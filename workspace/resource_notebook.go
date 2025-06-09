@@ -401,6 +401,6 @@ func ResourceNotebook() common.Resource {
 }
 
 func isParentDoesntExistError(err error) bool {
-	errStr := err.Error()
-	return strings.HasPrefix(errStr, "The parent folder ") && strings.HasSuffix(errStr, " does not exist.")
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "parent folder ") && strings.Contains(errStr, " does not exist")
 }

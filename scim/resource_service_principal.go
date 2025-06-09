@@ -3,7 +3,6 @@ package scim
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -170,14 +169,9 @@ func ResourceServicePrincipal() common.Resource {
 			if err != nil {
 				return err
 			}
-			log.Printf("[DEBUG] read SP '%s': %v", d.Id(), sp)
-			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
-			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
+			setCommonUserFields(d, sp, sp.ApplicationID)
 			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
-			err = common.StructToData(sp, servicePrincipalSchema, d)
-			if err != nil {
-				return err
-			}
+			d.Set("application_id", sp.ApplicationID)
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

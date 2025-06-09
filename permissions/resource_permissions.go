@@ -38,14 +38,14 @@ func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.Access
 	idParts := strings.Split(objectID, "/")
 	id := idParts[len(idParts)-1]
 	withOwner := mapping.addOwnerPermissionIfNeeded(objectACL, ownerOpt)
-	_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
+	_, err = w.Permissions.Set(a.context, iam.SetObjectPermissions{
 		RequestObjectId:   id,
 		RequestObjectType: mapping.requestObjectType,
 		AccessControlList: withOwner,
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
-			_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
+			_, err = w.Permissions.Set(a.context, iam.SetObjectPermissions{
 				RequestObjectId:   id,
 				RequestObjectType: mapping.requestObjectType,
 				AccessControlList: objectACL,

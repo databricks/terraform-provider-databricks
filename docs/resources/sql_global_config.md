@@ -5,6 +5,8 @@ subcategory: "Databricks SQL"
 
 This resource configures the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace. *Please note that changing parameters of this resource will restart all running [databricks_sql_endpoint](sql_endpoint.md).*  To use this resource you need to be an administrator.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example usage
 
 ### AWS example
@@ -52,6 +54,15 @@ The following arguments are supported (see [documentation](https://docs.databric
 ## Import
 
 You can import a `databricks_sql_global_config` resource with command like the following (you need to use `global` as ID):
+
+```hcl
+import {
+  to = databricks_sql_global_config.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_sql_global_config.this global

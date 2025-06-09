@@ -316,6 +316,7 @@ func TestResourcePipelineRead(t *testing.T) {
 		"library": []any{
 			map[string]any{
 				"file":  []any{},
+				"glob":  []any{},
 				"maven": []any{},
 				"jar":   "",
 				"whl":   "",

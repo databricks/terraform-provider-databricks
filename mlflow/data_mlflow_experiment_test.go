@@ -2,30 +2,29 @@ package mlflow
 
 import (
 	"fmt"
-	"net/url"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/ml"
-
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceExperimentById(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=1234567890",
-				Response: ml.GetExperimentResponse{
-					Experiment: &ml.Experiment{
-						Name:             "/Users/databricks/my-experiment",
-						ExperimentId:     "1234567890",
-						ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
-						LifecycleStage:   "active",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().GetExperiment(mock.Anything, ml.GetExperimentRequest{
+				ExperimentId: "1234567890",
+			}).Return(&ml.GetExperimentResponse{
+				Experiment: &ml.Experiment{
+					Name:             "/Users/databricks/my-experiment",
+					ExperimentId:     "1234567890",
+					ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
+					LifecycleStage:   "active",
 				},
-			},
+			}, nil)
 		},
 		Read:        true,
 		NonWritable: true,
@@ -45,16 +44,14 @@ func TestDataSourceExperimentById(t *testing.T) {
 
 func TestDataSourceExperimentByIdNotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=0987654321",
-				Status:   404,
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Node ID 0987654321 does not exist.",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().GetExperiment(mock.Anything, ml.GetExperimentRequest{
+				ExperimentId: "0987654321",
+			}).Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				Message:   "Node ID 0987654321 does not exist.",
+			})
 		},
 		Read:        true,
 		NonWritable: true,
@@ -68,19 +65,18 @@ func TestDataSourceExperimentByName(t *testing.T) {
 	experimentName := "/Users/databricks/my-experiment"
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
-				Response: ml.GetExperimentResponse{
-					Experiment: &ml.Experiment{
-						Name:             experimentName,
-						ExperimentId:     "1234567890",
-						ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
-						LifecycleStage:   "active",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
+				ExperimentName: experimentName,
+			}).Return(&ml.GetExperimentByNameResponse{
+				Experiment: &ml.Experiment{
+					Name:             experimentName,
+					ExperimentId:     "1234567890",
+					ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
+					LifecycleStage:   "active",
 				},
-			},
+			}, nil)
 		},
 		Read:        true,
 		NonWritable: true,
@@ -102,16 +98,14 @@ func TestDataSourceExperimentByNameNotFound(t *testing.T) {
 	experimentName := "/Users/databricks/non-existent-experiment"
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
-				Status:   404,
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Node /Users/databricks/non-existent-experiment does not exist.",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
+				ExperimentName: experimentName,
+			}).Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				Message:   "Node /Users/databricks/non-existent-experiment does not exist.",
+			})
 		},
 		Read:        true,
 		NonWritable: true,
@@ -125,16 +119,14 @@ func TestDataSourceExperimentByNameInvalidPath(t *testing.T) {
 	experimentName := "invalid_path"
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
-				Status:   404,
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
+				ExperimentName: experimentName,
+			}).Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				Message:   "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
+			})
 		},
 		Read:        true,
 		NonWritable: true,

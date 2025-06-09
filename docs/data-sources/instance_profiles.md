@@ -6,6 +6,8 @@ subcategory: "Deployment"
 
 Lists all available [databricks_instance_profiles](../resources/instance_profile.md).
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 Get all instance profiles:

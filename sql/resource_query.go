@@ -100,7 +100,9 @@ func ResourceQuery() common.Resource {
 			var q queryCreateStruct
 			common.DataToStructPointer(d, s, &q)
 			apiQuery, err := w.Queries.Create(ctx, sql.CreateQueryRequest{
-				Query: &q.CreateQueryRequestQuery,
+				AutoResolveDisplayName: false,
+				Query:                  &q.CreateQueryRequestQuery,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 			})
 			if err != nil {
 				return err
@@ -149,9 +151,11 @@ func ResourceQuery() common.Resource {
 				}
 			}
 			_, err = w.Queries.Update(ctx, sql.UpdateQueryRequest{
-				Query:      &q.UpdateQueryRequestQuery,
-				Id:         d.Id(),
-				UpdateMask: updateMask,
+				Query:                  &q.UpdateQueryRequestQuery,
+				Id:                     d.Id(),
+				UpdateMask:             updateMask,
+				AutoResolveDisplayName: false,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 			})
 			return err
 		},

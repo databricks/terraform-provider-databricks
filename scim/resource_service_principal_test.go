@@ -30,6 +30,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 							Value: "allow-cluster-create",
 						},
 					},
+					ExternalID: "def",
 				},
 			},
 		},
@@ -45,6 +46,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		"home":                 "/Users/bcd",
 		"repos":                "/Repos/bcd",
 		"acl_principal_id":     "servicePrincipals/bcd",
+		"external_id":          "def",
 	})
 }
 

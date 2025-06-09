@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_registered_model Resource
 
--> This resource can only be used with a workspace-level provider!
-
 This resource allows you to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
+
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -42,8 +42,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The registered model resource can be imported using the full (3-level) name of the model.
 
+```hcl
+import {
+  to = databricks_registered_model.this
+  id = "<catalog_name>.<schema_name>.<model_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_registered_model.this <catalog_name.schema_name.model_name>
+terraform import databricks_registered_model.this <catalog_name>.<schema_name>.<model_name>
 ```
 
 ## Related Resources

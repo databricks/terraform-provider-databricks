@@ -277,7 +277,8 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 
 func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (string, error) {
 	sparkVersion := clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
-		Latest: true,
+		Latest:          true,
+		LongTermSupport: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
@@ -287,13 +288,15 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
 			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			SparkConf: map[string]string{
-				"spark.databricks.cluster.profile": "singleNode",
-				"spark.master":                     "local[*]",
-			},
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
+			// TODO: return back after backend fix is rolled out
+			NumWorkers: 1,
+			// SparkConf: map[string]string{
+			// 	"spark.databricks.cluster.profile": "singleNode",
+			// 	"spark.master":                     "local[*]",
+			// },
+			// CustomTags: map[string]string{
+			// 	"ResourceClass": "SingleNode",
+			// },
 		})
 	if err != nil {
 		return "", err

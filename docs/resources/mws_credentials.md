@@ -3,9 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_credentials Resource
 
--> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
-
 This resource to configure the cross-account role for creation of new workspaces within AWS.
+
+-> This resource can only be used with an account-level provider!
 
 Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with `host="https://accounts.cloud.databricks.com/"`) and another for the workspace you've created with `databricks_mws_workspaces` resource. If you want both creation of workspaces & clusters within workspace within the same terraform module (essentially same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module for creation of workspace + PAT token and the rest in different modules.
 
@@ -65,6 +65,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by the combination of its identifier and the account id:
+
+```hcl
+import {
+  to = databricks_mws_credentials.this
+  id = "<account_id>/<credentials_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_mws_credentials.this <account_id>/<credentials_id>

@@ -3,9 +3,9 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_warehouse Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves information about a [databricks_sql_warehouse](../resources/sql_endpoint.md) using its id. This could be retrieved programmatically using [databricks_sql_warehouses](../data-sources/sql_warehouses.md) data source.
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example usage
 

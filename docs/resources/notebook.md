@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html). You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql`, `.r`, and `.ipynb` extensions are supported, if you would like to omit the `language` attribute.
@@ -70,6 +72,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource notebook can be imported using notebook path
 
+```hcl
+import {
+  to = databricks_notebook.this
+  id = "/path/to/notebook"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_notebook.this /path/to/notebook
 ```
@@ -84,7 +95,7 @@ The following resources are often used in the same context:
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
 * [databricks_notebook_paths](../data-sources/notebook_paths.md) data to list notebooks in Databricks Workspace.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

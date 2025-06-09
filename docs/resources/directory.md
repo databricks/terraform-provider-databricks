@@ -6,6 +6,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 You can declare a Terraform-managed directory by specifying the `path` attribute of the corresponding directory.
@@ -38,6 +40,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource directory can be imported using directory path:
+
+```hcl
+import {
+  to = databricks_directory.this
+  id = "/path/to/directory"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_directory.this /path/to/directory

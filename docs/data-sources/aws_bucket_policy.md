@@ -5,6 +5,8 @@ subcategory: "Deployment"
 
 This datasource configures a simple access policy for AWS S3 buckets, so that Databricks can access data in it.
 
+-> This data source can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 ```hcl
@@ -74,7 +76,7 @@ resource "aws_s3_bucket_policy" "ds" {
 
 ## Argument Reference
 
-* `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
+* `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document. The name must follow the [S3 bucket naming rules](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `aws_partition` - (Optional) AWS partition. The options are `aws`, `aws-us-gov`, or `aws-us-gov-dod`. Defaults to `aws`
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
 * `databricks_e2_account_id` - (Optional) Your Databricks account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket

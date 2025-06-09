@@ -43,6 +43,7 @@ var entitlementMapping = map[string]string{
 	"allow-instance-pool-create": "allow_instance_pool_create",
 	"databricks-sql-access":      "databricks_sql_access",
 	"workspace-access":           "workspace_access",
+	"workspace-consume":          "workspace_consume",
 }
 
 // order is important for tests
@@ -51,6 +52,7 @@ var possibleEntitlements = []string{
 	"allow-instance-pool-create",
 	"databricks-sql-access",
 	"workspace-access",
+	"workspace-consume",
 }
 
 type entitlements []ComplexValue
@@ -100,6 +102,13 @@ func addEntitlementsToSchema(s map[string]*schema.Schema) {
 			Default:  false,
 		}
 	}
+	s["workspace_consume"].ConflictsWith = []string{"workspace_access", "databricks_sql_access"}
+}
+
+// ResourceMeta is a struct that contains the meta information about the SCIM group
+type ResourceMeta struct {
+	// ResourceType is the type of the resource: "Group" or "WorkspaceGroup"
+	ResourceType string `json:"resourceType,omitempty"`
 }
 
 // Group contains information about the SCIM group
@@ -112,6 +121,7 @@ type Group struct {
 	Roles        []ComplexValue `json:"roles,omitempty"`
 	Entitlements entitlements   `json:"entitlements,omitempty"`
 	ExternalID   string         `json:"externalId,omitempty"`
+	Meta         *ResourceMeta  `json:"meta,omitempty" tf:"computed"`
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api

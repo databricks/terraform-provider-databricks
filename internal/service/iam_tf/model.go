@@ -912,6 +912,12 @@ func (o GetAccountUserRequest) Type(ctx context.Context) attr.Type {
 // Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest struct {
 	// The resource name for which assignable roles will be listed.
+	//
+	// Examples | Summary :--- | :--- `resource=accounts/<ACCOUNT_ID>` | A
+	// resource name for the account.
+	// `resource=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>` | A resource name for
+	// the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
+	// resource name for the service principal.
 	Resource types.String `tfsdk:"-"`
 }
 
@@ -1140,9 +1146,12 @@ func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 
 // Get object permission levels
 type GetPermissionLevelsRequest struct {
-	// <needs content>
 	RequestObjectId types.String `tfsdk:"-"`
-	// <needs content>
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -1312,8 +1321,21 @@ type GetRuleSetRequest struct {
 	// avoid race conditions that is get an etag from a GET rule set request,
 	// and pass it with the PUT update request to identify the rule set version
 	// you are updating.
+	//
+	// Examples | Summary :--- | :--- `etag=` | An empty etag can only be used
+	// in GET to indicate no freshness requirements.
+	// `etag=RENUAAABhSweA4NvVmmUYdiU717H3Tgy0UJdor3gE4a+mq/oj9NjAf8ZsQ==` | An
+	// etag encoded a specific version of the rule set to get or to be updated.
 	Etag types.String `tfsdk:"-"`
 	// The ruleset name associated with the request.
+	//
+	// Examples | Summary :--- | :---
+	// `name=accounts/<ACCOUNT_ID>/ruleSets/default` | A name for a rule set on
+	// the account.
+	// `name=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>/ruleSets/default` | A name
+	// for a rule set on the group.
+	// `name=accounts/<ACCOUNT_ID>/servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>/ruleSets/default`
+	// | A name for a rule set on the service principal.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1497,7 +1519,11 @@ func (o GetWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GrantRule struct {
-	// Principals this grant rule applies to.
+	// Principals this grant rule applies to. A principal can be a user (for end
+	// users), a service principal (for applications and compute workloads), or
+	// an account group. Each principal has its own identifier format: *
+	// users/<USERNAME> * groups/<GROUP_NAME> *
+	// servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>
 	Principals types.List `tfsdk:"principals"`
 	// Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role"`
@@ -3981,97 +4007,6 @@ func (o PermissionsDescription) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type PermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
-	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
-	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *PermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsRequest) {
-}
-
-func (newState *PermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PermissionsRequest) {
-}
-
-func (c PermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionsRequest
-// only implements ToObjectValue() and Type().
-func (o PermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PermissionsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.Type(ctx),
-			},
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
-}
-
-// GetAccessControlList returns the value of the AccessControlList field in PermissionsRequest as
-// a slice of AccessControlRequest values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *PermissionsRequest) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessControlRequest
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetAccessControlList sets the value of the AccessControlList field in PermissionsRequest.
-func (o *PermissionsRequest) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
-}
-
 // Information about the principal assigned to the workspace.
 type PrincipalOutput struct {
 	// The display name of the principal.
@@ -4240,7 +4175,15 @@ func (o Role) Type(ctx context.Context) attr.Type {
 }
 
 type RuleSetResponse struct {
-	// Identifies the version of the rule set returned.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`
@@ -4255,9 +4198,9 @@ func (newState *RuleSetResponse) SyncEffectiveFieldsDuringRead(existingState Rul
 }
 
 func (c RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetRequired()
 	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -4328,9 +4271,15 @@ func (o *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
 }
 
 type RuleSetUpdateRequest struct {
-	// The expected etag of the rule set to update. The update will fail if the
-	// value does not match the value that is stored in account access control
-	// service.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`
@@ -4623,6 +4572,188 @@ func (o *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
+}
+
+type SetObjectPermissions struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The id of the request object.
+	RequestObjectId types.String `tfsdk:"-"`
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
+	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *SetObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetObjectPermissions) {
+}
+
+func (newState *SetObjectPermissions) SyncEffectiveFieldsDuringRead(existingState SetObjectPermissions) {
+}
+
+func (c SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SetObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SetObjectPermissions
+// only implements ToObjectValue() and Type().
+func (o SetObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"request_object_id":   o.RequestObjectId,
+			"request_object_type": o.RequestObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SetObjectPermissions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: AccessControlRequest{}.Type(ctx),
+			},
+			"request_object_id":   types.StringType,
+			"request_object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in SetObjectPermissions as
+// a slice of AccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SetObjectPermissions.
+func (o *SetObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+type UpdateObjectPermissions struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The id of the request object.
+	RequestObjectId types.String `tfsdk:"-"`
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
+	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateObjectPermissions) {
+}
+
+func (newState *UpdateObjectPermissions) SyncEffectiveFieldsDuringRead(existingState UpdateObjectPermissions) {
+}
+
+func (c UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateObjectPermissions
+// only implements ToObjectValue() and Type().
+func (o UpdateObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"request_object_id":   o.RequestObjectId,
+			"request_object_type": o.RequestObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateObjectPermissions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: AccessControlRequest{}.Type(ctx),
+			},
+			"request_object_id":   types.StringType,
+			"request_object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in UpdateObjectPermissions as
+// a slice of AccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in UpdateObjectPermissions.
+func (o *UpdateObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse struct {

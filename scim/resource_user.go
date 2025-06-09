@@ -23,6 +23,14 @@ const (
 	userAttributes = "userName,displayName,active,externalId,entitlements"
 )
 
+func setCommonUserFields(d *schema.ResourceData, user User, username string) {
+	d.Set("display_name", user.DisplayName)
+	d.Set("active", user.Active)
+	d.Set("external_id", user.ExternalID)
+	d.Set("home", fmt.Sprintf("/Users/%s", username))
+	d.Set("repos", fmt.Sprintf("/Repos/%s", username))
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() common.Resource {
 	type entity struct {
@@ -101,12 +109,8 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
+			setCommonUserFields(d, user, user.UserName)
 			d.Set("user_name", user.UserName)
-			d.Set("display_name", user.DisplayName)
-			d.Set("active", user.Active)
-			d.Set("external_id", user.ExternalID)
-			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
-			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
 			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},

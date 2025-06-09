@@ -3,9 +3,9 @@ subcategory: "Apps"
 ---
 # databricks_custom_app_integration Resource
 
--> Initialize provider with `alias = "account"`, and `host` pointing to the account URL, like, `host = "https://accounts.cloud.databricks.com"`. Use `provider = databricks.account` for all account-level resources.
-
 This resource allows you to enable [custom OAuth applications](https://docs.databricks.com/en/integrations/enable-disable-oauth.html#enable-custom-oauth-applications-using-the-databricks-ui).
+
+-> This resource can only be used with an account-level provider!
 
 ## Example Usage
 
@@ -45,10 +45,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its integration ID.
+This resource can be imported by its integration ID:
 
-```sh
-terraform import databricks_custom_app_integration.this '<integration_id>'
+```hcl
+import {
+  to = databricks_custom_app_integration.this
+  id = "<integration_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_custom_app_integration.this "<integration_id>"
 ```
 
 ## Related Resources

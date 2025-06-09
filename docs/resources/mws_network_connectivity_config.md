@@ -3,11 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_network_connectivity_config Resource
 
--> Initialize provider with `alias = "account"`, `host = "https://accounts.azuredatabricks.net"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
-
--> **Public Preview** This feature is available for AWS & Azure only, and is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) in AWS.
-
 Allows you to create a Network Connectivity Config that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-firewall).
+
+-> This resource can only be used with an account-level provider!
 
 ## Example Usage
 
@@ -57,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by Databricks account ID and Network Connectivity Config ID.
 
-```sh
-terraform import databricks_mws_network_connectivity_config.ncc <account_id>/<network_connectivity_config_id>
+```hcl
+import {
+  to = databricks_mws_network_connectivity_config.this
+  id = "<account_id>/<network_connectivity_config_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_mws_network_connectivity_config.this "<account_id>/<network_connectivity_config_id>"
 ```
 
 ## Related Resources

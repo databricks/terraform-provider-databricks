@@ -71,7 +71,7 @@ func TestVectorSearchIndexCreate(t *testing.T) {
 						},
 					},
 				},
-			}).Return(&vectorsearch.CreateVectorIndexResponse{}, nil)
+			}).Return(&vectorsearch.VectorIndex{}, nil)
 			e.GetIndexByIndexName(mock.Anything, "abc").Return(indexResponse, nil)
 		},
 		Resource: ResourceVectorSearchIndex(),
@@ -101,7 +101,7 @@ func TestVectorSearchIndexCreateNotReadyButIndexedRows(t *testing.T) {
 						},
 					},
 				},
-			}).Return(&vectorsearch.CreateVectorIndexResponse{}, nil)
+			}).Return(&vectorsearch.VectorIndex{}, nil)
 			e.GetIndexByIndexName(mock.Anything, "abc").Return(&vectorsearch.VectorIndex{
 				Name:         "abc",
 				EndpointName: "test",

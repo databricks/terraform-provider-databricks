@@ -1128,6 +1128,8 @@ type AppResource_SdkV2 struct {
 	ServingEndpoint types.List `tfsdk:"serving_endpoint"`
 
 	SqlWarehouse types.List `tfsdk:"sql_warehouse"`
+
+	UcSecurable types.List `tfsdk:"uc_securable"`
 }
 
 func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource_SdkV2) {
@@ -1147,6 +1149,8 @@ func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["serving_endpoint"] = attrs["serving_endpoint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sql_warehouse"] = attrs["sql_warehouse"].SetOptional()
 	attrs["sql_warehouse"] = attrs["sql_warehouse"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["uc_securable"] = attrs["uc_securable"].SetOptional()
+	attrs["uc_securable"] = attrs["uc_securable"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1164,6 +1168,7 @@ func (a AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 		"secret":           reflect.TypeOf(AppResourceSecret_SdkV2{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint_SdkV2{}),
 		"sql_warehouse":    reflect.TypeOf(AppResourceSqlWarehouse_SdkV2{}),
+		"uc_securable":     reflect.TypeOf(AppResourceUcSecurable_SdkV2{}),
 	}
 }
 
@@ -1180,6 +1185,7 @@ func (o AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"secret":           o.Secret,
 			"serving_endpoint": o.ServingEndpoint,
 			"sql_warehouse":    o.SqlWarehouse,
+			"uc_securable":     o.UcSecurable,
 		})
 }
 
@@ -1200,6 +1206,9 @@ func (o AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"sql_warehouse": basetypes.ListType{
 				ElemType: AppResourceSqlWarehouse_SdkV2{}.Type(ctx),
+			},
+			"uc_securable": basetypes.ListType{
+				ElemType: AppResourceUcSecurable_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1307,6 +1316,32 @@ func (o *AppResource_SdkV2) SetSqlWarehouse(ctx context.Context, v AppResourceSq
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
 	o.SqlWarehouse = types.ListValueMust(t, vs)
+}
+
+// GetUcSecurable returns the value of the UcSecurable field in AppResource_SdkV2 as
+// a AppResourceUcSecurable_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource_SdkV2) GetUcSecurable(ctx context.Context) (AppResourceUcSecurable_SdkV2, bool) {
+	var e AppResourceUcSecurable_SdkV2
+	if o.UcSecurable.IsNull() || o.UcSecurable.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceUcSecurable_SdkV2
+	d := o.UcSecurable.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUcSecurable sets the value of the UcSecurable field in AppResource_SdkV2.
+func (o *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable"]
+	o.UcSecurable = types.ListValueMust(t, vs)
 }
 
 type AppResourceJob_SdkV2 struct {
@@ -1526,6 +1561,63 @@ func (o AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id":         types.StringType,
 			"permission": types.StringType,
+		},
+	}
+}
+
+type AppResourceUcSecurable_SdkV2 struct {
+	Permission types.String `tfsdk:"permission"`
+
+	SecurableFullName types.String `tfsdk:"securable_full_name"`
+
+	SecurableType types.String `tfsdk:"securable_type"`
+}
+
+func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable_SdkV2) {
+}
+
+func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceUcSecurable_SdkV2) {
+}
+
+func (c AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceUcSecurable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppResourceUcSecurable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceUcSecurable_SdkV2
+// only implements ToObjectValue() and Type().
+func (o AppResourceUcSecurable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission":          o.Permission,
+			"securable_full_name": o.SecurableFullName,
+			"securable_type":      o.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission":          types.StringType,
+			"securable_full_name": types.StringType,
+			"securable_type":      types.StringType,
 		},
 	}
 }

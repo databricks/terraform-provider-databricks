@@ -100,7 +100,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, bindings.BindingsSecurableTypeStorageCredential)
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -258,7 +258,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, bindings.BindingsSecurableTypeStorageCredential)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

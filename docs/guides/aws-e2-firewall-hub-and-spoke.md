@@ -4,7 +4,7 @@ page_title: "Provisioning AWS Databricks workspace with a Hub & Spoke firewall f
 
 # Provisioning AWS Databricks workspace with a Hub & Spoke firewall for data exfiltration protection
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform, and where many Databricks workspaces are deployed, we recommend a hub and spoke topology reference architecture powered by AWS Transit Gateway. The hub will consist of a central inspection and egress virtual private cloud (VPC), while the Spoke VPC houses federated Databricks workspaces for different business units or segregated teams. In this way, you create your version of a centralized deployment model for your egress architecture, as is recommended for large enterprises. For more information, please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 

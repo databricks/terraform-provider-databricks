@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -15,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -621,6 +623,123 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
+func TestResourceJobCreate_PowerBiTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "power_bi_task_name",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey: "power_bi_task_key",
+						PowerBiTask: &jobs.PowerBiTask{
+							ConnectionResourceName: "test-connection",
+							PowerBiModel: &jobs.PowerBiModel{
+								AuthenticationMethod: jobs.AuthenticationMethodOauth,
+								ModelName:            "TestModel",
+								OverwriteExisting:    true,
+								StorageMode:          jobs.StorageModeDirectQuery,
+								WorkspaceName:        "TestWorkspace",
+							},
+							RefreshAfterUpdate: true,
+							Tables: []jobs.PowerBiTable{
+								{
+									Catalog:     "TestCatalog",
+									Name:        "TestTable1",
+									Schema:      "TestSchema",
+									StorageMode: jobs.StorageModeDirectQuery,
+								},
+								{
+									Catalog:     "TestCatalog",
+									Name:        "TestTable2",
+									Schema:      "TestSchema",
+									StorageMode: jobs.StorageModeDual,
+								},
+							},
+							WarehouseId: "12345",
+						},
+					},
+				},
+			}).
+				Return(&jobs.CreateResponse{
+					JobId: 789,
+				}, nil)
+			e.GetByJobId(mock.Anything, int64(789)).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "power_bi_task_name",
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "power_bi_task_key",
+							PowerBiTask: &jobs.PowerBiTask{
+								ConnectionResourceName: "test-connection",
+								PowerBiModel: &jobs.PowerBiModel{
+									AuthenticationMethod: jobs.AuthenticationMethodOauth,
+									ModelName:            "TestModel",
+									OverwriteExisting:    true,
+									StorageMode:          jobs.StorageModeDirectQuery,
+									WorkspaceName:        "TestWorkspace",
+								},
+								RefreshAfterUpdate: true,
+								Tables: []jobs.PowerBiTable{
+									{
+										Catalog:     "TestCatalog",
+										Name:        "TestTable1",
+										Schema:      "TestSchema",
+										StorageMode: jobs.StorageModeDirectQuery,
+									},
+									{
+										Catalog:     "TestCatalog",
+										Name:        "TestTable2",
+										Schema:      "TestSchema",
+										StorageMode: jobs.StorageModeDual,
+									},
+								},
+								WarehouseId: "12345",
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "power_bi_task_name"
+		task {
+			task_key = "power_bi_task_key"
+			power_bi_task {
+				connection_resource_name = "test-connection"
+				power_bi_model {
+					authentication_method = "OAUTH"
+					model_name = "TestModel"
+					overwrite_existing = true
+					storage_mode = "DIRECT_QUERY"
+					workspace_name = "TestWorkspace"
+				}
+				refresh_after_update = true
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable1"
+					schema = "TestSchema"
+					storage_mode = "DIRECT_QUERY"
+				}
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable2"
+					schema = "TestSchema"
+					storage_mode = "DUAL"
+				}
+				warehouse_id = "12345"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1029,6 +1148,93 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "18", d.Id())
+}
+
+func TestResourceJobCreate_DashboardTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: jobs.CreateJob{
+					Name:              "DashboardTask",
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "a",
+							DashboardTask: &jobs.DashboardTask{
+								Subscription: &jobs.Subscription{
+									Subscribers: []jobs.SubscriptionSubscriber{
+										{UserName: "user@domain.com"},
+										{DestinationId: "Test"},
+									},
+									Paused:        true,
+									CustomSubject: "\"custom subject\"",
+								},
+								WarehouseId: "\"dca3a0ba199040eb\"",
+								DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name: "DashboardTask",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "a",
+								DashboardTask: &jobs.DashboardTask{
+									Subscription: &jobs.Subscription{
+										Subscribers: []jobs.SubscriptionSubscriber{
+											{UserName: "user@domain.com"},
+											{DestinationId: "Test"},
+										},
+										Paused:        true,
+										CustomSubject: "\"custom subject\"",
+									},
+									WarehouseId: "\"dca3a0ba199040eb\"",
+									DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "DashboardTask"
+		task {
+		  task_key = "a"
+		  dashboard_task {
+			warehouse_id = "\"dca3a0ba199040eb\""
+			subscription {
+				subscribers {
+    				user_name = "user@domain.com"
+  				}
+				subscribers {
+					destination_id = "Test"
+				}
+				paused = true
+				custom_subject = "\"custom subject\""
+			}
+			dashboard_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
 }
 
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {

@@ -5,6 +5,8 @@ subcategory: "MLflow"
 
 This resource allows you to create [MLflow models](https://docs.databricks.com/applications/mlflow/models.html) in Databricks.
 
+-> This resource can only be used with a workspace-level provider!
+
 -> This documentation covers the Workspace Model Registry. Databricks recommends using [Models in Unity Catalog](registered_model.md). Models in Unity Catalog provides centralized model governance, cross-workspace access, lineage, and deployment.
 
 ## Example Usage
@@ -43,6 +45,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The model resource can be imported using the name
+
+```hcl
+import {
+  to = databricks_mlflow_model.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_mlflow_model.this <name>

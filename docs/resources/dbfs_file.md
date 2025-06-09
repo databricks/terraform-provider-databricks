@@ -5,6 +5,8 @@ subcategory: "Storage"
 
 This is a resource that lets you manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html). The best use cases are libraries for [databricks_cluster](cluster.md) or [databricks_job](job.md). You can also use [databricks_dbfs_file](../data-sources/dbfs_file.md) and [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data sources.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 In order to manage a file on Databricks File System with Terraform, you must specify the `source` attribute containing the full path to the file on the local filesystem.
@@ -68,6 +70,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource dbfs file can be imported using the path of the file:
+
+```hcl
+import {
+  to = databricks_dbfs_file.this
+  id = "<path>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_dbfs_file.this <path>

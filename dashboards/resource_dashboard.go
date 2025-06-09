@@ -78,14 +78,14 @@ func ResourceDashboard() common.Resource {
 			}
 			d.Set("md5", md5Hash)
 			dashboard.SerializedDashboard = content
-			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
+			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: dashboard})
 			if err != nil && isParentDoesntExistError(err) {
 				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
 				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
 				if err != nil {
 					return err
 				}
-				createdDashboard, err = w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
+				createdDashboard, err = w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: dashboard})
 			}
 			if err != nil {
 				return err
@@ -153,7 +153,7 @@ func ResourceDashboard() common.Resource {
 			dashboard.SerializedDashboard = content
 			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
 				DashboardId: dashboard.DashboardId,
-				Dashboard:   &dashboard,
+				Dashboard:   dashboard,
 			})
 			if err != nil {
 				return err

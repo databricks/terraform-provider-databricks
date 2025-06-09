@@ -24,7 +24,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var create settings.CreatePrivateEndpointRuleRequest
-			common.DataToStructPointer(d, s, &create)
+			common.DataToStructPointer(d, s, &create.PrivateEndpointRule)
 			create.NetworkConnectivityConfigId = d.Get("network_connectivity_config_id").(string)
 			acc, err := c.AccountClient()
 			if err != nil {

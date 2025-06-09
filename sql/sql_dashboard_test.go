@@ -1,94 +1,89 @@
 package sql_test
 
-import (
-	"testing"
+// Legacy dashboards can no longer be created via the API. Tests for this resource are disabled.
+// func TestAccDashboard(t *testing.T) {
+// 	acceptance.WorkspaceLevel(t, acceptance.Step{
+// 		Template: `
+// 		resource "databricks_sql_dashboard" "d1" {
+// 			name = "tf-{var.RANDOM}-dashboard"
 
-	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-)
+// 			// The SQLA API doesn't save tags on create, only on update.
+// 			// Uncomment the following when this is fixed.
+// 			// tags = [
+// 			// "tf-{var.RANDOM}-dashboard",
+// 			// ]
+// 		}
 
-func TestAccDashboard(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-		resource "databricks_sql_dashboard" "d1" {
-			name = "tf-{var.RANDOM}-dashboard"
+// 		resource "databricks_sql_widget" "d1w1" {
+// 			dashboard_id = databricks_sql_dashboard.d1.id
+// 			text = "hello there!"
 
-			// The SQLA API doesn't save tags on create, only on update.
-			// Uncomment the following when this is fixed.
-			// tags = [
-			// "tf-{var.RANDOM}-dashboard",
-			// ]
-		}
+// 			position {
+// 				size_x = 3
+// 				size_y = 4
+// 				pos_x = 0
+// 				pos_y = 0
+// 			}
+// 		}
 
-		resource "databricks_sql_widget" "d1w1" {
-			dashboard_id = databricks_sql_dashboard.d1.id
-			text = "hello there!"
+// 		resource "databricks_sql_widget" "d1w2" {
+// 			dashboard_id = databricks_sql_dashboard.d1.id
+// 			visualization_id = databricks_sql_visualization.q1v1.visualization_id
 
-			position {
-				size_x = 3
-				size_y = 4
-				pos_x = 0
-				pos_y = 0
-			}
-		}
+// 			position {
+// 				size_x = 3
+// 				size_y = 4
+// 				pos_x = 3
+// 				pos_y = 0
+// 			}
+// 		}
 
-		resource "databricks_sql_widget" "d1w2" {
-			dashboard_id = databricks_sql_dashboard.d1.id
-			visualization_id = databricks_sql_visualization.q1v1.visualization_id
+//         resource "databricks_permissions" "sql_dashboard_usage" {
+//             sql_dashboard_id = databricks_sql_dashboard.d1.id
+//             access_control {
+//               group_name       = "users"
+//               permission_level = "CAN_RUN"
+//             }
+//         }
 
-			position {
-				size_x = 3
-				size_y = 4
-				pos_x = 3
-				pos_y = 0
-			}
-		}
+//         resource "databricks_permissions" "query_usage" {
+//             sql_query_id = databricks_sql_query.q1.id
+//             access_control {
+//               group_name       = "users"
+//               permission_level = "CAN_RUN"
+//             }
+//         }
 
-        resource "databricks_permissions" "sql_dashboard_usage" {
-            sql_dashboard_id = databricks_sql_dashboard.d1.id
-            access_control {
-              group_name       = "users"
-              permission_level = "CAN_RUN"
-            }
-        }
+// 		resource "databricks_sql_query" "q1" {
+// 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
+// 			name = "tf-{var.RANDOM}-query"
+// 			query = "SELECT 1"
+// 		}
 
-        resource "databricks_permissions" "query_usage" {
-            sql_query_id = databricks_sql_query.q1.id
-            access_control {
-              group_name       = "users"
-              permission_level = "CAN_RUN"
-            }
-        }
+// 		resource "databricks_sql_visualization" "q1v1" {
+// 			query_id = databricks_sql_query.q1.id
+// 			type = "table"
+// 			name = "My Table"
 
-		resource "databricks_sql_query" "q1" {
-			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
-			name = "tf-{var.RANDOM}-query"
-			query = "SELECT 1"
-		}
+// 			options = jsonencode({})
+// 		}
 
-		resource "databricks_sql_visualization" "q1v1" {
-			query_id = databricks_sql_query.q1.id
-			type = "table"
-			name = "My Table"
+// 		resource "databricks_sql_visualization" "q1v2" {
+// 			query_id = databricks_sql_query.q1.id
+// 			type = "table"
+// 			name = "My Table (1)"
 
-			options = jsonencode({})
-		}
+// 			options = jsonencode({})
 
-		resource "databricks_sql_visualization" "q1v2" {
-			query_id = databricks_sql_query.q1.id
-			type = "table"
-			name = "My Table (1)"
-
-			options = jsonencode({})
-
-			# Note: this resource differs from the one above in that
-			# the query plan is set. This tests that it can either
-			# be unset or set and in both cases yield a consistent result.
-			query_plan = jsonencode({
-				# The value should be non-empty to check we don't have
-				# plan changes due to whitespace changes in JSON serialization.
-				groups = [
-				]
-			})
-		}`,
-	})
-}
+// 			# Note: this resource differs from the one above in that
+// 			# the query plan is set. This tests that it can either
+// 			# be unset or set and in both cases yield a consistent result.
+// 			query_plan = jsonencode({
+// 				# The value should be non-empty to check we don't have
+// 				# plan changes due to whitespace changes in JSON serialization.
+// 				groups = [
+// 				]
+// 			})
+// 		}`,
+// 	})
+// }

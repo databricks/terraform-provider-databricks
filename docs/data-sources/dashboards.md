@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This data source allows you to retrieve information about Databricks [Dashboards](https://docs.databricks.com/en/dashboards/index.html).
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl

@@ -106,6 +106,17 @@ func (o AddInstanceProfile) Type(ctx context.Context) attr.Type {
 type AddResponse struct {
 }
 
+func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse) {
+}
+
+func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
+}
+
+func (c AddResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -559,6 +570,17 @@ func (o CancelCommand) Type(ctx context.Context) attr.Type {
 }
 
 type CancelResponse struct {
+}
+
+func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse) {
+}
+
+func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
+}
+
+func (c CancelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelResponse.
@@ -1045,7 +1067,9 @@ type ClusterAttributes struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -1769,7 +1793,9 @@ type ClusterDetails struct {
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Determines whether the cluster was created by a user through the UI,
 	// created by the Databricks Jobs Scheduler, or through an API request.
@@ -4028,7 +4054,9 @@ type ClusterSpec struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -5027,7 +5055,9 @@ type CreateCluster struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -7034,6 +7064,17 @@ func (o DestroyContext) Type(ctx context.Context) attr.Type {
 type DestroyResponse struct {
 }
 
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse) {
+}
+
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
+}
+
+func (c DestroyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7409,7 +7450,9 @@ type EditCluster struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -8438,6 +8481,17 @@ func (o EditPolicyResponse) Type(ctx context.Context) attr.Type {
 type EditResponse struct {
 }
 
+func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse) {
+}
+
+func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
+}
+
+func (c EditResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8604,9 +8658,10 @@ func (o *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 	o.Changes = types.ListValueMust(t, vs)
 }
 
-// The environment entity used to preserve serverless environment side panel and
-// jobs' environment for non-notebook task. In this minimal environment spec,
-// only pip dependencies are supported.
+// The environment entity used to preserve serverless environment side panel,
+// jobs' environment for non-notebook task, and DLT's environment for classic
+// and serverless pipelines. In this minimal environment spec, only pip
+// dependencies are supported.
 type Environment struct {
 	// Client version used by the environment The client is the user-facing
 	// environment of the runtime. Each client comes with a specific set of
@@ -8620,6 +8675,17 @@ type Environment struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies types.List `tfsdk:"dependencies"`
+	// We renamed `client` to `environment_version` in notebook exports. This
+	// field is meant solely so that imported notebooks with
+	// `environment_version` can be deserialized correctly, in a
+	// backwards-compatible way (i.e. if `client` is specified instead of
+	// `environment_version`, it will be deserialized correctly). Do NOT use
+	// this field for any other purpose, e.g. notebook storage. This field is
+	// not yet exposed to customers (e.g. in the jobs API).
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+	// List of jar dependencies, should be string representing volume paths. For
+	// example: `/Volumes/path/to/test.jar`.
+	JarDependencies types.List `tfsdk:"jar_dependencies"`
 }
 
 func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
@@ -8631,6 +8697,8 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["client"] = attrs["client"].SetRequired()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()
 
 	return attrs
 }
@@ -8644,7 +8712,8 @@ func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (a Environment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dependencies": reflect.TypeOf(types.String{}),
+		"dependencies":     reflect.TypeOf(types.String{}),
+		"jar_dependencies": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8655,8 +8724,10 @@ func (o Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client":       o.Client,
-			"dependencies": o.Dependencies,
+			"client":              o.Client,
+			"dependencies":        o.Dependencies,
+			"environment_version": o.EnvironmentVersion,
+			"jar_dependencies":    o.JarDependencies,
 		})
 }
 
@@ -8666,6 +8737,10 @@ func (o Environment) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"client": types.StringType,
 			"dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"environment_version": types.StringType,
+			"jar_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -8696,6 +8771,32 @@ func (o *Environment) SetDependencies(ctx context.Context, v []types.String) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Dependencies = types.ListValueMust(t, vs)
+}
+
+// GetJarDependencies returns the value of the JarDependencies field in Environment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Environment) GetJarDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.JarDependencies.IsNull() || o.JarDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarDependencies sets the value of the JarDependencies field in Environment.
+func (o *Environment) SetJarDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.JarDependencies = types.ListValueMust(t, vs)
 }
 
 type EventDetails struct {
@@ -9678,15 +9779,29 @@ type GetEvents struct {
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
 	EventTypes types.List `tfsdk:"event_types"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The offset in the result set. Defaults to 0 (no offset). When an offset
 	// is specified and the results are requested in descending order, the
 	// end_time field is required.
 	Offset types.Int64 `tfsdk:"offset"`
 	// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
 	Order types.String `tfsdk:"order"`
+	// The maximum number of events to include in a page of events. The server
+	// may further constrain the maximum number of results returned in a single
+	// page. If the page_size is empty or 0, the server will decide the number
+	// of results to be returned. The field has to be in the range [0,500]. If
+	// the value is outside the range, the server enforces 0 or 500.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// Use next_page_token or prev_page_token returned from the previous request
+	// to list the next or previous page of events respectively. If page_token
+	// is empty, the first page is returned.
+	PageToken types.String `tfsdk:"page_token"`
 	// The start time in epoch milliseconds. If empty, returns events starting
 	// from the beginning of time.
 	StartTime types.Int64 `tfsdk:"start_time"`
@@ -9705,6 +9820,8 @@ func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["limit"] = attrs["limit"].SetOptional()
 	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 
 	return attrs
@@ -9736,6 +9853,8 @@ func (o GetEvents) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"limit":       o.Limit,
 			"offset":      o.Offset,
 			"order":       o.Order,
+			"page_size":   o.PageSize,
+			"page_token":  o.PageToken,
 			"start_time":  o.StartTime,
 		})
 }
@@ -9752,6 +9871,8 @@ func (o GetEvents) Type(ctx context.Context) attr.Type {
 			"limit":      types.Int64Type,
 			"offset":     types.Int64Type,
 			"order":      types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 			"start_time": types.Int64Type,
 		},
 	}
@@ -9785,9 +9906,21 @@ func (o *GetEvents) SetEventTypes(ctx context.Context, v []types.String) {
 
 type GetEventsResponse struct {
 	Events types.List `tfsdk:"events"`
+	// Deprecated: use next_page_token or prev_page_token instead.
+	//
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
 	NextPage types.Object `tfsdk:"next_page"`
+	// This field represents the pagination token to retrieve the next page of
+	// results. If the value is "", it means no further results for the request.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// This field represents the pagination token to retrieve the previous page
+	// of results. If the value is "", it means no further results for the
+	// request.
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
+	// Deprecated: Returns 0 when request uses page_token. Will start returning
+	// zero when request uses offset/limit soon.
+	//
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count"`
@@ -9802,6 +9935,8 @@ func (newState *GetEventsResponse) SyncEffectiveFieldsDuringRead(existingState G
 func (c GetEventsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["events"] = attrs["events"].SetOptional()
 	attrs["next_page"] = attrs["next_page"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
 	attrs["total_count"] = attrs["total_count"].SetOptional()
 
 	return attrs
@@ -9828,9 +9963,11 @@ func (o GetEventsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"events":      o.Events,
-			"next_page":   o.NextPage,
-			"total_count": o.TotalCount,
+			"events":          o.Events,
+			"next_page":       o.NextPage,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+			"total_count":     o.TotalCount,
 		})
 }
 
@@ -9841,8 +9978,10 @@ func (o GetEventsResponse) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: ClusterEvent{}.Type(ctx),
 			},
-			"next_page":   GetEvents{}.Type(ctx),
-			"total_count": types.Int64Type,
+			"next_page":       GetEvents{}.Type(ctx),
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"total_count":     types.Int64Type,
 		},
 	}
 }
@@ -15935,6 +16074,17 @@ func (o RemoveInstanceProfile) Type(ctx context.Context) attr.Type {
 type RemoveResponse struct {
 }
 
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse) {
+}
+
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
+}
+
+func (c RemoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17182,7 +17332,9 @@ type UpdateClusterResource struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in

@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage Databricks [Dashboards](https://docs.databricks.com/en/dashboards/index.html). To manage [Dashboards](https://docs.databricks.com/en/dashboards/index.html) you must have a warehouse access on your databricks workspace.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 Dashboard using `serialized_dashboard` attribute:
@@ -64,6 +66,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 You can import a `databricks_dashboard` resource with ID like the following:
+
+```hcl
+import {
+  to = databricks_dashboard.this
+  id = "<dashboard-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_dashboard.this <dashboard-id>

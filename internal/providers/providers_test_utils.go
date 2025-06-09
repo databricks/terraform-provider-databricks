@@ -118,7 +118,7 @@ func (pf providerFixture) applyWithPluginFramework(t *testing.T) *common.Databri
 func (pf providerFixture) applyAssertions(c *common.DatabricksClient, t *testing.T, err error) *common.DatabricksClient {
 	if pf.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", pf.assertError)
-		require.True(t, strings.HasPrefix(err.Error(), pf.assertError),
+		require.True(t, strings.Contains(err.Error(), pf.assertError),
 			"Expected to have '%s' error, but got '%s'", pf.assertError, err)
 		return nil
 	}
@@ -184,7 +184,7 @@ func (pf providerFixture) configureProviderAndReturnClient_PluginFramework(t *te
 	if len(diags) > 0 {
 		issues := []string{}
 		for _, d := range diags {
-			issues = append(issues, d.Summary())
+			issues = append(issues, d.Summary(), d.Detail())
 		}
 		return nil, errors.New(strings.Join(issues, ", "))
 	}

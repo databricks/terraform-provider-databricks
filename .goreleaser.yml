@@ -51,5 +51,4 @@ changelog:
     - '^docs:'
     - '^test:'
 
-release:
-  draft: true
+release: {}

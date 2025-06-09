@@ -200,7 +200,7 @@ func (ic *importContext) cacheGroups() error {
 		ic.allGroups = make([]scim.Group, 0, groupsCount)
 		for i, g := range *groups {
 			err = runWithRetries(func() error {
-				group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+				group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members,meta")
 				if err != nil {
 					return err
 				}

@@ -5,6 +5,8 @@ subcategory: "Databricks SQL"
 
 This resource allows you to manage [Databricks SQL Queries](https://docs.databricks.com/en/sql/user/queries/index.html).  It supersedes [databricks_sql_query](sql_query.md) resource - see migration guide below for more details.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -181,6 +183,15 @@ resource "databricks_permissions" "query_usage" {
 ## Import
 
 This resource can be imported using query ID:
+
+```hcl
+import {
+  to = databricks_query.this
+  id = "<query-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_query.this <query-id>

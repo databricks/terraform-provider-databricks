@@ -1007,6 +1007,11 @@ type FederationPolicy struct {
 	// Specifies the policy to use for validating OIDC claims in your federated
 	// tokens.
 	OidcPolicy types.Object `tfsdk:"oidc_policy"`
+	// The ID of the federation policy.
+	PolicyId types.String `tfsdk:"policy_id"`
+	// The service principal ID that this federation policy applies to. Only set
+	// for service principal federation policies.
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 	// Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`
 	// Last update time of the federation policy.
@@ -1024,6 +1029,8 @@ func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -1050,12 +1057,14 @@ func (o FederationPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": o.CreateTime,
-			"description": o.Description,
-			"name":        o.Name,
-			"oidc_policy": o.OidcPolicy,
-			"uid":         o.Uid,
-			"update_time": o.UpdateTime,
+			"create_time":          o.CreateTime,
+			"description":          o.Description,
+			"name":                 o.Name,
+			"oidc_policy":          o.OidcPolicy,
+			"policy_id":            o.PolicyId,
+			"service_principal_id": o.ServicePrincipalId,
+			"uid":                  o.Uid,
+			"update_time":          o.UpdateTime,
 		})
 }
 
@@ -1063,12 +1072,14 @@ func (o FederationPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o FederationPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
-			"description": types.StringType,
-			"name":        types.StringType,
-			"oidc_policy": OidcFederationPolicy{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": types.StringType,
+			"create_time":          types.StringType,
+			"description":          types.StringType,
+			"name":                 types.StringType,
+			"oidc_policy":          OidcFederationPolicy{}.Type(ctx),
+			"policy_id":            types.StringType,
+			"service_principal_id": types.Int64Type,
+			"uid":                  types.StringType,
+			"update_time":          types.StringType,
 		},
 	}
 }

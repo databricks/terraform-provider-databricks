@@ -7,8 +7,7 @@ import (
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/service/billing"
-	"github.com/databricks/terraform-provider-databricks/common"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -29,26 +28,26 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 
 type BudgetPoliciesList struct {
 	billing_tf.ListBudgetPoliciesRequest
-	BudgetPolicy types.List `tfsdk:"budget_policies"`
+	BudgetPolicy types.List `tfsdk:"policies"`
 }
 
 func (c BudgetPoliciesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policies"] = attrs["budget_policies"].SetComputed()
+	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
 }
 
 func (BudgetPoliciesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"budget_policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
+		"policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
 	}
 }
 
 type BudgetPoliciesDataSource struct {
-	Client *common.DatabricksClient
+	Client *autogen.DatabricksClient
 }
 
 func (r *BudgetPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourcesName)
+	resp.TypeName = autogen.GetDatabricksProductionName(dataSourcesName)
 }
 
 func (r *BudgetPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -61,9 +60,7 @@ func (r *BudgetPoliciesDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (r *BudgetPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if r.Client == nil {
-		r.Client = pluginfwcommon.ConfigureDataSource(req, resp)
-	}
+	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
 func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -93,17 +90,17 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var budget_policies = []attr.Value{}
+	var policies = []attr.Value{}
 	for _, item := range response {
 		var budget_policy billing_tf.BudgetPolicy
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &budget_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		budget_policies = append(budget_policies, budget_policy.ToObjectValue(ctx))
+		policies = append(policies, budget_policy.ToObjectValue(ctx))
 	}
 
 	var newState BudgetPoliciesList
-	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), budget_policies)
+	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), policies)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

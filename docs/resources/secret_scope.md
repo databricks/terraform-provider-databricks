@@ -5,6 +5,8 @@ subcategory: "Security"
 
 Sometimes accessing data requires that you authenticate to external data sources through JDBC. Instead of directly entering your credentials into a notebook, use Databricks secrets to store your credentials and reference them in notebooks and jobs. Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) for more details.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -71,8 +73,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because the underlying API doesn't include it in the response.
 
+```hcl
+import {
+  to = databricks_secret_scope.this
+  id = "<scopeName>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_secret_scope.object <scopeName>
+terraform import databricks_secret_scope.this "<scopeName>"
 ```
 
 ## Related Resources

@@ -1,53 +1,54 @@
 package workspace
 
 import (
-	"fmt"
-	"net/http"
-	"net/url"
+	"errors"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestResourceDirectoryRead(t *testing.T) {
 	path := "/test/path"
-	objectID := 12345
+	objectID := int64(12345)
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: ObjectStatus{
-					ObjectID:   int64(objectID),
-					ObjectType: Directory,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, path).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeDirectory,
 					Path:       path,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceDirectory(),
 		Read:     true,
 		New:      true,
 		ID:       path,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id": path, "path": path, "workspace_path": "/Workspace" + path, "object_id": objectID,
+		"id":             path,
+		"path":           path,
+		"workspace_path": "/Workspace" + path,
+		"object_id":      int(objectID),
 	})
 }
 
 func TestResourceDirectoryDelete(t *testing.T) {
 	path := "/test/path"
 	delete_recursive := true
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          http.MethodPost,
-				Resource:        "/api/2.0/workspace/delete",
-				Status:          http.StatusOK,
-				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Delete(mock.Anything, ws_api.Delete{
+					Path:      path,
+					Recursive: delete_recursive,
+				}).
+				Return(nil)
 		},
 		Resource: ResourceDirectory(),
 		Delete:   true,
@@ -56,26 +57,22 @@ func TestResourceDirectoryDelete(t *testing.T) {
 			"path":             "/foo/path.py",
 			"delete_recursive": delete_recursive,
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path,
+	})
 }
 
 func TestResourceDirectoryDelete_NotFound(t *testing.T) {
 	path := "/test/path"
 	delete_recursive := true
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          http.MethodPost,
-				Resource:        "/api/2.0/workspace/delete",
-				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Path (/test/path) doesn't exist.",
-				},
-				Status: 404,
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Delete(mock.Anything, ws_api.Delete{
+					Path:      path,
+					Recursive: delete_recursive,
+				}).
+				Return(apierr.ErrNotFound)
 		},
 		Resource: ResourceDirectory(),
 		Delete:   true,
@@ -84,103 +81,77 @@ func TestResourceDirectoryDelete_NotFound(t *testing.T) {
 			"path":             "/foo/path.py",
 			"delete_recursive": delete_recursive,
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path,
+	})
 }
 
 func TestResourceDirectoryRead_NotFound(t *testing.T) {
 	path := "/test/path"
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{ // read log output for correct url...
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, path).
+				Return(nil, apierr.ErrNotFound)
 		},
 		Resource: ResourceDirectory(),
 		Read:     true,
 		Removed:  true,
-		ID:       "/test/path",
+		ID:       path,
 	}.ApplyNoError(t)
 }
 
 func TestResourceDirectoryRead_Error(t *testing.T) {
 	path := "/test/path"
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, path).
+				Return(nil, errors.New("Internal error happened"))
 		},
 		Resource: ResourceDirectory(),
 		Read:     true,
-		ID:       "/test/path",
+		ID:       path,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "/test/path", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, path, d.Id(), "Id should not be empty for error reads")
 }
 
 func TestResourceDirectoryCreate(t *testing.T) {
 	path := "/test/path"
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": path,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: "DIRECTORY",
+	objectID := int64(4567)
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.MkdirsByPath(mock.Anything, path).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, path).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeDirectory,
 					Path:       path,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceDirectory(),
 		State: map[string]any{
-			"object_id":        4567,
 			"path":             path,
 			"delete_recursive": false,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             path,
+		"path":           path,
+		"workspace_path": "/Workspace" + path,
+		"object_id":      int(objectID),
+	})
 }
 
 func TestResourceDirectoryCreate_Error(t *testing.T) {
 	path := "/test/path"
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": path,
-				},
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				MkdirsByPath(mock.Anything, path).
+				Return(errors.New("Internal error happened"))
 		},
 		Resource: ResourceDirectory(),
 		State: map[string]any{
@@ -195,17 +166,13 @@ func TestResourceDirectoryCreate_Error(t *testing.T) {
 func TestResourceDirectoryDelete_Error(t *testing.T) {
 	path := "/test/path"
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          "POST",
-				Resource:        "/api/2.0/workspace/delete",
-				ExpectedRequest: DeletePath{Path: path, Recursive: false},
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Delete(mock.Anything, ws_api.Delete{
+					Path:      path,
+					Recursive: false,
+				}).
+				Return(errors.New("Internal error happened"))
 		},
 		Resource: ResourceDirectory(),
 		Delete:   true,
@@ -217,34 +184,16 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 
 func TestResourceDirectoryUpdate(t *testing.T) {
 	path := "/test/path"
-	object_id := 4567
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": path,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: ObjectStatus{
-					ObjectID:   int64(object_id),
-					ObjectType: "DIRECTORY",
+	objectID := int64(4567)
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.GetStatusByPath(mock.Anything, path).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeDirectory,
 					Path:       path,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: ObjectStatus{
-					ObjectID:   int64(object_id),
-					ObjectType: "DIRECTORY",
-					Path:       path,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceDirectory(),
 		InstanceState: map[string]string{
@@ -252,30 +201,31 @@ func TestResourceDirectoryUpdate(t *testing.T) {
 			"delete_recursive": "true",
 		},
 		State: map[string]any{
-			"object_id": object_id,
-			"path":      path,
+			"path": path,
 		},
 		ID:     path,
 		Update: true,
-	}.Apply(t)
-	require.NoError(t, err)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             path,
+		"path":           path,
+		"workspace_path": "/Workspace" + path,
+		"object_id":      int(objectID),
+	})
 }
 
 func TestResourceDirectoryReadNotDirectory(t *testing.T) {
 	path := "/test/path"
-	objectID := 12345
+	objectID := int64(12345)
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: ObjectStatus{
-					ObjectID:   int64(objectID),
-					ObjectType: Notebook,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, path).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeNotebook,
 					Path:       path,
-					Language:   Python,
-				},
-			},
+					Language:   ws_api.LanguagePython,
+				}, nil)
 		},
 		Resource: ResourceDirectory(),
 		Read:     true,

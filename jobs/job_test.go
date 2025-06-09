@@ -437,3 +437,89 @@ func TestAccPeriodicTrigger(t *testing.T) {
 		}),
 	})
 }
+
+func TestAccJobDashboardTask(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_dashboard" "d1" {
+			display_name			= 	"Dashboard Task Test {var.RANDOM}"
+			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			parent_path				= 	"/Shared/provider-test"
+			serialized_dashboard	=	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+		}
+
+		resource "databricks_job" "this" {
+			name = "Dashboard Task Test {var.RANDOM}"
+
+			task {
+				task_key = "d"
+
+				dashboard_task {
+					dashboard_id = databricks_dashboard.d1.id
+					warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+				}
+			}
+		}`,
+	})
+}
+
+func TestAccJobClusterPolicySparkVersion(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+		resource "databricks_cluster_policy" "this" {
+			name = "test-policy-{var.RANDOM}"
+			definition = jsonencode({
+				"spark_version": {
+					"type": "fixed",
+					"value": data.databricks_spark_version.latest.id
+				}
+			})
+		}
+		resource "databricks_job" "this" {
+			name = "test-job-{var.RANDOM}"
+			job_cluster {
+				job_cluster_key = "test-cluster"
+				new_cluster {
+					num_workers = 0
+					node_type_id = data.databricks_node_type.smallest.id
+					custom_tags = {
+						"ResourceClass" = "SingleNode"
+					}
+					spark_conf = {
+						"spark.databricks.cluster.profile" : "singleNode"
+						"spark.master" : "local[*,4]"
+					}
+
+					// Apply the cluster policy to the job cluster for the Spark version.
+					policy_id = databricks_cluster_policy.this.id
+					apply_policy_default_values = true
+				}
+			}
+			task {
+				task_key = "test-task"
+				job_cluster_key = "test-cluster"
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+		}
+`,
+		// The configuration uses "apply_policy_default_values = true" to set the Spark version.
+		// This means permanent drift will occur for the values sourced from the policy.
+		ExpectNonEmptyPlan: true,
+	})
+}

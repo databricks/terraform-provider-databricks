@@ -94,7 +94,7 @@ func TestResourceRuleSetCreate(t *testing.T) {
 		`, testServicePrincipalRuleSetName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
-		"etag": "etagEx2=",
+		"etag": "",
 	})
 }
 
@@ -126,7 +126,7 @@ func TestResourceRuleSetRead(t *testing.T) {
 		ID:       testServicePrincipalRuleSetName,
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
-		"etag": "etagEx=",
+		"etag": "",
 		"id":   testServicePrincipalRuleSetName,
 	})
 }
@@ -134,6 +134,14 @@ func TestResourceRuleSetRead(t *testing.T) {
 func TestResourceRuleSetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
 			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
@@ -180,7 +188,7 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 		}`, testServicePrincipalRuleSetName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
-		"etag": "etagEx2=",
+		"etag": "",
 		"id":   testServicePrincipalRuleSetName,
 	})
 }
@@ -190,12 +198,21 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
+			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
 					Name: newName,
 					RuleSet: iam.RuleSetUpdateRequest{
 						Name: newName,
+						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
@@ -235,7 +252,7 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 		}`, newName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": newName,
-		"etag": "etagEx2=",
+		"etag": "",
 		"id":   newName,
 	})
 }
@@ -243,6 +260,14 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 func TestResourceRuleSetUpdateConflict(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
 			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
@@ -325,7 +350,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 		}`, testServicePrincipalRuleSetName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
-		"etag": "etagEx3=",
+		"etag": "",
 		"id":   testServicePrincipalRuleSetName,
 	})
 }
@@ -333,6 +358,20 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 func TestResourceRuleSetDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx="),

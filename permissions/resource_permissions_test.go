@@ -137,7 +137,7 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "fakeuuid123",
 				RequestObjectType: "registered-models",
 				AccessControlList: []iam.AccessControlRequest{
@@ -194,7 +194,7 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "fakeuuid123",
 				RequestObjectType: "registered-models",
 				AccessControlList: []iam.AccessControlRequest{
@@ -273,7 +273,7 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "fakeuuid123",
 				RequestObjectType: "registered-models",
 				AccessControlList: []iam.AccessControlRequest{
@@ -546,7 +546,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
 				AccessControlList: []iam.AccessControlRequest{
@@ -597,7 +597,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
 				AccessControlList: []iam.AccessControlRequest{
@@ -703,7 +703,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
 				AccessControlList: []iam.AccessControlRequest{
@@ -770,7 +770,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "dbsql-dashboards",
 				AccessControlList: []iam.AccessControlRequest{
@@ -810,7 +810,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "sql/warehouses",
 				AccessControlList: []iam.AccessControlRequest{
@@ -875,7 +875,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "sql/warehouses",
 				AccessControlList: []iam.AccessControlRequest{
@@ -897,7 +897,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 				Message:    "PUT requests for warehouse *** with no existing owner must provide a new owner.",
 				StatusCode: 400,
 			})
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "sql/warehouses",
 				AccessControlList: []iam.AccessControlRequest{
@@ -958,7 +958,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
 				RequestObjectType: "sql/warehouses",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1075,7 +1075,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 				ObjectType: workspace.ObjectTypeNotebook,
 			}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "988765",
 				RequestObjectType: "notebooks",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1143,7 +1143,7 @@ func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 				ObjectType: workspace.ObjectTypeFile,
 			}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "988765",
 				RequestObjectType: "files",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1291,7 +1291,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "9",
 				RequestObjectType: "jobs",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1342,7 +1342,7 @@ func getResourcePermissions(field, objectType string) resourcePermissions {
 func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
 		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "me"}, nil)
-		mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, iam.PermissionsRequest{
+		mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, iam.SetObjectPermissions{
 			RequestObjectId:   "tokens",
 			RequestObjectType: "authorization",
 			AccessControlList: []iam.AccessControlRequest{
@@ -1399,7 +1399,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 				},
 			},
 		}, nil)
-		e.Set(mock.Anything, iam.PermissionsRequest{
+		e.Set(mock.Anything, iam.SetObjectPermissions{
 			RequestObjectId:   "123",
 			RequestObjectType: "jobs",
 			AccessControlList: []iam.AccessControlRequest{
@@ -1486,7 +1486,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 				},
 			},
 		}, nil)
-		e.Set(mock.Anything, iam.PermissionsRequest{
+		e.Set(mock.Anything, iam.SetObjectPermissions{
 			RequestObjectId:   "123",
 			RequestObjectType: "pipelines",
 			AccessControlList: []iam.AccessControlRequest{
@@ -1576,7 +1576,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "988765",
 				RequestObjectType: "repos",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1614,7 +1614,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "id111",
 				RequestObjectType: "sql/queries",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1672,7 +1672,7 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
 			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "id111",
 				RequestObjectType: "sql/queries",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1736,7 +1736,7 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 				ObjectType: workspace.ObjectTypeDirectory,
 			}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "123456",
 				RequestObjectType: "directories",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1822,7 +1822,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "passwords",
 				RequestObjectType: "authorization",
 				AccessControlList: []iam.AccessControlRequest{
@@ -1873,7 +1873,7 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.Set(mock.Anything, iam.PermissionsRequest{
+			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "0",
 				RequestObjectType: "directories",
 				AccessControlList: []iam.AccessControlRequest{

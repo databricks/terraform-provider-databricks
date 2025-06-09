@@ -228,6 +228,19 @@ type ApproveTransitionRequestResponse_SdkV2 struct {
 	Activity types.List `tfsdk:"activity"`
 }
 
+func (newState *ApproveTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *ApproveTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequestResponse_SdkV2) {
+}
+
+func (c ApproveTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity"] = attrs["activity"].SetOptional()
+	attrs["activity"] = attrs["activity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApproveTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -287,6 +300,161 @@ func (o *ApproveTransitionRequestResponse_SdkV2) SetActivity(ctx context.Context
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["activity"]
 	o.Activity = types.ListValueMust(t, vs)
+}
+
+type ArtifactCredentialInfo_SdkV2 struct {
+	// A collection of HTTP headers that should be specified when uploading to
+	// or downloading from the specified `signed_uri`.
+	Headers types.List `tfsdk:"headers"`
+	// The path, relative to the Run's artifact root location, of the artifact
+	// that can be accessed with the credential.
+	Path types.String `tfsdk:"path"`
+	// The ID of the MLflow Run containing the artifact that can be accessed
+	// with the credential.
+	RunId types.String `tfsdk:"run_id"`
+	// The signed URI credential that provides access to the artifact.
+	SignedUri types.String `tfsdk:"signed_uri"`
+	// The type of the signed credential URI (e.g., an AWS presigned URL or an
+	// Azure Shared Access Signature URI).
+	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *ArtifactCredentialInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactCredentialInfo_SdkV2) {
+}
+
+func (newState *ArtifactCredentialInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ArtifactCredentialInfo_SdkV2) {
+}
+
+func (c ArtifactCredentialInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["headers"] = attrs["headers"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["signed_uri"] = attrs["signed_uri"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ArtifactCredentialInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ArtifactCredentialInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"headers": reflect.TypeOf(ArtifactCredentialInfoHttpHeader_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ArtifactCredentialInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ArtifactCredentialInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"headers":    o.Headers,
+			"path":       o.Path,
+			"run_id":     o.RunId,
+			"signed_uri": o.SignedUri,
+			"type":       o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ArtifactCredentialInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"headers": basetypes.ListType{
+				ElemType: ArtifactCredentialInfoHttpHeader_SdkV2{}.Type(ctx),
+			},
+			"path":       types.StringType,
+			"run_id":     types.StringType,
+			"signed_uri": types.StringType,
+			"type":       types.StringType,
+		},
+	}
+}
+
+// GetHeaders returns the value of the Headers field in ArtifactCredentialInfo_SdkV2 as
+// a slice of ArtifactCredentialInfoHttpHeader_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ArtifactCredentialInfo_SdkV2) GetHeaders(ctx context.Context) ([]ArtifactCredentialInfoHttpHeader_SdkV2, bool) {
+	if o.Headers.IsNull() || o.Headers.IsUnknown() {
+		return nil, false
+	}
+	var v []ArtifactCredentialInfoHttpHeader_SdkV2
+	d := o.Headers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHeaders sets the value of the Headers field in ArtifactCredentialInfo_SdkV2.
+func (o *ArtifactCredentialInfo_SdkV2) SetHeaders(ctx context.Context, v []ArtifactCredentialInfoHttpHeader_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["headers"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Headers = types.ListValueMust(t, vs)
+}
+
+type ArtifactCredentialInfoHttpHeader_SdkV2 struct {
+	// The HTTP header name.
+	Name types.String `tfsdk:"name"`
+	// The HTTP header value.
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *ArtifactCredentialInfoHttpHeader_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactCredentialInfoHttpHeader_SdkV2) {
+}
+
+func (newState *ArtifactCredentialInfoHttpHeader_SdkV2) SyncEffectiveFieldsDuringRead(existingState ArtifactCredentialInfoHttpHeader_SdkV2) {
+}
+
+func (c ArtifactCredentialInfoHttpHeader_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ArtifactCredentialInfoHttpHeader.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ArtifactCredentialInfoHttpHeader_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ArtifactCredentialInfoHttpHeader_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ArtifactCredentialInfoHttpHeader_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":  o.Name,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ArtifactCredentialInfoHttpHeader_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":  types.StringType,
+			"value": types.StringType,
+		},
+	}
 }
 
 // Comment details.
@@ -454,6 +622,19 @@ func (o CreateComment_SdkV2) Type(ctx context.Context) attr.Type {
 type CreateCommentResponse_SdkV2 struct {
 	// Comment details.
 	Comment types.List `tfsdk:"comment"`
+}
+
+func (newState *CreateCommentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCommentResponse_SdkV2) {
+}
+
+func (newState *CreateCommentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCommentResponse_SdkV2) {
+}
+
+func (c CreateCommentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["comment"] = attrs["comment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCommentResponse.
@@ -659,56 +840,64 @@ func (o CreateExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateForecastingExperimentRequest_SdkV2 struct {
-	// Name of the column in the input training table used to customize the
-	// weight for each time series to calculate weighted metrics.
+	// The column in the training table used to customize weights for each time
+	// series.
 	CustomWeightsColumn types.String `tfsdk:"custom_weights_column"`
-	// The path to the created experiment. This is the path where the experiment
-	// will be stored in the workspace.
+	// The path in the workspace to store the created experiment.
 	ExperimentPath types.String `tfsdk:"experiment_path"`
-	// The granularity of the forecast. This defines the time interval between
-	// consecutive rows in the time series data. Possible values: '1 second', '1
-	// minute', '5 minutes', '10 minutes', '15 minutes', '30 minutes', 'Hourly',
-	// 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'.
+	// The time interval between consecutive rows in the time series data.
+	// Possible values include: '1 second', '1 minute', '5 minutes', '10
+	// minutes', '15 minutes', '30 minutes', 'Hourly', 'Daily', 'Weekly',
+	// 'Monthly', 'Quarterly', 'Yearly'.
 	ForecastGranularity types.String `tfsdk:"forecast_granularity"`
-	// The number of time steps into the future for which predictions should be
-	// made. This value represents a multiple of forecast_granularity
-	// determining how far ahead the model will forecast.
+	// The number of time steps into the future to make predictions, calculated
+	// as a multiple of forecast_granularity. This value represents how far
+	// ahead the model should forecast.
 	ForecastHorizon types.Int64 `tfsdk:"forecast_horizon"`
-	// Region code(s) to consider when automatically adding holiday features.
-	// When empty, no holiday features are added. Only supports 1 holiday region
-	// for now.
+	// The fully qualified path of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used to store future feature data
+	// for predictions.
+	FutureFeatureDataPath types.String `tfsdk:"future_feature_data_path"`
+	// The region code(s) to automatically add holiday features. Currently
+	// supports only one region.
 	HolidayRegions types.List `tfsdk:"holiday_regions"`
-	// The maximum duration in minutes for which the experiment is allowed to
-	// run. If the experiment exceeds this time limit it will be stopped
-	// automatically.
+	// Specifies the list of feature columns to include in model training. These
+	// columns must exist in the training data and be of type string, numerical,
+	// or boolean. If not specified, no additional features will be included.
+	// Note: Certain columns are automatically handled: - Automatically
+	// excluded: split_column, target_column, custom_weights_column. -
+	// Automatically included: time_column.
+	IncludeFeatures types.List `tfsdk:"include_features"`
+	// The maximum duration for the experiment in minutes. The experiment stops
+	// automatically if it exceeds this limit.
 	MaxRuntime types.Int64 `tfsdk:"max_runtime"`
-	// The three-level (fully qualified) path to a unity catalog table. This
-	// table path serves to store the predictions.
+	// The fully qualified path of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used to store predictions.
 	PredictionDataPath types.String `tfsdk:"prediction_data_path"`
 	// The evaluation metric used to optimize the forecasting model.
 	PrimaryMetric types.String `tfsdk:"primary_metric"`
-	// The three-level (fully qualified) path to a unity catalog model. This
-	// model path serves to store the best model.
+	// The fully qualified path of a Unity Catalog model, formatted as
+	// catalog_name.schema_name.model_name, used to store the best model.
 	RegisterTo types.String `tfsdk:"register_to"`
-	// Name of the column in the input training table used for custom data
-	// splits. The values in this column must be "train", "validate", or "test"
-	// to indicate which split each row belongs to.
+	// // The column in the training table used for custom data splits. Values
+	// must be 'train', 'validate', or 'test'.
 	SplitColumn types.String `tfsdk:"split_column"`
-	// Name of the column in the input training table that serves as the
-	// prediction target. The values in this column will be used as the ground
-	// truth for model training.
+	// The column in the input training table used as the prediction target for
+	// model training. The values in this column are used as the ground truth
+	// for model training.
 	TargetColumn types.String `tfsdk:"target_column"`
-	// Name of the column in the input training table that represents the
-	// timestamp of each row.
+	// The column in the input training table that represents each row's
+	// timestamp.
 	TimeColumn types.String `tfsdk:"time_column"`
-	// Name of the column in the input training table used to group the dataset
-	// to predict individual time series
+	// The column in the training table used to group the dataset for predicting
+	// individual time series.
 	TimeseriesIdentifierColumns types.List `tfsdk:"timeseries_identifier_columns"`
-	// The three-level (fully qualified) name of a unity catalog table. This
-	// table serves as the training data for the forecasting model.
+	// The fully qualified path of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used as training data for the
+	// forecasting model.
 	TrainDataPath types.String `tfsdk:"train_data_path"`
-	// The list of frameworks to include for model tuning. Possible values:
-	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list will include all supported
+	// List of frameworks to include for model tuning. Possible values are
+	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list includes all supported
 	// frameworks.
 	TrainingFrameworks types.List `tfsdk:"training_frameworks"`
 }
@@ -724,7 +913,9 @@ func (c CreateForecastingExperimentRequest_SdkV2) ApplySchemaCustomizations(attr
 	attrs["experiment_path"] = attrs["experiment_path"].SetOptional()
 	attrs["forecast_granularity"] = attrs["forecast_granularity"].SetRequired()
 	attrs["forecast_horizon"] = attrs["forecast_horizon"].SetRequired()
+	attrs["future_feature_data_path"] = attrs["future_feature_data_path"].SetOptional()
 	attrs["holiday_regions"] = attrs["holiday_regions"].SetOptional()
+	attrs["include_features"] = attrs["include_features"].SetOptional()
 	attrs["max_runtime"] = attrs["max_runtime"].SetOptional()
 	attrs["prediction_data_path"] = attrs["prediction_data_path"].SetOptional()
 	attrs["primary_metric"] = attrs["primary_metric"].SetOptional()
@@ -749,6 +940,7 @@ func (c CreateForecastingExperimentRequest_SdkV2) ApplySchemaCustomizations(attr
 func (a CreateForecastingExperimentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"holiday_regions":               reflect.TypeOf(types.String{}),
+		"include_features":              reflect.TypeOf(types.String{}),
 		"timeseries_identifier_columns": reflect.TypeOf(types.String{}),
 		"training_frameworks":           reflect.TypeOf(types.String{}),
 	}
@@ -765,7 +957,9 @@ func (o CreateForecastingExperimentRequest_SdkV2) ToObjectValue(ctx context.Cont
 			"experiment_path":               o.ExperimentPath,
 			"forecast_granularity":          o.ForecastGranularity,
 			"forecast_horizon":              o.ForecastHorizon,
+			"future_feature_data_path":      o.FutureFeatureDataPath,
 			"holiday_regions":               o.HolidayRegions,
+			"include_features":              o.IncludeFeatures,
 			"max_runtime":                   o.MaxRuntime,
 			"prediction_data_path":          o.PredictionDataPath,
 			"primary_metric":                o.PrimaryMetric,
@@ -783,11 +977,15 @@ func (o CreateForecastingExperimentRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (o CreateForecastingExperimentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_weights_column": types.StringType,
-			"experiment_path":       types.StringType,
-			"forecast_granularity":  types.StringType,
-			"forecast_horizon":      types.Int64Type,
+			"custom_weights_column":    types.StringType,
+			"experiment_path":          types.StringType,
+			"forecast_granularity":     types.StringType,
+			"forecast_horizon":         types.Int64Type,
+			"future_feature_data_path": types.StringType,
 			"holiday_regions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_features": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"max_runtime":          types.Int64Type,
@@ -832,6 +1030,32 @@ func (o *CreateForecastingExperimentRequest_SdkV2) SetHolidayRegions(ctx context
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["holiday_regions"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.HolidayRegions = types.ListValueMust(t, vs)
+}
+
+// GetIncludeFeatures returns the value of the IncludeFeatures field in CreateForecastingExperimentRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateForecastingExperimentRequest_SdkV2) GetIncludeFeatures(ctx context.Context) ([]types.String, bool) {
+	if o.IncludeFeatures.IsNull() || o.IncludeFeatures.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IncludeFeatures.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeFeatures sets the value of the IncludeFeatures field in CreateForecastingExperimentRequest_SdkV2.
+func (o *CreateForecastingExperimentRequest_SdkV2) SetIncludeFeatures(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include_features"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.IncludeFeatures = types.ListValueMust(t, vs)
 }
 
 // GetTimeseriesIdentifierColumns returns the value of the TimeseriesIdentifierColumns field in CreateForecastingExperimentRequest_SdkV2 as
@@ -932,6 +1156,217 @@ func (o CreateForecastingExperimentResponse_SdkV2) Type(ctx context.Context) att
 			"experiment_id": types.StringType,
 		},
 	}
+}
+
+type CreateLoggedModelRequest_SdkV2 struct {
+	// The ID of the experiment that owns the model.
+	ExperimentId types.String `tfsdk:"experiment_id"`
+	// The type of the model, such as ``"Agent"``, ``"Classifier"``, ``"LLM"``.
+	ModelType types.String `tfsdk:"model_type"`
+	// The name of the model (optional). If not specified one will be generated.
+	Name types.String `tfsdk:"name"`
+	// Parameters attached to the model.
+	Params types.List `tfsdk:"params"`
+	// The ID of the run that created the model.
+	SourceRunId types.String `tfsdk:"source_run_id"`
+	// Tags attached to the model.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *CreateLoggedModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLoggedModelRequest_SdkV2) {
+}
+
+func (newState *CreateLoggedModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateLoggedModelRequest_SdkV2) {
+}
+
+func (c CreateLoggedModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["model_type"] = attrs["model_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["source_run_id"] = attrs["source_run_id"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateLoggedModelRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateLoggedModelRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"params": reflect.TypeOf(LoggedModelParameter_SdkV2{}),
+		"tags":   reflect.TypeOf(LoggedModelTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateLoggedModelRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateLoggedModelRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment_id": o.ExperimentId,
+			"model_type":    o.ModelType,
+			"name":          o.Name,
+			"params":        o.Params,
+			"source_run_id": o.SourceRunId,
+			"tags":          o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateLoggedModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment_id": types.StringType,
+			"model_type":    types.StringType,
+			"name":          types.StringType,
+			"params": basetypes.ListType{
+				ElemType: LoggedModelParameter_SdkV2{}.Type(ctx),
+			},
+			"source_run_id": types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: LoggedModelTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetParams returns the value of the Params field in CreateLoggedModelRequest_SdkV2 as
+// a slice of LoggedModelParameter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateLoggedModelRequest_SdkV2) GetParams(ctx context.Context) ([]LoggedModelParameter_SdkV2, bool) {
+	if o.Params.IsNull() || o.Params.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelParameter_SdkV2
+	d := o.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in CreateLoggedModelRequest_SdkV2.
+func (o *CreateLoggedModelRequest_SdkV2) SetParams(ctx context.Context, v []LoggedModelParameter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Params = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateLoggedModelRequest_SdkV2 as
+// a slice of LoggedModelTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateLoggedModelRequest_SdkV2) GetTags(ctx context.Context) ([]LoggedModelTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateLoggedModelRequest_SdkV2.
+func (o *CreateLoggedModelRequest_SdkV2) SetTags(ctx context.Context, v []LoggedModelTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+type CreateLoggedModelResponse_SdkV2 struct {
+	// The newly created logged model.
+	Model types.List `tfsdk:"model"`
+}
+
+func (newState *CreateLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLoggedModelResponse_SdkV2) {
+}
+
+func (newState *CreateLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateLoggedModelResponse_SdkV2) {
+}
+
+func (c CreateLoggedModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["model"] = attrs["model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateLoggedModelResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateLoggedModelResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model": reflect.TypeOf(LoggedModel_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateLoggedModelResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateLoggedModelResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model": o.Model,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateLoggedModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model": basetypes.ListType{
+				ElemType: LoggedModel_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetModel returns the value of the Model field in CreateLoggedModelResponse_SdkV2 as
+// a LoggedModel_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateLoggedModelResponse_SdkV2) GetModel(ctx context.Context) (LoggedModel_SdkV2, bool) {
+	var e LoggedModel_SdkV2
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []LoggedModel_SdkV2
+	d := o.Model.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in CreateLoggedModelResponse_SdkV2.
+func (o *CreateLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v LoggedModel_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model"]
+	o.Model = types.ListValueMust(t, vs)
 }
 
 type CreateModelRequest_SdkV2 struct {
@@ -1741,6 +2176,19 @@ type CreateTransitionRequestResponse_SdkV2 struct {
 	Request types.List `tfsdk:"request"`
 }
 
+func (newState *CreateTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *CreateTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequestResponse_SdkV2) {
+}
+
+func (c CreateTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request"] = attrs["request"].SetOptional()
+	attrs["request"] = attrs["request"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1804,6 +2252,19 @@ func (o *CreateTransitionRequestResponse_SdkV2) SetRequest(ctx context.Context, 
 
 type CreateWebhookResponse_SdkV2 struct {
 	Webhook types.List `tfsdk:"webhook"`
+}
+
+func (newState *CreateWebhookResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWebhookResponse_SdkV2) {
+}
+
+func (newState *CreateWebhookResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateWebhookResponse_SdkV2) {
+}
+
+func (c CreateWebhookResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["webhook"] = attrs["webhook"].SetOptional()
+	attrs["webhook"] = attrs["webhook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWebhookResponse.
@@ -2215,6 +2676,166 @@ func (o DeleteExperimentResponse_SdkV2) ToObjectValue(ctx context.Context) baset
 
 // Type implements basetypes.ObjectValuable.
 func (o DeleteExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Delete a logged model
+type DeleteLoggedModelRequest_SdkV2 struct {
+	// The ID of the logged model to delete.
+	ModelId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLoggedModelRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLoggedModelRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLoggedModelRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLoggedModelRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLoggedModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+		},
+	}
+}
+
+type DeleteLoggedModelResponse_SdkV2 struct {
+}
+
+func (newState *DeleteLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteLoggedModelResponse_SdkV2) {
+}
+
+func (newState *DeleteLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteLoggedModelResponse_SdkV2) {
+}
+
+func (c DeleteLoggedModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLoggedModelResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLoggedModelResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLoggedModelResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLoggedModelResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLoggedModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Delete a tag on a logged model
+type DeleteLoggedModelTagRequest_SdkV2 struct {
+	// The ID of the logged model to delete the tag from.
+	ModelId types.String `tfsdk:"-"`
+	// The tag key.
+	TagKey types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLoggedModelTagRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLoggedModelTagRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLoggedModelTagRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLoggedModelTagRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+			"tag_key":  o.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLoggedModelTagRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+			"tag_key":  types.StringType,
+		},
+	}
+}
+
+type DeleteLoggedModelTagResponse_SdkV2 struct {
+}
+
+func (newState *DeleteLoggedModelTagResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteLoggedModelTagResponse_SdkV2) {
+}
+
+func (newState *DeleteLoggedModelTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteLoggedModelTagResponse_SdkV2) {
+}
+
+func (c DeleteLoggedModelTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLoggedModelTagResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLoggedModelTagResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLoggedModelTagResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLoggedModelTagResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLoggedModelTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -3593,11 +4214,11 @@ func (o ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Metadata of a single artifact file or directory.
 type FileInfo_SdkV2 struct {
-	// Size in bytes. Unset for directories.
+	// The size in bytes of the file. Unset for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
 	// Whether the path is a directory.
 	IsDir types.Bool `tfsdk:"is_dir"`
-	// Path relative to the root artifact directory run.
+	// The path relative to the root artifact directory run.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -3648,6 +4269,140 @@ func (o FileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"path":      types.StringType,
 		},
 	}
+}
+
+type FinalizeLoggedModelRequest_SdkV2 struct {
+	// The ID of the logged model to finalize.
+	ModelId types.String `tfsdk:"-"`
+	// Whether or not the model is ready for use.
+	// ``"LOGGED_MODEL_UPLOAD_FAILED"`` indicates that something went wrong when
+	// logging the model weights / agent code).
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *FinalizeLoggedModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FinalizeLoggedModelRequest_SdkV2) {
+}
+
+func (newState *FinalizeLoggedModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState FinalizeLoggedModelRequest_SdkV2) {
+}
+
+func (c FinalizeLoggedModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+	attrs["status"] = attrs["status"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FinalizeLoggedModelRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FinalizeLoggedModelRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FinalizeLoggedModelRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o FinalizeLoggedModelRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+			"status":   o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FinalizeLoggedModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+			"status":   types.StringType,
+		},
+	}
+}
+
+type FinalizeLoggedModelResponse_SdkV2 struct {
+	// The updated logged model.
+	Model types.List `tfsdk:"model"`
+}
+
+func (newState *FinalizeLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FinalizeLoggedModelResponse_SdkV2) {
+}
+
+func (newState *FinalizeLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState FinalizeLoggedModelResponse_SdkV2) {
+}
+
+func (c FinalizeLoggedModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["model"] = attrs["model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FinalizeLoggedModelResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FinalizeLoggedModelResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model": reflect.TypeOf(LoggedModel_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FinalizeLoggedModelResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o FinalizeLoggedModelResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model": o.Model,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FinalizeLoggedModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model": basetypes.ListType{
+				ElemType: LoggedModel_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetModel returns the value of the Model field in FinalizeLoggedModelResponse_SdkV2 as
+// a LoggedModel_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FinalizeLoggedModelResponse_SdkV2) GetModel(ctx context.Context) (LoggedModel_SdkV2, bool) {
+	var e LoggedModel_SdkV2
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []LoggedModel_SdkV2
+	d := o.Model.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in FinalizeLoggedModelResponse_SdkV2.
+func (o *FinalizeLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v LoggedModel_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model"]
+	o.Model = types.ListValueMust(t, vs)
 }
 
 // Represents a forecasting experiment with its unique identifier, URL, and
@@ -3745,6 +4500,238 @@ func (o GetByNameRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"experiment_name": types.StringType,
 		},
 	}
+}
+
+// Get credentials to download trace data
+type GetCredentialsForTraceDataDownloadRequest_SdkV2 struct {
+	// The ID of the trace to fetch artifact download credentials for.
+	RequestId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataDownloadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataDownloadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataDownloadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataDownloadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"request_id": o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataDownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"request_id": types.StringType,
+		},
+	}
+}
+
+type GetCredentialsForTraceDataDownloadResponse_SdkV2 struct {
+	// The artifact download credentials for the specified trace data.
+	CredentialInfo types.List `tfsdk:"credential_info"`
+}
+
+func (newState *GetCredentialsForTraceDataDownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsForTraceDataDownloadResponse_SdkV2) {
+}
+
+func (newState *GetCredentialsForTraceDataDownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCredentialsForTraceDataDownloadResponse_SdkV2) {
+}
+
+func (c GetCredentialsForTraceDataDownloadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_info"] = attrs["credential_info"].SetOptional()
+	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataDownloadResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataDownloadResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"credential_info": reflect.TypeOf(ArtifactCredentialInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataDownloadResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataDownloadResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_info": o.CredentialInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataDownloadResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_info": basetypes.ListType{
+				ElemType: ArtifactCredentialInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in GetCredentialsForTraceDataDownloadResponse_SdkV2 as
+// a ArtifactCredentialInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCredentialsForTraceDataDownloadResponse_SdkV2) GetCredentialInfo(ctx context.Context) (ArtifactCredentialInfo_SdkV2, bool) {
+	var e ArtifactCredentialInfo_SdkV2
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ArtifactCredentialInfo_SdkV2
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in GetCredentialsForTraceDataDownloadResponse_SdkV2.
+func (o *GetCredentialsForTraceDataDownloadResponse_SdkV2) SetCredentialInfo(ctx context.Context, v ArtifactCredentialInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
+}
+
+// Get credentials to upload trace data
+type GetCredentialsForTraceDataUploadRequest_SdkV2 struct {
+	// The ID of the trace to fetch artifact upload credentials for.
+	RequestId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataUploadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataUploadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataUploadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataUploadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"request_id": o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataUploadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"request_id": types.StringType,
+		},
+	}
+}
+
+type GetCredentialsForTraceDataUploadResponse_SdkV2 struct {
+	// The artifact upload credentials for the specified trace data.
+	CredentialInfo types.List `tfsdk:"credential_info"`
+}
+
+func (newState *GetCredentialsForTraceDataUploadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsForTraceDataUploadResponse_SdkV2) {
+}
+
+func (newState *GetCredentialsForTraceDataUploadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCredentialsForTraceDataUploadResponse_SdkV2) {
+}
+
+func (c GetCredentialsForTraceDataUploadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_info"] = attrs["credential_info"].SetOptional()
+	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataUploadResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataUploadResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"credential_info": reflect.TypeOf(ArtifactCredentialInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataUploadResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataUploadResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_info": o.CredentialInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataUploadResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_info": basetypes.ListType{
+				ElemType: ArtifactCredentialInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in GetCredentialsForTraceDataUploadResponse_SdkV2 as
+// a ArtifactCredentialInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCredentialsForTraceDataUploadResponse_SdkV2) GetCredentialInfo(ctx context.Context) (ArtifactCredentialInfo_SdkV2, bool) {
+	var e ArtifactCredentialInfo_SdkV2
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ArtifactCredentialInfo_SdkV2
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in GetCredentialsForTraceDataUploadResponse_SdkV2.
+func (o *GetCredentialsForTraceDataUploadResponse_SdkV2) SetCredentialInfo(ctx context.Context, v ArtifactCredentialInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
 }
 
 type GetExperimentByNameResponse_SdkV2 struct {
@@ -4350,6 +5337,122 @@ func (o *GetLatestVersionsResponse_SdkV2) SetModelVersions(ctx context.Context, 
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
+// Get a logged model
+type GetLoggedModelRequest_SdkV2 struct {
+	// The ID of the logged model to retrieve.
+	ModelId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+		},
+	}
+}
+
+type GetLoggedModelResponse_SdkV2 struct {
+	// The retrieved logged model.
+	Model types.List `tfsdk:"model"`
+}
+
+func (newState *GetLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLoggedModelResponse_SdkV2) {
+}
+
+func (newState *GetLoggedModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLoggedModelResponse_SdkV2) {
+}
+
+func (c GetLoggedModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["model"] = attrs["model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model": reflect.TypeOf(LoggedModel_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model": o.Model,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model": basetypes.ListType{
+				ElemType: LoggedModel_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetModel returns the value of the Model field in GetLoggedModelResponse_SdkV2 as
+// a LoggedModel_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLoggedModelResponse_SdkV2) GetModel(ctx context.Context) (LoggedModel_SdkV2, bool) {
+	var e LoggedModel_SdkV2
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []LoggedModel_SdkV2
+	d := o.Model.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in GetLoggedModelResponse_SdkV2.
+func (o *GetLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v LoggedModel_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model"]
+	o.Model = types.ListValueMust(t, vs)
+}
+
 type GetMetricHistoryResponse_SdkV2 struct {
 	// All logged values for this metric if `max_results` is not specified in
 	// the request or if the total count of metrics returned is less than the
@@ -4477,6 +5580,19 @@ func (o GetModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetModelResponse_SdkV2 struct {
 	RegisteredModelDatabricks types.List `tfsdk:"registered_model_databricks"`
+}
+
+func (newState *GetModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelResponse_SdkV2) {
+}
+
+func (newState *GetModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetModelResponse_SdkV2) {
+}
+
+func (c GetModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["registered_model_databricks"] = attrs["registered_model_databricks"].SetOptional()
+	attrs["registered_model_databricks"] = attrs["registered_model_databricks"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetModelResponse.
@@ -5326,8 +6442,8 @@ func (o JobSpecWithoutSecret_SdkV2) Type(ctx context.Context) attr.Type {
 
 // List artifacts
 type ListArtifactsRequest_SdkV2 struct {
-	// Token indicating the page of artifact results to fetch. `page_token` is
-	// not supported when listing artifacts in UC Volumes. A maximum of 1000
+	// The token indicating the page of artifact results to fetch. `page_token`
+	// is not supported when listing artifacts in UC Volumes. A maximum of 1000
 	// artifacts will be retrieved for UC Volumes. Please call
 	// `/api/2.0/fs/directories{directory_path}` for listing artifacts in UC
 	// Volumes, which supports pagination. See [List directory contents | Files
@@ -5381,11 +6497,11 @@ func (o ListArtifactsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListArtifactsResponse_SdkV2 struct {
-	// File location and metadata for artifacts.
+	// The file location and metadata for artifacts.
 	Files types.List `tfsdk:"files"`
-	// Token that can be used to retrieve the next page of artifact results
+	// The token that can be used to retrieve the next page of artifact results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// Root artifact directory for the run.
+	// The root artifact directory for the run.
 	RootUri types.String `tfsdk:"root_uri"`
 }
 
@@ -5601,6 +6717,145 @@ func (o *ListExperimentsResponse_SdkV2) SetExperiments(ctx context.Context, v []
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Experiments = types.ListValueMust(t, vs)
+}
+
+// List artifacts for a logged model
+type ListLoggedModelArtifactsRequest_SdkV2 struct {
+	// Filter artifacts matching this path (a relative path from the root
+	// artifact directory).
+	ArtifactDirectoryPath types.String `tfsdk:"-"`
+	// The ID of the logged model for which to list the artifacts.
+	ModelId types.String `tfsdk:"-"`
+	// Token indicating the page of artifact results to fetch. `page_token` is
+	// not supported when listing artifacts in UC Volumes. A maximum of 1000
+	// artifacts will be retrieved for UC Volumes. Please call
+	// `/api/2.0/fs/directories{directory_path}` for listing artifacts in UC
+	// Volumes, which supports pagination. See [List directory contents | Files
+	// API](/api/workspace/files/listdirectorycontents).
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListLoggedModelArtifactsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListLoggedModelArtifactsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListLoggedModelArtifactsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListLoggedModelArtifactsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"artifact_directory_path": o.ArtifactDirectoryPath,
+			"model_id":                o.ModelId,
+			"page_token":              o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListLoggedModelArtifactsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"artifact_directory_path": types.StringType,
+			"model_id":                types.StringType,
+			"page_token":              types.StringType,
+		},
+	}
+}
+
+type ListLoggedModelArtifactsResponse_SdkV2 struct {
+	// File location and metadata for artifacts.
+	Files types.List `tfsdk:"files"`
+	// Token that can be used to retrieve the next page of artifact results
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Root artifact directory for the logged model.
+	RootUri types.String `tfsdk:"root_uri"`
+}
+
+func (newState *ListLoggedModelArtifactsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListLoggedModelArtifactsResponse_SdkV2) {
+}
+
+func (newState *ListLoggedModelArtifactsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListLoggedModelArtifactsResponse_SdkV2) {
+}
+
+func (c ListLoggedModelArtifactsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["files"] = attrs["files"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["root_uri"] = attrs["root_uri"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListLoggedModelArtifactsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListLoggedModelArtifactsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"files": reflect.TypeOf(FileInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListLoggedModelArtifactsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListLoggedModelArtifactsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"files":           o.Files,
+			"next_page_token": o.NextPageToken,
+			"root_uri":        o.RootUri,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListLoggedModelArtifactsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"files": basetypes.ListType{
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+			"root_uri":        types.StringType,
+		},
+	}
+}
+
+// GetFiles returns the value of the Files field in ListLoggedModelArtifactsResponse_SdkV2 as
+// a slice of FileInfo_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListLoggedModelArtifactsResponse_SdkV2) GetFiles(ctx context.Context) ([]FileInfo_SdkV2, bool) {
+	if o.Files.IsNull() || o.Files.IsUnknown() {
+		return nil, false
+	}
+	var v []FileInfo_SdkV2
+	d := o.Files.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFiles sets the value of the Files field in ListLoggedModelArtifactsResponse_SdkV2.
+func (o *ListLoggedModelArtifactsResponse_SdkV2) SetFiles(ctx context.Context, v []FileInfo_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Files = types.ListValueMust(t, vs)
 }
 
 // List models
@@ -5854,6 +7109,18 @@ func (o ListTransitionRequestsRequest_SdkV2) Type(ctx context.Context) attr.Type
 type ListTransitionRequestsResponse_SdkV2 struct {
 	// Array of open transition requests.
 	Requests types.List `tfsdk:"requests"`
+}
+
+func (newState *ListTransitionRequestsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTransitionRequestsResponse_SdkV2) {
+}
+
+func (newState *ListTransitionRequestsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsResponse_SdkV2) {
+}
+
+func (c ListTransitionRequestsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["requests"] = attrs["requests"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTransitionRequestsResponse.
@@ -6193,6 +7460,8 @@ func (o LogBatchResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type LogInputs_SdkV2 struct {
 	// Dataset inputs
 	Datasets types.List `tfsdk:"datasets"`
+	// Model inputs
+	Models types.List `tfsdk:"models"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id"`
 }
@@ -6205,6 +7474,7 @@ func (newState *LogInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState Log
 
 func (c LogInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["models"] = attrs["models"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
@@ -6220,6 +7490,7 @@ func (c LogInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a LogInputs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"datasets": reflect.TypeOf(DatasetInput_SdkV2{}),
+		"models":   reflect.TypeOf(ModelInput_SdkV2{}),
 	}
 }
 
@@ -6231,6 +7502,7 @@ func (o LogInputs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"datasets": o.Datasets,
+			"models":   o.Models,
 			"run_id":   o.RunId,
 		})
 }
@@ -6241,6 +7513,9 @@ func (o LogInputs_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"datasets": basetypes.ListType{
 				ElemType: DatasetInput_SdkV2{}.Type(ctx),
+			},
+			"models": basetypes.ListType{
+				ElemType: ModelInput_SdkV2{}.Type(ctx),
 			},
 			"run_id": types.StringType,
 		},
@@ -6271,6 +7546,32 @@ func (o *LogInputs_SdkV2) SetDatasets(ctx context.Context, v []DatasetInput_SdkV
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Datasets = types.ListValueMust(t, vs)
+}
+
+// GetModels returns the value of the Models field in LogInputs_SdkV2 as
+// a slice of ModelInput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogInputs_SdkV2) GetModels(ctx context.Context) ([]ModelInput_SdkV2, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelInput_SdkV2
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in LogInputs_SdkV2.
+func (o *LogInputs_SdkV2) SetModels(ctx context.Context, v []ModelInput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
 }
 
 type LogInputsResponse_SdkV2 struct {
@@ -6314,9 +7615,142 @@ func (o LogInputsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type LogLoggedModelParamsRequest_SdkV2 struct {
+	// The ID of the logged model to log params for.
+	ModelId types.String `tfsdk:"-"`
+	// Parameters to attach to the model.
+	Params types.List `tfsdk:"params"`
+}
+
+func (newState *LogLoggedModelParamsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogLoggedModelParamsRequest_SdkV2) {
+}
+
+func (newState *LogLoggedModelParamsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogLoggedModelParamsRequest_SdkV2) {
+}
+
+func (c LogLoggedModelParamsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+	attrs["params"] = attrs["params"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LogLoggedModelParamsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LogLoggedModelParamsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"params": reflect.TypeOf(LoggedModelParameter_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LogLoggedModelParamsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LogLoggedModelParamsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+			"params":   o.Params,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LogLoggedModelParamsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+			"params": basetypes.ListType{
+				ElemType: LoggedModelParameter_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetParams returns the value of the Params field in LogLoggedModelParamsRequest_SdkV2 as
+// a slice of LoggedModelParameter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogLoggedModelParamsRequest_SdkV2) GetParams(ctx context.Context) ([]LoggedModelParameter_SdkV2, bool) {
+	if o.Params.IsNull() || o.Params.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelParameter_SdkV2
+	d := o.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in LogLoggedModelParamsRequest_SdkV2.
+func (o *LogLoggedModelParamsRequest_SdkV2) SetParams(ctx context.Context, v []LoggedModelParameter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Params = types.ListValueMust(t, vs)
+}
+
+type LogLoggedModelParamsRequestResponse_SdkV2 struct {
+}
+
+func (newState *LogLoggedModelParamsRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogLoggedModelParamsRequestResponse_SdkV2) {
+}
+
+func (newState *LogLoggedModelParamsRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogLoggedModelParamsRequestResponse_SdkV2) {
+}
+
+func (c LogLoggedModelParamsRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LogLoggedModelParamsRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LogLoggedModelParamsRequestResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LogLoggedModelParamsRequestResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LogLoggedModelParamsRequestResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LogLoggedModelParamsRequestResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type LogMetric_SdkV2 struct {
+	// Dataset digest of the dataset associated with the metric, e.g. an md5
+	// hash of the dataset that uniquely identifies it within datasets of the
+	// same name.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// The name of the dataset associated with the metric. E.g.
+	// “my.uc.table@2” “nyc-taxi-dataset”, “fantastic-elk-3”
+	DatasetName types.String `tfsdk:"dataset_name"`
 	// Name of the metric.
 	Key types.String `tfsdk:"key"`
+	// ID of the logged model associated with the metric, if applicable
+	ModelId types.String `tfsdk:"model_id"`
 	// ID of the run under which to log the metric. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use `run_id` instead] ID of the run under which to log the
@@ -6337,7 +7771,10 @@ func (newState *LogMetric_SdkV2) SyncEffectiveFieldsDuringRead(existingState Log
 }
 
 func (c LogMetric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
 	attrs["key"] = attrs["key"].SetRequired()
+	attrs["model_id"] = attrs["model_id"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["step"] = attrs["step"].SetOptional()
@@ -6365,12 +7802,15 @@ func (o LogMetric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":       o.Key,
-			"run_id":    o.RunId,
-			"run_uuid":  o.RunUuid,
-			"step":      o.Step,
-			"timestamp": o.Timestamp,
-			"value":     o.Value,
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+			"key":            o.Key,
+			"model_id":       o.ModelId,
+			"run_id":         o.RunId,
+			"run_uuid":       o.RunUuid,
+			"step":           o.Step,
+			"timestamp":      o.Timestamp,
+			"value":          o.Value,
 		})
 }
 
@@ -6378,12 +7818,15 @@ func (o LogMetric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o LogMetric_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":       types.StringType,
-			"run_id":    types.StringType,
-			"run_uuid":  types.StringType,
-			"step":      types.Int64Type,
-			"timestamp": types.Int64Type,
-			"value":     types.Float64Type,
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+			"key":            types.StringType,
+			"model_id":       types.StringType,
+			"run_id":         types.StringType,
+			"run_uuid":       types.StringType,
+			"step":           types.Int64Type,
+			"timestamp":      types.Int64Type,
+			"value":          types.Float64Type,
 		},
 	}
 }
@@ -6523,6 +7966,130 @@ func (o LogModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type LogOutputsRequest_SdkV2 struct {
+	// The model outputs from the Run.
+	Models types.List `tfsdk:"models"`
+	// The ID of the Run from which to log outputs.
+	RunId types.String `tfsdk:"run_id"`
+}
+
+func (newState *LogOutputsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogOutputsRequest_SdkV2) {
+}
+
+func (newState *LogOutputsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogOutputsRequest_SdkV2) {
+}
+
+func (c LogOutputsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["models"] = attrs["models"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LogOutputsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LogOutputsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"models": reflect.TypeOf(ModelOutput_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LogOutputsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LogOutputsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"models": o.Models,
+			"run_id": o.RunId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LogOutputsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"models": basetypes.ListType{
+				ElemType: ModelOutput_SdkV2{}.Type(ctx),
+			},
+			"run_id": types.StringType,
+		},
+	}
+}
+
+// GetModels returns the value of the Models field in LogOutputsRequest_SdkV2 as
+// a slice of ModelOutput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogOutputsRequest_SdkV2) GetModels(ctx context.Context) ([]ModelOutput_SdkV2, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelOutput_SdkV2
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in LogOutputsRequest_SdkV2.
+func (o *LogOutputsRequest_SdkV2) SetModels(ctx context.Context, v []ModelOutput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
+}
+
+type LogOutputsResponse_SdkV2 struct {
+}
+
+func (newState *LogOutputsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogOutputsResponse_SdkV2) {
+}
+
+func (newState *LogOutputsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogOutputsResponse_SdkV2) {
+}
+
+func (c LogOutputsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LogOutputsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LogOutputsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LogOutputsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LogOutputsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LogOutputsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type LogParam_SdkV2 struct {
 	// Name of the param. Maximum size is 255 bytes.
 	Key types.String `tfsdk:"key"`
@@ -6628,15 +8195,501 @@ func (o LogParamResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A logged model message includes logged model attributes, tags, registration
+// info, params, and linked run metrics.
+type LoggedModel_SdkV2 struct {
+	// The params and metrics attached to the logged model.
+	Data types.List `tfsdk:"data"`
+	// The logged model attributes such as model ID, status, tags, etc.
+	Info types.List `tfsdk:"info"`
+}
+
+func (newState *LoggedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LoggedModel_SdkV2) {
+}
+
+func (newState *LoggedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState LoggedModel_SdkV2) {
+}
+
+func (c LoggedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["data"] = attrs["data"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["info"] = attrs["info"].SetOptional()
+	attrs["info"] = attrs["info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LoggedModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LoggedModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data": reflect.TypeOf(LoggedModelData_SdkV2{}),
+		"info": reflect.TypeOf(LoggedModelInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LoggedModel_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LoggedModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data": o.Data,
+			"info": o.Info,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LoggedModel_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data": basetypes.ListType{
+				ElemType: LoggedModelData_SdkV2{}.Type(ctx),
+			},
+			"info": basetypes.ListType{
+				ElemType: LoggedModelInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetData returns the value of the Data field in LoggedModel_SdkV2 as
+// a LoggedModelData_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LoggedModel_SdkV2) GetData(ctx context.Context) (LoggedModelData_SdkV2, bool) {
+	var e LoggedModelData_SdkV2
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return e, false
+	}
+	var v []LoggedModelData_SdkV2
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetData sets the value of the Data field in LoggedModel_SdkV2.
+func (o *LoggedModel_SdkV2) SetData(ctx context.Context, v LoggedModelData_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	o.Data = types.ListValueMust(t, vs)
+}
+
+// GetInfo returns the value of the Info field in LoggedModel_SdkV2 as
+// a LoggedModelInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LoggedModel_SdkV2) GetInfo(ctx context.Context) (LoggedModelInfo_SdkV2, bool) {
+	var e LoggedModelInfo_SdkV2
+	if o.Info.IsNull() || o.Info.IsUnknown() {
+		return e, false
+	}
+	var v []LoggedModelInfo_SdkV2
+	d := o.Info.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInfo sets the value of the Info field in LoggedModel_SdkV2.
+func (o *LoggedModel_SdkV2) SetInfo(ctx context.Context, v LoggedModelInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["info"]
+	o.Info = types.ListValueMust(t, vs)
+}
+
+// A LoggedModelData message includes logged model params and linked metrics.
+type LoggedModelData_SdkV2 struct {
+	// Performance metrics linked to the model.
+	Metrics types.List `tfsdk:"metrics"`
+	// Immutable string key-value pairs of the model.
+	Params types.List `tfsdk:"params"`
+}
+
+func (newState *LoggedModelData_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LoggedModelData_SdkV2) {
+}
+
+func (newState *LoggedModelData_SdkV2) SyncEffectiveFieldsDuringRead(existingState LoggedModelData_SdkV2) {
+}
+
+func (c LoggedModelData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["params"] = attrs["params"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LoggedModelData.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LoggedModelData_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"metrics": reflect.TypeOf(Metric_SdkV2{}),
+		"params":  reflect.TypeOf(LoggedModelParameter_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LoggedModelData_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LoggedModelData_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"metrics": o.Metrics,
+			"params":  o.Params,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LoggedModelData_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"metrics": basetypes.ListType{
+				ElemType: Metric_SdkV2{}.Type(ctx),
+			},
+			"params": basetypes.ListType{
+				ElemType: LoggedModelParameter_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetMetrics returns the value of the Metrics field in LoggedModelData_SdkV2 as
+// a slice of Metric_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LoggedModelData_SdkV2) GetMetrics(ctx context.Context) ([]Metric_SdkV2, bool) {
+	if o.Metrics.IsNull() || o.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []Metric_SdkV2
+	d := o.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in LoggedModelData_SdkV2.
+func (o *LoggedModelData_SdkV2) SetMetrics(ctx context.Context, v []Metric_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Metrics = types.ListValueMust(t, vs)
+}
+
+// GetParams returns the value of the Params field in LoggedModelData_SdkV2 as
+// a slice of LoggedModelParameter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LoggedModelData_SdkV2) GetParams(ctx context.Context) ([]LoggedModelParameter_SdkV2, bool) {
+	if o.Params.IsNull() || o.Params.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelParameter_SdkV2
+	d := o.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in LoggedModelData_SdkV2.
+func (o *LoggedModelData_SdkV2) SetParams(ctx context.Context, v []LoggedModelParameter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Params = types.ListValueMust(t, vs)
+}
+
+// A LoggedModelInfo includes logged model attributes, tags, and registration
+// info.
+type LoggedModelInfo_SdkV2 struct {
+	// The URI of the directory where model artifacts are stored.
+	ArtifactUri types.String `tfsdk:"artifact_uri"`
+	// The timestamp when the model was created in milliseconds since the UNIX
+	// epoch.
+	CreationTimestampMs types.Int64 `tfsdk:"creation_timestamp_ms"`
+	// The ID of the user or principal that created the model.
+	CreatorId types.Int64 `tfsdk:"creator_id"`
+	// The ID of the experiment that owns the model.
+	ExperimentId types.String `tfsdk:"experiment_id"`
+	// The timestamp when the model was last updated in milliseconds since the
+	// UNIX epoch.
+	LastUpdatedTimestampMs types.Int64 `tfsdk:"last_updated_timestamp_ms"`
+	// The unique identifier for the logged model.
+	ModelId types.String `tfsdk:"model_id"`
+	// The type of model, such as ``"Agent"``, ``"Classifier"``, ``"LLM"``.
+	ModelType types.String `tfsdk:"model_type"`
+	// The name of the model.
+	Name types.String `tfsdk:"name"`
+	// The ID of the run that created the model.
+	SourceRunId types.String `tfsdk:"source_run_id"`
+	// The status of whether or not the model is ready for use.
+	Status types.String `tfsdk:"status"`
+	// Details on the current model status.
+	StatusMessage types.String `tfsdk:"status_message"`
+	// Mutable string key-value pairs set on the model.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *LoggedModelInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LoggedModelInfo_SdkV2) {
+}
+
+func (newState *LoggedModelInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState LoggedModelInfo_SdkV2) {
+}
+
+func (c LoggedModelInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifact_uri"] = attrs["artifact_uri"].SetOptional()
+	attrs["creation_timestamp_ms"] = attrs["creation_timestamp_ms"].SetOptional()
+	attrs["creator_id"] = attrs["creator_id"].SetOptional()
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["last_updated_timestamp_ms"] = attrs["last_updated_timestamp_ms"].SetOptional()
+	attrs["model_id"] = attrs["model_id"].SetOptional()
+	attrs["model_type"] = attrs["model_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["source_run_id"] = attrs["source_run_id"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LoggedModelInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LoggedModelInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tags": reflect.TypeOf(LoggedModelTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LoggedModelInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LoggedModelInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"artifact_uri":              o.ArtifactUri,
+			"creation_timestamp_ms":     o.CreationTimestampMs,
+			"creator_id":                o.CreatorId,
+			"experiment_id":             o.ExperimentId,
+			"last_updated_timestamp_ms": o.LastUpdatedTimestampMs,
+			"model_id":                  o.ModelId,
+			"model_type":                o.ModelType,
+			"name":                      o.Name,
+			"source_run_id":             o.SourceRunId,
+			"status":                    o.Status,
+			"status_message":            o.StatusMessage,
+			"tags":                      o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LoggedModelInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"artifact_uri":              types.StringType,
+			"creation_timestamp_ms":     types.Int64Type,
+			"creator_id":                types.Int64Type,
+			"experiment_id":             types.StringType,
+			"last_updated_timestamp_ms": types.Int64Type,
+			"model_id":                  types.StringType,
+			"model_type":                types.StringType,
+			"name":                      types.StringType,
+			"source_run_id":             types.StringType,
+			"status":                    types.StringType,
+			"status_message":            types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: LoggedModelTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTags returns the value of the Tags field in LoggedModelInfo_SdkV2 as
+// a slice of LoggedModelTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LoggedModelInfo_SdkV2) GetTags(ctx context.Context) ([]LoggedModelTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in LoggedModelInfo_SdkV2.
+func (o *LoggedModelInfo_SdkV2) SetTags(ctx context.Context, v []LoggedModelTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+// Parameter associated with a LoggedModel.
+type LoggedModelParameter_SdkV2 struct {
+	// The key identifying this param.
+	Key types.String `tfsdk:"key"`
+	// The value of this param.
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *LoggedModelParameter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LoggedModelParameter_SdkV2) {
+}
+
+func (newState *LoggedModelParameter_SdkV2) SyncEffectiveFieldsDuringRead(existingState LoggedModelParameter_SdkV2) {
+}
+
+func (c LoggedModelParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LoggedModelParameter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LoggedModelParameter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LoggedModelParameter_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LoggedModelParameter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LoggedModelParameter_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
+// Tag for a LoggedModel.
+type LoggedModelTag_SdkV2 struct {
+	// The tag key.
+	Key types.String `tfsdk:"key"`
+	// The tag value.
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *LoggedModelTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LoggedModelTag_SdkV2) {
+}
+
+func (newState *LoggedModelTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState LoggedModelTag_SdkV2) {
+}
+
+func (c LoggedModelTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LoggedModelTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LoggedModelTag_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LoggedModelTag_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LoggedModelTag_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
 // Metric associated with a run, represented as a key-value pair.
 type Metric_SdkV2 struct {
-	// Key identifying this metric.
+	// The dataset digest of the dataset associated with the metric, e.g. an md5
+	// hash of the dataset that uniquely identifies it within datasets of the
+	// same name.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// The name of the dataset associated with the metric. E.g.
+	// “my.uc.table@2” “nyc-taxi-dataset”, “fantastic-elk-3”
+	DatasetName types.String `tfsdk:"dataset_name"`
+	// The key identifying the metric.
 	Key types.String `tfsdk:"key"`
-	// Step at which to log the metric.
+	// The ID of the logged model or registered model version associated with
+	// the metric, if applicable.
+	ModelId types.String `tfsdk:"model_id"`
+	// The ID of the run containing the metric.
+	RunId types.String `tfsdk:"run_id"`
+	// The step at which the metric was logged.
 	Step types.Int64 `tfsdk:"step"`
-	// The timestamp at which this metric was recorded.
+	// The timestamp at which the metric was recorded.
 	Timestamp types.Int64 `tfsdk:"timestamp"`
-	// Value associated with this metric.
+	// The value of the metric.
 	Value types.Float64 `tfsdk:"value"`
 }
 
@@ -6647,7 +8700,11 @@ func (newState *Metric_SdkV2) SyncEffectiveFieldsDuringRead(existingState Metric
 }
 
 func (c Metric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
 	attrs["key"] = attrs["key"].SetOptional()
+	attrs["model_id"] = attrs["model_id"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["step"] = attrs["step"].SetOptional()
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
@@ -6673,10 +8730,14 @@ func (o Metric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":       o.Key,
-			"step":      o.Step,
-			"timestamp": o.Timestamp,
-			"value":     o.Value,
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+			"key":            o.Key,
+			"model_id":       o.ModelId,
+			"run_id":         o.RunId,
+			"step":           o.Step,
+			"timestamp":      o.Timestamp,
+			"value":          o.Value,
 		})
 }
 
@@ -6684,10 +8745,14 @@ func (o Metric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Metric_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":       types.StringType,
-			"step":      types.Int64Type,
-			"timestamp": types.Int64Type,
-			"value":     types.Float64Type,
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+			"key":            types.StringType,
+			"model_id":       types.StringType,
+			"run_id":         types.StringType,
+			"step":           types.Int64Type,
+			"timestamp":      types.Int64Type,
+			"value":          types.Float64Type,
 		},
 	}
 }
@@ -6977,6 +9042,109 @@ func (o *ModelDatabricks_SdkV2) SetTags(ctx context.Context, v []ModelTag_SdkV2)
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
+}
+
+// Represents a LoggedModel or Registered Model Version input to a Run.
+type ModelInput_SdkV2 struct {
+	// The unique identifier of the model.
+	ModelId types.String `tfsdk:"model_id"`
+}
+
+func (newState *ModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelInput_SdkV2) {
+}
+
+func (newState *ModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelInput_SdkV2) {
+}
+
+func (c ModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelInput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelInput_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ModelInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelInput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+		},
+	}
+}
+
+// Represents a LoggedModel output of a Run.
+type ModelOutput_SdkV2 struct {
+	// The unique identifier of the model.
+	ModelId types.String `tfsdk:"model_id"`
+	// The step at which the model was produced.
+	Step types.Int64 `tfsdk:"step"`
+}
+
+func (newState *ModelOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelOutput_SdkV2) {
+}
+
+func (newState *ModelOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelOutput_SdkV2) {
+}
+
+func (c ModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+	attrs["step"] = attrs["step"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelOutput_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ModelOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+			"step":     o.Step,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelOutput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+			"step":     types.Int64Type,
+		},
+	}
 }
 
 type ModelTag_SdkV2 struct {
@@ -8205,6 +10373,19 @@ type RejectTransitionRequestResponse_SdkV2 struct {
 	Activity types.List `tfsdk:"activity"`
 }
 
+func (newState *RejectTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *RejectTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequestResponse_SdkV2) {
+}
+
+func (c RejectTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity"] = attrs["activity"].SetOptional()
+	attrs["activity"] = attrs["activity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RejectTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9085,6 +11266,11 @@ func (o RunInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type RunInputs_SdkV2 struct {
 	// Run metrics.
 	DatasetInputs types.List `tfsdk:"dataset_inputs"`
+	// **NOTE**: Experimental: This API field may change or be removed in a
+	// future release without warning.
+	//
+	// Model inputs to the Run.
+	ModelInputs types.List `tfsdk:"model_inputs"`
 }
 
 func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInputs_SdkV2) {
@@ -9095,6 +11281,7 @@ func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState Run
 
 func (c RunInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dataset_inputs"] = attrs["dataset_inputs"].SetOptional()
+	attrs["model_inputs"] = attrs["model_inputs"].SetOptional()
 
 	return attrs
 }
@@ -9109,6 +11296,7 @@ func (c RunInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a RunInputs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dataset_inputs": reflect.TypeOf(DatasetInput_SdkV2{}),
+		"model_inputs":   reflect.TypeOf(ModelInput_SdkV2{}),
 	}
 }
 
@@ -9120,6 +11308,7 @@ func (o RunInputs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dataset_inputs": o.DatasetInputs,
+			"model_inputs":   o.ModelInputs,
 		})
 }
 
@@ -9129,6 +11318,9 @@ func (o RunInputs_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dataset_inputs": basetypes.ListType{
 				ElemType: DatasetInput_SdkV2{}.Type(ctx),
+			},
+			"model_inputs": basetypes.ListType{
+				ElemType: ModelInput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9158,6 +11350,32 @@ func (o *RunInputs_SdkV2) SetDatasetInputs(ctx context.Context, v []DatasetInput
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataset_inputs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DatasetInputs = types.ListValueMust(t, vs)
+}
+
+// GetModelInputs returns the value of the ModelInputs field in RunInputs_SdkV2 as
+// a slice of ModelInput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunInputs_SdkV2) GetModelInputs(ctx context.Context) ([]ModelInput_SdkV2, bool) {
+	if o.ModelInputs.IsNull() || o.ModelInputs.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelInput_SdkV2
+	d := o.ModelInputs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelInputs sets the value of the ModelInputs field in RunInputs_SdkV2.
+func (o *RunInputs_SdkV2) SetModelInputs(ctx context.Context, v []ModelInput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_inputs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ModelInputs = types.ListValueMust(t, vs)
 }
 
 // Tag for a run.
@@ -9399,6 +11617,382 @@ func (o *SearchExperimentsResponse_SdkV2) SetExperiments(ctx context.Context, v 
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Experiments = types.ListValueMust(t, vs)
+}
+
+type SearchLoggedModelsDataset_SdkV2 struct {
+	// The digest of the dataset.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// The name of the dataset.
+	DatasetName types.String `tfsdk:"dataset_name"`
+}
+
+func (newState *SearchLoggedModelsDataset_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchLoggedModelsDataset_SdkV2) {
+}
+
+func (newState *SearchLoggedModelsDataset_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchLoggedModelsDataset_SdkV2) {
+}
+
+func (c SearchLoggedModelsDataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchLoggedModelsDataset.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SearchLoggedModelsDataset_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchLoggedModelsDataset_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SearchLoggedModelsDataset_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SearchLoggedModelsDataset_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+		},
+	}
+}
+
+type SearchLoggedModelsOrderBy_SdkV2 struct {
+	// Whether the search results order is ascending or not.
+	Ascending types.Bool `tfsdk:"ascending"`
+	// If ``field_name`` refers to a metric, this field specifies the digest of
+	// the dataset associated with the metric. Only metrics associated with the
+	// specified dataset name and digest will be considered for ordering. This
+	// field may only be set if ``dataset_name`` is also set.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// If ``field_name`` refers to a metric, this field specifies the name of
+	// the dataset associated with the metric. Only metrics associated with the
+	// specified dataset name will be considered for ordering. This field may
+	// only be set if ``field_name`` refers to a metric.
+	DatasetName types.String `tfsdk:"dataset_name"`
+	// The name of the field to order by, e.g. "metrics.accuracy".
+	FieldName types.String `tfsdk:"field_name"`
+}
+
+func (newState *SearchLoggedModelsOrderBy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchLoggedModelsOrderBy_SdkV2) {
+}
+
+func (newState *SearchLoggedModelsOrderBy_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchLoggedModelsOrderBy_SdkV2) {
+}
+
+func (c SearchLoggedModelsOrderBy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ascending"] = attrs["ascending"].SetOptional()
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
+	attrs["field_name"] = attrs["field_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchLoggedModelsOrderBy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SearchLoggedModelsOrderBy_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchLoggedModelsOrderBy_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SearchLoggedModelsOrderBy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ascending":      o.Ascending,
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+			"field_name":     o.FieldName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SearchLoggedModelsOrderBy_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ascending":      types.BoolType,
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+			"field_name":     types.StringType,
+		},
+	}
+}
+
+type SearchLoggedModelsRequest_SdkV2 struct {
+	// List of datasets on which to apply the metrics filter clauses. For
+	// example, a filter with `metrics.accuracy > 0.9` and dataset info with
+	// name "test_dataset" means we will return all logged models with accuracy
+	// > 0.9 on the test_dataset. Metric values from ANY dataset matching the
+	// criteria are considered. If no datasets are specified, then metrics
+	// across all datasets are considered in the filter.
+	Datasets types.List `tfsdk:"datasets"`
+	// The IDs of the experiments in which to search for logged models.
+	ExperimentIds types.List `tfsdk:"experiment_ids"`
+	// A filter expression over logged model info and data that allows returning
+	// a subset of logged models. The syntax is a subset of SQL that supports
+	// AND'ing together binary operations.
+	//
+	// Example: ``params.alpha < 0.3 AND metrics.accuracy > 0.9``.
+	Filter types.String `tfsdk:"filter"`
+	// The maximum number of Logged Models to return. The maximum limit is 50.
+	MaxResults types.Int64 `tfsdk:"max_results"`
+	// The list of columns for ordering the results, with additional fields for
+	// sorting criteria.
+	OrderBy types.List `tfsdk:"order_by"`
+	// The token indicating the page of logged models to fetch.
+	PageToken types.String `tfsdk:"page_token"`
+}
+
+func (newState *SearchLoggedModelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchLoggedModelsRequest_SdkV2) {
+}
+
+func (newState *SearchLoggedModelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchLoggedModelsRequest_SdkV2) {
+}
+
+func (c SearchLoggedModelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["experiment_ids"] = attrs["experiment_ids"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchLoggedModelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SearchLoggedModelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"datasets":       reflect.TypeOf(SearchLoggedModelsDataset_SdkV2{}),
+		"experiment_ids": reflect.TypeOf(types.String{}),
+		"order_by":       reflect.TypeOf(SearchLoggedModelsOrderBy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchLoggedModelsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SearchLoggedModelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"datasets":       o.Datasets,
+			"experiment_ids": o.ExperimentIds,
+			"filter":         o.Filter,
+			"max_results":    o.MaxResults,
+			"order_by":       o.OrderBy,
+			"page_token":     o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SearchLoggedModelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"datasets": basetypes.ListType{
+				ElemType: SearchLoggedModelsDataset_SdkV2{}.Type(ctx),
+			},
+			"experiment_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"filter":      types.StringType,
+			"max_results": types.Int64Type,
+			"order_by": basetypes.ListType{
+				ElemType: SearchLoggedModelsOrderBy_SdkV2{}.Type(ctx),
+			},
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// GetDatasets returns the value of the Datasets field in SearchLoggedModelsRequest_SdkV2 as
+// a slice of SearchLoggedModelsDataset_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchLoggedModelsRequest_SdkV2) GetDatasets(ctx context.Context) ([]SearchLoggedModelsDataset_SdkV2, bool) {
+	if o.Datasets.IsNull() || o.Datasets.IsUnknown() {
+		return nil, false
+	}
+	var v []SearchLoggedModelsDataset_SdkV2
+	d := o.Datasets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatasets sets the value of the Datasets field in SearchLoggedModelsRequest_SdkV2.
+func (o *SearchLoggedModelsRequest_SdkV2) SetDatasets(ctx context.Context, v []SearchLoggedModelsDataset_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Datasets = types.ListValueMust(t, vs)
+}
+
+// GetExperimentIds returns the value of the ExperimentIds field in SearchLoggedModelsRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchLoggedModelsRequest_SdkV2) GetExperimentIds(ctx context.Context) ([]types.String, bool) {
+	if o.ExperimentIds.IsNull() || o.ExperimentIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExperimentIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExperimentIds sets the value of the ExperimentIds field in SearchLoggedModelsRequest_SdkV2.
+func (o *SearchLoggedModelsRequest_SdkV2) SetExperimentIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExperimentIds = types.ListValueMust(t, vs)
+}
+
+// GetOrderBy returns the value of the OrderBy field in SearchLoggedModelsRequest_SdkV2 as
+// a slice of SearchLoggedModelsOrderBy_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchLoggedModelsRequest_SdkV2) GetOrderBy(ctx context.Context) ([]SearchLoggedModelsOrderBy_SdkV2, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []SearchLoggedModelsOrderBy_SdkV2
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in SearchLoggedModelsRequest_SdkV2.
+func (o *SearchLoggedModelsRequest_SdkV2) SetOrderBy(ctx context.Context, v []SearchLoggedModelsOrderBy_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
+type SearchLoggedModelsResponse_SdkV2 struct {
+	// Logged models that match the search criteria.
+	Models types.List `tfsdk:"models"`
+	// The token that can be used to retrieve the next page of logged models.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *SearchLoggedModelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchLoggedModelsResponse_SdkV2) {
+}
+
+func (newState *SearchLoggedModelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchLoggedModelsResponse_SdkV2) {
+}
+
+func (c SearchLoggedModelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["models"] = attrs["models"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchLoggedModelsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SearchLoggedModelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"models": reflect.TypeOf(LoggedModel_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchLoggedModelsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SearchLoggedModelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"models":          o.Models,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SearchLoggedModelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"models": basetypes.ListType{
+				ElemType: LoggedModel_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetModels returns the value of the Models field in SearchLoggedModelsResponse_SdkV2 as
+// a slice of LoggedModel_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchLoggedModelsResponse_SdkV2) GetModels(ctx context.Context) ([]LoggedModel_SdkV2, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModel_SdkV2
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in SearchLoggedModelsResponse_SdkV2.
+func (o *SearchLoggedModelsResponse_SdkV2) SetModels(ctx context.Context, v []LoggedModel_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
 }
 
 // Searches model versions
@@ -10066,6 +12660,130 @@ func (o SetExperimentTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SetLoggedModelTagsRequest_SdkV2 struct {
+	// The ID of the logged model to set the tags on.
+	ModelId types.String `tfsdk:"-"`
+	// The tags to set on the logged model.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *SetLoggedModelTagsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetLoggedModelTagsRequest_SdkV2) {
+}
+
+func (newState *SetLoggedModelTagsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetLoggedModelTagsRequest_SdkV2) {
+}
+
+func (c SetLoggedModelTagsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SetLoggedModelTagsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SetLoggedModelTagsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tags": reflect.TypeOf(LoggedModelTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SetLoggedModelTagsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SetLoggedModelTagsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+			"tags":     o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SetLoggedModelTagsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: LoggedModelTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTags returns the value of the Tags field in SetLoggedModelTagsRequest_SdkV2 as
+// a slice of LoggedModelTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetLoggedModelTagsRequest_SdkV2) GetTags(ctx context.Context) ([]LoggedModelTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModelTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in SetLoggedModelTagsRequest_SdkV2.
+func (o *SetLoggedModelTagsRequest_SdkV2) SetTags(ctx context.Context, v []LoggedModelTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+type SetLoggedModelTagsResponse_SdkV2 struct {
+}
+
+func (newState *SetLoggedModelTagsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetLoggedModelTagsResponse_SdkV2) {
+}
+
+func (newState *SetLoggedModelTagsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetLoggedModelTagsResponse_SdkV2) {
+}
+
+func (c SetLoggedModelTagsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SetLoggedModelTagsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SetLoggedModelTagsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SetLoggedModelTagsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SetLoggedModelTagsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SetLoggedModelTagsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type SetModelTagRequest_SdkV2 struct {
 	// Name of the tag. Maximum size depends on storage backend. If a tag with
 	// this name already exists, its preexisting value will be replaced by the
@@ -10499,6 +13217,19 @@ type TestRegistryWebhookResponse_SdkV2 struct {
 	Webhook types.List `tfsdk:"webhook"`
 }
 
+func (newState *TestRegistryWebhookResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookResponse_SdkV2) {
+}
+
+func (newState *TestRegistryWebhookResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookResponse_SdkV2) {
+}
+
+func (c TestRegistryWebhookResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["webhook"] = attrs["webhook"].SetOptional()
+	attrs["webhook"] = attrs["webhook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhookResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10749,6 +13480,19 @@ type TransitionStageResponse_SdkV2 struct {
 	ModelVersion types.List `tfsdk:"model_version"`
 }
 
+func (newState *TransitionStageResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionStageResponse_SdkV2) {
+}
+
+func (newState *TransitionStageResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransitionStageResponse_SdkV2) {
+}
+
+func (c TransitionStageResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionStageResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10866,6 +13610,19 @@ func (o UpdateComment_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateCommentResponse_SdkV2 struct {
 	// Comment details.
 	Comment types.List `tfsdk:"comment"`
+}
+
+func (newState *UpdateCommentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCommentResponse_SdkV2) {
+}
+
+func (newState *UpdateCommentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCommentResponse_SdkV2) {
+}
+
+func (c UpdateCommentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["comment"] = attrs["comment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCommentResponse.

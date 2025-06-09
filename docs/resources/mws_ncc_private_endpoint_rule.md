@@ -3,11 +3,11 @@ subcategory: "Deployment"
 ---
 # databricks_mws_ncc_private_endpoint_rule Resource
 
--> Initialize provider with `alias = "account"`, `host = "https://accounts.azuredatabricks.net"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
+Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
+
+-> This resource can only be used with an account-level provider!
 
 -> This feature is only available in Azure.
-
-Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 
 ## Example Usage
 
@@ -58,8 +58,17 @@ The possible values are:
 
 This resource can be imported by Databricks account ID and Network Connectivity Config ID.
 
+```hcl
+import {
+  to = databricks_mws_ncc_private_endpoint_rule.this
+  id = "<network_connectivity_config_id>/<rule_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```sh
-terraform import databricks_mws_ncc_private_endpoint_rule.rule <network_connectivity_config_id>/<rule_id>
+terraform import databricks_mws_ncc_private_endpoint_rule.this "<network_connectivity_config_id>/<rule_id>"
 ```
 
 ## Related Resources

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -104,6 +105,8 @@ type Workspace struct {
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
+	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
+	EffectiveComputeMode                string                   `json:"effective_compute_mode" tf:"computed"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -140,6 +143,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	if w.StorageCustomerManagedKeyID != "" {
 		workspaceCreationRequest["storage_customer_managed_key_id"] = w.StorageCustomerManagedKeyID
+	}
+	if w.ComputeMode != "" {
+		workspaceCreationRequest["compute_mode"] = w.ComputeMode
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -314,6 +320,10 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
 	}
+	// Set the effective compute mode to the compute mode
+	mwsWorkspace.EffectiveComputeMode = mwsWorkspace.ComputeMode
+	mwsWorkspace.ComputeMode = ""
+
 	return mwsWorkspace, err
 }
 
@@ -546,23 +556,13 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "compute_mode").SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"SERVERLESS"}, false)))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
 		})
-	requireFields := func(onThisCloud bool, d *schema.ResourceData, fields ...string) error {
-		if !onThisCloud {
-			return nil
-		}
-		for _, fieldName := range fields {
-			if d.Get(fieldName) == workspaceSchema[fieldName].ZeroValue() {
-				return fmt.Errorf("%s is required", fieldName)
-			}
-		}
-		return nil
-	}
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 3,
@@ -577,11 +577,22 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
-				return err
-			}
-			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
-				return err
+			if c.IsAws() {
+				if _, ok := d.GetOk("aws_region"); !ok {
+					return fmt.Errorf("aws_region is required for AWS workspaces")
+				}
+				if d.Get("compute_mode") != "SERVERLESS" {
+					if _, ok := d.GetOk("credentials_id"); !ok {
+						return fmt.Errorf("credentials_id is required for non-serverless workspaces")
+					}
+					if _, ok := d.GetOk("storage_configuration_id"); !ok {
+						return fmt.Errorf("storage_configuration_id is required for non-serverless workspaces")
+					}
+				}
+			} else if c.IsGcp() {
+				if _, ok := d.GetOk("location"); !ok {
+					return fmt.Errorf("location is required for GCP workspaces")
+				}
 			}
 			if !c.IsAws() && workspace.CustomTags != nil {
 				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")

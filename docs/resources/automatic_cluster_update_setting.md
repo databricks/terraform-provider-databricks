@@ -4,11 +4,11 @@ subcategory: "Settings"
 
 # databricks_automatic_cluster_update_workspace_setting Resource
 
--> This resource can only be used with a workspace-level provider!
+The `databricks_automatic_cluster_update_workspace_setting` resource allows you to control whether automatic cluster update is enabled for the current workspace. By default, it is turned off. Enabling this feature on a workspace requires that you add the Enhanced Security and Compliance add-on.
 
 ~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace#automatic_cluster_update_enabled-1) resource to configure this setting.
 
-The `databricks_automatic_cluster_update_workspace_setting` resource allows you to control whether automatic cluster update is enabled for the current workspace. By default, it is turned off. Enabling this feature on a workspace requires that you add the Enhanced Security and Compliance add-on.
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 

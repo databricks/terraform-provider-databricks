@@ -52,16 +52,23 @@ func ResourceAccessControlRuleSet() common.Resource {
 		}
 		return workspaceClient.AccountAccessControlProxy.UpdateRuleSet(ctx, updateRuleSetReq)
 	}
-	fetchLatestEtagAndUpdateRuleSet := func(ctx context.Context, c *common.DatabricksClient,
-		ruleSetUpdateReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
+	fetchLatestEtag := func(ctx context.Context, c *common.DatabricksClient, name string) (string, error) {
 		ruleSetGetRes, err := readFromWsOrAcc(ctx, c, iam.GetRuleSetRequest{
-			Name: ruleSetUpdateReq.Name,
+			Name: name,
 			Etag: "",
 		})
 		if err != nil {
+			return "", err
+		}
+		return ruleSetGetRes.Etag, nil
+	}
+	updateRuleSet := func(ctx context.Context, c *common.DatabricksClient,
+		ruleSetUpdateReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
+		latestEtag, err := fetchLatestEtag(ctx, c, ruleSetUpdateReq.Name)
+		if err != nil {
 			return nil, err
 		}
-		ruleSetUpdateReq.RuleSet.Etag = ruleSetGetRes.Etag
+		ruleSetUpdateReq.RuleSet.Etag = latestEtag
 		ruleSetUpdateRes, err := updateThroughWsOrAcc(ctx, c, ruleSetUpdateReq)
 		if err != nil {
 			return nil, err
@@ -79,7 +86,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			if aerr.StatusCode == http.StatusConflict {
 				if aerr.ErrorCode == "RESOURCE_CONFLICT" {
 					// we need to get and update
-					etag, err := fetchLatestEtagAndUpdateRuleSet(ctx, c, ruleSetUpdateReq)
+					etag, err := updateRuleSet(ctx, c, ruleSetUpdateReq)
 					return etag, err
 				}
 			}
@@ -96,10 +103,12 @@ func ResourceAccessControlRuleSet() common.Resource {
 			var ruleSetUpdateReq iam.UpdateRuleSetRequest
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
-			response, err := fetchLatestEtagAndUpdateRuleSet(ctx, c, ruleSetUpdateReq)
+			response, err := updateRuleSet(ctx, c, ruleSetUpdateReq)
 			if err != nil {
 				return err
 			}
+			// Store empty etag in state as we will always use the latest etag
+			response.Etag = ""
 			err = common.StructToData(response, s, d)
 			if err != nil {
 				return err
@@ -110,22 +119,32 @@ func ResourceAccessControlRuleSet() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			data, err := readFromWsOrAcc(ctx, c, iam.GetRuleSetRequest{
 				Name: d.Id(),
-				Etag: d.Get("etag").(string),
+				Etag: "",
 			})
 			if err != nil {
 				return err
 			}
+			// Store empty etag in state as we will always use the latest etag
+			data.Etag = ""
 			return common.StructToData(data, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// Fetch the latest Etag
+			latestEtag, err := fetchLatestEtag(ctx, c, d.Id())
+			if err != nil {
+				return err
+			}
+
 			var ruleSetUpdateReq iam.UpdateRuleSetRequest
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
-			// etag should already be present
+			ruleSetUpdateReq.RuleSet.Etag = latestEtag
 			response, err := handleConflictAndUpdate(ctx, c, ruleSetUpdateReq)
 			if err != nil {
 				return err
 			}
+			// Storing empty etag in state as we will always use the latest etag
+			response.Etag = ""
 			err = common.StructToData(response, s, d)
 			if err != nil {
 				return err
@@ -134,12 +153,18 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// Fetch the latest Etag
+			latestEtag, err := fetchLatestEtag(ctx, c, d.Id())
+			if err != nil {
+				return err
+			}
+
 			// we remove all grant rules. Account admins will still be able to update rule set
-			_, err := handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
+			_, err = handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
 				Name: d.Id(),
 				RuleSet: iam.RuleSetUpdateRequest{
 					Name: d.Id(),
-					Etag: d.Get("etag").(string),
+					Etag: latestEtag,
 				},
 			})
 			if err != nil {

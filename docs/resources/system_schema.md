@@ -3,13 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_system_schema Resource
 
--> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account's operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
 -> This resource can only be used with a workspace-level provider!
 
--> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.
-
-Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
+-> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.  Certain schemas can't also be disabled completely.
 
 ## Example Usage
 
@@ -37,7 +35,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by the metastore id and schema name
+This resource can be imported by the metastore id and schema name:
+
+```hcl
+import {
+  to = databricks_system_schema.this
+  id = "<metastore_id>|<schema_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_system_schema.this '<metastore_id>|<schema_name>'

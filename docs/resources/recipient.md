@@ -117,10 +117,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The recipient resource can be imported using the name of the recipient.
+The recipient resource can be imported using the name of the recipient:
+
+```hcl
+import {
+  to = databricks_recipient.this
+  id = "<recipient_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_recipient.this <recipient_name>
+terraform import databricks_recipient.this "<recipient_name>"
 ```
 
 ## Related Resources

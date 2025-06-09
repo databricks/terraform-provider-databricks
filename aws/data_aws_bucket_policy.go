@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,11 +87,9 @@ func DataAwsBucketPolicy() common.Resource {
 				Optional: true,
 			},
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
-					"must contain only alphanumeric, underscore, and hyphen characters"),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(AwsBucketNameRegex, AwsBucketNameRegexError),
 			},
 			"json": {
 				Type:     schema.TypeString,

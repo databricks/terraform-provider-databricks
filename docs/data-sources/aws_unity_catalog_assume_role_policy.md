@@ -3,9 +3,11 @@ subcategory: "Deployment"
 ---
 # databricks_aws_unity_catalog_assume_role_policy Data Source
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
-
 This data source constructs the necessary AWS Unity Catalog assume role policy for you.
+
+-> This data source can be used with an account or workspace-level provider.
+
+-> This data source has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
 ## Example Usage
 
@@ -31,7 +33,11 @@ resource "aws_iam_policy" "unity_metastore" {
 resource "aws_iam_role" "metastore_data_access" {
   name                = "${var.prefix}-uc-access"
   assume_role_policy  = data.databricks_aws_unity_catalog_assume_role_policy.this.json
-  managed_policy_arns = [aws_iam_policy.unity_metastore.arn]
+}
+
+resource "aws_iam_role_policy_attachment" "metastore_data_access" {
+  role       = aws_iam_role.metastore_data_access.name
+  policy_arn = aws_iam_policy.unity_metastore.arn
 }
 ```
 

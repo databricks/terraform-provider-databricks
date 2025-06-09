@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"golang.org/x/exp/maps"
 )
@@ -45,7 +46,21 @@ func searchGroup(ic *importContext, r *resource) error {
 
 func importGroup(ic *importContext, r *resource) error {
 	groupName := r.Data.Get("display_name").(string)
-	if (!ic.accountLevel && (groupName == "admins" || groupName == "users")) ||
+	if err := ic.cacheGroups(); err != nil {
+		return err
+	}
+	var group *scim.Group
+	for _, g := range ic.allGroups {
+		if r.ID == g.ID {
+			group = &g
+			break
+		}
+	}
+	if group == nil {
+		return fmt.Errorf("group %s not found", r.ID)
+	}
+	isAccountLevelGroup := ic.currentMetastore != nil && group.Meta != nil && group.Meta.ResourceType == "Group"
+	if (!ic.accountLevel && (isAccountLevelGroup || groupName == "admins" || groupName == "users")) ||
 		(ic.accountLevel && groupName == "account users") {
 		// Workspace admins & users or Account users are to be imported through "data block"
 		r.Mode = "data"
@@ -62,50 +77,46 @@ func importGroup(ic *importContext, r *resource) error {
 	} else if r.Data != nil {
 		r.Data.Set("force", true)
 	}
-	if err := ic.cacheGroups(); err != nil {
-		return err
+	// process group data
+	ic.emitRoles("group", group.ID, group.Roles)
+	builtInUserGroup := (ic.accountLevel && group.DisplayName == "account users") || (!ic.accountLevel && group.DisplayName == "users")
+	if builtInUserGroup && !ic.importAllUsers {
+		log.Printf("[INFO] Skipping import of entire user directory ...")
+		return nil
 	}
-	for _, g := range ic.allGroups {
-		if r.ID != g.ID {
-			continue
+	// process group members only if they are on account level or is not an account level group
+	if ic.accountLevel || !isAccountLevelGroup {
+		if len(group.Members) > 10 {
+			log.Printf("[INFO] Importing %d members of %s", len(group.Members), group.DisplayName)
 		}
-		ic.emitRoles("group", g.ID, g.Roles)
-		builtInUserGroup := (ic.accountLevel && g.DisplayName == "account users") || (!ic.accountLevel && g.DisplayName == "users")
-		if builtInUserGroup && !ic.importAllUsers {
-			log.Printf("[INFO] Skipping import of entire user directory ...")
-			continue
-		}
-		if len(g.Members) > 10 {
-			log.Printf("[INFO] Importing %d members of %s", len(g.Members), g.DisplayName)
-		}
-		for _, parent := range g.Groups {
+		for _, parent := range group.Groups {
 			ic.Emit(&resource{
 				Resource: "databricks_group",
 				ID:       parent.Value,
 			})
 			if parent.Type == "direct" {
-				id := fmt.Sprintf("%s|%s", parent.Value, g.ID)
+				id := fmt.Sprintf("%s|%s", parent.Value, group.ID)
 				ic.Emit(&resource{
 					Resource: "databricks_group_member",
 					ID:       id,
-					Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName),
-					Data:     ic.makeGroupMemberData(id, parent.Value, g.ID),
+					Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, group.DisplayName),
+					Data:     ic.makeGroupMemberData(id, parent.Value, group.ID),
 				})
 			}
 		}
-		for i, x := range g.Members {
+		for i, x := range group.Members {
 			if strings.HasPrefix(x.Ref, "Users/") {
 				ic.Emit(&resource{
 					Resource: "databricks_user",
 					ID:       x.Value,
 				})
 				if !builtInUserGroup {
-					id := fmt.Sprintf("%s|%s", g.ID, x.Value)
+					id := fmt.Sprintf("%s|%s", group.ID, x.Value)
 					ic.Emit(&resource{
 						Resource: "databricks_group_member",
 						ID:       id,
-						Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
-						Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
+						Name:     fmt.Sprintf("%s_%s_%s_%s", group.DisplayName, group.ID, x.Display, x.Value),
+						Data:     ic.makeGroupMemberData(id, group.ID, x.Value),
 					})
 				}
 			}
@@ -115,12 +126,12 @@ func importGroup(ic *importContext, r *resource) error {
 					ID:       x.Value,
 				})
 				if !builtInUserGroup {
-					id := fmt.Sprintf("%s|%s", g.ID, x.Value)
+					id := fmt.Sprintf("%s|%s", group.ID, x.Value)
 					ic.Emit(&resource{
 						Resource: "databricks_group_member",
 						ID:       id,
-						Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
-						Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
+						Name:     fmt.Sprintf("%s_%s_%s_%s", group.DisplayName, group.ID, x.Display, x.Value),
+						Data:     ic.makeGroupMemberData(id, group.ID, x.Value),
 					})
 				}
 			}
@@ -130,20 +141,21 @@ func importGroup(ic *importContext, r *resource) error {
 					ID:       x.Value,
 				})
 				if !builtInUserGroup {
-					id := fmt.Sprintf("%s|%s", g.ID, x.Value)
+					id := fmt.Sprintf("%s|%s", group.ID, x.Value)
 					ic.Emit(&resource{
 						Resource: "databricks_group_member",
 						ID:       id,
-						Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
-						Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
+						Name:     fmt.Sprintf("%s_%s_%s_%s", group.DisplayName, group.ID, x.Display, x.Value),
+						Data:     ic.makeGroupMemberData(id, group.ID, x.Value),
 					})
 				}
 			}
-			if len(g.Members) > 10 {
-				log.Printf("[INFO] Imported %d of %d members of %s", i+1, len(g.Members), g.DisplayName)
+			if len(group.Members) > 10 {
+				log.Printf("[INFO] Imported %d of %d members of %s", i+1, len(group.Members), group.DisplayName)
 			}
 		}
 	}
+
 	if ic.accountLevel {
 		ic.Emit(&resource{
 			Resource: "databricks_access_control_rule_set",
@@ -181,7 +193,24 @@ func searchUser(ic *importContext, r *resource) error {
 
 func importUser(ic *importContext, r *resource) error {
 	username := r.Data.Get("user_name").(string)
-	r.Data.Set("force", true)
+	if ic.currentMetastore != nil {
+		// Users are maintained on account level and are referenced via data sources
+		r.Mode = "data"
+		r.Data.Set("workspace_access", false)
+		r.Data.Set("databricks_sql_access", false)
+		r.Data.Set("allow_instance_pool_create", false)
+		r.Data.Set("allow_cluster_create", false)
+		r.Data.Set("display_name", "")
+		r.Data.Set("external_id", "")
+		r.Data.State().Set(&terraform.InstanceState{
+			ID: r.ID,
+			Attributes: map[string]string{
+				"user_name": username,
+			},
+		})
+	} else if r.Data != nil {
+		r.Data.Set("force", true)
+	}
 	u, err := ic.findUserByName(username, false)
 	if err != nil {
 		return err
@@ -217,7 +246,24 @@ func searchServicePrincipal(ic *importContext, r *resource) error {
 
 func importServicePrincipal(ic *importContext, r *resource) error {
 	applicationID := r.Data.Get("application_id").(string)
-	r.Data.Set("force", true)
+	if ic.currentMetastore != nil {
+		// Users are maintained on account level and are referenced via data sources
+		r.Mode = "data"
+		r.Data.Set("workspace_access", false)
+		r.Data.Set("databricks_sql_access", false)
+		r.Data.Set("allow_instance_pool_create", false)
+		r.Data.Set("allow_cluster_create", false)
+		r.Data.Set("display_name", "")
+		r.Data.Set("external_id", "")
+		r.Data.State().Set(&terraform.InstanceState{
+			ID: r.ID,
+			Attributes: map[string]string{
+				"application_id": applicationID,
+			},
+		})
+	} else if r.Data != nil {
+		r.Data.Set("force", true)
+	}
 	u, err := ic.findSpnByAppID(applicationID, false)
 	if err != nil {
 		return err

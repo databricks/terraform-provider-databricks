@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -110,14 +111,14 @@ func TestCreateIsolatedCredential(t *testing.T) {
 			}, nil)
 			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
 				SecurableName: "a",
-				SecurableType: catalog.UpdateBindingsSecurableTypeCredential,
+				SecurableType: string(bindings.BindingsSecurableTypeCredential),
 				Add: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
 					},
 				},
-			}).Return(&catalog.WorkspaceBindingsResponse{
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),

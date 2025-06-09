@@ -1010,6 +1010,11 @@ type FederationPolicy_SdkV2 struct {
 	// Specifies the policy to use for validating OIDC claims in your federated
 	// tokens.
 	OidcPolicy types.List `tfsdk:"oidc_policy"`
+	// The ID of the federation policy.
+	PolicyId types.String `tfsdk:"policy_id"`
+	// The service principal ID that this federation policy applies to. Only set
+	// for service principal federation policies.
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 	// Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`
 	// Last update time of the federation policy.
@@ -1028,6 +1033,8 @@ func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -1054,12 +1061,14 @@ func (o FederationPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": o.CreateTime,
-			"description": o.Description,
-			"name":        o.Name,
-			"oidc_policy": o.OidcPolicy,
-			"uid":         o.Uid,
-			"update_time": o.UpdateTime,
+			"create_time":          o.CreateTime,
+			"description":          o.Description,
+			"name":                 o.Name,
+			"oidc_policy":          o.OidcPolicy,
+			"policy_id":            o.PolicyId,
+			"service_principal_id": o.ServicePrincipalId,
+			"uid":                  o.Uid,
+			"update_time":          o.UpdateTime,
 		})
 }
 
@@ -1073,8 +1082,10 @@ func (o FederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 			"oidc_policy": basetypes.ListType{
 				ElemType: OidcFederationPolicy_SdkV2{}.Type(ctx),
 			},
-			"uid":         types.StringType,
-			"update_time": types.StringType,
+			"policy_id":            types.StringType,
+			"service_principal_id": types.Int64Type,
+			"uid":                  types.StringType,
+			"update_time":          types.StringType,
 		},
 	}
 }

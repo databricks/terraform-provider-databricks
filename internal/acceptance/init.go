@@ -180,13 +180,13 @@ func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provide
 
 // SdkV2ProviderForTest creates a test provider with the default config customizer.
 func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
-	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
+	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer), sdkv2.WithConfigCustomizer(OidcConfigCustomizer))
 	return sdkv2.DatabricksProvider(opts...)
 }
 
 // PluginFrameworkProviderForTest creates a test provider with the default config customizer.
 func PluginFrameworkProviderForTest(pluginFwOptions ...pluginfw.PluginFrameworkOption) provider.Provider {
-	opts := append(pluginFwOptions, pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
+	opts := append(pluginFwOptions, pluginfw.WithConfigCustomizer(DefaultConfigCustomizer), pluginfw.WithConfigCustomizer(OidcConfigCustomizer))
 	return pluginfw.GetDatabricksProviderPluginFramework(opts...)
 }
 
@@ -291,6 +291,35 @@ func run(t *testing.T, steps []Step) {
 // ensures that tests don't fail even if individual requests take longer than 1 minute.
 func DefaultConfigCustomizer(cfg *config.Config) error {
 	cfg.HTTPTimeoutSeconds = 10 * 60
+	return nil
+}
+
+// OidcConfigCustomizer customizes the SDK configuration to use OIDC when running in Github Actions without
+// busting Go test caching.
+// The Go test cache is busted when using OIDC because the URL and token in Github are different in each test run.
+// The environment variables are cleared in the action to prevent the Go SDK from reading them during test runs.
+// The resulting values are written to a hard-coded location, which we read from if present to use OIDC.
+// It is not an error if these files are not present.
+func OidcConfigCustomizer(cfg *config.Config) error {
+	// This is a no-op for non-AWS and for non-UC AWS workspace environments because the OIDC auth is not supported.
+	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
+		return nil
+	}
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err == nil {
+		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
+		if err != nil {
+			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
+		}
+		cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
+	}
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN"); err == nil {
+		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+		if err != nil {
+			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN: %w", err)
+		}
+		cfg.ActionsIDTokenRequestToken = strings.TrimSpace(string(bs))
+	}
+	cfg.AuthType = "github-oidc"
 	return nil
 }
 

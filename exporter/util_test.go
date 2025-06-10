@@ -99,7 +99,7 @@ var (
 	}
 	spListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=1",
 		Response: iam.ListServicePrincipalResponse{
 			Resources: []iam.ServicePrincipal{
 				{
@@ -113,7 +113,7 @@ var (
 	}
 	spListIdUsernameFixture2 = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=2",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=2",
 		Response: iam.ListServicePrincipalResponse{
 			Resources:    []iam.ServicePrincipal{},
 			TotalResults: 1,

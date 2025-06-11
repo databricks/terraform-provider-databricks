@@ -12,7 +12,7 @@
 ### Bug Fixes
 
 ### Documentation
- * [Documentation] `databricks_instance_pool`: auto zone_id can only be used for fleet node types
+ * auto `zone_id` can only be used for fleet node types in `databricks_instance_pool` resource ([#4782](https://github.com/databricks/terraform-provider-databricks/pull/4782)).
 
 ### Exporter
 

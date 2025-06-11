@@ -67,8 +67,10 @@ func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan settings
 		return
 	}
 
-	var updateRequest = settings.UpdateNetworkPolicyRequest{NetworkPolicy: account_network_policy}
-	updateRequest.NetworkPolicyId = plan.NetworkPolicyId.ValueString()
+	updateRequest := settings.UpdateNetworkPolicyRequest{
+		NetworkPolicy:   account_network_policy,
+		NetworkPolicyId: plan.NetworkPolicyId.ValueString(),
+	}
 
 	response, err := client.NetworkPolicies.UpdateNetworkPolicyRpc(ctx, updateRequest)
 	if err != nil {
@@ -107,7 +109,11 @@ func (r *AccountNetworkPolicyResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	response, err := client.NetworkPolicies.CreateNetworkPolicyRpc(ctx, settings.CreateNetworkPolicyRequest{NetworkPolicy: account_network_policy})
+	createRequest := settings.CreateNetworkPolicyRequest{
+		NetworkPolicy: account_network_policy,
+	}
+
+	response, err := client.NetworkPolicies.CreateNetworkPolicyRpc(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create account_network_policy", err.Error())
 		return

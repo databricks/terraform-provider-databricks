@@ -12,6 +12,7 @@
 ### Bug Fixes
 
 ### Documentation
+ * [Documentation] `databricks_instance_pool`: auto zone_id can only be used for fleet node types
 
 ### Exporter
 

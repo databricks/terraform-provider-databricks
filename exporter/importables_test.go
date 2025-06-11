@@ -538,7 +538,7 @@ func TestGroupCacheAndSearchError(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=10000&startIndex=1",
 			Status:       404,
 			Response: &apierr.APIError{
 				ErrorCode:  "NOT_FOUND",

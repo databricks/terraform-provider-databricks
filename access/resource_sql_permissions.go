@@ -267,7 +267,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		return
 	}
 	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; (!ok || v != "true") && clusterInfo.DataSecurityMode != "USER_ISOLATION" && clusterInfo.DataSecurityMode != "LEGACY_TABLE_ACL" {
-		err = fmt.Errorf("cluster_id: pecified cluster does not support setting Table ACL: %s (%s)",
+		err = fmt.Errorf("cluster_id: specified cluster does not support setting Table ACL: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
 		return
 	}
@@ -281,22 +281,14 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 		LongTermSupport: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
+	// The cluster used for setting table ACLs is a single node cluster with USER_ISOLATION data security mode.
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terraform-table-acl", clusters.Cluster{
 			ClusterName:            "terraform-table-acl",
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
-			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			// TODO: return back after backend fix is rolled out
-			NumWorkers: 1,
-			// SparkConf: map[string]string{
-			// 	"spark.databricks.cluster.profile": "singleNode",
-			// 	"spark.master":                     "local[*]",
-			// },
-			// CustomTags: map[string]string{
-			// 	"ResourceClass": "SingleNode",
-			// },
+			DataSecurityMode:       "USER_ISOLATION",
 		})
 	if err != nil {
 		return "", err

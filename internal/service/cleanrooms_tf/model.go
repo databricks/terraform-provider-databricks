@@ -198,6 +198,9 @@ type CleanRoomAsset struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
+	// The name of the clean room this asset belongs to. This is an output-only
+	// field to ensure proper resource identification.
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTable types.Object `tfsdk:"foreign_table"`
@@ -245,6 +248,7 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState Clea
 func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -289,6 +293,7 @@ func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		map[string]attr.Value{
 			"added_at":                    o.AddedAt,
 			"asset_type":                  o.AssetType,
+			"clean_room_name":             o.CleanRoomName,
 			"foreign_table":               o.ForeignTable,
 			"foreign_table_local_details": o.ForeignTableLocalDetails,
 			"name":                        o.Name,
@@ -309,6 +314,7 @@ func (o CleanRoomAsset) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"added_at":                    types.Int64Type,
 			"asset_type":                  types.StringType,
+			"clean_room_name":             types.StringType,
 			"foreign_table":               CleanRoomAssetForeignTable{}.Type(ctx),
 			"foreign_table_local_details": CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
 			"name":                        types.StringType,
@@ -2160,13 +2166,13 @@ func (o *CreateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) 
 
 // Delete an asset
 type DeleteCleanRoomAssetRequest struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2187,9 +2193,9 @@ func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2197,9 +2203,9 @@ func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o DeleteCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
@@ -2316,13 +2322,13 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 
 // Get an asset
 type GetCleanRoomAssetRequest struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2343,9 +2349,9 @@ func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2353,9 +2359,9 @@ func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }

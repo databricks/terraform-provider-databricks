@@ -5354,7 +5354,7 @@ func (o *UpdateShare_SdkV2) SetUpdates(ctx context.Context, v []SharedDataObject
 }
 
 type UpdateSharePermissions_SdkV2 struct {
-	// Array of permission changes.
+	// Array of permissions change objects.
 	Changes types.List `tfsdk:"changes"`
 	// The name of the share.
 	Name types.String `tfsdk:"-"`

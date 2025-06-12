@@ -12,6 +12,7 @@
 ### Bug Fixes
 
 ### Documentation
+ * Added link to Workload Identity Federation page ([#4786](https://github.com/databricks/terraform-provider-databricks/pull/4786)).
 
 ### Exporter
 

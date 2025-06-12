@@ -234,6 +234,7 @@ func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context
 	// This could break TF customers, so we disable it by default until we
 	// have more clarity.
 	// TODO: Determine whether it is safe to change this and a customer migration is needed.
+	// Note: this change should be kept in sync with the change in Update().
 	if createJob.Queue == nil {
 		createJob.Queue = &jobs.QueueSettings{
 			Enabled: false,
@@ -244,6 +245,18 @@ func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context
 }
 
 func Update(jobID int64, js JobSettingsResource, w *databricks.WorkspaceClient, ctx context.Context) error {
+	// With the introduction of Jobs2.2, queue becomes enabled by default.
+	// This could break TF customers, so we disable it by default until we
+	// have more clarity.
+	// Customers who upgrade from provider version <1.71.0 and who did not specify a queue setting
+	// have queueing disabled. The Jobs 2.2 Reset API enables queueing if unset, so we need to
+	// disable it if unspecified.
+	// Note: this change should be kept in sync with the change in Create().
+	if js.Queue == nil {
+		js.Queue = &jobs.QueueSettings{
+			Enabled: false,
+		}
+	}
 	err := w.Jobs.Reset(ctx, jobs.ResetJob{
 		JobId:       jobID,
 		NewSettings: js.JobSettings,

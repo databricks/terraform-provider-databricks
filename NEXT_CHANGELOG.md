@@ -11,6 +11,8 @@
 
 ### Bug Fixes
 
+ * Preserve `queue` setting for `databricks_job` resource when upgrading from provider version <1.71.0.
+
 ### Documentation
 
 ### Exporter

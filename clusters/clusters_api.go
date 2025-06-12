@@ -530,6 +530,7 @@ type ClusterInfo struct {
 	TerminationReason         *TerminationReason      `json:"termination_reason,omitempty"`
 	DataSecurityMode          string                  `json:"data_security_mode,omitempty"`
 	RuntimeEngine             string                  `json:"runtime_engine,omitempty"`
+	IsSingleNode              bool                    `json:"is_single_node,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

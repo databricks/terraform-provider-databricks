@@ -271,9 +271,9 @@ provider "databricks" {
 }
 ```
 
-### Authentication with Workload Identity Federation (WIF)
+### Authenticating with Workload Identity Federation (WIF)
 
-Authentication is done through token issues by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider. 
+Authentication to Databricks from automated workflows can be done through the token issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider. 
 
 ## Special configurations for Azure
 

@@ -469,14 +469,14 @@ var emptyDestinationNotficationsList = qa.HTTPFixture{
 
 var emptyUsersList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySpnsList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+	Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=1",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -1018,7 +1018,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
 				Response: scim.UserList{
 					Resources: []scim.User{

@@ -10,7 +10,7 @@ import (
 )
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
-	s := common.StructToSchema(settings.NccAzurePrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(settings.NccPrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, p := range []string{"network_connectivity_config_id", "group_id", "resource_id"} {
 			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
 		}

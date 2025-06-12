@@ -1455,6 +1455,7 @@ func (o *CreateBudgetPolicyRequest_SdkV2) SetPolicy(ctx context.Context, v Budge
 	o.Policy = types.ListValueMust(t, vs)
 }
 
+// * Log Delivery Configuration
 type CreateLogDeliveryConfigurationParams_SdkV2 struct {
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
@@ -1470,31 +1471,27 @@ type CreateLogDeliveryConfigurationParams_SdkV2 struct {
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
 	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix"`
-	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
-	// optional start month and year for delivery, specified in `YYYY-MM`
-	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
-	// available for usage before March 2019 (`2019-03`).
+	// This field applies only if log_type is BILLABLE_USAGE. This is the
+	// optional start month and year for delivery, specified in YYYY-MM format.
+	// Defaults to current year and month. BILLABLE_USAGE logs are not available
+	// for usage before March 2019 (2019-03).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time"`
-	// Log delivery type. Supported values are:
-	//
-	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
-	// CSV schema, see the [View billable usage].
-	//
-	// * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON schema,
-	// see [Configure audit logging]
+	// Log delivery type. Supported values are: * `BILLABLE_USAGE` — Configure
+	// [billable usage log delivery]. For the CSV schema, see the [View billable
+	// usage]. * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON
+	// schema, see [Configure audit logging]
 	//
 	// [Configure audit logging]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
 	LogType types.String `tfsdk:"log_type"`
-	// The file type of log delivery.
-	//
-	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
-	// CSV (comma-separated values) format is supported. For the schema, see the
-	// [View billable usage] * If `log_type` is `AUDIT_LOGS`, this value must be
-	// `JSON`. Only the JSON (JavaScript Object Notation) format is supported.
-	// For the schema, see the [Configuring audit logs].
+	// The file type of log delivery. * If `log_type` is `BILLABLE_USAGE`, this
+	// value must be `CSV`. Only the CSV (comma-separated values) format is
+	// supported. For the schema, see the [View billable usage] * If `log_type`
+	// is `AUDIT_LOGS`, this value must be `JSON`. Only the JSON (JavaScript
+	// Object Notation) format is supported. For the schema, see the
+	// [Configuring audit logs].
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
@@ -2165,9 +2162,88 @@ func (o GetBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetLogDeliveryConfigurationResponse_SdkV2 struct {
+	// The fetched log delivery configuration
+	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration"`
+}
+
+func (newState *GetLogDeliveryConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLogDeliveryConfigurationResponse_SdkV2) {
+}
+
+func (newState *GetLogDeliveryConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryConfigurationResponse_SdkV2) {
+}
+
+func (c GetLogDeliveryConfigurationResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
+	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLogDeliveryConfigurationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLogDeliveryConfigurationResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"log_delivery_configuration": reflect.TypeOf(LogDeliveryConfiguration_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLogDeliveryConfigurationResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLogDeliveryConfigurationResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"log_delivery_configuration": o.LogDeliveryConfiguration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLogDeliveryConfigurationResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"log_delivery_configuration": basetypes.ListType{
+				ElemType: LogDeliveryConfiguration_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse_SdkV2 as
+// a LogDeliveryConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLogDeliveryConfigurationResponse_SdkV2) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration_SdkV2, bool) {
+	var e LogDeliveryConfiguration_SdkV2
+	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []LogDeliveryConfiguration_SdkV2
+	d := o.LogDeliveryConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse_SdkV2.
+func (o *GetLogDeliveryConfigurationResponse_SdkV2) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configuration"]
+	o.LogDeliveryConfiguration = types.ListValueMust(t, vs)
+}
+
 // Get log delivery configuration
 type GetLogDeliveryRequest_SdkV2 struct {
-	// Databricks log delivery configuration ID
+	// The log delivery configuration id of customer
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
 }
 
@@ -2576,11 +2652,15 @@ func (o *ListBudgetPoliciesResponse_SdkV2) SetPolicies(ctx context.Context, v []
 
 // Get all log delivery configurations
 type ListLogDeliveryRequest_SdkV2 struct {
-	// Filter by credential configuration ID.
+	// The Credentials id to filter the search results with
 	CredentialsId types.String `tfsdk:"-"`
-	// Filter by status `ENABLED` or `DISABLED`.
+	// A page token received from a previous get all budget configurations call.
+	// This token can be used to retrieve the subsequent page. Requests first
+	// page if absent.
+	PageToken types.String `tfsdk:"-"`
+	// The log delivery status to filter the search results with
 	Status types.String `tfsdk:"-"`
-	// Filter by storage configuration ID.
+	// The Storage Configuration id to filter the search results with
 	StorageConfigurationId types.String `tfsdk:"-"`
 }
 
@@ -2603,6 +2683,7 @@ func (o ListLogDeliveryRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"credentials_id":           o.CredentialsId,
+			"page_token":               o.PageToken,
 			"status":                   o.Status,
 			"storage_configuration_id": o.StorageConfigurationId,
 		})
@@ -2613,16 +2694,18 @@ func (o ListLogDeliveryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credentials_id":           types.StringType,
+			"page_token":               types.StringType,
 			"status":                   types.StringType,
 			"storage_configuration_id": types.StringType,
 		},
 	}
 }
 
+// * Log Delivery Configuration
 type LogDeliveryConfiguration_SdkV2 struct {
-	// The Databricks account ID that hosts the log delivery configuration.
+	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
-	// Databricks log delivery configuration ID.
+	// The unique UUID of log delivery configuration
 	ConfigId types.String `tfsdk:"config_id"`
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
@@ -2641,33 +2724,29 @@ type LogDeliveryConfiguration_SdkV2 struct {
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
 	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix"`
-	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
-	// optional start month and year for delivery, specified in `YYYY-MM`
-	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
-	// available for usage before March 2019 (`2019-03`).
+	// This field applies only if log_type is BILLABLE_USAGE. This is the
+	// optional start month and year for delivery, specified in YYYY-MM format.
+	// Defaults to current year and month. BILLABLE_USAGE logs are not available
+	// for usage before March 2019 (2019-03).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time"`
-	// Databricks log delivery status.
+	// The LogDeliveryStatus of this log delivery configuration
 	LogDeliveryStatus types.List `tfsdk:"log_delivery_status"`
-	// Log delivery type. Supported values are:
-	//
-	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
-	// CSV schema, see the [View billable usage].
-	//
-	// * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON schema,
-	// see [Configure audit logging]
+	// Log delivery type. Supported values are: * `BILLABLE_USAGE` — Configure
+	// [billable usage log delivery]. For the CSV schema, see the [View billable
+	// usage]. * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON
+	// schema, see [Configure audit logging]
 	//
 	// [Configure audit logging]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
 	LogType types.String `tfsdk:"log_type"`
-	// The file type of log delivery.
-	//
-	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
-	// CSV (comma-separated values) format is supported. For the schema, see the
-	// [View billable usage] * If `log_type` is `AUDIT_LOGS`, this value must be
-	// `JSON`. Only the JSON (JavaScript Object Notation) format is supported.
-	// For the schema, see the [Configuring audit logs].
+	// The file type of log delivery. * If `log_type` is `BILLABLE_USAGE`, this
+	// value must be `CSV`. Only the CSV (comma-separated values) format is
+	// supported. For the schema, see the [View billable usage] * If `log_type`
+	// is `AUDIT_LOGS`, this value must be `JSON`. Only the JSON (JavaScript
+	// Object Notation) format is supported. For the schema, see the
+	// [Configuring audit logs].
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
@@ -2710,19 +2789,19 @@ func (newState *LogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(ex
 }
 
 func (c LogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["config_id"] = attrs["config_id"].SetOptional()
 	attrs["config_name"] = attrs["config_name"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
-	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
+	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
 	attrs["delivery_path_prefix"] = attrs["delivery_path_prefix"].SetOptional()
 	attrs["delivery_start_time"] = attrs["delivery_start_time"].SetOptional()
 	attrs["log_delivery_status"] = attrs["log_delivery_status"].SetOptional()
 	attrs["log_delivery_status"] = attrs["log_delivery_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["log_type"] = attrs["log_type"].SetOptional()
-	attrs["output_format"] = attrs["output_format"].SetOptional()
+	attrs["log_type"] = attrs["log_type"].SetRequired()
+	attrs["output_format"] = attrs["output_format"].SetRequired()
 	attrs["status"] = attrs["status"].SetOptional()
-	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 	attrs["workspace_ids_filter"] = attrs["workspace_ids_filter"].SetOptional()
 
@@ -2845,7 +2924,6 @@ func (o *LogDeliveryConfiguration_SdkV2) SetWorkspaceIdsFilter(ctx context.Conte
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
-// Databricks log delivery status.
 type LogDeliveryStatus_SdkV2 struct {
 	// The UTC time for the latest log delivery attempt.
 	LastAttemptTime types.String `tfsdk:"last_attempt_time"`
@@ -2855,8 +2933,8 @@ type LogDeliveryStatus_SdkV2 struct {
 	// delivery fails with USER_FAILURE, error details will be provided for
 	// fixing misconfigurations in cloud permissions.
 	Message types.String `tfsdk:"message"`
-	// The status string for log delivery. Possible values are: * `CREATED`:
-	// There were no log delivery attempts since the config was created. *
+	// Enum that describes the status. Possible values are: * `CREATED`: There
+	// were no log delivery attempts since the config was created. *
 	// `SUCCEEDED`: The latest attempt of log delivery has succeeded completely.
 	// * `USER_FAILURE`: The latest attempt of log delivery failed because of
 	// misconfiguration of customer provided permissions on role or storage. *
@@ -2877,8 +2955,8 @@ func (newState *LogDeliveryStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 func (c LogDeliveryStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["last_attempt_time"] = attrs["last_attempt_time"].SetOptional()
 	attrs["last_successful_attempt_time"] = attrs["last_successful_attempt_time"].SetOptional()
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
+	attrs["message"] = attrs["message"].SetRequired()
+	attrs["status"] = attrs["status"].SetRequired()
 
 	return attrs
 }
@@ -2921,6 +2999,17 @@ func (o LogDeliveryStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchStatusResponse_SdkV2 struct {
+}
+
+func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchStatusResponse_SdkV2) {
+}
+
+func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse_SdkV2) {
+}
+
+func (c PatchStatusResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchStatusResponse.
@@ -3405,8 +3494,9 @@ func (o *UpdateBudgetPolicyRequest_SdkV2) SetPolicy(ctx context.Context, v Budge
 	o.Policy = types.ListValueMust(t, vs)
 }
 
+// * Update Log Delivery Configuration
 type UpdateLogDeliveryConfigurationStatusRequest_SdkV2 struct {
-	// Databricks log delivery configuration ID
+	// The log delivery configuration id of customer
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
 	// Status of log delivery configuration. Set to `ENABLED` (enabled) or
 	// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable
@@ -3462,7 +3552,9 @@ func (o UpdateLogDeliveryConfigurationStatusRequest_SdkV2) Type(ctx context.Cont
 	}
 }
 
+// * Properties of the new log delivery configuration.
 type WrappedCreateLogDeliveryConfiguration_SdkV2 struct {
+	// * Log Delivery Configuration
 	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration"`
 }
 
@@ -3473,7 +3565,7 @@ func (newState *WrappedCreateLogDeliveryConfiguration_SdkV2) SyncEffectiveFields
 }
 
 func (c WrappedCreateLogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
+	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetRequired()
 	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -3541,6 +3633,7 @@ func (o *WrappedCreateLogDeliveryConfiguration_SdkV2) SetLogDeliveryConfiguratio
 }
 
 type WrappedLogDeliveryConfiguration_SdkV2 struct {
+	// The created log delivery configuration
 	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration"`
 }
 
@@ -3619,7 +3712,11 @@ func (o *WrappedLogDeliveryConfiguration_SdkV2) SetLogDeliveryConfiguration(ctx 
 }
 
 type WrappedLogDeliveryConfigurations_SdkV2 struct {
+	// Log delivery configurations were returned successfully.
 	LogDeliveryConfigurations types.List `tfsdk:"log_delivery_configurations"`
+	// Token which can be sent as `page_token` to retrieve the next page of
+	// results. If this field is omitted, there are no subsequent budgets.
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *WrappedLogDeliveryConfigurations_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfigurations_SdkV2) {
@@ -3630,6 +3727,7 @@ func (newState *WrappedLogDeliveryConfigurations_SdkV2) SyncEffectiveFieldsDurin
 
 func (c WrappedLogDeliveryConfigurations_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configurations"] = attrs["log_delivery_configurations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
 	return attrs
 }
@@ -3655,6 +3753,7 @@ func (o WrappedLogDeliveryConfigurations_SdkV2) ToObjectValue(ctx context.Contex
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"log_delivery_configurations": o.LogDeliveryConfigurations,
+			"next_page_token":             o.NextPageToken,
 		})
 }
 
@@ -3665,6 +3764,7 @@ func (o WrappedLogDeliveryConfigurations_SdkV2) Type(ctx context.Context) attr.T
 			"log_delivery_configurations": basetypes.ListType{
 				ElemType: LogDeliveryConfiguration_SdkV2{}.Type(ctx),
 			},
+			"next_page_token": types.StringType,
 		},
 	}
 }

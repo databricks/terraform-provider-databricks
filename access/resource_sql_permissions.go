@@ -289,6 +289,7 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
 			DataSecurityMode:       "USER_ISOLATION",
+			IsSingleNode:           true,
 		})
 	if err != nil {
 		return "", err

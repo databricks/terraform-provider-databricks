@@ -432,6 +432,7 @@ type Cluster struct {
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
 	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
+	IsSingleNode     bool          `json:"is_single_node,omitempty"`
 }
 
 // TODO: Remove this once all the resources using clusters are migrated to Go SDK.

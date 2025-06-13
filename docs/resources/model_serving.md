@@ -196,6 +196,10 @@ The following arguments are supported:
 * `min_provisioned_throughput`- The minimum tokens per second that the endpoint can scale down to.
 * `max_provisioned_throughput` -  The maximum tokens per second that the endpoint can scale up to.
 * `workload_size` - The workload size of the served entity. The workload size corresponds to a range of provisioned concurrency that the compute autoscales between. A single unit of provisioned concurrency can process one request at a time. Valid workload sizes are `Small` (4 - 4 provisioned concurrency), `Medium` (8 - 16 provisioned concurrency), and `Large` (16 - 64 provisioned concurrency). If `scale-to-zero` is enabled, the lower bound of the provisioned concurrency for each workload size is 0.
+* `min_provisioned_concurrency` - The minimum provisioned concurrency that the endpoint can scale down to. Conflicts with `workload_size`.
+* `max_provisioned_concurrency` - The maximum provisioned concurrency that the endpoint can scale up to. Conflicts with `workload_size`.
+* `min_provisioned_throughput` - The minimum tokens per second that the endpoint can scale down to.
+* `max_provisioned_throughput` - The maximum tokens per second that the endpoint can scale up to.
 * `workload_type` - The workload type of the served entity. The workload type selects which type of compute to use in the endpoint. The default value for this parameter is `CPU`. For deep learning workloads, GPU acceleration is available by selecting workload types like `GPU_SMALL` and others. See the available [GPU types](https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types).
 * `scale_to_zero_enabled` - Whether the compute resources for the served entity should scale down to zero.
 * `environment_vars` - An object containing a set of optional, user-specified environment variable key-value pairs used for serving this entity. Note: this is an experimental feature and is subject to change. Example entity environment variables that refer to Databricks secrets: ```{"OPENAI_API_KEY": "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN": "{{secrets/my_scope2/my_key2}}"}```

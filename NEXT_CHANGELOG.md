@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+ * Preserve `queue` setting for `databricks_job` resource when upgrading from provider version <1.71.0.
+
 ### Documentation
  * Added link to Workload Identity Federation page ([#4786](https://github.com/databricks/terraform-provider-databricks/pull/4786)).
 

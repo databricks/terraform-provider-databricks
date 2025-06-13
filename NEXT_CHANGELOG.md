@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Recommend OAuth instead of PAT in guides ([#4787](https://github.com/databricks/terraform-provider-databricks/pull/4787))
+
 ### Exporter
 
 ### Internal Changes

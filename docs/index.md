@@ -271,6 +271,10 @@ provider "databricks" {
 }
 ```
 
+### Authenticating with Workload Identity Federation (WIF)
+
+Workload Identity Federation can be used to authenticate Databricks from automated workflows. This is done through the tokens issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider. 
+
 ## Special configurations for Azure
 
 The below Azure authentication options are supported at both the account and workspace levels. The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios, managed identity or service principal auth is recommended (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).

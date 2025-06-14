@@ -34,7 +34,9 @@ The following arguments are available:
 - `service_principal_id` - (Required) The service principal id for the federation policy.
 - `description` - (Optional) Description of the federation policy.
 - `name` - (Optional) Resource name for the federation policy.
-- `oidc_policy` - (Required) Specifies the policy to use for validating OIDC claims in your federated tokens.
+
+### oidc_policy Configuration Block (Required) Specifies the policy to use for validating OIDC claims in your federated tokens.
+
 - `audiences` - (Optional) The allowed token audiences, as specified in the 'aud' claim of federated tokens. The audience identifier is intended to represent the recipient of the token. Can be any non-empty string value. As long as the audience in the token matches at least one audience in the policy, the token is considered a match. If audiences is unspecified, defaults to your Databricks account id.
 - `issuer` - (Required) The required token issuer, as specified in the 'iss' claim of federated tokens.
 - `jwks_json` - (Optional) The public keys used to validate the signature of federated tokens, in JWKS format. Most use cases should not need to specify this field. If jwks_uri and jwks_json are both unspecified (recommended), Databricks automatically fetches the public keys from your issuer’s well known endpoint. Databricks strongly recommends relying on your issuer’s well known endpoint for discovering public keys.

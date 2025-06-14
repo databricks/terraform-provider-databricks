@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+ * Added `time_rotating` argument to `databricks_service_principal_secret` to enable secret rotation ([#4789](https://github.com/databricks/terraform-provider-databricks/pull/4789)).
 
 ### Bug Fixes
 

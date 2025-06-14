@@ -49,7 +49,7 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the secret
-* `secret` - Generated secret for the service principal.
+* `secret` - **Sensitive** Generated secret for the service principal.
 * `create_time` - UTC time when the secret was created.
 * `expire_time` - UTC time when the secret will expire. If the field is not present, the secret does not expire.
 * `secret_hash` - Secret Hash.

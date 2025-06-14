@@ -66,6 +66,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by the combination of its identifier and the account id:
 
+```hcl
+import {
+  to = databricks_mws_credentials.this
+  id = "<account_id>/<credentials_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_mws_credentials.this <account_id>/<credentials_id>
 ```

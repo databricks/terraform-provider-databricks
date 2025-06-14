@@ -7,7 +7,9 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 -> This resource can only be used with an account-level provider!
 
--> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
+~> The `gke_config` argument is now deprecated and no longer supported. If you have already created a workspace using these fields, it is safe to remove them from your Terraform template.
+
+~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
 ## Example Usage
 
@@ -83,13 +85,6 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id               = databricks_mws_networks.this.network_id
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -199,19 +194,12 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
-  token {}
-
   # Optional Custom Tags
   custom_tags = {
 
     "SoldToCode" = "1234"
 
   }
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -262,17 +250,6 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -306,18 +283,6 @@ resource "databricks_mws_workspaces" "this" {
       project_id = data.google_client_config.current.project
     }
   }
-
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -340,17 +305,16 @@ The following arguments are available:
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
     * `project_id` - The Google Cloud project ID, which the workspace uses to instantiate cloud resources for your workspace.
-* `gke_config` - (GCP only) A block that specifies GKE configuration for the Databricks workspace:
-  * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
-  * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
 * `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 * `pricing_tier` - (Optional) - The pricing tier of the workspace.
 * `compute_mode` - (Optional) - The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace.
 
-### token block
+~> Databricks strongly recommends using OAuth instead of PATs for user account client authentication and authorization due to the improved security
 
-You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
+### token block (legacy)
+
+You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
 -> Tokens managed by `token {}` block are recreated when expired.
 
@@ -405,8 +369,17 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 
 This resource can be imported by Databricks account ID and workspace ID.
 
-```sh
-terraform import databricks_mws_networks.this '<account_id>/<workspace_id>'
+```hcl
+import {
+  to = databricks_mws_workspaces.this
+  id = "<account_id>/<workspace_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_mws_workspaces.this "<account_id>/<workspace_id>"
 ```
 
 ~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.

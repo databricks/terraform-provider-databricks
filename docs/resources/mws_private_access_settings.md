@@ -56,10 +56,7 @@ resource "databricks_mws_workspaces" "this" {
       project_id = var.google_project
     }
   }
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
+
   network_id                 = databricks_mws_networks.this.network_id
   private_access_settings_id = databricks_mws_private_access_settings.pas.private_access_settings_id
   pricing_tier               = "PREMIUM"
@@ -88,6 +85,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by Databricks account ID and private access settings ID.
+
+```hcl
+import {
+  to = databricks_mws_private_access_settings.this
+  id = "<account_id>/<private_access_settings_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_mws_private_access_settings.this '<account_id>/<private_access_settings_id>'

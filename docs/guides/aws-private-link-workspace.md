@@ -4,7 +4,7 @@ page_title: "Provisioning Databricks on AWS with Private Link"
 
 # Provisioning Databricks on AWS with Private Link
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically using a programmatic approach. This guide assumes you are deploying into an existing VPC and have set up credentials and storage configurations as per prior examples, notably here.
 

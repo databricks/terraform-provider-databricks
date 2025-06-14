@@ -45,10 +45,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its integration ID.
+This resource can be imported by its integration ID:
 
-```sh
-terraform import databricks_custom_app_integration.this '<integration_id>'
+```hcl
+import {
+  to = databricks_custom_app_integration.this
+  id = "<integration_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_custom_app_integration.this "<integration_id>"
 ```
 
 ## Related Resources

@@ -3,7 +3,7 @@ subcategory: "Apps"
 ---
 # databricks_app Resource
 
-[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer’s Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
+[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer's Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
 
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
@@ -72,6 +72,10 @@ Exactly one of the following attributes must be provided:
 * `job` attribute
   * `id` - Id of the job to grant permission on.
   * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
+* `uc_securable` attribute (see the [API docs](https://docs.databricks.com/api/workspace/apps/create#resources-uc_securable) for full list of supported UC objects)
+  * `securable_type` - the type of UC securable, i.e. `VOLUME`.
+  * `securable_full_name` - the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.
+  * `permission` - Permissions to grant on UC securable, i.e. `READ_VOLUME`, `WRITE_VOLUME`.
 
 ## Attribute Reference
 
@@ -105,7 +109,7 @@ import {
 }
 ```
 
-or using the `terraform` CLI:
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_app.this <app_name>

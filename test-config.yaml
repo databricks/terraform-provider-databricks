@@ -108,4 +108,12 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/permissions
       test_name: TestAccPermissions_App
       comment: Failure due to API timeouts in the permissions APIs.
-      
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle
+      comment: Failure due to stale results being returned from cache on using empty etag.  
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestMwsAccAccountGroupRuleSetsFullLifeCycle
+      comment: Failure due to stale results being returned from cache on using empty etag.
+    - package: github.com/databricks/terraform-provider-databricks/serving
+      test_name: TestUcAccModelServingProvisionedThroughputResource
+      comment: Failure due to limited capacity in specific regions

@@ -1438,7 +1438,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 					AwsAttributes: &compute.AwsAttributes{
 						Availability:  "SPOT",
 						FirstOnDemand: 1,
-						ZoneId:        "us-west-2a",
+						ZoneId:        "auto",
 					},
 				},
 			},

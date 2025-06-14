@@ -120,6 +120,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by name:
 
+```hcl
+import {
+  to = databricks_credential.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_credential.this <name>
 ```

@@ -73,8 +73,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because the underlying API doesn't include it in the response.
 
+```hcl
+import {
+  to = databricks_secret_scope.this
+  id = "<scopeName>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_secret_scope.object <scopeName>
+terraform import databricks_secret_scope.this "<scopeName>"
 ```
 
 ## Related Resources

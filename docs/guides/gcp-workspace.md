@@ -4,7 +4,7 @@ page_title: "Provisioning Databricks workspaces on GCP."
 
 # Provisioning Databricks workspaces on GCP
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy GCP Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform.
 
@@ -171,14 +171,6 @@ resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" 
   ip_cidr_range = "10.0.0.0/16"
   region        = "us-central1"
   network       = google_compute_network.dbx_private_vpc.id
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-  secondary_ip_range {
-    range_name    = "svc"
-    ip_cidr_range = "10.2.0.0/20"
-  }
   private_ip_google_access = true
 }
 
@@ -232,14 +224,6 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
-
-  token {
-    comment = "Terraform"
-  }
 
   # this makes sure that the NAT is created for outbound traffic before creating the workspace
   depends_on = [google_compute_router_nat.nat]
@@ -247,11 +231,6 @@ resource "databricks_mws_workspaces" "this" {
 
 output "databricks_host" {
   value = databricks_mws_workspaces.this.workspace_url
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -273,12 +252,13 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = module.dbx_gcp.workspace_url
-  token = module.dbx_gcp.token_value
+  host          = module.dbx_gcp.workspace_url
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
-We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project and `workspace_url` is the output attribute of that module. This provider configuration will allow you to authenticate to the created workspace after workspace creation.
 
 ### More than one authorization method configured error
 

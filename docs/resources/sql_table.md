@@ -190,7 +190,7 @@ The following arguments are supported:
 
 ### `column` configuration block
 
-For table columns
+For table columns. These can be optional for external tables.
 Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column
@@ -207,10 +207,19 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its full name.
+This resource can be imported by its full name:
+
+```hcl
+import {
+  to = databricks_sql_table.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
+terraform import databricks_sql_table.this "<catalog_name>.<schema_name>.<name>"
 ```
 
 ## Migration from `databricks_table`

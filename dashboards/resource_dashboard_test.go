@@ -18,7 +18,7 @@ func TestDashboardCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DisplayName:         "Dashboard name",
 					WarehouseId:         "abc",
 					ParentPath:          "/path",
@@ -71,7 +71,7 @@ func TestDashboardCreate_NoParent(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			lv := w.GetMockLakeviewAPI().EXPECT()
 			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DisplayName:         "Dashboard name",
 					WarehouseId:         "abc",
 					ParentPath:          "/path",
@@ -80,7 +80,7 @@ func TestDashboardCreate_NoParent(t *testing.T) {
 			}).Return(nil, fmt.Errorf("Path (/path) doesn't exist.")).Once()
 			w.GetMockWorkspaceAPI().EXPECT().MkdirsByPath(mock.Anything, "/path").Return(nil)
 			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DisplayName:         "Dashboard name",
 					WarehouseId:         "abc",
 					ParentPath:          "/path",
@@ -180,7 +180,7 @@ func TestDashboardUpdate(t *testing.T) {
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Update(mock.Anything, dashboards.UpdateDashboardRequest{
 				DashboardId: "xyz",
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DashboardId:         "xyz",
 					DisplayName:         "Dashboard name",
 					WarehouseId:         "abc",

@@ -1530,6 +1530,167 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreatePtEndpointRequest_SdkV2 struct {
+	// The AI Gateway configuration for the serving endpoint.
+	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy associated with the endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// The core config of the serving endpoint.
+	Config types.List `tfsdk:"config"`
+	// The name of the serving endpoint. This field is required and must be
+	// unique across a Databricks workspace. An endpoint name can consist of
+	// alphanumeric characters, dashes, and underscores.
+	Name types.String `tfsdk:"name"`
+	// Tags to be attached to the serving endpoint and automatically propagated
+	// to billing logs.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePtEndpointRequest_SdkV2) {
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePtEndpointRequest_SdkV2) {
+}
+
+func (c CreatePtEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePtEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreatePtEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ai_gateway": reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":     reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+		"tags":       reflect.TypeOf(EndpointTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreatePtEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreatePtEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ai_gateway":       o.AiGateway,
+			"budget_policy_id": o.BudgetPolicyId,
+			"config":           o.Config,
+			"name":             o.Name,
+			"tags":             o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreatePtEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
+			},
+			"budget_policy_id": types.StringType,
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetAiGateway returns the value of the AiGateway field in CreatePtEndpointRequest_SdkV2 as
+// a AiGatewayConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetAiGateway(ctx context.Context) (AiGatewayConfig_SdkV2, bool) {
+	var e AiGatewayConfig_SdkV2
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig_SdkV2
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetAiGateway(ctx context.Context, v AiGatewayConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in CreatePtEndpointRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreatePtEndpointRequest_SdkV2 as
+// a slice of EndpointTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetTags(ctx context.Context) ([]EndpointTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetTags(ctx context.Context, v []EndpointTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type CreateServingEndpoint_SdkV2 struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: External
 	// model, provisioned throughput, and pay-per-token endpoints are fully
@@ -4811,6 +4972,190 @@ func (o PayloadTable_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type PtEndpointCoreConfig_SdkV2 struct {
+	// The list of served entities under the serving endpoint config.
+	ServedEntities types.List `tfsdk:"served_entities"`
+
+	TrafficConfig types.List `tfsdk:"traffic_config"`
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
+}
+
+func (c PtEndpointCoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtEndpointCoreConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtEndpointCoreConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"served_entities": reflect.TypeOf(PtServedModel_SdkV2{}),
+		"traffic_config":  reflect.TypeOf(TrafficConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtEndpointCoreConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtEndpointCoreConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"served_entities": o.ServedEntities,
+			"traffic_config":  o.TrafficConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtEndpointCoreConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"served_entities": basetypes.ListType{
+				ElemType: PtServedModel_SdkV2{}.Type(ctx),
+			},
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetServedEntities returns the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2 as
+// a slice of PtServedModel_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetServedEntities(ctx context.Context) ([]PtServedModel_SdkV2, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []PtServedModel_SdkV2
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetServedEntities(ctx context.Context, v []PtServedModel_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2 as
+// a TrafficConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetTrafficConfig(ctx context.Context) (TrafficConfig_SdkV2, bool) {
+	var e TrafficConfig_SdkV2
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig_SdkV2
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetTrafficConfig(ctx context.Context, v TrafficConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
+}
+
+type PtServedModel_SdkV2 struct {
+	// The name of the entity to be served. The entity may be a model in the
+	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
+	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
+	// name of the object should be given in the form of
+	// **catalog_name.schema_name.model_name**.
+	EntityName types.String `tfsdk:"entity_name"`
+
+	EntityVersion types.String `tfsdk:"entity_version"`
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
+	Name types.String `tfsdk:"name"`
+	// The number of model units to be provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtServedModel_SdkV2) {
+}
+
+func (c PtServedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtServedModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtServedModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtServedModel_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtServedModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_name":             o.EntityName,
+			"entity_version":          o.EntityVersion,
+			"name":                    o.Name,
+			"provisioned_model_units": o.ProvisionedModelUnits,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtServedModel_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_name":             types.StringType,
+			"entity_version":          types.StringType,
+			"name":                    types.StringType,
+			"provisioned_model_units": types.Int64Type,
+		},
+	}
+}
+
 type PutAiGatewayRequest_SdkV2 struct {
 	// Configuration for traffic fallback which auto fallbacks to other served
 	// entities if the request to a served entity fails with certain error
@@ -6099,8 +6444,14 @@ type ServedEntityInput_SdkV2 struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of a served entity. It must be unique across an endpoint. A
@@ -6109,6 +6460,8 @@ type ServedEntityInput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6117,8 +6470,11 @@ type ServedEntityInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6143,9 +6499,12 @@ func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["external_model"] = attrs["external_model"].SetOptional()
 	attrs["external_model"] = attrs["external_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
@@ -6174,17 +6533,20 @@ func (o ServedEntityInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entity_name":                o.EntityName,
-			"entity_version":             o.EntityVersion,
-			"environment_vars":           o.EnvironmentVars,
-			"external_model":             o.ExternalModel,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"name":                       o.Name,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"entity_name":                 o.EntityName,
+			"entity_version":              o.EntityVersion,
+			"environment_vars":            o.EnvironmentVars,
+			"external_model":              o.ExternalModel,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6200,13 +6562,16 @@ func (o ServedEntityInput_SdkV2) Type(ctx context.Context) attr.Type {
 			"external_model": basetypes.ListType{
 				ElemType: ExternalModel_SdkV2{}.Type(ctx),
 			},
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"name":                       types.StringType,
-			"scale_to_zero_enabled":      types.BoolType,
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -6297,8 +6662,14 @@ type ServedEntityOutput_SdkV2 struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of a served entity. It must be unique across an endpoint. A
@@ -6307,6 +6678,8 @@ type ServedEntityOutput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6317,8 +6690,11 @@ type ServedEntityOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6347,9 +6723,12 @@ func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["foundation_model"] = attrs["foundation_model"].SetOptional()
 	attrs["foundation_model"] = attrs["foundation_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6382,21 +6761,24 @@ func (o ServedEntityOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":         o.CreationTimestamp,
-			"creator":                    o.Creator,
-			"entity_name":                o.EntityName,
-			"entity_version":             o.EntityVersion,
-			"environment_vars":           o.EnvironmentVars,
-			"external_model":             o.ExternalModel,
-			"foundation_model":           o.FoundationModel,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"name":                       o.Name,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"state":                      o.State,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"creation_timestamp":          o.CreationTimestamp,
+			"creator":                     o.Creator,
+			"entity_name":                 o.EntityName,
+			"entity_version":              o.EntityVersion,
+			"environment_vars":            o.EnvironmentVars,
+			"external_model":              o.ExternalModel,
+			"foundation_model":            o.FoundationModel,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"state":                       o.State,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6417,11 +6799,14 @@ func (o ServedEntityOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"foundation_model": basetypes.ListType{
 				ElemType: FoundationModel_SdkV2{}.Type(ctx),
 			},
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"name":                       types.StringType,
-			"scale_to_zero_enabled":      types.BoolType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
 			"state": basetypes.ListType{
 				ElemType: ServedModelState_SdkV2{}.Type(ctx),
 			},
@@ -6675,8 +7060,14 @@ type ServedModelInput_SdkV2 struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 
@@ -6689,6 +7080,8 @@ type ServedModelInput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6697,8 +7090,11 @@ type ServedModelInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6719,11 +7115,14 @@ func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetRequired()
 	attrs["model_version"] = attrs["model_version"].SetRequired()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetRequired()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
@@ -6751,16 +7150,19 @@ func (o ServedModelInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"environment_vars":           o.EnvironmentVars,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"model_name":                 o.ModelName,
-			"model_version":              o.ModelVersion,
-			"name":                       o.Name,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"environment_vars":            o.EnvironmentVars,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"model_name":                  o.ModelName,
+			"model_version":               o.ModelVersion,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6771,15 +7173,18 @@ func (o ServedModelInput_SdkV2) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"model_name":                 types.StringType,
-			"model_version":              types.StringType,
-			"name":                       types.StringType,
-			"scale_to_zero_enabled":      types.BoolType,
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"model_name":                  types.StringType,
+			"model_version":               types.StringType,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -6824,6 +7229,12 @@ type ServedModelOutput_SdkV2 struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 
 	ModelName types.String `tfsdk:"model_name"`
 
@@ -6834,6 +7245,8 @@ type ServedModelOutput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6844,8 +7257,11 @@ type ServedModelOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6868,9 +7284,12 @@ func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["model_version"] = attrs["model_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6901,17 +7320,20 @@ func (o ServedModelOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":    o.CreationTimestamp,
-			"creator":               o.Creator,
-			"environment_vars":      o.EnvironmentVars,
-			"instance_profile_arn":  o.InstanceProfileArn,
-			"model_name":            o.ModelName,
-			"model_version":         o.ModelVersion,
-			"name":                  o.Name,
-			"scale_to_zero_enabled": o.ScaleToZeroEnabled,
-			"state":                 o.State,
-			"workload_size":         o.WorkloadSize,
-			"workload_type":         o.WorkloadType,
+			"creation_timestamp":          o.CreationTimestamp,
+			"creator":                     o.Creator,
+			"environment_vars":            o.EnvironmentVars,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"model_name":                  o.ModelName,
+			"model_version":               o.ModelVersion,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"state":                       o.State,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6924,11 +7346,14 @@ func (o ServedModelOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"instance_profile_arn":  types.StringType,
-			"model_name":            types.StringType,
-			"model_version":         types.StringType,
-			"name":                  types.StringType,
-			"scale_to_zero_enabled": types.BoolType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"model_name":                  types.StringType,
+			"model_version":               types.StringType,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
 			"state": basetypes.ListType{
 				ElemType: ServedModelState_SdkV2{}.Type(ctx),
 			},
@@ -8222,6 +8647,89 @@ func (o *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Routes = types.ListValueMust(t, vs)
+}
+
+type UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 struct {
+	Config types.List `tfsdk:"config"`
+	// The name of the pt endpoint to update. This field is required.
+	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (c UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvisionedThroughputEndpointConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"config": reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateProvisionedThroughputEndpointConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"config": o.Config,
+			"name":   o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetConfig returns the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
 }
 
 type V1ResponseChoiceElement_SdkV2 struct {

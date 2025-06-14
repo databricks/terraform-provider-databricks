@@ -312,7 +312,7 @@ func listJobs(ic *importContext) error {
 	return nil
 }
 
-func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	switch pathString {
 	case "url", "format":
 		return true
@@ -376,9 +376,9 @@ func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schem
 		// TODO: double check it
 	}
 	if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
-		return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
+		return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d, r)
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 }
 
 func shouldIgnoreJob(ic *importContext, r *resource) bool {

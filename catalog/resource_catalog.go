@@ -102,7 +102,7 @@ func ResourceCatalog() common.Resource {
 			}
 
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, catalog.UpdateBindingsSecurableTypeCatalog)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -183,7 +183,7 @@ func ResourceCatalog() common.Resource {
 			d.SetId(ci.Name)
 
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, catalog.UpdateBindingsSecurableTypeCatalog)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func getTestNccRule() *settings.NccAzurePrivateEndpointRule {
-	return &settings.NccAzurePrivateEndpointRule{
+func getTestNccRule() *settings.NccPrivateEndpointRule {
+	return &settings.NccPrivateEndpointRule{
 		GroupId:                     "group_id",
 		ResourceId:                  "resource_id",
 		RuleId:                      "rule_id",
@@ -29,8 +29,10 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
 			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
 				NetworkConnectivityConfigId: "ncc_id",
-				ResourceId:                  "resource_id",
-				GroupId:                     "blob",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(getTestNccRule(), nil)
 		},
@@ -51,8 +53,10 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testin
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
 			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
 				NetworkConnectivityConfigId: "ncc_id",
-				ResourceId:                  "resource_id",
-				GroupId:                     "blob",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
 			}).Return(nil, &apierr.APIError{Message: "error"})
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
@@ -111,7 +115,7 @@ func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().
 				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
-				Return(&settings.NccAzurePrivateEndpointRule{}, nil)
+				Return(&settings.NccPrivateEndpointRule{}, nil)
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",

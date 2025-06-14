@@ -286,10 +286,10 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		raw, nonZero := d.GetOk(pathString)
 		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
-			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
+			if defaultShouldOmitFieldFunc(ic, pathString, as, d, res) {
 				continue
 			}
-		} else if i.ShouldOmitField(ic, pathString, as, d) {
+		} else if i.ShouldOmitField(ic, pathString, as, d, res) {
 			continue
 		}
 		mpath := dependsRe.ReplaceAllString(pathString, "")
@@ -312,7 +312,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			// In case when have zero value, but there is non-zero default, we also need to produce it
 			shouldSkip = false
 		}
-		if shouldSkip && (i.ShouldGenerateField == nil || !i.ShouldGenerateField(ic, pathString, as, d)) {
+		if shouldSkip && (i.ShouldGenerateField == nil || !i.ShouldGenerateField(ic, pathString, as, d, res)) {
 			continue
 		}
 		switch as.Type {

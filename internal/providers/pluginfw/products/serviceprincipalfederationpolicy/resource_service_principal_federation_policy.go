@@ -35,7 +35,6 @@ func (rspfp *resourceServicePrincipalFederationPolicy) Create(ctx context.Contex
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	ac, diags := rspfp.client.GetAccountClient()
 	response.Diagnostics.Append(diags...)
-
 	var spfpr servicePrincipalFederationPolicyResource
 	response.Diagnostics.Append(request.Plan.Get(ctx, &spfpr)...)
 	if response.Diagnostics.HasError() {
@@ -48,7 +47,7 @@ func (rspfp *resourceServicePrincipalFederationPolicy) Create(ctx context.Contex
 	}
 
 	finalSpfpr, err := ac.ServicePrincipalFederationPolicy.Create(ctx, oauth2.CreateServicePrincipalFederationPolicyRequest{
-		Policy:             &federationPolicyGoSdk,
+		Policy:             federationPolicyGoSdk,
 		ServicePrincipalId: spfpr.ServicePrincipalId.ValueInt64(),
 	})
 	if err != nil {
@@ -132,7 +131,7 @@ func (rspfp *resourceServicePrincipalFederationPolicy) Update(ctx context.Contex
 	}
 	updatedFederationPolicyGoSdk, err := ac.ServicePrincipalFederationPolicy.Update(ctx,
 		oauth2.UpdateServicePrincipalFederationPolicyRequest{
-			Policy:             &federationPolicyGoSdk,
+			Policy:             federationPolicyGoSdk,
 			PolicyId:           getLastPartOfName(&spfpr),
 			ServicePrincipalId: spfpr.ServicePrincipalId.ValueInt64(),
 		},

@@ -20,7 +20,7 @@ resource "databricks_service_principal" "sp" {
 
 resource "databricks_service_principal_federation_policy" "dspfp" {
   service_principal_id = databricks_service_principal.sp.id
-  oidc_policy  {
+  oidc_policy = {
     issuer = "https://idp.mycompany.com/oidc"
     audiences = ["2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"]
     jwks_uri: "https://idp.mycompany.com/jwks.json"

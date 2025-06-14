@@ -1631,27 +1631,6 @@ type Group_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *Group_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group_SdkV2) {
-}
-
-func (newState *Group_SdkV2) SyncEffectiveFieldsDuringRead(existingState Group_SdkV2) {
-}
-
-func (c Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["displayName"] = attrs["displayName"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["meta"] = attrs["meta"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Group.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2711,21 +2690,6 @@ type MigratePermissionsRequest_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *MigratePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsRequest_SdkV2) {
-}
-
-func (newState *MigratePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsRequest_SdkV2) {
-}
-
-func (c MigratePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
-	attrs["size"] = attrs["size"].SetOptional()
-	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2959,20 +2923,6 @@ type PartialUpdate_SdkV2 struct {
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
-}
-
-func (newState *PartialUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartialUpdate_SdkV2) {
-}
-
-func (newState *PartialUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState PartialUpdate_SdkV2) {
-}
-
-func (c PartialUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["Operations"] = attrs["Operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartialUpdate.
@@ -3458,18 +3408,6 @@ func (o PasswordPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Typ
 
 type PasswordPermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
-}
-
-func (newState *PasswordPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsRequest_SdkV2) {
-}
-
-func (newState *PasswordPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsRequest_SdkV2) {
-}
-
-func (c PasswordPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsRequest.
@@ -4394,26 +4332,6 @@ type ServicePrincipal_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *ServicePrincipal_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal_SdkV2) {
-}
-
-func (newState *ServicePrincipal_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal_SdkV2) {
-}
-
-func (c ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["applicationId"] = attrs["applicationId"].SetOptional()
-	attrs["displayName"] = attrs["displayName"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServicePrincipal.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4590,20 +4508,6 @@ type SetObjectPermissions_SdkV2 struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
-func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetObjectPermissions_SdkV2) {
-}
-
-func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetObjectPermissions_SdkV2) {
-}
-
-func (c SetObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4679,20 +4583,6 @@ type UpdateObjectPermissions_SdkV2 struct {
 	// pipelines, queries, registered-models, repos, serving-endpoints, or
 	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateObjectPermissions_SdkV2) {
-}
-
-func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateObjectPermissions_SdkV2) {
-}
-
-func (c UpdateObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
@@ -4797,20 +4687,6 @@ type UpdateRuleSetRequest_SdkV2 struct {
 	RuleSet types.List `tfsdk:"rule_set"`
 }
 
-func (newState *UpdateRuleSetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest_SdkV2) {
-}
-
-func (newState *UpdateRuleSetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRuleSetRequest_SdkV2) {
-}
-
-func (c UpdateRuleSetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRuleSetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4886,20 +4762,6 @@ type UpdateWorkspaceAssignments_SdkV2 struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *UpdateWorkspaceAssignments_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceAssignments_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceAssignments_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceAssignments_SdkV2) {
-}
-
-func (c UpdateWorkspaceAssignments_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignments.
@@ -4998,29 +4860,6 @@ type User_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 	// Email address of the Databricks user.
 	UserName types.String `tfsdk:"userName"`
-}
-
-func (newState *User_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan User_SdkV2) {
-}
-
-func (newState *User_SdkV2) SyncEffectiveFieldsDuringRead(existingState User_SdkV2) {
-}
-
-func (c User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["displayName"] = attrs["displayName"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["name"] = attrs["name"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["userName"] = attrs["userName"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in User.

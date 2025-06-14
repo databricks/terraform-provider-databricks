@@ -19,7 +19,7 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 
 ## Import
-As of terraform v1.5, resources can be imported through configuration.
+As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
   id = workspace_id
@@ -27,7 +27,7 @@ import {
 }
 ```
 
-If you are using an older version of terraform, you can import the resource using cli as follows:
+If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-$ terraform import databricks_workspace_network_option workspace_id
+terraform import databricks_workspace_network_option workspace_id
 ```

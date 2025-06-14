@@ -27,19 +27,6 @@ type AccountsCreateMetastore_SdkV2 struct {
 	MetastoreInfo types.List `tfsdk:"metastore_info"`
 }
 
-func (newState *AccountsCreateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastore_SdkV2) {
-}
-
-func (newState *AccountsCreateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastore_SdkV2) {
-}
-
-func (c AccountsCreateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["metastore_info"] = attrs["metastore_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateMetastore.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -107,21 +94,6 @@ type AccountsCreateMetastoreAssignment_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *AccountsCreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *AccountsCreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastoreAssignment_SdkV2) {
-}
-
-func (c AccountsCreateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateMetastoreAssignment.
@@ -193,20 +165,6 @@ type AccountsCreateStorageCredential_SdkV2 struct {
 	CredentialInfo types.List `tfsdk:"credential_info"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
-}
-
-func (newState *AccountsCreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateStorageCredential_SdkV2) {
-}
-
-func (newState *AccountsCreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateStorageCredential_SdkV2) {
-}
-
-func (c AccountsCreateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_info"] = attrs["credential_info"].SetOptional()
-	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateStorageCredential.
@@ -513,20 +471,6 @@ type AccountsUpdateMetastore_SdkV2 struct {
 	MetastoreInfo types.List `tfsdk:"metastore_info"`
 }
 
-func (newState *AccountsUpdateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastore_SdkV2) {
-}
-
-func (newState *AccountsUpdateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastore_SdkV2) {
-}
-
-func (c AccountsUpdateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["metastore_info"] = attrs["metastore_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateMetastore.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -596,21 +540,6 @@ type AccountsUpdateMetastoreAssignment_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *AccountsUpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *AccountsUpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastoreAssignment_SdkV2) {
-}
-
-func (c AccountsUpdateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateMetastoreAssignment.
@@ -684,21 +613,6 @@ type AccountsUpdateStorageCredential_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Name of the storage credential.
 	StorageCredentialName types.String `tfsdk:"-"`
-}
-
-func (newState *AccountsUpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateStorageCredential_SdkV2) {
-}
-
-func (newState *AccountsUpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateStorageCredential_SdkV2) {
-}
-
-func (c AccountsUpdateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_info"] = attrs["credential_info"].SetOptional()
-	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateStorageCredential.
@@ -2644,25 +2558,6 @@ type CreateCatalog_SdkV2 struct {
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
-func (newState *CreateCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCatalog_SdkV2) {
-}
-
-func (newState *CreateCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCatalog_SdkV2) {
-}
-
-func (c CreateCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["connection_name"] = attrs["connection_name"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["options"] = attrs["options"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["provider_name"] = attrs["provider_name"].SetOptional()
-	attrs["share_name"] = attrs["share_name"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCatalog.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2780,23 +2675,6 @@ type CreateConnection_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-}
-
-func (newState *CreateConnection_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateConnection_SdkV2) {
-}
-
-func (newState *CreateConnection_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateConnection_SdkV2) {
-}
-
-func (c CreateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["connection_type"] = attrs["connection_type"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["options"] = attrs["options"].SetRequired()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateConnection.
@@ -2923,30 +2801,6 @@ type CreateCredentialRequest_SdkV2 struct {
 	// Optional. Supplying true to this argument skips validation of the created
 	// set of credentials.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialRequest_SdkV2) {
-}
-
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest_SdkV2) {
-}
-
-func (c CreateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["purpose"] = attrs["purpose"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialRequest.
@@ -3138,29 +2992,6 @@ type CreateExternalLocation_SdkV2 struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 	// Path URL of the external location.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *CreateExternalLocation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExternalLocation_SdkV2) {
-}
-
-func (newState *CreateExternalLocation_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExternalLocation_SdkV2) {
-}
-
-func (c CreateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["credential_name"] = attrs["credential_name"].SetRequired()
-	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["fallback"] = attrs["fallback"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["url"] = attrs["url"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExternalLocation.
@@ -3519,19 +3350,6 @@ type CreateFunctionRequest_SdkV2 struct {
 	FunctionInfo types.List `tfsdk:"function_info"`
 }
 
-func (newState *CreateFunctionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFunctionRequest_SdkV2) {
-}
-
-func (newState *CreateFunctionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateFunctionRequest_SdkV2) {
-}
-
-func (c CreateFunctionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["function_info"] = attrs["function_info"].SetRequired()
-	attrs["function_info"] = attrs["function_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFunctionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3602,20 +3420,6 @@ type CreateMetastore_SdkV2 struct {
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
-func (newState *CreateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMetastore_SdkV2) {
-}
-
-func (newState *CreateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateMetastore_SdkV2) {
-}
-
-func (c CreateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["region"] = attrs["region"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMetastore.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3660,20 +3464,6 @@ type CreateMetastoreAssignment_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// A workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *CreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *CreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateMetastoreAssignment_SdkV2) {
-}
-
-func (c CreateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_catalog_name"] = attrs["default_catalog_name"].SetRequired()
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMetastoreAssignment.
@@ -3750,37 +3540,6 @@ type CreateMonitor_SdkV2 struct {
 	// Optional argument to specify the warehouse for dashboard creation. If not
 	// specified, the first running warehouse will be used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *CreateMonitor_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMonitor_SdkV2) {
-}
-
-func (newState *CreateMonitor_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateMonitor_SdkV2) {
-}
-
-func (c CreateMonitor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["assets_dir"] = attrs["assets_dir"].SetRequired()
-	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
-	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inference_log"] = attrs["inference_log"].SetOptional()
-	attrs["inference_log"] = attrs["inference_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["output_schema_name"] = attrs["output_schema_name"].SetRequired()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["skip_builtin_dashboard"] = attrs["skip_builtin_dashboard"].SetOptional()
-	attrs["slicing_exprs"] = attrs["slicing_exprs"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["time_series"] = attrs["time_series"].SetOptional()
-	attrs["time_series"] = attrs["time_series"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMonitor.
@@ -4154,22 +3913,6 @@ type CreateRegisteredModelRequest_SdkV2 struct {
 	StorageLocation types.String `tfsdk:"storage_location"`
 }
 
-func (newState *CreateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegisteredModelRequest_SdkV2) {
-}
-
-func (newState *CreateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRegisteredModelRequest_SdkV2) {
-}
-
-func (c CreateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRegisteredModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4250,22 +3993,6 @@ type CreateSchema_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// Storage root URL for managed tables within schema.
 	StorageRoot types.String `tfsdk:"storage_root"`
-}
-
-func (newState *CreateSchema_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSchema_SdkV2) {
-}
-
-func (newState *CreateSchema_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateSchema_SdkV2) {
-}
-
-func (c CreateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSchema.
@@ -4357,31 +4084,6 @@ type CreateStorageCredential_SdkV2 struct {
 	// Supplying true to this argument skips validation of the created
 	// credential.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *CreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateStorageCredential_SdkV2) {
-}
-
-func (newState *CreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateStorageCredential_SdkV2) {
-}
-
-func (c CreateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].SetOptional()
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateStorageCredential.
@@ -4586,20 +4288,6 @@ type CreateTableConstraint_SdkV2 struct {
 	FullNameArg types.String `tfsdk:"full_name_arg"`
 }
 
-func (newState *CreateTableConstraint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTableConstraint_SdkV2) {
-}
-
-func (newState *CreateTableConstraint_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTableConstraint_SdkV2) {
-}
-
-func (c CreateTableConstraint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["constraint"] = attrs["constraint"].SetRequired()
-	attrs["constraint"] = attrs["constraint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["full_name_arg"] = attrs["full_name_arg"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTableConstraint.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4681,23 +4369,6 @@ type CreateVolumeRequestContent_SdkV2 struct {
 	//
 	// [Learn more]: https://docs.databricks.com/aws/en/volumes/managed-vs-external
 	VolumeType types.String `tfsdk:"volume_type"`
-}
-
-func (newState *CreateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVolumeRequestContent_SdkV2) {
-}
-
-func (newState *CreateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVolumeRequestContent_SdkV2) {
-}
-
-func (c CreateVolumeRequestContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-	attrs["volume_type"] = attrs["volume_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVolumeRequestContent.
@@ -6754,20 +6425,6 @@ type EnableRequest_SdkV2 struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
-func (newState *EnableRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableRequest_SdkV2) {
-}
-
-func (newState *EnableRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnableRequest_SdkV2) {
-}
-
-func (c EnableRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8396,22 +8053,6 @@ type GenerateTemporaryServiceCredentialRequest_SdkV2 struct {
 	GcpOptions types.List `tfsdk:"gcp_options"`
 }
 
-func (newState *GenerateTemporaryServiceCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest_SdkV2) {
-}
-
-func (newState *GenerateTemporaryServiceCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialRequest_SdkV2) {
-}
-
-func (c GenerateTemporaryServiceCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["azure_options"] = attrs["azure_options"].SetOptional()
-	attrs["azure_options"] = attrs["azure_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credential_name"] = attrs["credential_name"].SetRequired()
-	attrs["gcp_options"] = attrs["gcp_options"].SetOptional()
-	attrs["gcp_options"] = attrs["gcp_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryServiceCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8513,19 +8154,6 @@ type GenerateTemporaryTableCredentialRequest_SdkV2 struct {
 	Operation types.String `tfsdk:"operation"`
 	// UUID of the table to read or write.
 	TableId types.String `tfsdk:"table_id"`
-}
-
-func (newState *GenerateTemporaryTableCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryTableCredentialRequest_SdkV2) {
-}
-
-func (newState *GenerateTemporaryTableCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryTableCredentialRequest_SdkV2) {
-}
-
-func (c GenerateTemporaryTableCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operation"] = attrs["operation"].SetOptional()
-	attrs["table_id"] = attrs["table_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryTableCredentialRequest.
@@ -15653,19 +15281,6 @@ type RegenerateDashboardRequest_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *RegenerateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegenerateDashboardRequest_SdkV2) {
-}
-
-func (newState *RegenerateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegenerateDashboardRequest_SdkV2) {
-}
-
-func (c RegenerateDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegenerateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16201,22 +15816,6 @@ type SetArtifactAllowlist_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 }
 
-func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetArtifactAllowlist_SdkV2) {
-}
-
-func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetArtifactAllowlist_SdkV2) {
-}
-
-func (c SetArtifactAllowlist_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetRequired()
-	attrs["artifact_type"] = attrs["artifact_type"].SetRequired()
-	attrs["created_at"] = attrs["created_at"].SetComputed()
-	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetArtifactAllowlist.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16293,20 +15892,6 @@ type SetRegisteredModelAliasRequest_SdkV2 struct {
 	FullName types.String `tfsdk:"full_name"`
 	// The version number of the model version to which the alias points
 	VersionNum types.Int64 `tfsdk:"version_num"`
-}
-
-func (newState *SetRegisteredModelAliasRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRegisteredModelAliasRequest_SdkV2) {
-}
-
-func (newState *SetRegisteredModelAliasRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetRegisteredModelAliasRequest_SdkV2) {
-}
-
-func (c SetRegisteredModelAliasRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alias"] = attrs["alias"].SetRequired()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["version_num"] = attrs["version_num"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRegisteredModelAliasRequest.
@@ -18032,25 +17617,6 @@ type UpdateCatalog_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 }
 
-func (newState *UpdateCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCatalog_SdkV2) {
-}
-
-func (newState *UpdateCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCatalog_SdkV2) {
-}
-
-func (c UpdateCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["options"] = attrs["options"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCatalog.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18244,21 +17810,6 @@ type UpdateConnection_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateConnection_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateConnection_SdkV2) {
-}
-
-func (newState *UpdateConnection_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateConnection_SdkV2) {
-}
-
-func (c UpdateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["options"] = attrs["options"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateConnection.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18358,33 +17909,6 @@ type UpdateCredentialRequest_SdkV2 struct {
 	// Supply true to this argument to skip validation of the updated
 	// credential.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *UpdateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialRequest_SdkV2) {
-}
-
-func (newState *UpdateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialRequest_SdkV2) {
-}
-
-func (c UpdateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["force"] = attrs["force"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name_arg"] = attrs["name_arg"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCredentialRequest.
@@ -18593,33 +18117,6 @@ type UpdateExternalLocation_SdkV2 struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *UpdateExternalLocation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExternalLocation_SdkV2) {
-}
-
-func (newState *UpdateExternalLocation_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExternalLocation_SdkV2) {
-}
-
-func (c UpdateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["credential_name"] = attrs["credential_name"].SetOptional()
-	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["fallback"] = attrs["fallback"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["force"] = attrs["force"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExternalLocation.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18744,19 +18241,6 @@ type UpdateFunction_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateFunction_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateFunction_SdkV2) {
-}
-
-func (newState *UpdateFunction_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateFunction_SdkV2) {
-}
-
-func (c UpdateFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateFunction.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18809,25 +18293,6 @@ type UpdateMetastore_SdkV2 struct {
 	PrivilegeModelVersion types.String `tfsdk:"privilege_model_version"`
 	// UUID of storage credential to access the metastore storage_root.
 	StorageRootCredentialId types.String `tfsdk:"storage_root_credential_id"`
-}
-
-func (newState *UpdateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMetastore_SdkV2) {
-}
-
-func (newState *UpdateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateMetastore_SdkV2) {
-}
-
-func (c UpdateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_sharing_organization_name"] = attrs["delta_sharing_organization_name"].SetOptional()
-	attrs["delta_sharing_recipient_token_lifetime_in_seconds"] = attrs["delta_sharing_recipient_token_lifetime_in_seconds"].SetOptional()
-	attrs["delta_sharing_scope"] = attrs["delta_sharing_scope"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["privilege_model_version"] = attrs["privilege_model_version"].SetOptional()
-	attrs["storage_root_credential_id"] = attrs["storage_root_credential_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateMetastore.
@@ -18886,20 +18351,6 @@ type UpdateMetastoreAssignment_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-func (newState *UpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *UpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateMetastoreAssignment_SdkV2) {
-}
-
-func (c UpdateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_catalog_name"] = attrs["default_catalog_name"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateMetastoreAssignment.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18942,20 +18393,6 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	FullName types.String `tfsdk:"-"`
 	// The integer version number of the model version
 	Version types.Int64 `tfsdk:"-"`
-}
-
-func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest_SdkV2) {
-}
-
-func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest_SdkV2) {
-}
-
-func (c UpdateModelVersionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelVersionRequest.
@@ -19027,35 +18464,6 @@ type UpdateMonitor_SdkV2 struct {
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
 	TimeSeries types.List `tfsdk:"time_series"`
-}
-
-func (newState *UpdateMonitor_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMonitor_SdkV2) {
-}
-
-func (newState *UpdateMonitor_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateMonitor_SdkV2) {
-}
-
-func (c UpdateMonitor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
-	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inference_log"] = attrs["inference_log"].SetOptional()
-	attrs["inference_log"] = attrs["inference_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["output_schema_name"] = attrs["output_schema_name"].SetRequired()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["slicing_exprs"] = attrs["slicing_exprs"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["time_series"] = attrs["time_series"].SetOptional()
-	attrs["time_series"] = attrs["time_series"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateMonitor.
@@ -19353,20 +18761,6 @@ type UpdatePermissions_SdkV2 struct {
 	SecurableType types.String `tfsdk:"-"`
 }
 
-func (newState *UpdatePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissions_SdkV2) {
-}
-
-func (newState *UpdatePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePermissions_SdkV2) {
-}
-
-func (c UpdatePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["changes"] = attrs["changes"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["securable_type"] = attrs["securable_type"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19521,21 +18915,6 @@ type UpdateRegisteredModelRequest_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegisteredModelRequest_SdkV2) {
-}
-
-func (newState *UpdateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRegisteredModelRequest_SdkV2) {
-}
-
-func (c UpdateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRegisteredModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19617,23 +18996,6 @@ type UpdateSchema_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-}
-
-func (newState *UpdateSchema_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSchema_SdkV2) {
-}
-
-func (newState *UpdateSchema_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateSchema_SdkV2) {
-}
-
-func (c UpdateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSchema.
@@ -19736,35 +19098,6 @@ type UpdateStorageCredential_SdkV2 struct {
 	// Supplying true to this argument skips validation of the updated
 	// credential.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *UpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStorageCredential_SdkV2) {
-}
-
-func (newState *UpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateStorageCredential_SdkV2) {
-}
-
-func (c UpdateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].SetOptional()
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["force"] = attrs["force"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateStorageCredential.
@@ -19976,19 +19309,6 @@ type UpdateTableRequest_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateTableRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateTableRequest_SdkV2) {
-}
-
-func (newState *UpdateTableRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateTableRequest_SdkV2) {
-}
-
-func (c UpdateTableRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -20031,21 +19351,6 @@ type UpdateVolumeRequestContent_SdkV2 struct {
 	NewName types.String `tfsdk:"new_name"`
 	// The identifier of the user who owns the volume
 	Owner types.String `tfsdk:"owner"`
-}
-
-func (newState *UpdateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVolumeRequestContent_SdkV2) {
-}
-
-func (newState *UpdateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateVolumeRequestContent_SdkV2) {
-}
-
-func (c UpdateVolumeRequestContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateVolumeRequestContent.
@@ -20092,20 +19397,6 @@ type UpdateWorkspaceBindings_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// A list of workspace IDs.
 	UnassignWorkspaces types.List `tfsdk:"unassign_workspaces"`
-}
-
-func (newState *UpdateWorkspaceBindings_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindings_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceBindings_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindings_SdkV2) {
-}
-
-func (c UpdateWorkspaceBindings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["assign_workspaces"] = attrs["assign_workspaces"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["unassign_workspaces"] = attrs["unassign_workspaces"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceBindings.
@@ -20212,21 +19503,6 @@ type UpdateWorkspaceBindingsParameters_SdkV2 struct {
 	// The type of the securable to bind to a workspace (catalog,
 	// storage_credential, credential, or external_location).
 	SecurableType types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateWorkspaceBindingsParameters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindingsParameters_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceBindingsParameters_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindingsParameters_SdkV2) {
-}
-
-func (c UpdateWorkspaceBindingsParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["add"] = attrs["add"].SetOptional()
-	attrs["remove"] = attrs["remove"].SetOptional()
-	attrs["securable_name"] = attrs["securable_name"].SetRequired()
-	attrs["securable_type"] = attrs["securable_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceBindingsParameters.
@@ -20428,28 +19704,6 @@ type ValidateCredentialRequest_SdkV2 struct {
 	// The external location url to validate. Only applicable when purpose is
 	// **STORAGE**.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *ValidateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateCredentialRequest_SdkV2) {
-}
-
-func (newState *ValidateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ValidateCredentialRequest_SdkV2) {
-}
-
-func (c ValidateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credential_name"] = attrs["credential_name"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["external_location_name"] = attrs["external_location_name"].SetOptional()
-	attrs["purpose"] = attrs["purpose"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ValidateCredentialRequest.
@@ -20688,31 +19942,6 @@ type ValidateStorageCredential_SdkV2 struct {
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
 	// The external location url to validate.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *ValidateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateStorageCredential_SdkV2) {
-}
-
-func (newState *ValidateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState ValidateStorageCredential_SdkV2) {
-}
-
-func (c ValidateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].SetOptional()
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["external_location_name"] = attrs["external_location_name"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ValidateStorageCredential.

@@ -818,19 +818,6 @@ type CancelAllRuns struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRuns) {
-}
-
-func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
-}
-
-func (c CancelAllRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -897,18 +884,6 @@ func (o CancelAllRunsResponse) Type(ctx context.Context) attr.Type {
 type CancelRun struct {
 	// This field is required.
 	RunId types.Int64 `tfsdk:"run_id"`
-}
-
-func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRun) {
-}
-
-func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
-}
-
-func (c CancelRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
@@ -1758,42 +1733,6 @@ type CreateJob struct {
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
-}
-
-func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJob) {
-}
-
-func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
-}
-
-func (c CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
-	attrs["environment"] = attrs["environment"].SetOptional()
-	attrs["format"] = attrs["format"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].SetOptional()
-	attrs["health"] = attrs["health"].SetOptional()
-	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
-	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
-	attrs["parameter"] = attrs["parameter"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["task"] = attrs["task"].SetOptional()
-	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
@@ -3158,18 +3097,6 @@ type DeleteJob struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJob) {
-}
-
-func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
-}
-
-func (c DeleteJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3234,18 +3161,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 type DeleteRun struct {
 	// ID of the run to delete.
 	RunId types.Int64 `tfsdk:"run_id"`
-}
-
-func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
-}
-
-func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
-}
-
-func (c DeleteRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -3382,19 +3297,6 @@ type EnforcePolicyComplianceRequest struct {
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceRequest) {
-}
-
-func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
-}
-
-func (c EnforcePolicyComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
@@ -6154,19 +6056,6 @@ type JobPermissionsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
-func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsRequest) {
-}
-
-func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
-}
-
-func (c JobPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8865,32 +8754,6 @@ type RepairRun struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRun) {
-}
-
-func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
-}
-
-func (c RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
-	attrs["jar_params"] = attrs["jar_params"].SetOptional()
-	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
-	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
-	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
-	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
-	attrs["python_params"] = attrs["python_params"].SetOptional()
-	attrs["rerun_all_failed_tasks"] = attrs["rerun_all_failed_tasks"].SetOptional()
-	attrs["rerun_dependent_tasks"] = attrs["rerun_dependent_tasks"].SetOptional()
-	attrs["rerun_tasks"] = attrs["rerun_tasks"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
-	attrs["sql_params"] = attrs["sql_params"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9300,19 +9163,6 @@ type ResetJob struct {
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
 	NewSettings types.Object `tfsdk:"new_settings"`
-}
-
-func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob) {
-}
-
-func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
-}
-
-func (c ResetJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["new_settings"] = attrs["new_settings"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
@@ -11840,31 +11690,6 @@ type RunNow struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams types.Map `tfsdk:"sql_params"`
-}
-
-func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
-}
-
-func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
-}
-
-func (c RunNow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
-	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
-	attrs["jar_params"] = attrs["jar_params"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
-	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
-	attrs["only"] = attrs["only"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
-	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
-	attrs["python_params"] = attrs["python_params"].SetOptional()
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
-	attrs["sql_params"] = attrs["sql_params"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
@@ -15948,31 +15773,6 @@ type SubmitRun struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRun) {
-}
-
-func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
-}
-
-func (c SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
-	attrs["environments"] = attrs["environments"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].SetOptional()
-	attrs["health"] = attrs["health"].SetOptional()
-	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_name"] = attrs["run_name"].SetOptional()
-	attrs["tasks"] = attrs["tasks"].SetOptional()
-	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19268,20 +19068,6 @@ type UpdateJob struct {
 	// Changes to the field `JobSettings.timeout_seconds` are applied to active
 	// runs. Changes to other fields are applied to future runs only.
 	NewSettings types.Object `tfsdk:"new_settings"`
-}
-
-func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJob) {
-}
-
-func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
-}
-
-func (c UpdateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["new_settings"] = attrs["new_settings"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.

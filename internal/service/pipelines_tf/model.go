@@ -102,46 +102,6 @@ type CreatePipeline struct {
 	Trigger types.Object `tfsdk:"trigger"`
 }
 
-func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline) {
-}
-
-func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState CreatePipeline) {
-}
-
-func (c CreatePipeline) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["dry_run"] = attrs["dry_run"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -954,47 +914,6 @@ type EditPipeline struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.Object `tfsdk:"trigger"`
-}
-
-func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline) {
-}
-
-func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPipeline) {
-}
-
-func (c EditPipeline) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -4883,19 +4802,6 @@ type PipelinePermissionsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsRequest) {
-}
-
-func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest) {
-}
-
-func (c PipelinePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6332,23 +6238,6 @@ type StartUpdate struct {
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *StartUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate) {
-}
-
-func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUpdate) {
-}
-
-func (c StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cause"] = attrs["cause"].SetOptional()
-	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
-	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.

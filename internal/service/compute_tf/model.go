@@ -51,21 +51,6 @@ type AddInstanceProfile struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 }
 
-func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddInstanceProfile) {
-}
-
-func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringRead(existingState AddInstanceProfile) {
-}
-
-func (c AddInstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
-	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
-	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddInstanceProfile.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -520,20 +505,6 @@ type CancelCommand struct {
 	ContextId types.String `tfsdk:"contextId"`
 }
 
-func (newState *CancelCommand) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelCommand) {
-}
-
-func (newState *CancelCommand) SyncEffectiveFieldsDuringRead(existingState CancelCommand) {
-}
-
-func (c CancelCommand) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["commandId"] = attrs["commandId"].SetOptional()
-	attrs["contextId"] = attrs["contextId"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelCommand.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -614,19 +585,6 @@ type ChangeClusterOwner struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// New owner of the cluster_id after this RPC.
 	OwnerUsername types.String `tfsdk:"owner_username"`
-}
-
-func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwner) {
-}
-
-func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwner) {
-}
-
-func (c ChangeClusterOwner) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["owner_username"] = attrs["owner_username"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChangeClusterOwner.
@@ -3317,19 +3275,6 @@ type ClusterPermissionsRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
-func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsRequest) {
-}
-
-func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsRequest) {
-}
-
-func (c ClusterPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3784,19 +3729,6 @@ type ClusterPolicyPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
-}
-
-func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsRequest) {
-}
-
-func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsRequest) {
-}
-
-func (c ClusterPolicyPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["cluster_policy_id"] = attrs["cluster_policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermissionsRequest.
@@ -4747,21 +4679,6 @@ type Command struct {
 	Language types.String `tfsdk:"language"`
 }
 
-func (newState *Command) SyncEffectiveFieldsDuringCreateOrUpdate(plan Command) {
-}
-
-func (newState *Command) SyncEffectiveFieldsDuringRead(existingState Command) {
-}
-
-func (c Command) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["command"] = attrs["command"].SetOptional()
-	attrs["contextId"] = attrs["contextId"].SetOptional()
-	attrs["language"] = attrs["language"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Command.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5219,48 +5136,6 @@ type CreateCluster struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.Object `tfsdk:"workload_type"`
-}
-
-func (newState *CreateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster) {
-}
-
-func (newState *CreateCluster) SyncEffectiveFieldsDuringRead(existingState CreateCluster) {
-}
-
-func (c CreateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["clone_from"] = attrs["clone_from"].SetOptional()
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
-	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].SetOptional()
-	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
-	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
-	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
-	attrs["kind"] = attrs["kind"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
-	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
-	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
-	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
-	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
-	attrs["spark_version"] = attrs["spark_version"].SetRequired()
-	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
-	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCluster.
@@ -5786,19 +5661,6 @@ type CreateContext struct {
 	Language types.String `tfsdk:"language"`
 }
 
-func (newState *CreateContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateContext) {
-}
-
-func (newState *CreateContext) SyncEffectiveFieldsDuringRead(existingState CreateContext) {
-}
-
-func (c CreateContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["language"] = attrs["language"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateContext.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5887,30 +5749,6 @@ type CreateInstancePool struct {
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
-}
-
-func (newState *CreateInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool) {
-}
-
-func (newState *CreateInstancePool) SyncEffectiveFieldsDuringRead(existingState CreateInstancePool) {
-}
-
-func (c CreateInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
-	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
-	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
-	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
-	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
-	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstancePool.
@@ -6254,24 +6092,6 @@ type CreatePolicy struct {
 	// `policy_family_definition_overrides` instead to customize the policy
 	// definition.
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
-}
-
-func (newState *CreatePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicy) {
-}
-
-func (newState *CreatePolicy) SyncEffectiveFieldsDuringRead(existingState CreatePolicy) {
-}
-
-func (c CreatePolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["definition"] = attrs["definition"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
-	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePolicy.
@@ -6661,18 +6481,6 @@ type DeleteCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *DeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCluster) {
-}
-
-func (newState *DeleteCluster) SyncEffectiveFieldsDuringRead(existingState DeleteCluster) {
-}
-
-func (c DeleteCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6787,18 +6595,6 @@ type DeleteInstancePool struct {
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
-func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePool) {
-}
-
-func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePool) {
-}
-
-func (c DeleteInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstancePool.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6874,18 +6670,6 @@ func (o DeleteInstancePoolResponse) Type(ctx context.Context) attr.Type {
 type DeletePolicy struct {
 	// The ID of the policy to delete.
 	PolicyId types.String `tfsdk:"policy_id"`
-}
-
-func (newState *DeletePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicy) {
-}
-
-func (newState *DeletePolicy) SyncEffectiveFieldsDuringRead(existingState DeletePolicy) {
-}
-
-func (c DeletePolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicy.
@@ -7005,19 +6789,6 @@ type DestroyContext struct {
 	ClusterId types.String `tfsdk:"clusterId"`
 
 	ContextId types.String `tfsdk:"contextId"`
-}
-
-func (newState *DestroyContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyContext) {
-}
-
-func (newState *DestroyContext) SyncEffectiveFieldsDuringRead(existingState DestroyContext) {
-}
-
-func (c DestroyContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetRequired()
-	attrs["contextId"] = attrs["contextId"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyContext.
@@ -7608,48 +7379,6 @@ type EditCluster struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *EditCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster) {
-}
-
-func (newState *EditCluster) SyncEffectiveFieldsDuringRead(existingState EditCluster) {
-}
-
-func (c EditCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
-	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].SetOptional()
-	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
-	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
-	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
-	attrs["kind"] = attrs["kind"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
-	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
-	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
-	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
-	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
-	attrs["spark_version"] = attrs["spark_version"].SetRequired()
-	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
-	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8165,24 +7894,6 @@ type EditInstancePool struct {
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 }
 
-func (newState *EditInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePool) {
-}
-
-func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState EditInstancePool) {
-}
-
-func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
-	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
-	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditInstancePool.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8333,25 +8044,6 @@ type EditPolicy struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 	// The ID of the policy to update.
 	PolicyId types.String `tfsdk:"policy_id"`
-}
-
-func (newState *EditPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicy) {
-}
-
-func (newState *EditPolicy) SyncEffectiveFieldsDuringRead(existingState EditPolicy) {
-}
-
-func (c EditPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["definition"] = attrs["definition"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
-	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPolicy.
@@ -8517,19 +8209,6 @@ type EnforceClusterComplianceRequest struct {
 	// If set, previews the changes that would be made to a cluster to enforce
 	// compliance but does not update the cluster.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceRequest) {
-}
-
-func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceRequest) {
-}
-
-func (c EnforceClusterComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforceClusterComplianceRequest.
@@ -9792,26 +9471,6 @@ type GetEvents struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvents) {
-}
-
-func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
-}
-
-func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["end_time"] = attrs["end_time"].SetOptional()
-	attrs["event_types"] = attrs["event_types"].SetOptional()
-	attrs["limit"] = attrs["limit"].SetOptional()
-	attrs["offset"] = attrs["offset"].SetOptional()
-	attrs["order"] = attrs["order"].SetOptional()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["start_time"] = attrs["start_time"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEvents.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10853,21 +10512,6 @@ type GlobalInitScriptCreateRequest struct {
 	Script types.String `tfsdk:"script"`
 }
 
-func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptCreateRequest) {
-}
-
-func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptCreateRequest) {
-}
-
-func (c GlobalInitScriptCreateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["position"] = attrs["position"].SetOptional()
-	attrs["script"] = attrs["script"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptCreateRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11104,22 +10748,6 @@ type GlobalInitScriptUpdateRequest struct {
 	Script types.String `tfsdk:"script"`
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
-}
-
-func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptUpdateRequest) {
-}
-
-func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptUpdateRequest) {
-}
-
-func (c GlobalInitScriptUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["position"] = attrs["position"].SetOptional()
-	attrs["script"] = attrs["script"].SetRequired()
-	attrs["script_id"] = attrs["script_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptUpdateRequest.
@@ -11890,19 +11518,6 @@ type InstallLibraries struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The libraries to install.
 	Libraries types.List `tfsdk:"libraries"`
-}
-
-func (newState *InstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibraries) {
-}
-
-func (newState *InstallLibraries) SyncEffectiveFieldsDuringRead(existingState InstallLibraries) {
-}
-
-func (c InstallLibraries) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["libraries"] = attrs["libraries"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallLibraries.
@@ -13079,19 +12694,6 @@ type InstancePoolPermissionsRequest struct {
 	InstancePoolId types.String `tfsdk:"-"`
 }
 
-func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsRequest) {
-}
-
-func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsRequest) {
-}
-
-func (c InstancePoolPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13318,20 +12920,6 @@ type InstanceProfile struct {
 	// roles. Therefore it should always be used with authorization. This field
 	// is optional, the default value is `false`.
 	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
-}
-
-func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstanceProfile) {
-}
-
-func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
-}
-
-func (c InstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
-	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
-	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstanceProfile.
@@ -15508,18 +15096,6 @@ type PermanentDeleteCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteCluster) {
-}
-
-func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteCluster) {
-}
-
-func (c PermanentDeleteCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermanentDeleteCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -15594,18 +15170,6 @@ func (o PermanentDeleteClusterResponse) Type(ctx context.Context) attr.Type {
 
 type PinCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
-}
-
-func (newState *PinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinCluster) {
-}
-
-func (newState *PinCluster) SyncEffectiveFieldsDuringRead(existingState PinCluster) {
-}
-
-func (c PinCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PinCluster.
@@ -16013,18 +15577,6 @@ type RemoveInstanceProfile struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
-func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveInstanceProfile) {
-}
-
-func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringRead(existingState RemoveInstanceProfile) {
-}
-
-func (c RemoveInstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveInstanceProfile.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16115,20 +15667,6 @@ type ResizeCluster struct {
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
-}
-
-func (newState *ResizeCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeCluster) {
-}
-
-func (newState *ResizeCluster) SyncEffectiveFieldsDuringRead(existingState ResizeCluster) {
-}
-
-func (c ResizeCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResizeCluster.
@@ -16242,19 +15780,6 @@ type RestartCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	RestartUser types.String `tfsdk:"restart_user"`
-}
-
-func (newState *RestartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartCluster) {
-}
-
-func (newState *RestartCluster) SyncEffectiveFieldsDuringRead(existingState RestartCluster) {
-}
-
-func (c RestartCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["restart_user"] = attrs["restart_user"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartCluster.
@@ -16805,18 +16330,6 @@ type StartCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *StartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartCluster) {
-}
-
-func (newState *StartCluster) SyncEffectiveFieldsDuringRead(existingState StartCluster) {
-}
-
-func (c StartCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16985,19 +16498,6 @@ type UninstallLibraries struct {
 	Libraries types.List `tfsdk:"libraries"`
 }
 
-func (newState *UninstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibraries) {
-}
-
-func (newState *UninstallLibraries) SyncEffectiveFieldsDuringRead(existingState UninstallLibraries) {
-}
-
-func (c UninstallLibraries) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["libraries"] = attrs["libraries"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UninstallLibraries.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17106,18 +16606,6 @@ type UnpinCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *UnpinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinCluster) {
-}
-
-func (newState *UnpinCluster) SyncEffectiveFieldsDuringRead(existingState UnpinCluster) {
-}
-
-func (c UnpinCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpinCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17210,20 +16698,6 @@ type UpdateCluster struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCluster) {
-}
-
-func (newState *UpdateCluster) SyncEffectiveFieldsDuringRead(existingState UpdateCluster) {
-}
-
-func (c UpdateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster"] = attrs["cluster"].SetOptional()
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCluster.

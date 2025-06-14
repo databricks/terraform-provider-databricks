@@ -27,6 +27,6 @@ The following attributes are exported:
 * `name` (string) - The name of the instance. This is the unique identifier for the instance
 * `pg_version` (string) - The version of Postgres running on the instance
 * `read_write_dns` (string) - The DNS endpoint to connect to the instance for read+write access
-* `state` (string) - The current state of the instance. Possible values are: AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING
+* `state` (string) - The current state of the instance. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
 * `stopped` (boolean) - Whether the instance is stopped
 * `uid` (string) - An immutable UUID identifier for the instance

@@ -19,6 +19,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -112,24 +114,6 @@ type CreateCustomAppIntegration_SdkV2 struct {
 	// token. If the user does not authorize the access token will not be
 	// minted. Must be a subset of scopes.
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
-}
-
-func (newState *CreateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration_SdkV2) {
-}
-
-func (newState *CreateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration_SdkV2) {
-}
-
-func (c CreateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["confidential"] = attrs["confidential"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomAppIntegration.
@@ -357,20 +341,6 @@ type CreatePublishedAppIntegration_SdkV2 struct {
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
 }
 
-func (newState *CreatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration_SdkV2) {
-}
-
-func (newState *CreatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration_SdkV2) {
-}
-
-func (c CreatePublishedAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["app_id"] = attrs["app_id"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePublishedAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -564,19 +534,6 @@ type CreateServicePrincipalSecretRequest_SdkV2 struct {
 	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest_SdkV2) {
-}
-
-func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest_SdkV2) {
-}
-
-func (c CreateServicePrincipalSecretRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["lifetime"] = attrs["lifetime"].SetOptional()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -1029,13 +986,17 @@ func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 
 func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -2749,23 +2710,6 @@ type UpdateCustomAppIntegration_SdkV2 struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration_SdkV2) {
-}
-
-func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration_SdkV2) {
-}
-
-func (c UpdateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2967,20 +2911,6 @@ type UpdatePublishedAppIntegration_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
-}
-
-func (newState *UpdatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration_SdkV2) {
-}
-
-func (newState *UpdatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration_SdkV2) {
-}
-
-func (c UpdatePublishedAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePublishedAppIntegration.

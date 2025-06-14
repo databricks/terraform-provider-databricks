@@ -1554,7 +1554,7 @@ func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
@@ -2878,19 +2878,6 @@ type UpdateCleanRoomRequest struct {
 	CleanRoom types.Object `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomRequest) {
-}
-
-func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest) {
-}
-
-func (c UpdateCleanRoomRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room"] = attrs["clean_room"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.

@@ -46,7 +46,7 @@ In addition to the above arguments, the following attributes are exported:
 * `update_time` (string) - System-generated timestamp indicating when the policy was last updated
 
 ## Import
-As of terraform v1.5, resources can be imported through configuration.
+As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
   id = name
@@ -54,7 +54,7 @@ import {
 }
 ```
 
-If you are using an older version of terraform, you can import the resource using cli as follows:
+If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-$ terraform import databricks_recipient_federation_policy name
+terraform import databricks_recipient_federation_policy name
 ```

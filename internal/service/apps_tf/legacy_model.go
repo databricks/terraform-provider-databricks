@@ -1039,19 +1039,6 @@ type AppPermissionsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
-func (newState *AppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsRequest_SdkV2) {
-}
-
-func (newState *AppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissionsRequest_SdkV2) {
-}
-
-func (c AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["app_name"] = attrs["app_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2393,18 +2380,6 @@ type StartAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *StartAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartAppRequest_SdkV2) {
-}
-
-func (newState *StartAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartAppRequest_SdkV2) {
-}
-
-func (c StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2439,18 +2414,6 @@ func (o StartAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type StopAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *StopAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopAppRequest_SdkV2) {
-}
-
-func (newState *StopAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopAppRequest_SdkV2) {
-}
-
-func (c StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.

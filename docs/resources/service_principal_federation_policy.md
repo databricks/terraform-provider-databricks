@@ -6,6 +6,8 @@ subcategory: "Security"
 
 Service principal federation, also known as Workload Identity Federation, allows your automated workloads running outside of Databricks to securely access Databricks APIs without the need for Databricks secrets. With Workload Identity Federation, your application (or workload) authenticates to Databricks as a Databricks service principal, using tokens provided by the workload runtime.
 
+-> This resource can only be used with an account-level provider!
+
 ## Example Usage
 
 Creating service principal federation policy:

@@ -21,12 +21,28 @@ resource "databricks_service_principal_secret" "terraform_sp" {
 }
 ```
 
+A secret can be automatically rotated by taking a dependency on the `time_rotating` resource:
+
+```hcl
+resource "time_rotating" "this" {
+  rotation_days = 30
+}
+
+resource "databricks_service_principal_secret" "terraform_sp" {
+  service_principal_id = databricks_service_principal.this.id
+
+  # Token is valid for 60 days but is rotated after 30 days.
+  time_rotating = "Terraform (created: ${time_rotating.this.rfc3339})"
+}
+```
+
 ## Argument Reference
 
 The following arguments are available:
 
 * `service_principal_id` (Required, string) - SCIM ID of the [databricks_service_principal](service_principal.md) (not application ID).
 * `lifetime` (Optional, string) - The lifetime of the secret in seconds formatted as `NNNNs`. If this parameter is not provided, the secret will have a default lifetime of 730 days (`63072000s`).  Expiration of secret will lead to generation of new secret.
+* `time_rotating` - (Optional, string) - Changing this argument forces recreation of the secret.
 
 ## Attribute Reference
 

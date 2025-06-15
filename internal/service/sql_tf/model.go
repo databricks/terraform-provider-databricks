@@ -7529,6 +7529,25 @@ type LegacyVisualization struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
+func (newState *LegacyVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyVisualization) {
+}
+
+func (newState *LegacyVisualization) SyncEffectiveFieldsDuringRead(existingState LegacyVisualization) {
+}
+
+func (c LegacyVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LegacyVisualization.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to

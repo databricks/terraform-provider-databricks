@@ -1629,6 +1629,26 @@ type Group struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
+func (newState *Group) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group) {
+}
+
+func (newState *Group) SyncEffectiveFieldsDuringRead(existingState Group) {
+}
+
+func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["members"] = attrs["members"].SetOptional()
+	attrs["meta"] = attrs["meta"].SetOptional()
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Group.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4329,6 +4349,26 @@ type ServicePrincipal struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
+func (newState *ServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
+}
+
+func (newState *ServicePrincipal) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal) {
+}
+
+func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active"] = attrs["active"].SetOptional()
+	attrs["applicationId"] = attrs["applicationId"].SetOptional()
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServicePrincipal.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4857,6 +4897,28 @@ type User struct {
 	Schemas types.List `tfsdk:"schemas"`
 	// Email address of the Databricks user.
 	UserName types.String `tfsdk:"userName"`
+}
+
+func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
+}
+
+func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
+}
+
+func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active"] = attrs["active"].SetOptional()
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["emails"] = attrs["emails"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["userName"] = attrs["userName"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in User.

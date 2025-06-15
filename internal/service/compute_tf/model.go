@@ -9471,6 +9471,26 @@ type GetEvents struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
+func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvents) {
+}
+
+func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
+}
+
+func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["event_types"] = attrs["event_types"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEvents.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12920,6 +12940,20 @@ type InstanceProfile struct {
 	// roles. Therefore it should always be used with authorization. This field
 	// is optional, the default value is `false`.
 	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
+}
+
+func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstanceProfile) {
+}
+
+func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
+}
+
+func (c InstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
+	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstanceProfile.

@@ -2405,6 +2405,22 @@ type EndpointCoreConfigInput struct {
 	TrafficConfig types.Object `tfsdk:"traffic_config"`
 }
 
+func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput) {
+}
+
+func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput) {
+}
+
+func (c EndpointCoreConfigInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["served_models"] = attrs["served_models"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigInput.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to

@@ -1631,6 +1631,27 @@ type Group_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
+func (newState *Group_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group_SdkV2) {
+}
+
+func (newState *Group_SdkV2) SyncEffectiveFieldsDuringRead(existingState Group_SdkV2) {
+}
+
+func (c Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["members"] = attrs["members"].SetOptional()
+	attrs["meta"] = attrs["meta"].SetOptional()
+	attrs["meta"] = attrs["meta"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Group.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4332,6 +4353,26 @@ type ServicePrincipal_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
+func (newState *ServicePrincipal_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal_SdkV2) {
+}
+
+func (newState *ServicePrincipal_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal_SdkV2) {
+}
+
+func (c ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active"] = attrs["active"].SetOptional()
+	attrs["applicationId"] = attrs["applicationId"].SetOptional()
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServicePrincipal.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4860,6 +4901,29 @@ type User_SdkV2 struct {
 	Schemas types.List `tfsdk:"schemas"`
 	// Email address of the Databricks user.
 	UserName types.String `tfsdk:"userName"`
+}
+
+func (newState *User_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan User_SdkV2) {
+}
+
+func (newState *User_SdkV2) SyncEffectiveFieldsDuringRead(existingState User_SdkV2) {
+}
+
+func (c User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active"] = attrs["active"].SetOptional()
+	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["emails"] = attrs["emails"].SetOptional()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["groups"] = attrs["groups"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["userName"] = attrs["userName"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in User.

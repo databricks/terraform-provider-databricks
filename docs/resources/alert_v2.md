@@ -73,8 +73,8 @@ The following arguments are supported:
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
 
 ### AlertV2Evaluation
-* `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL, IS_NOT_NULL, IS_NULL, LESS_THAN, LESS_THAN_OR_EQUAL, NOT_EQUAL
-* `empty_result_state` (string, optional) - Alert state if result is empty. Possible values are: ERROR, OK, TRIGGERED, UNKNOWN
+* `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
+* `empty_result_state` (string, optional) - Alert state if result is empty. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `notification` (AlertV2Notification, optional) - User or Notification Destination to notify when alert is triggered
 * `source` (AlertV2OperandColumn, optional) - Source column from result to use to evaluate alert
 * `threshold` (AlertV2Operand, optional) - Threshold to user for alert evaluation, can be a column or a value
@@ -89,7 +89,7 @@ The following arguments are supported:
 * `value` (AlertV2OperandValue, optional) - 
 
 ### AlertV2OperandColumn
-* `aggregation` (string, optional) - . Possible values are: AVG, COUNT, COUNT_DISTINCT, MAX, MEDIAN, MIN, STDDEV, SUM
+* `aggregation` (string, optional) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string, optional) - 
 * `name` (string, optional) - 
 
@@ -103,7 +103,7 @@ The following arguments are supported:
 * `user_email` (string, optional) - 
 
 ### CronSchedule
-* `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: PAUSED, UNPAUSED
+* `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`
 * `quartz_cron_schedule` (string, optional) - A cron expression using quartz syntax that specifies the schedule for this pipeline.
   Should use the quartz format described here: http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
 * `timezone_id` (string, optional) - A Java timezone id. The schedule will be resolved using this timezone.
@@ -114,17 +114,17 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - The timestamp indicating when the alert was created
 * `id` (string) - UUID identifying the alert
-* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: ACTIVE, TRASHED
+* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `run_as_user_name` (string) - The run as username. This field is set to "Unavailable" if the user has been deleted
 * `update_time` (string) - The timestamp indicating when the alert was updated
 
 ### AlertV2Evaluation
 * `last_evaluated_at` (string) - Timestamp of the last evaluation
-* `state` (string) - Latest state of alert evaluation. Possible values are: ERROR, OK, TRIGGERED, UNKNOWN
+* `state` (string) - Latest state of alert evaluation. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 
 ## Import
-As of terraform v1.5, resources can be imported through configuration.
+As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
   id = id
@@ -132,7 +132,7 @@ import {
 }
 ```
 
-If you are using an older version of terraform, you can import the resource using cli as follows:
+If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-$ terraform import databricks_alert_v2 id
+terraform import databricks_alert_v2 id
 ```

@@ -1546,24 +1546,6 @@ type CreatePtEndpointRequest_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePtEndpointRequest_SdkV2) {
-}
-
-func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePtEndpointRequest_SdkV2) {
-}
-
-func (c CreatePtEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
-	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["config"] = attrs["config"].SetRequired()
-	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePtEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1712,26 +1694,6 @@ type CreateServingEndpoint_SdkV2 struct {
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
 	Tags types.List `tfsdk:"tags"`
-}
-
-func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServingEndpoint_SdkV2) {
-}
-
-func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServingEndpoint_SdkV2) {
-}
-
-func (c CreateServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
-	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["config"] = attrs["config"].SetOptional()
-	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
-	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServingEndpoint.
@@ -3414,23 +3376,6 @@ type ExternalFunctionRequest_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *ExternalFunctionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalFunctionRequest_SdkV2) {
-}
-
-func (newState *ExternalFunctionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalFunctionRequest_SdkV2) {
-}
-
-func (c ExternalFunctionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["connection_name"] = attrs["connection_name"].SetRequired()
-	attrs["headers"] = attrs["headers"].SetOptional()
-	attrs["json"] = attrs["json"].SetOptional()
-	attrs["method"] = attrs["method"].SetRequired()
-	attrs["params"] = attrs["params"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalFunctionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4807,20 +4752,6 @@ type PatchServingEndpointTags_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *PatchServingEndpointTags_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchServingEndpointTags_SdkV2) {
-}
-
-func (newState *PatchServingEndpointTags_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchServingEndpointTags_SdkV2) {
-}
-
-func (c PatchServingEndpointTags_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["add_tags"] = attrs["add_tags"].SetOptional()
-	attrs["delete_tags"] = attrs["delete_tags"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchServingEndpointTags.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5177,27 +5108,6 @@ type PutAiGatewayRequest_SdkV2 struct {
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
 	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
-}
-
-func (newState *PutAiGatewayRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayRequest_SdkV2) {
-}
-
-func (newState *PutAiGatewayRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayRequest_SdkV2) {
-}
-
-func (c PutAiGatewayRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["fallback_config"] = attrs["fallback_config"].SetOptional()
-	attrs["fallback_config"] = attrs["fallback_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["guardrails"] = attrs["guardrails"].SetOptional()
-	attrs["guardrails"] = attrs["guardrails"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
-	attrs["inference_table_config"] = attrs["inference_table_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
-	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].SetOptional()
-	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayRequest.
@@ -5620,19 +5530,6 @@ type PutRequest_SdkV2 struct {
 	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
-func (newState *PutRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRequest_SdkV2) {
-}
-
-func (newState *PutRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutRequest_SdkV2) {
-}
-
-func (c PutRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5824,32 +5721,6 @@ type QueryEndpointInput_SdkV2 struct {
 	// with a default of 1.0 and should only be used with other chat/completions
 	// query fields.
 	Temperature types.Float64 `tfsdk:"temperature"`
-}
-
-func (newState *QueryEndpointInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointInput_SdkV2) {
-}
-
-func (newState *QueryEndpointInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryEndpointInput_SdkV2) {
-}
-
-func (c QueryEndpointInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dataframe_records"] = attrs["dataframe_records"].SetOptional()
-	attrs["dataframe_split"] = attrs["dataframe_split"].SetOptional()
-	attrs["dataframe_split"] = attrs["dataframe_split"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["extra_params"] = attrs["extra_params"].SetOptional()
-	attrs["input"] = attrs["input"].SetOptional()
-	attrs["inputs"] = attrs["inputs"].SetOptional()
-	attrs["instances"] = attrs["instances"].SetOptional()
-	attrs["max_tokens"] = attrs["max_tokens"].SetOptional()
-	attrs["messages"] = attrs["messages"].SetOptional()
-	attrs["n"] = attrs["n"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["prompt"] = attrs["prompt"].SetOptional()
-	attrs["stop"] = attrs["stop"].SetOptional()
-	attrs["stream"] = attrs["stream"].SetOptional()
-	attrs["temperature"] = attrs["temperature"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointInput.
@@ -8495,19 +8366,6 @@ type ServingEndpointPermissionsRequest_SdkV2 struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
-func (newState *ServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (newState *ServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (c ServingEndpointPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8653,20 +8511,6 @@ type UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// The name of the pt endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
-}
-
-func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
-}
-
-func (c UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["config"] = attrs["config"].SetRequired()
-	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvisionedThroughputEndpointConfigRequest.

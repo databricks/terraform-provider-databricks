@@ -79,7 +79,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 		srcField := field.Value
 		srcFieldName := field.StructField.Name
 
-		srcFieldTag := field.StructField.Tag.Get("json")
+		srcFieldTag := field.StructField.Tag.Get("tf")
 		if srcFieldTag == "-" {
 			continue
 		}

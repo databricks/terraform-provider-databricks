@@ -901,19 +901,6 @@ type GenerateDatabaseCredentialRequest_SdkV2 struct {
 	RequestId types.String `tfsdk:"request_id"`
 }
 
-func (newState *GenerateDatabaseCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateDatabaseCredentialRequest_SdkV2) {
-}
-
-func (newState *GenerateDatabaseCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenerateDatabaseCredentialRequest_SdkV2) {
-}
-
-func (c GenerateDatabaseCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_names"] = attrs["instance_names"].SetOptional()
-	attrs["request_id"] = attrs["request_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateDatabaseCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to

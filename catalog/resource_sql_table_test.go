@@ -2081,3 +2081,17 @@ func TestSqlTablesAPI_getTable_OptionsAndParametersProcessedCorrectly(t *testing
 		})
 	}
 }
+
+func TestFormatViewDefinition(t *testing.T) {
+	ti := &SqlTableInfo{
+		ViewDefinition: "SELECT\n\n\n\t*\nFROM\n\tmy_table\nWHERE\n\tcolumn = 'value'",
+	}
+
+	expected := "SELECT\n    *\nFROM\n    my_table\nWHERE\n    column = 'value'"
+
+	formatViewDefinition(ti)
+
+	if ti.ViewDefinition != expected {
+		t.Errorf("Expected view definition: %s, but got: %s", expected, ti.ViewDefinition)
+	}
+}

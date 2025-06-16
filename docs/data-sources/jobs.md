@@ -16,10 +16,6 @@ Granting view [databricks_permissions](../resources/permissions.md) to all [data
 ```hcl
 data "databricks_jobs" "this" {}
 
-data "databricks_jobs" "tests" {
-  job_name_contains = "test"
-}
-
 resource "databricks_permissions" "everyone_can_view_all_jobs" {
   for_each = data.databricks_jobs.this.ids
   job_id   = each.value
@@ -34,7 +30,9 @@ resource "databricks_permissions" "everyone_can_view_all_jobs" {
 Getting ID of specific [databricks_job](../resources/job.md) by name:
 
 ```hcl
-data "databricks_jobs" "this" {}
+data "databricks_jobs" "this" {
+  job_name_contains = "test"
+}
 
 output "x" {
   value     = "ID of `x` job is ${data.databricks_jobs.this.ids["x"]}"

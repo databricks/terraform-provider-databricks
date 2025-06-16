@@ -43,8 +43,8 @@ const baseResources = `
 		config {
 			served_entities {
 				name = "prod_model"
-				model_name = "experiment-fixture-model"
-				model_version = "1"
+				entity_name = "experiment-fixture-model"
+				entity_version = "1"
 				workload_size = "Small"
 				scale_to_zero_enabled = true
 				max_provisioned_concurrency = 4

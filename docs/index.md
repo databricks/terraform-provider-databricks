@@ -277,6 +277,32 @@ provider "databricks" {
 
 Workload Identity Federation can be used to authenticate Databricks from automated workflows. This is done through the tokens issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider. 
 
+To create resources at both the account and workspace levels, you can create two providers as shown below:
+
+Workspace level provider:
+```hcl
+provider "databricks" {
+  alias       = "workspace"
+  auth_type   = "env-oidc"
+  host        = var.workspace_host
+  client_id   = var.client_id
+}
+```
+
+Account level provider:
+```hcl
+provider "databricks" {
+  alias       = "account"
+  auth_type   = "env-oidc"
+  host        = var.account_host
+  client_id   = var.client_id
+  account_id  = var.account_id
+}
+```
+
+Note: `auth_type` for Github Actions would be "github-oidc". For more details, please see the document linked above. 
+
+
 ## Special configurations for Azure
 
 The below Azure authentication options are supported at both the account and workspace levels. The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios, managed identity or service principal auth is recommended (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).

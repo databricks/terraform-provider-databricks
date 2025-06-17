@@ -47,7 +47,7 @@ const baseResources = `
 				entity_version = "1"
 				scale_to_zero_enabled = true
 				max_provisioned_concurrency = 4
-				min_provisioned_concurrency = 4
+				min_provisioned_concurrency = 0
 			}
 		}
 	}

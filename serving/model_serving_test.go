@@ -27,7 +27,7 @@ func TestAccModelServing(t *testing.T) {
 						entity_version = "1"
 						scale_to_zero_enabled = true
 						max_provisioned_concurrency = 4
-						min_provisioned_concurrency = 4
+						min_provisioned_concurrency = 0
 					}
 					served_entities {
 						name = "candidate_model"
@@ -85,7 +85,7 @@ func TestAccModelServing(t *testing.T) {
 						entity_version = "1"
 						scale_to_zero_enabled = true
 						max_provisioned_concurrency = 4
-						min_provisioned_concurrency = 4
+						min_provisioned_concurrency = 0
 					}
 					traffic_config {
 						routes {

@@ -18,11 +18,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AuthorizationDetails_SdkV2 struct {
@@ -536,7 +538,7 @@ func (o Dashboard_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"dashboard_id":         types.StringType,
 			"display_name":         types.StringType,
 			"etag":                 types.StringType,
@@ -544,7 +546,7 @@ func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 			"parent_path":          types.StringType,
 			"path":                 types.StringType,
 			"serialized_dashboard": types.StringType,
-			"update_time":          types.StringType,
+			"update_time":          timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -3206,7 +3208,7 @@ func (o PublishedDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"display_name":         types.StringType,
 			"embed_credentials":    types.BoolType,
-			"revision_create_time": types.StringType,
+			"revision_create_time": timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -3353,7 +3355,7 @@ func (o Schedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o Schedule_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
+			"create_time": timetypes.RFC3339Type{},
 			"cron_schedule": basetypes.ListType{
 				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
@@ -3362,7 +3364,7 @@ func (o Schedule_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":         types.StringType,
 			"pause_status": types.StringType,
 			"schedule_id":  types.StringType,
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -3588,7 +3590,7 @@ func (o Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
+			"create_time":        timetypes.RFC3339Type{},
 			"created_by_user_id": types.Int64Type,
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
@@ -3597,7 +3599,7 @@ func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Subscriber_SdkV2{}.Type(ctx),
 			},
 			"subscription_id": types.StringType,
-			"update_time":     types.StringType,
+			"update_time":     timetypes.RFC3339Type{},
 		},
 	}
 }

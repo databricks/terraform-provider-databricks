@@ -112,15 +112,15 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `create_time` (string) - The timestamp indicating when the alert was created
+* `create_time` ([time.Time](../../README.md#well-known-types)) - The timestamp indicating when the alert was created
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `run_as_user_name` (string) - The run as username. This field is set to "Unavailable" if the user has been deleted
-* `update_time` (string) - The timestamp indicating when the alert was updated
+* `update_time` ([time.Time](../../README.md#well-known-types)) - The timestamp indicating when the alert was updated
 
 ### AlertV2Evaluation
-* `last_evaluated_at` (string) - Timestamp of the last evaluation
+* `last_evaluated_at` ([time.Time](../../README.md#well-known-types)) - Timestamp of the last evaluation
 * `state` (string) - Latest state of alert evaluation. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 
 ## Import

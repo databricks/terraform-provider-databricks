@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -195,7 +196,7 @@ func (o Alert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition":            AlertCondition{}.Type(ctx),
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -207,8 +208,8 @@ func (o Alert) Type(ctx context.Context) attr.Type {
 			"query_id":             types.StringType,
 			"seconds_to_retrigger": types.Int64Type,
 			"state":                types.StringType,
-			"trigger_time":         types.StringType,
-			"update_time":          types.StringType,
+			"trigger_time":         timetypes.RFC3339Type{},
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -992,7 +993,7 @@ func (o AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o AlertV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
+			"create_time":        timetypes.RFC3339Type{},
 			"custom_description": types.StringType,
 			"custom_summary":     types.StringType,
 			"display_name":       types.StringType,
@@ -1004,7 +1005,7 @@ func (o AlertV2) Type(ctx context.Context) attr.Type {
 			"query_text":         types.StringType,
 			"run_as_user_name":   types.StringType,
 			"schedule":           CronSchedule{}.Type(ctx),
-			"update_time":        types.StringType,
+			"update_time":        timetypes.RFC3339Type{},
 			"warehouse_id":       types.StringType,
 		},
 	}
@@ -1139,7 +1140,7 @@ func (o AlertV2Evaluation) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comparison_operator": types.StringType,
 			"empty_result_state":  types.StringType,
-			"last_evaluated_at":   types.StringType,
+			"last_evaluated_at":   timetypes.RFC3339Type{},
 			"notification":        AlertV2Notification{}.Type(ctx),
 			"source":              AlertV2OperandColumn{}.Type(ctx),
 			"state":               types.StringType,
@@ -7856,7 +7857,7 @@ func (o ListAlertsResponseAlert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition":            AlertCondition{}.Type(ctx),
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -7867,8 +7868,8 @@ func (o ListAlertsResponseAlert) Type(ctx context.Context) attr.Type {
 			"query_id":             types.StringType,
 			"seconds_to_retrigger": types.Int64Type,
 			"state":                types.StringType,
-			"trigger_time":         types.StringType,
-			"update_time":          types.StringType,
+			"trigger_time":         timetypes.RFC3339Type{},
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -8538,7 +8539,7 @@ func (o ListQueryObjectsResponseQuery) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"apply_auto_limit":        types.BoolType,
 			"catalog":                 types.StringType,
-			"create_time":             types.StringType,
+			"create_time":             timetypes.RFC3339Type{},
 			"description":             types.StringType,
 			"display_name":            types.StringType,
 			"id":                      types.StringType,
@@ -8554,7 +8555,7 @@ func (o ListQueryObjectsResponseQuery) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -9341,7 +9342,7 @@ func (o Query) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"apply_auto_limit":        types.BoolType,
 			"catalog":                 types.StringType,
-			"create_time":             types.StringType,
+			"create_time":             timetypes.RFC3339Type{},
 			"description":             types.StringType,
 			"display_name":            types.StringType,
 			"id":                      types.StringType,
@@ -9358,7 +9359,7 @@ func (o Query) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -13883,14 +13884,14 @@ func (o Visualization) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o Visualization) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":           types.StringType,
+			"create_time":           timetypes.RFC3339Type{},
 			"display_name":          types.StringType,
 			"id":                    types.StringType,
 			"query_id":              types.StringType,
 			"serialized_options":    types.StringType,
 			"serialized_query_plan": types.StringType,
 			"type":                  types.StringType,
-			"update_time":           types.StringType,
+			"update_time":           timetypes.RFC3339Type{},
 		},
 	}
 }

@@ -46,7 +46,7 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `creation_time` (string) - The timestamp when the instance was created
+* `creation_time` ([time.Time](../../README.md#well-known-types)) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
 * `pg_version` (string) - The version of Postgres running on the instance
 * `read_write_dns` (string) - The DNS endpoint to connect to the instance for read+write access

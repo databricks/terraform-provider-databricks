@@ -17,10 +17,12 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 // Create a Database Catalog
@@ -483,7 +485,7 @@ func (o DatabaseInstance_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"capacity":       types.StringType,
-			"creation_time":  types.StringType,
+			"creation_time":  timetypes.RFC3339Type{},
 			"creator":        types.StringType,
 			"name":           types.StringType,
 			"pg_version":     types.StringType,
@@ -1517,7 +1519,7 @@ func (o SyncedTableContinuousUpdateStatus_SdkV2) Type(ctx context.Context) attr.
 				ElemType: SyncedTablePipelineProgress_SdkV2{}.Type(ctx),
 			},
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -1603,7 +1605,7 @@ func (o SyncedTableFailedStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -2163,7 +2165,7 @@ func (o SyncedTableTriggeredUpdateStatus_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 			"triggered_update_progress": basetypes.ListType{
 				ElemType: SyncedTablePipelineProgress_SdkV2{}.Type(ctx),
 			},

@@ -21,12 +21,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type CleanRoom_SdkV2 struct {

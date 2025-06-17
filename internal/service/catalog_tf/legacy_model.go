@@ -17,10 +17,12 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AccountsCreateMetastore_SdkV2 struct {
@@ -2505,7 +2507,7 @@ func (o ContinuousUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: PipelineProgress_SdkV2{}.Type(ctx),
 			},
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -6926,7 +6928,7 @@ func (o FailedStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -17492,7 +17494,7 @@ func (o TriggeredUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 			"triggered_update_progress": basetypes.ListType{
 				ElemType: PipelineProgress_SdkV2{}.Type(ctx),
 			},

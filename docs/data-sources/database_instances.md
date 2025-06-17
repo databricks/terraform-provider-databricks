@@ -27,7 +27,7 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `database_instances`. It is a list of resources, each with the following attributes:
 * `capacity` (string) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
-* `creation_time` (string) - The timestamp when the instance was created
+* `creation_time` ([time.Time](../../README.md#well-known-types)) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
 * `name` (string) - The name of the instance. This is the unique identifier for the instance
 * `pg_version` (string) - The version of Postgres running on the instance

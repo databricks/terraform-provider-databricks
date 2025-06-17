@@ -17,11 +17,13 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type CancelCustomLlmOptimizationRunRequest_SdkV2 struct {
@@ -173,7 +175,7 @@ func (o CustomLlm_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"agent_artifact_path": types.StringType,
-			"creation_time":       types.StringType,
+			"creation_time":       timetypes.RFC3339Type{},
 			"creator":             types.StringType,
 			"datasets": basetypes.ListType{
 				ElemType: Dataset_SdkV2{}.Type(ctx),

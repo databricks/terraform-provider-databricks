@@ -18,11 +18,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 // Create recipient federation policy
@@ -1120,13 +1122,13 @@ func (o FederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":     types.StringType,
-			"create_time": types.StringType,
+			"create_time": timetypes.RFC3339Type{},
 			"id":          types.StringType,
 			"name":        types.StringType,
 			"oidc_policy": basetypes.ListType{
 				ElemType: OidcFederationPolicy_SdkV2{}.Type(ctx),
 			},
-			"update_time": types.StringType,
+			"update_time": timetypes.RFC3339Type{},
 		},
 	}
 }

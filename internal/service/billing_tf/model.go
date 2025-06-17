@@ -828,19 +828,6 @@ type CreateBillingUsageDashboardRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardRequest) {
-}
-
-func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardRequest) {
-}
-
-func (c CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBillingUsageDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1208,18 +1195,6 @@ type CreateBudgetConfigurationRequest struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationRequest) {
-}
-
-func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationRequest) {
-}
-
-func (c CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget"] = attrs["budget"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1369,19 +1344,6 @@ type CreateBudgetPolicyRequest struct {
 	// A random UUID is recommended. This request is only idempotent if a
 	// `request_id` is provided.
 	RequestId types.String `tfsdk:"request_id"`
-}
-
-func (newState *CreateBudgetPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetPolicyRequest) {
-}
-
-func (newState *CreateBudgetPolicyRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetPolicyRequest) {
-}
-
-func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy"] = attrs["policy"].SetOptional()
-	attrs["request_id"] = attrs["request_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetPolicyRequest.
@@ -3220,19 +3182,6 @@ type UpdateBudgetConfigurationRequest struct {
 	BudgetId types.String `tfsdk:"-"`
 }
 
-func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationRequest) {
-}
-
-func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationRequest) {
-}
-
-func (c UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget"] = attrs["budget"].SetRequired()
-	attrs["budget_id"] = attrs["budget_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3492,19 +3441,6 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLogDeliveryConfigurationStatusRequest) {
-}
-
-func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLogDeliveryConfigurationStatusRequest) {
-}
-
-func (c UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
-	attrs["status"] = attrs["status"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLogDeliveryConfigurationStatusRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3542,18 +3478,6 @@ func (o UpdateLogDeliveryConfigurationStatusRequest) Type(ctx context.Context) a
 type WrappedCreateLogDeliveryConfiguration struct {
 	// * Log Delivery Configuration
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
-}
-
-func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedCreateLogDeliveryConfiguration) {
-}
-
-func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedCreateLogDeliveryConfiguration) {
-}
-
-func (c WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WrappedCreateLogDeliveryConfiguration.

@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -170,7 +171,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"app_status":                 ApplicationStatus{}.Type(ctx),
 			"budget_policy_id":           types.StringType,
 			"compute_status":             ComputeStatus{}.Type(ctx),
-			"create_time":                types.StringType,
+			"create_time":                timetypes.RFC3339Type{},
 			"creator":                    types.StringType,
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
@@ -189,7 +190,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
-			"update_time":                 types.StringType,
+			"update_time":                 timetypes.RFC3339Type{},
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
 			"user_api_scopes": basetypes.ListType{
@@ -630,14 +631,14 @@ func (o AppDeployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o AppDeployment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"creator":              types.StringType,
 			"deployment_artifacts": AppDeploymentArtifacts{}.Type(ctx),
 			"deployment_id":        types.StringType,
 			"mode":                 types.StringType,
 			"source_code_path":     types.StringType,
 			"status":               AppDeploymentStatus{}.Type(ctx),
-			"update_time":          types.StringType,
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -1030,19 +1031,6 @@ type AppPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsRequest) {
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState AppPermissionsRequest) {
-}
-
-func (c AppPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["app_name"] = attrs["app_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
@@ -2381,18 +2369,6 @@ type StartAppRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartAppRequest) {
-}
-
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringRead(existingState StartAppRequest) {
-}
-
-func (c StartAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2427,18 +2403,6 @@ func (o StartAppRequest) Type(ctx context.Context) attr.Type {
 type StopAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopAppRequest) {
-}
-
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
-}
-
-func (c StopAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.

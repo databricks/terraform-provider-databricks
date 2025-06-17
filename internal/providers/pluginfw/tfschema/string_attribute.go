@@ -6,11 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type StringAttributeBuilder struct {
 	Optional           bool
 	Required           bool
+	CustomType         basetypes.StringTypable
 	Sensitive          bool
 	Computed           bool
 	DeprecationMessage string
@@ -20,6 +22,7 @@ type StringAttributeBuilder struct {
 
 func (a StringAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.StringAttribute{
+		CustomType:         a.CustomType,
 		Optional:           a.Optional,
 		Required:           a.Required,
 		Sensitive:          a.Sensitive,
@@ -31,6 +34,7 @@ func (a StringAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute 
 
 func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.StringAttribute{
+		CustomType:         a.CustomType,
 		Optional:           a.Optional,
 		Required:           a.Required,
 		Sensitive:          a.Sensitive,

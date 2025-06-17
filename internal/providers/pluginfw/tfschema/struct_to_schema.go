@@ -9,6 +9,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -52,6 +54,12 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			scmAttr[fieldName] = Int64AttributeBuilder{}
 		case types.Float64:
 			scmAttr[fieldName] = Float64AttributeBuilder{}
+		case timetypes.RFC3339:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: timetypes.RFC3339Type{}}
+		case timetypes.GoDuration:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: timetypes.GoDurationType{}}
+		case jsontypes.Normalized:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: jsontypes.NormalizedType{}}
 		case types.String:
 			scmAttr[fieldName] = StringAttributeBuilder{}
 		case types.List, types.Map, types.Object:

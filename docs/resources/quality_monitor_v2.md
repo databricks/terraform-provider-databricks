@@ -28,10 +28,10 @@ In addition to the above arguments, the following attributes are exported:
 
 ### AnomalyDetectionConfig
 * `last_run_id` (string) - Run id of the last run of the workflow
-* `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: ANOMALY_DETECTION_RUN_STATUS_CANCELED, ANOMALY_DETECTION_RUN_STATUS_FAILED, ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED, ANOMALY_DETECTION_RUN_STATUS_PENDING, ANOMALY_DETECTION_RUN_STATUS_RUNNING, ANOMALY_DETECTION_RUN_STATUS_SUCCESS, ANOMALY_DETECTION_RUN_STATUS_UNKNOWN, ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR
+* `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_RUN_STATUS_CANCELED`, `ANOMALY_DETECTION_RUN_STATUS_FAILED`, `ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED`, `ANOMALY_DETECTION_RUN_STATUS_PENDING`, `ANOMALY_DETECTION_RUN_STATUS_RUNNING`, `ANOMALY_DETECTION_RUN_STATUS_SUCCESS`, `ANOMALY_DETECTION_RUN_STATUS_UNKNOWN`, `ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR`
 
 ## Import
-As of terraform v1.5, resources can be imported through configuration.
+As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
   id = object_type,object_id
@@ -39,7 +39,7 @@ import {
 }
 ```
 
-If you are using an older version of terraform, you can import the resource using cli as follows:
+If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-$ terraform import databricks_quality_monitor_v2 object_type,object_id
+terraform import databricks_quality_monitor_v2 object_type,object_id
 ```

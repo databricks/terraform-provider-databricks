@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -482,7 +483,7 @@ func (o DatabaseInstance) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"capacity":       types.StringType,
-			"creation_time":  types.StringType,
+			"creation_time":  timetypes.RFC3339Type{},
 			"creator":        types.StringType,
 			"name":           types.StringType,
 			"pg_version":     types.StringType,
@@ -898,19 +899,6 @@ type GenerateDatabaseCredentialRequest struct {
 	InstanceNames types.List `tfsdk:"instance_names"`
 
 	RequestId types.String `tfsdk:"request_id"`
-}
-
-func (newState *GenerateDatabaseCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateDatabaseCredentialRequest) {
-}
-
-func (newState *GenerateDatabaseCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GenerateDatabaseCredentialRequest) {
-}
-
-func (c GenerateDatabaseCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_names"] = attrs["instance_names"].SetOptional()
-	attrs["request_id"] = attrs["request_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateDatabaseCredentialRequest.
@@ -1524,7 +1512,7 @@ func (o SyncedTableContinuousUpdateStatus) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"initial_pipeline_sync_progress": SyncedTablePipelineProgress{}.Type(ctx),
 			"last_processed_commit_version":  types.Int64Type,
-			"timestamp":                      types.StringType,
+			"timestamp":                      timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -1612,7 +1600,7 @@ func (o SyncedTableFailedStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -2165,7 +2153,7 @@ func (o SyncedTableTriggeredUpdateStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 			"triggered_update_progress":     SyncedTablePipelineProgress{}.Type(ctx),
 		},
 	}

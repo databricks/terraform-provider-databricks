@@ -18,10 +18,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type BaseJob_SdkV2 struct {
@@ -829,19 +830,6 @@ type CancelAllRuns_SdkV2 struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *CancelAllRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRuns_SdkV2) {
-}
-
-func (newState *CancelAllRuns_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns_SdkV2) {
-}
-
-func (c CancelAllRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -908,18 +896,6 @@ func (o CancelAllRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type CancelRun_SdkV2 struct {
 	// This field is required.
 	RunId types.Int64 `tfsdk:"run_id"`
-}
-
-func (newState *CancelRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRun_SdkV2) {
-}
-
-func (newState *CancelRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelRun_SdkV2) {
-}
-
-func (c CancelRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
@@ -1773,53 +1749,6 @@ type CreateJob_SdkV2 struct {
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.List `tfsdk:"webhook_notifications"`
-}
-
-func (newState *CreateJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJob_SdkV2) {
-}
-
-func (newState *CreateJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateJob_SdkV2) {
-}
-
-func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["environment"] = attrs["environment"].SetOptional()
-	attrs["format"] = attrs["format"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["health"] = attrs["health"].SetOptional()
-	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
-	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["parameter"] = attrs["parameter"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["task"] = attrs["task"].SetOptional()
-	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
@@ -3185,18 +3114,6 @@ type DeleteJob_SdkV2 struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *DeleteJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJob_SdkV2) {
-}
-
-func (newState *DeleteJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteJob_SdkV2) {
-}
-
-func (c DeleteJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3261,18 +3178,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteRun_SdkV2 struct {
 	// ID of the run to delete.
 	RunId types.Int64 `tfsdk:"run_id"`
-}
-
-func (newState *DeleteRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun_SdkV2) {
-}
-
-func (newState *DeleteRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRun_SdkV2) {
-}
-
-func (c DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -3409,19 +3314,6 @@ type EnforcePolicyComplianceRequest_SdkV2 struct {
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *EnforcePolicyComplianceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceRequest_SdkV2) {
-}
-
-func (newState *EnforcePolicyComplianceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest_SdkV2) {
-}
-
-func (c EnforcePolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
@@ -6191,19 +6083,6 @@ type JobPermissionsRequest_SdkV2 struct {
 	JobId types.String `tfsdk:"-"`
 }
 
-func (newState *JobPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsRequest_SdkV2) {
-}
-
-func (newState *JobPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest_SdkV2) {
-}
-
-func (c JobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8916,33 +8795,6 @@ type RepairRun_SdkV2 struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RepairRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRun_SdkV2) {
-}
-
-func (newState *RepairRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepairRun_SdkV2) {
-}
-
-func (c RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
-	attrs["jar_params"] = attrs["jar_params"].SetOptional()
-	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
-	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
-	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
-	attrs["python_params"] = attrs["python_params"].SetOptional()
-	attrs["rerun_all_failed_tasks"] = attrs["rerun_all_failed_tasks"].SetOptional()
-	attrs["rerun_dependent_tasks"] = attrs["rerun_dependent_tasks"].SetOptional()
-	attrs["rerun_tasks"] = attrs["rerun_tasks"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
-	attrs["sql_params"] = attrs["sql_params"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9352,20 +9204,6 @@ type ResetJob_SdkV2 struct {
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
 	NewSettings types.List `tfsdk:"new_settings"`
-}
-
-func (newState *ResetJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob_SdkV2) {
-}
-
-func (newState *ResetJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResetJob_SdkV2) {
-}
-
-func (c ResetJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["new_settings"] = attrs["new_settings"].SetRequired()
-	attrs["new_settings"] = attrs["new_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
@@ -11914,33 +11752,6 @@ type RunNow_SdkV2 struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams types.Map `tfsdk:"sql_params"`
-}
-
-func (newState *RunNow_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow_SdkV2) {
-}
-
-func (newState *RunNow_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunNow_SdkV2) {
-}
-
-func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
-	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
-	attrs["jar_params"] = attrs["jar_params"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
-	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
-	attrs["only"] = attrs["only"].SetOptional()
-	attrs["performance_target"] = attrs["performance_target"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
-	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
-	attrs["python_params"] = attrs["python_params"].SetOptional()
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
-	attrs["sql_params"] = attrs["sql_params"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
@@ -16068,38 +15879,6 @@ type SubmitRun_SdkV2 struct {
 	WebhookNotifications types.List `tfsdk:"webhook_notifications"`
 }
 
-func (newState *SubmitRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRun_SdkV2) {
-}
-
-func (newState *SubmitRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState SubmitRun_SdkV2) {
-}
-
-func (c SubmitRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
-	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["environments"] = attrs["environments"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].SetOptional()
-	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["health"] = attrs["health"].SetOptional()
-	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
-	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["queue"] = attrs["queue"].SetOptional()
-	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["run_name"] = attrs["run_name"].SetOptional()
-	attrs["tasks"] = attrs["tasks"].SetOptional()
-	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
-	attrs["webhook_notifications"] = attrs["webhook_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19442,21 +19221,6 @@ type UpdateJob_SdkV2 struct {
 	// Changes to the field `JobSettings.timeout_seconds` are applied to active
 	// runs. Changes to other fields are applied to future runs only.
 	NewSettings types.List `tfsdk:"new_settings"`
-}
-
-func (newState *UpdateJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJob_SdkV2) {
-}
-
-func (newState *UpdateJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateJob_SdkV2) {
-}
-
-func (c UpdateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
-	attrs["job_id"] = attrs["job_id"].SetRequired()
-	attrs["new_settings"] = attrs["new_settings"].SetOptional()
-	attrs["new_settings"] = attrs["new_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.

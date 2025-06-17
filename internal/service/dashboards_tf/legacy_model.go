@@ -18,11 +18,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AuthorizationDetails_SdkV2 struct {
@@ -492,7 +494,7 @@ func (c Dashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
-	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -536,7 +538,7 @@ func (o Dashboard_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"dashboard_id":         types.StringType,
 			"display_name":         types.StringType,
 			"etag":                 types.StringType,
@@ -544,7 +546,7 @@ func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 			"parent_path":          types.StringType,
 			"path":                 types.StringType,
 			"serialized_dashboard": types.StringType,
-			"update_time":          types.StringType,
+			"update_time":          timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -911,20 +913,6 @@ type GenieCreateConversationMessageRequest_SdkV2 struct {
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is started.
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieCreateConversationMessageRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieCreateConversationMessageRequest_SdkV2) {
-}
-
-func (newState *GenieCreateConversationMessageRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest_SdkV2) {
-}
-
-func (c GenieCreateConversationMessageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
@@ -2160,19 +2148,6 @@ type GenieStartConversationMessageRequest_SdkV2 struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieStartConversationMessageRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationMessageRequest_SdkV2) {
-}
-
-func (newState *GenieStartConversationMessageRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest_SdkV2) {
-}
-
-func (c GenieStartConversationMessageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3092,21 +3067,6 @@ type MigrateDashboardRequest_SdkV2 struct {
 	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
-func (newState *MigrateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest_SdkV2) {
-}
-
-func (newState *MigrateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest_SdkV2) {
-}
-
-func (c MigrateDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["parent_path"] = attrs["parent_path"].SetOptional()
-	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
-	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3154,20 +3114,6 @@ type PublishRequest_SdkV2 struct {
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *PublishRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishRequest_SdkV2) {
-}
-
-func (newState *PublishRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishRequest_SdkV2) {
-}
-
-func (c PublishRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -3262,7 +3208,7 @@ func (o PublishedDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"display_name":         types.StringType,
 			"embed_credentials":    types.BoolType,
-			"revision_create_time": types.StringType,
+			"revision_create_time": timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -3409,7 +3355,7 @@ func (o Schedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o Schedule_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
+			"create_time": timetypes.RFC3339Type{},
 			"cron_schedule": basetypes.ListType{
 				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
@@ -3418,7 +3364,7 @@ func (o Schedule_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":         types.StringType,
 			"pause_status": types.StringType,
 			"schedule_id":  types.StringType,
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -3644,7 +3590,7 @@ func (o Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
+			"create_time":        timetypes.RFC3339Type{},
 			"created_by_user_id": types.Int64Type,
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
@@ -3653,7 +3599,7 @@ func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Subscriber_SdkV2{}.Type(ctx),
 			},
 			"subscription_id": types.StringType,
-			"update_time":     types.StringType,
+			"update_time":     timetypes.RFC3339Type{},
 		},
 	}
 }

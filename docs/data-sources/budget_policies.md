@@ -33,7 +33,7 @@ The following arguments are supported:
 
 ### SortSpec
 * `descending` (boolean, optional) - Whether to sort in descending order
-* `field` (string, optional) - The filed to sort by. Possible values are: POLICY_NAME
+* `field` (string, optional) - The filed to sort by. Possible values are: `POLICY_NAME`
 
 
 ## Attributes

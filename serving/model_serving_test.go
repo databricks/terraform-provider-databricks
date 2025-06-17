@@ -25,7 +25,6 @@ func TestAccModelServing(t *testing.T) {
 						name = "prod_model"
 						entity_name = "experiment-fixture-model"
 						entity_version = "1"
-						workload_size = "Small"
 						scale_to_zero_enabled = true
 						max_provisioned_concurrency = 4
 						min_provisioned_concurrency = 4
@@ -34,7 +33,6 @@ func TestAccModelServing(t *testing.T) {
 						name = "candidate_model"
 						entity_name = "experiment-fixture-model"
 						entity_version = "2"
-						workload_size = "Small"
 						scale_to_zero_enabled = false
 						max_provisioned_concurrency = 4
 						min_provisioned_concurrency = 4
@@ -85,7 +83,6 @@ func TestAccModelServing(t *testing.T) {
 						name = "prod_model"
 						entity_name = "experiment-fixture-model"
 						entity_version = "1"
-						workload_size = "Small"
 						scale_to_zero_enabled = true
 						max_provisioned_concurrency = 4
 						min_provisioned_concurrency = 4

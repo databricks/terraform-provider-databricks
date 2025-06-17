@@ -41,12 +41,13 @@ const baseResources = `
 	resource "databricks_model_serving" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		config {
-			served_models {
+			served_entities {
 				name = "prod_model"
-				model_name = "experiment-fixture-model"
-				model_version = "1"
-				workload_size = "Small"
+				entity_name = "experiment-fixture-model"
+				entity_version = "1"
 				scale_to_zero_enabled = true
+				max_provisioned_concurrency = 4
+				min_provisioned_concurrency = 0
 			}
 		}
 	}

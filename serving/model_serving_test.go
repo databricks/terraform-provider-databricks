@@ -21,19 +21,21 @@ func TestAccModelServing(t *testing.T) {
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
 				config {
-					served_models {
+					served_entities {
 						name = "prod_model"
-						model_name = "experiment-fixture-model"
-						model_version = "1"
-						workload_size = "Small"
+						entity_name = "experiment-fixture-model"
+						entity_version = "1"
 						scale_to_zero_enabled = true
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 0
 					}
-					served_models {
+					served_entities {
 						name = "candidate_model"
-						model_name = "experiment-fixture-model"
-						model_version = "2"
-						workload_size = "Small"
+						entity_name = "experiment-fixture-model"
+						entity_version = "2"
 						scale_to_zero_enabled = false
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 4
 					}
 					traffic_config {
 						routes {
@@ -77,12 +79,13 @@ func TestAccModelServing(t *testing.T) {
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
 				config {
-					served_models {
+					served_entities {
 						name = "prod_model"
-						model_name = "experiment-fixture-model"
-						model_version = "1"
-						workload_size = "Small"
+						entity_name = "experiment-fixture-model"
+						entity_version = "1"
 						scale_to_zero_enabled = true
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 0
 					}
 					traffic_config {
 						routes {
@@ -123,10 +126,12 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
 				config {
-					served_entities{
+					served_entities {
 						name = "pt_model"
 						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
 						entity_version = "2"
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 4
 						min_provisioned_throughput = 0
 						max_provisioned_throughput = 970
 					}
@@ -144,10 +149,12 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
 				config {
-					served_entities{
+					served_entities {
 						name = "pt_model"
 						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
 						entity_version = "2"
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 4
 						min_provisioned_throughput = 970
 						max_provisioned_throughput = 1940
 					}
@@ -165,10 +172,12 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
 				config {
-					served_entities{
+					served_entities {
 						name = "pt_model"
 						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
 						entity_version = "2"
+						max_provisioned_concurrency = 4
+						min_provisioned_concurrency = 4
 						min_provisioned_throughput = 0
 						max_provisioned_throughput = 1940
 					}

@@ -84,6 +84,7 @@ The following arguments are required:
 
 * `name` (Required) - Name of share. Change forces creation of a new resource.
 * `owner` (Optional) -  User name/group name/sp application_id of the share owner.
+* `comment` - (Optional) User-supplied free-form text.
 
 ### object Configuration Block
 

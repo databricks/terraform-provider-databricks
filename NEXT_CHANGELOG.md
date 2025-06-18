@@ -17,6 +17,8 @@
 
 * Recommend OAuth instead of PAT in guides ([#4787](https://github.com/databricks/terraform-provider-databricks/pull/4787))
 
+* Updated `share` documentation to be more in line with Terraform styling ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
+
 ### Exporter
 
 ### Internal Changes

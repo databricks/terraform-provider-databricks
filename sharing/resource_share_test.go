@@ -192,11 +192,13 @@ func TestCreateShare(t *testing.T) {
 				ExpectedRequest: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
 						Name: "a",
+						Comment: "b",
 					},
 				},
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
 						Name: "a",
+						Comment: "b",
 					}},
 			},
 			{
@@ -204,6 +206,7 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/a",
 				ExpectedRequest: sharing.UpdateShare{
 					Owner: "admin",
+					Comment: "b",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "ADD",
@@ -226,6 +229,7 @@ func TestCreateShare(t *testing.T) {
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
 						Name: "a",
+						Comment: "b",
 					},
 				},
 			},
@@ -235,6 +239,7 @@ func TestCreateShare(t *testing.T) {
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
 						Name:  "a",
+						Comment: "b",
 						Owner: "admin",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -255,6 +260,7 @@ func TestCreateShare(t *testing.T) {
 		Create:   true,
 		HCL: `
 			name  = "a"
+			comment = "b"
 			owner = "admin"
 			object {
 				name = "main.a"
@@ -302,6 +308,13 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Comment: "cba",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -337,6 +350,7 @@ func TestUpdateShare(t *testing.T) {
 					sharing.ShareInfo{
 						Name:  "abc",
 						Owner: "admin",
+						Comment: "cba",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "a",
@@ -367,6 +381,7 @@ func TestUpdateShare(t *testing.T) {
 		HCL: `
 			name  = "abc"
 			owner = "admin"
+			comment = "cba"
 			object {
 				name = "a"
 				comment = "c"
@@ -414,6 +429,13 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Comment: "updatedComment",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -455,11 +477,19 @@ func TestUpdateShareRollback(t *testing.T) {
 				},
 			},
 			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Comment: "cba",
+				},
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
 					sharing.ShareInfo{
 						Name:  "abc",
+						Comment: "cba",
 						Owner: "admin",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -488,9 +518,11 @@ func TestUpdateShareRollback(t *testing.T) {
 		InstanceState: map[string]string{
 			"name":  "abc",
 			"owner": "admin",
+			"comment": "cba",
 		},
 		HCL: `
 			name  = "abc"
+			comment = "updatedComment"
 			owner = "updatedOwner"
 			object {
 				name = "a"

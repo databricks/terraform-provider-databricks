@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Added ability to add `comment` when defining a new `databricks_share` ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
 
 ### Bug Fixes
 

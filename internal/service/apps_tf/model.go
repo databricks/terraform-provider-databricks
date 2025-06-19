@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -170,7 +171,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"app_status":                 ApplicationStatus{}.Type(ctx),
 			"budget_policy_id":           types.StringType,
 			"compute_status":             ComputeStatus{}.Type(ctx),
-			"create_time":                types.StringType,
+			"create_time":                timetypes.RFC3339Type{},
 			"creator":                    types.StringType,
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
@@ -189,7 +190,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
-			"update_time":                 types.StringType,
+			"update_time":                 timetypes.RFC3339Type{},
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
 			"user_api_scopes": basetypes.ListType{
@@ -630,14 +631,14 @@ func (o AppDeployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o AppDeployment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"creator":              types.StringType,
 			"deployment_artifacts": AppDeploymentArtifacts{}.Type(ctx),
 			"deployment_id":        types.StringType,
 			"mode":                 types.StringType,
 			"source_code_path":     types.StringType,
 			"status":               AppDeploymentStatus{}.Type(ctx),
-			"update_time":          types.StringType,
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }

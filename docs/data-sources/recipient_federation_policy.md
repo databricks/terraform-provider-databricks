@@ -15,12 +15,12 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `comment` (string) - Description of the policy. This is a user-provided description
-* `create_time` (string) - System-generated timestamp indicating when the policy was created
+* `create_time` ([time.Time](../../README.md#well-known-types)) - System-generated timestamp indicating when the policy was created
 * `id` (string) - Unique, immutable system-generated identifier for the federation policy
 * `name` (string) - Name of the federation policy. A recipient can have multiple policies with different names.
   The name must contain only lowercase alphanumeric characters, numbers, and hyphens
 * `oidc_policy` (OidcFederationPolicy) - Specifies the policy to use for validating OIDC claims in the federated tokens
-* `update_time` (string) - System-generated timestamp indicating when the policy was last updated
+* `update_time` ([time.Time](../../README.md#well-known-types)) - System-generated timestamp indicating when the policy was last updated
 
 ### OidcFederationPolicy
 * `audiences` (list of string) - The allowed token audiences, as specified in the 'aud' claim of federated tokens.

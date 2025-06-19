@@ -3,10 +3,14 @@ package converters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -79,7 +83,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 		srcField := field.Value
 		srcFieldName := field.StructField.Name
 
-		srcFieldTag := field.StructField.Tag.Get("json")
+		srcFieldTag := field.StructField.Tag.Get("tf")
 		if srcFieldTag == "-" {
 			continue
 		}
@@ -160,13 +164,20 @@ func goSdkToTfSdkSingleField(
 			destField.Set(reflect.ValueOf(types.BoolNull()))
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		// convert any kind of integer to int64
-		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Int()
-		// check if the value is non-zero or if the field is in the forceSendFields list
-		if intVal != 0 || forceSendField {
-			destField.Set(reflect.ValueOf(types.Int64Value(intVal)))
+		if srcField.Type() == reflect.TypeOf(time.Duration(0)) {
+			// time.Duration is represented as a timetypes.GoDuration in the TF SDK.
+			duration := srcField.Interface().(time.Duration)
+			goDuration := timetypes.NewGoDurationValue(duration)
+			destField.Set(reflect.ValueOf(goDuration))
 		} else {
-			destField.Set(reflect.ValueOf(types.Int64Null()))
+			// convert any kind of integer to int64
+			intVal := srcField.Convert(reflect.TypeOf(int64(0))).Int()
+			// check if the value is non-zero or if the field is in the forceSendFields list
+			if intVal != 0 || forceSendField {
+				destField.Set(reflect.ValueOf(types.Int64Value(intVal)))
+			} else {
+				destField.Set(reflect.ValueOf(types.Int64Null()))
+			}
 		}
 	case reflect.Float32, reflect.Float64:
 		// convert any kind of float to float64
@@ -213,26 +224,51 @@ func goSdkToTfSdkSingleField(
 			d.Append(goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)...)
 			return
 		}
-
-		// Otherwise, the destination field is a types.Object. Convert the nested struct to the corresponding
-		// TFSDK struct, then set the destination field to the object
-		dest := reflect.New(innerType).Interface()
-		d.Append(GoSdkToTfSdkStruct(ctx, srcField.Interface(), dest)...)
-		if d.HasError() {
+		// time.Time is represented as a string in the TF SDK.
+		if srcField.Type() == reflect.TypeOf(time.Time{}) {
+			// Call Format method
+			timeVal := srcField.Interface().(time.Time)
+			if !timeVal.IsZero() || forceSendField {
+				rfc3339Val, ds := timetypes.NewRFC3339Value(timeVal.Format(time.RFC3339))
+				d.Append(ds...)
+				destField.Set(reflect.ValueOf(rfc3339Val))
+				return
+			}
+			destField.Set(reflect.ValueOf(timetypes.NewRFC3339Null()))
 			return
+		} else {
+			// Otherwise, the destination field is a types.Object. Convert the nested struct to the corresponding
+			// TFSDK struct, then set the destination field to the object
+			dest := reflect.New(innerType).Interface()
+			d.Append(GoSdkToTfSdkStruct(ctx, srcField.Interface(), dest)...)
+			if d.HasError() {
+				return
+			}
+			objectType, ok := tfType.(types.ObjectType)
+			if !ok {
+				d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not an object type: %s. %s", tfType, common.TerraformBugErrorMessage))
+				return
+			}
+			objectVal, ds := types.ObjectValueFrom(ctx, objectType.AttrTypes, dest)
+			d.Append(ds...)
+			if d.HasError() {
+				return
+			}
+			destField.Set(reflect.ValueOf(objectVal))
 		}
-		objectType, ok := tfType.(types.ObjectType)
-		if !ok {
-			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not an object type: %s. %s", tfType, common.TerraformBugErrorMessage))
-			return
-		}
-		objectVal, ds := types.ObjectValueFrom(ctx, objectType.AttrTypes, dest)
-		d.Append(ds...)
-		if d.HasError() {
-			return
-		}
-		destField.Set(reflect.ValueOf(objectVal))
 	case reflect.Slice:
+		// json.RawMessage is represented as a string in the TF SDK.
+		if srcField.Type() == reflect.TypeOf(json.RawMessage{}) {
+			bytes := srcField.Convert(reflect.TypeOf([]byte{})).Bytes()
+			if len(bytes) != 0 || forceSendField {
+				val := jsontypes.NewNormalizedValue(string(bytes))
+				destField.Set(reflect.ValueOf(val))
+			} else {
+				destField.Set(reflect.ValueOf(jsontypes.NewNormalizedNull()))
+			}
+
+			return
+		}
 		// This always corresponds to a types.List.
 		listType, ok := tfType.(types.ListType)
 		if !ok {

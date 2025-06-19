@@ -17,10 +17,12 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 // Activity recorded for the action.
@@ -1564,6 +1566,74 @@ func (o *CreateModelVersionResponse_SdkV2) SetModelVersion(ctx context.Context, 
 	o.ModelVersion = types.ListValueMust(t, vs)
 }
 
+// Create an Online Feature Store
+type CreateOnlineStoreRequest_SdkV2 struct {
+	// An OnlineStore is a logical database instance that stores and serves
+	// features online.
+	OnlineStore types.List `tfsdk:"online_store"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOnlineStoreRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateOnlineStoreRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"online_store": reflect.TypeOf(OnlineStore_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateOnlineStoreRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateOnlineStoreRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"online_store": o.OnlineStore,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateOnlineStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"online_store": basetypes.ListType{
+				ElemType: OnlineStore_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetOnlineStore returns the value of the OnlineStore field in CreateOnlineStoreRequest_SdkV2 as
+// a OnlineStore_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateOnlineStoreRequest_SdkV2) GetOnlineStore(ctx context.Context) (OnlineStore_SdkV2, bool) {
+	var e OnlineStore_SdkV2
+	if o.OnlineStore.IsNull() || o.OnlineStore.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineStore_SdkV2
+	d := o.OnlineStore.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnlineStore sets the value of the OnlineStore field in CreateOnlineStoreRequest_SdkV2.
+func (o *CreateOnlineStoreRequest_SdkV2) SetOnlineStore(ctx context.Context, v OnlineStore_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["online_store"]
+	o.OnlineStore = types.ListValueMust(t, vs)
+}
+
 type CreateRegistryWebhook_SdkV2 struct {
 	// User-specified description for the webhook.
 	Description types.String `tfsdk:"description"`
@@ -2970,6 +3040,73 @@ func (o DeleteModelVersionTagResponse_SdkV2) ToObjectValue(ctx context.Context) 
 
 // Type implements basetypes.ObjectValuable.
 func (o DeleteModelVersionTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Delete an Online Feature Store
+type DeleteOnlineStoreRequest_SdkV2 struct {
+	// Name of the online store to delete.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteOnlineStoreRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteOnlineStoreRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteOnlineStoreRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteOnlineStoreRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteOnlineStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteOnlineStoreResponse_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteOnlineStoreResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteOnlineStoreResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteOnlineStoreResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteOnlineStoreResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteOnlineStoreResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -5480,6 +5617,43 @@ func (o *GetModelVersionResponse_SdkV2) SetModelVersion(ctx context.Context, v M
 	o.ModelVersion = types.ListValueMust(t, vs)
 }
 
+// Get an Online Feature Store
+type GetOnlineStoreRequest_SdkV2 struct {
+	// Name of the online store to get.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOnlineStoreRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetOnlineStoreRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetOnlineStoreRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetOnlineStoreRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetOnlineStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 // Get registered model permission levels
 type GetRegisteredModelPermissionLevelsRequest_SdkV2 struct {
 	// The registered model for which to get or manage permissions.
@@ -6457,6 +6631,131 @@ func (o *ListModelsResponse_SdkV2) SetRegisteredModels(ctx context.Context, v []
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.RegisteredModels = types.ListValueMust(t, vs)
+}
+
+// List Online Feature Stores
+type ListOnlineStoresRequest_SdkV2 struct {
+	// The maximum number of results to return. Defaults to 100 if not
+	// specified.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page based on a previous query.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListOnlineStoresRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListOnlineStoresRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListOnlineStoresRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListOnlineStoresRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListOnlineStoresRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListOnlineStoresResponse_SdkV2 struct {
+	// Pagination token to request the next page of results for this query.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// List of online stores.
+	OnlineStores types.List `tfsdk:"online_stores"`
+}
+
+func (newState *ListOnlineStoresResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListOnlineStoresResponse_SdkV2) {
+}
+
+func (newState *ListOnlineStoresResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListOnlineStoresResponse_SdkV2) {
+}
+
+func (c ListOnlineStoresResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["online_stores"] = attrs["online_stores"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListOnlineStoresResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListOnlineStoresResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"online_stores": reflect.TypeOf(OnlineStore_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListOnlineStoresResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListOnlineStoresResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"online_stores":   o.OnlineStores,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListOnlineStoresResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"online_stores": basetypes.ListType{
+				ElemType: OnlineStore_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetOnlineStores returns the value of the OnlineStores field in ListOnlineStoresResponse_SdkV2 as
+// a slice of OnlineStore_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListOnlineStoresResponse_SdkV2) GetOnlineStores(ctx context.Context) ([]OnlineStore_SdkV2, bool) {
+	if o.OnlineStores.IsNull() || o.OnlineStores.IsUnknown() {
+		return nil, false
+	}
+	var v []OnlineStore_SdkV2
+	d := o.OnlineStores.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnlineStores sets the value of the OnlineStores field in ListOnlineStoresResponse_SdkV2.
+func (o *ListOnlineStoresResponse_SdkV2) SetOnlineStores(ctx context.Context, v []OnlineStore_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["online_stores"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OnlineStores = types.ListValueMust(t, vs)
 }
 
 type ListRegistryWebhooks_SdkV2 struct {
@@ -9034,6 +9333,78 @@ func (o ModelVersionTag_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An OnlineStore is a logical database instance that stores and serves features
+// online.
+type OnlineStore_SdkV2 struct {
+	// The capacity of the online store. Valid values are "CU_1", "CU_2",
+	// "CU_4", "CU_8".
+	Capacity types.String `tfsdk:"capacity"`
+	// The timestamp when the online store was created.
+	CreationTime types.String `tfsdk:"creation_time"`
+	// The email of the creator of the online store.
+	Creator types.String `tfsdk:"creator"`
+	// The name of the online store. This is the unique identifier for the
+	// online store.
+	Name types.String `tfsdk:"name"`
+	// The current state of the online store.
+	State types.String `tfsdk:"state"`
+}
+
+func (newState *OnlineStore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineStore_SdkV2) {
+}
+
+func (newState *OnlineStore_SdkV2) SyncEffectiveFieldsDuringRead(existingState OnlineStore_SdkV2) {
+}
+
+func (c OnlineStore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OnlineStore.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OnlineStore_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStore_SdkV2
+// only implements ToObjectValue() and Type().
+func (o OnlineStore_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"capacity":      o.Capacity,
+			"creation_time": o.CreationTime,
+			"creator":       o.Creator,
+			"name":          o.Name,
+			"state":         o.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o OnlineStore_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"capacity":      types.StringType,
+			"creation_time": timetypes.RFC3339Type{},
+			"creator":       types.StringType,
+			"name":          types.StringType,
+			"state":         types.StringType,
+		},
+	}
+}
+
 // Param associated with a run.
 type Param_SdkV2 struct {
 	// Key identifying this param.
@@ -9084,6 +9455,204 @@ func (o Param_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
+		},
+	}
+}
+
+type PublishSpec_SdkV2 struct {
+	// The name of the target online store.
+	OnlineStore types.String `tfsdk:"online_store"`
+	// The full three-part (catalog, schema, table) name of the online table.
+	// Auto-generated if not specified.
+	OnlineTableName types.String `tfsdk:"online_table_name"`
+	// The publish mode of the pipeline that syncs the online table with the
+	// source table. Defaults to TRIGGERED if not specified. All publish modes
+	// require the source table to have Change Data Feed (CDF) enabled.
+	PublishMode types.String `tfsdk:"publish_mode"`
+}
+
+func (newState *PublishSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishSpec_SdkV2) {
+}
+
+func (newState *PublishSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishSpec_SdkV2) {
+}
+
+func (c PublishSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["online_store"] = attrs["online_store"].SetRequired()
+	attrs["online_table_name"] = attrs["online_table_name"].SetOptional()
+	attrs["publish_mode"] = attrs["publish_mode"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PublishSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PublishSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PublishSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"online_store":      o.OnlineStore,
+			"online_table_name": o.OnlineTableName,
+			"publish_mode":      o.PublishMode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PublishSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"online_store":      types.StringType,
+			"online_table_name": types.StringType,
+			"publish_mode":      types.StringType,
+		},
+	}
+}
+
+type PublishTableRequest_SdkV2 struct {
+	// The specification for publishing the online table from the source table.
+	PublishSpec types.List `tfsdk:"publish_spec"`
+	// The full three-part (catalog, schema, table) name of the source table.
+	SourceTableName types.String `tfsdk:"-"`
+}
+
+func (newState *PublishTableRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishTableRequest_SdkV2) {
+}
+
+func (newState *PublishTableRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishTableRequest_SdkV2) {
+}
+
+func (c PublishTableRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["publish_spec"] = attrs["publish_spec"].SetRequired()
+	attrs["publish_spec"] = attrs["publish_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["source_table_name"] = attrs["source_table_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PublishTableRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"publish_spec": reflect.TypeOf(PublishSpec_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PublishTableRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PublishTableRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"publish_spec":      o.PublishSpec,
+			"source_table_name": o.SourceTableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PublishTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"publish_spec": basetypes.ListType{
+				ElemType: PublishSpec_SdkV2{}.Type(ctx),
+			},
+			"source_table_name": types.StringType,
+		},
+	}
+}
+
+// GetPublishSpec returns the value of the PublishSpec field in PublishTableRequest_SdkV2 as
+// a PublishSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PublishTableRequest_SdkV2) GetPublishSpec(ctx context.Context) (PublishSpec_SdkV2, bool) {
+	var e PublishSpec_SdkV2
+	if o.PublishSpec.IsNull() || o.PublishSpec.IsUnknown() {
+		return e, false
+	}
+	var v []PublishSpec_SdkV2
+	d := o.PublishSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPublishSpec sets the value of the PublishSpec field in PublishTableRequest_SdkV2.
+func (o *PublishTableRequest_SdkV2) SetPublishSpec(ctx context.Context, v PublishSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["publish_spec"]
+	o.PublishSpec = types.ListValueMust(t, vs)
+}
+
+type PublishTableResponse_SdkV2 struct {
+	// The full three-part (catalog, schema, table) name of the online table.
+	OnlineTableName types.String `tfsdk:"online_table_name"`
+	// The ID of the pipeline that syncs the online table with the source table.
+	PipelineId types.String `tfsdk:"pipeline_id"`
+}
+
+func (newState *PublishTableResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishTableResponse_SdkV2) {
+}
+
+func (newState *PublishTableResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishTableResponse_SdkV2) {
+}
+
+func (c PublishTableResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["online_table_name"] = attrs["online_table_name"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishTableResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PublishTableResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PublishTableResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PublishTableResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"online_table_name": o.OnlineTableName,
+			"pipeline_id":       o.PipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PublishTableResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"online_table_name": types.StringType,
+			"pipeline_id":       types.StringType,
 		},
 	}
 }
@@ -13424,6 +13993,83 @@ func (o UpdateModelVersionResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
+}
+
+// Update an Online Feature Store
+type UpdateOnlineStoreRequest_SdkV2 struct {
+	// The name of the online store. This is the unique identifier for the
+	// online store.
+	Name types.String `tfsdk:"-"`
+	// An OnlineStore is a logical database instance that stores and serves
+	// features online.
+	OnlineStore types.List `tfsdk:"online_store"`
+	// The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateOnlineStoreRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateOnlineStoreRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"online_store": reflect.TypeOf(OnlineStore_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateOnlineStoreRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateOnlineStoreRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":         o.Name,
+			"online_store": o.OnlineStore,
+			"update_mask":  o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateOnlineStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"online_store": basetypes.ListType{
+				ElemType: OnlineStore_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetOnlineStore returns the value of the OnlineStore field in UpdateOnlineStoreRequest_SdkV2 as
+// a OnlineStore_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateOnlineStoreRequest_SdkV2) GetOnlineStore(ctx context.Context) (OnlineStore_SdkV2, bool) {
+	var e OnlineStore_SdkV2
+	if o.OnlineStore.IsNull() || o.OnlineStore.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineStore_SdkV2
+	d := o.OnlineStore.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnlineStore sets the value of the OnlineStore field in UpdateOnlineStoreRequest_SdkV2.
+func (o *UpdateOnlineStoreRequest_SdkV2) SetOnlineStore(ctx context.Context, v OnlineStore_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["online_store"]
+	o.OnlineStore = types.ListValueMust(t, vs)
 }
 
 type UpdateRegistryWebhook_SdkV2 struct {

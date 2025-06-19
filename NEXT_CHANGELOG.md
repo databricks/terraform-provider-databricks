@@ -6,6 +6,9 @@
 
 ### New Features and Improvements
 
+* Added online_store resource and data sources ([#4805](https://github.com/databricks/terraform-provider-databricks/pull/4805)).
+* Bump the Go SDK to v0.73.0 ([#4805](https://github.com/databricks/terraform-provider-databricks/pull/4805)).
+
 ### Bug Fixes
 
 ### Documentation

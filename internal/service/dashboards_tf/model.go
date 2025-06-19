@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -491,7 +492,7 @@ func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
-	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -535,7 +536,7 @@ func (o Dashboard) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Dashboard) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"dashboard_id":         types.StringType,
 			"display_name":         types.StringType,
 			"etag":                 types.StringType,
@@ -543,7 +544,7 @@ func (o Dashboard) Type(ctx context.Context) attr.Type {
 			"parent_path":          types.StringType,
 			"path":                 types.StringType,
 			"serialized_dashboard": types.StringType,
-			"update_time":          types.StringType,
+			"update_time":          timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -3252,7 +3253,7 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"display_name":         types.StringType,
 			"embed_credentials":    types.BoolType,
-			"revision_create_time": types.StringType,
+			"revision_create_time": timetypes.RFC3339Type{},
 			"warehouse_id":         types.StringType,
 		},
 	}
@@ -3398,14 +3399,14 @@ func (o Schedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Schedule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":   types.StringType,
+			"create_time":   timetypes.RFC3339Type{},
 			"cron_schedule": CronSchedule{}.Type(ctx),
 			"dashboard_id":  types.StringType,
 			"display_name":  types.StringType,
 			"etag":          types.StringType,
 			"pause_status":  types.StringType,
 			"schedule_id":   types.StringType,
-			"update_time":   types.StringType,
+			"update_time":   timetypes.RFC3339Type{},
 			"warehouse_id":  types.StringType,
 		},
 	}
@@ -3630,14 +3631,14 @@ func (o Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Subscription) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
+			"create_time":        timetypes.RFC3339Type{},
 			"created_by_user_id": types.Int64Type,
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
 			"subscriber":         Subscriber{}.Type(ctx),
 			"subscription_id":    types.StringType,
-			"update_time":        types.StringType,
+			"update_time":        timetypes.RFC3339Type{},
 		},
 	}
 }

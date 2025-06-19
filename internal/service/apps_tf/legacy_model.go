@@ -17,10 +17,12 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type App_SdkV2 struct {
@@ -181,7 +183,7 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"compute_status": basetypes.ListType{
 				ElemType: ComputeStatus_SdkV2{}.Type(ctx),
 			},
-			"create_time":                types.StringType,
+			"create_time":                timetypes.RFC3339Type{},
 			"creator":                    types.StringType,
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
@@ -202,7 +204,7 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
-			"update_time":                 types.StringType,
+			"update_time":                 timetypes.RFC3339Type{},
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
 			"user_api_scopes": basetypes.ListType{
@@ -637,7 +639,7 @@ func (o AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (o AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
+			"create_time": timetypes.RFC3339Type{},
 			"creator":     types.StringType,
 			"deployment_artifacts": basetypes.ListType{
 				ElemType: AppDeploymentArtifacts_SdkV2{}.Type(ctx),
@@ -648,7 +650,7 @@ func (o AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 			"status": basetypes.ListType{
 				ElemType: AppDeploymentStatus_SdkV2{}.Type(ctx),
 			},
-			"update_time": types.StringType,
+			"update_time": timetypes.RFC3339Type{},
 		},
 	}
 }

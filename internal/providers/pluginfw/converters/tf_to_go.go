@@ -3,10 +3,14 @@ package converters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -136,6 +140,41 @@ func tfsdkToGoSdkStructField(
 		destField.SetInt(v.ValueInt64())
 	case types.Float64:
 		destField.SetFloat(v.ValueFloat64())
+	case timetypes.GoDuration:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil
+			return
+		}
+		duration, err := v.ValueGoDuration()
+		if err != nil {
+			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Duration. %s", v, common.TerraformBugErrorMessage))
+			return
+		}
+		destField.Set(reflect.ValueOf(&duration))
+	case timetypes.RFC3339:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil
+			return
+		}
+		strVal := v.ValueString()
+		t, err := time.Parse(time.RFC3339, strVal)
+		if err != nil {
+			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot parse timestamp %s. Expected format RFC3339", strVal))
+			return
+		}
+		destField.Set(reflect.ValueOf(&t))
+	case jsontypes.Normalized:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil
+			return
+		}
+		val := v.ValueString()
+		if val == "" {
+			destField.Set(reflect.Zero(destField.Type()))
+		} else {
+			raw := json.RawMessage(val)
+			destField.Set(reflect.ValueOf(raw))
+		}
 	case types.String:
 		if destField.Type().Name() != "string" {
 			// This is the case for enum.

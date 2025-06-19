@@ -18,10 +18,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type BaseJob_SdkV2 struct {
@@ -317,9 +318,11 @@ type BaseRun_SdkV2 struct {
 	// failed run. This occurs when you request to re-run the job in case of
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
-	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
-	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
-	// restart a continuous job run.
+	// arrival. * `CONTINUOUS`: Indicates a run that is triggered by a
+	// continuous job. * `TABLE`: Indicates a run that is triggered by a table
+	// update. * `CONTINUOUS_RESTART`: Indicates a run created by user to
+	// manually restart a continuous job run. * `MODEL`: Indicates a run that is
+	// triggered by a model update.
 	Trigger types.String `tfsdk:"trigger"`
 	// Additional details about what triggered the run
 	TriggerInfo types.List `tfsdk:"trigger_info"`
@@ -2761,6 +2764,7 @@ func (o *DashboardTaskOutput_SdkV2) SetPageSnapshots(ctx context.Context, v []Da
 }
 
 // Format of response retrieved from dbt Cloud, for inclusion in output
+// Deprecated in favor of DbtPlatformJobRunStep
 type DbtCloudJobRunStep_SdkV2 struct {
 	// Orders the steps in the job
 	Index types.Int64 `tfsdk:"index"`
@@ -2824,6 +2828,7 @@ func (o DbtCloudJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated in favor of DbtPlatformTask
 type DbtCloudTask_SdkV2 struct {
 	// The resource name of the UC connection that authenticates the dbt Cloud
 	// for this task
@@ -2878,6 +2883,7 @@ func (o DbtCloudTask_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated in favor of DbtPlatformTaskOutput
 type DbtCloudTaskOutput_SdkV2 struct {
 	// Id of the job run in dbt Cloud
 	DbtCloudJobRunId types.Int64 `tfsdk:"dbt_cloud_job_run_id"`
@@ -3050,6 +3056,232 @@ func (o *DbtOutput_SdkV2) SetArtifactsHeaders(ctx context.Context, v map[string]
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.ArtifactsHeaders = types.MapValueMust(t, vs)
+}
+
+// Format of response retrieved from dbt platform, for inclusion in output
+type DbtPlatformJobRunStep_SdkV2 struct {
+	// Orders the steps in the job
+	Index types.Int64 `tfsdk:"index"`
+	// Output of the step
+	Logs types.String `tfsdk:"logs"`
+	// Whether the logs of this step have been truncated. If true, the logs has
+	// been truncated to 10000 characters.
+	LogsTruncated types.Bool `tfsdk:"logs_truncated"`
+	// Name of the step in the job
+	Name types.String `tfsdk:"name"`
+	// Whether the name of the job has been truncated. If true, the name has
+	// been truncated to 100 characters.
+	NameTruncated types.Bool `tfsdk:"name_truncated"`
+	// State of the step
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DbtPlatformJobRunStep_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformJobRunStep_SdkV2) {
+}
+
+func (newState *DbtPlatformJobRunStep_SdkV2) SyncEffectiveFieldsDuringRead(existingState DbtPlatformJobRunStep_SdkV2) {
+}
+
+func (c DbtPlatformJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index"] = attrs["index"].SetOptional()
+	attrs["logs"] = attrs["logs"].SetOptional()
+	attrs["logs_truncated"] = attrs["logs_truncated"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name_truncated"] = attrs["name_truncated"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtPlatformJobRunStep.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DbtPlatformJobRunStep_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformJobRunStep_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DbtPlatformJobRunStep_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"index":          o.Index,
+			"logs":           o.Logs,
+			"logs_truncated": o.LogsTruncated,
+			"name":           o.Name,
+			"name_truncated": o.NameTruncated,
+			"status":         o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DbtPlatformJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"index":          types.Int64Type,
+			"logs":           types.StringType,
+			"logs_truncated": types.BoolType,
+			"name":           types.StringType,
+			"name_truncated": types.BoolType,
+			"status":         types.StringType,
+		},
+	}
+}
+
+type DbtPlatformTask_SdkV2 struct {
+	// The resource name of the UC connection that authenticates the dbt
+	// platform for this task
+	ConnectionResourceName types.String `tfsdk:"connection_resource_name"`
+	// Id of the dbt platform job to be triggered. Specified as a string for
+	// maximum compatibility with clients.
+	DbtPlatformJobId types.String `tfsdk:"dbt_platform_job_id"`
+}
+
+func (newState *DbtPlatformTask_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformTask_SdkV2) {
+}
+
+func (newState *DbtPlatformTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState DbtPlatformTask_SdkV2) {
+}
+
+func (c DbtPlatformTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_resource_name"] = attrs["connection_resource_name"].SetOptional()
+	attrs["dbt_platform_job_id"] = attrs["dbt_platform_job_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtPlatformTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DbtPlatformTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformTask_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DbtPlatformTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"connection_resource_name": o.ConnectionResourceName,
+			"dbt_platform_job_id":      o.DbtPlatformJobId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DbtPlatformTask_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"connection_resource_name": types.StringType,
+			"dbt_platform_job_id":      types.StringType,
+		},
+	}
+}
+
+type DbtPlatformTaskOutput_SdkV2 struct {
+	// Id of the job run in dbt platform. Specified as a string for maximum
+	// compatibility with clients.
+	DbtPlatformJobRunId types.String `tfsdk:"dbt_platform_job_run_id"`
+	// Steps of the job run as received from dbt platform
+	DbtPlatformJobRunOutput types.List `tfsdk:"dbt_platform_job_run_output"`
+	// Url where full run details can be viewed
+	DbtPlatformJobRunUrl types.String `tfsdk:"dbt_platform_job_run_url"`
+	// Whether the number of steps in the output has been truncated. If true,
+	// the output will contain the first 20 steps of the output.
+	StepsTruncated types.Bool `tfsdk:"steps_truncated"`
+}
+
+func (newState *DbtPlatformTaskOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformTaskOutput_SdkV2) {
+}
+
+func (newState *DbtPlatformTaskOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DbtPlatformTaskOutput_SdkV2) {
+}
+
+func (c DbtPlatformTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_platform_job_run_id"] = attrs["dbt_platform_job_run_id"].SetOptional()
+	attrs["dbt_platform_job_run_output"] = attrs["dbt_platform_job_run_output"].SetOptional()
+	attrs["dbt_platform_job_run_url"] = attrs["dbt_platform_job_run_url"].SetOptional()
+	attrs["steps_truncated"] = attrs["steps_truncated"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtPlatformTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DbtPlatformTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dbt_platform_job_run_output": reflect.TypeOf(DbtPlatformJobRunStep_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformTaskOutput_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DbtPlatformTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dbt_platform_job_run_id":     o.DbtPlatformJobRunId,
+			"dbt_platform_job_run_output": o.DbtPlatformJobRunOutput,
+			"dbt_platform_job_run_url":    o.DbtPlatformJobRunUrl,
+			"steps_truncated":             o.StepsTruncated,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DbtPlatformTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dbt_platform_job_run_id": types.StringType,
+			"dbt_platform_job_run_output": basetypes.ListType{
+				ElemType: DbtPlatformJobRunStep_SdkV2{}.Type(ctx),
+			},
+			"dbt_platform_job_run_url": types.StringType,
+			"steps_truncated":          types.BoolType,
+		},
+	}
+}
+
+// GetDbtPlatformJobRunOutput returns the value of the DbtPlatformJobRunOutput field in DbtPlatformTaskOutput_SdkV2 as
+// a slice of DbtPlatformJobRunStep_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DbtPlatformTaskOutput_SdkV2) GetDbtPlatformJobRunOutput(ctx context.Context) ([]DbtPlatformJobRunStep_SdkV2, bool) {
+	if o.DbtPlatformJobRunOutput.IsNull() || o.DbtPlatformJobRunOutput.IsUnknown() {
+		return nil, false
+	}
+	var v []DbtPlatformJobRunStep_SdkV2
+	d := o.DbtPlatformJobRunOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtPlatformJobRunOutput sets the value of the DbtPlatformJobRunOutput field in DbtPlatformTaskOutput_SdkV2.
+func (o *DbtPlatformTaskOutput_SdkV2) SetDbtPlatformJobRunOutput(ctx context.Context, v []DbtPlatformJobRunStep_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_job_run_output"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DbtPlatformJobRunOutput = types.ListValueMust(t, vs)
 }
 
 type DbtTask_SdkV2 struct {
@@ -10585,9 +10817,11 @@ type Run_SdkV2 struct {
 	// failed run. This occurs when you request to re-run the job in case of
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
-	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
-	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
-	// restart a continuous job run.
+	// arrival. * `CONTINUOUS`: Indicates a run that is triggered by a
+	// continuous job. * `TABLE`: Indicates a run that is triggered by a table
+	// update. * `CONTINUOUS_RESTART`: Indicates a run created by user to
+	// manually restart a continuous job run. * `MODEL`: Indicates a run that is
+	// triggered by a model update.
 	Trigger types.String `tfsdk:"trigger"`
 	// Additional details about what triggered the run
 	TriggerInfo types.List `tfsdk:"trigger_info"`
@@ -12381,10 +12615,12 @@ type RunOutput_SdkV2 struct {
 	CleanRoomsNotebookOutput types.List `tfsdk:"clean_rooms_notebook_output"`
 	// The output of a dashboard task, if available
 	DashboardOutput types.List `tfsdk:"dashboard_output"`
-
+	// Deprecated in favor of the new dbt_platform_output
 	DbtCloudOutput types.List `tfsdk:"dbt_cloud_output"`
 	// The output of a dbt task, if available.
 	DbtOutput types.List `tfsdk:"dbt_output"`
+
+	DbtPlatformOutput types.List `tfsdk:"dbt_platform_output"`
 	// An error message indicating why a task failed or why output is not
 	// available. The message is unstructured, and its exact format is subject
 	// to change.
@@ -12436,6 +12672,8 @@ func (c RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["dbt_cloud_output"] = attrs["dbt_cloud_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_output"] = attrs["dbt_output"].SetOptional()
 	attrs["dbt_output"] = attrs["dbt_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dbt_platform_output"] = attrs["dbt_platform_output"].SetOptional()
+	attrs["dbt_platform_output"] = attrs["dbt_platform_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["error_trace"] = attrs["error_trace"].SetOptional()
 	attrs["info"] = attrs["info"].SetOptional()
@@ -12466,6 +12704,7 @@ func (a RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"dashboard_output":            reflect.TypeOf(DashboardTaskOutput_SdkV2{}),
 		"dbt_cloud_output":            reflect.TypeOf(DbtCloudTaskOutput_SdkV2{}),
 		"dbt_output":                  reflect.TypeOf(DbtOutput_SdkV2{}),
+		"dbt_platform_output":         reflect.TypeOf(DbtPlatformTaskOutput_SdkV2{}),
 		"metadata":                    reflect.TypeOf(Run_SdkV2{}),
 		"notebook_output":             reflect.TypeOf(NotebookOutput_SdkV2{}),
 		"run_job_output":              reflect.TypeOf(RunJobOutput_SdkV2{}),
@@ -12484,6 +12723,7 @@ func (o RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"dashboard_output":            o.DashboardOutput,
 			"dbt_cloud_output":            o.DbtCloudOutput,
 			"dbt_output":                  o.DbtOutput,
+			"dbt_platform_output":         o.DbtPlatformOutput,
 			"error":                       o.Error,
 			"error_trace":                 o.ErrorTrace,
 			"info":                        o.Info,
@@ -12511,6 +12751,9 @@ func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"dbt_output": basetypes.ListType{
 				ElemType: DbtOutput_SdkV2{}.Type(ctx),
+			},
+			"dbt_platform_output": basetypes.ListType{
+				ElemType: DbtPlatformTaskOutput_SdkV2{}.Type(ctx),
 			},
 			"error":          types.StringType,
 			"error_trace":    types.StringType,
@@ -12635,6 +12878,32 @@ func (o *RunOutput_SdkV2) SetDbtOutput(ctx context.Context, v DbtOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_output"]
 	o.DbtOutput = types.ListValueMust(t, vs)
+}
+
+// GetDbtPlatformOutput returns the value of the DbtPlatformOutput field in RunOutput_SdkV2 as
+// a DbtPlatformTaskOutput_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput_SdkV2) GetDbtPlatformOutput(ctx context.Context) (DbtPlatformTaskOutput_SdkV2, bool) {
+	var e DbtPlatformTaskOutput_SdkV2
+	if o.DbtPlatformOutput.IsNull() || o.DbtPlatformOutput.IsUnknown() {
+		return e, false
+	}
+	var v []DbtPlatformTaskOutput_SdkV2
+	d := o.DbtPlatformOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtPlatformOutput sets the value of the DbtPlatformOutput field in RunOutput_SdkV2.
+func (o *RunOutput_SdkV2) SetDbtPlatformOutput(ctx context.Context, v DbtPlatformTaskOutput_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_output"]
+	o.DbtPlatformOutput = types.ListValueMust(t, vs)
 }
 
 // GetMetadata returns the value of the Metadata field in RunOutput_SdkV2 as
@@ -13352,8 +13621,11 @@ type RunTask_SdkV2 struct {
 	ConditionTask types.List `tfsdk:"condition_task"`
 	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
-	// Task type for dbt cloud
+	// Task type for dbt cloud, deprecated in favor of the new name
+	// dbt_platform_task
 	DbtCloudTask types.List `tfsdk:"dbt_cloud_task"`
+
+	DbtPlatformTask types.List `tfsdk:"dbt_platform_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -13532,6 +13804,8 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["dashboard_task"] = attrs["dashboard_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].SetOptional()
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].SetOptional()
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
@@ -13609,6 +13883,7 @@ func (a RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"condition_task":            reflect.TypeOf(RunConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
+		"dbt_platform_task":         reflect.TypeOf(DbtPlatformTask_SdkV2{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
@@ -13648,6 +13923,7 @@ func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"condition_task":               o.ConditionTask,
 			"dashboard_task":               o.DashboardTask,
 			"dbt_cloud_task":               o.DbtCloudTask,
+			"dbt_platform_task":            o.DbtPlatformTask,
 			"dbt_task":                     o.DbtTask,
 			"depends_on":                   o.DependsOn,
 			"description":                  o.Description,
@@ -13710,6 +13986,9 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"dbt_cloud_task": basetypes.ListType{
 				ElemType: DbtCloudTask_SdkV2{}.Type(ctx),
+			},
+			"dbt_platform_task": basetypes.ListType{
+				ElemType: DbtPlatformTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
 				ElemType: DbtTask_SdkV2{}.Type(ctx),
@@ -13926,6 +14205,32 @@ func (o *RunTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
 	o.DbtCloudTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtPlatformTask returns the value of the DbtPlatformTask field in RunTask_SdkV2 as
+// a DbtPlatformTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+	var e DbtPlatformTask_SdkV2
+	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtPlatformTask_SdkV2
+	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtPlatformTask sets the value of the DbtPlatformTask field in RunTask_SdkV2.
+func (o *RunTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	o.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in RunTask_SdkV2 as
@@ -16510,8 +16815,11 @@ type SubmitTask_SdkV2 struct {
 	ConditionTask types.List `tfsdk:"condition_task"`
 	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
-	// Task type for dbt cloud
+	// Task type for dbt cloud, deprecated in favor of the new name
+	// dbt_platform_task
 	DbtCloudTask types.List `tfsdk:"dbt_cloud_task"`
+
+	DbtPlatformTask types.List `tfsdk:"dbt_platform_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -16626,6 +16934,8 @@ func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["dashboard_task"] = attrs["dashboard_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].SetOptional()
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].SetOptional()
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
@@ -16685,6 +16995,7 @@ func (a SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
+		"dbt_platform_task":         reflect.TypeOf(DbtPlatformTask_SdkV2{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
@@ -16718,6 +17029,7 @@ func (o SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"condition_task":            o.ConditionTask,
 			"dashboard_task":            o.DashboardTask,
 			"dbt_cloud_task":            o.DbtCloudTask,
+			"dbt_platform_task":         o.DbtPlatformTask,
 			"dbt_task":                  o.DbtTask,
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
@@ -16761,6 +17073,9 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"dbt_cloud_task": basetypes.ListType{
 				ElemType: DbtCloudTask_SdkV2{}.Type(ctx),
+			},
+			"dbt_platform_task": basetypes.ListType{
+				ElemType: DbtPlatformTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
 				ElemType: DbtTask_SdkV2{}.Type(ctx),
@@ -16931,6 +17246,32 @@ func (o *SubmitTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_S
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
 	o.DbtCloudTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtPlatformTask returns the value of the DbtPlatformTask field in SubmitTask_SdkV2 as
+// a DbtPlatformTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+	var e DbtPlatformTask_SdkV2
+	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtPlatformTask_SdkV2
+	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtPlatformTask sets the value of the DbtPlatformTask field in SubmitTask_SdkV2.
+func (o *SubmitTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	o.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in SubmitTask_SdkV2 as
@@ -17683,8 +18024,11 @@ type Task_SdkV2 struct {
 	ConditionTask types.List `tfsdk:"condition_task"`
 	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
-	// Task type for dbt cloud
+	// Task type for dbt cloud, deprecated in favor of the new name
+	// dbt_platform_task
 	DbtCloudTask types.List `tfsdk:"dbt_cloud_task"`
+
+	DbtPlatformTask types.List `tfsdk:"dbt_platform_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -17822,6 +18166,8 @@ func (c Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["dashboard_task"] = attrs["dashboard_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].SetOptional()
 	attrs["dbt_cloud_task"] = attrs["dbt_cloud_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].SetOptional()
+	attrs["dbt_platform_task"] = attrs["dbt_platform_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
@@ -17886,6 +18232,7 @@ func (a Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
+		"dbt_platform_task":         reflect.TypeOf(DbtPlatformTask_SdkV2{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(TaskEmailNotifications_SdkV2{}),
@@ -17919,6 +18266,7 @@ func (o Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"condition_task":            o.ConditionTask,
 			"dashboard_task":            o.DashboardTask,
 			"dbt_cloud_task":            o.DbtCloudTask,
+			"dbt_platform_task":         o.DbtPlatformTask,
 			"dbt_task":                  o.DbtTask,
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
@@ -17967,6 +18315,9 @@ func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"dbt_cloud_task": basetypes.ListType{
 				ElemType: DbtCloudTask_SdkV2{}.Type(ctx),
+			},
+			"dbt_platform_task": basetypes.ListType{
+				ElemType: DbtPlatformTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
 				ElemType: DbtTask_SdkV2{}.Type(ctx),
@@ -18142,6 +18493,32 @@ func (o *Task_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
 	o.DbtCloudTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtPlatformTask returns the value of the DbtPlatformTask field in Task_SdkV2 as
+// a DbtPlatformTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+	var e DbtPlatformTask_SdkV2
+	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtPlatformTask_SdkV2
+	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtPlatformTask sets the value of the DbtPlatformTask field in Task_SdkV2.
+func (o *Task_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	o.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in Task_SdkV2 as

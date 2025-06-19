@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+ * Add AWS support for `databricks_mws_ncc_private_endpoint_rule` ([#4804](https://github.com/databricks/terraform-provider-databricks/pull/4804)).
 
 ### Bug Fixes
 

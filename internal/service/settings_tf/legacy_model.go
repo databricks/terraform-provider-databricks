@@ -17,10 +17,11 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AccountIpAccessEnable_SdkV2 struct {
@@ -5655,7 +5656,7 @@ type EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2 struct {
 	AzureStorageService types.String `tfsdk:"azure_storage_service"`
 
 	BucketName types.String `tfsdk:"bucket_name"`
-	// The region of the S3 bucket.
+
 	Region types.String `tfsdk:"region"`
 	// The type of storage destination.
 	StorageDestinationType types.String `tfsdk:"storage_destination_type"`

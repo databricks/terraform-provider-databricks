@@ -17,10 +17,12 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AccessControl_SdkV2 struct {
@@ -199,7 +201,7 @@ func (o Alert_SdkV2) Type(ctx context.Context) attr.Type {
 			"condition": basetypes.ListType{
 				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -211,8 +213,8 @@ func (o Alert_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_id":             types.StringType,
 			"seconds_to_retrigger": types.Int64Type,
 			"state":                types.StringType,
-			"trigger_time":         types.StringType,
-			"update_time":          types.StringType,
+			"trigger_time":         timetypes.RFC3339Type{},
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -1001,7 +1003,7 @@ func (o AlertV2_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o AlertV2_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
+			"create_time":        timetypes.RFC3339Type{},
 			"custom_description": types.StringType,
 			"custom_summary":     types.StringType,
 			"display_name":       types.StringType,
@@ -1017,7 +1019,7 @@ func (o AlertV2_SdkV2) Type(ctx context.Context) attr.Type {
 			"schedule": basetypes.ListType{
 				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -1151,7 +1153,7 @@ func (o AlertV2Evaluation_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comparison_operator": types.StringType,
 			"empty_result_state":  types.StringType,
-			"last_evaluated_at":   types.StringType,
+			"last_evaluated_at":   timetypes.RFC3339Type{},
 			"notification": basetypes.ListType{
 				ElemType: AlertV2Notification_SdkV2{}.Type(ctx),
 			},
@@ -5623,7 +5625,7 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// [`USE SCHEMA`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html
 	Schema types.String `tfsdk:"schema"`
 	// The SQL statement to execute. The statement can optionally be
-	// parameterized, see `parameters`.
+	// parameterized, see `parameters`. The maximum query text size is 16 MiB.
 	Statement types.String `tfsdk:"statement"`
 	// The time in seconds the call will wait for the statement's result set as
 	// `Ns`, where `N` can be set to 0 or to a value between 5 and 50.
@@ -8115,7 +8117,7 @@ func (o ListAlertsResponseAlert_SdkV2) Type(ctx context.Context) attr.Type {
 			"condition": basetypes.ListType{
 				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
-			"create_time":          types.StringType,
+			"create_time":          timetypes.RFC3339Type{},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -8126,8 +8128,8 @@ func (o ListAlertsResponseAlert_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_id":             types.StringType,
 			"seconds_to_retrigger": types.Int64Type,
 			"state":                types.StringType,
-			"trigger_time":         types.StringType,
-			"update_time":          types.StringType,
+			"trigger_time":         timetypes.RFC3339Type{},
+			"update_time":          timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -8521,7 +8523,10 @@ func (o *ListQueriesResponse_SdkV2) SetRes(ctx context.Context, v []QueryInfo_Sd
 
 // List Queries
 type ListQueryHistoryRequest_SdkV2 struct {
-	// A filter to limit query history results. This field is optional.
+	// An optional filter object to limit query history results. Accepts
+	// parameters such as user IDs, endpoint IDs, and statuses to narrow the
+	// returned data. In a URL, the parameters of this filter are specified with
+	// dot notation. For example: `filter_by.statement_ids`.
 	FilterBy types.List `tfsdk:"-"`
 	// Whether to include the query metrics with each query. Only use this for a
 	// small subset of queries (max_results). Defaults to false.
@@ -8795,7 +8800,7 @@ func (o ListQueryObjectsResponseQuery_SdkV2) Type(ctx context.Context) attr.Type
 		AttrTypes: map[string]attr.Type{
 			"apply_auto_limit":        types.BoolType,
 			"catalog":                 types.StringType,
-			"create_time":             types.StringType,
+			"create_time":             timetypes.RFC3339Type{},
 			"description":             types.StringType,
 			"display_name":            types.StringType,
 			"id":                      types.StringType,
@@ -8811,7 +8816,7 @@ func (o ListQueryObjectsResponseQuery_SdkV2) Type(ctx context.Context) attr.Type
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -9599,7 +9604,7 @@ func (o Query_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"apply_auto_limit":        types.BoolType,
 			"catalog":                 types.StringType,
-			"create_time":             types.StringType,
+			"create_time":             timetypes.RFC3339Type{},
 			"description":             types.StringType,
 			"display_name":            types.StringType,
 			"id":                      types.StringType,
@@ -9616,7 +9621,7 @@ func (o Query_SdkV2) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"update_time":  types.StringType,
+			"update_time":  timetypes.RFC3339Type{},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -9915,12 +9920,15 @@ func (o *QueryEditContent_SdkV2) SetTags(ctx context.Context, v []types.String) 
 }
 
 type QueryFilter_SdkV2 struct {
-	// A range filter for query submitted time. The time range must be <= 30
-	// days.
+	// A range filter for query submitted time. The time range must be less than
+	// or equal to 30 days.
 	QueryStartTimeRange types.List `tfsdk:"query_start_time_range"`
 	// A list of statement IDs.
 	StatementIds types.List `tfsdk:"statement_ids"`
-
+	// A list of statuses (QUEUED, RUNNING, CANCELED, FAILED, FINISHED) to match
+	// query results. Corresponds to the `status` field in the response.
+	// Filtering for multiple statuses is not recommended. Instead, opt to
+	// filter by a single status multiple times and then combine the results.
 	Statuses types.List `tfsdk:"statuses"`
 	// A list of user IDs who ran the queries.
 	UserIds types.List `tfsdk:"user_ids"`
@@ -10138,7 +10146,9 @@ type QueryInfo_SdkV2 struct {
 	// provided by client applications. While values are expected to remain
 	// static over time, this cannot be guaranteed.
 	ClientApplication types.String `tfsdk:"client_application"`
-	// Total execution time of the statement ( excluding result fetch time ).
+	// Total time of the statement execution. This value does not include the
+	// time taken to retrieve the results, which can result in a discrepancy
+	// between this value and the start-to-finish wall-clock time.
 	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
@@ -14297,14 +14307,14 @@ func (o Visualization_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (o Visualization_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":           types.StringType,
+			"create_time":           timetypes.RFC3339Type{},
 			"display_name":          types.StringType,
 			"id":                    types.StringType,
 			"query_id":              types.StringType,
 			"serialized_options":    types.StringType,
 			"serialized_query_plan": types.StringType,
 			"type":                  types.StringType,
-			"update_time":           types.StringType,
+			"update_time":           timetypes.RFC3339Type{},
 		},
 	}
 }

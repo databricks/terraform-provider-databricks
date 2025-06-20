@@ -680,7 +680,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+				Resource: "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -816,7 +816,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+				Resource: "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -871,7 +871,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+				Resource:     "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 				Response:     getJSONObject("test-data/clusters-list-response.json"),
 				ReuseRequest: true,
 			},
@@ -883,7 +883,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Resource: "/api/2.1/clusters/list?filter_by.IsPinned=true&filter_by.PolicyId=&page_size=100",
 				Response: sdk_compute.ListClustersResponse{
 					Clusters: []sdk_compute.ClusterDetails{},
 				},
@@ -1542,7 +1542,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+				Resource: "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{

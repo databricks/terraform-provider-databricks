@@ -188,12 +188,12 @@ func ResourceShare() common.Resource {
 				Name:              d.Id(),
 				IncludeSharedData: true,
 			})
-			var si = ShareInfo{*shareInfo}
-			si.sortSharesByName()
-			si.suppressCDFEnabledDiff()
 			if err != nil {
 				return err
 			}
+			var si = ShareInfo{*shareInfo}
+			si.sortSharesByName()
+			si.suppressCDFEnabledDiff()
 
 			return common.StructToData(si, shareSchema, d)
 		},

@@ -18,10 +18,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type ActionConfiguration_SdkV2 struct {

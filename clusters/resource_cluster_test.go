@@ -14,7 +14,7 @@ import (
 
 var nothingPinned = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+	Resource: "/api/2.1/clusters/list?filter_by.IsPinned=true&filter_by.PolicyId=&page_size=100",
 	Response: compute.ListClustersResponse{
 		Clusters: []compute.ClusterDetails{},
 	},
@@ -125,7 +125,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Resource: "/api/2.1/clusters/list?filter_by.IsPinned=true&filter_by.PolicyId=&page_size=100",
 				Response: compute.ListClustersResponse{
 					Clusters: []compute.ClusterDetails{{
 						ClusterId:              "abc",

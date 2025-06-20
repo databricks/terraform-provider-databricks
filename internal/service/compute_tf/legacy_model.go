@@ -17,10 +17,11 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type AddInstanceProfile_SdkV2 struct {
@@ -1175,6 +1176,9 @@ type ClusterAttributes_SdkV2 struct {
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -1214,6 +1218,9 @@ type ClusterAttributes_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -1255,12 +1262,14 @@ func (c ClusterAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["kind"] = attrs["kind"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
 	attrs["spark_version"] = attrs["spark_version"].SetRequired()
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1298,33 +1307,35 @@ func (o ClusterAttributes_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_name":                 o.ClusterName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"docker_image":                 o.DockerImage,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"kind":                         o.Kind,
-			"node_type_id":                 o.NodeTypeId,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_name":                   o.ClusterName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"docker_image":                   o.DockerImage,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"kind":                           o.Kind,
+			"node_type_id":                   o.NodeTypeId,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -1360,13 +1371,14 @@ func (o ClusterAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id": types.StringType,
-			"is_single_node":   types.BoolType,
-			"kind":             types.StringType,
-			"node_type_id":     types.StringType,
-			"policy_id":        types.StringType,
-			"runtime_engine":   types.StringType,
-			"single_user_name": types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -1377,7 +1389,8 @@ func (o ClusterAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},
@@ -1951,6 +1964,9 @@ type ClusterDetails_SdkV2 struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -2012,6 +2028,9 @@ type ClusterDetails_SdkV2 struct {
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.List `tfsdk:"termination_reason"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -2070,6 +2089,7 @@ func (c ClusterDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
@@ -2085,6 +2105,7 @@ func (c ClusterDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["terminated_time"] = attrs["terminated_time"].SetOptional()
 	attrs["termination_reason"] = attrs["termination_reason"].SetOptional()
 	attrs["termination_reason"] = attrs["termination_reason"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2129,54 +2150,56 @@ func (o ClusterDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"autoscale":                    o.Autoscale,
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"cluster_cores":                o.ClusterCores,
-			"cluster_id":                   o.ClusterId,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_log_status":           o.ClusterLogStatus,
-			"cluster_memory_mb":            o.ClusterMemoryMb,
-			"cluster_name":                 o.ClusterName,
-			"cluster_source":               o.ClusterSource,
-			"creator_user_name":            o.CreatorUserName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"default_tags":                 o.DefaultTags,
-			"docker_image":                 o.DockerImage,
-			"driver":                       o.Driver,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"executors":                    o.Executors,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"jdbc_port":                    o.JdbcPort,
-			"kind":                         o.Kind,
-			"last_restarted_time":          o.LastRestartedTime,
-			"last_state_loss_time":         o.LastStateLossTime,
-			"node_type_id":                 o.NodeTypeId,
-			"num_workers":                  o.NumWorkers,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_context_id":             o.SparkContextId,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"spec":                         o.Spec,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"start_time":                   o.StartTime,
-			"state":                        o.State,
-			"state_message":                o.StateMessage,
-			"terminated_time":              o.TerminatedTime,
-			"termination_reason":           o.TerminationReason,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"autoscale":                      o.Autoscale,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"cluster_cores":                  o.ClusterCores,
+			"cluster_id":                     o.ClusterId,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_log_status":             o.ClusterLogStatus,
+			"cluster_memory_mb":              o.ClusterMemoryMb,
+			"cluster_name":                   o.ClusterName,
+			"cluster_source":                 o.ClusterSource,
+			"creator_user_name":              o.CreatorUserName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"default_tags":                   o.DefaultTags,
+			"docker_image":                   o.DockerImage,
+			"driver":                         o.Driver,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"executors":                      o.Executors,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"jdbc_port":                      o.JdbcPort,
+			"kind":                           o.Kind,
+			"last_restarted_time":            o.LastRestartedTime,
+			"last_state_loss_time":           o.LastStateLossTime,
+			"node_type_id":                   o.NodeTypeId,
+			"num_workers":                    o.NumWorkers,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_context_id":               o.SparkContextId,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"spec":                           o.Spec,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"start_time":                     o.StartTime,
+			"state":                          o.State,
+			"state_message":                  o.StateMessage,
+			"terminated_time":                o.TerminatedTime,
+			"termination_reason":             o.TerminationReason,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -2232,17 +2255,18 @@ func (o ClusterDetails_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id":     types.StringType,
-			"is_single_node":       types.BoolType,
-			"jdbc_port":            types.Int64Type,
-			"kind":                 types.StringType,
-			"last_restarted_time":  types.Int64Type,
-			"last_state_loss_time": types.Int64Type,
-			"node_type_id":         types.StringType,
-			"num_workers":          types.Int64Type,
-			"policy_id":            types.StringType,
-			"runtime_engine":       types.StringType,
-			"single_user_name":     types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"jdbc_port":              types.Int64Type,
+			"kind":                   types.StringType,
+			"last_restarted_time":    types.Int64Type,
+			"last_state_loss_time":   types.Int64Type,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -2264,7 +2288,8 @@ func (o ClusterDetails_SdkV2) Type(ctx context.Context) attr.Type {
 			"termination_reason": basetypes.ListType{
 				ElemType: TerminationReason_SdkV2{}.Type(ctx),
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},
@@ -4196,6 +4221,9 @@ type ClusterSpec_SdkV2 struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -4235,6 +4263,9 @@ type ClusterSpec_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -4280,12 +4311,14 @@ func (c ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
 	attrs["spark_version"] = attrs["spark_version"].SetOptional()
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4324,36 +4357,38 @@ func (o ClusterSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"apply_policy_default_values":  o.ApplyPolicyDefaultValues,
-			"autoscale":                    o.Autoscale,
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_name":                 o.ClusterName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"docker_image":                 o.DockerImage,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"kind":                         o.Kind,
-			"node_type_id":                 o.NodeTypeId,
-			"num_workers":                  o.NumWorkers,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"apply_policy_default_values":    o.ApplyPolicyDefaultValues,
+			"autoscale":                      o.Autoscale,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_name":                   o.ClusterName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"docker_image":                   o.DockerImage,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"kind":                           o.Kind,
+			"node_type_id":                   o.NodeTypeId,
+			"num_workers":                    o.NumWorkers,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -4393,14 +4428,15 @@ func (o ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id": types.StringType,
-			"is_single_node":   types.BoolType,
-			"kind":             types.StringType,
-			"node_type_id":     types.StringType,
-			"num_workers":      types.Int64Type,
-			"policy_id":        types.StringType,
-			"runtime_engine":   types.StringType,
-			"single_user_name": types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -4411,7 +4447,8 @@ func (o ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},
@@ -5205,6 +5242,9 @@ type CreateCluster_SdkV2 struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -5244,6 +5284,9 @@ type CreateCluster_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -5291,12 +5334,14 @@ func (c CreateCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
 	attrs["spark_version"] = attrs["spark_version"].SetRequired()
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5336,37 +5381,39 @@ func (o CreateCluster_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"apply_policy_default_values":  o.ApplyPolicyDefaultValues,
-			"autoscale":                    o.Autoscale,
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"clone_from":                   o.CloneFrom,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_name":                 o.ClusterName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"docker_image":                 o.DockerImage,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"kind":                         o.Kind,
-			"node_type_id":                 o.NodeTypeId,
-			"num_workers":                  o.NumWorkers,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"apply_policy_default_values":    o.ApplyPolicyDefaultValues,
+			"autoscale":                      o.Autoscale,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"clone_from":                     o.CloneFrom,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_name":                   o.ClusterName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"docker_image":                   o.DockerImage,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"kind":                           o.Kind,
+			"node_type_id":                   o.NodeTypeId,
+			"num_workers":                    o.NumWorkers,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -5409,14 +5456,15 @@ func (o CreateCluster_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id": types.StringType,
-			"is_single_node":   types.BoolType,
-			"kind":             types.StringType,
-			"node_type_id":     types.StringType,
-			"num_workers":      types.Int64Type,
-			"policy_id":        types.StringType,
-			"runtime_engine":   types.StringType,
-			"single_user_name": types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -5427,7 +5475,8 @@ func (o CreateCluster_SdkV2) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},
@@ -5928,6 +5977,12 @@ type CreateInstancePool_SdkV2 struct {
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED types.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
 func (newState *CreateInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool_SdkV2) {
@@ -5954,6 +6009,8 @@ func (c CreateInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 
 	return attrs
 }
@@ -5997,6 +6054,8 @@ func (o CreateInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
+			"remote_disk_throughput":                o.RemoteDiskThroughput,
+			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
 		})
 }
 
@@ -6031,6 +6090,8 @@ func (o CreateInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"remote_disk_throughput":         types.Int64Type,
+			"total_initial_remote_disk_size": types.Int64Type,
 		},
 	}
 }
@@ -7606,6 +7667,9 @@ type EditCluster_SdkV2 struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -7645,6 +7709,9 @@ type EditCluster_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -7691,12 +7758,14 @@ func (c EditCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
 	attrs["spark_version"] = attrs["spark_version"].SetRequired()
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -7735,37 +7804,39 @@ func (o EditCluster_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"apply_policy_default_values":  o.ApplyPolicyDefaultValues,
-			"autoscale":                    o.Autoscale,
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"cluster_id":                   o.ClusterId,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_name":                 o.ClusterName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"docker_image":                 o.DockerImage,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"kind":                         o.Kind,
-			"node_type_id":                 o.NodeTypeId,
-			"num_workers":                  o.NumWorkers,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"apply_policy_default_values":    o.ApplyPolicyDefaultValues,
+			"autoscale":                      o.Autoscale,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"cluster_id":                     o.ClusterId,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_name":                   o.ClusterName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"docker_image":                   o.DockerImage,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"kind":                           o.Kind,
+			"node_type_id":                   o.NodeTypeId,
+			"num_workers":                    o.NumWorkers,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -7806,14 +7877,15 @@ func (o EditCluster_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id": types.StringType,
-			"is_single_node":   types.BoolType,
-			"kind":             types.StringType,
-			"node_type_id":     types.StringType,
-			"num_workers":      types.Int64Type,
-			"policy_id":        types.StringType,
-			"runtime_engine":   types.StringType,
-			"single_user_name": types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -7824,7 +7896,8 @@ func (o EditCluster_SdkV2) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},
@@ -8217,6 +8290,12 @@ type EditInstancePool_SdkV2 struct {
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED types.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
 func (newState *EditInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePool_SdkV2) {
@@ -8233,6 +8312,8 @@ func (c EditInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 
 	return attrs
 }
@@ -8264,6 +8345,8 @@ func (o EditInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
 			"node_type_id":                          o.NodeTypeId,
+			"remote_disk_throughput":                o.RemoteDiskThroughput,
+			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
 		})
 }
 
@@ -8280,6 +8363,8 @@ func (o EditInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
 			"node_type_id":                          types.StringType,
+			"remote_disk_throughput":                types.Int64Type,
+			"total_initial_remote_disk_size":        types.Int64Type,
 		},
 	}
 }
@@ -10191,12 +10276,18 @@ type GetInstancePool_SdkV2 struct {
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state"`
 	// Usage statistics about the instance pool.
 	Stats types.List `tfsdk:"stats"`
 	// Status of failed pending instances in the pool.
 	Status types.List `tfsdk:"status"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED types.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
 func (newState *GetInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool_SdkV2) {
@@ -10225,11 +10316,13 @@ func (c GetInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["stats"] = attrs["stats"].SetOptional()
 	attrs["stats"] = attrs["stats"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 
 	return attrs
 }
@@ -10278,9 +10371,11 @@ func (o GetInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
+			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"state":                                 o.State,
 			"stats":                                 o.Stats,
 			"status":                                o.Status,
+			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
 		})
 }
 
@@ -10319,13 +10414,15 @@ func (o GetInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state": types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"state":                  types.StringType,
 			"stats": basetypes.ListType{
 				ElemType: InstancePoolStats_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
 				ElemType: InstancePoolStatus_SdkV2{}.Type(ctx),
 			},
+			"total_initial_remote_disk_size": types.Int64Type,
 		},
 	}
 }
@@ -12319,12 +12416,18 @@ type InstancePoolAndStats_SdkV2 struct {
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state"`
 	// Usage statistics about the instance pool.
 	Stats types.List `tfsdk:"stats"`
 	// Status of failed pending instances in the pool.
 	Status types.List `tfsdk:"status"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED types.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
 func (newState *InstancePoolAndStats_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats_SdkV2) {
@@ -12353,11 +12456,13 @@ func (c InstancePoolAndStats_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["stats"] = attrs["stats"].SetOptional()
 	attrs["stats"] = attrs["stats"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 
 	return attrs
 }
@@ -12406,9 +12511,11 @@ func (o InstancePoolAndStats_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
+			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"state":                                 o.State,
 			"stats":                                 o.Stats,
 			"status":                                o.Status,
+			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
 		})
 }
 
@@ -12447,13 +12554,15 @@ func (o InstancePoolAndStats_SdkV2) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state": types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"state":                  types.StringType,
 			"stats": basetypes.ListType{
 				ElemType: InstancePoolStats_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
 				ElemType: InstancePoolStatus_SdkV2{}.Type(ctx),
 			},
+			"total_initial_remote_disk_size": types.Int64Type,
 		},
 	}
 }
@@ -17530,6 +17639,9 @@ type UpdateClusterResource_SdkV2 struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -17569,6 +17681,9 @@ type UpdateClusterResource_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -17613,12 +17728,14 @@ func (c UpdateClusterResource_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
 	attrs["spark_version"] = attrs["spark_version"].SetOptional()
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -17657,35 +17774,37 @@ func (o UpdateClusterResource_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"autoscale":                    o.Autoscale,
-			"autotermination_minutes":      o.AutoterminationMinutes,
-			"aws_attributes":               o.AwsAttributes,
-			"azure_attributes":             o.AzureAttributes,
-			"cluster_log_conf":             o.ClusterLogConf,
-			"cluster_name":                 o.ClusterName,
-			"custom_tags":                  o.CustomTags,
-			"data_security_mode":           o.DataSecurityMode,
-			"docker_image":                 o.DockerImage,
-			"driver_instance_pool_id":      o.DriverInstancePoolId,
-			"driver_node_type_id":          o.DriverNodeTypeId,
-			"enable_elastic_disk":          o.EnableElasticDisk,
-			"enable_local_disk_encryption": o.EnableLocalDiskEncryption,
-			"gcp_attributes":               o.GcpAttributes,
-			"init_scripts":                 o.InitScripts,
-			"instance_pool_id":             o.InstancePoolId,
-			"is_single_node":               o.IsSingleNode,
-			"kind":                         o.Kind,
-			"node_type_id":                 o.NodeTypeId,
-			"num_workers":                  o.NumWorkers,
-			"policy_id":                    o.PolicyId,
-			"runtime_engine":               o.RuntimeEngine,
-			"single_user_name":             o.SingleUserName,
-			"spark_conf":                   o.SparkConf,
-			"spark_env_vars":               o.SparkEnvVars,
-			"spark_version":                o.SparkVersion,
-			"ssh_public_keys":              o.SshPublicKeys,
-			"use_ml_runtime":               o.UseMlRuntime,
-			"workload_type":                o.WorkloadType,
+			"autoscale":                      o.Autoscale,
+			"autotermination_minutes":        o.AutoterminationMinutes,
+			"aws_attributes":                 o.AwsAttributes,
+			"azure_attributes":               o.AzureAttributes,
+			"cluster_log_conf":               o.ClusterLogConf,
+			"cluster_name":                   o.ClusterName,
+			"custom_tags":                    o.CustomTags,
+			"data_security_mode":             o.DataSecurityMode,
+			"docker_image":                   o.DockerImage,
+			"driver_instance_pool_id":        o.DriverInstancePoolId,
+			"driver_node_type_id":            o.DriverNodeTypeId,
+			"enable_elastic_disk":            o.EnableElasticDisk,
+			"enable_local_disk_encryption":   o.EnableLocalDiskEncryption,
+			"gcp_attributes":                 o.GcpAttributes,
+			"init_scripts":                   o.InitScripts,
+			"instance_pool_id":               o.InstancePoolId,
+			"is_single_node":                 o.IsSingleNode,
+			"kind":                           o.Kind,
+			"node_type_id":                   o.NodeTypeId,
+			"num_workers":                    o.NumWorkers,
+			"policy_id":                      o.PolicyId,
+			"remote_disk_throughput":         o.RemoteDiskThroughput,
+			"runtime_engine":                 o.RuntimeEngine,
+			"single_user_name":               o.SingleUserName,
+			"spark_conf":                     o.SparkConf,
+			"spark_env_vars":                 o.SparkEnvVars,
+			"spark_version":                  o.SparkVersion,
+			"ssh_public_keys":                o.SshPublicKeys,
+			"total_initial_remote_disk_size": o.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 o.UseMlRuntime,
+			"workload_type":                  o.WorkloadType,
 		})
 }
 
@@ -17724,14 +17843,15 @@ func (o UpdateClusterResource_SdkV2) Type(ctx context.Context) attr.Type {
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
 			},
-			"instance_pool_id": types.StringType,
-			"is_single_node":   types.BoolType,
-			"kind":             types.StringType,
-			"node_type_id":     types.StringType,
-			"num_workers":      types.Int64Type,
-			"policy_id":        types.StringType,
-			"runtime_engine":   types.StringType,
-			"single_user_name": types.StringType,
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
 			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -17742,7 +17862,8 @@ func (o UpdateClusterResource_SdkV2) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"use_ml_runtime": types.BoolType,
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType_SdkV2{}.Type(ctx),
 			},

@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1072,8 +1073,10 @@ func (o AwsIamRole) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The AWS IAM role configuration
 type AwsIamRoleRequest struct {
-	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
+	// The Amazon Resource Name (ARN) of the AWS IAM role used to vend temporary
+	// credentials.
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
@@ -1120,11 +1123,13 @@ func (o AwsIamRoleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The AWS IAM role configuration
 type AwsIamRoleResponse struct {
-	// The external ID used in role assumption to prevent confused deputy
-	// problem..
+	// The external ID used in role assumption to prevent the confused deputy
+	// problem.
 	ExternalId types.String `tfsdk:"external_id"`
-	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
+	// The Amazon Resource Name (ARN) of the AWS IAM role used to vend temporary
+	// credentials.
 	RoleArn types.String `tfsdk:"role_arn"`
 	// The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks.
 	// This is the identity that is going to assume the AWS IAM role.
@@ -1138,9 +1143,9 @@ func (newState *AwsIamRoleResponse) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 func (c AwsIamRoleResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["external_id"] = attrs["external_id"].SetComputed()
 	attrs["role_arn"] = attrs["role_arn"].SetRequired()
-	attrs["unity_catalog_iam_arn"] = attrs["unity_catalog_iam_arn"].SetOptional()
+	attrs["unity_catalog_iam_arn"] = attrs["unity_catalog_iam_arn"].SetComputed()
 
 	return attrs
 }
@@ -1294,10 +1299,7 @@ type AzureManagedIdentity struct {
 	// format
 	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
-	// The Databricks internal ID that represents this managed identity. This
-	// field is only used to persist the credential_id once it is fetched from
-	// the credentials manager - as we only use the protobuf serializer to store
-	// credentials, this ID gets persisted to the database. .
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
 	// The Azure resource ID of the managed identity. Use the format,
 	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
@@ -1357,17 +1359,18 @@ func (o AzureManagedIdentity) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The Azure managed identity configuration.
 type AzureManagedIdentityRequest struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}.
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
-	// The Azure resource ID of the managed identity. Use the format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}.
+	// The Azure resource ID of the managed identity. Use the format,
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
 	// This is only available for user-assgined identities. For system-assigned
 	// identities, the access_connector_id is used to identify the identity. If
 	// this field is not provided, then we assume the AzureManagedIdentity is
-	// for a system-assigned identity.
+	// using the system-assigned identity.
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
@@ -1417,19 +1420,20 @@ func (o AzureManagedIdentityRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The Azure managed identity configuration.
 type AzureManagedIdentityResponse struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}.
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
 	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
-	// The Azure resource ID of the managed identity. Use the format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}.
+	// The Azure resource ID of the managed identity. Use the format,
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
 	// This is only available for user-assgined identities. For system-assigned
 	// identities, the access_connector_id is used to identify the identity. If
 	// this field is not provided, then we assume the AzureManagedIdentity is
-	// for a system-assigned identity.
+	// using the system-assigned identity.
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
@@ -1441,7 +1445,7 @@ func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringRead(exis
 
 func (c AzureManagedIdentityResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_connector_id"] = attrs["access_connector_id"].SetRequired()
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
 	attrs["managed_identity_id"] = attrs["managed_identity_id"].SetOptional()
 
 	return attrs
@@ -2016,12 +2020,14 @@ func (o *CatalogInfo) SetProvisioningInfo(ctx context.Context, v ProvisioningInf
 	o.ProvisioningInfo = vs
 }
 
+// The Cloudflare API token configuration. Read more at
+// https://developers.cloudflare.com/r2/api/s3/tokens/
 type CloudflareApiToken struct {
-	// The Cloudflare access key id of the token.
+	// The access key ID associated with the API token.
 	AccessKeyId types.String `tfsdk:"access_key_id"`
-	// The account id associated with the API token.
+	// The ID of the account associated with the API token.
 	AccountId types.String `tfsdk:"account_id"`
-	// The secret access token generated for the access key id
+	// The secret access token generated for the above access key ID.
 	SecretAccessKey types.String `tfsdk:"secret_access_key"`
 }
 
@@ -2574,7 +2580,7 @@ func (o ContinuousUpdateStatus) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"initial_pipeline_sync_progress": PipelineProgress{}.Type(ctx),
 			"last_processed_commit_version":  types.Int64Type,
-			"timestamp":                      types.StringType,
+			"timestamp":                      timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -2885,17 +2891,15 @@ func (o *CreateConnection) SetProperties(ctx context.Context, v map[string]types
 }
 
 type CreateCredentialRequest struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
@@ -4319,9 +4323,11 @@ type CreateStorageCredential struct {
 	Comment types.String `tfsdk:"comment"`
 	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
-	// The credential name. The name must be unique within the metastore.
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
 	Name types.String `tfsdk:"name"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Supplying true to this argument skips validation of the created
 	// credential.
@@ -4705,12 +4711,11 @@ func (o CreateVolumeRequestContent) Type(ctx context.Context) attr.Type {
 }
 
 type CredentialInfo struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
@@ -4718,8 +4723,7 @@ type CredentialInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
 	// The full name of the credential.
 	FullName types.String `tfsdk:"full_name"`
@@ -5016,10 +5020,7 @@ func (o CredentialValidationResult) Type(ctx context.Context) attr.Type {
 // GCP long-lived credential. Databricks-created Google Cloud Storage service
 // account.
 type DatabricksGcpServiceAccount struct {
-	// The Databricks internal ID that represents this managed identity. This
-	// field is only used to persist the credential_id once it is fetched from
-	// the credentials manager - as we only use the protobuf serializer to store
-	// credentials, this ID gets persisted to the database
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
 	// The email of the service account.
 	Email types.String `tfsdk:"email"`
@@ -5076,6 +5077,8 @@ func (o DatabricksGcpServiceAccount) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
 type DatabricksGcpServiceAccountRequest struct {
 }
 
@@ -5117,11 +5120,12 @@ func (o DatabricksGcpServiceAccountRequest) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
 type DatabricksGcpServiceAccountResponse struct {
-	// The Databricks internal ID that represents this service account. This is
-	// an output-only field.
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
-	// The email of the service account. This is an output-only field.
+	// The email of the service account.
 	Email types.String `tfsdk:"email"`
 }
 
@@ -5132,8 +5136,8 @@ func (newState *DatabricksGcpServiceAccountResponse) SyncEffectiveFieldsDuringRe
 }
 
 func (c DatabricksGcpServiceAccountResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
-	attrs["email"] = attrs["email"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
+	attrs["email"] = attrs["email"].SetComputed()
 
 	return attrs
 }
@@ -5892,8 +5896,9 @@ func (o DeleteSchemaRequest) Type(ctx context.Context) attr.Type {
 
 // Delete a credential
 type DeleteStorageCredentialRequest struct {
-	// Force deletion even if there are dependent external locations or external
-	// tables.
+	// Force an update even if there are dependent external locations or
+	// external tables (when purpose is **STORAGE**) or dependent services (when
+	// purpose is **SERVICE**).
 	Force types.Bool `tfsdk:"-"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -7170,7 +7175,7 @@ func (o FailedStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 		},
 	}
 }
@@ -16330,7 +16335,7 @@ type StorageCredentialInfo struct {
 	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// Time at which this Credential was created, in epoch milliseconds.
+	// Time at which this credential was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by"`
@@ -16340,22 +16345,25 @@ type StorageCredentialInfo struct {
 	FullName types.String `tfsdk:"full_name"`
 	// The unique identifier of the credential.
 	Id types.String `tfsdk:"id"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Unique identifier of parent metastore.
+	// Unique identifier of the parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// The credential name. The name must be unique within the metastore.
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
 	Name types.String `tfsdk:"name"`
 	// Username of current owner of credential.
 	Owner types.String `tfsdk:"owner"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Time at which this credential was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified the credential.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// Whether this credential is the current metastore's root storage
-	// credential.
+	// credential. Only applicable when purpose is **STORAGE**.
 	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage"`
 }
 
@@ -17755,7 +17763,7 @@ func (o TriggeredUpdateStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
-			"timestamp":                     types.StringType,
+			"timestamp":                     timetypes.RFC3339Type{},
 			"triggered_update_progress":     PipelineProgress{}.Type(ctx),
 		},
 	}
@@ -18228,17 +18236,15 @@ func (o *UpdateConnection) SetOptions(ctx context.Context, v map[string]types.St
 }
 
 type UpdateCredentialRequest struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
 	// Force an update even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
@@ -19612,7 +19618,8 @@ type UpdateStorageCredential struct {
 	// Force update even if there are dependent external locations or external
 	// tables.
 	Force types.Bool `tfsdk:"force"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -19620,7 +19627,8 @@ type UpdateStorageCredential struct {
 	NewName types.String `tfsdk:"new_name"`
 	// Username of current owner of credential.
 	Owner types.String `tfsdk:"owner"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Supplying true to this argument skips validation of the updated
 	// credential.
@@ -20565,7 +20573,8 @@ type ValidateStorageCredential struct {
 	ExternalLocationName types.String `tfsdk:"external_location_name"`
 	// Whether the storage credential is only usable for read operations.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// The name of the storage credential to validate.
+	// Required. The name of an existing credential or long-lived cloud
+	// credential to validate.
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
 	// The external location url to validate.
 	Url types.String `tfsdk:"url"`

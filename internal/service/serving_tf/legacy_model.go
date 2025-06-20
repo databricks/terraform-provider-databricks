@@ -17,10 +17,11 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
 
 type Ai21LabsConfig_SdkV2 struct {
@@ -7587,6 +7588,8 @@ type ServingEndpoint_SdkV2 struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
+	// Description of the endpoint
+	Description types.String `tfsdk:"description"`
 	// System-generated ID of the endpoint, included to be used by the
 	// Permissions API.
 	Id types.String `tfsdk:"id"`
@@ -7616,6 +7619,7 @@ func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -7655,6 +7659,7 @@ func (o ServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
+			"description":            o.Description,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
 			"name":                   o.Name,
@@ -7677,6 +7682,7 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
+			"description":            types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
@@ -7971,6 +7977,8 @@ type ServingEndpointDetailed_SdkV2 struct {
 	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
 	DataPlaneInfo types.List `tfsdk:"data_plane_info"`
+	// Description of the serving model
+	Description types.String `tfsdk:"description"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -8011,6 +8019,7 @@ func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -8058,6 +8067,7 @@ func (o ServingEndpointDetailed_SdkV2) ToObjectValue(ctx context.Context) basety
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
 			"data_plane_info":        o.DataPlaneInfo,
+			"description":            o.Description,
 			"endpoint_url":           o.EndpointUrl,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -8087,6 +8097,7 @@ func (o ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_plane_info": basetypes.ListType{
 				ElemType: ModelDataPlaneInfo_SdkV2{}.Type(ctx),
 			},
+			"description":            types.StringType,
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,

@@ -11,6 +11,9 @@
 * Add AWS support for `databricks_mws_ncc_private_endpoint_rule` ([#4804](https://github.com/databricks/terraform-provider-databricks/pull/4804)).
 * Added `key` argument to `databricks_jobs` data source to enable mapping by job ID and allow duplicate job names ([#4796](https://github.com/databricks/terraform-provider-databricks/pull/4796)).
 
+* Added online_store resource and data sources ([#4805](https://github.com/databricks/terraform-provider-databricks/pull/4805)).
+* Bump the Go SDK to v0.73.0 ([#4805](https://github.com/databricks/terraform-provider-databricks/pull/4805)).
+
 ### Bug Fixes
 
 ### Documentation

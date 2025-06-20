@@ -11,10 +11,12 @@ This data source can be used to fetch a quality monitors v2.
 Referring to a quality monitor by uc object type (currently only support `schema`) and object id:
 
 ```hcl
+data "databricks_schema" "this" {
+  name = "my_catalog.my_schema"
+}
 data "databricks_quality_monitor_v2" "this" {
   object_type = "schema"
-  // Please get schema id from UI or SDK
-  object_id = "ecb4f03c-f6c9-4d84-8934-e50e087d2435"
+  object_id = data.databricks_schema.this.schema_info.schema_id
 }
 ```
 
@@ -32,4 +34,4 @@ The following attributes are exported:
 
 ### AnomalyDetectionConfig
 * `last_run_id` (string) - Run id of the last run of the workflow
-* `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: ANOMALY_DETECTION_RUN_STATUS_CANCELED, ANOMALY_DETECTION_RUN_STATUS_FAILED, ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED, ANOMALY_DETECTION_RUN_STATUS_PENDING, ANOMALY_DETECTION_RUN_STATUS_RUNNING, ANOMALY_DETECTION_RUN_STATUS_SUCCESS, ANOMALY_DETECTION_RUN_STATUS_UNKNOWN, ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR
+* `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_RUN_STATUS_CANCELED`, `ANOMALY_DETECTION_RUN_STATUS_FAILED`, `ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED`, `ANOMALY_DETECTION_RUN_STATUS_PENDING`, `ANOMALY_DETECTION_RUN_STATUS_RUNNING`, `ANOMALY_DETECTION_RUN_STATUS_SUCCESS`, `ANOMALY_DETECTION_RUN_STATUS_UNKNOWN`, `ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR`

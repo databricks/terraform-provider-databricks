@@ -112,13 +112,13 @@ type DummyGoSdk struct {
 	Type              string                      `json:"type"` // Test Type_ renaming
 	EmptyStructList   []DummyNestedGoSdkEmpty     `json:"empty_struct_list"`
 	EmptyStructObject *DummyNestedGoSdkEmpty      `json:"empty_struct_object"`
-	ForceSendFields   []string                    `json:"-"`
+	ForceSendFields   []string                    `json:"-" tf:"-"`
 }
 
 type DummyNestedGoSdk struct {
 	Name            string   `json:"name"`
 	Enabled         bool     `json:"enabled"`
-	ForceSendFields []string `json:"-"`
+	ForceSendFields []string `json:"-" tf:"-"`
 }
 
 type DummyNestedGoSdkEmpty struct{}

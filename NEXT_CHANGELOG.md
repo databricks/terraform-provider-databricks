@@ -19,4 +19,6 @@
 
 ### Exporter
 
+* Fix crash when importing model serving endpoint ([#4806](https://github.com/databricks/terraform-provider-databricks/pull/4806))
+
 ### Internal Changes

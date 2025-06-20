@@ -19,7 +19,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 		}
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
-		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetOptional().SetComputed()
+		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
 
 		supportedFields := []string{"group_id", "resource_names", "domain_names"}
 		for _, key := range supportedFields {

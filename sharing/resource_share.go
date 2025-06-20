@@ -19,6 +19,7 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("name").SetRequired()
 	s.SchemaPath("name").SetForceNew()
 	s.SchemaPath("name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	s.SchemaPath("comment").SetSuppressDiff()
 	s.SchemaPath("owner").SetSuppressDiff()
 	s.SchemaPath("created_at").SetComputed()
 	s.SchemaPath("created_by").SetComputed()
@@ -167,6 +168,7 @@ func ResourceShare() common.Resource {
 			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(string(sharing.SharedDataObjectUpdateActionAdd))
 			shareChanges.Name = si.Name
+			shareChanges.Comment = si.Comment
 			shareChanges.Owner = si.Owner
 			if _, err := w.Shares.Update(ctx, shareChanges); err != nil {
 				//delete orphaned share if update fails
@@ -228,7 +230,17 @@ func ResourceShare() common.Resource {
 				}
 			}
 
-			if !d.HasChangeExcept("owner") {
+			if d.HasChange("comment") {
+				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
+					Name:  afterSi.Name,
+					Comment: afterSi.Comment,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangesExcept("owner") {
 				return nil
 			}
 

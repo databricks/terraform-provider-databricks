@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Added ability to add `comment` when defining a new `databricks_share` ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
 
 ### Bug Fixes
 
@@ -16,6 +17,8 @@
 
 * Recommend OAuth instead of PAT in guides ([#4787](https://github.com/databricks/terraform-provider-databricks/pull/4787))
 * Document new options in `databricks_model_serving` resource ([#4789](https://github.com/databricks/terraform-provider-databricks/pull/4789))
+
+* Updated `share` documentation to be more in line with Terraform styling ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
 
 ### Exporter
 

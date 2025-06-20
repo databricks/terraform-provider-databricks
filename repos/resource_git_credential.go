@@ -57,6 +57,9 @@ func ResourceGitCredential() common.Resource {
 				if err != nil {
 					return err
 				}
+				if resp == nil {
+					resp = &workspace.CreateCredentialsResponse{}
+				}
 				resp.CredentialId = creds[0].CredentialId
 			}
 			d.SetId(fmt.Sprintf("%d", resp.CredentialId))

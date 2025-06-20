@@ -407,7 +407,7 @@ func TestClusterListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+			Resource: "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 			Status:   404,
 			Response: &apierr.APIError{
 				ErrorCode:  "NOT_FOUND",
@@ -426,7 +426,7 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
+			Resource: "/api/2.1/clusters/list?filter_by.ClusterSources=UI&filter_by.ClusterSources=API&filter_by.IsPinned=false&filter_by.PolicyId=&page_size=100",
 			Response: clusters.ClusterList{
 				Clusters: []clusters.ClusterInfo{
 					{

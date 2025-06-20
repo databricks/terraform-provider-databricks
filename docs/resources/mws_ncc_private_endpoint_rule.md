@@ -84,6 +84,8 @@ The possible values are:
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
 * `updated_time` - Time in epoch milliseconds when this object was updated.
+* `enabled` - Activation status. Only used by private endpoints towards an AWS S3 service.
+* `vpc_endpoint_id` - The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks.
 
 ## Import
 

@@ -26,6 +26,21 @@ resource "databricks_service_principal_role" "my_service_principal_instance_prof
 }
 ```
 
+Granting a service principal the Account Admin role.
+
+-> This can only be used with an account-level provider.
+
+```hcl
+resource "databricks_service_principal" "tf_admin" {
+  display_name = "Terraform Admin"
+}
+
+resource "databricks_service_principal_role" "tf_admin_account" {
+  service_principal_id = databricks_service_principal.tf_admin.id
+  role                 = "account_admin"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

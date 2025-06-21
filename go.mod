@@ -3,6 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.24.0
 
 require (
+	github.com/bluele/gcache v0.0.2
 	github.com/databricks/databricks-sdk-go v0.72.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/hashicorp/go-cty v1.5.0
@@ -30,7 +31,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/bitfield/gotestdox v0.2.2 // indirect
-	github.com/bluele/gcache v0.0.2 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/fatih/color v1.17.0 // indirect

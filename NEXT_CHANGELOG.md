@@ -26,3 +26,5 @@
 * Fix crash when importing model serving endpoint ([#4806](https://github.com/databricks/terraform-provider-databricks/pull/4806))
 
 ### Internal Changes
+
+* Use caching for group membership and user information retrieval to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

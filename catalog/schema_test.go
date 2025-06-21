@@ -18,6 +18,7 @@ const catalogTemplate = `
 `
 
 func TestUcAccSchema(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogTemplate + `
 		data "databricks_catalogs" "all" {

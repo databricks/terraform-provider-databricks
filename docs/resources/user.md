@@ -9,7 +9,7 @@ This resource allows you to manage [users in Databricks Workspace](https://docs.
 
 -> To assign account level users to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
--> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
+-> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access`, `workspace_consume` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
 
 To create users in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments.
 
@@ -98,7 +98,9 @@ The following arguments are available:
 * `external_id` - (Optional) ID of the user in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
 * `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
-* `databricks_sql_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
+* `databricks_sql_access` - (Optional) This is a field to allow the user to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
+* `workspace_access` - (Optional) This is a field to allow the user to have access to a Databricks Workspace.
+* `workspace_consume` - (Optional) This is a field to allow the user to have access to a Databricks Workspace as consumer, with limited access to workspace UI.  Couldn't be used with `workspace_access` or `databricks_sql_access`.
 * `active` - (Optional) Either user is active or not. True by default, but can be set to false in case of user deactivation with preserving user assets.
 * `force` - (Optional) Ignore `cannot create user: User with username X already exists` errors and implicitly import the specific user into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 * `force_delete_repos` - (Optional) This flag determines whether the user's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.

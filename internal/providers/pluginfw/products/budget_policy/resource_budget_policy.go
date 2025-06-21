@@ -67,8 +67,10 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan billing_tf.Budge
 		return
 	}
 
-	var updateRequest = billing.UpdateBudgetPolicyRequest{Policy: budget_policy}
-	updateRequest.PolicyId = plan.PolicyId.ValueString()
+	updateRequest := billing.UpdateBudgetPolicyRequest{
+		Policy:   budget_policy,
+		PolicyId: plan.PolicyId.ValueString(),
+	}
 
 	response, err := client.BudgetPolicy.Update(ctx, updateRequest)
 	if err != nil {
@@ -107,7 +109,11 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	response, err := client.BudgetPolicy.Create(ctx, billing.CreateBudgetPolicyRequest{Policy: &budget_policy})
+	createRequest := billing.CreateBudgetPolicyRequest{
+		Policy: &budget_policy,
+	}
+
+	response, err := client.BudgetPolicy.Create(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create budget_policy", err.Error())
 		return

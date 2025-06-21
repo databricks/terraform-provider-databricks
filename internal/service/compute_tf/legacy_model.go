@@ -6539,16 +6539,8 @@ type CustomPolicyTag_SdkV2 struct {
 	// The key of the tag. - Must be unique among all custom tags of the same
 	// policy - Cannot be “budget-policy-name”, “budget-policy-id” or
 	// "budget-policy-resolution-result" - these tags are preserved.
-	//
-	// - Follows the regex pattern defined in
-	// cluster-common/conf/src/ClusterTagConstraints.scala
-	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L17)
 	Key types.String `tfsdk:"key"`
 	// The value of the tag.
-	//
-	// - Follows the regex pattern defined in
-	// cluster-common/conf/src/ClusterTagConstraints.scala
-	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L24)
 	Value types.String `tfsdk:"value"`
 }
 
@@ -8717,25 +8709,18 @@ func (o *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 // and serverless pipelines. In this minimal environment spec, only pip
 // dependencies are supported.
 type Environment_SdkV2 struct {
-	// Client version used by the environment The client is the user-facing
-	// environment of the runtime. Each client comes with a specific set of
-	// pre-installed libraries. The version is a string, consisting of the major
-	// client version.
+	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
 	// List of pip dependencies, as supported by the version of pip in this
-	// environment. Each dependency is a pip requirement file line
-	// https://pip.pypa.io/en/stable/reference/requirements-file-format/ Allowed
-	// dependency could be <requirement specifier>, <archive url/path>, <local
-	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
-	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+	// environment. Each dependency is a valid pip requirements file line per
+	// https://pip.pypa.io/en/stable/reference/requirements-file-format/.
+	// Allowed dependencies include a requirement specifier, an archive URL, a
+	// local project path (such as WSFS or UC Volumes in Databricks), or a VCS
+	// project URL.
 	Dependencies types.List `tfsdk:"dependencies"`
-	// We renamed `client` to `environment_version` in notebook exports. This
-	// field is meant solely so that imported notebooks with
-	// `environment_version` can be deserialized correctly, in a
-	// backwards-compatible way (i.e. if `client` is specified instead of
-	// `environment_version`, it will be deserialized correctly). Do NOT use
-	// this field for any other purpose, e.g. notebook storage. This field is
-	// not yet exposed to customers (e.g. in the jobs API).
+	// Required. Environment version used by the environment. Each version comes
+	// with a specific Python version and a set of Python packages. The version
+	// is a string, consisting of an integer.
 	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// List of jar dependencies, should be string representing volume paths. For
 	// example: `/Volumes/path/to/test.jar`.
@@ -8749,7 +8734,7 @@ func (newState *Environment_SdkV2) SyncEffectiveFieldsDuringRead(existingState E
 }
 
 func (c Environment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["client"] = attrs["client"].SetRequired()
+	attrs["client"] = attrs["client"].SetOptional()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()

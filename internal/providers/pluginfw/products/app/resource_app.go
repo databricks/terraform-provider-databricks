@@ -53,7 +53,7 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = tfschema.ResourceStructToSchema(ctx, appResource{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
-		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse"}
+		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse", "uc_securable"}
 		paths := path.Expressions{}
 		for _, field := range exclusiveFields[1:] {
 			paths = append(paths, path.MatchRelative().AtParent().AtName(field))

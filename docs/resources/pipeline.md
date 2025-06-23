@@ -110,6 +110,7 @@ The following arguments are supported:
   * `name` - (Required) The table name the event log is published to in UC.
   * `catalog` - (Optional, default to `catalog` defined on pipeline level) The UC catalog the event log is published under.
   * `schema` - (Optional, default to `schema` defined on pipeline level) The UC schema the event log is published under.
+* `tags` - (Optional, map of strings) A map of tags associated with the pipeline. These are forwarded to the cluster as cluster tags, and are therefore subject to the same limitations. A maximum of 25 tags can be added to the pipeline.
 
 ### library block
 

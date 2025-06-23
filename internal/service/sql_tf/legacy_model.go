@@ -1680,7 +1680,6 @@ func (o BaseChunkInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Cancel statement execution
 type CancelExecutionRequest_SdkV2 struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
@@ -2338,7 +2337,6 @@ func (o *CreateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// Create an alert
 type CreateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 }
@@ -4106,7 +4104,6 @@ func (o DateValue_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an alert
 type DeleteAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -4142,7 +4139,6 @@ func (o DeleteAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove a dashboard
 type DeleteDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -4178,7 +4174,6 @@ func (o DeleteDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove widget
 type DeleteDashboardWidgetRequest_SdkV2 struct {
 	// Widget ID returned by :method:dashboardwidgets/create
 	Id types.String `tfsdk:"-"`
@@ -4215,7 +4210,6 @@ func (o DeleteDashboardWidgetRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete a query
 type DeleteQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -4251,7 +4245,6 @@ func (o DeleteQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove visualization
 type DeleteQueryVisualizationsLegacyRequest_SdkV2 struct {
 	// Widget ID returned by :method:queryvizualisations/create
 	Id types.String `tfsdk:"-"`
@@ -4318,7 +4311,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove a visualization
 type DeleteVisualizationRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -4354,7 +4346,6 @@ func (o DeleteVisualizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a warehouse
 type DeleteWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -5623,7 +5614,7 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// [`USE SCHEMA`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html
 	Schema types.String `tfsdk:"schema"`
 	// The SQL statement to execute. The statement can optionally be
-	// parameterized, see `parameters`.
+	// parameterized, see `parameters`. The maximum query text size is 16 MiB.
 	Statement types.String `tfsdk:"statement"`
 	// The time in seconds the call will wait for the statement's result set as
 	// `Ns`, where `N` can be set to 0 or to a value between 5 and 50.
@@ -6048,7 +6039,6 @@ func (o ExternalQuerySourceJobInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6084,7 +6074,6 @@ func (o GetAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6120,7 +6109,6 @@ func (o GetAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -6156,7 +6144,6 @@ func (o GetAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Retrieve a definition
 type GetDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -6192,7 +6179,6 @@ func (o GetDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get object ACL
 type GetDbsqlPermissionRequest_SdkV2 struct {
 	// Object ID. An ACL is returned for the object with this UUID.
 	ObjectId types.String `tfsdk:"-"`
@@ -6233,7 +6219,6 @@ func (o GetDbsqlPermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a query definition.
 type GetQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -6269,7 +6254,6 @@ func (o GetQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a query
 type GetQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6392,7 +6376,6 @@ func (o *GetResponse_SdkV2) SetAccessControlList(ctx context.Context, v []Access
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
-// Get status, manifest, and result first chunk
 type GetStatementRequest_SdkV2 struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
@@ -6430,7 +6413,6 @@ func (o GetStatementRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get result chunk by index
 type GetStatementResultChunkNRequest_SdkV2 struct {
 	ChunkIndex types.Int64 `tfsdk:"-"`
 	// The statement ID is returned upon successfully submitting a SQL
@@ -6471,7 +6453,6 @@ func (o GetStatementResultChunkNRequest_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get SQL warehouse permission levels
 type GetWarehousePermissionLevelsRequest_SdkV2 struct {
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
@@ -6586,7 +6567,6 @@ func (o *GetWarehousePermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx con
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get SQL warehouse permissions
 type GetWarehousePermissionsRequest_SdkV2 struct {
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
@@ -6623,7 +6603,6 @@ func (o GetWarehousePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get warehouse info
 type GetWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -7879,7 +7858,6 @@ func (o *LegacyVisualization_SdkV2) SetQuery(ctx context.Context, v LegacyQuery_
 	o.Query = types.ListValueMust(t, vs)
 }
 
-// List alerts
 type ListAlertsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8158,7 +8136,6 @@ func (o *ListAlertsResponseAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// List alerts
 type ListAlertsV2Request_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8280,7 +8257,6 @@ func (o *ListAlertsV2Response_SdkV2) SetResults(ctx context.Context, v []AlertV2
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// Get dashboard objects
 type ListDashboardsRequest_SdkV2 struct {
 	// Name of dashboard attribute to order by.
 	Order types.String `tfsdk:"-"`
@@ -8329,7 +8305,6 @@ func (o ListDashboardsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a list of queries
 type ListQueriesLegacyRequest_SdkV2 struct {
 	// Name of query attribute to order by. Default sort order is ascending.
 	// Append a dash (`-`) to order descending instead.
@@ -8391,7 +8366,6 @@ func (o ListQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List queries
 type ListQueriesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8519,9 +8493,11 @@ func (o *ListQueriesResponse_SdkV2) SetRes(ctx context.Context, v []QueryInfo_Sd
 	o.Res = types.ListValueMust(t, vs)
 }
 
-// List Queries
 type ListQueryHistoryRequest_SdkV2 struct {
-	// A filter to limit query history results. This field is optional.
+	// An optional filter object to limit query history results. Accepts
+	// parameters such as user IDs, endpoint IDs, and statuses to narrow the
+	// returned data. In a URL, the parameters of this filter are specified with
+	// dot notation. For example: `filter_by.statement_ids`.
 	FilterBy types.List `tfsdk:"-"`
 	// Whether to include the query metrics with each query. Only use this for a
 	// small subset of queries (max_results). Defaults to false.
@@ -8962,7 +8938,6 @@ func (o *ListResponse_SdkV2) SetResults(ctx context.Context, v []Dashboard_SdkV2
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// List visualizations on a query
 type ListVisualizationsForQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 
@@ -9088,7 +9063,6 @@ func (o *ListVisualizationsForQueryResponse_SdkV2) SetResults(ctx context.Contex
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// List warehouses
 type ListWarehousesRequest_SdkV2 struct {
 	// Service Principal which will be used to fetch the list of warehouses. If
 	// not specified, the user from the session header is used.
@@ -9915,12 +9889,15 @@ func (o *QueryEditContent_SdkV2) SetTags(ctx context.Context, v []types.String) 
 }
 
 type QueryFilter_SdkV2 struct {
-	// A range filter for query submitted time. The time range must be <= 30
-	// days.
+	// A range filter for query submitted time. The time range must be less than
+	// or equal to 30 days.
 	QueryStartTimeRange types.List `tfsdk:"query_start_time_range"`
 	// A list of statement IDs.
 	StatementIds types.List `tfsdk:"statement_ids"`
-
+	// A list of statuses (QUEUED, RUNNING, CANCELED, FAILED, FINISHED) to match
+	// query results. Corresponds to the `status` field in the response.
+	// Filtering for multiple statuses is not recommended. Instead, opt to
+	// filter by a single status multiple times and then combine the results.
 	Statuses types.List `tfsdk:"statuses"`
 	// A list of user IDs who ran the queries.
 	UserIds types.List `tfsdk:"user_ids"`
@@ -10138,7 +10115,9 @@ type QueryInfo_SdkV2 struct {
 	// provided by client applications. While values are expected to remain
 	// static over time, this cannot be guaranteed.
 	ClientApplication types.String `tfsdk:"client_application"`
-	// Total execution time of the statement ( excluding result fetch time ).
+	// Total time of the statement execution. This value does not include the
+	// time taken to retrieve the results, which can result in a discrepancy
+	// between this value and the start-to-finish wall-clock time.
 	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
@@ -11288,7 +11267,6 @@ func (o *RepeatedEndpointConfPairs_SdkV2) SetConfigurationPairs(ctx context.Cont
 	o.ConfigurationPairs = types.ListValueMust(t, vs)
 }
 
-// Restore a dashboard
 type RestoreDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -11324,7 +11302,6 @@ func (o RestoreDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Restore a query
 type RestoreQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -12309,7 +12286,6 @@ func (o SetWorkspaceWarehouseConfigResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Start a warehouse
 type StartRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -12699,7 +12675,6 @@ func (o *StatementStatus_SdkV2) SetError(ctx context.Context, v ServiceError_Sdk
 	o.Error = types.ListValueMust(t, vs)
 }
 
-// Stop a warehouse
 type StopRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -13284,7 +13259,6 @@ func (o *TransferOwnershipRequest_SdkV2) SetObjectId(ctx context.Context, v Tran
 	o.ObjectId = types.ListValueMust(t, vs)
 }
 
-// Delete an alert
 type TrashAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13320,7 +13294,6 @@ func (o TrashAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an alert
 type TrashAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13356,7 +13329,6 @@ func (o TrashAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a query
 type TrashQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13621,7 +13593,6 @@ func (o *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// Update an alert
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 	// UUID identifying the alert.

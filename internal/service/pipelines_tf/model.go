@@ -51,6 +51,8 @@ type CreatePipeline struct {
 	DryRun types.Bool `tfsdk:"dry_run"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.Object `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.Object `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
@@ -120,6 +122,7 @@ func (c CreatePipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["dry_run"] = attrs["dry_run"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["event_log"] = attrs["event_log"].SetOptional()
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -154,6 +157,7 @@ func (a CreatePipeline) GetComplexFieldTypes(ctx context.Context) map[string]ref
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment{}),
 		"event_log":            reflect.TypeOf(EventLogSpec{}),
 		"filters":              reflect.TypeOf(Filters{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -185,6 +189,7 @@ func (o CreatePipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"development":           o.Development,
 			"dry_run":               o.DryRun,
 			"edition":               o.Edition,
+			"environment":           o.Environment,
 			"event_log":             o.EventLog,
 			"filters":               o.Filters,
 			"gateway_definition":    o.GatewayDefinition,
@@ -225,6 +230,7 @@ func (o CreatePipeline) Type(ctx context.Context) attr.Type {
 			"development":          types.BoolType,
 			"dry_run":              types.BoolType,
 			"edition":              types.StringType,
+			"environment":          PipelinesEnvironment{}.Type(ctx),
 			"event_log":            EventLogSpec{}.Type(ctx),
 			"filters":              Filters{}.Type(ctx),
 			"gateway_definition":   IngestionGatewayPipelineDefinition{}.Type(ctx),
@@ -331,6 +337,34 @@ func (o *CreatePipeline) GetDeployment(ctx context.Context) (PipelineDeployment,
 func (o *CreatePipeline) SetDeployment(ctx context.Context, v PipelineDeployment) {
 	vs := v.ToObjectValue(ctx)
 	o.Deployment = vs
+}
+
+// GetEnvironment returns the value of the Environment field in CreatePipeline as
+// a PipelinesEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetEnvironment(ctx context.Context) (PipelinesEnvironment, bool) {
+	var e PipelinesEnvironment
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment
+	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in CreatePipeline.
+func (o *CreatePipeline) SetEnvironment(ctx context.Context, v PipelinesEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.Environment = vs
 }
 
 // GetEventLog returns the value of the EventLog field in CreatePipeline as
@@ -796,7 +830,6 @@ func (o DataPlaneId) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a pipeline
 type DeletePipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -899,6 +932,8 @@ type EditPipeline struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.Object `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.Object `tfsdk:"event_log"`
 	// If present, the last-modified time of the pipeline settings before the
@@ -973,6 +1008,7 @@ func (c EditPipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["event_log"] = attrs["event_log"].SetOptional()
 	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
 	attrs["filters"] = attrs["filters"].SetOptional()
@@ -1009,6 +1045,7 @@ func (a EditPipeline) GetComplexFieldTypes(ctx context.Context) map[string]refle
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment{}),
 		"event_log":            reflect.TypeOf(EventLogSpec{}),
 		"filters":              reflect.TypeOf(Filters{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -1039,6 +1076,7 @@ func (o EditPipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"deployment":             o.Deployment,
 			"development":            o.Development,
 			"edition":                o.Edition,
+			"environment":            o.Environment,
 			"event_log":              o.EventLog,
 			"expected_last_modified": o.ExpectedLastModified,
 			"filters":                o.Filters,
@@ -1080,6 +1118,7 @@ func (o EditPipeline) Type(ctx context.Context) attr.Type {
 			"deployment":             PipelineDeployment{}.Type(ctx),
 			"development":            types.BoolType,
 			"edition":                types.StringType,
+			"environment":            PipelinesEnvironment{}.Type(ctx),
 			"event_log":              EventLogSpec{}.Type(ctx),
 			"expected_last_modified": types.Int64Type,
 			"filters":                Filters{}.Type(ctx),
@@ -1188,6 +1227,34 @@ func (o *EditPipeline) GetDeployment(ctx context.Context) (PipelineDeployment, b
 func (o *EditPipeline) SetDeployment(ctx context.Context, v PipelineDeployment) {
 	vs := v.ToObjectValue(ctx)
 	o.Deployment = vs
+}
+
+// GetEnvironment returns the value of the Environment field in EditPipeline as
+// a PipelinesEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetEnvironment(ctx context.Context) (PipelinesEnvironment, bool) {
+	var e PipelinesEnvironment
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment
+	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in EditPipeline.
+func (o *EditPipeline) SetEnvironment(ctx context.Context, v PipelinesEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.Environment = vs
 }
 
 // GetEventLog returns the value of the EventLog field in EditPipeline as
@@ -1807,7 +1874,6 @@ func (o *Filters) SetInclude(ctx context.Context, v []types.String) {
 	o.Include = types.ListValueMust(t, vs)
 }
 
-// Get pipeline permission levels
 type GetPipelinePermissionLevelsRequest struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
@@ -1922,7 +1988,6 @@ func (o *GetPipelinePermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get pipeline permissions
 type GetPipelinePermissionsRequest struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
@@ -1959,7 +2024,6 @@ func (o GetPipelinePermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a pipeline
 type GetPipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -2159,7 +2223,6 @@ func (o *GetPipelineResponse) SetSpec(ctx context.Context, v PipelineSpec) {
 	o.Spec = vs
 }
 
-// Get a pipeline update
 type GetUpdateRequest struct {
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"-"`
@@ -2635,7 +2698,6 @@ func (o *IngestionPipelineDefinition) SetTableConfiguration(ctx context.Context,
 	o.TableConfiguration = vs
 }
 
-// List pipeline events
 type ListPipelineEventsRequest struct {
 	// Criteria to select a subset of results, expressed using a SQL-like
 	// syntax. The supported filters are: 1. level='INFO' (or WARN or ERROR) 2.
@@ -2819,7 +2881,6 @@ func (o *ListPipelineEventsResponse) SetEvents(ctx context.Context, v []Pipeline
 	o.Events = types.ListValueMust(t, vs)
 }
 
-// List pipelines
 type ListPipelinesRequest struct {
 	// Select a subset of results based on the specified criteria. The supported
 	// filters are:
@@ -2994,7 +3055,6 @@ func (o *ListPipelinesResponse) SetStatuses(ctx context.Context, v []PipelineSta
 	o.Statuses = types.ListValueMust(t, vs)
 }
 
-// List pipeline updates
 type ListUpdatesRequest struct {
 	// Max number of entries to return in a single page.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -4982,6 +5042,8 @@ type PipelineSpec struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.Object `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.Object `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
@@ -5042,6 +5104,7 @@ func (c PipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["event_log"] = attrs["event_log"].SetOptional()
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -5075,6 +5138,7 @@ func (a PipelineSpec) GetComplexFieldTypes(ctx context.Context) map[string]refle
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment{}),
 		"event_log":            reflect.TypeOf(EventLogSpec{}),
 		"filters":              reflect.TypeOf(Filters{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -5103,6 +5167,7 @@ func (o PipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"deployment":           o.Deployment,
 			"development":          o.Development,
 			"edition":              o.Edition,
+			"environment":          o.Environment,
 			"event_log":            o.EventLog,
 			"filters":              o.Filters,
 			"gateway_definition":   o.GatewayDefinition,
@@ -5140,6 +5205,7 @@ func (o PipelineSpec) Type(ctx context.Context) attr.Type {
 			"deployment":           PipelineDeployment{}.Type(ctx),
 			"development":          types.BoolType,
 			"edition":              types.StringType,
+			"environment":          PipelinesEnvironment{}.Type(ctx),
 			"event_log":            EventLogSpec{}.Type(ctx),
 			"filters":              Filters{}.Type(ctx),
 			"gateway_definition":   IngestionGatewayPipelineDefinition{}.Type(ctx),
@@ -5245,6 +5311,34 @@ func (o *PipelineSpec) GetDeployment(ctx context.Context) (PipelineDeployment, b
 func (o *PipelineSpec) SetDeployment(ctx context.Context, v PipelineDeployment) {
 	vs := v.ToObjectValue(ctx)
 	o.Deployment = vs
+}
+
+// GetEnvironment returns the value of the Environment field in PipelineSpec as
+// a PipelinesEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetEnvironment(ctx context.Context) (PipelinesEnvironment, bool) {
+	var e PipelinesEnvironment
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment
+	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in PipelineSpec.
+func (o *PipelineSpec) SetEnvironment(ctx context.Context, v PipelinesEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.Environment = vs
 }
 
 // GetEventLog returns the value of the EventLog field in PipelineSpec as
@@ -5719,6 +5813,92 @@ func (o *PipelineTrigger) SetManual(ctx context.Context, v ManualTrigger) {
 	o.Manual = vs
 }
 
+// The environment entity used to preserve serverless environment side panel,
+// jobs' environment for non-notebook task, and DLT's environment for classic
+// and serverless pipelines. In this minimal environment spec, only pip
+// dependencies are supported.
+type PipelinesEnvironment struct {
+	// List of pip dependencies, as supported by the version of pip in this
+	// environment. Each dependency is a pip requirement file line
+	// https://pip.pypa.io/en/stable/reference/requirements-file-format/ Allowed
+	// dependency could be <requirement specifier>, <archive url/path>, <local
+	// project path>(WSFS or Volumes in Databricks), <vcs project url>
+	Dependencies types.List `tfsdk:"dependencies"`
+}
+
+func (newState *PipelinesEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinesEnvironment) {
+}
+
+func (newState *PipelinesEnvironment) SyncEffectiveFieldsDuringRead(existingState PipelinesEnvironment) {
+}
+
+func (c PipelinesEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinesEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PipelinesEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dependencies": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PipelinesEnvironment
+// only implements ToObjectValue() and Type().
+func (o PipelinesEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dependencies": o.Dependencies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PipelinesEnvironment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetDependencies returns the value of the Dependencies field in PipelinesEnvironment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelinesEnvironment) GetDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.Dependencies.IsNull() || o.Dependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Dependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependencies sets the value of the Dependencies field in PipelinesEnvironment.
+func (o *PipelinesEnvironment) SetDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Dependencies = types.ListValueMust(t, vs)
+}
+
 type ReportSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
@@ -6079,7 +6259,7 @@ func (o *SchemaSpec) SetTableConfiguration(ctx context.Context, v TableSpecificC
 }
 
 type Sequencing struct {
-	// A sequence number, unique and increasing within the control plane.
+	// A sequence number, unique and increasing per pipeline.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no"`
 	// the ID assigned by the data plane.
 	DataPlaneId types.Object `tfsdk:"data_plane_id"`
@@ -6539,7 +6719,6 @@ func (o StopPipelineResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Stop a pipeline
 type StopRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }

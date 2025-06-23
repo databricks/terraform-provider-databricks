@@ -403,7 +403,6 @@ func (o *DeleteDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.S
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Delete data from index
 type DeleteDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
@@ -558,7 +557,6 @@ func (o *DeleteDataVectorIndexResponse) SetResult(ctx context.Context, v DeleteD
 	o.Result = vs
 }
 
-// Delete an endpoint
 type DeleteEndpointRequest struct {
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -636,7 +634,6 @@ func (o DeleteEndpointResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an index
 type DeleteIndexRequest struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1462,7 +1459,6 @@ func (o EndpointStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an endpoint
 type GetEndpointRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1499,7 +1495,6 @@ func (o GetEndpointRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an index
 type GetIndexRequest struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1620,7 +1615,6 @@ func (o *ListEndpointResponse) SetEndpoints(ctx context.Context, v []EndpointInf
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// List all endpoints
 type ListEndpointsRequest struct {
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
@@ -1657,7 +1651,6 @@ func (o ListEndpointsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List indexes
 type ListIndexesRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -2872,7 +2865,6 @@ func (o *Struct) SetFields(ctx context.Context, v []MapStringValueEntry) {
 	o.Fields = types.ListValueMust(t, vs)
 }
 
-// Synchronize an index
 type SyncIndexRequest struct {
 	// Name of the vector index to synchronize. Must be a Delta Sync Index.
 	IndexName types.String `tfsdk:"-"`

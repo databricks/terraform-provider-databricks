@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Create a Database Catalog
 type CreateDatabaseCatalogRequest struct {
 	Catalog types.Object `tfsdk:"catalog"`
 }
@@ -88,7 +87,6 @@ func (o *CreateDatabaseCatalogRequest) SetCatalog(ctx context.Context, v Databas
 	o.Catalog = vs
 }
 
-// Create a Database Instance
 type CreateDatabaseInstanceRequest struct {
 	// A DatabaseInstance represents a logical Postgres instance, comprised of
 	// both compute and storage.
@@ -156,7 +154,6 @@ func (o *CreateDatabaseInstanceRequest) SetDatabaseInstance(ctx context.Context,
 	o.DatabaseInstance = vs
 }
 
-// Create a Database Table
 type CreateDatabaseTableRequest struct {
 	// Next field marker: 13
 	Table types.Object `tfsdk:"table"`
@@ -223,7 +220,6 @@ func (o *CreateDatabaseTableRequest) SetTable(ctx context.Context, v DatabaseTab
 	o.Table = vs
 }
 
-// Create a Synced Database Table
 type CreateSyncedDatabaseTableRequest struct {
 	// Next field marker: 12
 	SyncedTable types.Object `tfsdk:"synced_table"`
@@ -358,6 +354,8 @@ func (o DatabaseCatalog) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseCredential struct {
+	ExpirationTime types.String `tfsdk:"expiration_time"`
+
 	Token types.String `tfsdk:"token"`
 }
 
@@ -368,6 +366,7 @@ func (newState *DatabaseCredential) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 func (c DatabaseCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
 	attrs["token"] = attrs["token"].SetOptional()
 
 	return attrs
@@ -391,7 +390,8 @@ func (o DatabaseCredential) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"token": o.Token,
+			"expiration_time": o.ExpirationTime,
+			"token":           o.Token,
 		})
 }
 
@@ -399,7 +399,8 @@ func (o DatabaseCredential) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o DatabaseCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token": types.StringType,
+			"expiration_time": types.StringType,
+			"token":           types.StringType,
 		},
 	}
 }
@@ -413,6 +414,12 @@ type DatabaseInstance struct {
 	CreationTime types.String `tfsdk:"creation_time"`
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
+	// xref AIP-129. `stopped` is owned by the client, while `effective_stopped`
+	// is owned by the server. `stopped` will only be set in Create/Update
+	// response messages if and only if the user provides the field via the
+	// request. `effective_stopped` on the other hand will always bet set in all
+	// response messages (Create/Update/Get/List).
+	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
 	// The name of the instance. This is the unique identifier for the instance.
 	Name types.String `tfsdk:"name"`
 	// The version of Postgres running on the instance.
@@ -437,6 +444,7 @@ func (c DatabaseInstance) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["capacity"] = attrs["capacity"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
 	attrs["read_write_dns"] = attrs["read_write_dns"].SetComputed()
@@ -465,15 +473,16 @@ func (o DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"capacity":       o.Capacity,
-			"creation_time":  o.CreationTime,
-			"creator":        o.Creator,
-			"name":           o.Name,
-			"pg_version":     o.PgVersion,
-			"read_write_dns": o.ReadWriteDns,
-			"state":          o.State,
-			"stopped":        o.Stopped,
-			"uid":            o.Uid,
+			"capacity":          o.Capacity,
+			"creation_time":     o.CreationTime,
+			"creator":           o.Creator,
+			"effective_stopped": o.EffectiveStopped,
+			"name":              o.Name,
+			"pg_version":        o.PgVersion,
+			"read_write_dns":    o.ReadWriteDns,
+			"state":             o.State,
+			"stopped":           o.Stopped,
+			"uid":               o.Uid,
 		})
 }
 
@@ -481,15 +490,16 @@ func (o DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o DatabaseInstance) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"capacity":       types.StringType,
-			"creation_time":  types.StringType,
-			"creator":        types.StringType,
-			"name":           types.StringType,
-			"pg_version":     types.StringType,
-			"read_write_dns": types.StringType,
-			"state":          types.StringType,
-			"stopped":        types.BoolType,
-			"uid":            types.StringType,
+			"capacity":          types.StringType,
+			"creation_time":     types.StringType,
+			"creator":           types.StringType,
+			"effective_stopped": types.BoolType,
+			"name":              types.StringType,
+			"pg_version":        types.StringType,
+			"read_write_dns":    types.StringType,
+			"state":             types.StringType,
+			"stopped":           types.BoolType,
+			"uid":               types.StringType,
 		},
 	}
 }
@@ -520,8 +530,6 @@ type DatabaseTable struct {
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`
-	// Data serving REST API URL for this table
-	TableServingUrl types.String `tfsdk:"table_serving_url"`
 }
 
 func (newState *DatabaseTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseTable) {
@@ -534,7 +542,6 @@ func (c DatabaseTable) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 
 	return attrs
 }
@@ -560,7 +567,6 @@ func (o DatabaseTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"database_instance_name": o.DatabaseInstanceName,
 			"logical_database_name":  o.LogicalDatabaseName,
 			"name":                   o.Name,
-			"table_serving_url":      o.TableServingUrl,
 		})
 }
 
@@ -571,12 +577,10 @@ func (o DatabaseTable) Type(ctx context.Context) attr.Type {
 			"database_instance_name": types.StringType,
 			"logical_database_name":  types.StringType,
 			"name":                   types.StringType,
-			"table_serving_url":      types.StringType,
 		},
 	}
 }
 
-// Delete a Database Catalog
 type DeleteDatabaseCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -642,7 +646,6 @@ func (o DeleteDatabaseCatalogResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Database Instance
 type DeleteDatabaseInstanceRequest struct {
 	// By default, a instance cannot be deleted if it has descendant instances
 	// created via PITR. If this flag is specified as true, all descendent
@@ -650,11 +653,14 @@ type DeleteDatabaseInstanceRequest struct {
 	Force types.Bool `tfsdk:"-"`
 	// Name of the instance to delete.
 	Name types.String `tfsdk:"-"`
-	// If false, the database instance is soft deleted. Soft deleted instances
-	// behave as if they are deleted, and cannot be used for CRUD operations nor
-	// connected to. However they can be undeleted by calling the undelete API
-	// for a limited time. If true, the database instance is hard deleted and
-	// cannot be undeleted.
+	// Note purge=false is in development. If false, the database instance is
+	// soft deleted (implementation pending). Soft deleted instances behave as
+	// if they are deleted, and cannot be used for CRUD operations nor connected
+	// to. However they can be undeleted by calling the undelete API for a
+	// limited time (implementation pending). If true, the database instance is
+	// hard deleted and cannot be undeleted. For the time being, setting this
+	// value to true is required to delete an instance (soft delete is not yet
+	// supported).
 	Purge types.Bool `tfsdk:"-"`
 }
 
@@ -723,7 +729,6 @@ func (o DeleteDatabaseInstanceResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Database Table
 type DeleteDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -789,7 +794,6 @@ func (o DeleteDatabaseTableResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Synced Database Table
 type DeleteSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -855,7 +859,6 @@ func (o DeleteSyncedDatabaseTableResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Find a Database Instance by uid
 type FindDatabaseInstanceByUidRequest struct {
 	// UID of the cluster to get.
 	Uid types.String `tfsdk:"-"`
@@ -976,7 +979,6 @@ func (o *GenerateDatabaseCredentialRequest) SetInstanceNames(ctx context.Context
 	o.InstanceNames = types.ListValueMust(t, vs)
 }
 
-// Get a Database Catalog
 type GetDatabaseCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -1012,7 +1014,6 @@ func (o GetDatabaseCatalogRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Database Instance
 type GetDatabaseInstanceRequest struct {
 	// Name of the cluster to get.
 	Name types.String `tfsdk:"-"`
@@ -1049,7 +1050,6 @@ func (o GetDatabaseInstanceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Database Table
 type GetDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -1085,7 +1085,6 @@ func (o GetDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Synced Database Table
 type GetSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -1121,7 +1120,6 @@ func (o GetSyncedDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List Database Instances
 type ListDatabaseInstancesRequest struct {
 	// Upper bound for items returned.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1335,8 +1333,6 @@ type SyncedDatabaseTable struct {
 	Name types.String `tfsdk:"name"`
 	// Specification of a synced database table.
 	Spec types.Object `tfsdk:"spec"`
-	// Data serving REST API URL for this table
-	TableServingUrl types.String `tfsdk:"table_serving_url"`
 	// The provisioning state of the synced table entity in Unity Catalog. This
 	// is distinct from the state of the data synchronization pipeline (i.e. the
 	// table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it
@@ -1356,7 +1352,6 @@ func (c SyncedDatabaseTable) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
 	return attrs
@@ -1388,7 +1383,6 @@ func (o SyncedDatabaseTable) ToObjectValue(ctx context.Context) basetypes.Object
 			"logical_database_name":            o.LogicalDatabaseName,
 			"name":                             o.Name,
 			"spec":                             o.Spec,
-			"table_serving_url":                o.TableServingUrl,
 			"unity_catalog_provisioning_state": o.UnityCatalogProvisioningState,
 		})
 }
@@ -1402,7 +1396,6 @@ func (o SyncedDatabaseTable) Type(ctx context.Context) attr.Type {
 			"logical_database_name":            types.StringType,
 			"name":                             types.StringType,
 			"spec":                             SyncedTableSpec{}.Type(ctx),
-			"table_serving_url":                types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},
 	}
@@ -1774,11 +1767,16 @@ type SyncedTableSpec struct {
 	// If true, the synced table's logical database and schema resources in PG
 	// will be created if they do not already exist.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
-	// Spec of new pipeline. Should be empty if pipeline_id is set
+	// User-specified ID of a pre-existing pipeline to bin pack. This field is
+	// optional, and should be empty if new_pipeline_spec is set. This field
+	// will only be set by the server in response messages if it is specified in
+	// the request. The SyncedTableStatus message will always contain the
+	// effective pipeline ID (either client provided or server generated),
+	// however.
+	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
+	// Spec of new pipeline. Should be empty if pipeline_id /
+	// existing_pipeline_id is set
 	NewPipelineSpec types.Object `tfsdk:"new_pipeline_spec"`
-	// ID of the associated pipeline. Should be empty if new_pipeline_spec is
-	// set
-	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
 	// Scheduling policy of the underlying pipeline.
@@ -1798,8 +1796,8 @@ func (newState *SyncedTableSpec) SyncEffectiveFieldsDuringRead(existingState Syn
 
 func (c SyncedTableSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetOptional()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["primary_key_columns"] = attrs["primary_key_columns"].SetOptional()
 	attrs["scheduling_policy"] = attrs["scheduling_policy"].SetOptional()
 	attrs["source_table_full_name"] = attrs["source_table_full_name"].SetOptional()
@@ -1830,8 +1828,8 @@ func (o SyncedTableSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_database_objects_if_missing": o.CreateDatabaseObjectsIfMissing,
+			"existing_pipeline_id":               o.ExistingPipelineId,
 			"new_pipeline_spec":                  o.NewPipelineSpec,
-			"pipeline_id":                        o.PipelineId,
 			"primary_key_columns":                o.PrimaryKeyColumns,
 			"scheduling_policy":                  o.SchedulingPolicy,
 			"source_table_full_name":             o.SourceTableFullName,
@@ -1844,8 +1842,8 @@ func (o SyncedTableSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_database_objects_if_missing": types.BoolType,
+			"existing_pipeline_id":               types.StringType,
 			"new_pipeline_spec":                  NewPipelineSpec{}.Type(ctx),
-			"pipeline_id":                        types.StringType,
 			"primary_key_columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -1922,6 +1920,10 @@ type SyncedTableStatus struct {
 	FailedStatus types.Object `tfsdk:"failed_status"`
 	// A text description of the current state of the synced table.
 	Message types.String `tfsdk:"message"`
+	// ID of the associated pipeline. The pipeline ID may have been provided by
+	// the client (in the case of bin packing), or generated by the server (when
+	// creating a new pipeline).
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Detailed status of a synced table. Shown if the synced table is in the
 	// PROVISIONING_PIPELINE_RESOURCES or the PROVISIONING_INITIAL_SNAPSHOT
 	// state.
@@ -1942,6 +1944,7 @@ func (c SyncedTableStatus) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["detailed_state"] = attrs["detailed_state"].SetOptional()
 	attrs["failed_status"] = attrs["failed_status"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["provisioning_status"] = attrs["provisioning_status"].SetOptional()
 	attrs["triggered_update_status"] = attrs["triggered_update_status"].SetOptional()
 
@@ -1975,6 +1978,7 @@ func (o SyncedTableStatus) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"detailed_state":           o.DetailedState,
 			"failed_status":            o.FailedStatus,
 			"message":                  o.Message,
+			"pipeline_id":              o.PipelineId,
 			"provisioning_status":      o.ProvisioningStatus,
 			"triggered_update_status":  o.TriggeredUpdateStatus,
 		})
@@ -1988,6 +1992,7 @@ func (o SyncedTableStatus) Type(ctx context.Context) attr.Type {
 			"detailed_state":           types.StringType,
 			"failed_status":            SyncedTableFailedStatus{}.Type(ctx),
 			"message":                  types.StringType,
+			"pipeline_id":              types.StringType,
 			"provisioning_status":      SyncedTableProvisioningStatus{}.Type(ctx),
 			"triggered_update_status":  SyncedTableTriggeredUpdateStatus{}.Type(ctx),
 		},
@@ -2199,7 +2204,6 @@ func (o *SyncedTableTriggeredUpdateStatus) SetTriggeredUpdateProgress(ctx contex
 	o.TriggeredUpdateProgress = vs
 }
 
-// Update a Database Instance
 type UpdateDatabaseInstanceRequest struct {
 	// A DatabaseInstance represents a logical Postgres instance, comprised of
 	// both compute and storage.

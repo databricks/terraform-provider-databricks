@@ -431,7 +431,6 @@ func (o ConsistencyToken_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group.
 type DeleteAccountGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -468,7 +467,6 @@ func (o DeleteAccountGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal.
 type DeleteAccountServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -505,7 +503,6 @@ func (o DeleteAccountServicePrincipalRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Delete a user.
 type DeleteAccountUserRequest_SdkV2 struct {
 	// Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -542,7 +539,6 @@ func (o DeleteAccountUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group.
 type DeleteGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -609,7 +605,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal.
 type DeleteServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -646,7 +641,6 @@ func (o DeleteServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete a user.
 type DeleteUserRequest_SdkV2 struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -683,7 +677,6 @@ func (o DeleteUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete permissions assignment
 type DeleteWorkspaceAssignmentRequest_SdkV2 struct {
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
@@ -765,7 +758,6 @@ func (o DeleteWorkspacePermissionAssignmentResponse_SdkV2) Type(ctx context.Cont
 	}
 }
 
-// Get group details.
 type GetAccountGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -802,7 +794,6 @@ func (o GetAccountGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details.
 type GetAccountServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -839,7 +830,6 @@ func (o GetAccountServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.
 	}
 }
 
-// Get user details.
 type GetAccountUserRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -911,7 +901,6 @@ func (o GetAccountUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest_SdkV2 struct {
 	// The resource name for which assignable roles will be listed.
 	//
@@ -1031,7 +1020,6 @@ func (o *GetAssignableRolesForResourceResponse_SdkV2) SetRoles(ctx context.Conte
 	o.Roles = types.ListValueMust(t, vs)
 }
 
-// Get group details.
 type GetGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1146,7 +1134,6 @@ func (o *GetPasswordPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx cont
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permission levels
 type GetPermissionLevelsRequest_SdkV2 struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
@@ -1268,7 +1255,6 @@ func (o *GetPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Cont
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permissions
 type GetPermissionRequest_SdkV2 struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
@@ -1313,7 +1299,6 @@ func (o GetPermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a rule set
 type GetRuleSetRequest_SdkV2 struct {
 	// Etag used for versioning. The response is at least as fresh as the eTag
 	// provided. Etag is used for optimistic concurrency control as a way to
@@ -1374,7 +1359,6 @@ func (o GetRuleSetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details.
 type GetServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1411,7 +1395,6 @@ func (o GetServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get user details.
 type GetUserRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1483,7 +1466,6 @@ func (o GetUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List workspace permissions
 type GetWorkspaceAssignmentRequest_SdkV2 struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -1874,7 +1856,6 @@ func (o *Group_SdkV2) SetSchemas(ctx context.Context, v []types.String) {
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List group details.
 type ListAccountGroupsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1941,7 +1922,6 @@ func (o ListAccountGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List service principals.
 type ListAccountServicePrincipalsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2008,7 +1988,6 @@ func (o ListAccountServicePrincipalsRequest_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// List users.
 type ListAccountUsersRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2076,7 +2055,6 @@ func (o ListAccountUsersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List group details.
 type ListGroupsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2399,7 +2377,6 @@ func (o *ListServicePrincipalResponse_SdkV2) SetSchemas(ctx context.Context, v [
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List service principals.
 type ListServicePrincipalsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2466,7 +2443,6 @@ func (o ListServicePrincipalsRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// List users.
 type ListUsersRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2662,7 +2638,6 @@ func (o *ListUsersResponse_SdkV2) SetSchemas(ctx context.Context, v []types.Stri
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// Get permission assignments
 type ListWorkspaceAssignmentRequest_SdkV2 struct {
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`

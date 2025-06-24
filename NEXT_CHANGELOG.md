@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4811](https://github.com/databricks/terraform-provider-databricks/pull/4811)).
+
 ### Bug Fixes
 
 ### Documentation

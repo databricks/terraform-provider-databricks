@@ -3,14 +3,14 @@ subcategory: "Unity Catalog"
 ---
 # databricks_connection (Resource)
 
+-> This resource can only be used with a workspace-level provider!
+
 Lakehouse Federation is the query federation platform for Databricks. Databricks uses Unity Catalog to manage query federation. To make a dataset available for read-only querying using Lakehouse Federation, you create the following:
 
 - A connection, a securable object in Unity Catalog that specifies a path and credentials for accessing an external database system.
 - A foreign [catalog](catalog.md)
 
-This resource manages connections in Unity Catalog
-
--> This resource can only be used with a workspace-level provider!
+This resource manages connections in Unity Catalog. Please note that OAuth U2M is not supported as it requires user interaction for authentication.
 
 ## Example Usage
 
@@ -64,12 +64,59 @@ resource "databricks_connection" "bigquery" {
 Create a connection to builtin Hive Metastore
 
 ```hcl
-resource "databricks_connection" "this" {
+resource "databricks_connection" "hms" {
   name            = "hms-builtin"
   connection_type = "HIVE_METASTORE"
   comment         = "This is a connection to builtin HMS"
   options = {
     builtin = "true"
+  }
+}
+
+Create a HTTP connection with bearer token
+
+```hcl
+resource "databricks_connection" "http_bearer" {
+  name            = "http_bearer"
+  connection_type = "HTTP"
+  comment         = "This is a connection to a HTTP service"
+  options = {
+    host         = "https://example.com"
+    port         = "8433"
+    base_path    = "/api/"
+    bearer_token = "bearer_token"
+  }
+}
+
+Create a HTTP connection with OAuth M2M
+
+```hcl
+resource "databricks_connection" "http_oauth" {
+  name            = "http_oauth"
+  connection_type = "HTTP"
+  comment         = "This is a connection to a HTTP service"
+  options = {
+    host           = "https://example.com"
+    port           = "8433"
+    base_path      = "/api/"
+    client_id      = "client_id"
+    client_secret  = "client_secret"
+    oauth_scope    = "channels:read channels:history chat:write"
+    token_endpoint = "https://authorization-server.com/oauth/token"
+  }
+}
+```
+
+Create a PowerBI connection with OAuth M2M
+
+```hcl
+resource "databricks_connection" "pbi" {
+  name            = "test-pbi"
+  connection_type = "POWER_BI"
+  options = {
+    authorization_endpoint = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+    client_id              = "client_id"
+    client_secret          = "client_secret"
   }
 }
 ```
@@ -79,11 +126,12 @@ resource "databricks_connection" "this" {
 The following arguments are supported:
 
 - `name` - Name of the Connection.
-- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE`, `HIVE_METASTORE`, `GLUE`, `TERADATA`, `ORACLE` or `DATABRICKS` are supported. Up-to-date list of connection type supported is in the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
-- `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
+- `connection_type` - Connection type. `MYSQL`, `POSTGRESQL`, `SNOWFLAKE`, `REDSHIFT` `SQLDW`, `SQLSERVER`, `DATABRICKS`, `SALESFORCE`, `BIGQUERY`, `WORKDAY_RAAS`, `HIVE_METASTORE`, `GA4_RAW_DATA`, `SERVICENOW`, `SALESFORCE_DATA_CLOUD`, `GLUE`, `ORACLE`, `TERADATA`, `HTTP` or `POWER_BI` are supported. Up-to-date list of connection type supported is in the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
+- `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
 - `owner` - (Optional) Name of the connection owner.
-- `properties` -  (Optional) Free-form connection properties.
-- `comment` - (Optional) Free-form text.
+- `properties` -  (Optional) Free-form connection properties. Change forces creation of a new resource.
+- `comment` - (Optional) Free-form text. Change forces creation of a new resource.
+- `read_only` - (Optional) Indicates whether the connection is read-only. Change forces creation of a new resource.
 
 ## Attribute Reference
 

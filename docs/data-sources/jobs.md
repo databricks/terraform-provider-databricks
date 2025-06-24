@@ -3,11 +3,11 @@ subcategory: "Compute"
 ---
 # databricks_jobs Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves a list of [databricks_job](../resources/job.md) ids, that were created by Terraform or manually, so that special handling could be applied.
 
--> **Note** Data resource will error in case of jobs with duplicate names.
+-> This data source can only be used with a workspace-level provider!
+
+~> By default, this data resource will error in case of jobs with duplicate names. To support duplicate names, set `key = "id"` to map jobs by ID.
 
 ## Example Usage
 
@@ -30,13 +30,38 @@ resource "databricks_permissions" "everyone_can_view_all_jobs" {
 Getting ID of specific [databricks_job](../resources/job.md) by name:
 
 ```hcl
-data "databricks_jobs" "this" {}
+data "databricks_jobs" "this" {
+  job_name_contains = "test"
+}
 
 output "x" {
   value     = "ID of `x` job is ${data.databricks_jobs.this.ids["x"]}"
   sensitive = false
 }
 ```
+
+Getting IDs of [databricks_job](../resources/job.md) mapped by ID, allowing duplicate job names:
+
+```hcl
+data "databricks_jobs" "this" {
+  key = "id"
+}
+
+resource "databricks_permissions" "everyone_can_view_all_jobs" {
+  for_each = data.databricks_jobs.this.ids
+  job_id   = each.value
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_VIEW"
+  }
+}
+```
+
+## Argument Reference
+
+* `job_name_contains` - (Optional) Only return [databricks_job](../resources/job.md#) ids that match the given name string (case-insensitive).
+* `key` - (Optional) Attribute to use for keys in the returned map of [databricks_job](../resources/job.md#) ids by. Possible values are `name` (default) or `id`. Setting to `id` uses the job ID as the map key, allowing duplicate job names.
 
 ## Attribute Reference
 

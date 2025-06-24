@@ -101,8 +101,11 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, apierr.NotFound(
-		fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID))
+	return nil, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID),
+	}
 }
 
 // Update ...
@@ -145,7 +148,7 @@ func suppressWhitespaceChangesInJSON(_, old, new string, d *schema.ResourceData)
 	return bytes.Equal(oldp, newp)
 }
 
-func ResourceSqlVisualization() *schema.Resource {
+func ResourceSqlVisualization() common.Resource {
 	p := common.NewPairSeparatedID("query_id", "visualization_id", "/")
 	s := common.StructToSchema(
 		VisualizationEntity{},
@@ -217,5 +220,5 @@ func ResourceSqlVisualization() *schema.Resource {
 			return NewVisualizationAPI(ctx, c).Delete(visualizationID)
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

@@ -3,7 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: PatchRequest("add", "members", "bcd"),
+				ExpectedRequest: PatchRequestWithValue("add", "members", "bcd"),
 				Response: Group{
 					ID: "abc",
 				},
@@ -51,7 +51,7 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -121,7 +121,7 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -141,7 +141,7 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -164,8 +164,7 @@ func TestResourceGroupMemberDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: PatchRequest(
 					"remove",
-					`members[value eq "bcd"]`,
-					""),
+					`members[value eq "bcd"]`),
 			},
 		},
 		Resource: ResourceGroupMember(),
@@ -182,7 +181,7 @@ func TestResourceGroupMemberDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

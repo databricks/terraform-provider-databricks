@@ -5,11 +5,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -76,29 +74,11 @@ func TestResourceRuleSetCreate(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx2="),
-				Response: iam.RuleSetResponse{
-					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx2=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-						{
-							Principals: []string{"groups/new_group"},
-							Role:       "roles/servicePrincipal.user",
-						},
-					},
-				},
-			},
 		},
 		Resource: ResourceAccessControlRuleSet(),
 		Create:   true,
-		HCL: `
-		name    = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
+		HCL: fmt.Sprintf(`
+		name    = "%s"
 		grant_rules {
 			principals = [
 				"users/abc@example.com"
@@ -111,12 +91,15 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			]
 			role = "roles/servicePrincipal.user"
 		}
-		`,
-	}.ApplyNoError(t)
+		`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+	})
 }
 
 func TestResourceRuleSetRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -141,16 +124,24 @@ func TestResourceRuleSetRead(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       testServicePrincipalRuleSetName,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, testServicePrincipalRuleSetName, d.Id(), "Id should not be empty")
-	assert.Equal(t, testServicePrincipalRuleSetName, d.Get("name"))
-	assert.Equal(t, "etagEx=", d.Get("etag"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+		"id":   testServicePrincipalRuleSetName,
+	})
 }
 
 func TestResourceRuleSetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
 			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
@@ -167,20 +158,6 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 						},
 					},
 				},
-				Response: iam.RuleSetResponse{
-					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx2=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx2="),
 				Response: iam.RuleSetResponse{
 					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
@@ -200,21 +177,97 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 			"name": testServicePrincipalRuleSetName,
 			"etag": "etagEx=",
 		},
-		HCL: `
-		name = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
+		HCL: fmt.Sprintf(`
+		name = "%s"
 
 		grant_rules {
 			principals = [
 				"users/abc@example.com"
 			]
 			role = "roles/servicePrincipal.manager"
-		}`,
-	}.ApplyNoError(t)
+		}`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+		"id":   testServicePrincipalRuleSetName,
+	})
+}
+
+func TestResourceRuleSetUpdateName(t *testing.T) {
+	newName := "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default-2"
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: ruleSetApiPath,
+				ExpectedRequest: iam.UpdateRuleSetRequest{
+					Name: newName,
+					RuleSet: iam.RuleSetUpdateRequest{
+						Name: newName,
+						Etag: "etagEx=",
+						GrantRules: []iam.GrantRule{
+							{
+								Principals: []string{"users/abc@example.com"},
+								Role:       "roles/servicePrincipal.manager",
+							},
+						},
+					},
+				},
+				Response: iam.RuleSetResponse{
+					Name: newName,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+		},
+		Resource:    ResourceAccessControlRuleSet(),
+		Update:      true,
+		RequiresNew: true,
+		ID:          testServicePrincipalRuleSetName,
+		InstanceState: map[string]string{
+			"name": testServicePrincipalRuleSetName,
+			"etag": "etagEx=",
+		},
+		HCL: fmt.Sprintf(`
+		name = "%s"
+
+		grant_rules {
+			principals = [
+				"users/abc@example.com"
+			]
+			role = "roles/servicePrincipal.manager"
+		}`, newName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": newName,
+		"etag": "",
+		"id":   newName,
+	})
 }
 
 func TestResourceRuleSetUpdateConflict(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
 			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
@@ -231,7 +284,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 						},
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_CONFLICT",
 					Message:   "Conflict with another RuleSet operation",
 				},
@@ -278,20 +331,6 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx3="),
-				Response: iam.RuleSetResponse{
-					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx3=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-					},
-				},
-			},
 		},
 		Resource: ResourceAccessControlRuleSet(),
 		Update:   true,
@@ -300,21 +339,39 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 			"name": testServicePrincipalRuleSetName,
 			"etag": "etagEx=",
 		},
-		HCL: `
-		name = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
+		HCL: fmt.Sprintf(`
+		name = "%s"
 
 		grant_rules {
 			principals = [
 				"users/abc@example.com"
 			]
 			role = "roles/servicePrincipal.manager"
-		}`,
-	}.ApplyNoError(t)
+		}`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+		"id":   testServicePrincipalRuleSetName,
+	})
 }
 
 func TestResourceRuleSetDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx="),
@@ -348,6 +405,9 @@ func TestResourceRuleSetDelete(t *testing.T) {
 		Resource: ResourceAccessControlRuleSet(),
 		Delete:   true,
 		ID:       testServicePrincipalRuleSetName,
+		State: map[string]any{
+			"name": testServicePrincipalRuleSetName,
+		},
 		InstanceState: map[string]string{
 			"name": testServicePrincipalRuleSetName,
 			"etag": "etagEx=",

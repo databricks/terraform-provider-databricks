@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type awsIamPolicy struct {
@@ -27,10 +28,18 @@ type awsIamPolicyStatement struct {
 }
 
 // DataAwsAssumeRolePolicy ...
-func DataAwsAssumeRolePolicy() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataAwsAssumeRolePolicy() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			externalID := d.Get("external_id").(string)
+			awsPartition := d.Get("aws_partition").(string)
+			databricksAwsAccountId := d.Get("databricks_account_id").(string)
+			awsNamespace := AwsConfig[awsPartition]["awsNamespace"]
+
+			if databricksAwsAccountId == "" {
+				databricksAwsAccountId = AwsConfig[awsPartition]["accountId"]
+			}
+
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
 				Statements: []*awsIamPolicyStatement{
@@ -43,21 +52,19 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 							},
 						},
 						Principal: map[string]string{
-							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
+							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, databricksAwsAccountId),
 						},
 					},
 				},
 			}
 			if v, ok := d.GetOk("for_log_delivery"); ok {
 				if v.(bool) {
-					// this is production UsageDelivery IAM role, that is considered a constant
-					logDeliveryARN := "arn:aws:iam::414351767826:role/SaasUsageDeliveryRole-prod-IAMRole-3PLHICCRR1TK"
-					policy.Statements[0].Principal["AWS"] = logDeliveryARN
+					policy.Statements[0].Principal["AWS"] = AwsConfig[awsPartition]["logDeliveryIamArn"]
 				}
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(externalID)
 			// nolint
@@ -65,10 +72,16 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
+			"aws_partition": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(AwsPartitions, false),
+				Default:      "aws",
+			},
 			"databricks_account_id": {
-				Type:     schema.TypeString,
-				Default:  "414351767826",
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "databricks_account_id will be will be removed in the next major release.",
 			},
 			"for_log_delivery": {
 				Type:        schema.TypeBool,

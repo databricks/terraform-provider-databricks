@@ -3,35 +3,24 @@ package clusters
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 // DataSourceClusterZones ...
-func DataSourceClusterZones() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			zonesInfo, err := NewClustersAPI(ctx, m).ListZones()
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			d.SetId(zonesInfo.DefaultZone)
-			d.Set("default_zone", zonesInfo.DefaultZone)
-			d.Set("zones", zonesInfo.Zones)
-			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"default_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-				ForceNew: true,
-			},
-			"zones": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
-			},
-		},
-	}
+func DataSourceClusterZones() common.Resource {
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		Id          string   `json:"id,omitempty" tf:"computed"`
+		DefaultZone string   `json:"default_zone,omitempty" tf:"computed"`
+		Zones       []string `json:"zones,omitempty" tf:"computed"`
+	}, w *databricks.WorkspaceClient) error {
+		zonesInfo, err := w.Clusters.ListZones(ctx)
+		if err != nil {
+			return err
+		}
+		data.Id = zonesInfo.DefaultZone
+		data.DefaultZone = zonesInfo.DefaultZone
+		data.Zones = zonesInfo.Zones
+		return nil
+	})
 }

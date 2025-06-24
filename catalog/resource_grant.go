@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -16,17 +15,17 @@ import (
 )
 
 // diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
-func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAssignment, existing []catalog.PrivilegeAssignment) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
-	for _, v := range desired.PrivilegeAssignments {
+	for _, v := range desired {
 		if v.Principal == principal {
 			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// existing permissions that needs removal for principal
 	remote := map[string]*schema.Set{}
-	for _, v := range existing.PrivilegeAssignments {
+	for _, v := range existing {
 		if v.Principal == principal {
 			remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 		}
@@ -67,25 +66,25 @@ func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsLi
 }
 
 // replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
-func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.PermissionsList) error {
+func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.GetPermissionsResponse) error {
 	securableType := permissions.Mappings.GetSecurableType(securable)
 	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
 		return err
 	}
-	err = a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list, *existing))
+	err = a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list.PrivilegeAssignments, existing.PrivilegeAssignments))
 	if err != nil {
 		return err
 	}
-	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
-		return diffPermissionsForPrincipal(principal, desired, *current)
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list.PrivilegeAssignments, func(current []catalog.PrivilegeAssignment, desired []catalog.PrivilegeAssignment) []catalog.PermissionsChange {
+		return diffPermissionsForPrincipal(principal, desired, current)
 	})
 }
 
 // filterPermissionsForPrincipal extracts permissions for the given principal and transforms to permissions.UnityCatalogPrivilegeAssignment to match Schema
-func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (*permissions.UnityCatalogPrivilegeAssignment, error) {
+func filterPermissionsForPrincipal(in []catalog.PrivilegeAssignment, principal string) (*permissions.UnityCatalogPrivilegeAssignment, error) {
 	grantsForPrincipal := []permissions.UnityCatalogPrivilegeAssignment{}
-	for _, v := range in.PrivilegeAssignments {
+	for _, v := range in {
 		privileges := []string{}
 		if v.Principal == principal {
 			for _, p := range v.Privileges {
@@ -98,10 +97,18 @@ func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string)
 		}
 	}
 	if len(grantsForPrincipal) == 0 {
-		return nil, apierr.NotFound("got empty permissions list")
+		return nil, &apierr.APIError{
+			ErrorCode:  "NOT_FOUND",
+			StatusCode: 404,
+			Message:    "got empty permissions list",
+		}
 	}
 	if len(grantsForPrincipal) > 1 {
-		return nil, errors.New("got more than one principal in permissions list")
+		return nil, &apierr.APIError{
+			ErrorCode:  "NOT_FOUND",
+			StatusCode: 404,
+			Message:    "got more than one principal in permissions list",
+		}
 	}
 	return &grantsForPrincipal[0], nil
 }
@@ -119,11 +126,16 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
-func ResourceGrant() *schema.Resource {
+func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
-			m["principal"].ForceNew = true
+			// set custom hash function for privileges
+			common.MustSchemaPath(m, "privileges").Set = func(i any) int {
+				privilege := i.(string)
+				return schema.HashString(permissions.NormalizePrivilege(privilege))
+			}
 
 			allFields := []string{}
 			for field := range permissions.Mappings {
@@ -144,9 +156,17 @@ func ResourceGrant() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			principal := d.Get("principal").(string)
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			var grants = catalog.GetPermissionsResponse{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
@@ -156,7 +176,7 @@ func ResourceGrant() *schema.Resource {
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err := replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
+			err = replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 			if err != nil {
 				return err
 			}
@@ -172,19 +192,31 @@ func ResourceGrant() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			grantsForPrincipal, err := filterPermissionsForPrincipal(*grants, principal)
+			grantsForPrincipal, err := filterPermissionsForPrincipal(grants.PrivilegeAssignments, principal)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*grantsForPrincipal, s, d)
+			err = common.StructToData(*grantsForPrincipal, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
 			}
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			var grants = catalog.GetPermissionsResponse{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
@@ -196,12 +228,20 @@ func ResourceGrant() *schema.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
 		},
-	}.ToResource()
+	}
 }

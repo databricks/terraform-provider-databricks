@@ -3,11 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_system_schema Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account's operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
-Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
+-> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.  Certain schemas can't also be disabled completely.
 
 ## Example Usage
 
@@ -23,18 +23,29 @@ resource "databricks_system_schema" "this" {
 
 The following arguments are available:
 
-* `schema` - (Required) Full name of the system schema.
+* `schema` - (Required) name of the system schema.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of system schema in form of `metastore_id|schema_name`.
 * `state` - The current state of enablement for the system schema.
+* `full_name` - the full name of the system schema, in form of `system.<schema>`.
 
 ## Import
 
-This resource can be imported by the metastore id and schema name
+This resource can be imported by the metastore id and schema name:
+
+```hcl
+import {
+  to = databricks_system_schema.this
+  id = "<metastore_id>|<schema_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_system_schema.this <metastore_id>|<schema_name>
+terraform import databricks_system_schema.this '<metastore_id>|<schema_name>'
 ```

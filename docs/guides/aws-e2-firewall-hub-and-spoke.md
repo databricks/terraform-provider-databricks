@@ -1,16 +1,18 @@
 ---
-page_title: "Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection"
+page_title: "Provisioning AWS Databricks workspace with a Hub & Spoke firewall for data exfiltration protection"
 ---
 
-# Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection
+# Provisioning AWS Databricks workspace with a Hub & Spoke firewall for data exfiltration protection
+
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform, and where many Databricks workspaces are deployed, we recommend a hub and spoke topology reference architecture powered by AWS Transit Gateway. The hub will consist of a central inspection and egress virtual private cloud (VPC), while the Spoke VPC houses federated Databricks workspaces for different business units or segregated teams. In this way, you create your version of a centralized deployment model for your egress architecture, as is recommended for large enterprises. For more information, please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-exfiltration-replace-1.png)
+![Data Exfiltration](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-exfiltration-replace-1.png)
 
-## Provider initialization for E2 workspaces
+## Provider initialization for AWS workspaces
 
-This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](resources/service_principal.md), `client_secret`, which is its secret, and `databricks_account_id`, which can be found in the top right corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup. If you use AWS Firewall to block most traffic but allow the URLs to which Databricks needs to connect, please update the configuration based on your region. You can get the configuration details for your region from [Firewall Appliance](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#firewall-appliance-infrastructure) document.
+This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](../resources/service_principal.md), `client_secret`, which is its secret, and `databricks_account_id`, which can be found in the top right corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup. If you use AWS Firewall to block most traffic but allow the URLs to which Databricks needs to connect, please update the configuration based on your region. You can get the configuration details for your region from [Firewall Appliance](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#firewall-appliance-infrastructure) document.
 
 ```hcl
 variable "client_id" {}
@@ -82,7 +84,7 @@ Before [managing workspace](workspace-management.md), you have to create:
 - [AWS Network Firewall](#aws-network-firewall)
 - [Root bucket](aws-workspace.md#root-bucket)
 - [Cross-account role](aws-workspace.md#cross-account-iam-role)
-- [Databricks E2 workspace](aws-workspace.md#databricks-e2-workspace)
+- [Databricks workspace](aws-workspace.md#databricks-workspace)
 - [Host and Token outputs](aws-workspace.md#provider-configuration)
 
 > Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually, this module creates VPC and IAM roles as well.
@@ -122,7 +124,7 @@ The very first step is Hub & Spoke VPC creation. Please consult [main documentat
 
 The first step is to create a Spoke VPC, which houses federated Databricks workspaces for different business units or segregated teams.
 
-![SpokeVPC](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-spoke-vpc.png)
+![SpokeVPC](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-spoke-vpc.png)
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -309,7 +311,7 @@ module "vpc_endpoints" {
 
 The hub will consist of a central inspection and egress virtual private cloud (VPC). We're going to create a central inspection/egress VPC, which, once we’ve finished, should look like this:
 
-![HubVPC](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-hub-vpc.png)
+![HubVPC](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-hub-vpc.png)
 
 ```hcl
 /* Create VPC */
@@ -470,7 +472,7 @@ Now that our spoke and inspection/egress VPCs are ready to go, all you need to d
 First, we will create a Transit Gateway and link our Databricks data plane via TGW subnets.
 All of the logic that determines what routes are going via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We will create some TGW route tables for our Hub & Spoke networks.
 
-![TransitGateway](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-tgw.png)
+![TransitGateway](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-tgw.png)
 
 ```hcl
 //Create transit gateway
@@ -555,7 +557,7 @@ resource "aws_route" "hub_nat_to_tgw" {
 
 Once [VPC](#vpc) is ready, we're going to create AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
 
-![AWS Network Firewall](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-config.png)
+![AWS Network Firewall](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-config.png)
 
 ### AWS Firewall Rule Groups
 

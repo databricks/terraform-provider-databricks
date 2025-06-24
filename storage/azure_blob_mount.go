@@ -19,9 +19,9 @@ type AzureBlobMount struct {
 }
 
 // Source ...
-func (m AzureBlobMount) Source() string {
-	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
-		m.ContainerName, m.StorageAccountName, m.Directory)
+func (m AzureBlobMount) Source(client *common.DatabricksClient) string {
+	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.%[3]s%[4]s",
+		m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
 }
 
 func (m AzureBlobMount) Name() string {
@@ -46,8 +46,8 @@ func (m AzureBlobMount) Config(client *common.DatabricksClient) map[string]strin
 }
 
 // ResourceAzureBlobMount creates the resource
-func ResourceAzureBlobMount() *schema.Resource {
-	return deprecatedMountTesource(commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
+func ResourceAzureBlobMount() common.Resource {
+	return deprecatedMountResource(commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,

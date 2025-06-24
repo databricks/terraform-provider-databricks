@@ -1,11 +1,13 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_recipient Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
-Within a metastore, Unity Catalog provides the ability to create a recipient to attach delta shares to.
+In Delta Sharing, a recipient is an entity that receives shares from a provider. In Unity Catalog, a share is a securable object that represents an organization and associates it with a credential or secure sharing identifier that allows that organization to access one or more shares.
+
+As a data provider (sharer), you can define multiple recipients for any given Unity Catalog metastore, but if you want to share data from multiple metastores with a particular user or group of users, you must define the recipient separately for each metastore. A recipient can have access to multiple shares.
 
 A `databricks_recipient` is contained within [databricks_metastore](metastore.md) and can have permissions to `SELECT` from a list of shares.
 
@@ -73,6 +75,8 @@ The following arguments are required:
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN` and `DATABRICKS`.
 * `data_recipient_global_metastore_id` - Required when `authentication_type` is `DATABRICKS`.
 * `ip_access_list` - (Optional) Recipient IP access list.
+* `properties_kvpairs` - (Optional) Recipient properties - object consisting of following fields:
+  * `properties` (Required) a map of string key-value pairs with recipient's properties.  Properties with name starting with `databricks.` are reserved.
 
 ### Ip Access List Argument
 
@@ -94,6 +98,7 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of the recipient - the same as the `name`.
 * `tokens` - List of Recipient Tokens. This field is only present when the authentication_type is TOKEN. Each list element is an object with following attributes:
   * `id` - Unique ID of the recipient token.
   * `created_at` - Time at which this recipient Token was created, in epoch milliseconds.
@@ -102,7 +107,30 @@ In addition to all arguments above, the following attributes are exported:
   * `expiration_time` - Expiration timestamp of the token in epoch milliseconds.
   * `updated_at` - Time at which this recipient Token was updated, in epoch milliseconds.
   * `updated_by` - Username of recipient Token updater.
-* `id` - ID of this recipient - same as the `name`.
+* `created_at` - Time at which this recipient was created, in epoch milliseconds.
+* `created_by` - Username of recipient creator.
+* `updated_at` - Time at which this recipient was updated, in epoch milliseconds.
+* `updated_by` - Username of recipient Token updater.
+* `metastore_id` - Unique identifier of recipient's Unity Catalog metastore. This field is only present when the authentication_type is `DATABRICKS`.
+* `cloud` - Cloud vendor of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
+* `region` - Cloud region of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
+
+## Import
+
+The recipient resource can be imported using the name of the recipient:
+
+```hcl
+import {
+  to = databricks_recipient.this
+  id = "<recipient_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_recipient.this "<recipient_name>"
+```
 
 ## Related Resources
 

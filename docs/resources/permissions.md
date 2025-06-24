@@ -4,15 +4,17 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspaces. It ensures that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
--> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
+-> This resource can only be used with a workspace-level provider!
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
+~> This resource is _authoritative_ for permissions on objects. Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset.
 
--> **Note** If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
+-> It is not possible to lower permissions for `admins`, so Databricks Terraform Provider removes those `access_control` blocks automatically.
 
--> **Warning** To manage access control on service principals, use [databricks_access_control_rule_set](access_control_rule_set.md).
+-> If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
+
+~> To manage access control on service principals, use [databricks_access_control_rule_set](access_control_rule_set.md).
 
 ## Cluster usage
 
@@ -232,6 +234,8 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 - Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
 
 ```hcl
+data "databricks_current_user" "me" {}
+
 resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
@@ -291,6 +295,8 @@ resource "databricks_permissions" "dlt_usage" {
 
 Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#notebook-permissions) for [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
 
+A notebook could be specified by using either `notebook_path` or `notebook_id` attribute.  The value for the `notebook_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_notebook` resource as shown below.
+
 ```hcl
 resource "databricks_group" "auto" {
   display_name = "Automation"
@@ -306,7 +312,7 @@ resource "databricks_notebook" "this" {
   language       = "PYTHON"
 }
 
-resource "databricks_permissions" "notebook_usage" {
+resource "databricks_permissions" "notebook_usage_by_path" {
   notebook_path = databricks_notebook.this.path
 
   access_control {
@@ -324,11 +330,34 @@ resource "databricks_permissions" "notebook_usage" {
     permission_level = "CAN_EDIT"
   }
 }
+
+resource "databricks_permissions" "notebook_usage_by_id" {
+  notebook_id = databricks_notebook.this.object_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
 ```
+
+-> when importing a permissions resource, only the `notebook_id` is filled!
 
 ## Workspace file usage
 
 Valid permission levels for [databricks_workspace_file](workspace_file.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+A workspace file could be specified by using either `workspace_file_path` or `workspace_file_id` attribute.  The value for the `workspace_file_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_workspace_file` resource as shown below.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -344,7 +373,7 @@ resource "databricks_workspace_file" "this" {
   path           = "/Production/ETL/Features.py"
 }
 
-resource "databricks_permissions" "workspace_file_usage" {
+resource "databricks_permissions" "workspace_file_usage_by_path" {
   workspace_file_path = databricks_workspace_file.this.path
 
   access_control {
@@ -362,33 +391,9 @@ resource "databricks_permissions" "workspace_file_usage" {
     permission_level = "CAN_EDIT"
   }
 }
-```
 
-## Folder usage
-
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
-
-- All users can list items in the folder without any permissions.
-- All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
-- All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
-- User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
-
-```hcl
-resource "databricks_group" "auto" {
-  display_name = "Automation"
-}
-
-resource "databricks_group" "eng" {
-  display_name = "Engineering"
-}
-
-resource "databricks_directory" "this" {
-  path = "/Production/ETL"
-}
-
-resource "databricks_permissions" "folder_usage" {
-  directory_path = databricks_directory.this.path
-  depends_on     = [databricks_directory.this]
+resource "databricks_permissions" "workspace_file_usage_by_id" {
+  workspace_file_id = databricks_workspace_file.this.object_id
 
   access_control {
     group_name       = "users"
@@ -406,6 +411,73 @@ resource "databricks_permissions" "folder_usage" {
   }
 }
 ```
+
+-> when importing a permissions resource, only the `workspace_file_id` is filled!
+
+## Folder usage
+
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
+
+- All users can list items in the folder without any permissions.
+- All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
+- All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
+- User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
+
+A folder could be specified by using either `directory_path` or `directory_id` attribute.  The value for the `directory_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_directory` resource as shown below.
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_directory" "this" {
+  path = "/Production/ETL"
+}
+
+resource "databricks_permissions" "folder_usage_by_path" {
+  directory_path = databricks_directory.this.path
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+
+resource "databricks_permissions" "folder_usage_by_id" {
+  directory_id = databricks_directory.this.object_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+-> when importing a permissions resource, only the `directory_id` is filled!
 
 ## Repos usage
 
@@ -568,9 +640,40 @@ resource "databricks_permissions" "ml_serving_usage" {
 }
 ```
 
+## Mosaic AI Vector Search usage
+
+Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
+
+-> You need to use the `endpoint_id` attribute of `databricks_vector_search_endpoint` as value for `vector_search_endpoint_id`, not the `id`!
+
+```hcl
+resource "databricks_vector_search_endpoint" "this" {
+  name          = "vector-search-test"
+  endpoint_type = "STANDARD"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "vector_search_endpoint_usage" {
+  vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Passwords usage
 
-By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
+By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users' and API users' ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
 
 ```hcl
 resource "databricks_group" "guests" {
@@ -621,7 +724,11 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have three possible permissions: `IS_OWNER`, `CAN_USE` and `CAN_MANAGE`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have five possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE`, `CAN_VIEW` and `IS_OWNER`:
+
+- The creator of a warehouse has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a warehouse would revert ownership to the creator.
+- A warehouse must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the warehouse. Nothing would change, per se, if the warehouse was created through Terraform.
+- A warehouse cannot have a group as an owner.
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -662,9 +769,9 @@ resource "databricks_permissions" "endpoint_usage" {
 }
 ```
 
-## SQL Dashboard usage
+## Dashboard usage
 
-[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+[Dashboards](https://docs.databricks.com/en/dashboards/tutorials/manage-permissions.html) have four possible permissions: `CAN_READ`, `CAN_RUN`, `CAN_EDIT` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -675,7 +782,41 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_dashboard" "dashboard" {
+  display_name = "TF New Dashboard"
+  # ...
+}
+
+
+resource "databricks_permissions" "dashboard_usage" {
+  dashboard_id = databricks_dashboard.dashboard.id
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
+## Legacy SQL Dashboard usage
+
+[Legacy SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "sql_dashboard_usage" {
   sql_dashboard_id = "3244325"
 
   access_control {
@@ -694,7 +835,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 [SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
--> **Note** If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
+-> If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -705,7 +846,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "query_usage" {
   sql_query_id = "3244325"
 
   access_control {
@@ -733,12 +874,36 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "alert_usage" {
   sql_alert_id = "3244325"
 
   access_control {
     group_name       = databricks_group.auto.display_name
     permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
+## Databricks Apps usage
+
+[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "app_usage" {
+  app_name = "myapp"
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
   }
 
   access_control {
@@ -762,7 +927,7 @@ General Permissions API does not apply to access control for tables and they hav
 
 ## Data Access with Unity Catalog
 
-Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
+Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) or [databricks_grant](grant.md) resource.
 
 ## Argument Reference
 
@@ -772,6 +937,7 @@ One type argument and at least one access control block argument are required.
 
 Exactly one of the following arguments is required:
 
+- `app_name` - [app](app.md) name
 - `cluster_id` - [cluster](cluster.md) id
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id
@@ -786,6 +952,7 @@ Exactly one of the following arguments is required:
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `serving_endpoint_id` - [Model Serving](model_serving.md) endpoint id.
+- `vector_search_endpoint_id` - [Vector Search](vector_search_endpoint.md) endpoint id.
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
@@ -805,7 +972,7 @@ access_control {
 
 Arguments for the `access_control` block are:
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
+-> It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/permissions/resource_permissions.go#L324-L332) those `access_control` blocks automatically.
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 
@@ -819,15 +986,24 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - Canonical unique identifier for the permissions.
+- `id` - Canonical unique identifier for the permissions in form of `/<object type>/<object id>`.
 - `object_type` - type of permissions.
 
 ## Import
 
-The resource permissions can be imported using the object id
+The resource permissions can be imported using the object id:
+
+```hcl
+import {
+  to = databricks_permissions.this
+  id = "/<object_type>/<object_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_permissions.this /<object type>/<object id>
+terraform import databricks_permissions.this /<object_type>/<object_id>
 ```
 
 ### Import Example
@@ -851,7 +1027,6 @@ resource "databricks_permissions" "model_usage" {
 ```
 
 Import command:
-
 ```bash
 terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
 ```

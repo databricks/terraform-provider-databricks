@@ -3,7 +3,8 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -17,7 +18,7 @@ func TestLibraryCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,
@@ -26,23 +27,23 @@ func TestLibraryCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.InstallLibraries{
+					Libraries: []compute.Library{
 						{
 							Whl: "foo.whl",
 						},
 					},
-					ClusterID: "abc",
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "foo.whl",
 							},
 							Status: "INSTALLED",
@@ -65,7 +66,7 @@ func TestLibraryDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,
@@ -75,10 +76,10 @@ func TestLibraryDelete(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "foo.whl",
 							},
 							Status: "INSTALLED",
@@ -89,17 +90,38 @@ func TestLibraryDelete(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/uninstall",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.UninstallLibraries{
+					Libraries: []compute.Library{
 						{
 							Whl: "foo.whl",
 						},
 					},
-					ClusterID: "abc",
+					ClusterId: "abc",
 				},
 			},
 		},
 		Delete: true,
 		ID:     "abc/whl:foo.whl",
+	}.ApplyNoError(t)
+}
+
+func TestLibraryDeleteClusterNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceLibrary(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Cluster does not exist",
+				},
+				Status: 404,
+			},
+		},
+		Delete:  true,
+		Removed: true,
+		ID:      "abc/whl:foo.whl",
 	}.ApplyNoError(t)
 }

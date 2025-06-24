@@ -3,9 +3,9 @@ subcategory: "Storage"
 ---
 # databricks_dbfs_file_paths Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 This data source allows to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -15,6 +15,7 @@ data "databricks_dbfs_file_paths" "partitions" {
   recursive = false
 }
 ```
+
 ## Argument Reference
 
 * `path` - (Required) Path on DBFS for the file to perform listing
@@ -26,12 +27,11 @@ This data source exports the following attributes:
 
 * `path_list` - returns list of objects with `path` and `file_size` attributes in each
 
-
 ## Related Resources
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide.
+* [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_dbfs_file](dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_dbfs_file_paths](dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_dbfs_file](../resources/dbfs_file.md) to manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).

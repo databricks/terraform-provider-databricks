@@ -29,7 +29,8 @@ type InstancePoolAzureAttributes struct {
 // https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#instancepoolgcpattributes
 type InstancePoolGcpAttributes struct {
 	Availability  clusters.Availability `json:"gcp_availability,omitempty" tf:"force_new"`
-	LocalSsdCount int32                 `json:"local_ssd_count,omitempty"`
+	LocalSsdCount int32                 `json:"local_ssd_count,omitempty" tf:"computed,force_new"`
+	ZoneID        string                `json:"zone_id,omitempty" tf:"computed,force_new"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
@@ -169,7 +170,7 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 }
 
 // ResourceInstancePool ...
-func ResourceInstancePool() *schema.Resource {
+func ResourceInstancePool() common.Resource {
 	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
@@ -195,6 +196,11 @@ func ResourceInstancePool() *schema.Resource {
 				clusters.AzureAvailabilitySpot,
 				clusters.AzureAvailabilityOnDemand,
 			}, false)
+		}
+		if v, err := common.SchemaPath(s, "azure_attributes", "spot_bid_max_price"); err == nil {
+			v.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return oldValue != "0" && newValue == "0"
+			}
 		}
 		if v, err := common.SchemaPath(s, "gcp_attributes", "gcp_availability"); err == nil {
 			v.Default = clusters.GcpAvailabilityOnDemand
@@ -270,5 +276,5 @@ func ResourceInstancePool() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewInstancePoolsAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

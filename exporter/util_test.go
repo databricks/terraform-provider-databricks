@@ -3,23 +3,27 @@ package exporter
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/terraform-provider-databricks/clusters"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
-	ic.importCluster(&clusters.Cluster{
-		InitScripts: []clusters.InitScriptStorageInfo{
+	ic.enableServices("storage")
+	ic.importCluster(&compute.ClusterSpec{
+		InitScripts: []compute.InitScriptInfo{
 			{
-				Dbfs: &clusters.DbfsStorageInfo{
+				Dbfs: &compute.DbfsStorageInfo{
 					Destination: "/mnt/abc/test.sh",
 				},
 			},
@@ -27,6 +31,18 @@ func TestImportClusterEmitsInitScripts(t *testing.T) {
 	})
 	assert.Equal(t, 1, len(ic.testEmits))
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /mnt/abc/test.sh)"])
+}
+
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "foo", eitherString("foo", "bar"))
+	assert.Equal(t, "bar", eitherString(nil, "bar"))
+	assert.Equal(t, "foo", eitherString("foo", ""))
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
+	assert.Equal(t, "a", eitherString(1, "a"))
+	assert.Equal(t, "", eitherString(1, nil))
+	assert.Equal(t, "", eitherString(1, 1))
 }
 
 func TestAddAwsMounts(t *testing.T) {
@@ -42,7 +58,7 @@ func TestAddAwsMounts(t *testing.T) {
 var (
 	userListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 		Response: iam.ListUsersResponse{
 			Resources: []iam.User{
 				{
@@ -57,7 +73,7 @@ var (
 	}
 	userListIdUsernameFixture2 = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=2",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
 		Response: iam.ListUsersResponse{
 			Resources:    []iam.User{},
 			TotalResults: 1,
@@ -83,7 +99,7 @@ var (
 	}
 	spListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=1",
 		Response: iam.ListServicePrincipalResponse{
 			Resources: []iam.ServicePrincipal{
 				{
@@ -97,7 +113,7 @@ var (
 	}
 	spListIdUsernameFixture2 = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=2",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=2",
 		Response: iam.ListServicePrincipalResponse{
 			Resources:    []iam.ServicePrincipal{},
 			TotalResults: 1,
@@ -134,6 +150,7 @@ func TestEmitUser(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("users")
 		assert.True(t, len(ic.testEmits) == 0)
 		ic.emitUserOrServicePrincipal("user@domain.com")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -149,6 +166,7 @@ func TestEmitServicePrincipal(t *testing.T) {
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("users")
 		ic.emitUserOrServicePrincipal("21aab5a7-ee70-4385-34d4-a77278be5cb6")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_service_principal[<unknown>] (id: id)"])
@@ -159,7 +177,24 @@ func TestEmitUserError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
+			Response: iam.ListUsersResponse{
+				Resources: []iam.User{},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("users")
+		ic.emitUserOrServicePrincipal("abc")
+		assert.True(t, len(ic.testEmits) == 0)
+	})
+}
+
+func TestEmitUserServiceNotEnabled(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{},
 			},
@@ -179,6 +214,7 @@ func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("users")
 		ic.emitUserOrServicePrincipalForPath("/Users/user@domain.com/abc", "/Users")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_user[<unknown>] (id: id)"])
@@ -202,8 +238,14 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Fabc&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("notebooks")
 		ic.emitNotebookOrRepo("/Users/user@domain.com/abc")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_notebook[<unknown>] (id: /Users/user@domain.com/abc)"])
@@ -216,6 +258,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("repos")
 		ic.emitNotebookOrRepo("/Repos/user@domain.com/repo/abc")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_repo[<unknown>] (path: /Repos/user@domain.com/repo)"])
@@ -230,20 +273,20 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users")
+		result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users", true)
 		assert.False(t, result_false_partslength_more_than_3)
 	})
 
 	ic := importContextForTest()
-	result_false_partslength_less_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users", "/Users")
+	result_false_partslength_less_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users", "/Users", true)
 	assert.False(t, result_false_partslength_less_than_3)
 
 	ic = importContextForTest()
-	result_false_part2_empty := ic.IsUserOrServicePrincipalDirectory("/Users/", "/Users")
+	result_false_part2_empty := ic.IsUserOrServicePrincipalDirectory("/Users/", "/Users", true)
 	assert.False(t, result_false_part2_empty)
 
 	ic = importContextForTest()
-	result_false_notprefix_with_user := ic.IsUserOrServicePrincipalDirectory("/Shared", "/Users")
+	result_false_notprefix_with_user := ic.IsUserOrServicePrincipalDirectory("/Shared", "/Users", true)
 	assert.False(t, result_false_notprefix_with_user)
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
@@ -253,7 +296,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users")
+		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users", true)
 		assert.True(t, result_true_user_directory)
 	})
 
@@ -264,7 +307,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users")
+		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users", true)
 		assert.True(t, result_true_user_directory)
 	})
 
@@ -275,7 +318,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/21aab5a7-ee70-4385-34d4-a77278be5cb6", "/Users")
+		result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/21aab5a7-ee70-4385-34d4-a77278be5cb6", "/Users", true)
 		assert.True(t, result_true_sp_directory)
 	})
 }
@@ -291,15 +334,183 @@ func TestGetEnvAsInt(t *testing.T) {
 }
 
 func TestExcludeAuxiliaryDirectories(t *testing.T) {
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{ObjectType: workspace.File}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{ObjectType: workspace.File}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
 		ObjectType: workspace.Directory}))
 	// should be ignored
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Shared/.bundle",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Shared/.bundle",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
 		ObjectType: workspace.Directory}))
+}
+
+func TestParallelListing(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   1,
+						ObjectType: workspace.Directory,
+						Path:       "/a",
+					},
+					{
+						ObjectID:   2,
+						ObjectType: workspace.Directory,
+						Path:       "/b",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Fa",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   3,
+						ObjectType: workspace.Notebook,
+						Language:   workspace.Python,
+						Path:       "/a/e",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Fb",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   4,
+						ObjectType: workspace.Notebook,
+						Language:   workspace.SQL,
+						Path:       "/b/c",
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	os.Setenv("EXPORTER_WS_LIST_PARALLLELISM", "2")
+	os.Setenv("EXPORTER_CHANNEL_SIZE", "100")
+	ctx := context.Background()
+	api := workspace.NewNotebooksAPI(ctx, client)
+	objects, err := ListParallel(api, "/", nil, func(os []workspace.ObjectStatus) {})
+
+	require.NoError(t, err)
+	require.Equal(t, 4, len(objects))
+
+}
+
+func TestIgnoreObjectWithEmptyName(t *testing.T) {
+	ic := importContextForTest()
+	// Test importing
+	d := tfcatalog.ResourceVolume().ToResource().TestResourceData()
+	d.SetId("vtest")
+	r := &resource{
+		ID:   "vtest",
+		Data: d,
+	}
+	//
+	ignoreFunc := resourcesMap["databricks_volume"].Ignore
+	require.NotNil(t, ignoreFunc)
+	assert.True(t, ignoreFunc(ic, r))
+	require.Equal(t, 1, len(ic.ignoredResources))
+	assert.Contains(t, ic.ignoredResources, "databricks_volume. id=vtest")
+
+	d.Set("name", "test")
+	assert.False(t, ignoreFunc(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,directories")
+	dirPath := "/Shared"
+	r := &resource{
+		ID:       "/Shared/abc",
+		Resource: "databricks_notebook",
+	}
+	ic.emitWorkspaceObjectParentDirectory(r)
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_directory[<unknown>] (id: /Shared)"])
+
+	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
+	assert.True(t, exists)
+	assert.Equal(t, dirPath, dir)
+}
+
+func TestDirectoryIncrementalMode(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	// test emit during workspace listing
+	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
+}
+
+func TestParsingServices(t *testing.T) {
+	ic := importContextForTest()
+	allServices, allListing := ic.allServicesAndListing()
+	// test for all listings
+	listing := ic.parseServicesList("all", true)
+	assert.ElementsMatch(t, strings.Split(allListing, ","), listing)
+	// Test for all services
+	services := ic.parseServicesList("all", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	//
+	services = ic.parseServicesList("all,-uc,+uc", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	// Test for all except UC
+	exceptUcServices := ic.parseServicesList("all,-uc", false)
+	expectedExceptUcServices := []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if !strings.HasPrefix(s, "uc-") && s != "vector-search" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+	// Test for all UC except some services
+	exceptUcServices = ic.parseServicesList("uc,-uc-tables", false)
+	expectedExceptUcServices = []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if (strings.HasPrefix(s, "uc-") || s == "vector-search") && s != "uc-tables" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+
+	// specific things
+	specificServices := ic.parseServicesList("+uc-tables", false)
+	expectedServices := []string{"uc-tables"}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+	//
+	specificServices = ic.parseServicesList("+uc-tables,-uc-tables", false)
+	expectedServices = []string{}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+
+}
+
+func TestAnalyzeNotebook(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,wsfiles,volumes,storage")
+	content := `
+		%pip install -U pandas /dbfs/tmp/mypkg.whl numpy==1.23.5
+		# %pip install -U pandas /dbfs/tmp/mypkg2.whl numpy==1.23.5
+		%pip install -U pandas /Volumes/default/main/tmp/mypkg3.whl numpy==1.23.5
+		%pip install -U pandas /Workspace/Shared/tmp/mypkg4.whl numpy==1.23.5
+
+	`
+	analyzeNotebook(ic, content)
+	assert.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /tmp/mypkg.whl)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/default/main/tmp/mypkg3.whl)"])
+	assert.True(t, ic.testEmits["databricks_workspace_file[<unknown>] (id: /Shared/tmp/mypkg4.whl)"])
 }

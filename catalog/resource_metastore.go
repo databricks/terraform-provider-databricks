@@ -38,7 +38,7 @@ func updateForceSendFields(req *catalog.UpdateMetastore) {
 	}
 }
 
-func ResourceMetastore() *schema.Resource {
+func ResourceMetastore() common.Resource {
 	s := common.StructToSchema(MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
@@ -55,6 +55,7 @@ func ResourceMetastore() *schema.Resource {
 				}
 				return false
 			}
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 
@@ -66,15 +67,15 @@ func ResourceMetastore() *schema.Resource {
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
 			updateForceSendFields(&update)
+			emptyRequest, err := common.IsRequestEmpty(update)
+			if err != nil {
+				return err
+			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
 						MetastoreInfo: &create,
 					})
-				if err != nil {
-					return err
-				}
-				emptyRequest, err := common.IsRequestEmpty(update)
 				if err != nil {
 					return err
 				}
@@ -96,6 +97,9 @@ func ResourceMetastore() *schema.Resource {
 					return err
 				}
 				d.SetId(mi.MetastoreId)
+				if emptyRequest {
+					return nil
+				}
 				update.Id = mi.MetastoreId
 				_, err = w.Metastores.Update(ctx, update)
 				if err != nil {
@@ -138,6 +142,11 @@ func ResourceMetastore() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
@@ -171,6 +180,11 @@ func ResourceMetastore() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {
@@ -198,5 +212,5 @@ func ResourceMetastore() *schema.Resource {
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			})
 		},
-	}.ToResource()
+	}
 }

@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceCatalogs() *schema.Resource {
+func DataSourceCatalogs() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}, w *databricks.WorkspaceClient) error {
-		catalogs, err := w.Catalogs.ListAll(ctx)
+		catalogs, err := w.Catalogs.ListAll(ctx, catalog.ListCatalogsRequest{})
 		if err != nil {
 			return err
 		}

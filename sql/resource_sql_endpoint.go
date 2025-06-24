@@ -14,8 +14,9 @@ import (
 
 // ClusterSizes for SQL endpoints
 var (
-	ClusterSizes   = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
-	MaxNumClusters = 30
+	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
+	MaxNumClusters  = 30
+	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 
 type SqlWarehouse struct {
@@ -51,12 +52,12 @@ func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, war
 	return "", fmt.Errorf("no data source found for endpoint %s", warehouseId)
 }
 
-func ResourceSqlEndpoint() *schema.Resource {
+func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
 		common.SetDefault(m["auto_stop_mins"], 120)
-		common.SetSuppressDiff(m["channel"])
+		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
 		common.SetRequired(m["cluster_size"])
 		common.SetReadOnly(m["creator_name"])
@@ -69,19 +70,19 @@ func ResourceSqlEndpoint() *schema.Resource {
 		common.SetDefault(m["max_num_clusters"], 1)
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		common.SetSuppressDiff(m["min_num_clusters"])
+		common.CustomizeSchemaPath(m, "min_num_clusters").SetSuppressDiff()
 		common.SetRequired(m["name"])
 		common.SetReadOnly(m["num_active_sessions"])
 		common.SetReadOnly(m["num_clusters"])
 		common.SetReadOnly(m["odbc_params"])
 		common.SetDefault(m["spot_instance_policy"], "COST_OPTIMIZED")
 		common.SetReadOnly(m["state"])
-		common.SetSuppressDiff(m["tags"])
+		common.CustomizeSchemaPath(m, "tags").SetSuppressDiff()
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "key"))
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "value"))
-		common.SetSuppressDiff(m["warehouse_type"])
-		m["warehouse_type"].ValidateDiagFunc = validation.ToDiagFunc(
-			validation.StringInSlice([]string{"PRO", "CLASSIC"}, false))
+		common.CustomizeSchemaPath(m, "warehouse_type").
+			SetSuppressDiff().
+			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
 		return m
 	})
 	return common.Resource{
@@ -95,13 +96,18 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			var se sql.CreateWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
-			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
+			common.SetForceSendFields(&se, d, ForceSendFields)
 			wait, err := w.Warehouses.Create(ctx, se)
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)
 			}
 			resp, err := wait.Get()
 			if err != nil {
+				// Rollback by deleting the warehouse
+				rollbackErr := w.Warehouses.DeleteById(ctx, wait.Id)
+				if rollbackErr != nil {
+					return fmt.Errorf("failed waiting for warehouse to start: %w. when rolling back, also failed: %w", err, rollbackErr)
+				}
 				return fmt.Errorf("failed waiting for warehouse to start: %w", err)
 			}
 			d.SetId(resp.Id)
@@ -129,7 +135,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			var se sql.EditWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
-			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
+			common.SetForceSendFields(&se, d, ForceSendFields)
 			se.Id = d.Id()
 			_, err = w.Warehouses.Edit(ctx, se)
 			if err != nil {
@@ -145,5 +151,8 @@ func ResourceSqlEndpoint() *schema.Resource {
 			return w.Warehouses.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
-	}.ToResource()
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return d.Clear("health")
+		},
+	}
 }

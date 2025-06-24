@@ -5,7 +5,7 @@ page_title: "Unity Catalog set up on Google Cloud"
 # Deploying pre-requisite resources and enabling Unity Catalog
 
 **Note**
-If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
 
 **Note**
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
@@ -20,7 +20,7 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
@@ -31,7 +31,7 @@ To get started with Unity Catalog, this guide takes you throw the following high
 
 ## Provider initialization
 
-Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-hostname,-username,-and-password), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
+Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authentication), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
 
 Define the required variables, and calculate the local values
 
@@ -117,7 +117,6 @@ resource "databricks_metastore_assignment" "this" {
   provider             = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
 ```
 
@@ -141,6 +140,40 @@ resource "databricks_storage_credential" "ext" {
   name = "the-creds"
   databricks_gcp_service_account {}
   depends_on = [databricks_metastore_assignment.this]
+}
+
+resource "google_project_iam_custom_role" "uc_file_events" {
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  permissions = [
+    "pubsub.subscriptions.consume",
+    "pubsub.subscriptions.create",
+    "pubsub.subscriptions.delete",
+    "pubsub.subscriptions.get",
+    "pubsub.subscriptions.list",
+    "pubsub.subscriptions.update",
+    "pubsub.topics.attachSubscription",
+    "pubsub.topics.create",
+    "pubsub.topics.delete",
+    "pubsub.topics.get",
+    "pubsub.topics.list",
+    "pubsub.topics.update",
+    "storage.buckets.update"
+  ]
+}
+
+data "google_storage_project_service_account" "gcs_account" {}
+
+resource "google_project_iam_member" "uc_project_file_events_admin" {
+  project = var.project
+  role    = google_project_iam_custom_role.uc_file_events.id
+  member  = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_project_iam_member" "cloud_storage_sa_pubsub_publisher" {
+  project = var.project
+  role  = "roles/pubsub.publisher"
+  member = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
@@ -236,9 +269,9 @@ resource "databricks_grants" "things" {
 
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has the access mode set to either **Shared** or **Single User**.
 
-- **User Isolation** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
+- **Shared** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
 ```hcl
 data "databricks_spark_version" "latest" {
@@ -264,7 +297,7 @@ resource "databricks_cluster" "unity_shared" {
 ```
 
 - To use those advanced cluster features or languages like Machine Learning Runtime and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
+  The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 

@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/serving"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestModelServingCornerCases(t *testing.T) {
@@ -21,7 +22,7 @@ func TestModelServingCreate(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -148,7 +149,7 @@ func TestModelServingCreateGPU(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -277,7 +278,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -286,6 +287,97 @@ func TestModelServingCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceModelServing(),
 		Create:   true,
+	}.ExpectError(t, "Internal error happened")
+}
+
+func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/serving-endpoints",
+				ExpectedRequest: serving.CreateServingEndpoint{
+					Name: "test-endpoint",
+					Config: &serving.EndpointCoreConfigInput{
+						ServedModels: []serving.ServedModelInput{
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								ModelName:          "ads1",
+								ModelVersion:       "4",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: false,
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "prod_model",
+									TrafficPercentage: 90,
+								},
+								{
+									ServedModelName:   "candidate_model",
+									TrafficPercentage: 10,
+								},
+							},
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+			},
+		},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_models {
+					name = "prod_model"
+					model_name = "ads1"
+					model_version = "2"
+					workload_size = "Small"
+					scale_to_zero_enabled = true
+				}
+				served_models {
+					name = "candidate_model"
+					model_name = "ads1"
+					model_version = "4"
+					workload_size = "Small"
+					scale_to_zero_enabled = false
+				}
+				traffic_config {
+					routes {
+						served_model_name = "prod_model"
+						traffic_percentage = 90
+					}
+					routes {
+						served_model_name = "candidate_model"
+						traffic_percentage = 10
+					}
+				}
+			}
+			`,
+		Create: true,
 	}.ExpectError(t, "Internal error happened")
 }
 
@@ -316,6 +408,20 @@ func TestModelServingRead(t *testing.T) {
 								ScaleToZeroEnabled: false,
 							},
 						},
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name:               "prod_model",
+								EntityName:         "ads1",
+								EntityVersion:      "2",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								EntityName:         "ads1",
+								EntityVersion:      "4",
+								ScaleToZeroEnabled: false,
+							},
+						},
 						TrafficConfig: &serving.TrafficConfig{
 							Routes: []serving.Route{
 								{
@@ -338,13 +444,44 @@ func TestModelServingRead(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestModelServingReadEmptyConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: map[string]any{
+					"creation_timestamp":           1743085336000,
+					"creator":                      "b76b6808-9e10-43b3-be20-6b6d19ed1af0",
+					"creator_display_name":         "DECO-TF-AWS-PROD-IS-SPN",
+					"creator_kind":                 "ServicePrincipal",
+					"id":                           "84f4b90597b94fb1846a96cb505772f1",
+					"last_updated_timestamp":       1743085336000,
+					"name":                         "test-endpoint-462f54a7-fefd-4d48-bdc2-2659a5439d94",
+					"permission_level":             "CAN_MANAGE",
+					"resource_credential_strategy": "EMBEDDED_CREDENTIALS",
+					"route_optimized":              false,
+					"state": map[string]any{
+						"config_update": "NOT_UPDATING",
+						"ready":         "NOT_READY",
+						"suspend":       "NOT_SUSPENDED",
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServing(),
+		Read:     true,
+		ID:       "test-endpoint",
+	}.ApplyNoError(t)
+}
+
 func TestModelServingRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -454,13 +591,31 @@ func TestModelServingUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceModelServing(),
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name":                          "test-endpoint",
+			"config.#":                      "1",
+			"config.0.served_models.#":      "1",
+			"config.0.served_models.0.name": "prod_model",
+			"serving_endpoint_id":           "id",
+		},
+		HCL: `
+			name = "test-endpoint"
+			`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+	}.ApplyNoError(t)
+}
+
 func TestModelServingUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -515,7 +670,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

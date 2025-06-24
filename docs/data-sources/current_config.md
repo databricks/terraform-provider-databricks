@@ -5,6 +5,8 @@ subcategory: "Deployment"
 
 Retrieves information about the currently configured provider to make a decision, for example, add a dynamic block based on the specific cloud.
 
+-> This data source can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Create cloud-specific [databricks_storage_credential](../resources/storage_credential.md):
@@ -51,7 +53,7 @@ Data source exposes the following attributes:
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [End to end workspace management](../guides/workspace-management.md) guide
 * [databricks_directory](../resources/directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_notebook](../resources/notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_repo](../resources/repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

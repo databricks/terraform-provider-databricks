@@ -65,7 +65,7 @@ func (a LogDeliveryAPI) Patch(accountID, configID string, status string) error {
 	})
 }
 
-func ResourceMwsLogDelivery() *schema.Resource {
+func ResourceMwsLogDelivery() common.Resource {
 	p := common.NewPairID("account_id", "config_id")
 	s := common.StructToSchema(LogDeliveryConfiguration{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -119,5 +119,5 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			}
 			return NewLogDeliveryAPI(ctx, c).Patch(accountID, configID, "DISABLED")
 		},
-	}.ToResource()
+	}
 }

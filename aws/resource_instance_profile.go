@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
@@ -60,8 +60,12 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (result InstancePro
 			return
 		}
 	}
-	err = apierr.NotFound(fmt.Sprintf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", instanceProfileARN))
+	err = &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message: fmt.Sprintf("Instance profile with name: %s not found in "+
+			"list of instance profiles in the workspace!", instanceProfileARN),
+	}
 	return
 }
 
@@ -142,7 +146,7 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 }
 
 // ResourceInstanceProfile manages Instance Profile ARN binding
-func ResourceInstanceProfile() *schema.Resource {
+func ResourceInstanceProfile() common.Resource {
 	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["instance_profile_arn"].ValidateDiagFunc = ValidArn
@@ -181,7 +185,7 @@ func ResourceInstanceProfile() *schema.Resource {
 			common.DataToStructPointer(d, instanceProfileSchema, &profile)
 			return NewInstanceProfilesAPI(ctx, c).Update(profile)
 		},
-	}.ToResource()
+	}
 }
 
 // ValidArn validate if it's valid instance profile or role ARN

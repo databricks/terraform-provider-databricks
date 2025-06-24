@@ -152,22 +152,18 @@ func GetGitProviderFromUrl(uri string) string {
 
 func validatePath(i interface{}, k string) (_ []string, errors []error) {
 	v := i.(string)
-	if v != "" {
-		if !strings.HasPrefix(v, "/Repos/") {
-			errors = append(errors, fmt.Errorf("should start with /Repos/, got '%s'", v))
-			return
-		}
-		v = strings.TrimSuffix(v, "/")
-		parts := strings.Split(v, "/")
-		if len(parts) != 4 { // we require 3 path parts + starting /
-			errors = append(errors, fmt.Errorf("should have 3 components (/Repos/<directory>/<repo>), got %d", len(parts)-1))
-			return
-		}
+	if v == "" || !strings.HasPrefix(v, "/Repos/") {
+		return
+	}
+	v = strings.TrimSuffix(v, "/")
+	parts := strings.Split(v, "/")
+	if len(parts) != 4 { // we require 3 path parts + starting /
+		errors = append(errors, fmt.Errorf("should have 3 components (/Repos/<directory>/<repo>), got %d", len(parts)-1))
 	}
 	return
 }
 
-func ResourceRepo() *schema.Resource {
+func ResourceRepo() common.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
 		s["git_provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -259,5 +255,5 @@ func ResourceRepo() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

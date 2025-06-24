@@ -1,9 +1,11 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_shares Data Source
 
 Retrieves a list of [databricks_share](../resources/share.md) name, that were created by Terraform or manually.
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 

@@ -104,14 +104,8 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					},
 					"location":   "bcd",
 					"network_id": "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "d",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -132,6 +126,8 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
+					Location:        "bcd",
+					Cloud:           "gcp",
 				},
 			},
 		},
@@ -149,17 +145,14 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "d"
-			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
 		Create: true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloud":            "gcp",
+		"gcp_workspace_sa": "db-1234@prod-gcp-bcd.iam.gserviceaccount.com",
+	})
 }
 
 func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
@@ -180,21 +173,15 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 					"custom_tags": map[string]any{
 						"SoldToCode": "1234",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_PARAMETER_VALUE",
 					Message:   "custom_tags are only allowed for AWS workspaces",
 				},
@@ -227,12 +214,6 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		custom_tags = {
 			SoldToCode = "1234"
@@ -261,14 +242,8 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -307,12 +282,6 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -337,14 +306,8 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 					"managed_services_customer_managed_key_id": "managed_services_cmk",
@@ -385,12 +348,6 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		managed_services_customer_managed_key_id = "managed_services_cmk"
 		storage_customer_managed_key_id = "storage_cmk"
@@ -527,7 +484,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -536,7 +493,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -666,7 +623,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -686,7 +643,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -868,7 +825,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -913,7 +870,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cannot find anything",
 				},
@@ -934,7 +891,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1429,7 +1386,7 @@ func TestEnsureTokenExists(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1459,7 +1416,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1480,7 +1437,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := ResourceMwsWorkspaces()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("workspace_url", client.Config.Host)
 	d.Set("token", []any{
 		map[string]any{
@@ -1498,7 +1455,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
-	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, "x", d), noAuth, "remove")
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1516,7 +1473,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1528,7 +1485,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		for msg, err := range map[string]error{
 			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
 			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}
@@ -1723,13 +1680,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
 					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-						SubnetCIDR:               "a",
-						GKEClusterPodIPRange:     "b",
-						GKEClusterServiceIPRange: "c",
-					},
-					GkeConfig: &GkeConfig{
-						ConnectivityType: "d",
-						MasterIPRange:    "e",
+						SubnetCIDR: "a",
 					},
 				},
 			},

@@ -27,15 +27,15 @@ type PermissionsList struct {
 }
 
 // diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
-func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+func diffPermissions(pl []catalog.PrivilegeAssignment, existing []catalog.PrivilegeAssignment) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}
-	for _, v := range pl.PrivilegeAssignments {
+	for _, v := range pl {
 		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
-	for _, v := range existing.PrivilegeAssignments {
+	for _, v := range existing {
 		remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
@@ -74,187 +74,22 @@ func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsLis
 }
 
 // replaceAllPermissions merges removal diff of existing permissions on the platform
-func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.PermissionsList) error {
+func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.GetPermissionsResponse) error {
 	securableType := permissions.Mappings.GetSecurableType(securable)
 	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
 		return err
 	}
-	err = a.UpdatePermissions(securableType, name, diffPermissions(list, *existing))
+	err = a.UpdatePermissions(securableType, name, diffPermissions(list.PrivilegeAssignments, existing.PrivilegeAssignments))
 	if err != nil {
 		return err
 	}
-	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
-		return diffPermissions(desired, *current)
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list.PrivilegeAssignments, func(current []catalog.PrivilegeAssignment, desired []catalog.PrivilegeAssignment) []catalog.PermissionsChange {
+		return diffPermissions(desired, current)
 	})
 }
 
-type securableMapping map[string]map[string]bool
-
-// reuse ResourceDiff and ResourceData
-type attributeGetter interface {
-	Get(key string) any
-}
-
-func (sm securableMapping) kv(d attributeGetter) (string, string) {
-	for field := range sm {
-		v := d.Get(field).(string)
-		if v == "" {
-			continue
-		}
-		return field, v
-	}
-	return "unknown", "unknown"
-}
-
-func (sm securableMapping) id(d *schema.ResourceData) string {
-	securable, name := sm.kv(d)
-	return fmt.Sprintf("%s/%s", securable, name)
-}
-
-func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error {
-	securable, _ := sm.kv(d)
-	allowed, ok := sm[securable]
-	if !ok {
-		return fmt.Errorf(`%s is not fully supported yet`, securable)
-	}
-	for _, v := range pl.Assignments {
-		for _, priv := range v.Privileges {
-			if !allowed[strings.ToUpper(priv)] {
-				// check if user uses spaces instead of underscores
-				if allowed[strings.ReplaceAll(priv, " ", "_")] {
-					return fmt.Errorf(`%s is not allowed on %s. Did you mean %s?`, priv, securable, strings.ReplaceAll(priv, " ", "_"))
-				}
-				return fmt.Errorf(`%s is not allowed on %s`, priv, securable)
-			}
-		}
-	}
-	return nil
-}
-
-var mapping = securableMapping{
-	// add other securable mappings once needed
-	"table": {
-		"MODIFY": true,
-		"SELECT": true,
-
-		// v1.0
-		"ALL_PRIVILEGES": true,
-		"APPLY_TAG":      true,
-		"BROWSE":         true,
-	},
-	"catalog": {
-		"CREATE": true,
-		"USAGE":  true,
-
-		// v1.0
-		"ALL_PRIVILEGES":           true,
-		"APPLY_TAG":                true,
-		"USE_CATALOG":              true,
-		"USE_SCHEMA":               true,
-		"CREATE_SCHEMA":            true,
-		"CREATE_TABLE":             true,
-		"CREATE_FUNCTION":          true,
-		"CREATE_MATERIALIZED_VIEW": true,
-		"CREATE_MODEL":             true,
-		"CREATE_VOLUME":            true,
-		"READ_VOLUME":              true,
-		"WRITE_VOLUME":             true,
-		"EXECUTE":                  true,
-		"MODIFY":                   true,
-		"SELECT":                   true,
-		"REFRESH":                  true,
-		"BROWSE":                   true,
-	},
-	"schema": {
-		"CREATE": true,
-		"USAGE":  true,
-
-		// v1.0
-		"ALL_PRIVILEGES":           true,
-		"APPLY_TAG":                true,
-		"USE_SCHEMA":               true,
-		"CREATE_TABLE":             true,
-		"CREATE_FUNCTION":          true,
-		"CREATE_MATERIALIZED_VIEW": true,
-		"CREATE_MODEL":             true,
-		"CREATE_VOLUME":            true,
-		"READ_VOLUME":              true,
-		"WRITE_VOLUME":             true,
-		"EXECUTE":                  true,
-		"MODIFY":                   true,
-		"SELECT":                   true,
-		"REFRESH":                  true,
-		"BROWSE":                   true,
-	},
-	"storage_credential": {
-		"CREATE_TABLE":             true,
-		"READ_FILES":               true,
-		"WRITE_FILES":              true,
-		"CREATE_EXTERNAL_LOCATION": true,
-
-		// v1.0
-		"ALL_PRIVILEGES":        true,
-		"CREATE_EXTERNAL_TABLE": true,
-	},
-	"external_location": {
-		"CREATE_TABLE": true,
-		"READ_FILES":   true,
-		"WRITE_FILES":  true,
-
-		// v1.0
-		"ALL_PRIVILEGES":         true,
-		"CREATE_EXTERNAL_TABLE":  true,
-		"CREATE_MANAGED_STORAGE": true,
-		"CREATE_EXTERNAL_VOLUME": true,
-		"BROWSE":                 true,
-	},
-	"metastore": {
-		// v1.0
-		"CREATE_CATALOG":            true,
-		"CREATE_CLEAN_ROOM":         true,
-		"CREATE_CONNECTION":         true,
-		"CREATE_EXTERNAL_LOCATION":  true,
-		"CREATE_STORAGE_CREDENTIAL": true,
-		"CREATE_SHARE":              true,
-		"CREATE_RECIPIENT":          true,
-		"CREATE_PROVIDER":           true,
-		"MANAGE_ALLOWLIST":          true,
-		"USE_CONNECTION":            true,
-		"USE_PROVIDER":              true,
-		"USE_SHARE":                 true,
-		"USE_RECIPIENT":             true,
-		"USE_MARKETPLACE_ASSETS":    true,
-		"SET_SHARE_PERMISSION":      true,
-	},
-	"function": {
-		"ALL_PRIVILEGES": true,
-		"EXECUTE":        true,
-	},
-	"model": {
-		"ALL_PRIVILEGES": true,
-		"APPLY_TAG":      true,
-		"EXECUTE":        true,
-	},
-	"share": {
-		"SELECT": true,
-	},
-	"volume": {
-		"ALL_PRIVILEGES": true,
-		"READ_VOLUME":    true,
-		"WRITE_VOLUME":   true,
-	},
-	// avoid reserved field
-	"foreign_connection": {
-		"ALL_PRIVILEGES":         true,
-		"CREATE_FOREIGN_CATALOG": true,
-		"CREATE_FOREIGN_SCHEMA":  true,
-		"CREATE_FOREIGN_TABLE":   true,
-		"USE_CONNECTION":         true,
-	},
-}
-
-func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
+func (pl PermissionsList) toSdkPermissionsList() (out catalog.GetPermissionsResponse) {
 	for _, v := range pl.Assignments {
 		privileges := []catalog.Privilege{}
 		for _, p := range v.Privileges {
@@ -268,8 +103,8 @@ func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
 	return
 }
 
-func sdkPermissionsListToPermissionsList(sdkPermissionsList catalog.PermissionsList) (out PermissionsList) {
-	for _, v := range sdkPermissionsList.PrivilegeAssignments {
+func sdkPermissionsListToPermissionsList(sdkPermissionsList []catalog.PrivilegeAssignment) (out PermissionsList) {
+	for _, v := range sdkPermissionsList {
 		privileges := []string{}
 		for _, p := range v.Privileges {
 			privileges = append(privileges, p.String())
@@ -290,11 +125,26 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 	return split[0], split[1], nil
 }
 
-func ResourceGrants() *schema.Resource {
+func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			// set custom hash function for principal and privileges
+			common.MustSchemaPath(s, "grant", "privileges").Set = func(i any) int {
+				privilege := i.(string)
+				return schema.HashString(permissions.NormalizePrivilege(privilege))
+			}
+			common.MustSchemaPath(s, "grant").Set = func(i any) int {
+				objectStruct := i.(map[string]any)
+				principal := objectStruct["principal"].(string)
+				privileges := objectStruct["privileges"].(*schema.Set)
+				hashString := strings.ToLower(principal)
+				for _, privilege := range privileges.List() {
+					hashString += "|" + permissions.NormalizePrivilege(privilege.(string))
+				}
+				return schema.HashString(hashString)
+			}
 			alof := []string{}
-			for field := range mapping {
+			for field := range permissions.Mappings {
 				s[field] = &schema.Schema{
 					Type:     schema.TypeString,
 					ForceNew: true,
@@ -302,32 +152,31 @@ func ResourceGrants() *schema.Resource {
 				}
 				alof = append(alof, field)
 			}
-			for field := range mapping {
+			for field := range permissions.Mappings {
 				s[field].AtLeastOneOf = alof
 			}
 			return s
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			if d.Id() == "" {
-				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
-				return nil
-			}
-			var grants PermissionsList
-			common.DiffToStructPointer(d, s, &grants)
-			return mapping.validate(d, grants)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var grants PermissionsList
-			common.DataToStructPointer(d, s, &grants)
-			securable, name := mapping.kv(d)
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err := replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			d.SetId(mapping.id(d))
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
+			var grants PermissionsList
+			common.DataToStructPointer(d, s, &grants)
+			securable, name := permissions.Mappings.KeyValue(d)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
+			if err != nil {
+				return err
+			}
+			d.SetId(permissions.Mappings.Id(d))
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -341,11 +190,28 @@ func ResourceGrants() *schema.Resource {
 				return err
 			}
 			if len(grants.PrivilegeAssignments) == 0 {
-				return apierr.NotFound("got empty permissions list")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "got empty permissions list",
+				}
 			}
-			return common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
+
+			err = common.StructToData(sdkPermissionsListToPermissionsList(grants.PrivilegeAssignments), s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, err := parseId(d)
 			if err != nil {
 				return err
@@ -356,12 +222,20 @@ func ResourceGrants() *schema.Resource {
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, err := parseId(d)
 			if err != nil {
 				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.GetPermissionsResponse{})
 		},
-	}.ToResource()
+	}
 }

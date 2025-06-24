@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -131,6 +131,62 @@ func TestConnectionsCreate(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"purpose": "testing"}, d.Get("properties"))
 }
 
+func TestConnectionsCreate_BuiltinHms(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.1/unity-catalog/connections",
+				ExpectedRequest: catalog.CreateConnection{
+					Name:           "hms",
+					ConnectionType: catalog.ConnectionType("HIVE_METASTORE"),
+					Options: map[string]string{
+						"builtin": "true",
+					},
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "hms",
+					ConnectionType: catalog.ConnectionType("HIVE_METASTORE"),
+					FullName:       "hms",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"builtin": "true",
+						"host":    "test.com",
+						"port":    "3306",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/hms?",
+				Response: catalog.ConnectionInfo{
+					Name:           "hms",
+					ConnectionType: catalog.ConnectionType("HIVE_METASTORE"),
+					FullName:       "hms",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"builtin": "true",
+						"host":    "test.com",
+						"port":    "3306",
+					},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		HCL: `
+		name = "hms"
+		connection_type = "HIVE_METASTORE"
+		options = {
+			builtin = "true"
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":            "hms",
+		"connection_type": "HIVE_METASTORE",
+	})
+}
+
 func TestConnectionsCreate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -145,7 +201,7 @@ func TestConnectionsCreate_Error(t *testing.T) {
 						"host": "test.com",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -210,7 +266,7 @@ func TestConnectionRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -395,7 +451,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 						"host": "test.com",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -443,7 +499,7 @@ func TestConnectionDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},

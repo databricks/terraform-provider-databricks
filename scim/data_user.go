@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -26,8 +26,8 @@ func getUser(usersAPI UsersAPI, id, name string) (user User, err error) {
 }
 
 // DataSourceUser returns information about user specified by user name
-func DataSourceUser() *schema.Resource {
-	return &schema.Resource{
+func DataSourceUser() common.Resource {
+	return common.Resource{
 		Schema: map[string]*schema.Schema{
 			"user_name": {
 				Type:         schema.TypeString,
@@ -67,12 +67,16 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"active": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			usersAPI := NewUsersAPI(ctx, m)
 			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.Set("user_name", user.UserName)
 			d.Set("display_name", user.DisplayName)
@@ -81,6 +85,7 @@ func DataSourceUser() *schema.Resource {
 			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			d.Set("external_id", user.ExternalID)
 			d.Set("application_id", user.ApplicationID)
+			d.Set("active", user.Active)
 			splits := strings.Split(user.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

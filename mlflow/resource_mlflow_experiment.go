@@ -2,105 +2,87 @@ package mlflow
 
 import (
 	"context"
+	"log"
+	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Experiment defines the response object from the API
-type Experiment struct {
-	Name             string `json:"name"`
-	Description      string `json:"description,omitempty"`
-	ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
-	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new,suppress_diff"`
-	LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`
-	LastUpdateTime   int64  `json:"last_update_time,omitempty" tf:"computed"`
-	CreationTime     int64  `json:"creation_time,omitempty" tf:"computed"`
-}
+func experimentNameSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
 
-type experimentUpdate struct {
-	ExperimentId string `json:"experiment_id"`
-	NewName      string `json:"new_name"`
-}
-
-type experimentWrapper struct {
-	Experiment Experiment `json:"experiment"`
-}
-
-// ExperimentsAPI ...
-type ExperimentsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-// NewExperimentsAPI ...
-func NewExperimentsAPI(ctx context.Context, m any) ExperimentsAPI {
-	return ExperimentsAPI{m.(*common.DatabricksClient), ctx}
-}
-
-// Create ...
-func (a ExperimentsAPI) Create(d *Experiment) error {
-	return a.client.Post(a.context, "/mlflow/experiments/create", d, &d)
-}
-
-// Read ...
-func (a ExperimentsAPI) Read(experimentId string) (*Experiment, error) {
-	var d experimentWrapper
-	err := a.client.Get(a.context, "/mlflow/experiments/get", map[string]string{
-		"experiment_id": experimentId,
-	}, &d)
-	if err != nil {
-		return nil, err
+	if strings.TrimSuffix(strings.TrimPrefix(new, "/Workspace"), "/") == strings.TrimSuffix(strings.TrimPrefix(old, "/Workspace"), "/") {
+		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
+		return true
 	}
-	return &d.Experiment, nil
+	return false
 }
 
-// Update ...
-func (a ExperimentsAPI) Update(e *experimentUpdate) error {
-	return a.client.Post(a.context, "/mlflow/experiments/update", e, &e)
-}
-
-// Delete ...
-func (a ExperimentsAPI) Delete(id string) error {
-	return a.client.Post(a.context, "/mlflow/experiments/delete", map[string]string{
-		"experiment_id": id,
-	}, nil)
-}
-
-func ResourceMlflowExperiment() *schema.Resource {
+func ResourceMlflowExperiment() common.Resource {
 	s := common.StructToSchema(
-		Experiment{},
-		common.NoCustomize)
+		ml.Experiment{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			for _, p := range []string{"creation_time", "experiment_id", "last_update_time", "lifecycle_stage", "tags"} {
+				common.CustomizeSchemaPath(m, p).SetComputed()
+			}
+			common.CustomizeSchemaPath(m, "artifact_location").SetForceNew().SetSuppressDiff()
+			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(experimentNameSuppressDiff)
+			// the API never accepts description, but we need to keep this for backwards compatibility
+			m["description"] = &schema.Schema{
+				Optional:   true,
+				Type:       schema.TypeString,
+				Deprecated: "Remove the description attribute as it no longer is used and will be removed in a future version.",
+			}
+			return m
+		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var e Experiment
-			common.DataToStructPointer(d, s, &e)
-			if err := NewExperimentsAPI(ctx, c).Create(&e); err != nil {
-				return err
-			}
-			d.SetId(e.ExperimentId)
-			return nil
-		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			e, err := NewExperimentsAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*e, s, d)
+			var create ml.CreateExperiment
+			common.DataToStructPointer(d, s, &create)
+			response, err := w.Experiments.CreateExperiment(ctx, create)
+			if err != nil {
+				return err
+			}
+			d.SetId(response.ExperimentId)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			e, err := w.Experiments.GetExperiment(ctx, ml.GetExperimentRequest{ExperimentId: d.Id()})
+			if err != nil {
+				return err
+			}
+			return common.StructToData(e.Experiment, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var e Experiment
-			common.DataToStructPointer(d, s, &e)
-			updateDoc := experimentUpdate{ExperimentId: d.Id(), NewName: e.Name}
-			return NewExperimentsAPI(ctx, c).Update(&updateDoc)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.Experiments.UpdateExperiment(ctx, ml.UpdateExperiment{
+				ExperimentId: d.Id(),
+				NewName:      d.Get("name").(string),
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewExperimentsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.Experiments.DeleteExperiment(ctx, ml.DeleteExperiment{ExperimentId: d.Id()})
 		},
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts:       &schema.ResourceTimeout{},
-	}.ToResource()
+	}
 }

@@ -3,39 +3,75 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - "*"
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Unshallow
-        run: git fetch --prune --unshallow
-      -
-        name: Set up Go
-        uses: actions/setup-go@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          go-version: 1.21.x
-      - 
-        name: Import GPG key
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+          # The default cache key for this action considers only the `go.sum` file.
+          # We include .goreleaser.yaml here to differentiate from the cache used by the push action
+          # that runs unit tests. This job produces and uses a different cache.
+          cache-dependency-path: |
+            go.sum
+            .goreleaser.yml
+
+      - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      - 
-        name: Pull external libraries
-        run: make vendor
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
+
+      - name: Write release notes to file
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            RELEASE_NOTES_DIR=/tmp/release-notes
+            mkdir -p "$RELEASE_NOTES_DIR"
+            RELEASE_NOTES_FILE="$RELEASE_NOTES_DIR/release-notes.md"
+            git for-each-ref --format='%(body)' ${{ github.ref }} > "$RELEASE_NOTES_FILE"
+            echo "Release notes file: $RELEASE_NOTES_FILE"
+            echo "Release notes contents:"
+            cat "$RELEASE_NOTES_FILE"
+          else
+            echo "Not a release tag, skipping release notes"
+          fi
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
-          version: latest
-          args: release --rm-dist
+          version: ~> v2
+          # Arguments cannot reference environment variables, so we write the release notes
+          # to a well-known location and use that in the goreleaser command.
+          args: release --clean --release-notes=/tmp/release-notes/release-notes.md
+        env:
+          # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
+          # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+      - name: Run GoReleaser (snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        if: ${{ ! startsWith(github.ref , 'refs/tags/v') }}
+        with:
+          version: ~> v2
+          args: release --clean --snapshot
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token

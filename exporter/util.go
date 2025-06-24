@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -16,336 +15,49 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
-	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/storage"
-	"github.com/databricks/terraform-provider-databricks/workspace"
+	"golang.org/x/exp/maps"
 
-	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/databricks-sdk-go/service/iam"
-
-	"golang.org/x/exp/slices"
-
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorageInfo) {
-	for _, is := range initScripts {
-		if is.Dbfs != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       is.Dbfs.Destination,
-			})
-		}
-		if is.Workspace != nil {
-			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
-		}
-	}
-
+func (ic *importContext) isServiceEnabled(service string) bool {
+	_, exists := ic.services[service]
+	return exists
 }
 
-func (ic *importContext) importCluster(c *clusters.Cluster) {
-	if c == nil {
-		return
-	}
-	ic.emitInitScripts(c.InitScripts)
-	if c.AwsAttributes != nil {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_profile",
-			ID:       c.AwsAttributes.InstanceProfileArn,
-		})
-	}
-	if c.InstancePoolID != "" {
-		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.InstancePoolID,
-		})
-	}
-	if c.DriverInstancePoolID != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.DriverInstancePoolID,
-		})
-	}
-	if c.PolicyID != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_cluster_policy",
-			ID:       c.PolicyID,
-		})
-	}
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
-	ic.emitUserOrServicePrincipal(c.SingleUserName)
+func (ic *importContext) isServiceInListing(service string) bool {
+	_, exists := ic.listing[service]
+	return exists
 }
 
-func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
-	for _, v := range m {
-		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_secret_scope",
-				ID:       res[1],
-			})
-		}
-	}
-}
-
-func (ic *importContext) emitListOfUsers(users []string) {
-	for _, user := range users {
-		if user != "" {
-			ic.Emit(&resource{
-				Resource:  "databricks_user",
-				Attribute: "user_name",
-				Value:     user,
-			})
-		}
-	}
-}
-
-func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
-	if userOrSPName == "" {
-		return
-	}
-	if common.StringIsUUID(userOrSPName) {
-		user, err := ic.findSpnByAppID(userOrSPName)
-		if err != nil {
-			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
-		} else {
-			ic.Emit(&resource{
-				Resource: "databricks_service_principal",
-				ID:       user.ID,
-			})
-		}
-	} else {
-		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
-		if err != nil {
-			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
-		} else {
-			ic.Emit(&resource{
-				Resource: "databricks_user",
-				ID:       user.ID,
-			})
-		}
-	}
-}
-
-func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
-	if strings.HasPrefix(path, prefix) {
-		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 && parts[2] != "" {
-			ic.emitUserOrServicePrincipal(parts[2])
-		}
-	}
-}
-
-func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
-	if !strings.HasPrefix(path, prefix) {
-		return false
-	}
-	parts := strings.SplitN(path, "/", 4)
-	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
-		userOrSPName := parts[2]
-		var err error
-		if common.StringIsUUID(userOrSPName) {
-			_, err = ic.findSpnByAppID(userOrSPName)
-			if err != nil {
-				ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
-			}
-		} else {
-			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
-			if err != nil {
-				ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
-			}
-		}
-		return err == nil
-	}
-	return false
-}
-
-func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
-}
-
-func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
-	if strings.HasPrefix(path, "/Repos") {
-		ic.emitRepoByPath(path)
-	} else {
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_file",
-			ID:       path,
-		})
-	}
-}
-
-func (ic *importContext) emitNotebookOrRepo(path string) {
-	if strings.HasPrefix(path, "/Repos") {
-		ic.emitRepoByPath(path)
-	} else {
-		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
-	}
-}
-
-func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
-	if len(ic.allDirectories) == 0 {
-		objects := ic.getAllWorkspaceObjects()
-		ic.wsObjectsMutex.Lock()
-		defer ic.wsObjectsMutex.Unlock()
-		if len(ic.allDirectories) == 0 {
-			for _, v := range objects {
-				if v.ObjectType == workspace.Directory {
-					ic.allDirectories = append(ic.allDirectories, v)
-				}
-			}
-		}
-	}
-	return ic.allDirectories
-}
-
-// TODO: Ignore databricks_automl as well?
-var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
-
-func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
-	if v.ObjectType != workspace.Directory {
+func (ic *importContext) MatchesName(n string) bool {
+	if ic.match == "" && ic.matchRegex == nil && ic.excludeRegex == nil {
 		return true
 	}
-	parts := strings.Split(v.Path, "/")
-	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
-	if result {
-		log.Printf("[DEBUG] Ignoring directory %s", v.Path)
+	if ic.excludeRegex != nil && ic.excludeRegex.MatchString(n) {
+		return false
 	}
-	return !result
+	if ic.matchRegex != nil {
+		return ic.matchRegex.MatchString(n)
+	}
+	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
-	ic.wsObjectsMutex.Lock()
-	defer ic.wsObjectsMutex.Unlock()
-	if len(ic.allWorkspaceObjects) == 0 {
-		t1 := time.Now()
-		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
-		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
-		t2 := time.Now()
-		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
-			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())
-	}
-	return ic.allWorkspaceObjects
-}
-
-func (ic *importContext) emitGroups(u scim.User) {
-	for _, g := range u.Groups {
-		if g.Type != "direct" {
-			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
-			continue
-		}
-		ic.Emit(&resource{
-			Resource: "databricks_group",
-			ID:       g.Value,
-		})
-		ic.Emit(&resource{
-			Resource: "databricks_group_member",
-			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
-		})
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
 }
 
-func (ic *importContext) emitRoles(objType string, id string, roles []scim.ComplexValue) {
-	log.Printf("[DEBUG] emitting roles for object type: %s, ID: %s, roles: %v", objType, id, roles)
-	for _, role := range roles {
-		if role.Type != "direct" {
-			continue
-		}
-		if !ic.accountLevel {
-			ic.Emit(&resource{
-				Resource: "databricks_instance_profile",
-				ID:       role.Value,
-			})
-		}
-		ic.Emit(&resource{
-			Resource: fmt.Sprintf("databricks_%s_role", objType),
-			ID:       fmt.Sprintf("%s|%s", id, role.Value),
-		})
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
-}
-
-func (ic *importContext) emitLibraries(libs []libraries.Library) {
-	for _, lib := range libs {
-		// Files on DBFS
-		ic.emitIfDbfsFile(lib.Whl)
-		ic.emitIfDbfsFile(lib.Jar)
-		ic.emitIfDbfsFile(lib.Egg)
-		// Files on WSFS
-		ic.emitIfWsfsFile(lib.Whl)
-		ic.emitIfWsfsFile(lib.Jar)
-		ic.emitIfWsfsFile(lib.Egg)
-	}
-
-}
-
-func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
-	common.DataToStructPointer(d, s, &cll)
-	ic.emitLibraries(cll.Libraries)
-	return nil
-}
-
-func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
-	if err != nil {
-		return err
-	}
-	for _, lib := range cll.LibraryStatuses {
-		// Emit workspace file libraries if necessary
-		// Emit Volume libraries when resource is available
-		ic.emitIfDbfsFile(lib.Library.Egg)
-		ic.emitIfDbfsFile(lib.Library.Jar)
-		ic.emitIfDbfsFile(lib.Library.Whl)
-	}
-	return nil
-}
-
-func (ic *importContext) cacheGroups() error {
-	ic.groupsMutex.Lock()
-	defer ic.groupsMutex.Unlock()
-	if ic.allGroups == nil {
-		log.Printf("[INFO] Caching groups in memory ...")
-		var groups []iam.Group
-		var err error
-		if ic.accountLevel {
-			groups, err = ic.accountClient.Groups.ListAll(ic.Context, iam.ListAccountGroupsRequest{
-				Attributes: "id",
-			})
-		} else {
-			groups, err = ic.workspaceClient.Groups.ListAll(ic.Context, iam.ListGroupsRequest{
-				Attributes: "id",
-			})
-		}
-		if err != nil {
-			log.Printf("[ERROR] can't fetch list of groups")
-			return err
-		}
-		api := scim.NewGroupsAPI(ic.Context, ic.Client)
-		ic.allGroups = make([]scim.Group, 0, len(groups))
-		for i, g := range groups {
-			group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
-			if err != nil {
-				log.Printf("[ERROR] Error reading group with ID %s", g.Id)
-				continue
-			}
-			ic.allGroups = append(ic.allGroups, group)
-			if (i+1)%10 == 0 {
-				log.Printf("[DEBUG] Read %d out of %d groups", i+1, len(groups))
-			}
-		}
-		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
-	}
-	return nil
 }
 
 func (ic *importContext) addIgnoredResource(msg string) {
@@ -354,176 +66,31 @@ func (ic *importContext) addIgnoredResource(msg string) {
 	ic.ignoredResources[msg] = struct{}{}
 }
 
-const (
-	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
-)
-
-func (ic *importContext) getUsersMapping() {
-	ic.usersMutex.Lock()
-	defer ic.usersMutex.Unlock()
-	if ic.allUsersMapping == nil {
-		ic.allUsersMapping = make(map[string]string)
-		var users []iam.User
-		var err error
-		if ic.accountLevel {
-			users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
-				Attributes: "id,userName",
-			})
-		} else {
-			users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
-				Attributes: "id,userName",
-			})
-		}
-		if err != nil {
-			log.Printf("[ERROR] can't fetch list of users")
-			return
-		}
-		for _, user := range users {
-			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
-			ic.allUsersMapping[user.UserName] = user.Id
-		}
-	}
-}
-
-func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
-	log.Printf("[DEBUG] Looking for user %s", name)
-	ic.usersMutex.RLocker().Lock()
-	user, exists := ic.allUsers[name]
-	ic.usersMutex.RLocker().Unlock()
-	if exists {
-		if user.UserName == nonExistingUserOrSp {
-			log.Printf("[DEBUG] non-existing user %s is found in the cache", name)
-			err = fmt.Errorf("user %s is not found", name)
-		} else {
-			log.Printf("[DEBUG] existing user %s is found in the cache", name)
-			u = user
-		}
-		return
-	}
-	ic.getUsersMapping()
-	ic.usersMutex.RLocker().Lock()
-	userId, exists := ic.allUsersMapping[name]
-	ic.usersMutex.RLocker().Unlock()
-	if !exists {
-		err = fmt.Errorf("there is no user '%s'", name)
-		u = scim.User{UserName: nonExistingUserOrSp}
-	} else {
-		a := scim.NewUsersAPI(ic.Context, ic.Client)
-		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
-		if err != nil {
-			log.Printf("[WARN] error reading user with name '%s', user ID: %s", name, userId)
-			u = scim.User{UserName: nonExistingUserOrSp}
-		}
-	}
-	ic.usersMutex.Lock()
-	defer ic.usersMutex.Unlock()
-	ic.allUsers[name] = u
-	return
-}
-
-func (ic *importContext) getSpsMapping() {
-	ic.spsMutex.Lock()
-	defer ic.spsMutex.Unlock()
-	if ic.allSpsMapping == nil {
-		ic.allSpsMapping = make(map[string]string)
-		var sps []iam.ServicePrincipal
-		var err error
-		// Reimplement it myself
-		if ic.accountLevel {
-			sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
-				Attributes: "id,userName",
-			})
-		} else {
-			sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
-				Attributes: "id,userName",
-			})
-		}
-		if err != nil {
-			log.Printf("[ERROR] can't fetch list of service principals")
-			return
-		}
-		for _, sp := range sps {
-			ic.allSpsMapping[sp.ApplicationId] = sp.Id
-		}
-	}
-}
-
-func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFamily {
-	ic.builtInPoliciesMutex.Lock()
-	defer ic.builtInPoliciesMutex.Unlock()
-	if ic.builtInPolicies == nil {
-		if !ic.accountLevel {
-			log.Printf("[DEBUG] Going to initialize ic.builtInPolicies. Getting policy families...")
-			families, err := ic.workspaceClient.PolicyFamilies.ListAll(ic.Context, compute.ListPolicyFamiliesRequest{})
-			log.Printf("[DEBUG] Going to initialize ic.builtInPolicies. Getting policy families...")
-			if err == nil {
-				ic.builtInPolicies = make(map[string]compute.PolicyFamily, len(families))
-				for _, f := range families {
-					f2 := f
-					ic.builtInPolicies[f2.PolicyFamilyId] = f2
-				}
-			} else {
-				log.Printf("[ERROR] Can't fetch cluster policy families: %v", err)
-				ic.builtInPolicies = map[string]compute.PolicyFamily{}
-			}
-		} else {
-			log.Print("[WARN] Can't list cluster policy families on account level")
-			ic.builtInPolicies = map[string]compute.PolicyFamily{}
-		}
-	}
-	return ic.builtInPolicies
-}
-
-func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
-	log.Printf("[DEBUG] Looking for SP %s", applicationID)
-	ic.spsMutex.RLocker().Lock()
-	sp, exists := ic.allSps[applicationID]
-	ic.spsMutex.RLocker().Unlock()
-	if exists {
-		if sp.ApplicationID == nonExistingUserOrSp {
-			log.Printf("[DEBUG] non-existing SP %s is found in the cache", applicationID)
-			err = fmt.Errorf("service principal %s is not found", applicationID)
-		} else {
-			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
-			u = sp
-		}
-		return
-	}
-	ic.getSpsMapping()
-	ic.spsMutex.RLocker().Lock()
-	spId, exists := ic.allSpsMapping[applicationID]
-	ic.spsMutex.RLocker().Unlock()
-	if !exists {
-		err = fmt.Errorf("there is no service principal '%s'", applicationID)
-		u = scim.User{ApplicationID: nonExistingUserOrSp}
-	} else {
-		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
-		if err != nil {
-			log.Printf("[WARN] error reading service principal with AppID '%s', SP ID: %s", applicationID, spId)
-			u = scim.User{ApplicationID: nonExistingUserOrSp}
-		}
-	}
-	ic.spsMutex.Lock()
-	defer ic.spsMutex.Unlock()
-	ic.allSps[applicationID] = u
-
-	return
-}
-
 func (ic *importContext) emitIfDbfsFile(path string) {
 	if strings.HasPrefix(path, "dbfs:") {
-		ic.Emit(&resource{
-			Resource: "databricks_dbfs_file",
-			ID:       path,
-		})
+		if strings.HasPrefix(path, "dbfs:/Volumes/") {
+			ic.emitIfVolumeFile(path[5:])
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       path,
+			})
+		}
 	}
 }
 
 func (ic *importContext) emitIfWsfsFile(path string) {
-	if strings.HasPrefix(path, "/Workspace/") {
-		normalPath := strings.TrimPrefix(path, "/Workspace")
-		ic.emitWorkspaceFileOrRepo(normalPath)
+	if hasWorkspacePrefix(path) {
+		ic.emitWorkspaceFileOrRepo(maybeStripWorkspacePrefix(path))
+	}
+}
+
+func (ic *importContext) emitIfVolumeFile(path string) {
+	if strings.HasPrefix(path, "/Volumes/") {
+		ic.Emit(&resource{
+			Resource: "databricks_file",
+			ID:       path,
+		})
 	}
 }
 
@@ -704,44 +271,35 @@ func (ic *importContext) getMountsThroughCluster(
 
 func eitherString(a any, b any) string {
 	if a != nil {
-		return a.(string)
+		if t, ok := a.(string); ok {
+			return t
+		}
 	}
 	if b != nil {
-		return b.(string)
+		if t, ok := b.(string); ok {
+			return t
+		}
 	}
 	return ""
 }
 
-func (ic *importContext) importJobs(l []jobs.Job) {
-	i := 0
-	for offset, job := range l {
-		if !ic.MatchesName(job.Settings.Name) {
-			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
-			continue
-		}
-		ic.Emit(&resource{
-			Resource: "databricks_job",
-			ID:       job.ID(),
-		})
-		i++
-		log.Printf("[INFO] Scanned %d of total %d jobs", offset+1, len(l))
-	}
-	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
-}
-
-// returns created file name in "files" directory for the export and error if any
-func (ic *importContext) createFile(name string, content []byte) (string, error) {
-	return ic.createFileIn("files", name, content)
-}
-
-func (ic *importContext) createFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error) {
 	fileName := ic.prefix + name
 	localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, dir, fileName)
 	err := os.MkdirAll(path.Dir(localFileName), 0755)
 	if err != nil && !os.IsExist(err) {
-		return "", err
+		return nil, "", err
 	}
 	local, err := os.Create(localFileName)
+	if err != nil {
+		return nil, "", err
+	}
+	relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
+	return local, relativeName, nil
+}
+
+func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
@@ -750,11 +308,10 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	if err != nil {
 		return "", err
 	}
-	relativeName := strings.Replace(localFileName, ic.Directory+"/", "", 1)
 	return relativeName, nil
 }
 
-func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, _ *resource) bool {
 	if as.Computed {
 		return true
 	} else if as.Default != nil && d.Get(pathString) == as.Default {
@@ -764,109 +321,101 @@ func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema
 	return false
 }
 
-func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-		prefix := ""
-		if regex != nil {
-			if res := regex.FindStringSubmatch(pathString); res != nil {
-				prefix = res[0]
-			} else {
-				return false
-			}
-		}
-		raw := d.Get(pathString)
-		if raw != nil {
-			v := reflect.ValueOf(raw)
-			if as.Optional && v.IsZero() {
-				return true
-			}
-		}
-		workerInstPoolID := d.Get(prefix + "instance_pool_id").(string)
-		switch pathString {
-		case prefix + "node_type_id":
-			return workerInstPoolID != ""
-		case prefix + "driver_node_type_id":
-			driverInstPoolID := d.Get(prefix + "driver_instance_pool_id").(string)
-			nodeTypeID := d.Get(prefix + "node_type_id").(string)
-			return workerInstPoolID != "" || driverInstPoolID != "" || raw.(string) == nodeTypeID
-		case prefix + "driver_instance_pool_id":
-			return raw.(string) == workerInstPoolID
-		case prefix + "enable_elastic_disk", prefix + "aws_attributes", prefix + "azure_attributes", prefix + "gcp_attributes":
-			return workerInstPoolID != ""
-		case prefix + "enable_local_disk_encryption":
-			return false
-		case prefix + "spark_conf":
-			return fmt.Sprintf("%v", d.Get(prefix+"spark_conf")) == "map[spark.databricks.delta.preview.enabled:true]"
-		case prefix + "spark_env_vars":
-			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
-		}
-
-		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+func (ic *importContext) generateNewData(data *schema.ResourceData, resourceType, rID string, obj any) *schema.ResourceData {
+	data.MarkNewResource()
+	data.SetId(rID)
+	scm := ic.Resources[resourceType].Schema
+	err := common.StructToData(obj, scm, data)
+	if err != nil {
+		log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
+		return nil
 	}
-}
-
-func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource) error {
-	blockType := "resource"
-	if r.Mode == "data" {
-		blockType = r.Mode
-	}
-	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+	return data
 }
 
 func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }
 
-func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	if pathString == "md5" { // `md5` is kind of computed, but not declared as it...
-		return true
+func (ic *importContext) allServicesAndListing() (string, string) {
+	services := map[string]struct{}{}
+	listing := map[string]struct{}{}
+	for _, ir := range ic.Importables {
+		services[ir.Service] = struct{}{}
+		if ir.List != nil {
+			listing[ir.Service] = struct{}{}
+		}
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	// We need this to specify default listings of UC & Workspace objects...
+	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles"} {
+		listing[ir] = struct{}{}
+	}
+	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
 }
 
-func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {
-	name := d.Get("path").(string)
-	if name == "" {
-		return d.Id()
+func (ic *importContext) parseServicesList(services string, isListing bool) []string {
+	allEnabledServices, allEnabledListing := ic.allServicesAndListing()
+	var allServices []string
+	if isListing {
+		allServices = strings.Split(allEnabledListing, ",")
 	} else {
-		name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
-			strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
+		allServices = strings.Split(allEnabledServices, ",")
 	}
-	return name
+	var allUcServices []string
+	for _, s := range allServices {
+		if strings.HasPrefix(s, "uc-") {
+			allUcServices = append(allUcServices, s)
+		}
+	}
+	allUcServices = append(allUcServices, "vector-search")
+	servicesList := map[string]struct{}{}
+	for _, s := range strings.Split(services, ",") {
+		ss := strings.TrimSpace(s)
+		if ss == "all" {
+			for _, service := range allServices {
+				servicesList[service] = struct{}{}
+			}
+		} else if ss == "+uc" || ss == "uc" {
+			for _, service := range allUcServices {
+				servicesList[service] = struct{}{}
+			}
+
+		} else if ss == "-uc" {
+			for _, service := range allUcServices {
+				delete(servicesList, service)
+			}
+		} else if strings.HasPrefix(ss, "-") {
+			delete(servicesList, ss[1:])
+		} else if strings.HasPrefix(ss, "+") {
+			servicesList[ss[1:]] = struct{}{}
+		} else if ss != "" {
+			servicesList[ss] = struct{}{}
+		}
+	}
+	return maps.Keys(servicesList)
 }
 
-func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
-	if obs.ModifiedAtInteractive != nil && obs.ModifiedAtInteractive.TimeMillis != 0 {
-		return obs.ModifiedAtInteractive.TimeMillis
+func (ic *importContext) enableServices(services string) {
+	ic.services = map[string]struct{}{}
+	for _, s := range ic.parseServicesList(services, false) {
+		ic.services[s] = struct{}{}
 	}
-	return obs.ModifiedAt
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[s] = struct{}{}
+	}
 }
 
-func (ic *importContext) shouldEmitForPath(path string) bool {
-	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
-		userDir := userDirRegex.ReplaceAllString(path, "$1")
-		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
-	}
-	return true
-}
-
-func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
-	if ic.shouldEmitForPath(path) {
-		ic.Emit(&resource{
-			Resource:    resourceType,
-			ID:          path,
-			Incremental: ic.incremental,
-		})
-	} else {
-		log.Printf("[WARN] Not emitting a workspace object %s for deleted user. Path='%s'", resourceType, path)
-		ic.addIgnoredResource(fmt.Sprintf("%s. path=%s", resourceType, path))
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range ic.parseServicesList(listing, true) {
+		ic.listing[s] = struct{}{}
+		ic.services[s] = struct{}{}
 	}
 }
 
 func (ic *importContext) emitSqlParentDirectory(parent string) {
-	if parent == "" {
+	if parent == "" || !ic.isServiceEnabled("directories") {
 		return
 	}
 	res := sqlParentRegexp.FindStringSubmatch(parent)
@@ -876,37 +425,6 @@ func (ic *importContext) emitSqlParentDirectory(parent string) {
 			Attribute: "object_id",
 			Value:     res[1],
 		})
-	}
-}
-
-func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
-	return func(ic *importContext) error {
-		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
-		objectsList := ic.getAllWorkspaceObjects()
-		updatedSinceMs := ic.getUpdatedSinceMs()
-		for offset, object := range objectsList {
-			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
-				continue
-			}
-			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
-				continue
-			}
-			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt < updatedSinceMs {
-				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
-					modifiedAt, updatedSinceMs)
-				continue
-			}
-			if !ic.MatchesName(object.Path) {
-				continue
-			}
-			ic.maybeEmitWorkspaceObject(resourceType, object.Path)
-
-			if offset%50 == 0 {
-				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)
-			}
-		}
-		return nil
 	}
 }
 
@@ -934,4 +452,106 @@ func getEnvAsInt(envName string, defaultValue int) int {
 		log.Printf("[ERROR] Can't parse value '%s' of environment variable '%s'", val, envName)
 	}
 	return defaultValue
+}
+
+var (
+	maxRetries        = 5
+	retryDelaySeconds = 2
+	retriableErrors   = []string{"deadline exceeded", "Error handling request", "Timed out after ", "Operation timed out"}
+)
+
+func isRetryableError(err string, i int) bool {
+	if i < (maxRetries - 1) {
+		for _, msg := range retriableErrors {
+			if strings.Contains(err, msg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
+	var err ERR
+	delay := 1
+	for i := 0; i < maxRetries; i++ {
+		err = runFunc()
+		valOf := reflect.ValueOf(&err).Elem()
+		if valOf.IsNil() || valOf.IsZero() {
+			break
+		}
+		if !isRetryableError(fmt.Sprintf("%v", err), i) {
+			log.Printf("[ERROR] Error %s after %d retries: %v", msg, i, err)
+			return err
+		}
+		delay = delay * retryDelaySeconds
+		log.Printf("[INFO] next retry (%d) for %s after %d seconds", (i + 1), msg, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+	}
+	return err
+}
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		return ok && objType.(string) == obj
+	}
+}
+
+func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) func(ic *importContext, r *resource) bool {
+	return func(ic *importContext, r *resource) bool {
+		res := (r.Data != nil && r.Data.Get(attrName).(string) == "")
+		if res {
+			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", resourceType, r.ID))
+		}
+		return res
+	}
+}
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
+}
+
+func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name string) {
+	if ic.meAdmin {
+		ignoreFunc := ic.Importables[r.Resource].Ignore
+		if ignoreFunc == nil || !ignoreFunc(ic, r) {
+			ic.Emit(&resource{
+				Resource: "databricks_permissions",
+				ID:       id,
+				Name:     name,
+			})
+		}
+	}
+}
+
+func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		return d.Get(nm).(string) + "_" + d.Id()
+	}
+}
+
+func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		name := d.Get(nm).(string)
+		if name == "" {
+			return d.Id()
+		}
+		return name
+	}
 }

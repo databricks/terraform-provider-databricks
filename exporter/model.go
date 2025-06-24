@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -29,49 +30,108 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
 }
 
-type stateApproximation struct {
-	mutex sync.RWMutex
-	// TODO: use map by type -> should speedup Has function?
-	resources []resourceApproximation
-}
-
-// TODO: check if it's used directly by multiple threads?
-func (s *stateApproximation) Resources() []resourceApproximation {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
-	c := make([]resourceApproximation, len(s.resources))
-	copy(c, s.resources)
-	return c
-}
-
-func (s *stateApproximation) Has(r *resource) bool {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
-	k, v := r.MatchPair()
-	for _, sr := range s.resources {
-		if sr.Type != r.Resource {
-			continue
+func (ra *resourceApproximation) Get(attr string) (any, bool) {
+	for _, i := range ra.Instances {
+		v, found := i.Attributes[attr]
+		if found {
+			return v, found
 		}
-		for _, i := range sr.Instances {
-			tv, ok := i.Attributes[k].(string)
-			if ok && tv == v {
-				return true
+	}
+	return nil, false
+}
+
+// TODO: think if something like trie may help here...
+type resourceApproximationHolder struct {
+	mutex      sync.RWMutex
+	resources  []*resourceApproximation
+	attributes map[string]*resourceApproximation
+}
+
+func makeMatchPair(k, v string) string {
+	return k + "/" + v
+}
+
+func (rah *resourceApproximationHolder) Has(r *resource) bool {
+	k, v := r.MatchPair()
+	matchPairKey := makeMatchPair(k, v)
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is called for %s/%s", k, v)
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
+	_, exists := rah.attributes[matchPairKey]
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is finished. Resource found? %v", exists)
+	return exists
+}
+
+func (rah *resourceApproximationHolder) Get(attr, value string) *resourceApproximation {
+	matchPairKey := makeMatchPair(attr, value)
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
+	ra := rah.attributes[matchPairKey]
+	return ra
+}
+
+func (rah *resourceApproximationHolder) Append(ra resourceApproximation) {
+	// log.Printf("[DEBUG] resourceApproximationHolder.Append: %v. Instances count=%d", ra, len(ra.Instances))
+	rah.mutex.Lock()
+	defer rah.mutex.Unlock()
+	rah.resources = append(rah.resources, &ra)
+	for _, i := range ra.Instances {
+		for k, v := range i.Attributes {
+			tv, ok := v.(string)
+			if ok {
+				rah.attributes[makeMatchPair(k, tv)] = &ra
 			}
 		}
 	}
-	return false
+}
+
+type stateApproximation struct {
+	rmap map[string]*resourceApproximationHolder
+}
+
+func newStateApproximation(suppported_resources []string) *stateApproximation {
+	sa := stateApproximation{rmap: map[string]*resourceApproximationHolder{}}
+	for _, k := range suppported_resources {
+		sa.rmap[k] = &resourceApproximationHolder{attributes: map[string]*resourceApproximation{}}
+	}
+	return &sa
+}
+
+func (s *stateApproximation) Resources(resource_type string) *[]*resourceApproximation {
+	rah := s.rmap[resource_type]
+	if rah != nil {
+		return &rah.resources
+	}
+	panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+}
+
+func (s *stateApproximation) Has(r *resource) bool {
+	rah, exist := s.rmap[r.Resource]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", r.Resource))
+	}
+	return rah.Has(r)
+}
+
+func (s *stateApproximation) Get(resource_type, attr, value string) *resourceApproximation {
+	rah, exist := s.rmap[resource_type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+	}
+	return rah.Get(attr, value)
 }
 
 func (s *stateApproximation) Append(ra resourceApproximation) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.resources = append(s.resources, ra)
+	rah, exist := s.rmap[ra.Type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", ra.Type))
+	}
+	rah.Append(ra)
 }
 
 type importable struct {
@@ -92,7 +152,9 @@ type importable struct {
 	// Function to detect if the given resource should be ignored or not
 	Ignore func(ic *importContext, r *resource) bool
 	// Function to check if the field in the given resource should be omitted or not
-	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
+	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
+	// Function to check if the field in the given resource should be generated or not independently of the value
+	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource
@@ -112,9 +174,14 @@ const (
 	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchLongestPrefix is to specify that prefix of value should match, and select the longest value from list of candidates
+	MatchLongestPrefix = "longestprefix"
 	// MatchRegexp is to specify that the group extracted from value should match
 	MatchRegexp = "regexp"
 )
+
+type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -131,6 +198,15 @@ type reference struct {
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
+	// functions to transform match and current search value
+	MatchValueTransformFunc  valueTransformFunc
+	SearchValueTransformFunc valueTransformFunc
+	// function to evaluate fit of the resource approximation found to the resource...
+	IsValidApproximation isValidAproximationFunc
+	// if we should skip direct lookups (for example, we need it for UC schemas matching)
+	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {
@@ -163,6 +239,29 @@ type resource struct {
 	Incremental bool
 	// Actual Terraform data
 	Data *schema.ResourceData
+	// Arbitrary data to be used by importable
+	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
+}
+
+func (r *resource) AddExtraData(key string, value any) {
+	if r.ExtraData == nil {
+		r.ExtraData = map[string]any{}
+	}
+	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
+}
+
+func (r *resource) GetExtraData(key string) (any, bool) {
+	if r.ExtraData == nil {
+		return nil, false
+	}
+	v, ok := r.ExtraData[key]
+	return v, ok
 }
 
 func (r *resource) MatchPair() (string, string) {
@@ -205,18 +304,26 @@ func (r *resource) ImportResource(ic *importContext) {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
 	}
-	if ic.HasInState(r, true) {
+	rString := r.String()
+	ic.importingMutex.Lock()
+	isAdded, ok := ic.importing[rString]
+	if ok && isAdded {
+		ic.importingMutex.Unlock()
 		log.Printf("[DEBUG] %s already imported", r)
 		return
 	}
-
+	ic.importingMutex.Unlock()
 	if r.ID == "" {
 		if ir.Search == nil {
 			log.Printf("[ERROR] Searching %s is not available", r)
 			return
 		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
+		err := runWithRetries(func() error {
+			return ir.Search(ic, r)
+		},
+			fmt.Sprintf("searching of %v", r))
+		if err != nil {
+			log.Printf("[ERROR] Error searching %s#%s: %v", r.Resource, r.ID, err)
 			return
 		}
 		if r.ID == "" {
@@ -238,17 +345,29 @@ func (r *resource) ImportResource(ic *importContext) {
 		if apiVersion != "" {
 			ctx = context.WithValue(ctx, common.Api, apiVersion)
 		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
+		dia := runWithRetries(func() diag.Diagnostics {
+			return pr.ReadContext(ctx, r.Data, ic.Client)
+		},
+			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+		if dia.HasError() {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
+			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+			}
+			return
 		}
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
+		err := runWithRetries(func() error {
+			return ir.Import(ic, r)
+		},
+			fmt.Sprintf("importing of %s#%s", r.Resource, r.ID))
+		if err != nil {
 			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
 			return
 		}
@@ -294,4 +413,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

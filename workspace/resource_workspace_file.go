@@ -6,14 +6,14 @@ import (
 	"log"
 	"path/filepath"
 
-	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceWorkspaceFile manages files in workspace
-func ResourceWorkspaceFile() *schema.Resource {
+func ResourceWorkspaceFile() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"url": {
 			Type:     schema.TypeString,
@@ -42,9 +42,9 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			path := d.Get("path").(string)
-			importReq := ws_api.Import{
+			importReq := workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          ws_api.ImportFormatAuto,
+				Format:          workspace.ImportFormatRaw,
 				Path:            path,
 				Overwrite:       true,
 				ForceSendFields: []string{"Content"},
@@ -72,12 +72,13 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			objectStatus, err := client.Workspace.GetStatusByPath(ctx, d.Id())
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return client.Workspace.GetStatusByPath(ctx, d.Id())
+			})
 			if err != nil {
 				return err
 			}
-			d.Set("url", c.FormatURL("#workspace", d.Id()))
-			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
+			SetWorkspaceObjectComputedProperties(d, c)
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -89,9 +90,9 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Import(ctx, ws_api.Import{
+			return client.Workspace.Import(ctx, workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          ws_api.ImportFormatAuto,
+				Format:          workspace.ImportFormatRaw,
 				Overwrite:       true,
 				Path:            d.Id(),
 				ForceSendFields: []string{"Content"},
@@ -102,7 +103,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: false})
+			return client.Workspace.Delete(ctx, workspace.Delete{Path: d.Id(), Recursive: false})
 		},
-	}.ToResource()
+	}
 }

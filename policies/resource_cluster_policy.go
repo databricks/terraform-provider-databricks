@@ -6,6 +6,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -24,26 +25,37 @@ func isBuiltinPolicyFamily(ctx context.Context, w *databricks.WorkspaceClient, f
 	return false, nil
 }
 
+var rcpSchema = common.StructToSchema(
+	compute.CreatePolicy{},
+	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["policy_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
+		m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
+		m["definition"].Computed = true
+		m["definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
+
+		m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
+		m["policy_family_definition_overrides"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
+		m["policy_family_id"].ConflictsWith = []string{"definition"}
+		m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
+
+		return m
+	})
+
 // ResourceClusterPolicy ...
-func ResourceClusterPolicy() *schema.Resource {
-	s := common.StructToSchema(
-		compute.CreatePolicy{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["policy_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
-			m["definition"].Computed = true
-			m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
-			m["policy_family_id"].ConflictsWith = []string{"definition"}
-			m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
-
-			return m
-		})
-
+func ResourceClusterPolicy() common.Resource {
 	return common.Resource{
-		Schema: s,
+		Schema:        rcpSchema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    rcpSchemaV0(),
+				Version: 0,
+				Upgrade: removeZeroMaxClustersPerUser,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -51,7 +63,7 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 
 			var request compute.CreatePolicy
-			common.DataToStructPointer(d, s, &request)
+			common.DataToStructPointer(d, rcpSchema, &request)
 
 			var clusterPolicy *compute.CreatePolicyResponse
 			if request.PolicyFamilyId != "" {
@@ -66,7 +78,7 @@ func ResourceClusterPolicy() *schema.Resource {
 					}
 					clusterPolicy = &compute.CreatePolicyResponse{PolicyId: resp.PolicyId}
 					var editRequest compute.EditPolicy
-					common.DataToStructPointer(d, s, &editRequest)
+					common.DataToStructPointer(d, rcpSchema, &editRequest)
 					editRequest.PolicyId = resp.PolicyId
 					err = w.ClusterPolicies.Edit(ctx, editRequest)
 				} else {
@@ -90,7 +102,7 @@ func ResourceClusterPolicy() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(resp, s, d)
+			return common.StructToData(resp, rcpSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -99,7 +111,7 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 
 			var request compute.EditPolicy
-			common.DataToStructPointer(d, s, &request)
+			common.DataToStructPointer(d, rcpSchema, &request)
 			request.PolicyId = d.Id()
 			if request.PolicyFamilyId != "" {
 				request.Definition = ""
@@ -113,7 +125,7 @@ func ResourceClusterPolicy() *schema.Resource {
 				return err
 			}
 			var request compute.EditPolicy
-			common.DataToStructPointer(d, s, &request)
+			common.DataToStructPointer(d, rcpSchema, &request)
 			if request.PolicyFamilyId != "" {
 				isBuiltin, err := isBuiltinPolicyFamily(ctx, w, request.PolicyFamilyId, request.Name)
 				if err != nil {
@@ -128,5 +140,10 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 			return w.ClusterPolicies.DeleteByPolicyId(ctx, d.Id())
 		},
-	}.ToResource()
+	}
+}
+
+func rcpSchemaV0() cty.Type {
+	return (&schema.Resource{
+		Schema: rcpSchema}).CoreConfigSchema().ImpliedType()
 }

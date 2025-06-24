@@ -27,7 +27,7 @@ func readWebHook(w *databricks.WorkspaceClient, ctx context.Context, ID string) 
 	return ml.RegistryWebhook{}, fmt.Errorf("webhook with ID %s isn't found", ID)
 }
 
-func ResourceMlflowWebhook() *schema.Resource {
+func ResourceMlflowWebhook() common.Resource {
 	s := common.StructToSchema(
 		ml.CreateRegistryWebhook{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -38,6 +38,8 @@ func ResourceMlflowWebhook() *schema.Resource {
 			m["http_url_spec"].ConflictsWith = []string{"job_spec"}
 			m["job_spec"].ConflictsWith = []string{"http_url_spec"}
 			common.MustSchemaPath(m, "http_url_spec", "enable_ssl_verification").Default = true
+			common.MustSchemaPath(m, "http_url_spec", "secret").Sensitive = true
+			common.MustSchemaPath(m, "job_spec", "access_token").Sensitive = true
 
 			return m
 		})
@@ -103,5 +105,5 @@ func ResourceMlflowWebhook() *schema.Resource {
 			return w.ModelRegistry.DeleteWebhook(ctx, ml.DeleteWebhookRequest{Id: d.Id()})
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

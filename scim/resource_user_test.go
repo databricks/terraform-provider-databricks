@@ -2,10 +2,10 @@ package scim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
@@ -15,7 +15,7 @@ import (
 )
 
 func TestResourceUserRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -34,6 +34,7 @@ func TestResourceUserRead(t *testing.T) {
 							Value:   "9877",
 						},
 					},
+					ExternalID: "def",
 				},
 			},
 		},
@@ -41,15 +42,14 @@ func TestResourceUserRead(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
-	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
-	assert.Equal(t, "users/me@example.com", d.Get("acl_principal_id"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": false,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+		"external_id":          "def",
+	})
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -76,7 +76,7 @@ func TestResourceUserRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -92,7 +92,7 @@ func TestResourceUserRead_Error(t *testing.T) {
 }
 
 func TestResourceUserCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -145,18 +145,17 @@ func TestResourceUserCreate(t *testing.T) {
 		display_name = "Example user"
 		allow_cluster_create = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
-	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
-	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": true,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserCreateInactive(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -210,12 +209,13 @@ func TestResourceUserCreateInactive(t *testing.T) {
 		allow_cluster_create = true
 		active = false
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": true,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserCreate_Error(t *testing.T) {
@@ -268,7 +268,7 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 		},
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -327,13 +327,14 @@ func TestResourceUserUpdate(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Changed Name", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":               "Changed Name",
+		"user_name":                  "me@example.com",
+		"allow_cluster_create":       false,
+		"allow_instance_pool_create": true,
+		"home":                       "/Users/me@example.com",
+		"repos":                      "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserUpdate_Error(t *testing.T) {
@@ -502,7 +503,7 @@ func TestResourceUserforce_delete_reposError(t *testing.T) {
 	require.Error(t, err, err)
 }
 func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -515,7 +516,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 					Path:      "/Repos/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
@@ -529,8 +530,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 			user_name    = "abc"
 			force_delete_repos = true
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_DirError(t *testing.T) {
@@ -561,7 +561,7 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 	require.Error(t, err, err)
 }
 func TestResourceUserDelete_NonExistingDir(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -574,7 +574,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 					Path:      "/Users/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Users/abc) doesn't exist.",
 				},
@@ -588,8 +588,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 			user_name    = "abc"
 			force_delete_home_dir = true
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
@@ -620,7 +619,7 @@ func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
-	d := ResourceUser().TestResourceData()
+	d := ResourceUser().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedUser(
 		fmt.Errorf("nonsense"), d,
@@ -634,15 +633,15 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Status:   417,
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "cannot find user",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
+			errors.New(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -660,10 +659,10 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			errors.New(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -700,11 +699,11 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
+			errors.New(userExistsErrorMessage("Me@Example.Com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -742,11 +741,11 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			errors.New(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

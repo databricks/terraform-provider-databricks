@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceMetastoreAssignment() *schema.Resource {
+func ResourceMetastoreAssignment() common.Resource {
 	s := common.StructToSchema(catalog.MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["default_catalog_name"].Default = "hive_metastore"
+			m["default_catalog_name"].Computed = true
+			m["default_catalog_name"].Deprecated = "Use databricks_default_namespace_setting resource instead"
 			m["workspace_id"].ForceNew = true
 			m["metastore_id"].ForceNew = true
 			return m
@@ -76,6 +77,8 @@ func ResourceMetastoreAssignment() *schema.Resource {
 					return err
 				}
 				d.Set("metastore_id", ma.MetastoreId)
+				d.Set("default_catalog_name", ma.DefaultCatalogName)
+				d.Set("workspace_id", workspaceId)
 				return nil
 			})
 		},
@@ -115,5 +118,5 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }

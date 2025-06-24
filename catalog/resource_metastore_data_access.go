@@ -19,7 +19,7 @@ type GcpServiceAccountKey struct {
 }
 
 var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity",
-	"gcp_service_account_key", "databricks_gcp_service_account"}
+	"gcp_service_account_key", "databricks_gcp_service_account", "cloudflare_api_token"}
 
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 	//ignore changes in private_key
@@ -28,11 +28,9 @@ func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 
 // it's used by both ResourceMetastoreDataAccess & ResourceStorageCredential
 func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	m["aws_iam_role"].AtLeastOneOf = alofCred
-	m["azure_service_principal"].AtLeastOneOf = alofCred
-	m["azure_managed_identity"].AtLeastOneOf = alofCred
-	m["gcp_service_account_key"].AtLeastOneOf = alofCred
-	m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
+	for _, cred := range alofCred {
+		common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofCred)
+	}
 
 	// suppress changes for private_key
 	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
@@ -42,6 +40,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
 	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
 	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
+	common.MustSchemaPath(m, "azure_service_principal", "client_secret").Sensitive = true
+	common.MustSchemaPath(m, "cloudflare_api_token", "secret_access_key").Sensitive = true
 
 	m["force_destroy"] = &schema.Schema{
 		Type:     schema.TypeBool,
@@ -56,6 +56,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 		return old == "false" && new == "true"
 	}
+
+	m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 	return m
 }
@@ -73,7 +75,7 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
-func ResourceMetastoreDataAccess() *schema.Resource {
+func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
 		Schema:        dacSchema,
@@ -88,13 +90,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
 
-			tmpSchema := removeGcpSaField(dacSchema)
 			var create catalog.CreateStorageCredential
-			common.DataToStructPointer(d, tmpSchema, &create)
-			//manually add empty struct back for databricks_gcp_service_account
-			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
-				create.DatabricksGcpServiceAccount = struct{}{}
-			}
+			common.DataToStructPointer(d, dacSchema, &create)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				dac, err := acc.StorageCredentials.Create(ctx,
@@ -194,7 +191,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }
 
 // migrate to v1 state, as the id is now changed

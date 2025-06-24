@@ -3,11 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_catalog Resource
 
--> **Note** This resource could be only used with workspace-level provider!
-
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 A `databricks_catalog` is contained within [databricks_metastore](metastore.md) and can contain [databricks_schema](schema.md). By default, Databricks creates `default` schema for every new catalog, but Terraform plugin is removing this auto-created schema, so that resource destruction could be done in a clean way.
+
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -32,6 +32,7 @@ The following arguments are required:
 * `connection_name` - (Optional) For Foreign Catalogs: the name of the connection to an external data source. Changes forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
 * `isolation_mode` - (Optional) Whether the catalog is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the catalog to `ISOLATED` will automatically allow access from the current workspace.
+* `enable_predictive_optimization` - (Optional) Whether predictive optimization should be enabled for this object and objects under it. Can be `ENABLE`, `DISABLE` or `INHERIT`
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
 * `options` - (Optional) For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.
@@ -41,12 +42,21 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `metastore_id` - ID of the parent metastore.
 * `id` - ID of this catalog - same as the `name`.
+* `metastore_id` - ID of the parent metastore.
 
 ## Import
 
 This resource can be imported by name:
+
+```hcl
+import {
+  to = databricks_catalog.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_catalog.this <name>

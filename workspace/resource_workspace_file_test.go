@@ -1,35 +1,33 @@
 package workspace
 
 import (
-	"net/http"
+	"errors"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
 	dummyWorkspaceFilePath    = "/foo/path.py"
-	dummyWorkspaceFilePathUrl = "path=%2Ffoo%2Fpath.py"
 	dummyWorkspaceFilePayload = "YWJjCg=="
 )
 
 func TestResourceWorkspaceFileRead(t *testing.T) {
-	objectID := 12345
+	objectID := int64(12345)
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
-				Response: ObjectStatus{
-					ObjectID:   int64(objectID),
-					ObjectType: File,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       dummyWorkspaceFilePath,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		Read:     true,
@@ -39,20 +37,20 @@ func TestResourceWorkspaceFileRead(t *testing.T) {
 		"id":             dummyWorkspaceFilePath,
 		"path":           dummyWorkspaceFilePath,
 		"workspace_path": "/Workspace" + dummyWorkspaceFilePath,
-		"object_id":      objectID,
+		"object_id":      int(objectID),
 	})
 }
 
 func TestResourceWorkspaceFileDelete(t *testing.T) {
 	path := "/test/path.py"
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          http.MethodPost,
-				Resource:        "/api/2.0/workspace/delete",
-				Status:          http.StatusOK,
-				ExpectedRequest: DeletePath{Path: path, Recursive: false},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Delete(mock.Anything, ws_api.Delete{
+					Path:      path,
+					Recursive: false,
+				}).
+				Return(nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		Delete:   true,
@@ -64,16 +62,10 @@ func TestResourceWorkspaceFileDelete(t *testing.T) {
 
 func TestResourceWorkspaceFileRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{ // read log output for correct url...
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/test/path").
+				Return(nil, apierr.ErrNotFound)
 		},
 		Resource: ResourceWorkspaceFile(),
 		Read:     true,
@@ -84,16 +76,10 @@ func TestResourceWorkspaceFileRead_NotFound(t *testing.T) {
 
 func TestResourceWorkspaceFileRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/test/path").
+				Return(nil, errors.New("Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		Read:     true,
@@ -105,40 +91,21 @@ func TestResourceWorkspaceFileRead_Error(t *testing.T) {
 
 func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/foo",
-				},
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content:   dummyWorkspaceFilePayload,
-					Path:      dummyWorkspaceFilePath,
-					Overwrite: true,
-					Format:    "AUTO",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
-				Response: ExportPath{
-					Content: dummyWorkspaceFilePayload,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: File,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         dummyWorkspaceFilePayload,
+				Path:            dummyWorkspaceFilePath,
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       dummyWorkspaceFilePath,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -152,56 +119,30 @@ func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 }
 
 func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/foo",
-				},
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content:   dummyWorkspaceFilePayload,
-					Path:      dummyWorkspaceFilePath,
-					Overwrite: true,
-					Format:    "AUTO",
-				},
-				Response: map[string]string{
-					"error_code": "RESOURCE_DOES_NOT_EXIST",
-					"message":    "The parent folder (/foo) does not exist.",
-				},
-				Status: 404,
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content:   dummyWorkspaceFilePayload,
-					Path:      dummyWorkspaceFilePath,
-					Overwrite: true,
-					Format:    "AUTO",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
-				Response: ExportPath{
-					Content: dummyWorkspaceFilePayload,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: File,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         dummyWorkspaceFilePayload,
+				Path:            dummyWorkspaceFilePath,
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(errors.New("The parent folder (/foo) does not exist.")).Once()
+			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").Return(nil)
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         dummyWorkspaceFilePayload,
+				Path:            dummyWorkspaceFilePath,
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       dummyWorkspaceFilePath,
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -209,41 +150,24 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, dummyWorkspaceFilePath, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": dummyWorkspaceFilePath,
+	})
 }
 
 func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/foo",
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content:   dummyWorkspaceFilePayload,
-					Path:      dummyWorkspaceFilePath,
-					Overwrite: true,
-					Format:    "AUTO",
-				},
-				Response: map[string]string{
-					"error_code": "RESOURCE_DOES_NOT_EXIST",
-					"message":    "The parent folder (/foo) does not exist.",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         dummyWorkspaceFilePayload,
+				Path:            dummyWorkspaceFilePath,
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(errors.New("The parent folder (/foo) does not exist."))
+			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").
+				Return(errors.New("INVALID_REQUEST: Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -256,29 +180,24 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 }
 
 func TestResourceWorkspaceFileCreateSource(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
-						"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
-						"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
-					Path:      "/Dashboard",
-					Overwrite: true,
-					Format:    "AUTO",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FDashboard",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: File,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
+					"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
+					"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
+				Path:            "/Dashboard",
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, "/Dashboard").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       "/Dashboard",
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -286,34 +205,30 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 			"path":   "/Dashboard",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/Dashboard", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/Dashboard",
+		"path":           "/Dashboard",
+		"workspace_path": "/Workspace/Dashboard",
+		"object_id":      4567})
 }
 
 func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Content:         "",
-					Path:            "/__init__.py",
-					Overwrite:       true,
-					Format:          "AUTO",
-					ForceSendFields: []string{"Content"},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2F__init__.py",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: File,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         "",
+				Path:            "/__init__.py",
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, "/__init__.py").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       "/__init__.py",
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -321,29 +236,22 @@ func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
 			"path":   "/__init__.py",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/__init__.py", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "/__init__.py",
+	})
 }
 
 func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: map[string]interface{}{
-					"content":   dummyWorkspaceFilePayload,
-					"format":    "AUTO",
-					"overwrite": true,
-					"path":      "/path.py",
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Import(mock.Anything, ws_api.Import{
+					Content:         dummyWorkspaceFilePayload,
+					Path:            "/path.py",
+					Overwrite:       true,
+					Format:          ws_api.ImportFormatRaw,
+					ForceSendFields: []string{"Content"},
+				}).Return(errors.New("Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
@@ -358,16 +266,12 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 
 func TestResourceWorkspaceFileDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/delete",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				Delete(mock.Anything, ws_api.Delete{
+					Path: "abc",
+				}).
+				Return(errors.New("Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		Delete:   true,
@@ -379,26 +283,21 @@ func TestResourceWorkspaceFileDelete_Error(t *testing.T) {
 
 func TestResourceWorkspaceFileUpdate(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ws_api.Import{
-					Format:    "AUTO",
-					Overwrite: true,
-					Content:   dummyWorkspaceFilePayload,
-					Path:      "abc",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=abc",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: File,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Import(mock.Anything, ws_api.Import{
+				Content:         dummyWorkspaceFilePayload,
+				Path:            "abc",
+				Overwrite:       true,
+				Format:          ws_api.ImportFormatRaw,
+				ForceSendFields: []string{"Content"},
+			}).Return(nil)
+			workspaceAPI.GetStatusByPath(mock.Anything, "abc").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
 					Path:       "abc",
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{

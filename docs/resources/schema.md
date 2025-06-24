@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
--> **Note** This resource could be only used with workspace-level provider!
-
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
+
+-> This resource can only be used with a workspace-level provider!
 
 A `databricks_schema` is contained within [databricks_catalog](catalog.md) and can contain tables & views.
 
@@ -40,6 +40,7 @@ The following arguments are required:
 * `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Schema properties.
+* `enable_predictive_optimization` - (Optional) Whether predictive optimization should be enabled for this object and objects under it. Can be `ENABLE`, `DISABLE` or `INHERIT`
 * `force_destroy` - (Optional) Delete schema regardless of its contents.
 
 ## Attribute Reference
@@ -47,13 +48,23 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this schema in form of `<catalog_name>.<name>`.
+* `schema_id` - The unique identifier of the schema.
 
 ## Import
 
 This resource can be imported by its full name:
 
+```hcl
+import {
+  to = databricks_schema.this
+  id = "<catalog_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_schema.this <catalog_name>.<name>
+terraform import databricks_schema.this "<catalog_name>.<name>"
 ```
 
 ## Related Resources

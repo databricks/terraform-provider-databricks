@@ -20,17 +20,15 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.1/unity-catalog/workspaces/123/metastore",
 				ExpectedRequest: catalog.CreateMetastoreAssignment{
-					DefaultCatalogName: "hive_metastore",
-					MetastoreId:        "a",
+					MetastoreId: "a",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
 				Response: catalog.MetastoreAssignment{
-					MetastoreId:        "a",
-					WorkspaceId:        123,
-					DefaultCatalogName: "hive_metastore",
+					MetastoreId: "a",
+					WorkspaceId: 123,
 				},
 			},
 		},
@@ -43,6 +41,28 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestMetastoreAssignment_Import(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId:        "a",
+					WorkspaceId:        123,
+					DefaultCatalogName: "test_metastore",
+				},
+			},
+		},
+		Resource: ResourceMetastoreAssignment(),
+		Read:     true,
+		ID:       "123|a",
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id": 123,
+		"metastore_id": "a",
+	})
+}
+
 func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -51,8 +71,7 @@ func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/workspaces/123/metastores/a",
 				ExpectedRequest: catalog.AccountsCreateMetastoreAssignment{
 					MetastoreAssignment: &catalog.CreateMetastoreAssignment{
-						DefaultCatalogName: "hive_metastore",
-						MetastoreId:        "a",
+						MetastoreId: "a",
 					},
 				},
 			},
@@ -61,9 +80,8 @@ func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/workspaces/123/metastore?",
 				Response: catalog.AccountsMetastoreAssignment{
 					MetastoreAssignment: &catalog.MetastoreAssignment{
-						MetastoreId:        "a",
-						WorkspaceId:        123,
-						DefaultCatalogName: "hive_metastore",
+						MetastoreId: "a",
+						WorkspaceId: 123,
 					},
 				},
 			},
@@ -84,10 +102,10 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/workspaces/123/metastores/b",
-				ExpectedRequest: catalog.AccountsCreateMetastoreAssignment{
-					MetastoreAssignment: &catalog.CreateMetastoreAssignment{
-						DefaultCatalogName: "hive_metastore",
-						MetastoreId:        "b",
+				//CreateMetastoreAssignment needs to have default_catalog_name marked as omitempty
+				ExpectedRequest: map[string]any{
+					"metastore_assignment": map[string]any{
+						"metastore_id": "b",
 					},
 				},
 			},
@@ -96,9 +114,8 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/workspaces/123/metastore?",
 				Response: catalog.AccountsMetastoreAssignment{
 					MetastoreAssignment: &catalog.MetastoreAssignment{
-						MetastoreId:        "b",
-						WorkspaceId:        123,
-						DefaultCatalogName: "hive_metastore",
+						MetastoreId: "b",
+						WorkspaceId: 123,
 					},
 				},
 			},
@@ -125,10 +142,10 @@ func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/workspaces/124/metastores/a",
-				ExpectedRequest: catalog.AccountsCreateMetastoreAssignment{
-					MetastoreAssignment: &catalog.CreateMetastoreAssignment{
-						DefaultCatalogName: "hive_metastore",
-						MetastoreId:        "a",
+				//CreateMetastoreAssignment needs to have default_catalog_name marked as omitempty
+				ExpectedRequest: map[string]any{
+					"metastore_assignment": map[string]any{
+						"metastore_id": "a",
 					},
 				},
 			},
@@ -137,9 +154,8 @@ func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/workspaces/123/metastore?",
 				Response: catalog.AccountsMetastoreAssignment{
 					MetastoreAssignment: &catalog.MetastoreAssignment{
-						MetastoreId:        "a",
-						WorkspaceId:        123,
-						DefaultCatalogName: "hive_metastore",
+						MetastoreId: "a",
+						WorkspaceId: 123,
 					},
 				},
 			},

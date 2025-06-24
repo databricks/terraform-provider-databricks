@@ -2,9 +2,11 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
@@ -19,10 +21,23 @@ type AzureADLSGen2Mount struct {
 	InitializeFileSystem bool   `json:"initialize_file_system"`
 }
 
+func getAzureDomain(client *common.DatabricksClient) string {
+	domains := map[string]string{
+		"PUBLIC":       "core.windows.net",
+		"USGOVERNMENT": "core.usgovcloudapi.net",
+		"CHINA":        "core.chinacloudapi.cn",
+	}
+	azureEnvironment := client.Config.Environment().AzureEnvironment.Name
+	domain, ok := domains[strings.ToUpper(azureEnvironment)]
+	if !ok {
+		panic(fmt.Sprintf("Unknown Azure environment: '%s'", azureEnvironment))
+	}
+	return domain
+}
+
 // Source returns ABFSS URI backing the mount
-func (m AzureADLSGen2Mount) Source() string {
-	return fmt.Sprintf("abfss://%s@%s.dfs.core.windows.net%s",
-		m.ContainerName, m.StorageAccountName, m.Directory)
+func (m AzureADLSGen2Mount) Source(client *common.DatabricksClient) string {
+	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
 }
 
 func (m AzureADLSGen2Mount) Name() string {
@@ -47,8 +62,8 @@ func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]s
 }
 
 // ResourceAzureAdlsGen2Mount creates the resource
-func ResourceAzureAdlsGen2Mount() *schema.Resource {
-	return deprecatedMountTesource(commonMountResource(AzureADLSGen2Mount{}, map[string]*schema.Schema{
+func ResourceAzureAdlsGen2Mount() common.Resource {
+	return deprecatedMountResource(commonMountResource(AzureADLSGen2Mount{}, map[string]*schema.Schema{
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -105,6 +120,13 @@ func ResourceAzureAdlsGen2Mount() *schema.Resource {
 			Type:     schema.TypeBool,
 			Required: true,
 			ForceNew: true,
+		},
+		"environment": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringInSlice([]string{"PUBLIC", "USGOVERNMENT", "CHINA"}, false),
+			Default:      "PUBLIC",
 		},
 	}))
 }

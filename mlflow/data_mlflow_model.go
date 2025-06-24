@@ -6,10 +6,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceModel() *schema.Resource {
+func DataSourceModel() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Name            string             `json:"name"`
 		UserId          string             `json:"user_id,omitempty" tf:"computed"`

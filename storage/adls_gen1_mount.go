@@ -20,7 +20,7 @@ type AzureADLSGen1Mount struct {
 }
 
 // Source ...
-func (m AzureADLSGen1Mount) Source() string {
+func (m AzureADLSGen1Mount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("adl://%s.azuredatalakestore.net%s", m.StorageResource, m.Directory)
 }
 
@@ -45,8 +45,8 @@ func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]s
 }
 
 // ResourceAzureAdlsGen1Mount creates the resource
-func ResourceAzureAdlsGen1Mount() *schema.Resource {
-	return deprecatedMountTesource(commonMountResource(AzureADLSGen1Mount{}, map[string]*schema.Schema{
+func ResourceAzureAdlsGen1Mount() common.Resource {
+	return deprecatedMountResource(commonMountResource(AzureADLSGen1Mount{}, map[string]*schema.Schema{
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,

@@ -11,37 +11,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func ResourceMwsPrivateAccessSettings() *schema.Resource {
-	s := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// nolint
-		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
-		common.SetRequired(s["private_access_settings_name"])
-		common.SetRequired(s["region"])
+func ResourceMwsPrivateAccessSettings() common.Resource {
+	pasSchema := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(m, "private_access_settings_name").SetValidateFunc(validation.StringLenBetween(4, 256))
+		common.CustomizeSchemaPath(m, "private_access_settings_name").SetRequired()
 
-		s["private_access_level"].ValidateFunc = validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true)
-		common.SetDefault(s["private_access_level"], "ACCOUNT")
+		common.CustomizeSchemaPath(m, "region").SetRequired()
 
-		s["private_access_settings_id"].Computed = true
+		common.CustomizeSchemaPath(m, "private_access_settings_id").SetComputed()
 
-		common.AddAccountIdField(s)
-		return s
+		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
+		common.CustomizeSchemaPath(m, "private_access_level").SetDefault("ACCOUNT")
+
+		common.AddAccountIdField(m)
+		return m
 	})
 	p := common.NewPairSeparatedID("account_id", "private_access_settings_id", "/")
 	return common.Resource{
-		Schema: s,
+		Schema: pasSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			a, err := c.AccountClientWithAccountIdFromConfig(d)
 			if err != nil {
 				return err
 			}
 			var pas provisioning.UpsertPrivateAccessSettingsRequest
-			common.DataToStructPointer(d, s, &pas)
+			common.DataToStructPointer(d, pasSchema, &pas)
 			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
 			res, err := a.PrivateAccess.Create(ctx, pas)
 			if err != nil {
 				return err
 			}
 			d.Set("private_access_settings_id", res.PrivateAccessSettingsId)
+			d.Set("account_id", res.AccountId)
 			p.Pack(d)
 			return nil
 		},
@@ -54,7 +55,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(pas, s, d)
+			return common.StructToData(pas, pasSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			a, pasID, err := c.AccountClientWithAccountIdFromPair(d, p)
@@ -62,7 +63,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 				return err
 			}
 			var pas provisioning.UpsertPrivateAccessSettingsRequest
-			common.DataToStructPointer(d, s, &pas)
+			common.DataToStructPointer(d, pasSchema, &pas)
 			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
 			pas.PrivateAccessSettingsId = pasID
 			return a.PrivateAccess.Replace(ctx, pas)
@@ -74,5 +75,5 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			}
 			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
 		},
-	}.ToResource()
+	}
 }

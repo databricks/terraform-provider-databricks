@@ -96,12 +96,13 @@ func (a DashboardAPI) Delete(dashboardID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
 }
 
-func ResourceSqlDashboard() *schema.Resource {
+func ResourceSqlDashboard() common.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
 		common.NoCustomize)
 
 	return common.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
@@ -141,5 +142,5 @@ func ResourceSqlDashboard() *schema.Resource {
 			return NewDashboardAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

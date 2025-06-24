@@ -3,11 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_grant Resource
 
--> **Note**
-  This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
+-> This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
--> **Note**
-  Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
+-> Most of Unity Catalog APIs are only accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive `ALL_PRIVILEGES` on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
@@ -32,14 +30,14 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
-  metastore = databricks_metastore.this.id
+  metastore = "metastore_id"
 
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
-  metastore = databricks_metastore.this.id
+  metastore = "metastore_id"
 
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
@@ -52,9 +50,8 @@ See [databricks_grants Catalog grants](grants.md#catalog-grants) for the list of
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -215,6 +212,48 @@ resource "databricks_grant" "customers_data_analysts" {
 }
 ```
 
+## Function grants
+
+See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to Registered models.
+
+```hcl
+resource "databricks_grant" "udf_data_engineers" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Engineers"
+  privileges = ["EXECUTE"]
+}
+
+resource "databricks_grant" "udf_data_analysts" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Analysts"
+  privileges = ["EXECUTE"]
+}
+```
+
+## Service credential grants
+
+See [databricks_grants Service credential grants](grants.md#service-credential-grants) for the list of privileges that apply to Service credentials.
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  purpose = "SERVICE"
+  comment = "Managed by TF"
+}
+
+resource "databricks_grant" "external_creds" {
+  credential = databricks_credential.external.id
+
+  principal  = "Data Engineers"
+  privileges = ["ACCESS"]
+}
+```
+
 ## Storage credential grants
 
 See [databricks_grants Storage credential grants](grants.md#storage-credential-grants) for the list of privileges that apply to Storage credentials.
@@ -329,3 +368,20 @@ resource "databricks_grant" "some" {
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.
+
+## Import
+
+The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...), it's name and `principal`:
+
+```hcl
+import {
+  to = databricks_grant.this
+  id = "<securable_type>/<securable_name>/<principal>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_grant.this <securable_type>/<securable_name>/<principal>
+```

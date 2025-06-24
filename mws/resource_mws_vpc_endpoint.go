@@ -8,8 +8,8 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // NewVPCEndpointAPI creates VPCEndpointAPI instance from provider meta
@@ -74,7 +74,7 @@ func (a VPCEndpointAPI) List(mwsAcctID string) ([]VPCEndpoint, error) {
 	return mwsVPCEndpointList, err
 }
 
-func ResourceMwsVpcEndpoint() *schema.Resource {
+func ResourceMwsVpcEndpoint() common.Resource {
 	s := common.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["aws_vpc_endpoint_id"].ExactlyOneOf = []string{"aws_vpc_endpoint_id", "gcp_vpc_endpoint_info"}
@@ -115,5 +115,5 @@ func ResourceMwsVpcEndpoint() *schema.Resource {
 			}
 			return NewVPCEndpointAPI(ctx, c).Delete(accountID, vpcEndpointID)
 		},
-	}.ToResource()
+	}
 }

@@ -5,9 +5,11 @@ subcategory: "Storage"
 
 This resource will [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`. Right now it supports mounting AWS S3, Azure (Blob Storage, ADLS Gen1 & Gen2), Google Cloud Storage.  It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount.
 
-**Note** When `cluster_id` is not specified, it will create the smallest possible cluster in the default availability zone with name equal to or starting with `terraform-mount` for the shortest possible amount of time. To avoid mount failure due to potentially quota or capacity issues with the default cluster, we recommend specifying a cluster to use for mounting.
+-> This resource can only be used with a workspace-level provider!
 
-**Note** CRUD operations on a databricks mount require a running cluster. Due to limitations of terraform and the databricks mounts APIs, if the cluster the mount was most recently created / updated using no longer exists AND the mount is destroyed as a part of a terraform apply, we mark it as deleted without cleaning it up from the workspace.
+-> When `cluster_id` is not specified, it will create the smallest possible cluster in the default availability zone with name equal to or starting with `terraform-mount` for the shortest possible amount of time. To avoid mount failure due to potentially quota or capacity issues with the default cluster, we recommend specifying a cluster to use for mounting.
+
+-> CRUD operations on a databricks mount require a running cluster. Due to limitations of terraform and the databricks mounts APIs, if the cluster the mount was most recently created / updated using no longer exists AND the mount is destroyed as a part of a terraform apply, we mark it as deleted without cleaning it up from the workspace.
 
 This resource provides two ways of mounting a storage account:
 
@@ -62,9 +64,9 @@ resource "databricks_mount" "this" {
 
 ### Example mounting ADLS Gen2 with AAD passthrough
 
--> **Note** AAD passthrough is considered a legacy data access pattern. Use Unity Catalog for fine-grained data access control.
+-> AAD passthrough is considered a legacy data access pattern. Use Unity Catalog for fine-grained data access control.
 
--> **Note** Mounts using AAD passthrough cannot be created using a service principal.
+-> Mounts using AAD passthrough cannot be created using a service principal.
 
 To mount ALDS Gen2 with Azure Active Directory Credentials passthrough we need to execute the mount commands using the cluster configured with AAD Credentials passthrough & provide necessary configuration parameters (see [documentation](https://docs.microsoft.com/en-us/azure/databricks/security/credential-passthrough/adls-passthrough#--mount-azure-data-lake-storage-to-dbfs-using-credential-passthrough) for more details).
 
@@ -341,7 +343,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

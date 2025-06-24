@@ -1,0 +1,59 @@
+name: PR Comment
+
+# WARNING:
+# THIS WORKFLOW ALWAYS RUNS FOR EXTERNAL CONTRIBUTORS WITHOUT ANY APPROVAL.
+# THIS WORKFLOW RUNS FROM MAIN BRANCH, NOT FROM THE PR BRANCH.
+# DO NOT PULL THE PR OR EXECUTE ANY CODE FROM THE PR.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+jobs:
+  comment-on-pr:
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete old comments
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            # Delete previous comment if it exists
+            previous_comment_ids=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+              --jq '.[] | select(.body | startswith("<!-- INTEGRATION_TESTS_MANUAL -->")) | .id')
+            echo "Previous comment IDs: $previous_comment_ids"
+            # Iterate over each comment ID and delete the comment
+            if [ ! -z "$previous_comment_ids" ]; then
+              echo "$previous_comment_ids" | while read -r comment_id; do
+                echo "Deleting comment with ID: $comment_id"
+                gh api "repos/${{ github.repository }}/issues/comments/$comment_id" -X DELETE
+              done
+            fi
+
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body \
+          "<!-- INTEGRATION_TESTS_MANUAL -->
+          If integration tests don't run automatically, an authorized user can run them manually by following the instructions below:
+
+          Trigger:
+          [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)
+
+          Inputs:
+          * PR number: ${{github.event.pull_request.number}}
+          * Commit SHA: \`${{ env.COMMIT_SHA }}\`
+
+          Checks will be approved automatically on success.
+          "

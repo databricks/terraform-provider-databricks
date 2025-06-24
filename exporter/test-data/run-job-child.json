@@ -1,6 +1,8 @@
 {
   "created_time":1678702840675,
   "job_id":932035899730845,
+  "run_as_user_name": "c1b2a35b-87c4-481a-a0fb-0508be621957",
+  "run_as_owner": false,
   "settings": {
     "format":"MULTI_TASK",
     "max_concurrent_runs":1,

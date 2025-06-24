@@ -1,0 +1,119 @@
+ignored_tests:
+  go:
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccGroupsUpdateDisplayName
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestMwsAccGroupDataSplitMembers
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccServicePrincipalResourceOnAws
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestMwsAccServicePrincipalResourceOnAws
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestUcAccAssignGroupToWorkspace
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/vectorsearch
+      test_name: TestUcAccVectorSearchEndpoint
+      comment: Failure due to read-after-create inconsistency. https://databricks.atlassian.net/browse/ES-1243690
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccServicePrincipalResourceOnAzure
+      comment: Failure due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestMwsAccGcpWorkspaces 
+      comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
+    - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestMwsAccGcpByovpcWorkspaces
+      comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Cluster
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_InstancePool
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_ClusterPolicy
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Job
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Pipeline
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Notebook_Path
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Notebook_Id
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Directory_Path
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Directory_Id
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Directory_RootDirectoryCorrectlyHandlesAdminUsers
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_WorkspaceFile_Path
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_WorkspaceFile_Id
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Repo_Id
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Repo_Path
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Authorization_Passwords
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Authorization_Tokens
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_SqlWarehouses
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_SqlAlert
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_SqlQuery
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Dashboard
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Experiment
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_RegisteredModel
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_RegisteredModel_Root
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_ServingEndpoint
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Alert
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Query
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_App
+      comment: Failure due to API timeouts in the permissions APIs.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle
+      comment: Failure due to stale results being returned from cache on using empty etag.  
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestMwsAccAccountGroupRuleSetsFullLifeCycle
+      comment: Failure due to stale results being returned from cache on using empty etag.
+    - package: github.com/databricks/terraform-provider-databricks/serving
+      test_name: TestUcAccModelServingProvisionedThroughputResource
+      comment: Failure due to limited capacity in specific regions

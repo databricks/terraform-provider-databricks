@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // UC catalog resources accept an optional metastore_id parameter. This is required for account-level operations, but it is not used
@@ -25,4 +26,34 @@ func validateMetastoreId(ctx context.Context, w *databricks.WorkspaceClient, met
 			"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set", cat.MetastoreId)
 	}
 	return nil
+}
+
+// Given a slice of SqlColumnInfo, construct the corresponding HCL string.
+func GetSqlColumnInfoHCL(columnInfos []SqlColumnInfo) string {
+	columnsTemplate := ""
+
+	for _, ci := range columnInfos {
+		ciTemplate := fmt.Sprintf(
+			`
+			column {
+				name      = "%s"
+				type      = "%s"
+				nullable  = %t
+				comment   = "%s"
+			}
+			`, ci.Name, ci.Type, ci.Nullable, ci.Comment,
+		)
+		columnsTemplate += ciTemplate
+	}
+	return columnsTemplate
+}
+
+// check if a UC resource needs the additional update call during create operation
+func updateRequired(d *schema.ResourceData, updateOnly []string) bool {
+	for _, key := range updateOnly {
+		if d.Get(key) != "" {
+			return true
+		}
+	}
+	return false
 }

@@ -43,6 +43,7 @@ var entitlementMapping = map[string]string{
 	"allow-instance-pool-create": "allow_instance_pool_create",
 	"databricks-sql-access":      "databricks_sql_access",
 	"workspace-access":           "workspace_access",
+	"workspace-consume":          "workspace_consume",
 }
 
 // order is important for tests
@@ -51,6 +52,7 @@ var possibleEntitlements = []string{
 	"allow-instance-pool-create",
 	"databricks-sql-access",
 	"workspace-access",
+	"workspace-consume",
 }
 
 type entitlements []ComplexValue
@@ -72,16 +74,6 @@ func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	return nil
 }
 
-func generateFullEntitlements() entitlements {
-	var e entitlements
-	for _, entitlement := range possibleEntitlements {
-		e = append(e, ComplexValue{
-			Value: entitlement,
-		})
-	}
-	return e
-}
-
 func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	var e entitlements
 	for _, entitlement := range possibleEntitlements {
@@ -101,15 +93,22 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	return e
 }
 
-func addEntitlementsToSchema(s *map[string]*schema.Schema) {
+func addEntitlementsToSchema(s map[string]*schema.Schema) {
 	for _, entitlement := range possibleEntitlements {
 		field_name := entitlementMapping[entitlement]
-		(*s)[field_name] = &schema.Schema{
+		s[field_name] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		}
 	}
+	s["workspace_consume"].ConflictsWith = []string{"workspace_access", "databricks_sql_access"}
+}
+
+// ResourceMeta is a struct that contains the meta information about the SCIM group
+type ResourceMeta struct {
+	// ResourceType is the type of the resource: "Group" or "WorkspaceGroup"
+	ResourceType string `json:"resourceType,omitempty"`
 }
 
 // Group contains information about the SCIM group
@@ -122,6 +121,7 @@ type Group struct {
 	Roles        []ComplexValue `json:"roles,omitempty"`
 	Entitlements entitlements   `json:"entitlements,omitempty"`
 	ExternalID   string         `json:"externalId,omitempty"`
+	Meta         *ResourceMeta  `json:"meta,omitempty" tf:"computed"`
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api
@@ -175,14 +175,19 @@ type patchRequest struct {
 	Operations []patchOperation `json:"Operations,omitempty"`
 }
 
-func PatchRequest(op, path, value string) patchRequest {
+func PatchRequest(op, path string) patchRequest {
+	o := patchOperation{
+		Op:   op,
+		Path: path,
+	}
+	return PatchRequestComplexValue([]patchOperation{o})
+}
+
+func PatchRequestWithValue(op, path, value string) patchRequest {
 	o := patchOperation{
 		Op:    op,
 		Path:  path,
-		Value: value,
-	}
-	if value != "" {
-		o.Value = []ComplexValue{{Value: value}}
+		Value: []ComplexValue{{Value: value}},
 	}
 	return PatchRequestComplexValue([]patchOperation{o})
 }

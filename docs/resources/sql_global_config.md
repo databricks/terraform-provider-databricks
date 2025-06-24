@@ -5,6 +5,8 @@ subcategory: "Databricks SQL"
 
 This resource configures the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace. *Please note that changing parameters of this resource will restart all running [databricks_sql_endpoint](sql_endpoint.md).*  To use this resource you need to be an administrator.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example usage
 
 ### AWS example
@@ -39,23 +41,31 @@ resource "databricks_sql_global_config" "this" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported (see [documentation](https://docs.databricks.com/sql/api/sql-endpoints.html#global-edit) for more details):
 
 * `security_policy` (Optional, String) - The policy for controlling access to datasets. Default value: `DATA_ACCESS_CONTROL`, consult documentation for list of possible values
 * `data_access_config` (Optional, Map) - Data access configuration for [databricks_sql_endpoint](sql_endpoint.md), such as configuration for an external Hive metastore, Hadoop Filesystem configuration, etc.  Please note that the list of supported configuration properties is limited, so refer to the [documentation](https://docs.databricks.com/sql/admin/data-access-configuration.html#supported-properties) for a full list.  Apply will fail if you're specifying not permitted configuration.
-* `instance_profile_arn` (Optional, String) - [databricks_instance_profile](instance_profile.md) used to access storage from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for AWS, and will generate an error if used on other clouds. 
-* `google_service_account` (Optional, String) - used to access GCP services, such as Cloud Storage, from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for GCP, and will generate an error if used on other clouds. 
+* `instance_profile_arn` (Optional, String) - [databricks_instance_profile](instance_profile.md) used to access storage from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for AWS, and will generate an error if used on other clouds.
+* `google_service_account` (Optional, String) - used to access GCP services, such as Cloud Storage, from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for GCP, and will generate an error if used on other clouds.
 * `sql_config_params` (Optional, Map) - SQL Configuration Parameters let you override the default behavior for all sessions with all endpoints.
 
 ## Import
 
 You can import a `databricks_sql_global_config` resource with command like the following (you need to use `global` as ID):
 
+```hcl
+import {
+  to = databricks_sql_global_config.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_sql_global_config.this global
+terraform import databricks_sql_global_config.this global
 ```
 
 ## Related Resources

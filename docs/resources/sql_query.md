@@ -3,9 +3,11 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_query Resource
 
+!> This resource is deprecated! Please switch to [databricks_query](query.md#migrating-from-databricks_sql_query-resource).
+
 To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
-**Note:** documentation for this resource is a work in progress.
+-> documentation for this resource is a work in progress.
 
 A query may have one or more [visualizations](sql_visualization.md).
 
@@ -111,12 +113,27 @@ For `text`, `number`, `date`, `datetime`, `datetimesec` block
 
 * `value` - The default value for this parameter.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - the unique ID of the SQL Query.
+
 ## Import
 
 You can import a `databricks_sql_query` resource with ID like the following:
 
+```hcl
+import {
+  to = databricks_sql_query.this
+  id = "<query-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_sql_query.this <query-id>
+terraform import databricks_sql_query.this "<query-id>"
 ```
 
 ## Troubleshooting

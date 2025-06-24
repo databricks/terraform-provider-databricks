@@ -6,6 +6,8 @@ subcategory: "Deployment"
 
 Lists all available [databricks_instance_profiles](../resources/instance_profile.md).
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 Get all instance profiles:
@@ -26,6 +28,7 @@ There are no arguments available for this data source.
 ## Attribute Reference
 
 This data source exports the following attributes:
+
 * `instance_profiles` - Set of objects for a [databricks_instance_profile](../resources/instance_profile.md). This contains the following attributes:
   * `name` - Name of the instance profile.
   * `arn` - ARN of the instance profile.

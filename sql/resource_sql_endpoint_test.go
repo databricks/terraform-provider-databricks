@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
@@ -11,6 +12,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -154,6 +156,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 				AutoStopMins:       0,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
 				Poll: poll.Simple(getResponse),
 			}, nil)
@@ -188,6 +191,69 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.ExpectError(t, "failed creating warehouse: Databricks SQL is not supported")
+}
+
+// this is pending https://github.com/databricks/databricks-sdk-go/pull/1155
+func simpleError[R any](err error) poll.PollFunc[R] {
+	return func(_ time.Duration, _ func(*R)) (*R, error) {
+		return nil, err
+	}
+}
+
+func TestResourceSQLEndpointCreateRollback(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(nil)
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch")
+}
+
+func TestResourceSQLEndpointCreateRollbackFailed(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(errors.New("Cannot delete warehouse"))
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch. when rolling back, also failed: Cannot delete warehouse")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {
@@ -237,6 +303,69 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
+// Testing the customizeDiff on clearing "health" diff is working as expected.
+func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"auto_stop_mins":            {Old: "120", New: "0", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestResourceSQLEndpointDelete(t *testing.T) {

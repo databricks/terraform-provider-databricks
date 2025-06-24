@@ -11,6 +11,7 @@
 * Added `key` argument to `databricks_jobs` data source to enable mapping by job ID and allow duplicate job names ([#4796](https://github.com/databricks/terraform-provider-databricks/pull/4796)).
 * Added online_store resource and data sources ([#4809](https://github.com/databricks/terraform-provider-databricks/pull/4809)).
 * Bump the Go SDK to v0.73.1 ([#4809](https://github.com/databricks/terraform-provider-databricks/pull/4809)).
+* Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4811](https://github.com/databricks/terraform-provider-databricks/pull/4811)).
 
 ### Bug Fixes
 

@@ -23,6 +23,7 @@
 * Recommend OAuth instead of PAT in guides ([#4787](https://github.com/databricks/terraform-provider-databricks/pull/4787))
 * Document new options in `databricks_model_serving` resource ([#4789](https://github.com/databricks/terraform-provider-databricks/pull/4789))
 * Added example of granting Account Admin role with `databricks_service_principal_role` resource ([#4807](https://github.com/databricks/terraform-provider-databricks/pull/4807))
+* Added more examples for `databricks_connection` ([#4810](https://github.com/databricks/terraform-provider-databricks/pull/4810))
 
 ### Exporter
 

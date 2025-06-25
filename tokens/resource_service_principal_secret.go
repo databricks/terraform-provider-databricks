@@ -26,6 +26,11 @@ func createFailedToConvertServicePrincipalIdToNumericError(err error) error {
 func ResourceServicePrincipalSecret() common.Resource {
 	spnSecretSchema := common.StructToSchema(ServicePrincipalSecret{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["time_rotating"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			}
 			m["id"].Computed = true
 			m["create_time"].Computed = true
 			m["expire_time"].Computed = true

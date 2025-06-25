@@ -75,7 +75,6 @@ func (o AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create a quality monitor
 type CreateQualityMonitorRequest struct {
 	QualityMonitor types.Object `tfsdk:"quality_monitor"`
 }
@@ -141,7 +140,6 @@ func (o *CreateQualityMonitorRequest) SetQualityMonitor(ctx context.Context, v Q
 	o.QualityMonitor = vs
 }
 
-// Delete a quality monitor
 type DeleteQualityMonitorRequest struct {
 	// The uuid of the request object. For example, schema id.
 	ObjectId types.String `tfsdk:"-"`
@@ -212,7 +210,6 @@ func (o DeleteQualityMonitorResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Read a quality monitor
 type GetQualityMonitorRequest struct {
 	// The uuid of the request object. For example, schema id.
 	ObjectId types.String `tfsdk:"-"`
@@ -253,7 +250,6 @@ func (o GetQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List quality monitors
 type ListQualityMonitorRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -462,7 +458,6 @@ func (o *QualityMonitor) SetAnomalyDetectionConfig(ctx context.Context, v Anomal
 	o.AnomalyDetectionConfig = vs
 }
 
-// Update a quality monitor
 type UpdateQualityMonitorRequest struct {
 	// The uuid of the request object. For example, schema id.
 	ObjectId types.String `tfsdk:"-"`

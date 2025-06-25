@@ -232,7 +232,7 @@ func ResourceShare() common.Resource {
 
 			if d.HasChange("comment") {
 				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
-					Name:  afterSi.Name,
+					Name:    afterSi.Name,
 					Comment: afterSi.Comment,
 				})
 				if err != nil {

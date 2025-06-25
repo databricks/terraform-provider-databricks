@@ -191,13 +191,13 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
+						Name:    "a",
 						Comment: "b",
 					},
 				},
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
+						Name:    "a",
 						Comment: "b",
 					}},
 			},
@@ -205,7 +205,7 @@ func TestCreateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
 				ExpectedRequest: sharing.UpdateShare{
-					Owner: "admin",
+					Owner:   "admin",
 					Comment: "b",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
@@ -228,7 +228,7 @@ func TestCreateShare(t *testing.T) {
 				},
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
+						Name:    "a",
 						Comment: "b",
 					},
 				},
@@ -238,9 +238,9 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name:  "a",
+						Name:    "a",
 						Comment: "b",
-						Owner: "admin",
+						Owner:   "admin",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "main.a",
@@ -348,8 +348,8 @@ func TestUpdateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
 					sharing.ShareInfo{
-						Name:  "abc",
-						Owner: "admin",
+						Name:    "abc",
+						Owner:   "admin",
 						Comment: "cba",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -488,9 +488,9 @@ func TestUpdateShareRollback(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
 					sharing.ShareInfo{
-						Name:  "abc",
+						Name:    "abc",
 						Comment: "cba",
-						Owner: "admin",
+						Owner:   "admin",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "a",
@@ -516,8 +516,8 @@ func TestUpdateShareRollback(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
-			"name":  "abc",
-			"owner": "admin",
+			"name":    "abc",
+			"owner":   "admin",
 			"comment": "cba",
 		},
 		HCL: `

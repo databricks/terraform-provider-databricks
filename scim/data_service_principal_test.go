@@ -41,7 +41,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
-		"sp_id":            "abc",
+		"scim_id":          "abc",
 		"id":               "abc",
 		"application_id":   "abc",
 		"display_name":     "Example Service Principal",
@@ -81,12 +81,12 @@ func TestDataServicePrincipalReadBySpId(t *testing.T) {
 			},
 		},
 		Resource:    DataSourceServicePrincipal(),
-		HCL:         `sp_id = "abc"`,
+		HCL:         `scim_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
-		"sp_id":            "abc",
+		"scim_id":          "abc",
 		"id":               "abc",
 		"application_id":   "abc",
 		"display_name":     "Example Service Principal",
@@ -130,7 +130,7 @@ func TestDataServicePrincipalReadByDisplayName(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
-		"sp_id":            "abc",
+		"scim_id":          "abc",
 		"id":               "abc",
 		"application_id":   "abc",
 		"display_name":     "testsp",
@@ -167,7 +167,7 @@ func TestDataServicePrincipalReadByIdNotFound(t *testing.T) {
 			},
 		},
 		Resource:    DataSourceServicePrincipal(),
-		HCL:         `sp_id = "abc"`,
+		HCL:         `scim_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -247,7 +247,7 @@ func TestDataServicePrincipalReadNoParams(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "please specify either application_id, display_name, or sp_id")
+	}.ExpectError(t, "please specify either application_id, display_name, or scim_id")
 }
 
 func TestDataServicePrincipalReadInvalidConfig(t *testing.T) {
@@ -258,5 +258,5 @@ func TestDataServicePrincipalReadInvalidConfig(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "invalid config supplied. [application_id] Invalid combination of arguments. [display_name] Invalid combination of arguments. [sp_id] Invalid combination of arguments")
+	}.ExpectError(t, "invalid config supplied. [application_id] Invalid combination of arguments. [display_name] Invalid combination of arguments. [scim_id] Invalid combination of arguments")
 }

@@ -13,6 +13,8 @@
 
 ### Documentation
 
+* Update documentation for single-node clusters in `databricks_cluster` resource.
+
 ### Exporter
 
 ### Internal Changes

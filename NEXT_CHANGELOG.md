@@ -15,4 +15,6 @@
 
 ### Exporter
 
+* Fix generation of columns in `databricks_sql_table` resource ([#4819](https://github.com/databricks/terraform-provider-databricks/pull/4819)).
+
 ### Internal Changes

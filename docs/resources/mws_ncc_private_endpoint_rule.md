@@ -11,7 +11,7 @@ Allows you to create a private endpoint in a [Network Connectivity Config](mws_n
 
 ## Example Usage
 
-Create a private endpoint to an Azure storage account
+Create a private endpoint to an Azure storage account or an Azure standard load balancer
 
 ```hcl
 variable "region" {}
@@ -28,6 +28,13 @@ resource "databricks_mws_ncc_private_endpoint_rule" "storage" {
   network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
   resource_id                    = "/subscriptions/653bb673-1234-abcd-a90b-d064d5d53ca4/resourcegroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/examplesa"
   group_id                       = "blob"
+}
+
+resource "databricks_mws_ncc_private_endpoint_rule" "slb" {
+  provider                       = databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
+  resource_id                    = "/subscriptions/653bb673-1234-abcd-a90b-d064d5d53ca4/resourcegroups/example-resource-group/providers/Microsoft.Network/privatelinkServices/example-private-link-service"
+  domain_names                   = ["my-example.exampledomain.com"]
 }
 ```
 
@@ -46,6 +53,7 @@ resource "databricks_mws_network_connectivity_config" "ncc" {
 resource "databricks_mws_ncc_private_endpoint_rule" "storage" {
   provider                       = databricks.account
   network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
+  endpoint_service               = "com.amazonaws.us-east-1.s3"
   resource_names                 = ["bucket"]
 }
 
@@ -63,10 +71,11 @@ The following arguments are available:
 
 * `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account. Change forces creation of a new resource.
 * `resource_id` - (Azure only) The Azure resource ID of the target resource. Change forces creation of a new resource.
-* `group_id` - (Azure only) The sub-resource type (group ID) of the target resource. Must be one of supported resource types (i.e., `blob`, `dfs`, `sqlServer` , etc. Consult the [Azure documentation](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource) for full list of supported resources). Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for `blob` and one for `dfs`. Change forces creation of a new resource.
-* `domain_names` - (AWS only) Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. List of target AWS resource FQDNs accessible via the VPC endpoint service. Conflicts with `resource_names`.
+* `group_id` - (Azure only) Not used by customer-managed private endpoint services. The sub-resource type (group ID) of the target resource. Must be one of supported resource types (i.e., `blob`, `dfs`, `sqlServer` , etc. Consult the [Azure documentation](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource) for full list of supported resources). Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for `blob` and one for `dfs`. Change forces creation of a new resource. Conflicts with `domain_names`.
+* `domain_names` - On Azure: Only used by private endpoints to customer-managed private endpoint services. List of domain names of target private link service. Conflicts with `group_id`.  On AWS: Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. The target AWS resource FQDNs accessible via the VPC endpoint service. Conflicts with `resource_names`. When updating this field, we perform full update on this field. Please ensure a full list of desired domain_names is provided.
 * `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
+* `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created.
 
 ## Attribute Reference
 
@@ -80,11 +89,11 @@ The possible values are:
   * `ESTABLISHED`: The endpoint has been approved and is ready to be used in your serverless compute resources.
   * `REJECTED`: Connection was rejected by the private link resource owner.
   * `DISCONNECTED`: Connection was removed by the private link resource owner, the private endpoint becomes informative and should be deleted for clean-up.
+  * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED.
 * `deactivated` - Whether this private endpoint is deactivated.
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
 * `updated_time` - Time in epoch milliseconds when this object was updated.
-* `enabled` - Activation status. Only used by private endpoints towards an AWS S3 service.
 * `vpc_endpoint_id` - The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks.
 
 ## Import

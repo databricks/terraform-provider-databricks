@@ -31,16 +31,18 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick service principals by one of the following attributes (only one of them):
 
-- `application_id` - (Required if `display_name` isn't used) ID of the service principal. The service principal must exist before this resource can be retrieved.
-- `display_name` - (Required if `application_id` isn't used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
+- `application_id` - (Required if neither `display_name` nor `scim_id` is used) ID of the service principal. The service principal must exist before this resource can be retrieved.
+- `display_name` - (Required if neither `application_id` nor `scim_id` is  used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
+- `scim_id` - (Required if neither `application_id` nor `display_name` is used) Unique SCIM ID for a service principal in the Databricks workspace. The service principal must exist before this resource can be retrieved.
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `id` - The id of the service principal.
+- `id` - The id of the service principal (SCIM ID).
 - `external_id` - ID of the service principal in an external identity provider.
 - `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
+- `scim_id` - same as `id`.
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
 - `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
 - `active` - Whether service principal is active or not.

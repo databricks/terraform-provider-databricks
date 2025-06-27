@@ -1,22 +1,24 @@
 ---
-page_title: "Provisioning Databricks on AWS with PrivateLink"
+page_title: "Provisioning Databricks on AWS with Private Link"
 ---
 
-# Deploying pre-requisite resources and enabling PrivateLink connections
+# Provisioning Databricks on AWS with Private Link
 
-Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. This guide assumes you are deploying into an existing VPC and you have set up credentials and storage configurations as per prior examples, notably here.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
-![Private link backend](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-private-link-backend.png)
+Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically using a programmatic approach. This guide assumes you are deploying into an existing VPC and have set up credentials and storage configurations as per prior examples, notably here.
+
+![Private link backend](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-private-link-backend.png)
 
 This guide uses the following variables in configurations:
 
-- `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
-- `databricks_account_password`: The password for `databricks_account_username`.
-- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
+- `client_id`: `application_id` of the service principal, see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)
+- `client_secret`: the secret of the service principal.
+- `databricks_account_id`: The numeric ID for your Databricks account. When logged in, it appears in the top right corner of the page.
 - `vpc_id` - The ID for the AWS VPC.
 - `region` - AWS region.
 - `security_group_id` - Security groups set up for the existing VPC.
-- `subnet_ids` - Existing subnets being used for the customer managed VPC.
+- `subnet_ids` - Existing subnets used for the customer-managed VPC.
 - `workspace_vpce_service` - Choose the region-specific service endpoint from this table.
 - `relay_vpce_service` - Choose the region-specific service from this table.
 - `vpce_subnet_cidr` - CIDR range for the subnet chosen for the VPC endpoint.
@@ -24,9 +26,9 @@ This guide uses the following variables in configurations:
 - `root_bucket_name` - AWS bucket name required for [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_storage_configurations).
 - `cross_account_arn` - AWS EC2 role ARN required for [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials).
 
-This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
+This guide is provided as-is, and you can use this guide as the basis for your custom Terraform module.
 
-To get started with AWS PrivateLink integration, this guide takes you throw the following high-level steps:
+This guide takes you through the following high-level steps to set up a workspace with AWS PrivateLink:
 
 - Initialize the required providers
 - Configure AWS objects
@@ -37,7 +39,7 @@ To get started with AWS PrivateLink integration, this guide takes you throw the 
 
 ## Provider initialization
 
-Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-hostname,-username,-and-password) for more details.
+To set up account-level resources, initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations). See [provider authentication](../index.md#authenticating-with-databricks-managed-service-principal) for more details.
 
 ```hcl
 terraform {
@@ -57,19 +59,20 @@ provider "aws" {
 }
 
 provider "databricks" {
-  alias    = "mws"
-  host     = "https://accounts.cloud.databricks.com"
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
-Define the required variables
+Define the required variables:
 
 ```hcl
 variable "databricks_account_id" {}
-variable "databricks_account_username" {}
-variable "databricks_account_password" {}
+variable "client_id" {}
+variable "client_secret" {}
 variable "root_bucket_name" {}
 variable "cross_account_arn" {}
 variable "vpc_id" {}
@@ -96,7 +99,7 @@ resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
   account_id                 = var.databricks_account_id
   bucket_name                = var.root_bucket_name
-  storage_configuration_name = "${local.prefix}-storage}"
+  storage_configuration_name = "${local.prefix}-storage"
 }
 ```
 
@@ -120,14 +123,14 @@ In this section, the goal is to create the two back-end VPC endpoints:
 - Back-end VPC endpoint for SSC relay
 - Back-end VPC endpoint for REST APIs
 
--> **Note** If you want to implement the front-end VPC endpoint as well for the connections from the user to the workspace front-end, use the transit (bastion) VPC that terminates your AWS Direct Connect or VPN gateway connection or one that is routable from such a transit (bastion) VPC. Once the front-end endpoint is created, it can be supplied to [databricks_mws_networks](../resources/mws_networks.md) resource using vpc_endpoints argument. Use the [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource to control which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object.
+-> **Note** If you want to implement the front-end VPC endpoint as well for the connections from the user to the workspace front-end, use the transit (bastion) VPC that terminates your AWS Direct Connect or VPN gateway connection or one that is routable from such a transit (bastion) VPC. Once the front-end endpoint is created, it can be supplied to [databricks_mws_networks](../resources/mws_networks.md) resource using `vpc_endpoints` argument. Use the [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource to control which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object.
 
 The first step is to create the required AWS objects:
 
 - A subnet dedicated to your VPC endpoints.
 - A security group dedicated to your VPC endpoints and satisfying required inbound/outbound TCP/HTTPS traffic rules on ports 443 and 6666, respectively.
 
-For workspace with [compliance security profile](https://docs.databricks.com/security/privacy/security-profile.html#prepare-a-workspace-for-the-compliance-security-profile), you need *additionally* allow bidirectional access to port 2443 for FIPS connections. The total set of ports to allow bidirectional access are 443, 2443, and 6666.
+For workspace with [compliance security profile](https://docs.databricks.com/security/privacy/security-profile.html#prepare-a-workspace-for-the-compliance-security-profile), you need *additionally* allow bidirectional access to port 2443 for FIPS connections. The ports to allow bidirectional access are 443, 2443, and 6666.
 
 ```hcl
 data "aws_vpc" "prod" {
@@ -275,7 +278,7 @@ resource "databricks_mws_networks" "this" {
 
 For a workspace to support any of the PrivateLink connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource.
 
-The credentials ID which is referenced below is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_storage_configurations) resource.
+The credentials ID, referenced below, is one of the attributes created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_storage_configurations) resource.
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {

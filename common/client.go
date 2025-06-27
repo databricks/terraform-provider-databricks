@@ -1,3 +1,4 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package common
 
 import (
@@ -12,13 +13,22 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type cachedMe struct {
 	internalImpl iam.CurrentUserService
 	cachedUser   *iam.User
 	mu           sync.Mutex
+}
+
+func newCachedMe(inner iam.CurrentUserService) *cachedMe {
+	return &cachedMe{
+		internalImpl: inner,
+	}
 }
 
 func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
@@ -42,11 +52,34 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 type DatabricksClient struct {
 	*client.DatabricksClient
 
-	// callback used to create API1.2 call wrapper, which simplifies unit tessting
-	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
+	// callback used to create API1.2 call wrapper, which simplifies unit testing
+	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
+
+	// cachedWorkspaceClient is a cached workspace client authenticated to the workspace
+	// configured for the provider
 	cachedWorkspaceClient *databricks.WorkspaceClient
-	cachedAccountClient   *databricks.AccountClient
-	mu                    sync.Mutex
+
+	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
+	// populated when fetching a WorkspaceClient for a specific workspace ID using
+	// a provider configured at the account level
+	cachedWorkspaceClients map[int64]*databricks.WorkspaceClient
+
+	// cachedAccountClient is a cached account client authenticated to the account
+	// configured for the provider
+	cachedAccountClient *databricks.AccountClient
+
+	// mu synchronizes access to all cached clients.
+	mu sync.Mutex
+}
+
+// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}
+	}
+	return w, nil
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
@@ -59,17 +92,94 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	internalImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&cachedMe{
-		internalImpl: internalImpl,
-	})
+	w.CurrentUser = newCachedMe(w.CurrentUser)
 	c.cachedWorkspaceClient = w
 	return w, nil
+}
+
+// Set the cached workspace client.
+func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceClient = w
+}
+
+func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
+	}
+	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return client, nil
+	}
+	a, err := c.accountClient()
+	if err != nil {
+		return nil, err
+	}
+	workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: workspaceId})
+	if err != nil {
+		return nil, err
+	}
+	w, err := a.GetWorkspaceClient(*workspace)
+	if err != nil {
+		return nil, err
+	}
+	w.CurrentUser = newCachedMe(w.CurrentUser)
+	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
+	return w, nil
+}
+
+// SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.
+func (c *DatabricksClient) SetWorkspaceClientForWorkspace(workspaceId int64, w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
+	}
+	c.cachedWorkspaceClients[workspaceId] = w
+}
+
+// Set the cached account client.
+func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedAccountClient = a
+}
+
+func (c *DatabricksClient) setAccountId(accountId string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if accountId == "" {
+		return nil
+	}
+	oldAccountID := c.DatabricksClient.Config.AccountID
+	if oldAccountID != "" && oldAccountID != accountId {
+		return fmt.Errorf("account ID is already set to %s", oldAccountID)
+	}
+	c.DatabricksClient.Config.AccountID = accountId
+	return nil
+}
+
+// GetAccountClient returns the Databricks Account client or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.Diagnostics) {
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get account client", err.Error())}
+	}
+	return a, nil
 }
 
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	return c.accountClient()
+}
+
+// accountClient returns the Databricks Account client or an error if that fails.
+// The `mu` mutex must be held by the current goroutine when calling this method.
+func (c *DatabricksClient) accountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
 	}
@@ -81,29 +191,82 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	return acc, nil
 }
 
+func (c *DatabricksClient) AccountClientWithAccountIdFromConfig(d *schema.ResourceData) (*databricks.AccountClient, error) {
+	accountID, ok := d.GetOk("account_id")
+	if ok {
+		err := c.setAccountId(accountID.(string))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.AccountClient()
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.ResourceData, p *Pair) (*databricks.AccountClient, string, error) {
+	accountID, resourceId, err := p.Unpack(d)
+	if err != nil {
+		return nil, "", err
+	}
+	err = c.setAccountId(accountID)
+	if err != nil {
+		return nil, "", err
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, "", err
+	}
+	return a, resourceId, nil
+}
+
+func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		return accCallback(a)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return err
+		}
+		return wsCallback(ws)
+	}
+}
+
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, c.addApiPrefix)
 }
 
-// Delete on path
+// Delete on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
-// Patch on path
+// Delete on path. Deserializes the response into the response parameter.
+func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, c.addApiPrefix)
+}
+
+// Patch on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, c.addApiPrefix)
+}
+
+// Patch on path. Deserializes the response into the response parameter.
+func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
 type ApiVersion string
@@ -129,7 +292,6 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
 	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
@@ -141,7 +303,9 @@ func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
-	return c.Do(ctx, method, path, request, response, c.addApiPrefix, c.scimVisitor)
+	return c.Do(ctx, method, path, map[string]string{
+		"Content-Type": "application/scim+json; charset=utf-8",
+	}, nil, request, response, c.addApiPrefix, c.scimVisitor)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
@@ -149,12 +313,12 @@ func (c *DatabricksClient) IsAzure() bool {
 	return c.Config.IsAzure()
 }
 
-// IsAws returns true if client is configured for AWS
+// acceptance.IsAws returns true if client is configured for AWS
 func (c *DatabricksClient) IsAws() bool {
 	return !c.IsGcp() && !c.IsAzure()
 }
 
-// IsGcp returns true if client is configured for GCP
+// acceptance.IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
 	return c.Config.GoogleServiceAccount != "" || c.Config.IsGcp()
 }
@@ -180,20 +344,9 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
 	}
-	cfg := &config.Config{
-		Host:                 url,
-		Username:             c.Config.Username,
-		Password:             c.Config.Password,
-		Token:                c.Config.Token,
-		ClientID:             c.Config.ClientID,
-		ClientSecret:         c.Config.ClientSecret,
-		GoogleServiceAccount: c.Config.GoogleServiceAccount,
-		GoogleCredentials:    c.Config.GoogleCredentials,
-		InsecureSkipVerify:   c.Config.InsecureSkipVerify,
-		HTTPTimeoutSeconds:   c.Config.HTTPTimeoutSeconds,
-		DebugTruncateBytes:   c.Config.DebugTruncateBytes,
-		DebugHeaders:         c.Config.DebugHeaders,
-		RateLimitPerSecond:   c.Config.RateLimitPerSecond,
+	cfg, err := c.DatabricksClient.Config.NewWithWorkspaceHost(url)
+	if err != nil {
+		return nil, fmt.Errorf("cannot configure new client: %w", err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

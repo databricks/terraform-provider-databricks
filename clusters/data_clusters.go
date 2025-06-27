@@ -4,42 +4,35 @@ import (
 	"context"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func DataSourceClusters() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
-			clusters, err := NewClustersAPI(ctx, i).List()
-			if err != nil {
-				return diag.FromErr(err)
+func DataSourceClusters() common.Resource {
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		Id                  string                        `json:"id,omitempty" tf:"computed"`
+		Ids                 []string                      `json:"ids,omitempty" tf:"computed,slice_set"`
+		ClusterNameContains string                        `json:"cluster_name_contains,omitempty"`
+		FilterBy            *compute.ListClustersFilterBy `json:"filter_by,omitempty"`
+	}, w *databricks.WorkspaceClient) error {
+		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{
+			FilterBy: data.FilterBy,
+		})
+		if err != nil {
+			return err
+		}
+		ids := make([]string, 0, len(clusters))
+		name_contains := strings.ToLower(data.ClusterNameContains)
+		for _, v := range clusters {
+			match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
+			if name_contains != "" && !match_name {
+				continue
 			}
-			ids := schema.NewSet(schema.HashString, []any{})
-			name_contains := strings.ToLower(d.Get("cluster_name_contains").(string))
-			for _, v := range clusters {
-				match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
-				if name_contains != "" && !match_name {
-					continue
-				}
-				ids.Add(v.ClusterID)
-			}
-			d.Set("ids", ids)
-			d.SetId("_")
-			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"ids": {
-				Computed: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"cluster_name_contains": {
-				Optional: true,
-				Type:     schema.TypeString,
-			},
-		},
-	}
+			ids = append(ids, v.ClusterId)
+		}
+		data.Ids = ids
+		data.Id = "_"
+		return nil
+	})
 }

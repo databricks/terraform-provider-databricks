@@ -3,6 +3,7 @@ package tokens
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -81,7 +82,11 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, apierr.NotFound(fmt.Sprintf("Unable to locate token: %s", tokenID))
+	return tokenInfo, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
+	}
 }
 
 // Delete will delete the token given a token id
@@ -89,14 +94,11 @@ func (a TokensAPI) Delete(tokenID string) error {
 	err := a.client.Post(a.context, "/token/delete", map[string]string{
 		"token_id": tokenID,
 	}, nil)
-	if apierr.IsMissing(err) {
-		return nil
-	}
-	return err
+	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 
 // ResourceToken refreshes token in case it's expired
-func ResourceToken() *schema.Resource {
+func ResourceToken() common.Resource {
 	s := map[string]*schema.Schema{
 		"lifetime_seconds": {
 			Type:     schema.TypeInt,
@@ -145,12 +147,26 @@ func ResourceToken() *schema.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			tokenInfo, err := NewTokensAPI(ctx, c).Read(d.Id())
 			if err != nil {
+				err = common.IgnoreNotFoundError(err)
+				if err != nil {
+					return err
+				}
+				log.Printf("[INFO] token with id %s not found, recreating it", d.Id())
+				d.SetId("")
+				return nil
+			}
+			err = common.StructToData(tokenInfo, s, d)
+			if err != nil {
 				return err
 			}
-			return common.StructToData(tokenInfo, s, d)
+			if tokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > tokenInfo.ExpiryTime {
+				log.Printf("[INFO] token with id %s is expired, recreating it", d.Id())
+				d.SetId("")
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTokensAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

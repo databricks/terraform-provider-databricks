@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 This resource creates a [cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules. The policy rules limit the attributes or attribute values available for [cluster](cluster.md) creation. [cluster](cluster.md) policies have ACLs that limit their use to specific users and groups. Only admin users can create, edit, and delete policies. Admin users also have access to all policies.
 
+-> This resource can only be used with a workspace-level provider!
+
 Cluster policies let you:
 
 * Limit users to create clusters with prescribed settings.
@@ -54,6 +56,18 @@ locals {
 resource "databricks_cluster_policy" "fair_use" {
   name       = "${var.team} cluster policy"
   definition = jsonencode(merge(local.default_policy, var.policy_overrides))
+
+  libraries {
+    pypi {
+      package = "databricks-sdk==0.12.0"
+      // repo can also be specified here
+    }
+  }
+  libraries {
+    maven {
+      coordinates = "com.oracle.database.jdbc:ojdbc8:XXXX"
+    }
+  }
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
@@ -93,9 +107,41 @@ module "engineering_compute_policy" {
 }
 ```
 
+### Overriding the built-in cluster policies
+
+You can override built-in cluster policies by creating a `databricks_cluster_policy` resource with following attributes:
+
+* `name` - the name of the built-in cluster policy.
+* `policy_family_id` - the ID of the cluster policy family used for built-in cluster policy.
+* `policy_family_definition_overrides` - settings to override in the built-in cluster policy.
+
+You can obtain the list of defined cluster policies families using the `databricks policy-families list` command of the new [Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/index.html), or via [list policy families](https://docs.databricks.com/api/workspace/policyfamilies/list) REST API.
+
+```hcl
+locals {
+  personal_vm_override = {
+    "autotermination_minutes" : {
+      "type" : "fixed",
+      "value" : 220,
+      "hidden" : true
+    },
+    "custom_tags.Team" : {
+      "type" : "fixed",
+      "value" : var.team
+    }
+  }
+}
+
+resource "databricks_cluster_policy" "personal_vm" {
+  policy_family_id                   = "personal-vm"
+  policy_family_definition_overrides = jsonencode(local.personal_vm_override)
+  name                               = "Personal Compute"
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
 * `description` - (Optional) Additional human-readable description of the cluster policy.
@@ -104,16 +150,29 @@ The following arguments are required:
 * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
 * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
 
+### libraries Configuration Block (Optional)
+
+One must specify each library in a separate configuration block, that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the cluster policy. This is equal to policy_id.
+* `id` - Canonical unique identifier for the cluster policy. This is equal to `policy_id`.
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
 ## Import
 
 The resource cluster policy can be imported using the policy id:
+
+```hcl
+import {
+  to = databricks_cluster_policy.this
+  id = "<cluster-policy-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_cluster_policy.this <cluster-policy-id>
@@ -123,7 +182,7 @@ terraform import databricks_cluster_policy.this <cluster-policy-id>
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [Dynamic Passthrough Clusters for a Group](../guides/workspace-management.md) guide.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).

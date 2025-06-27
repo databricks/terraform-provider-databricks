@@ -1,0 +1,60 @@
+name: Provider schema
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Base ref"
+        default: "main"
+        required: true
+      head:
+        description: "Head ref"
+        default: "main"
+        required: true
+
+jobs:
+  compute_diff:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the base commit first and the head commit second. diff-schema
+      # uses the current commit as the head commit.
+      - if: github.event_name == 'pull_request'
+        name: Checkout PR base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+      - if: github.event_name == 'pull_request'
+        name: Checkout PR merge commit
+        uses: actions/checkout@v4
+
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base }}
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout head commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.head }}
+
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: "Install jd"
+        run: go install github.com/josephburnett/jd@v1.8.1
+
+      - run: make diff-schema
+        env:
+          BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}

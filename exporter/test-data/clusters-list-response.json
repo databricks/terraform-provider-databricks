@@ -5,11 +5,6 @@
       "cluster_name": "terraform-abc"
     },
     {
-      "cluster_id": "23443",
-      "cluster_name": "job-34234234-run-32423432",
-      "cluster_source": "JOB"
-    },
-    {
       "autotermination_minutes": 120,
       "azure_attributes": {
         "availability": "ON_DEMAND_AZURE",

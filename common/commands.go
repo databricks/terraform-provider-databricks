@@ -1,8 +1,9 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package common
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"html"
 	"regexp"
 	"strings"
@@ -88,7 +89,7 @@ func (cr *CommandResults) Err() error {
 	if !cr.Failed() {
 		return nil
 	}
-	return fmt.Errorf(cr.Error())
+	return errors.New(cr.Error())
 }
 
 // Error returns error in a bit more friendly way

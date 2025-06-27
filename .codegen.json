@@ -1,0 +1,16 @@
+{
+    "formatter": "make fmt",
+    "mode": "tf_v1",
+    "changelog_config": ".codegen/changelog_config.yml",
+    "version": {
+        "common/version.go": "version = \"$VERSION\""
+    },
+    "toolchain": {
+        "required": [
+            "go"
+        ],
+        "post_generate": [
+            "make test"
+        ]
+    }
+}

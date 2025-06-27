@@ -2,17 +2,17 @@ package scim
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DataSourceGroup returns information about group specified by display name
-func DataSourceGroup() *schema.Resource {
+func DataSourceGroup() common.Resource {
 	type entity struct {
 		DisplayName       string   `json:"display_name"`
 		Recursive         bool     `json:"recursive,omitempty"`
@@ -23,6 +23,7 @@ func DataSourceGroup() *schema.Resource {
 		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
 		InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
+		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
 	}
 
 	s := common.StructToSchema(entity{}, func(
@@ -31,20 +32,20 @@ func DataSourceGroup() *schema.Resource {
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
-		addEntitlementsToSchema(&s)
+		addEntitlementsToSchema(s)
 		return s
 	})
 
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			var this entity
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
 			groupAttributes := "members,roles,entitlements,externalId"
 			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, groupAttributes)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(group.ID)
 			queue := []Group{group}
@@ -72,13 +73,14 @@ func DataSourceGroup() *schema.Resource {
 					if this.Recursive {
 						childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
 						if err != nil {
-							return diag.FromErr(err)
+							return err
 						}
 						queue = append(queue, childGroup)
 					}
 				}
 			}
 			this.ExternalID = group.ExternalID
+			this.AclPrincipalID = fmt.Sprintf("groups/%s", group.DisplayName)
 			sort.Strings(this.Groups)
 			sort.Strings(this.Members)
 			sort.Strings(this.Users)
@@ -87,7 +89,7 @@ func DataSourceGroup() *schema.Resource {
 			sort.Strings(this.InstanceProfiles)
 			err = common.StructToData(this, s, d)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			return nil
 		},

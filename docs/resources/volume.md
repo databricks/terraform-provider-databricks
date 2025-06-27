@@ -5,7 +5,9 @@ subcategory: "Unity Catalog"
 
 Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
 
-A volume resides in the third layer of Unity Catalog’s three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
+-> This resource can only be used with a workspace-level provider!
+
+A volume resides in the third layer of Unity Catalog's three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
 
 A volume can be **managed** or **external**.
 
@@ -14,6 +16,7 @@ A **managed volume** is a Unity Catalog-governed storage volume created within t
 An **external volume** is a Unity Catalog-governed storage volume registered against a directory within an external location.
 
 A volume can be referenced using its identifier: ```<catalogName>.<schemaName>.<volumeName>```, where:
+
 * ```<catalogName>```: The name of the catalog containing the Volume.
 * ```<schemaName>```: The name of the schema containing the Volume.
 * ```<volumeName>```: The name of the Volume. It identifies the volume object.
@@ -32,9 +35,8 @@ This resource manages Volumes in Unity Catalog.
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -57,7 +59,7 @@ resource "databricks_storage_credential" "external" {
 }
 
 resource "databricks_external_location" "some" {
-  name            = "external-location"
+  name            = "external_location"
   url             = "s3://${aws_s3_bucket.external.id}/some"
   credential_name = databricks_storage_credential.external.name
 }
@@ -77,16 +79,32 @@ resource "databricks_volume" "this" {
 The following arguments are supported:
 
 * `name` - Name of the Volume
-* `catalog_name` - Name of parent Catalog
-* `schema_name` - Name of parent Schema relative to parent Catalog
-* `volume_type` - Volume type. `EXTERNAL` or `MANAGED`.
+* `catalog_name` - Name of parent Catalog. Change forces creation of a new resource.
+* `schema_name` - Name of parent Schema relative to parent Catalog. Change forces creation of a new resource.
+* `volume_type` - Volume type. `EXTERNAL` or `MANAGED`. Change forces creation of a new resource.
 * `owner` - (Optional) Name of the volume owner.
-* `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes.
+* `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes. Change forces creation of a new resource.
 * `comment` - (Optional) Free-form text.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
+* `volume_path` - base file path for this Unity Catalog Volume in form of `/Volumes/<catalog>/<schema>/<name>`.
 
 ## Import
 
-This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<volume>`
+This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<name>`
+
+```hcl
+import {
+  to = databricks_volume.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>

@@ -21,11 +21,11 @@ import (
 // Test interface compliance via compile time error
 var _ Mount = (*S3IamMount)(nil)
 
-var sparkVersionsResponse = clusters.SparkVersionsList{
-	SparkVersions: []clusters.SparkVersion{
+var sparkVersionsResponse = compute.GetSparkVersionsResponse{
+	Versions: []compute.SparkVersion{
 		{
-			Version:     "7.3.x-scala2.12",
-			Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+			Key:  "7.3.x-scala2.12",
+			Name: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
 		},
 	},
 }
@@ -106,6 +106,78 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
+}
+
+func TestResourceAwsS3MountGenericCreateWithInvalidClusterId(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		State: map[string]any{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"s3": []any{map[string]any{
+				"bucket_name": testS3BucketName,
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
+
+}
+
+func TestResourceAwsS3MountGenericReadWithInvalidClusterId(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		InstanceState: map[string]string{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"source":     testS3BucketPath,
+		},
+		ID:      "this_id_should_be_unset",
+		Removed: true,
+		Read:    true,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "", d.Id())
+}
+
+func TestResourceAwsS3MountGenericDeleteWithInvalidClusterId(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		InstanceState: map[string]string{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"source":     testS3BucketPath,
+		},
+		ID:      "this_id_should_be_unset",
+		Removed: true,
+		Delete:  true,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "", d.Id())
 }
 
 func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
@@ -199,13 +271,13 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},
@@ -654,6 +726,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -698,6 +771,7 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				"initialize_file_system": true,
 			}}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -744,6 +818,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 				"initialize_file_system": true,
 			}}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
@@ -879,6 +954,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 			},
 			}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -924,6 +1000,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 				"directory":            "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -968,6 +1045,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 				"directory":          "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -988,6 +1066,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 				"directory":          "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "parsing failed for abc. Invalid container resource Id format")
@@ -1022,6 +1101,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				"token_secret_key":     "g",
 				"token_secret_scope":   "h",
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
@@ -1056,6 +1136,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 				"token_secret_key":   "g",
 				"token_secret_scope": "h",
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.EqualError(t, err, "container_name or storage_account_name are empty, and resource_id or uri aren't specified")
@@ -1065,6 +1146,13 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
@@ -1096,8 +1184,9 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
-		ID:   "e",
-		Read: true,
+		Azure: true,
+		ID:    "e",
+		Read:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -1107,6 +1196,13 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
@@ -1136,6 +1232,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
+		Azure:   true,
 		ID:      "e",
 		Read:    true,
 		Removed: true,
@@ -1145,6 +1242,13 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
@@ -1174,8 +1278,9 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
-		ID:   "e",
-		Read: true,
+		Azure: true,
+		ID:    "e",
+		Read:  true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
 	assert.Equal(t, "e", d.Id())
@@ -1185,6 +1290,13 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
@@ -1215,6 +1327,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
+		Azure:  true,
 		ID:     "e",
 		Delete: true,
 	}.Apply(t)
@@ -1380,13 +1493,13 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},

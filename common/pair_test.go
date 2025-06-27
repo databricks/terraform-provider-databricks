@@ -79,9 +79,13 @@ func TestPairIDResource(t *testing.T) {
 			assertID: "a|b|c|d",
 		},
 		{
-			read:     true,
-			id:       "a|b",
-			err:      apierr.NotFound("Nope"),
+			read: true,
+			id:   "a|b",
+			err: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 			left:     "a",
 			right:    "b",
 			assertID: "",
@@ -153,7 +157,7 @@ func TestPairIDResource(t *testing.T) {
 				DeleteContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
 					return tt.err
 				},
-			})
+			}).ToResource()
 			ctx := context.Background()
 			d := resource.Data(&terraform.InstanceState{
 				Attributes: state,

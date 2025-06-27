@@ -3,7 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -71,23 +71,7 @@ var emptyAddRequest = PatchRequestComplexValue([]patchOperation{
 
 var updateRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		"remove", "entitlements", []ComplexValue{
-			{
-				Value: "allow-cluster-create",
-			},
-			{
-				Value: "allow-instance-pool-create",
-			},
-			{
-				Value: "databricks-sql-access",
-			},
-			{
-				Value: "workspace-access",
-			},
-		},
-	},
-	{
-		"add", "entitlements", []ComplexValue{
+		"replace", "entitlements", []ComplexValue{
 			{
 				Value: "allow-cluster-create",
 			},
@@ -164,6 +148,25 @@ func TestResourceEntitlementsGroupRead(t *testing.T) {
 	})
 }
 
+func TestResourceEntitlementsGroupImport(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: oldGroup,
+			},
+		},
+		Resource: ResourceEntitlements(),
+		New:      true,
+		Read:     true,
+		ID:       "group/abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"group_id":             "abc",
+		"allow_cluster_create": true,
+	})
+}
+
 func TestResourceEntitlementsGroupReadEmpty(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -194,7 +197,7 @@ func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -289,7 +292,7 @@ func TestResourceEntitlementsGroupDeleteEmptyEntitlement(t *testing.T) {
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: deleteRequest,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_PATH",
 					Message:   "invalidPath No such attribute with the name : entitlements in the current resource",
 				},
@@ -436,7 +439,7 @@ func TestResourceEntitlementsUserRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -457,7 +460,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -467,7 +470,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: updateRequest,
 				Status:          400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -571,7 +574,7 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -596,7 +599,7 @@ func TestResourceEntitlementsSPNRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: User{
 					ID:            "abc",
 					ApplicationID: "bcd",
@@ -626,7 +629,7 @@ func TestResourceEntitlementsSPNRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Status:   404,
 			},
 		},
@@ -644,9 +647,9 @@ func TestResourceEntitlementsSPNRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -673,7 +676,7 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -703,7 +706,7 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 			{
@@ -762,4 +765,14 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, false, d.Get("databricks_sql_access"))
 	assert.Equal(t, false, d.Get("workspace_access"))
+}
+
+func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource:  ResourceEntitlements(),
+		HCL:       `group_id = "abc"`,
+		Create:    true,
+		AccountID: "abc-123",
+	}.Apply(t)
+	assert.Contains(t, "entitlements can only be managed with a provider configured at the workspace-level", err.Error())
 }

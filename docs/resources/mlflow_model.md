@@ -5,6 +5,10 @@ subcategory: "MLflow"
 
 This resource allows you to create [MLflow models](https://docs.databricks.com/applications/mlflow/models.html) in Databricks.
 
+-> This resource can only be used with a workspace-level provider!
+
+-> This documentation covers the Workspace Model Registry. Databricks recommends using [Models in Unity Catalog](registered_model.md). Models in Unity Catalog provides centralized model governance, cross-workspace access, lineage, and deployment.
+
 ## Example Usage
 
 ```hcl
@@ -32,12 +36,27 @@ The following arguments are supported:
 * `description` - The description of the MLflow model.
 * `tags` - Tags for the MLflow model.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the MLflow model, the same as `name`.
+
 ## Import
 
 The model resource can be imported using the name
 
+```hcl
+import {
+  to = databricks_mlflow_model.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_mlflow_model.this <name>
+terraform import databricks_mlflow_model.this <name>
 ```
 
 ## Access Control
@@ -48,6 +67,7 @@ $ terraform import databricks_mlflow_model.this <name>
 
 The following resources are often used in the same context:
 
+* [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_model_serving](model_serving.md) to serve this model on a Databricks serving endpoint.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).

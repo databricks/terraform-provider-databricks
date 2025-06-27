@@ -74,8 +74,8 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 type mockMount struct{}
 
-func (t mockMount) Source() string { return "fake-mount" }
-func (t mockMount) Name() string   { return "fake-mount" }
+func (t mockMount) Source(_ *common.DatabricksClient) string { return "fake-mount" }
+func (t mockMount) Name() string                             { return "fake-mount" }
 func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
 	return map[string]string{"fake-key": "fake-value"}
 }
@@ -84,11 +84,24 @@ func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *comm
 }
 
 func TestMountPoint_Mount(t *testing.T) {
+	client := common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  ".",
+				Token: ".",
+			},
+		},
+	}
 	mount := mockMount{}
 	expectedMountSource := "fake-mount"
 	expectedMountConfig := `{"fake-key":"fake-value"}`
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		def check_path(path_string):
+			fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
+			path = spark.sparkContext._jvm.org.apache.hadoop.fs.Path(f"dbfs:{path_string}")
+			fs.exists(path)
+
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -96,7 +109,7 @@ func TestMountPoint_Mount(t *testing.T) {
 			try:
 				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
-				dbutils.fs.ls(mount_point)
+				check_path(mount_point)
 				return mount_source
 			except Exception as e:
 				try:
@@ -108,14 +121,6 @@ func TestMountPoint_Mount(t *testing.T) {
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
-		client := common.DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host:  ".",
-					Token: ".",
-				},
-			},
-		}
 		return mp.Mount(mount, &client)
 	}, mount, mountName, expectedCommand)
 }
@@ -173,12 +178,12 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: clusters.SparkVersionsList{
-				SparkVersions: []clusters.SparkVersion{
+			Resource:     "/api/2.1/clusters/spark-versions",
+			Response: compute.GetSparkVersionsResponse{
+				Versions: []compute.SparkVersion{
 					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+						Key:  "7.1.x-cpu-ml-scala2.12",
+						Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 					},
 				},
 			},
@@ -186,7 +191,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 			Response: compute.ListNodeTypesResponse{
 				NodeTypes: []compute.NodeType{
 					{
@@ -212,7 +217,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				AutoterminationMinutes: 10,
 				ClusterName:            "terraform-mount",
 				NodeTypeID:             "Standard_F4s",
-				SparkVersion:           "7.3.x-scala2.12",
+				SparkVersion:           "11.3.x-scala2.12",
 				CustomTags: map[string]string{
 					"ResourceClass": "SingleNode",
 				},
@@ -304,16 +309,20 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
 		_, err := getMountingClusterID(ctx, client, "")
-		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+		assert.EqualError(t, err, "failed to get mounting cluster: nope")
 
 		// mounting cluster given, but it's removed already
 		_, err = getMountingClusterID(ctx, client, "bcd")
-		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+		assert.EqualError(t, err, "failed to get mounting cluster: nope")
 
 		// some other error happens
 		_, err = getMountingClusterID(ctx, client, "def")
@@ -330,24 +339,30 @@ func TestMountCRD(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceMount()
+		r := ResourceMount().ToResource()
 		d := r.TestResourceData()
+		d.Set("name", "a name")
+		d.Set("uri", "a uri")
 		client.WithCommandMock(func(commandStr string) common.CommandResults {
 			return common.CommandResults{}
 		})
-		diags := mountCreate(nil, r)(ctx, d, client)
+		diags := r.CreateContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 
-		diags = mountRead(nil, r)(ctx, d, client)
+		diags = r.ReadContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 
-		diags = mountDelete(nil, r)(ctx, d, client)
+		diags = r.DeleteContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 	})
 }

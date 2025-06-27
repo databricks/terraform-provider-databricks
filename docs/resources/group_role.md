@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach a role to [databricks_group](group.md). This role could be a pre-defined role such as account admin, or an instance profile ARN.
 
+-> This resource can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Attach an instance profile to a group
@@ -28,10 +30,10 @@ Attach account admin role to an account-level group
 
 ```hcl
 provider "databricks" {
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = var.databricks_account_id
-  username   = var.databricks_user
-  password   = var.databricks_password
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_group" "my_group" {
@@ -59,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

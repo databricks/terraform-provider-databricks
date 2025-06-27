@@ -122,7 +122,11 @@ func (ta *SqlPermissions) read() error {
 		failure := currentGrantsOnThis.Error()
 		if strings.Contains(failure, "does not exist") ||
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
-			return apierr.NotFound(failure)
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    failure,
+			}
 		}
 		return fmt.Errorf("cannot read current grants: %s", failure)
 	}
@@ -262,8 +266,8 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return
 	}
-	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; !ok || v != "true" {
-		err = fmt.Errorf("cluster_id: not a High-Concurrency cluster: %s (%s)",
+	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; (!ok || v != "true") && clusterInfo.DataSecurityMode != "USER_ISOLATION" && clusterInfo.DataSecurityMode != "LEGACY_TABLE_ACL" {
+		err = fmt.Errorf("cluster_id: pecified cluster does not support setting Table ACL: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
 		return
 	}
@@ -272,8 +276,9 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 }
 
 func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (string, error) {
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
-		Latest: true,
+	sparkVersion := clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
+		Latest:          true,
+		LongTermSupport: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
@@ -282,11 +287,10 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
+			DataSecurityMode:       "USER_ISOLATION",
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled":     "true",
-				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "singleNode",
-				"spark.master":                           "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
 			},
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
@@ -305,8 +309,7 @@ func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
 	return
 }
 
-func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
+func tableAclForLoad(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	ta, err = loadTableACL(d.Id())
 	if err != nil {
 		return
@@ -316,7 +319,7 @@ func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
 }
 
 // ResourceSqlPermissions manages table ACLs
-func ResourceSqlPermissions() *schema.Resource {
+func ResourceSqlPermissions() common.Resource {
 	s := common.StructToSchema(SqlPermissions{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
 		for _, field := range alof {
@@ -345,7 +348,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ta, err := tableAclForLoad(ctx, d, s, c)
+			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -370,11 +373,11 @@ func ResourceSqlPermissions() *schema.Resource {
 			return ta.enforce()
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ta, err := tableAclForLoad(ctx, d, s, c)
+			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return ta.revoke()
 		},
-	}.ToResource()
+	}
 }

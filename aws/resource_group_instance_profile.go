@@ -12,7 +12,7 @@ import (
 )
 
 // ResourceGroupInstanceProfile defines group role resource
-func ResourceGroupInstanceProfile() *schema.Resource {
+func ResourceGroupInstanceProfile() common.Resource {
 	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn
@@ -22,16 +22,20 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return apierr.NotFound("Group has no instance profile")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Group has no instance profile",
+				}
 			}
 			return err
 		},
 		CreateContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest("add", "roles", roleARN))
+			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest(
-				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
+				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN)))
 		},
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_group_role`"

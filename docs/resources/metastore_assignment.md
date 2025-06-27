@@ -3,7 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_assignment (Resource)
 
-A single [databricks_metastore](docs/resources/metastore.md) can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. You can only create a single metastore for each region in which your organization operates.
+-> This resource can be used with an account or workspace-level provider.
+
+A single [databricks_metastore](metastore.md) can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. You can only create a single metastore for each region in which your organization operates.
 
 ## Example Usage
 
@@ -12,6 +14,7 @@ resource "databricks_metastore" "this" {
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = "uc admins"
+  region        = "us-east-1"
   force_destroy = true
 }
 
@@ -27,4 +30,27 @@ The following arguments are required:
 
 * `metastore_id` - Unique identifier of the parent Metastore
 * `workspace_id` - id of the workspace for the assignment
-* `default_catalog_name` - (Optional) Default catalog used for this assignment, default to `hive_metastore`
+* `default_catalog_name` - (Deprecated) Default catalog used for this assignment. Please use [databricks_default_namespace_setting](default_namespace_setting.md) instead.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this metastore assignment in form of `<workspace_id>|<metastore_id>`.
+
+## Import
+
+This resource can be imported by combination of workspace id and metastore id:
+
+```hcl
+import {
+  to = databricks_metastore_assignment.this
+  id = "<workspace_id>|<metastore_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_metastore_assignment.this "<workspace_id>|<metastore_id>"
+```

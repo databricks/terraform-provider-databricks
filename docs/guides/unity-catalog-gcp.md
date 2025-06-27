@@ -4,7 +4,15 @@ page_title: "Unity Catalog set up on Google Cloud"
 
 # Deploying pre-requisite resources and enabling Unity Catalog
 
+**Note**
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
+
+**Note**
+Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
+
+This guide creates a metastore without a storage root location or credential to maintain strict separation of storage across catalogs or environments.
 
 This guide uses the following variables in configurations:
 
@@ -12,19 +20,18 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
-  - [Configure Google Cloud objects](#configure-google-cloud-objects)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
+  - [Configure external locations and credentials](#configure-external-locations-and-credentials)
   - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
-  - [Configure external tables and credentials](#configure-external-tables-and-credentials)
   - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
 
-Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-hostname,-username,-and-password), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
+Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authentication), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
 
 Define the required variables, and calculate the local values
 
@@ -74,19 +81,11 @@ provider "google" {
 provider "databricks" {
   host = var.databricks_workspace_url
 }
-```
 
-## Configure Google Cloud objects
-
-The first step is to create the required Google Cloud objects:
-
-- A GCS bucket which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
-
-```hcl
-resource "google_storage_bucket" "unity_metastore" {
-  name          = "${local.prefix}-metastore"
-  location      = var.location
-  force_destroy = true
+provider "databricks" {
+  alias      = "accounts"
+  host       = "https://accounts.gcp.databricks.com"
+  account_id = var.databricks_account_id
 }
 ```
 
@@ -96,16 +95,10 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
+  provider      = databricks.accounts
   name          = "primary"
-  storage_root  = "gs://${google_storage_bucket.unity_metastore.name}"
+  region        = var.location
   force_destroy = true
-}
-
-resource "databricks_metastore_data_access" "first" {
-  metastore_id = databricks_metastore.this.id
-  databricks_gcp_service_account {}
-  name       = "the-keys"
-  is_default = true
 }
 
 resource "google_storage_bucket_iam_member" "unity_sa_admin" {
@@ -121,9 +114,111 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
 }
 
 resource "databricks_metastore_assignment" "this" {
+  provider             = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
+}
+```
+
+## Configure external locations and credentials
+
+Unity Catalog introduces two new objects to access and work with external cloud storage:
+
+- [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage. Storage credentials are access-controlled to determine which users can use the credential.
+- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
+
+First, create the required object in GCPs, including granting permissions on the bucket to the Databricks-managed Service Account.
+
+```hcl
+resource "google_storage_bucket" "ext_bucket" {
+  name          = "${local.prefix}-ext-bucket"
+  location      = var.location
+  force_destroy = true
+}
+
+resource "databricks_storage_credential" "ext" {
+  name = "the-creds"
+  databricks_gcp_service_account {}
+  depends_on = [databricks_metastore_assignment.this]
+}
+
+resource "google_project_iam_custom_role" "uc_file_events" {
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  permissions = [
+    "pubsub.subscriptions.consume",
+    "pubsub.subscriptions.create",
+    "pubsub.subscriptions.delete",
+    "pubsub.subscriptions.get",
+    "pubsub.subscriptions.list",
+    "pubsub.subscriptions.update",
+    "pubsub.topics.attachSubscription",
+    "pubsub.topics.create",
+    "pubsub.topics.delete",
+    "pubsub.topics.get",
+    "pubsub.topics.list",
+    "pubsub.topics.update",
+    "storage.buckets.update"
+  ]
+}
+
+data "google_storage_project_service_account" "gcs_account" {}
+
+resource "google_project_iam_member" "uc_project_file_events_admin" {
+  project = var.project
+  role    = google_project_iam_custom_role.uc_file_events.id
+  member  = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_project_iam_member" "cloud_storage_sa_pubsub_publisher" {
+  project = var.project
+  role  = "roles/pubsub.publisher"
+  member = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
+}
+
+resource "google_storage_bucket_iam_member" "unity_cred_admin" {
+  bucket = google_storage_bucket.ext_bucket.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_storage_bucket_iam_member" "unity_cred_reader" {
+  bucket = google_storage_bucket.ext_bucket.name
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+```
+
+Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
+
+```hcl
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_EXTERNAL_TABLE"]
+  }
+}
+
+resource "databricks_external_location" "some" {
+  name = "the-ext-location"
+  url  = "gs://${google_storage_bucket.ext_bucket.name}"
+
+  credential_name = databricks_storage_credential.ext.id
+  comment         = "Managed by TF"
+  depends_on = [
+    databricks_metastore_assignment.this,
+    google_storage_bucket_iam_member.unity_cred_reader,
+    google_storage_bucket_iam_member.unity_cred_admin
+  ]
+}
+
+resource "databricks_grants" "some" {
+  external_location = databricks_external_location.some.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
+  }
 }
 ```
 
@@ -133,8 +228,8 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
+  storage_root = "gs://${google_storage_bucket.ext_bucket.name}"
   comment      = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
@@ -172,116 +267,48 @@ resource "databricks_grants" "things" {
 }
 ```
 
-## Configure external tables and credentials
-
-To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
-
-- [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage. Storage credentials are access-controlled to determine which users can use the credential.
-- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
-
-First, create the required object in GCPs, including granting permissions on the bucket to the Databricks-managed Service Account.
-
-```hcl
-resource "google_storage_bucket" "ext_bucket" {
-  name          = "${local.prefix}-ext-bucket"
-  location      = var.location
-  force_destroy = true
-}
-
-resource "databricks_storage_credential" "ext" {
-  name = "the-creds"
-  databricks_gcp_service_account {}
-  depends_on = [databricks_metastore_assignment.this]
-}
-
-resource "google_storage_bucket_iam_member" "unity_cred_admin" {
-  bucket = google_storage_bucket.ext_bucket.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
-}
-
-resource "google_storage_bucket_iam_member" "unity_cred_reader" {
-  bucket = google_storage_bucket.ext_bucket.name
-  role   = "roles/storage.legacyBucketReader"
-  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
-}
-```
-
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
-
-```hcl
-resource "databricks_grants" "external_creds" {
-  storage_credential = databricks_storage_credential.external.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
-  }
-}
-
-resource "databricks_external_location" "some" {
-  name = "the-ext-location"
-  url  = "gs://${google_storage_bucket.ext_bucket.name}"
-
-  credential_name = databricks_storage_credential.ext.id
-  comment         = "Managed by TF"
-  depends_on = [
-    databricks_metastore_assignment.this,
-    google_storage_bucket_iam_member.unity_cred_reader,
-    google_storage_bucket_iam_member.unity_cred_admin
-  ]
-}
-
-resource "databricks_grants" "some" {
-  external_location = databricks_external_location.some.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
-  }
-}
-```
-
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has the access mode set to either **Shared** or **Single User**.
 
-- **User Isolation** clusters can be shared by multiple users, but only Python (using DBR>=11.1) and SQL languages are allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
+- **Shared** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
 ```hcl
 data "databricks_spark_version" "latest" {
+  provider = databricks.workspace
 }
 data "databricks_node_type" "smallest" {
+  provider   = databricks.workspace
   local_disk = true
 }
 
-resource "databricks_cluster" "unity_sql" {
-  cluster_name            = "Unity SQL"
+resource "databricks_cluster" "unity_shared" {
+  provider                = databricks.workspace
+  cluster_name            = "Shared clusters"
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 60
-  enable_elastic_disk     = false
   num_workers             = 2
-  azure_attributes {
-    availability = "SPOT"
-  }
-  data_security_mode = "USER_ISOLATION"
-  # need to wait until the metastore is assigned
+  data_security_mode      = "USER_ISOLATION"
   depends_on = [
     databricks_metastore_assignment.this
   ]
 }
 ```
 
-- To use those advanced cluster features or languages like Machine Learning Runtime, Streaming, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
+- To use those advanced cluster features or languages like Machine Learning Runtime and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
+  The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 
 ```hcl
 data "databricks_group" "dev" {
+  provider     = databricks.workspace
   display_name = "dev-clusters"
 }
 
 data "databricks_user" "dev" {
+  provider = databricks.workspace
   for_each = data.databricks_group.dev.members
   user_id  = each.key
 }
@@ -292,6 +319,7 @@ Once we have a specific list of user resources, we could proceed creating single
 ```hcl
 resource "databricks_cluster" "dev" {
   for_each                = data.databricks_user.dev
+  provider                = databricks.workspace
   cluster_name            = "${each.value.display_name} unity cluster"
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
@@ -299,7 +327,6 @@ resource "databricks_cluster" "dev" {
   num_workers             = 2
   data_security_mode      = "SINGLE_USER"
   single_user_name        = each.value.user_name
-  # need to wait until the metastore is assigned
   depends_on = [
     databricks_metastore_assignment.this
   ]
@@ -307,6 +334,7 @@ resource "databricks_cluster" "dev" {
 
 resource "databricks_permissions" "dev_restart" {
   for_each   = data.databricks_user.dev
+  provider   = databricks.workspace
   cluster_id = databricks_cluster.dev[each.key].cluster_id
   access_control {
     user_name        = each.value.user_name

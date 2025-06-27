@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -17,15 +19,17 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +47,7 @@ func RandomEmail() string {
 	return fmt.Sprintf("%s@example.com", RandomName("tf-"))
 }
 
-// RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
+// acceptance.RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
 func RandomName(prefix ...string) string {
 	randLen := 12
 	b := make([]byte, randLen)
@@ -67,20 +71,49 @@ type HTTPFixture struct {
 	MatchAny        bool
 }
 
-// ResourceFixture helps testing resources and commands
+// ResourceFixture is a helper to unit test terraform resources. It does this by
+// creating a mock Databricks server and client.
 type ResourceFixture struct {
-	Fixtures      []HTTPFixture
-	Resource      *schema.Resource
-	RequiresNew   bool
+	// A list of HTTP fixtures representing requests and their corresponding
+	// responses. These are loaded into the mock Databricks server.
+	Fixtures []HTTPFixture
+
+	MockWorkspaceClientFunc func(*mocks.MockWorkspaceClient)
+
+	MockAccountClientFunc func(*mocks.MockAccountClient)
+
+	// The resource the unit test is testing.
+	Resource common.Resource
+
+	// Set to true if the diff generated in the test will force a recreation
+	// of the resource.
+	RequiresNew bool
+
+	// Existing state of the resource, equivalent to the state stored in a terraform
+	// state file.
 	InstanceState map[string]string
-	State         map[string]any
-	// HCL might be useful to test nested blocks
-	HCL         string
+
+	// Configuration for the resource, equivalent to the configuration a user
+	// defines in a .tf file. Only use one of HCL or State.
+	State map[string]any
+
+	// Alternative to State. Allows defining the resource configuration in HCL
+	// which is decoded into a map. Only use one of HCL or State.
+	HCL string
+
+	// Mocks the Databricks Command Execution API. This mock is loaded at the client
+	// level so any command execution API requests are not sent to the server.
 	CommandMock common.CommandMock
-	Create      bool
-	Read        bool
-	Update      bool
-	Delete      bool
+
+	// Set one of them to true to test the corresponding CRUD function for the
+	// terraform resource. Or set ExpectedDiff to skip execution and only test
+	// that the diff is expected.
+	Create       bool
+	Read         bool
+	Update       bool
+	Delete       bool
+	ExpectedDiff map[string]*terraform.ResourceAttrDiff
+
 	Removed     bool
 	ID          string
 	NonWritable bool
@@ -109,13 +142,13 @@ func (cb resourceCRUD) withId(id string) resourceCRUD {
 	})
 }
 
-func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
+func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, error) {
 	switch {
 	case f.Create:
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.CreateContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.CreateContext).before(func(d *schema.ResourceData) {
 			d.MarkNewResource()
 		}), nil
 	case f.Read:
@@ -124,7 +157,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		}
 		preRead := f.State
 		f.State = nil
-		return resourceCRUD(f.Resource.ReadContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.ReadContext).before(func(d *schema.ResourceData) {
 			if f.New {
 				d.MarkNewResource()
 			}
@@ -136,45 +169,119 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Update")
 		}
-		return resourceCRUD(f.Resource.UpdateContext).withId(f.ID), nil
+		return resourceCRUD(r.UpdateContext).withId(f.ID), nil
 	case f.Delete:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
-		return resourceCRUD(f.Resource.DeleteContext).withId(f.ID), nil
+		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
+	case f.ExpectedDiff != nil:
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 }
 
-// Apply runs tests from fixture
-func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
+	if f.Azure || f.AzureSPN {
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:              environment.CloudAzure,
+			DnsZone:            host,
+			AzureApplicationID: "azure-login-application-id",
+			AzureEnvironment:   &environment.AzurePublicCloud,
+		}
+	} else if f.Gcp {
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudGCP,
+			DnsZone: host,
+		}
+	} else {
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudAWS,
+			DnsZone: host,
+		}
+	}
+}
+
+func (f ResourceFixture) validateMocks() error {
+	isMockConfigured := f.MockAccountClientFunc != nil || f.MockWorkspaceClientFunc != nil
+	isFixtureConfigured := f.Fixtures != nil
+	if isFixtureConfigured && isMockConfigured {
+		return fmt.Errorf("either (MockWorkspaceClientFunc, MockAccountClientFunc) or Fixtures may be set, not both")
+	}
+	return nil
+}
+
+type server struct {
+	Close func()
+	URL   string
+}
+
+func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, server, error) {
 	token := "..."
 	if f.Token != "" {
 		token = f.Token
 	}
-	client, server, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
-	defer server.Close()
+	if f.Fixtures != nil {
+		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
+		ss := server{
+			Close: s.Close,
+			URL:   s.URL,
+		}
+		return client, ss, err
+	}
+	mw := mocks.NewMockWorkspaceClient(t)
+	ma := mocks.NewMockAccountClient(t)
+	if f.MockWorkspaceClientFunc != nil {
+		f.MockWorkspaceClientFunc(mw)
+	}
+	if f.MockAccountClientFunc != nil {
+		f.MockAccountClientFunc(ma)
+	}
+	c := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	c.SetWorkspaceClient(mw.WorkspaceClient)
+	c.SetAccountClient(ma.AccountClient)
+	c.Config.Credentials = testCredentialsProvider{token: token}
+	return c, server{
+		Close: func() {},
+		URL:   "does-not-matter",
+	}, nil
+}
+
+// Apply runs tests from fixture
+func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+	err := f.validateMocks()
 	if err != nil {
 		return nil, err
 	}
-	client.Config.WithTesting()
+	client, server, err := f.setupClient(t)
+	if err != nil {
+		return nil, err
+	}
+	defer server.Close()
+	config := client.Config
+	config.WithTesting()
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
-		client.Config.AzureClientID = "a"
-		client.Config.AzureClientSecret = "b"
-		client.Config.AzureTenantID = "c"
+		config.AzureClientID = "a"
+		config.AzureClientSecret = "b"
+		config.AzureTenantID = "c"
 	}
 	if f.Gcp {
-		client.Config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if f.AccountID != "" {
-		client.Config.AccountID = f.AccountID
+		config.AccountID = f.AccountID
 	}
+	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
 		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff
@@ -185,12 +292,13 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		f.State = fixHCL(out).(map[string]any)
 	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
-	execute, err := f.prepareExecution()
+	resource := f.Resource.ToResource()
+	execute, err := f.prepareExecution(resource)
 	if err != nil {
 		return nil, err
 	}
 	if f.State != nil {
-		diags := f.Resource.Validate(resourceConfig)
+		diags := resource.Validate(resourceConfig)
 		if diags.HasError() {
 			return nil, fmt.Errorf("invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
@@ -201,7 +309,17 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		Attributes: f.InstanceState,
 	}
 	ctx := context.Background()
-	diff, err := f.Resource.Diff(ctx, is, resourceConfig, client)
+	diff, err := resource.Diff(ctx, is, resourceConfig, client)
+	if f.ExpectedDiff != nil {
+		// Users can specify that there is no diff by setting an empty but initialized map.
+		// resource.Diff returns nil if there is no diff.
+		if len(f.ExpectedDiff) == 0 {
+			assert.Nil(t, diff)
+			return nil, err
+		}
+		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
+		return nil, err
+	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
@@ -216,7 +334,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
+	err = resource.InternalValidate(resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err
 	}
@@ -224,14 +342,14 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diags))
+			return resourceData, errors.New(diagsToString(diags))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
-	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, f.Resource.CustomizeDiff, client, true)
+	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err
 	}
@@ -273,9 +391,10 @@ func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
 		} else if that, ok := d.Get(k).(*schema.Set); ok {
-			this := expected.([]string)
-			assert.Equal(t, len(this), that.Len(), "set has different length")
-			for _, item := range this {
+			this := reflect.ValueOf(expected)
+			assert.Equal(t, this.Len(), that.Len(), "set has different length")
+			for i := 0; i < this.Len(); i++ {
+				item := this.Index(i).Interface()
 				assert.True(t, that.Contains(item), "set does not contain %s", item)
 			}
 		} else {
@@ -311,6 +430,7 @@ func CornerCaseAccountID(id string) CornerCase {
 	return CornerCase{"account_id", id}
 }
 
+var ErrImATeapot = errors.New("i'm a teapot")
 var HTTPFailures = []HTTPFixture{
 	{
 		MatchAny:     true,
@@ -319,23 +439,24 @@ var HTTPFailures = []HTTPFixture{
 		Response: apierr.APIError{
 			ErrorCode:  "NONSENSE",
 			StatusCode: 418,
-			Message:    "I'm a teapot",
+			Message:    "i'm a teapot",
 		},
 	},
 }
 
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
-func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
+func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
-		"expect_error": "I'm a teapot",
+		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
+	r := resource.ToResource()
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
-		"create": resource.CreateContext,
-		"read":   resource.ReadContext,
-		"update": resource.UpdateContext,
-		"delete": resource.DeleteContext,
+		"create": r.CreateContext,
+		"read":   r.ReadContext,
+		"update": r.UpdateContext,
+		"delete": r.DeleteContext,
 	}
 	for _, corner := range cc {
 		if corner.part == "skip_crud" {
@@ -344,8 +465,8 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		config[corner.part] = corner.value
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
-		validData := resource.TestResourceData()
-		client.Config.AccountID = config["account_id"]
+		validData := r.TestResourceData()
+		client.Config.WithTesting().AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
@@ -353,7 +474,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Equalf(t, config["expect_error"], diags[0].Summary,
+				assert.Containsf(t, diags[0].Summary, config["expect_error"],
 					"%s didn't handle correct error on valid data", n)
 			}
 		}
@@ -508,6 +629,30 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 	client, server, err := HttpFixtureClient(t, fixtures)
 	defer server.Close()
 	require.NoError(t, err)
+	callback(context.Background(), client)
+}
+
+func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
+	mw := mocks.NewMockWorkspaceClient(t)
+	mockWorkspaceClient(mw)
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	client.SetWorkspaceClient(mw.WorkspaceClient)
+	callback(context.Background(), client)
+}
+
+func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
+	ma := mocks.NewMockAccountClient(t)
+	mockAccountClient(ma)
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	client.SetAccountClient(ma.AccountClient)
 	callback(context.Background(), client)
 }
 

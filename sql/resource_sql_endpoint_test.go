@@ -2,71 +2,65 @@ package sql
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/qa/poll"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 // Define fixture for retrieving all data sources.
 // Shared between tests that end up performing a read operation.
-var dataSourceListHTTPFixture = qa.HTTPFixture{
-	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/data_sources",
-	ReuseRequest: true,
-	Response: json.RawMessage(`
-		[
-			{
-				"id": "2f47f0f9-b4b7-40e2-b130-43103151864c",
-				"endpoint_id": "def"
-			},
-			{
-				"id": "d7c9d05c-7496-4c69-b089-48823edad40c",
-				"endpoint_id": "abc"
-			}
-		]
-	`),
+func addDataSourceListHttpFixture(mw *mocks.MockWorkspaceClient) {
+	mw.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{
+		{
+			Id:          "2f47f0f9-b4b7-40e2-b130-43103151864c",
+			WarehouseId: "def",
+		},
+		{
+			Id:          "d7c9d05c-7496-4c69-b089-48823edad40c",
+			WarehouseId: "abc",
+		},
+	}, nil)
+}
+
+var createRequest = sql.CreateWarehouseRequest{
+	Name:               "foo",
+	ClusterSize:        "Small",
+	MaxNumClusters:     1,
+	AutoStopMins:       120,
+	EnablePhoton:       true,
+	SpotInstancePolicy: "COST_OPTIMIZED",
+}
+var getResponse = sql.GetWarehouseResponse{
+	Name:           "foo",
+	ClusterSize:    "Small",
+	Id:             "abc",
+	State:          "RUNNING",
+	Tags:           &sql.EndpointTags{},
+	MaxNumClusters: 1,
+	NumClusters:    1,
 }
 
 func TestResourceSQLEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: SQLEndpoint{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMinutes:    120,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-				Response: SQLEndpoint{
-					ID: "abc",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
-				ReuseRequest: true,
-				Response: SQLEndpoint{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					ID:             "abc",
-					State:          "RUNNING",
-					Tags:           &Tags{},
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockWarehousesAPI()
+			api.EXPECT().Create(mock.Anything, createRequest).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Poll: poll.Simple(getResponse),
+			}, nil)
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(w)
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,
@@ -80,39 +74,94 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+func TestResourceSQLEndpointCreate_ForceSendFields(t *testing.T) {
+	type forceSendFieldTestCase struct {
+		hcl                             string
+		expectedEnableServerlessCompute bool
+		expectedPhoton                  bool
+		expectedForceSendFields         []string
+	}
+	cases := []forceSendFieldTestCase{
+		{
+			hcl:                             "enable_serverless_compute = true",
+			expectedEnableServerlessCompute: true,
+			expectedPhoton:                  true,
+			expectedForceSendFields:         nil,
+		},
+		{
+			hcl:                             "enable_serverless_compute = false",
+			expectedEnableServerlessCompute: false,
+			expectedPhoton:                  true,
+			expectedForceSendFields:         []string{"EnableServerlessCompute"},
+		},
+		{
+			hcl:                             "enable_photon = false",
+			expectedEnableServerlessCompute: false,
+			expectedPhoton:                  false,
+			expectedForceSendFields:         []string{"EnablePhoton"},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.hcl, func(t *testing.T) {
+			d, err := qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					api := w.GetMockWarehousesAPI()
+					response := sql.GetWarehouseResponse{
+						Id:                      "abc",
+						Name:                    "foo",
+						ClusterSize:             "Small",
+						AutoStopMins:            120,
+						EnablePhoton:            c.expectedPhoton,
+						EnableServerlessCompute: c.expectedEnableServerlessCompute,
+						ForceSendFields:         c.expectedForceSendFields,
+					}
+					api.EXPECT().Create(mock.Anything, sql.CreateWarehouseRequest{
+						Name:                    "foo",
+						ClusterSize:             "Small",
+						AutoStopMins:            120,
+						EnablePhoton:            c.expectedPhoton,
+						EnableServerlessCompute: c.expectedEnableServerlessCompute,
+						MaxNumClusters:          1,
+						SpotInstancePolicy:      "COST_OPTIMIZED",
+						ForceSendFields:         c.expectedForceSendFields,
+					}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+						Poll: poll.Simple(response),
+					}, nil)
+					api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+					addDataSourceListHttpFixture(w)
+				},
+				Resource: ResourceSqlEndpoint(),
+				Create:   true,
+				HCL: `
+				name = "foo"
+				cluster_size = "Small"
+				` + c.hcl,
+			}.Apply(t)
+			require.NoError(t, err)
+			assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+			assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+		})
+	}
+
+}
+
 func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: SQLEndpoint{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMinutes:    0,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-				Response: SQLEndpoint{
-					ID: "abc",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
-				ReuseRequest: true,
-				Response: SQLEndpoint{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					ID:             "abc",
-					State:          "RUNNING",
-					Tags:           &Tags{},
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Poll: poll.Simple(getResponse),
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(w)
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,
@@ -129,16 +178,11 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 
 func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				Status:   404,
-				Response: apierr.APIError{
-					ErrorCode: "FEATURE_DISABLED",
-					Message:   "Databricks SQL is not supported",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().
+				Create(mock.Anything, createRequest).
+				Return(nil, errors.New("Databricks SQL is not supported"))
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,
@@ -146,24 +190,78 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 		name = "foo"
   		cluster_size = "Small"
 		`,
-	}.ExpectError(t, "Databricks SQL is not supported")
+	}.ExpectError(t, "failed creating warehouse: Databricks SQL is not supported")
+}
+
+// this is pending https://github.com/databricks/databricks-sdk-go/pull/1155
+func simpleError[R any](err error) poll.PollFunc[R] {
+	return func(_ time.Duration, _ func(*R)) (*R, error) {
+		return nil, err
+	}
+}
+
+func TestResourceSQLEndpointCreateRollback(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(nil)
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch")
+}
+
+func TestResourceSQLEndpointCreateRollbackFailed(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(errors.New("Cannot delete warehouse"))
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch. when rolling back, also failed: Cannot delete warehouse")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
-				ReuseRequest: true,
-				Response: SQLEndpoint{
-					Name:        "foo",
-					ClusterSize: "Small",
-					ID:          "abc",
-					State:       "RUNNING",
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(mwc)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -180,33 +278,19 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 
 func TestResourceSQLEndpointUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses/abc/edit",
-				ExpectedRequest: SQLEndpoint{
-					ID:                 "abc",
-					Name:               "foo",
-					ClusterSize:        "Small",
-					AutoStopMinutes:    120,
-					MaxNumClusters:     1,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
-				ReuseRequest: true,
-				Response: SQLEndpoint{
-					Name:        "foo",
-					ClusterSize: "Small",
-					ID:          "abc",
-					State:       "RUNNING",
-					NumClusters: 1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().Edit(mock.Anything, sql.EditWarehouseRequest{
+				Id:                 "abc",
+				Name:               "foo",
+				ClusterSize:        "Small",
+				AutoStopMins:       120,
+				MaxNumClusters:     1,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+			}).Return(&sql.WaitGetWarehouseRunning[struct{}]{Poll: poll.Simple(getResponse)}, nil)
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(mwc)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -221,13 +305,74 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+// Testing the customizeDiff on clearing "health" diff is working as expected.
+func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"auto_stop_mins":            {Old: "120", New: "0", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceSQLEndpointDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/sql/warehouses/abc?",
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().DeleteById(mock.Anything, "abc").Return(nil)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -241,99 +386,26 @@ func TestResourceSQLEndpoint_CornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceSqlEndpoint())
 }
 
-func TestSQLEnpointAPI(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses",
-			Response: map[string]any{
-				"warehouses": []SQLEndpoint{
-					{
-						ID:   "foo",
-						Name: "bar",
-					},
-				},
-			},
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/failstart/start",
-			Status:   404,
-			Response: apierr.NotFound("nope"),
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/deleting/start",
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/deleting",
-			Response: SQLEndpoint{
-				State: "STARTING",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/deleting",
-			Response: SQLEndpoint{
-				State: "DELETED",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/cantwait",
-			Status:   500,
-			Response: apierr.APIError{
-				Message: "does not compute",
-			},
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/stopping/stop",
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewSQLEndpointsAPI(ctx, client)
-		list, err := a.List()
-		require.NoError(t, err)
-		assert.Len(t, list.Endpoints, 1)
-
-		err = a.Start("failstart", 5*time.Minute)
-		assert.EqualError(t, err, "nope")
-
-		err = a.Start("deleting", 5*time.Minute)
-		assert.EqualError(t, err, "endpoint got deleted during creation")
-
-		err = a.waitForRunning("cantwait", 5*time.Minute)
-		assert.EqualError(t, err, "does not compute")
-
-		err = a.Stop("stopping")
-		require.NoError(t, err)
-	})
-}
-
 func TestResolveDataSourceIDError(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: map[string]any{},
-			Status:   404,
-		},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, &apierr.APIError{
+			ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+		})
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+		_, err = resolveDataSourceID(ctx, w, "any")
 		require.Error(t, err)
 	})
 }
 
 func TestResolveDataSourceIDNotFound(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: []any{},
-		},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{}, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+		_, err = resolveDataSourceID(ctx, w, "any")
 		require.Error(t, err)
 	})
 }

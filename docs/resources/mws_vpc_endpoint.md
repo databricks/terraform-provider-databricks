@@ -3,11 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_vpc_endpoint Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
 Enables you to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources or gcp vpc_endpoint resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
+
+-> This resource can only be used with an account-level provider!
 
 It is strongly recommended that customers read the [Enable AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or the [Enable GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation before trying to leverage this resource.
 
@@ -111,7 +109,7 @@ resource "databricks_mws_workspaces" "this" {
 
 ### Databricks on GCP usage
 
-Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details. 
+Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details.
 
 Once you have created the necessary PSC connections, you need to register each of them via *this* Terraform resource, which calls out to the Databricks Account API.
 
@@ -192,25 +190,26 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of VPC Endpoint in form of `account_id/vpc_endpoint_id`
 * `vpc_endpoint_id` - Canonical unique identifier of VPC Endpoint in Databricks Account
 * `aws_endpoint_service_id` - (AWS Only) The ID of the Databricks endpoint service that this VPC endpoint is connected to. Please find the list of endpoint service IDs for each supported region in the [Databricks PrivateLink documentation](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html)
 * `state` - (AWS Only) State of VPC Endpoint
 * `gcp_vpc_endpoint_info`- (GCP only) a block consists of Google Cloud specific information for this PSC endpoint. It has the following fields exported:
   * `psc_connection_id` - The unique ID of this PSC connection.
   * `service_attachment_id` - The service attachment this PSC connection connects to.
- 
+
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+-> Importing this resource is not currently supported.
 
 ## Related Resources
 
 The following resources are used in the same context:
 
 * [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
-* [Provisioning Databricks on AWS with PrivateLink](../guides/aws-private-link-workspace.md) guide.
-* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
+* [Provisioning Databricks on AWS with Private Link](../guides/aws-private-link-workspace.md) guide.
+* [Provisioning AWS Databricks workspaces with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
 * [Provisioning Databricks workspaces on GCP with Private Service Connect](../guides/gcp-private-service-connect-workspace.md) guide.
 * [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
-* [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a [Private Access Setting](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-5-create-a-private-access-settings-configuration-using-the-databricks-account-api) that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html).
-* [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).
+* [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a [Private Access Setting](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-5-create-a-private-access-settings-configuration-using-the-databricks-account-api) that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html).
+* [databricks_mws_workspaces](mws_workspaces.md) to set up [AWS and GCP workspaces](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

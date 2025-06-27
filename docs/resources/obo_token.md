@@ -3,13 +3,17 @@ subcategory: "Security"
 ---
 # databricks_obo_token Resource
 
-This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account.
+This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS and GCP.  In general it's best to use OAuth authentication using client ID and secret, and use this resource mostly for integrations that doesn't support OAuth.
+
+-> This resource can only be used with a workspace-level provider!
+
+~> To create On-Behalf-Of token for Azure Service Principal, configure Terraform provider to use Azure service principal's client ID and secret, and use `databricks_token` resource to create a personal access token.
 
 ## Example Usage
 
 Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure.
 
--> **Note** A given declaration of `databricks_permissions.token_usage` would OVERWRITE permissions to use PAT tokens from any existing groups with token usage permissions such as the `users` group. To avoid this, be sure to include any desired groups in additional `access_control` blocks in the Terraform configuration file.
+-> A given declaration of `databricks_permissions.token_usage` would OVERWRITE permissions to use PAT tokens from any existing groups with token usage permissions such as the `users` group. To avoid this, be sure to include any desired groups in additional `access_control` blocks in the Terraform configuration file.
 
 ```hcl
 resource "databricks_service_principal" "this" {
@@ -78,7 +82,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

@@ -11,9 +11,13 @@ import (
 
 // DashboardEntity defines the parameters that can be set in the resource.
 type DashboardEntity struct {
-	Name   string   `json:"name"`
-	Tags   []string `json:"tags,omitempty"`
-	Parent string   `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	Name                    string   `json:"name"`
+	Tags                    []string `json:"tags,omitempty"`
+	Parent                  string   `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	CreatedAt               string   `json:"created_at,omitempty" tf:"computed"`
+	UpdatedAt               string   `json:"updated_at,omitempty" tf:"computed"`
+	RunAsRole               string   `json:"run_as_role,omitempty" tf:"suppress_diff"`
+	DashboardFiltersEnabled bool     `json:"dashboard_filters_enabled,omitempty"`
 }
 
 func (d *DashboardEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Dashboard, error) {
@@ -26,6 +30,8 @@ func (d *DashboardEntity) toAPIObject(schema map[string]*schema.Schema, data *sc
 	ad.Name = d.Name
 	ad.Tags = append([]string{}, d.Tags...)
 	ad.Parent = d.Parent
+	ad.DashboardFiltersEnabled = d.DashboardFiltersEnabled
+	ad.RunAsRole = d.RunAsRole
 
 	return &ad, nil
 }
@@ -35,6 +41,10 @@ func (d *DashboardEntity) fromAPIObject(ad *api.Dashboard, schema map[string]*sc
 	d.Name = ad.Name
 	d.Tags = append([]string{}, ad.Tags...)
 	d.Parent = ad.Parent
+	d.UpdatedAt = ad.UpdatedAt
+	d.CreatedAt = ad.CreatedAt
+	d.DashboardFiltersEnabled = ad.DashboardFiltersEnabled
+	d.RunAsRole = ad.RunAsRole
 
 	// Pass to ResourceData.
 	if err := common.StructToData(*d, schema, data); err != nil {
@@ -86,14 +96,13 @@ func (a DashboardAPI) Delete(dashboardID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
 }
 
-func ResourceSqlDashboard() *schema.Resource {
+func ResourceSqlDashboard() common.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 
 	return common.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
@@ -133,5 +142,5 @@ func ResourceSqlDashboard() *schema.Resource {
 			return NewDashboardAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

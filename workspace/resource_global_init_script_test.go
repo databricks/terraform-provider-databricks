@@ -2,79 +2,72 @@ package workspace
 
 import (
 	"encoding/base64"
-	"net/http"
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestResourceGlobalInitScriptRead(t *testing.T) {
 	scriptID := "1234"
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					Name:          "Test",
-					Position:      0,
-					Enabled:       true,
-					CreatedBy:     "someuser@domain.com",
-					CreatedAt:     1612520583493,
-					UpdatedBy:     "someuser@domain.com",
-					UpdatedAt:     1612520583493,
-					ContentBase64: "ZWNobyBoZWxsbw==",
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGlobalInitScriptsAPI().EXPECT().
+				GetByScriptId(mock.Anything, scriptID).
+				Return(&compute.GlobalInitScriptDetailsWithContent{
+					ScriptId:  "1234",
+					Name:      "Test",
+					Position:  0,
+					Enabled:   true,
+					CreatedBy: "someuser@domain.com",
+					CreatedAt: 1612520583493,
+					UpdatedBy: "someuser@domain.com",
+					UpdatedAt: 1612520583493,
+					Script:    "ZWNobyBoZWxsbw==",
+				}, nil)
 		},
 		Resource: ResourceGlobalInitScript(),
 		Read:     true,
 		New:      true,
 		ID:       scriptID,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, scriptID, d.Id())
-	assert.Equal(t, "Test", d.Get("name"))
-	assert.Equal(t, true, d.Get("enabled"))
-	assert.Equal(t, 0, d.Get("position"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":       scriptID,
+		"name":     "Test",
+		"enabled":  true,
+		"position": 0,
+	})
 }
 
 func TestResourceGlobalInitScriptDelete(t *testing.T) {
 	scriptID := "1234"
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodDelete,
-				Resource: "/api/2.0/global-init-scripts/" + scriptID + "?script_id=" + scriptID,
-				Status:   http.StatusOK,
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGlobalInitScriptsAPI().EXPECT().
+				DeleteByScriptId(mock.Anything, scriptID).
+				Return(nil)
 		},
 		Resource: ResourceGlobalInitScript(),
 		Delete:   true,
 		ID:       scriptID,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, scriptID, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": scriptID,
+	})
 }
 
 func TestResourceGlobalInitScriptRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{ // read log output for correct url...
-				Method:   "GET",
-				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "The global unit script with ID 1234 does not exist.",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGlobalInitScriptsAPI().EXPECT().
+				GetByScriptId(mock.Anything, "1234").
+				Return(nil, apierr.ErrNotFound)
 		},
 		Resource: ResourceGlobalInitScript(),
 		Read:     true,
@@ -84,30 +77,23 @@ func TestResourceGlobalInitScriptRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGlobalInitScriptCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/global-init-scripts",
-				ExpectedRequest: GlobalInitScriptPayload{
-					Name:          "test",
-					ContentBase64: "ZWNobyBoZWxsbw==",
-				},
-				Response: globalInitScriptCreateResponse{
-					ScriptID: "1234",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/1234",
-				ReuseRequest: true,
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					ContentBase64: "ZWNobyBoZWxsbw==",
-					Position:      0,
-					Name:          "test",
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
+			scriptsAPI.Create(mock.Anything, compute.GlobalInitScriptCreateRequest{
+				Name:   "test",
+				Script: "ZWNobyBoZWxsbw==",
+			}).Return(&compute.CreateResponse{
+				ScriptId: "1234",
+			}, nil)
+
+			scriptsAPI.GetByScriptId(mock.Anything, "1234").
+				Return(&compute.GlobalInitScriptDetailsWithContent{
+					ScriptId: "1234",
+					Script:   "ZWNobyBoZWxsbw==",
+					Name:     "test",
+					Position: 0,
+				}, nil)
 		},
 		Create:   true,
 		Resource: ResourceGlobalInitScript(),
@@ -115,17 +101,18 @@ func TestResourceGlobalInitScriptCreate(t *testing.T) {
 			"name":           "test",
 			"content_base64": "ZWNobyBoZWxsbw==",
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "1234", d.Id())
-	assert.Equal(t, 0, d.Get("position"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "1234",
+		"name":           "test",
+		"content_base64": "ZWNobyBoZWxsbw==",
+		"position":       0,
+	})
 }
 
 func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
-		Create:   true,
 		Resource: ResourceGlobalInitScript(),
+		Create:   true,
 		State: map[string]any{
 			"name":           "test",
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
@@ -137,9 +124,8 @@ func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 
 func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
-		Update:   true,
 		Resource: ResourceGlobalInitScript(),
+		Update:   true,
 		ID:       "1234",
 		State: map[string]any{
 			"name":           "test",
@@ -151,31 +137,87 @@ func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 }
 
 func TestResourceGlobalInitScriptUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
+			scriptsAPI.Update(mock.Anything, compute.GlobalInitScriptUpdateRequest{
+				ScriptId: "1234",
+				Name:     "test",
+				Position: 0,
+				Script:   "ZWNobyBoZWxsbw==",
+			}).Return(nil)
+
+			scriptsAPI.GetByScriptId(mock.Anything, "1234").
+				Return(&compute.GlobalInitScriptDetailsWithContent{
+					ScriptId: "1234",
+					Script:   "ZWNobyBoZWxsbw==",
+					Position: 0,
+					Name:     "test",
+				}, nil)
+		},
+		Update:   true,
+		ID:       "1234",
+		Resource: ResourceGlobalInitScript(),
+		State: map[string]any{
+			"name":           "test",
+			"content_base64": "ZWNobyBoZWxsbw==",
+			"position":       0,
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "1234",
+		"name":           "test",
+		"content_base64": "ZWNobyBoZWxsbw==",
+		"position":       0,
+	})
+}
+
+func TestResourceGlobalInitScriptReadError(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/global-init-scripts/1234",
-				ExpectedRequest: GlobalInitScriptPayload{
-					Name:          "test",
-					Position:      0,
-					ContentBase64: "ZWNobyBoZWxsbw==",
-				},
-				Response: globalInitScriptCreateResponse{
-					ScriptID: "1234",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/1234",
-				ReuseRequest: true,
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					ContentBase64: "ZWNobyBoZWxsbw==",
-					Position:      0,
-					Name:          "test",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGlobalInitScriptsAPI().EXPECT().
+				GetByScriptId(mock.Anything, "1234").
+				Return(nil, errors.New("internal server error"))
+		},
+		Resource: ResourceGlobalInitScript(),
+		Read:     true,
+		ID:       "1234",
+	}.Apply(t)
+	assert.Error(t, err)
+	assert.Equal(t, "internal server error", err.Error())
+	assert.Equal(t, "1234", d.Id())
+}
+
+func TestResourceGlobalInitScriptCreateError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
+			scriptsAPI.Create(mock.Anything, compute.GlobalInitScriptCreateRequest{
+				Name:   "test",
+				Script: "ZWNobyBoZWxsbw==",
+			}).Return(nil, errors.New("creation failed"))
+		},
+		Create:   true,
+		Resource: ResourceGlobalInitScript(),
+		State: map[string]any{
+			"name":           "test",
+			"content_base64": "ZWNobyBoZWxsbw==",
+		},
+	}.Apply(t)
+	assert.Error(t, err)
+	assert.Equal(t, "creation failed", err.Error())
+	assert.Equal(t, "", d.Id())
+}
+
+func TestResourceGlobalInitScriptUpdateError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
+			scriptsAPI.Update(mock.Anything, compute.GlobalInitScriptUpdateRequest{
+				ScriptId: "1234",
+				Name:     "test",
+				Position: 0,
+				Script:   "ZWNobyBoZWxsbw==",
+			}).Return(errors.New("update failed"))
 		},
 		Update:   true,
 		ID:       "1234",
@@ -186,7 +228,23 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 			"position":       0,
 		},
 	}.Apply(t)
-	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.Equal(t, "update failed", err.Error())
 	assert.Equal(t, "1234", d.Id())
-	assert.Equal(t, 0, d.Get("position"))
+}
+
+func TestResourceGlobalInitScriptDeleteError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGlobalInitScriptsAPI().EXPECT().
+				DeleteByScriptId(mock.Anything, "1234").
+				Return(errors.New("delete failed"))
+		},
+		Resource: ResourceGlobalInitScript(),
+		Delete:   true,
+		ID:       "1234",
+	}.Apply(t)
+	assert.Error(t, err)
+	assert.Equal(t, "delete failed", err.Error())
+	assert.Equal(t, "1234", d.Id())
 }

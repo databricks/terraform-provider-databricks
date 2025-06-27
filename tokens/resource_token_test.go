@@ -2,14 +2,18 @@ package tokens
 
 import (
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceTokenRead(t *testing.T) {
+	creationTime := time.Now().UnixMilli()
+	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -19,8 +23,8 @@ func TestResourceTokenRead(t *testing.T) {
 					TokenInfos: []TokenInfo{
 						{
 							Comment:      "Hello, world!",
-							CreationTime: 10,
-							ExpiryTime:   20,
+							CreationTime: creationTime,
+							ExpiryTime:   expiryTime,
 							TokenID:      "abc",
 						},
 					},
@@ -35,8 +39,40 @@ func TestResourceTokenRead(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
-	assert.Equal(t, 10, d.Get("creation_time"))
-	assert.Equal(t, 20, d.Get("expiry_time"))
+	assert.Equal(t, creationTime, int64(d.Get("creation_time").(int)))
+	assert.Equal(t, expiryTime, int64(d.Get("expiry_time").(int)))
+	assert.Equal(t, "", d.Get("token_value"))
+}
+
+func TestResourceTokenRead_NoExpire(t *testing.T) {
+	creationTime := time.Now().UnixMilli()
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							Comment:      "Hello, world!",
+							CreationTime: creationTime,
+							ExpiryTime:   -1,
+							TokenID:      "abc",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		Read:     true,
+		New:      true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "Hello, world!", d.Get("comment"))
+	assert.Equal(t, creationTime, int64(d.Get("creation_time").(int)))
+	assert.Equal(t, int64(-1), int64(d.Get("expiry_time").(int)))
 	assert.Equal(t, "", d.Get("token_value"))
 }
 
@@ -61,6 +97,33 @@ func TestResourceTokenRead_NotFound(t *testing.T) {
 		Resource: ResourceToken(),
 		Read:     true,
 		Removed:  true,
+		New:      true,
+		ID:       "abc",
+	}.ApplyNoError(t)
+}
+
+func TestResourceTokenRead_Expired(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							Comment:      "Hello, world!",
+							CreationTime: 10,
+							ExpiryTime:   20,
+							TokenID:      "abc",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		Read:     true,
+		Removed:  true,
+		New:      true,
 		ID:       "abc",
 	}.ApplyNoError(t)
 }
@@ -71,7 +134,7 @@ func TestResourceTokenRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/token/list",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -87,6 +150,8 @@ func TestResourceTokenRead_Error(t *testing.T) {
 }
 
 func TestResourceTokenCreate(t *testing.T) {
+	creationTime := time.Now().UnixMilli()
+	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -111,8 +176,8 @@ func TestResourceTokenCreate(t *testing.T) {
 					TokenInfos: []TokenInfo{
 						{
 							Comment:      "Hello, world!",
-							CreationTime: 10,
-							ExpiryTime:   20,
+							CreationTime: creationTime,
+							ExpiryTime:   expiryTime,
 							TokenID:      "abc",
 						},
 					},
@@ -137,7 +202,7 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/create",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -156,6 +221,8 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 }
 
 func TestResourceTokenCreate_NoExpiration(t *testing.T) {
+	creationTime := time.Now().UnixMilli()
+	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -178,8 +245,8 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 					TokenInfos: []TokenInfo{
 						{
 							Comment:      "",
-							CreationTime: 10,
-							ExpiryTime:   -1,
+							CreationTime: creationTime,
+							ExpiryTime:   expiryTime,
 							TokenID:      "abc",
 						},
 					},
@@ -192,7 +259,7 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
-	assert.Equal(t, -1, d.Get("expiry_time")) // tokens without expiration have expiry_time set to -1 as listed in the examples on https://docs.databricks.com/dev-tools/api/latest/tokens.html#list
+	assert.Equal(t, expiryTime, int64(d.Get("expiry_time").(int)))
 	assert.Equal(t, "dapi...", d.Get("token_value"))
 }
 
@@ -221,8 +288,12 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: apierr.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
-				Status:   404,
+				Response: apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "RESOURCE_DOES_NOT_EXIST secret not found",
+				}, // per documentation this is the error response
+				Status: 404,
 			},
 		},
 		Resource: ResourceToken(),
@@ -238,9 +309,9 @@ func TestResourceTokenDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Token does not exist",
 				},
 				Status: 400,
 			},

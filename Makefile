@@ -2,7 +2,7 @@ default: build
 
 fmt:
 	@echo "✓ Formatting source code with goimports ..."
-	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@go tool goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
@@ -12,11 +12,11 @@ fmt-docs:
 
 lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
-	@staticcheck ./...
+	@go tool staticcheck ./...
 
 test: lint
 	@echo "✓ Running tests ..."
-	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+	@go tool gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
@@ -26,13 +26,8 @@ build: vendor
 	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
-install12: build
-	@echo "✓ Installing provider for Terraform 0.12 into ~/.terraform.d/plugins ..."
-	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
-	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
-
 install: build
-	@echo "✓ Installing provider for Terraform 0.13+ into ~/.terraform.d/plugins ..."
+	@echo "✓ Installing provider for Terraform 1.0+ into ~/.terraform.d/plugins ..."
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
 	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"
@@ -80,5 +75,11 @@ test-preview: install
 
 docker-it:
 	docker build -t databricks-terrafrom/test -f scripts/Dockerfile .
+
+schema:
+	@/bin/bash scripts/print-schema.sh
+
+diff-schema:
+	@/bin/bash scripts/diff-schema.sh
 
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

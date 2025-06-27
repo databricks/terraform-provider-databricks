@@ -4,12 +4,17 @@
   "job_id": 12,
   "settings": {
     "email_notifications": {},
-    "existing_cluster_id": "test2",
     "max_concurrent_runs": 1,
     "name": "Test",
-    "notebook_task": {
-      "notebook_path": "/Users/test@test.com/Test"
-    },
+      "tasks": [
+          {
+              "task_key": "test",
+              "existing_cluster_id": "test2",
+              "notebook_task": {
+                  "notebook_path": "/Workspace/Users/test@test.com/Test"
+              }
+          }
+      ],
     "timeout_seconds": 0
   }
 }

@@ -2,6 +2,7 @@ package policies
 
 import (
 	"context"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -9,8 +10,8 @@ import (
 )
 
 // DataSourceClusterPolicy returns information about cluster policy specified by name
-func DataSourceClusterPolicy() *schema.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+func DataSourceClusterPolicy() common.Resource {
+	resource := common.WorkspaceData(func(ctx context.Context, data *struct {
 		Id                              string `json:"id,omitempty" tf:"computed"`
 		Name                            string `json:"name,omitempty" tf:"computed"`
 		Definition                      string `json:"definition,omitempty" tf:"computed"`
@@ -33,4 +34,31 @@ func DataSourceClusterPolicy() *schema.Resource {
 		data.MaxClustersPerUser = int(policy.MaxClustersPerUser)
 		return nil
 	})
+	resource.SchemaVersion = 1
+	resource.StateUpgraders = []schema.StateUpgrader{
+		{
+			Type:    resource.ToResource().CoreConfigSchema().ImpliedType(),
+			Version: 0,
+			Upgrade: removeZeroMaxClustersPerUser,
+		},
+	}
+	return resource
+}
+
+func removeZeroMaxClustersPerUser(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "max_clusters_per_user":
+			vv, ok := v.(int)
+			if !ok || vv == 0 {
+				log.Printf("[INFO] remove zero max_clusters_per_user")
+				continue
+			}
+			newState[k] = v
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
 }

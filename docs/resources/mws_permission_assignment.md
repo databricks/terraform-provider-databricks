@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_mws_permission_assignment Resource
 
-These resources are invoked in the account context. Permission Assignment Account API endpoints are restricted to account admins. Provider must have `account_id` attribute configured. Account Id that could be found in the bottom left corner of Accounts Console
+This resource is used to assign account-level users, service principals and groups to a Databricks workspace.
+
+-> This resource can only be used with an account-level provider!
 
 ## Example Usage
 
@@ -74,9 +76,24 @@ The following arguments are required:
   * `"USER"` - Can access the workspace with basic privileges.
   * `"ADMIN"` - Can access the workspace and has workspace admin privileges to manage users and groups, workspace configurations, and more.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the permission assignment in form of `workspace_id|principal_id`.
+
 ## Import
 
 The resource `databricks_mws_permission_assignment` can be imported using the workspace id and principal id
+
+```hcl
+import {
+  to = databricks_mws_permission_assignment.this
+  id = "workspace_id|principal_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_mws_permission_assignment.this "workspace_id|principal_id"

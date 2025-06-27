@@ -1,25 +1,25 @@
 package workspace
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceDirectory(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2Fa%2Fb%2Fc",
-				Response: ObjectStatus{
-					ObjectID:   987,
-					ObjectType: "DIRECTORY",
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/a/b/c").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   987,
+					ObjectType: ws_api.ObjectTypeDirectory,
 					Path:       "/a/b/c",
-				},
-			},
+				}, nil)
 		},
 		Read:        true,
 		NonWritable: true,
@@ -28,25 +28,24 @@ func TestDataSourceDirectory(t *testing.T) {
 		State: map[string]any{
 			"path": "/a/b/c",
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "/a/b/c", d.Id())
-	assert.Equal(t, 987, d.Get("object_id").(int))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/a/b/c",
+		"object_id":      987,
+		"workspace_path": "/Workspace/a/b/c",
+	})
 }
 
 func TestDataSourceDirectory_NotDirectory(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2Fa%2Fb%2Fc",
-				Response: ObjectStatus{
-					ObjectID:   987,
-					Language:   "PYTHON",
-					ObjectType: "NOTEBOOK",
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/a/b/c").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   987,
+					Language:   ws_api.LanguagePython,
+					ObjectType: ws_api.ObjectTypeNotebook,
 					Path:       "/a/b/c",
-				},
-			},
+				}, nil)
 		},
 		Read:        true,
 		NonWritable: true,
@@ -60,7 +59,11 @@ func TestDataSourceDirectory_NotDirectory(t *testing.T) {
 
 func TestDataSourceDirectory_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/a/b/c").
+				Return(nil, errors.New("i'm a teapot"))
+		},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceDirectory(),
@@ -68,5 +71,5 @@ func TestDataSourceDirectory_Error(t *testing.T) {
 		State: map[string]any{
 			"path": "/a/b/c",
 		},
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

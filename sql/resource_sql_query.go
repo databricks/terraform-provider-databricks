@@ -24,8 +24,10 @@ type QueryEntity struct {
 	Schedule  *QuerySchedule   `json:"schedule,omitempty"`
 	Tags      []string         `json:"tags,omitempty"`
 	Parameter []QueryParameter `json:"parameter,omitempty"`
-	RunAsRole string           `json:"run_as_role,omitempty"`
+	RunAsRole string           `json:"run_as_role,omitempty" tf:"suppress_diff"`
 	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	CreatedAt string           `json:"created_at,omitempty" tf:"computed"`
+	UpdatedAt string           `json:"updated_at,omitempty" tf:"computed"`
 }
 
 // QuerySchedule ...
@@ -124,8 +126,8 @@ type QueryParameterDateRangeLike struct {
 
 // QueryParameterAllowMultiple ...
 type QueryParameterAllowMultiple struct {
-	Prefix    string `json:"prefix"`
-	Suffix    string `json:"suffix"`
+	Prefix    string `json:"prefix,omitempty"`
+	Suffix    string `json:"suffix,omitempty"`
 	Separator string `json:"separator"`
 }
 
@@ -288,10 +290,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	}
 
 	if q.RunAsRole != "" {
-		if aq.Options == nil {
-			aq.Options = &api.QueryOptions{}
-		}
-		aq.Options.RunAsRole = q.RunAsRole
+		aq.RunAsRole = q.RunAsRole
 	}
 
 	return &aq, nil
@@ -305,6 +304,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Query = aq.Query
 	q.Tags = append([]string{}, aq.Tags...)
 	q.Parent = aq.Parent
+	q.UpdatedAt = aq.UpdatedAt
+	q.CreatedAt = aq.CreatedAt
 
 	if s := aq.Schedule; s != nil {
 		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.
@@ -445,7 +446,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			q.Parameter = append(q.Parameter, p)
 		}
 
-		q.RunAsRole = aq.Options.RunAsRole
+		q.RunAsRole = aq.RunAsRole
 	}
 
 	// Transform to ResourceData.
@@ -509,12 +510,12 @@ func (a QueryAPI) Delete(queryID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
 }
 
-func ResourceSqlQuery() *schema.Resource {
+func ResourceSqlQuery() common.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["schedule"].Deprecated = "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`."
-			schedule := m["schedule"].Elem.(*schema.Resource)
+			schedule := common.MustSchemaMap(m, "schedule")
 
 			// Make different query schedule types mutually exclusive.
 			{
@@ -524,15 +525,15 @@ func ResourceSqlQuery() *schema.Resource {
 						if n1 == n2 {
 							continue
 						}
-						schedule.Schema[n1].ConflictsWith = append(schedule.Schema[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
+						schedule[n1].ConflictsWith = append(schedule[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
 					}
 				}
 			}
 
 			// Validate week of day in weekly schedule.
 			// Manually verified that this is case sensitive.
-			weekly := schedule.Schema["weekly"].Elem.(*schema.Resource)
-			weekly.Schema["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
+			weekly := common.MustSchemaMap(schedule, "weekly")
+			weekly["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
 				"Sunday",
 				"Monday",
 				"Tuesday",
@@ -543,6 +544,7 @@ func ResourceSqlQuery() *schema.Resource {
 			}, false)
 
 			m["run_as_role"].ValidateFunc = validation.StringInSlice([]string{"viewer", "owner"}, false)
+			m["query"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			return m
 		})
 
@@ -585,6 +587,7 @@ func ResourceSqlQuery() *schema.Resource {
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
-		Schema: s,
-	}.ToResource()
+		Schema:             s,
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",
+	}
 }

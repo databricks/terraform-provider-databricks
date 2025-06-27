@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -50,7 +50,8 @@ func TestResourceRepoRead(t *testing.T) {
 		ID:       repoIDStr,
 	}.ApplyAndExpectData(t,
 		map[string]any{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
-			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171"})
+			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171",
+			"workspace_path": "/Workspace" + path})
 }
 
 func TestResourceRepoRead_NotFound(t *testing.T) {
@@ -60,7 +61,7 @@ func TestResourceRepoRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: fmt.Sprintf("/api/2.0/repos/%s", repoID),
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Repo could not be found",
 				},
@@ -181,7 +182,7 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"path": "/Repos/Production",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -202,10 +203,10 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 		Resource: ResourceRepo(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
-			"path": "/NotRepos/Production/test/",
+			"path": "/Repos/Production/test/abc/",
 		},
 		Create: true,
-	}.ExpectError(t, "invalid config supplied. [path] should start with /Repos/, got '/NotRepos/Production/test/'")
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 4")
 }
 
 func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {

@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -16,39 +17,39 @@ func TestCreateDac(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
-				ExpectedRequest: DataAccessConfiguration{
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRoleRequest{
+						RoleArn: "def",
 					},
 				},
-				Response: DataAccessConfiguration{
-					ID: "efg",
+				Response: catalog.StorageCredentialInfo{
+					Id: "bcd",
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]any{
-					"default_data_access_config_id": "efg",
+				ExpectedRequest: catalog.UpdateMetastore{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
-				Response: DataAccessConfiguration{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "def",
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				Response: MetastoreInfo{
-					DefaultDacID: "efg",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.MetastoreInfo{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 		},
@@ -70,39 +71,41 @@ func TestCreateDacWithAzMI(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
-				ExpectedRequest: DataAccessConfiguration{
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
+						AccessConnectorId: "def",
+						ManagedIdentityId: "/..../subscription",
 					},
 				},
-				Response: DataAccessConfiguration{
-					ID: "efg",
+				Response: catalog.StorageCredentialInfo{
+					Id: "bcd",
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]any{
-					"default_data_access_config_id": "efg",
+				ExpectedRequest: catalog.UpdateMetastore{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
-				Response: DataAccessConfiguration{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
+						AccessConnectorId: "def",
+						ManagedIdentityId: "/..../subscription",
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				Response: MetastoreInfo{
-					DefaultDacID: "efg",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.MetastoreInfo{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 		},
@@ -114,65 +117,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 		is_default = true
 		azure_managed_identity {
 			access_connector_id = "def"
-		}
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestCreateDacWithGcpSA(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
-				ExpectedRequest: DataAccessConfiguration{
-					Name: "bcd",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-						PrivateKey:   "abcdefg",
-					},
-				},
-				Response: DataAccessConfiguration{
-					ID: "efg",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]any{
-					"default_data_access_config_id": "efg",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
-				Response: DataAccessConfiguration{
-					Name: "bcd",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				Response: MetastoreInfo{
-					DefaultDacID: "efg",
-				},
-			},
-		},
-		Create:   true,
-		Resource: ResourceMetastoreDataAccess(),
-		HCL: `
-		metastore_id = "abc"
-		name = "bcd"
-		is_default = true
-		gcp_service_account_key {
-			email = "a@example.com"
-			private_key_id = "b"
-			private_key = "abcdefg"
+			managed_identity_id = "/..../subscription"
 		}
 		`,
 	}.ApplyNoError(t)
@@ -183,37 +128,40 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
-				ExpectedRequest: DataAccessConfiguration{
-					Name:    "bcd",
-					DBGcpSA: &DbGcpServiceAccount{},
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name:                        "bcd",
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 				},
-				Response: DataAccessConfiguration{
-					ID: "efg",
+				Response: catalog.StorageCredentialInfo{
+					Id: "bcd",
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+						Email: "a@example.com",
+					},
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]any{
-					"default_data_access_config_id": "efg",
+				ExpectedRequest: catalog.UpdateMetastore{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
-				Response: DataAccessConfiguration{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					DBGcpSA: &DbGcpServiceAccount{
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
 						Email: "a@example.com",
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				Response: MetastoreInfo{
-					DefaultDacID: "efg",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.MetastoreInfo{
+					StorageRootCredentialId: "bcd",
 				},
 			},
 		},
@@ -226,4 +174,208 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 		databricks_gcp_service_account {}
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestCreateAccountDacWithAws(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
+				ExpectedRequest: catalog.AccountsCreateStorageCredential{
+					MetastoreId: "abc",
+					CredentialInfo: &catalog.CreateStorageCredential{
+						Name: "bcd",
+						AwsIamRole: &catalog.AwsIamRoleRequest{
+							RoleArn: "def",
+						},
+					},
+				},
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreId: "abc",
+					MetastoreInfo: &catalog.UpdateMetastore{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						AwsIamRole: &catalog.AwsIamRoleResponse{
+							RoleArn: "def",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+		},
+		Create:    true,
+		AccountID: "100",
+		Resource:  ResourceMetastoreDataAccess(),
+		HCL: `
+		metastore_id = "abc"
+		name = "bcd"
+		is_default = true
+		aws_iam_role {
+			role_arn = "def"
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateAccountDacWithAzMI(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
+				ExpectedRequest: catalog.AccountsCreateStorageCredential{
+					MetastoreId: "abc",
+					CredentialInfo: &catalog.CreateStorageCredential{
+						Name: "bcd",
+						AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
+							AccessConnectorId: "def",
+						},
+					},
+				},
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreId: "abc",
+					MetastoreInfo: &catalog.UpdateMetastore{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
+							AccessConnectorId: "def",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+		},
+		Create:    true,
+		AccountID: "100",
+		Resource:  ResourceMetastoreDataAccess(),
+		HCL: `
+		metastore_id = "abc"
+		name = "bcd"
+		is_default = true
+		azure_managed_identity {
+			access_connector_id = "def"
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
+				ExpectedRequest: catalog.AccountsCreateStorageCredential{
+					MetastoreId: "abc",
+					CredentialInfo: &catalog.CreateStorageCredential{
+						Name:                        "bcd",
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
+					},
+				},
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+							Email: "a@example.com",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreId: "abc",
+					MetastoreInfo: &catalog.UpdateMetastore{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+							Email: "a@example.com",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRootCredentialId: "bcd",
+					},
+				},
+			},
+		},
+		Create:    true,
+		AccountID: "100",
+		Resource:  ResourceMetastoreDataAccess(),
+		HCL: `
+		metastore_id = "abc"
+		name = "bcd"
+		is_default = true
+		databricks_gcp_service_account {}
+		`,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"databricks_gcp_service_account.#":       1,
+			"databricks_gcp_service_account.0.email": "a@example.com",
+		})
 }

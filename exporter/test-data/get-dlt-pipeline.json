@@ -22,7 +22,12 @@
             "dbfs": {
               "destination": "dbfs:/FileStore/jars/test.jar"
             }
-          }
+          },
+          {
+            "workspace": {
+              "destination": "/init.sh"
+            }
+          }            
         ],
         "spark_conf": {
           "fs.azure.account.auth.type": "OAuth",
@@ -46,6 +51,12 @@
           "path": "/Repos/user@domain.com/repo/Test DLT"
         }
       }
+    ],
+    "notifications": [
+       {
+          "email_recipients": ["user@domain.com"],
+          "alerts": ["on-flow-failure", "on-update-failure"]
+       }
     ],
     "name": "Test DLT",
     "photon": false,

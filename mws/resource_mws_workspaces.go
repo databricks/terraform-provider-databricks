@@ -12,13 +12,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // DefaultProvisionTimeout is the amount of minutes terraform will wait
@@ -59,13 +63,13 @@ type CloudResourceContainer struct {
 
 type GCPManagedNetworkConfig struct {
 	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range,omitempty"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range,omitempty"`
 }
 
 type GkeConfig struct {
-	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
-	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
+	ConnectivityType string `json:"connectivity_type,omitempty"`
+	MasterIPRange    string `json:"master_ip_range,omitempty"`
 }
 
 type externalCustomerInfo struct {
@@ -100,6 +104,9 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
+	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
+	EffectiveComputeMode                string                   `json:"effective_compute_mode" tf:"computed"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -130,6 +137,15 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	if w.GCPManagedNetworkConfig != nil {
 		workspaceCreationRequest["gcp_managed_network_config"] = w.GCPManagedNetworkConfig
+	}
+	if w.ManagedServicesCustomerManagedKeyID != "" {
+		workspaceCreationRequest["managed_services_customer_managed_key_id"] = w.ManagedServicesCustomerManagedKeyID
+	}
+	if w.StorageCustomerManagedKeyID != "" {
+		workspaceCreationRequest["storage_customer_managed_key_id"] = w.StorageCustomerManagedKeyID
+	}
+	if w.ComputeMode != "" {
+		workspaceCreationRequest["compute_mode"] = w.ComputeMode
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -192,13 +208,13 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
-	// make a request to Tokens API, just to verify there are no errors
+	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/token/list", nil, &response)
-	var apiError *apierr.APIError
-	if errors.As(err, &apiError) {
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
+	var dnsError *net.DNSError
+	if errors.As(err, &dnsError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
-			ws.WorkspaceURL, apiError)
+			ws.WorkspaceURL, dnsError)
 		log.Printf("[INFO] %s", err)
 		// expected to retry on: dial tcp: lookup XXX: no such host
 		return resource.RetryableError(err)
@@ -208,7 +224,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 
 func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 	if ws.NetworkID == "" {
-		return fmt.Errorf(ws.WorkspaceStatusMessage)
+		return errors.New(ws.WorkspaceStatusMessage)
 	}
 	network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
 	if nerr != nil {
@@ -246,17 +262,17 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 		default:
 			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName,
 				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
-			return resource.RetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
+			return resource.RetryableError(fmt.Errorf("%s", workspace.WorkspaceStatusMessage))
 		}
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{}
+	request := map[string]any{}
 
 	if ws.CredentialsID != "" {
 		request["credentials_id"] = ws.CredentialsID
@@ -275,6 +291,12 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
+	}
+	if ws.CustomTags != nil {
+		if !a.client.IsAws() {
+			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+		}
+		request["custom_tags"] = ws.CustomTags
 	}
 
 	if len(request) == 0 {
@@ -298,6 +320,10 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
 	}
+	// Set the effective compute mode to the compute mode
+	mwsWorkspace.EffectiveComputeMode = mwsWorkspace.ComputeMode
+	mwsWorkspace.ComputeMode = ""
+
 	return mwsWorkspace, err
 }
 
@@ -334,10 +360,20 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 }
 
 type Token struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
-	Comment         string `json:"comment,omitempty" tf:"default:Terraform PAT"`
-	TokenID         string `json:"token_id,omitempty" tf:"computed"`
-	TokenValue      string `json:"token_value,omitempty" tf:"computed,sensitive"`
+	LifetimeSeconds int32           `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
+	Comment         string          `json:"comment,omitempty" tf:"default:Terraform PAT"`
+	TokenID         string          `json:"token_id,omitempty" tf:"computed"`
+	TokenValue      SensitiveString `json:"token_value,omitempty" tf:"computed,sensitive"`
+}
+
+type SensitiveString string
+
+func (s SensitiveString) GoString() string {
+	return "****"
+}
+
+func (s SensitiveString) String() string {
+	return "****"
 }
 
 // ephemeral entity to use with StructToData()
@@ -360,12 +396,28 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
 	lifetime := time.Duration(wsToken.Token.LifetimeSeconds) * time.Second
 	token, err := tokensAPI.Create(lifetime, wsToken.Token.Comment)
+	if isInvalidClient(err) {
+		return fmt.Errorf("cannot create token: the principal used by Databricks (client ID %s) is not authorized to create a token in this workspace. "+
+			"If this is a UC-enabled workspace, add this client to the workspace, either using databricks_mws_permission_assignment or manually (see https://docs.databricks.com/en/admin/users-groups/service-principals.html#assign-a-service-principal-to-a-workspace-using-the-account-console for instructions). "+
+			"If this is not a UC-enabled workspace, remove the token block from this configuration and create a workspace-level service principal to configure resources in the workspace (see https://docs.databricks.com/en/admin/users-groups/service-principals.html#add-a-service-principal-to-a-workspace-using-the-workspace-admin-settings for instructions)", client.Config.ClientID)
+	}
 	if err != nil {
 		return fmt.Errorf("cannot create token: %w", err)
 	}
 	wsToken.Token.TokenID = token.TokenInfo.TokenID
-	wsToken.Token.TokenValue = token.TokenValue
+	wsToken.Token.TokenValue = SensitiveString(token.TokenValue)
 	return common.StructToData(wsToken, workspaceSchema, d)
+}
+
+// isInvalidClient checks whether the API request failed due to the client being invalid.
+// This can happen if the provided client does not belong to the workspace. For UC workspaces,
+// it is possible for an admin to add the user/service principal used by Terraform to the
+// workspace so that Terraform is able to create a token. For non-UC workspaces, it is not
+// possible to add account-level users/service principals to the workspace, so customers
+// need to manually create a workspace-level service principal and use it to authenticate to
+// the workspace.
+func isInvalidClient(err error) bool {
+	return errors.Is(err, databricks.ErrUnauthenticated)
 }
 
 func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
@@ -381,6 +433,13 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	_, err = tokensAPI.Read(wsToken.Token.TokenID)
+	// If we cannot authenticate to the workspace and we're using an in-house OAuth principal,
+	// log a warning but do not fail. This can happen if the provider is authenticated with a
+	// different principal than was used to create the workspace.
+	if isInvalidClient(err) {
+		tflog.Debug(a.context, fmt.Sprintf("unable to fetch token with ID %s from workspace using the provided service principal, continuing", wsToken.Token.TokenID))
+		return nil
+	}
 	if apierr.IsMissing(err) {
 		return CreateTokenIfNeeded(a, workspaceSchema, d)
 	}
@@ -390,14 +449,17 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	return nil
 }
 
-func removeTokenIfNeeded(a WorkspacesAPI,
-	workspaceSchema map[string]*schema.Schema, tokenID string, d *schema.ResourceData) error {
+func removeTokenIfNeeded(a WorkspacesAPI, tokenID string, d *schema.ResourceData) error {
 	client, err := a.client.ClientForHost(a.context, d.Get("workspace_url").(string))
 	if err != nil {
 		return err
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	err = tokensAPI.Delete(tokenID)
+	if isInvalidClient(err) {
+		tflog.Debug(a.context, fmt.Sprintf("unable to delete token with ID %s from workspace using the provided service principal, continuing", tokenID))
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("cannot remove token: %w", err)
 	}
@@ -414,12 +476,12 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		case len(old) > 0 && len(new) == 0: // delete
 			raw := old[0].(map[string]any)
-			return removeTokenIfNeeded(workspacesAPI, workspaceSchema,
-				raw["token_id"].(string), d)
+			id := raw["token_id"].(string)
+			return removeTokenIfNeeded(workspacesAPI, id, d)
 		case len(old) > 0 && len(new) > 0: // delete & create
 			rawOld := old[0].(map[string]any)
-			err := removeTokenIfNeeded(workspacesAPI, workspaceSchema,
-				rawOld["token_id"].(string), d)
+			id := rawOld["token_id"].(string)
+			err := removeTokenIfNeeded(workspacesAPI, id, d)
 			if err != nil {
 				return err
 			}
@@ -437,7 +499,7 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 }
 
 // ResourceMwsWorkspaces manages E2 workspaces
-func ResourceMwsWorkspaces() *schema.Resource {
+func ResourceMwsWorkspaces() common.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
@@ -470,6 +532,8 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				return old != ""
 			}
 
+			s["pricing_tier"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
@@ -479,23 +543,26 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				func(m map[string]*schema.Schema) map[string]*schema.Schema {
 					return m
 				})["token"]
+
+			s["gcp_workspace_sa"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+			docOptions := docs.DocOptions{
+				Section:  docs.Guides,
+				Slug:     "gcp-workspace",
+				Fragment: "creating-a-databricks-workspace",
+			}
+			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config", docOptions))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "compute_mode").SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"SERVERLESS"}, false)))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
 		})
-	requireFields := func(onThisCloud bool, d *schema.ResourceData, fields ...string) error {
-		if !onThisCloud {
-			return nil
-		}
-		for _, fieldName := range fields {
-			if d.Get(fieldName) == workspaceSchema[fieldName].ZeroValue() {
-				return fmt.Errorf("%s is required", fieldName)
-			}
-		}
-		return nil
-	}
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 3,
@@ -510,11 +577,25 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
-				return err
+			if c.IsAws() {
+				if _, ok := d.GetOk("aws_region"); !ok {
+					return fmt.Errorf("aws_region is required for AWS workspaces")
+				}
+				if d.Get("compute_mode") != "SERVERLESS" {
+					if _, ok := d.GetOk("credentials_id"); !ok {
+						return fmt.Errorf("credentials_id is required for non-serverless workspaces")
+					}
+					if _, ok := d.GetOk("storage_configuration_id"); !ok {
+						return fmt.Errorf("storage_configuration_id is required for non-serverless workspaces")
+					}
+				}
+			} else if c.IsGcp() {
+				if _, ok := d.GetOk("location"); !ok {
+					return fmt.Errorf("location is required for GCP workspaces")
+				}
 			}
-			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
-				return err
+			if !c.IsAws() && workspace.CustomTags != nil {
+				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
 			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
@@ -526,6 +607,10 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
 			d.Set("workspace_url", workspace.WorkspaceURL)
+			if workspace.Cloud == "gcp" {
+				d.Set("gcp_workspace_sa", fmt.Sprintf("db-%d@prod-gcp-%s.iam.gserviceaccount.com",
+					workspace.WorkspaceID, workspace.Location))
+			}
 			p.Pack(d)
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
@@ -539,6 +624,11 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// The gke_config, gcp_managed_network_config.0.gke_cluster_pod_ip_range, and
+			// gcp_managed_network_config.0.gke_cluster_service_ip_range fields do not need
+			// to be removed from the returned plan because they are marked with "suppress_diff",
+			// so their diff will be removed anyways.
+
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
 			workspace.IsNoPublicIPEnabled = true
@@ -580,6 +670,26 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")
 			}
+			// For `gke_config`, `gcp_managed_network_config.0.gke_cluster_pod_ip_range` or
+			// `gcp_managed_network_config.0.gke_cluster_service_ip_range`, users should be able to
+			// remove these keys without recreating the workspace as part of the GKE deprecation process.
+			//
+			// Otherwise, any change for these keys will cause the workspace resource to be recreated.
+			//
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				for _, key := range []string{"gke_config.#", "gcp_managed_network_config.0.gke_cluster_pod_ip_range", "gcp_managed_network_config.0.gke_cluster_service_ip_range"} {
+					// These fields are all tagged with "suppress_diff". This means that removing them from
+					// the config doesn't result in their disappearing from the diff. Thus, there is no change
+					// in the plan when these fields are removed.
+					if !d.HasChange(key) {
+						continue
+					}
+					if err := d.ForceNew(key); err != nil {
+						return err
+					}
+				}
+			}
 			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -587,7 +697,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
@@ -842,6 +952,10 @@ func workspaceSchemaV2() cty.Type {
 						},
 					},
 				},
+			},
+			"custom_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
 			},
 		},
 	}).CoreConfigSchema().ImpliedType()

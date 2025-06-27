@@ -1,6 +1,6 @@
 variable "account_id" {
   type        = string
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 variable "username" {

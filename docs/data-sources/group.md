@@ -3,9 +3,9 @@ subcategory: "Security"
 ---
 # databricks_group Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
+
+-> This data source can be used with an account or workspace-level provider.
 
 ## Example Usage
 
@@ -46,13 +46,13 @@ Data source exposes the following attributes:
 * `instance_profiles` - Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource.
 * `allow_cluster_create` - True if group members can create [clusters](../resources/cluster.md)
 * `allow_instance_pool_create` - True if group members can create [instance pools](../resources/instance_pool.md)
-
+* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `groups/Some Group`.
 
 ## Related Resources
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [End to end workspace management](../guides/workspace-management.md) guide
 * [databricks_cluster](../resources/cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_directory](../resources/directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_group_member](../resources/group_member.md) to attach [users](../resources/user.md) and [groups](../resources/group.md) as group members.

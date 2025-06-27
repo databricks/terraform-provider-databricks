@@ -237,8 +237,11 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, apierr.NotFound(
-		fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID))
+	return nil, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
+	}
 }
 
 // Update ...
@@ -251,7 +254,7 @@ func (a WidgetAPI) Delete(widgetID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), nil)
 }
 
-func ResourceSqlWidget() *schema.Resource {
+func ResourceSqlWidget() common.Resource {
 	p := common.NewPairSeparatedID("dashboard_id", "widget_id", "/")
 	s := common.StructToSchema(
 		WidgetEntity{},
@@ -329,5 +332,5 @@ func ResourceSqlWidget() *schema.Resource {
 			return NewWidgetAPI(ctx, c).Delete(widgetID)
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

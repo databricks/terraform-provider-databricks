@@ -3,7 +3,6 @@ package access
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -57,7 +56,11 @@ func (l PermissionAssignmentList) ForPrincipal(principalId int64) (res Permissio
 		}
 		return Permissions{v.Permissions}, nil
 	}
-	return res, apierr.NotFound(fmt.Sprintf("%d not found", principalId))
+	return res, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("%d not found", principalId),
+	}
 }
 
 func (a PermissionAssignmentAPI) List() (list PermissionAssignmentList, err error) {
@@ -65,26 +68,15 @@ func (a PermissionAssignmentAPI) List() (list PermissionAssignmentList, err erro
 	return
 }
 
-func mustInt64(s string) int64 {
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
-
 // ResourcePermissionAssignment performs of users to a workspace
 // from a workspace context, though it requires additional set
 // data resource for "workspace account scim", whicl will be added later.
-func ResourcePermissionAssignment() *schema.Resource {
+func ResourcePermissionAssignment() common.Resource {
 	type entity struct {
 		PrincipalId int64    `json:"principal_id"`
 		Permissions []string `json:"permissions" tf:"slice_as_set"`
 	}
-	s := common.StructToSchema(entity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+	s := common.StructToSchema(entity{}, common.NoCustomize)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -103,14 +95,18 @@ func ResourcePermissionAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			permissions, err := list.ForPrincipal(mustInt64(d.Id()))
+			data := entity{
+				PrincipalId: common.MustInt64(d.Id()),
+			}
+			permissions, err := list.ForPrincipal(data.PrincipalId)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(permissions, s, d)
+			data.Permissions = permissions.Permissions
+			return common.StructToData(data, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())
 		},
-	}.ToResource()
+	}
 }

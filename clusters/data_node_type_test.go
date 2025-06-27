@@ -14,7 +14,7 @@ func TestNodeType(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response: compute.ListNodeTypesResponse{
 					NodeTypes: []compute.NodeType{
 						{
@@ -123,7 +123,7 @@ func TestNodeTypeCategory(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response: compute.ListNodeTypesResponse{
 					NodeTypes: []compute.NodeType{
 						{
@@ -215,7 +215,7 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response: compute.ListNodeTypesResponse{
 					NodeTypes: []compute.NodeType{
 						{
@@ -247,8 +247,8 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							Category:       "Storage Optimized",
 							NodeInfo: &compute.CloudProviderNodeInfo{
 								Status: []compute.CloudProviderNodeStatus{
-									compute.CloudProviderNodeStatusNotavailableinregion,
-									compute.CloudProviderNodeStatusNotenabledonsubscription},
+									compute.CloudProviderNodeStatusNotAvailableInRegion,
+									compute.CloudProviderNodeStatusNotEnabledOnSubscription},
 							},
 						},
 						{
@@ -280,7 +280,7 @@ func TestNodeTypeFleet(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response: compute.ListNodeTypesResponse{
 					NodeTypes: []compute.NodeType{
 						{
@@ -324,7 +324,7 @@ func TestNodeTypeEmptyList(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response:     compute.ListNodeTypesResponse{},
 			},
 		},
@@ -345,7 +345,7 @@ func TestNodeTypeFleetEmptyList(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response:     compute.ListNodeTypesResponse{},
 			},
 		},

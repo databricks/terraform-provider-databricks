@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestQueryCreate(t *testing.T) {
+func TestSqlQueryCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -20,9 +20,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 				Response: api.Query{
 					ID:           "foo",
@@ -30,9 +28,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 			},
 			{
@@ -44,9 +40,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 			},
 		},
@@ -71,7 +65,7 @@ func TestQueryCreate(t *testing.T) {
 	assert.Equal(t, "viewer", d.Get("run_as_role"))
 }
 
-func TestQueryCreateWithMultipleSchedules(t *testing.T) {
+func TestSqlQueryCreateWithMultipleSchedules(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceSqlQuery(),
 		Create:   true,
@@ -90,10 +84,10 @@ func TestQueryCreateWithMultipleSchedules(t *testing.T) {
 				}
 			}
 		`,
-	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments. [schedule] Argument is deprecated")
+	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments. [schedule] Argument is deprecated. Deprecated Resource")
 }
 
-func TestQueryCreateWithContinuousSchedule(t *testing.T) {
+func TestSqlQueryCreateWithContinuousSchedule(t *testing.T) {
 	intervalSeconds := 3600
 	untilDate := "2021-04-21"
 
@@ -155,7 +149,7 @@ func TestQueryCreateWithContinuousSchedule(t *testing.T) {
 	assert.Equal(t, untilDate, d.Get("schedule.0.continuous.0.until_date"))
 }
 
-func TestQueryCreateWithDailySchedule(t *testing.T) {
+func TestSqlQueryCreateWithDailySchedule(t *testing.T) {
 	intervalDays := 2
 	intervalSeconds := intervalDays * 24 * 60 * 60
 	timeOfDay := "06:00"
@@ -221,7 +215,7 @@ func TestQueryCreateWithDailySchedule(t *testing.T) {
 	assert.Equal(t, untilDate, d.Get("schedule.0.daily.0.until_date"))
 }
 
-func TestQueryCreateWithWeeklySchedule(t *testing.T) {
+func TestSqlQueryCreateWithWeeklySchedule(t *testing.T) {
 	intervalWeeks := 2
 	intervalSeconds := intervalWeeks * 7 * 24 * 60 * 60
 	timeOfDay := "06:00"
@@ -290,7 +284,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 	assert.Equal(t, untilDate, d.Get("schedule.0.weekly.0.until_date"))
 }
 
-func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
+func TestSqlQueryCreateDeletesDefaultVisualization(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -344,7 +338,7 @@ func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestQueryRead(t *testing.T) {
+func TestSqlQueryRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -369,7 +363,7 @@ func TestQueryRead(t *testing.T) {
 	assert.Equal(t, "foo", d.Id())
 }
 
-func TestQueryReadWithSchedule(t *testing.T) {
+func TestSqlQueryReadWithSchedule(t *testing.T) {
 	// Note: this tests that if a schedule is returned by the API,
 	// it will always show up in the resulting resource data.
 	// If it doesn't, we wouldn't be able to erase a schedule
@@ -396,7 +390,7 @@ func TestQueryReadWithSchedule(t *testing.T) {
 	assert.Equal(t, 12345, d.Get("schedule.0.continuous.0.interval_seconds"))
 }
 
-func TestQueryUpdate(t *testing.T) {
+func TestSqlQueryUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -442,7 +436,7 @@ func TestQueryUpdate(t *testing.T) {
 	assert.Equal(t, "SELECT 2", d.Get("query"))
 }
 
-func TestQueryUpdateWithParams(t *testing.T) {
+func TestSqlQueryUpdateWithParams(t *testing.T) {
 	body := api.Query{
 		ID:           "foo",
 		DataSourceID: "xyz",
@@ -685,7 +679,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 	assert.Len(t, d.Get("parameter").([]any), 12)
 }
 
-func TestQueryDelete(t *testing.T) {
+func TestSqlQueryDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

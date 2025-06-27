@@ -17,11 +17,15 @@ func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *tes
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: apierr.NotFound("cluster deleted"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("uri", "s3://bucket")
 		d.Set("cluster_id", "removed-cluster")
 		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
@@ -35,7 +39,11 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: apierr.NotFound("cluster deleted"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
 		},
 		{
 			Method:   "GET",
@@ -47,12 +55,12 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/spark-versions",
+			Resource:     "/api/2.1/clusters/spark-versions",
 		},
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 		},
 		{
 			Method:   "POST",
@@ -62,7 +70,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 					"ResourceClass": "SingleNode",
 				},
 				ClusterName:  "terraform-mount-s3-access",
-				SparkVersion: "7.3.x-scala2.12",
+				SparkVersion: "11.3.x-scala2.12",
 				NumWorkers:   0,
 				NodeTypeID:   "i3.xlarge",
 				AwsAttributes: &clusters.AwsAttributes{
@@ -92,7 +100,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.MarkNewResource()
 		common.StructToData(GenericMount{
 			URI:       "s3://bucket",

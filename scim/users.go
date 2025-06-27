@@ -66,8 +66,8 @@ func (a UsersAPI) readByPath(userPath string) (user User, err error) {
 }
 
 // Update replaces user information for given ID
-func (a UsersAPI) Update(userID, attributes string, updateRequest User) error {
-	user, err := a.Read(userID, attributes)
+func (a UsersAPI) Update(userID string, updateRequest User) error {
+	user, err := a.Read(userID, "groups,roles")
 	if err != nil {
 		return err
 	}

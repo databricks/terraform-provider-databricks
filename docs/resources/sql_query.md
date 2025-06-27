@@ -3,9 +3,11 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_query Resource
 
+!> This resource is deprecated! Please switch to [databricks_query](query.md#migrating-from-databricks_sql_query-resource).
+
 To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
-**Note:** documentation for this resource is a work in progress.
+-> documentation for this resource is a work in progress.
 
 A query may have one or more [visualizations](sql_visualization.md).
 
@@ -88,12 +90,50 @@ resource "databricks_permissions" "q1" {
 }
 ```
 
+## Argument Reference
+
+The following arguments are supported:
+
+* `data_source_id` - Data source ID of a [SQL warehouse](sql_endpoint.md)
+* `query` - The text of the query to be run.
+* `name` - The title of this query that appears in list views, widget headings, and on the query page.
+* `parent` - The identifier of the workspace folder containing the object.
+* `description` - General description that conveys additional information about this query such as usage notes.
+* `run_as_role` - Run as role. Possible values are `viewer`, `owner`.
+
+### `parameter` configuration block
+
+For parameter definition
+
+* `title` - The text displayed in a parameter picking widget.
+* `name` - The literal parameter marker that appears between double curly braces in the query text.
+Parameters can have several different types. Type is specified using one of the following configuration blocks: `text`, `number`, `enum`, `query`, `date`, `datetime`, `datetimesec`, `date_range`, `datetime_range`, `datetimesec_range`.
+
+For `text`, `number`, `date`, `datetime`, `datetimesec` block
+
+* `value` - The default value for this parameter.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - the unique ID of the SQL Query.
+
 ## Import
 
 You can import a `databricks_sql_query` resource with ID like the following:
 
+```hcl
+import {
+  to = databricks_sql_query.this
+  id = "<query-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_sql_query.this <query-id>
+terraform import databricks_sql_query.this "<query-id>"
 ```
 
 ## Troubleshooting

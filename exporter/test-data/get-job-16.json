@@ -4,25 +4,30 @@
     "job_id": 16,
     "settings": {
         "email_notifications": {},
-        "libraries": [
-            {
-                "jar": "dbfs:/FileStore/jars/test.jar"
-            }
-        ],
         "max_concurrent_runs": 1,
         "max_retries": 1,
         "min_retry_interval_millis": 0,
         "name": "Python Project",
-        "new_cluster": {
-            "instance_pool_id": "pool1",
-            "num_workers": 2,
-            "spark_version": "6.4.x-scala2.11"
-        },
+        "tasks": [
+            {
+                "task_key": "test",
+                "libraries": [
+                    {
+                        "jar": "dbfs:/FileStore/jars/test.jar"
+                    }
+                ],
+                "new_cluster": {
+                    "instance_pool_id": "pool1",
+                    "num_workers": 2,
+                    "spark_version": "6.4.x-scala2.11"
+                },
+                "spark_python_task": {
+                    "python_file": "dbfs:/FileStore/jars/test.jar",
+                    "parameters": ["param1"]
+                },
+            }
+        ],
         "retry_on_timeout": false,
-        "spark_python_task": {
-            "python_file": "dbfs:/FileStore/jars/test.jar",
-            "parameters": ["param1"]
-        },
         "timeout_seconds": 3600
     }
 }

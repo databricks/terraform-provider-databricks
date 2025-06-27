@@ -3,10 +3,12 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
+	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,6 +20,7 @@ const (
 	Notebook  string = "NOTEBOOK"
 	File      string = "FILE"
 	Directory string = "DIRECTORY"
+	Repo      string = "REPO"
 	Scala     string = "SCALA"
 	Python    string = "PYTHON"
 	SQL       string = "SQL"
@@ -41,12 +44,27 @@ var extMap = map[string]notebookLanguageFormat{
 	".dbc":   {"", "DBC", false},
 }
 
+type ModifiedAtInteractive struct {
+	UserID     string `json:"user_id,omitempty"`
+	TimeMillis int64  `json:"time_millis,omitempty"`
+}
+
 // ObjectStatus contains information when doing a get request or list request on the workspace api
 type ObjectStatus struct {
-	ObjectID   int64  `json:"object_id,omitempty" tf:"computed"`
-	ObjectType string `json:"object_type,omitempty" tf:"computed"`
-	Path       string `json:"path"`
-	Language   string `json:"language,omitempty"`
+	ObjectID              int64                  `json:"object_id,omitempty" tf:"computed"`
+	ObjectType            string                 `json:"object_type,omitempty" tf:"computed"`
+	Path                  string                 `json:"path"`
+	Language              string                 `json:"language,omitempty"`
+	CreatedAt             int64                  `json:"created_at,omitempty"`
+	ModifiedAt            int64                  `json:"modified_at,omitempty"`
+	ModifiedAtInteractive *ModifiedAtInteractive `json:"modified_at_interactive,omitempty"`
+	Size                  int64                  `json:"size,omitempty"`
+	GitInfo               *workspace.RepoInfo    `json:"git_info,omitempty"`
+	ResourceId            string                 `json:"resource_id,omitempty"`
+}
+
+type ImportResponse struct {
+	ObjectID int64 `json:"object_id,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook
@@ -87,18 +105,34 @@ type NotebooksAPI struct {
 var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
-func (a NotebooksAPI) Create(r ImportPath) error {
-	mtx.Lock()
-	defer mtx.Unlock()
-	return a.client.Post(a.context, "/workspace/import", r, nil)
+func (a NotebooksAPI) Create(r ImportPath) (ImportResponse, error) {
+	if r.Format == "DBC" {
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
+	var response ImportResponse
+	err := a.client.Post(a.context, "/workspace/import", r, &response)
+	return response, err
 }
 
 // Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
+	return a.GetStatus(path, false)
+}
+
+// Read returns the notebook metadata and not the contents
+func (a NotebooksAPI) GetStatus(path string, returnGitInfo bool) (ObjectStatus, error) {
 	var notebookInfo ObjectStatus
-	err := a.client.Get(a.context, "/workspace/get-status", map[string]string{
+	params := map[string]string{
 		"path": path,
-	}, &notebookInfo)
+	}
+	if returnGitInfo {
+		params["return_git_info"] = "true"
+	}
+	_, err := common.RetryOnTimeout(a.context, func(ctx context.Context) (*ObjectStatus, error) {
+		err := a.client.Get(a.context, "/workspace/get-status", params, &notebookInfo)
+		return nil, err
+	})
 	return notebookInfo, err
 }
 
@@ -142,48 +176,18 @@ func (a NotebooksAPI) List(path string, recursive bool, ignoreErrors bool) ([]Ob
 		}
 		return paths, err
 	}
-	return a.list(path)
+	return a.ListInternalImpl(path)
 }
 
 func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	notebookInfoList, err := a.list(path)
+	notebookInfoList, err := a.ListInternalImpl(path)
 	if err != nil && !ignoreErrors {
 		return err
 	}
 	for _, v := range notebookInfoList {
-		if v.ObjectType == Notebook || v.ObjectType == File {
-			*pathList = append(*pathList, v)
-		} else if v.ObjectType == Directory {
-			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (a NotebooksAPI) ListDirectories(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
-	if recursive {
-		var paths []ObjectStatus
-		err := a.recursiveAddDirectoryPaths(path, &paths, ignoreErrors)
-		if err != nil {
-			return nil, err
-		}
-		return paths, err
-	}
-	return a.list(path)
-}
-
-func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	directoryInfoList, err := a.list(path)
-	if err != nil && !ignoreErrors {
-		return err
-	}
-	for _, v := range directoryInfoList {
+		*pathList = append(*pathList, v)
 		if v.ObjectType == Directory {
-			*pathList = append(*pathList, v)
-			err := a.recursiveAddDirectoryPaths(v.Path, pathList, ignoreErrors)
+			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}
@@ -196,7 +200,7 @@ type ObjectList struct {
 	Objects []ObjectStatus `json:"objects,omitempty"`
 }
 
-func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListInternalImpl(path string) ([]ObjectStatus, error) {
 	var notebookList ObjectList
 	err := a.client.Get(a.context, "/workspace/list", map[string]string{
 		"path": path,
@@ -206,39 +210,40 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	mtx.Lock()
-	defer mtx.Unlock()
+	if recursive {
+		log.Printf("[DEBUG] Doing recursive delete of path '%s'", path)
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
 	return a.client.Post(a.context, "/workspace/delete", DeletePath{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
 }
 
+func SetWorkspaceObjectComputedProperties(d *schema.ResourceData, c *common.DatabricksClient) {
+	d.Set("url", c.FormatURL("#workspace", d.Id()))
+	d.Set("workspace_path", "/Workspace"+d.Id())
+}
+
 // ResourceNotebook manages notebooks
-func ResourceNotebook() *schema.Resource {
+func ResourceNotebook() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true, // we need it because it will be filled by the provider or backend
 			ValidateFunc: validation.StringInSlice([]string{
 				Scala,
 				Python,
 				R,
 				SQL,
 			}, false),
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				source := d.Get("source").(string)
-				if source == "" {
-					return false
-				}
-				ext := strings.ToLower(filepath.Ext(source))
-				return old == extMap[ext].Language
-			},
 		},
 		"format": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Default:  "SOURCE",
+			Computed: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				"SOURCE",
 				"DBC",
@@ -260,11 +265,18 @@ func ResourceNotebook() *schema.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return d.Get("format").(string) == "SOURCE"
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
@@ -272,19 +284,16 @@ func ResourceNotebook() *schema.Resource {
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
-			parent := filepath.ToSlash(filepath.Dir(path))
-			if parent != "/" {
-				err = notebooksAPI.Mkdirs(parent)
-				if err != nil {
-					return err
-				}
-			}
 			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
 				Format:    d.Get("format").(string),
 				Path:      path,
 				Overwrite: true,
+			}
+			if createNotebook.Format == "" && createNotebook.Language != "" {
+				createNotebook.Format = "SOURCE"
+				d.Set("format", createNotebook.Format)
 			}
 			if createNotebook.Language == "" {
 				// TODO: check what happens with empty source
@@ -295,22 +304,59 @@ func ResourceNotebook() *schema.Resource {
 				createNotebook.Overwrite = extMap[ext].Overwrite
 				// by default it's SOURCE, but for DBC we have to change it
 				d.Set("format", createNotebook.Format)
+				d.Set("language", createNotebook.Language)
 			}
-			err = notebooksAPI.Create(createNotebook)
+			resp, err := notebooksAPI.Create(createNotebook)
 			if err != nil {
-				return err
+				if isParentDoesntExistError(err) {
+					parent := filepath.ToSlash(filepath.Dir(path))
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = notebooksAPI.Mkdirs(parent)
+					if err != nil {
+						return err
+					}
+					resp, err = notebooksAPI.Create(createNotebook)
+				}
+				if err != nil {
+					return err
+				}
 			}
+			if d.Get("object_type").(string) == "" {
+				d.Set("object_type", Notebook)
+			}
+			d.Set("object_id", resp.ObjectID)
 			d.SetId(path)
+			SetWorkspaceObjectComputedProperties(d, c)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			oldFormat := d.Get("format").(string)
+			if oldFormat == "" {
+				source := d.Get("source").(string)
+				// check if `source` is set, and if it is, use file extension to determine format
+				if source != "" {
+					ext := strings.ToLower(filepath.Ext(source))
+					oldFormat = extMap[ext].Format
+				} else {
+					oldFormat = "SOURCE"
+				}
+			}
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			d.Set("url", c.FormatURL("#workspace", d.Id()))
-			return common.StructToData(objectStatus, s, d)
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return w.Workspace.GetStatusByPath(ctx, d.Id())
+			})
+			if err != nil {
+				return err
+			}
+			SetWorkspaceObjectComputedProperties(d, c)
+			err = common.StructToData(objectStatus, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set("format", oldFormat)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
@@ -319,28 +365,42 @@ func ResourceNotebook() *schema.Resource {
 				return err
 			}
 			format := d.Get("format").(string)
+			var resp ImportResponse
 			if format == "DBC" {
 				// Overwrite cannot be used for source format when importing a folder
 				err = notebooksAPI.Delete(d.Id(), true)
 				if err != nil {
 					return err
 				}
-				return notebooksAPI.Create(ImportPath{
+				resp, err = notebooksAPI.Create(ImportPath{
 					Content: base64.StdEncoding.EncodeToString(content),
 					Format:  format,
 					Path:    d.Id(),
 				})
+			} else {
+				resp, err = notebooksAPI.Create(ImportPath{
+					Content:   base64.StdEncoding.EncodeToString(content),
+					Language:  d.Get("language").(string),
+					Format:    format,
+					Overwrite: true,
+					Path:      d.Id(),
+				})
 			}
-			return notebooksAPI.Create(ImportPath{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Language:  d.Get("language").(string),
-				Format:    format,
-				Overwrite: true,
-				Path:      d.Id(),
-			})
+			if err != nil {
+				return err
+			}
+			d.Set("object_id", resp.ObjectID)
+			SetWorkspaceObjectComputedProperties(d, c)
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewNotebooksAPI(ctx, c).Delete(d.Id(), true)
+			objType := d.Get("object_type")
+			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
-	}.ToResource()
+	}
+}
+
+func isParentDoesntExistError(err error) bool {
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "parent folder ") && strings.Contains(errStr, " does not exist")
 }

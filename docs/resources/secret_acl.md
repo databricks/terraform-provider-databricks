@@ -5,9 +5,11 @@ subcategory: "Security"
 
 Create or overwrite the ACL associated with the given principal (user or group) on the specified [databricks_secret_scope](secret_scope.md). Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) for more details.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
-This way, data scientists can read the Publishing API key that is synchronized from example, Azure Key Vault.
+This way, data scientists can read the Publishing API key that is synchronized from, for example, Azure Key Vault.
 
 ```hcl
 resource "databricks_group" "ds" {
@@ -37,15 +39,27 @@ resource "databricks_secret" "publishing_api" {
 The following arguments are required:
 
 * `scope` - (Required) name of the scope
-* `principal` - (Required) name of the principals. It can be `users` for all users or name or `display_name` of [databricks_group](group.md)
-* `permission` - (Required) `READ`, `WRITE` or `MANAGE`. 
+* `principal` - (Required) principal's identifier. It can be:
+  * `user_name` attribute of [databricks_user](user.md).
+  * `display_name` attribute of [databricks_group](group.md).  Use `users` to allow access for all workspace users.
+  * `application_id` attribute of [databricks_service_principal](service_principal.md).
+* `permission` - (Required) `READ`, `WRITE` or `MANAGE`.
 
 ## Import
 
 The resource secret acl can be imported using `scopeName|||principalName` combination.
 
+```hcl
+import {
+  to = databricks_secret_acl.object
+  id = "scopeName|||principalName"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_secret_acl.object `scopeName|||principalName`
+terraform import databricks_secret_acl.object `scopeName|||principalName`
 ```
 
 ## Related Resources

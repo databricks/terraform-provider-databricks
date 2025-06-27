@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // Command is the struct that contains what the 1.2 api returns for the commands api
@@ -173,7 +174,7 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 			return nil
 		}
 		log.Printf("[DEBUG] Command is in %s state", commandInfo.Status)
-		return resource.RetryableError(fmt.Errorf(commandInfo.Status))
+		return resource.RetryableError(errors.New(commandInfo.Status))
 	})
 }
 
@@ -184,11 +185,11 @@ func (a CommandsAPI) waitForContextReady(contextID, clusterID string) error {
 			return resource.NonRetryableError(err)
 		}
 		if status == "Error" {
-			return resource.NonRetryableError(fmt.Errorf(status))
+			return resource.NonRetryableError(errors.New(status))
 		}
 		if status == "Running" {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf(status))
+		return resource.RetryableError(errors.New(status))
 	})
 }

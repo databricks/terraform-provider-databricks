@@ -51,7 +51,7 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 }
 
 func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Group, err error) {
-	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+	groupList, err := a.Filter(fmt.Sprintf(`displayName eq "%s"`, displayName))
 	if err != nil {
 		return
 	}

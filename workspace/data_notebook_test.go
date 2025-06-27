@@ -5,12 +5,10 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDataSourceNotebook(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -38,10 +36,11 @@ func TestDataSourceNotebook(t *testing.T) {
 			"path":   "/a/b/c",
 			"format": "SOURCE",
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "/a/b/c", d.Id())
-	assert.Equal(t, "SGVsbG8gd29ybGQK", d.Get("content"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/a/b/c",
+		"content":        "SGVsbG8gd29ybGQK",
+		"workspace_path": "/Workspace/a/b/c",
+	})
 }
 
 func TestDataSourceNotebook_ErrorExport(t *testing.T) {
@@ -55,7 +54,7 @@ func TestDataSourceNotebook_ErrorExport(t *testing.T) {
 			"path":   "/a/b/c",
 			"format": "SOURCE",
 		},
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestDataSourceNotebook_ErrorStatus(t *testing.T) {

@@ -1,6 +1,9 @@
+version: 2
+
 before:
   hooks:
     - go mod download
+
 builds:
 - env:
     - CGO_ENABLED=0
@@ -15,18 +18,22 @@ builds:
   goarch:
     - amd64
     - arm64
+
 archives:
-- format: zip
+- formats: [zip]
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
   files:
     - LICENSE*
     - CHANGELOG*
     - NOTICE*
+
 checksum:
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_SHA256SUMS'
   algorithm: sha256
+
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}"
+
 signs:
   - artifacts: checksum
     args:
@@ -36,11 +43,12 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
-release:
-  draft: true
+
+release: {}

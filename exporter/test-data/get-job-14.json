@@ -8,35 +8,40 @@
         "test@test.com"
       ]
     },
-    "libraries": [
-      {
-        "maven": {
-          "coordinates": "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17"
-        }
-      },
-      {
-        "pypi": {
-          "package": "spacy"
-        }
-      }
-    ],
     "max_concurrent_runs": 1,
     "name": "Demo job",
-    "new_cluster": {
-      "azure_attributes": {
-        "availability": "ON_DEMAND_AZURE"
-      },
-      "enable_elastic_disk": true,
-      "node_type_id": "Standard_DS3_v2",
-      "num_workers": 2,
-      "spark_conf": {
-        "spark.databricks.delta.preview.enabled": "true"
-      },
-      "spark_version": "7.3.x-scala2.12"
-    },
-    "notebook_task": {
-      "notebook_path": "/Production/MakeFeatures"
-    },
+      "tasks": [
+          {
+              "task_key": "test",
+              "libraries": [
+                  {
+                      "maven": {
+                          "coordinates": "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17"
+                      }
+                  },
+                  {
+                      "pypi": {
+                          "package": "spacy"
+                      }
+                  }
+              ],
+              "new_cluster": {
+                  "azure_attributes": {
+                      "availability": "ON_DEMAND_AZURE"
+                  },
+                  "enable_elastic_disk": true,
+                  "node_type_id": "Standard_DS3_v2",
+                  "num_workers": 2,
+                  "spark_conf": {
+                      "spark.databricks.delta.preview.enabled": "true"
+                  },
+                  "spark_version": "7.3.x-scala2.12"
+              },
+              "notebook_task": {
+                  "notebook_path": "/Production/MakeFeatures"
+              }
+          }
+      ],
     "schedule": {
       "pause_status": "UNPAUSED",
       "quartz_cron_expression": "0 15 22 ? * *",

@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach [users](user.md), [service_principal](service_principal.md), and [groups](group.md) as group members.
 
+-> This resource can be used with an account or workspace-level provider.
+
 To attach members to groups in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage
@@ -39,8 +41,8 @@ resource "databricks_group_member" "bb" {
 
 The following arguments are supported:
 
-* `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `member_id` - (Required) This is the id of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
+* `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
+* `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
 
 ## Attribute Reference
 
@@ -52,8 +54,17 @@ In addition to all arguments above, the following attributes are exported:
 
 You can import a `databricks_group_member` resource with name `my_group_member` like the following:
 
+```hcl
+import {
+  to = databricks_group_member.my_group_member
+  id = "<group_id>|<member_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"
+terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"
 ```
 
 ## Related Resources

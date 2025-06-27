@@ -3,15 +3,13 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Lists all [databricks_mws_workspaces](../resources/mws_workspaces.md) in Databricks Account.
 
--> **Note** [`account_id`](../index.md#account_id) provider configuration property is required for this resource to work.
+-> This data source can only be used with an account-level provider!
 
 ## Example Usage
 
-Listing all workspaces in 
+Listing all workspaces in
 
 ```hcl
 provider "databricks" {
@@ -28,7 +26,7 @@ output "all_mws_workspaces" {
 
 ## Attribute Reference
 
--> **Note** This resource has an evolving interface, which may change in future versions of the provider.
+-> This resource has an evolving interface, which may change in future versions of the provider.
 
 This data source exports the following attributes:
 
@@ -38,5 +36,5 @@ This data source exports the following attributes:
 
 The following resources are used in the same context:
 
-* [databricks_mws_workspaces](../resources/mws_workspaces.md) to manage Databricks E2 Workspaces.
-* [databricks_metastore_assignment](../resources/metastore_assignment.md) to assign [databricks_metastore](docs/resources/metastore.md) to [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace)
+* [databricks_mws_workspaces](../resources/mws_workspaces.md) to manage Databricks Workspaces on AWS and GCP.
+* [databricks_metastore_assignment](../resources/metastore_assignment.md) to assign [databricks_metastore](../resources/metastore.md) to [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace)

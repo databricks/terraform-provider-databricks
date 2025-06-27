@@ -8,7 +8,9 @@
         {
           "permission_level": "CAN_RUN",
           "inherited": true,
-          "inherited_from_object": "/directories/"
+          "inherited_from_object": [
+              "/directories/"
+          ]
         }
       ]
     }

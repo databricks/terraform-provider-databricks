@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -50,18 +51,6 @@ func (ti TableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
-type Tables struct {
-	Tables []TableInfo `json:"tables"`
-}
-
-func (a TablesAPI) listTables(catalogName, schemaName string) (tables Tables, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/", map[string]string{
-		"catalog_name": catalogName,
-		"schema_name":  schemaName,
-	}, &tables)
-	return
-}
-
 func (a TablesAPI) createTable(ti *TableInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
 }
@@ -75,9 +64,13 @@ func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
 
-func ResourceTable() *schema.Resource {
+func ResourceTable() common.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
@@ -111,5 +104,6 @@ func ResourceTable() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
-	}.ToResource()
+		DeprecationMessage: fmt.Sprintf("databricks_table is deprecated in favor of databricks_sql_table. Please see %s for more information.", docs.DocumentationUrl(docs.DocOptions{Slug: "sql_table"})),
+	}
 }

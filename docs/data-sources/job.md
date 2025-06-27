@@ -3,9 +3,9 @@ subcategory: "Compute"
 ---
 # databricks_job Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves the settings of [databricks_job](../resources/job.md) by name or by id. Complements the feature of the [databricks_jobs](jobs.md) data source.
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -25,7 +25,6 @@ output "job_num_workers" {
 ## Attribute Reference
 
 This data source exports the following attributes:
-
 
 * `id` - the id of [databricks_job](../resources/job.md) if the resource was matched by name.
 * `name` - the job name of [databricks_job](../resources/job.md) if the resource was matched by id.

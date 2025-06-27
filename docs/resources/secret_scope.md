@@ -5,6 +5,8 @@ subcategory: "Security"
 
 Sometimes accessing data requires that you authenticate to external data sources through JDBC. Instead of directly entering your credentials into a notebook, use Databricks secrets to store your credentials and reference them in notebooks and jobs. Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) for more details.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -20,14 +22,13 @@ The following arguments are supported:
 * `name` - (Required) Scope name requested by the user. Must be unique within a workspace. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `initial_manage_principal` - (Optional) The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the [databricks_secret_acl](secret_acl.md) with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). This part of the state cannot be imported.
 
-## keyvault_metadata
+### keyvault_metadata
 
-On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault. 
+On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault.
 
 -> **Warning** To create a secret scope from Azure Key Vault, you must use one of the [Azure-specific authentication methods](../index.md#special-configurations-for-azure). Secret scopes backed by Azure Key Vault cannot be created using personal access tokens (PAT).
 
 To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and the secret scope won't be in a usable state anymore.
-
 
 ```hcl
 data "azurerm_client_config" "current" {
@@ -72,8 +73,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because the underlying API doesn't include it in the response.
 
+```hcl
+import {
+  to = databricks_secret_scope.this
+  id = "<scopeName>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-$ terraform import databricks_secret_scope.object <scopeName>
+terraform import databricks_secret_scope.this "<scopeName>"
 ```
 
 ## Related Resources

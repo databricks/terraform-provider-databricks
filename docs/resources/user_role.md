@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
 
+-> This resource can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Adding AWS instance profile to a user
@@ -28,10 +30,10 @@ Adding user as administrator to Databricks Account
 
 ```hcl
 provider "databricks" {
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = var.databricks_account_id
-  username   = var.databricks_user
-  password   = var.databricks_password
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_user" "my_user" {
@@ -59,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

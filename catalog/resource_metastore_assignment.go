@@ -2,53 +2,21 @@ package catalog
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type MetastoreAssignmentAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewMetastoreAssignmentAPI(ctx context.Context, m any) MetastoreAssignmentAPI {
-	return MetastoreAssignmentAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
-
-type MetastoreAssignment struct {
-	WorkspaceID        int64  `json:"workspace_id" tf:"force_new"`
-	MetastoreID        string `json:"metastore_id"`
-	DefaultCatalogName string `json:"default_catalog_name,omitempty" tf:"default:hive_metastore"`
-}
-
-func (a MetastoreAssignmentAPI) createMetastoreAssignment(ma MetastoreAssignment) error {
-	path := fmt.Sprintf("/unity-catalog/workspaces/%d/metastore", ma.WorkspaceID)
-	return a.client.Put(a.context, path, ma)
-}
-
-func (a MetastoreAssignmentAPI) updateMetastoreAssignment(ma MetastoreAssignment) error {
-	path := fmt.Sprintf("/unity-catalog/workspaces/%d/metastore", ma.WorkspaceID)
-	return a.client.Patch(a.context, path, ma)
-}
-
-func (a MetastoreAssignmentAPI) getAssignedMetastoreID() (string, error) {
-	var mi MetastoreInfo
-	err := a.client.Get(a.context, "/unity-catalog/metastore_summary", nil, &mi)
-	return mi.MetastoreID, err
-}
-
-func (a MetastoreAssignmentAPI) deleteMetastoreAssignment(workspaceID, metastoreID string) error {
-	path := fmt.Sprintf("/unity-catalog/workspaces/%s/metastore", workspaceID)
-	return a.client.Delete(a.context, path, map[string]string{
-		"metastore_id": metastoreID,
-	})
-}
-
-func ResourceMetastoreAssignment() *schema.Resource {
-	s := common.StructToSchema(MetastoreAssignment{},
+func ResourceMetastoreAssignment() common.Resource {
+	s := common.StructToSchema(catalog.MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["default_catalog_name"].Computed = true
+			m["default_catalog_name"].Deprecated = "Use databricks_default_namespace_setting resource instead"
+			m["workspace_id"].ForceNew = true
+			m["metastore_id"].ForceNew = true
 			return m
 		})
 	pi := common.NewPairID("workspace_id", "metastore_id").Schema(
@@ -58,30 +26,97 @@ func ResourceMetastoreAssignment() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ma MetastoreAssignment
-			common.DataToStructPointer(d, s, &ma)
-			if err := NewMetastoreAssignmentAPI(ctx, c).createMetastoreAssignment(ma); err != nil {
-				return err
-			}
-			pi.Pack(d)
-			return nil
+			workspaceId := int64(d.Get("workspace_id").(int))
+			metastoreId := d.Get("metastore_id").(string)
+			var create catalog.CreateMetastoreAssignment
+			common.DataToStructPointer(d, s, &create)
+			create.WorkspaceId = workspaceId
+
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				err := acc.MetastoreAssignments.Create(ctx,
+					catalog.AccountsCreateMetastoreAssignment{
+						WorkspaceId:         workspaceId,
+						MetastoreId:         metastoreId,
+						MetastoreAssignment: &create,
+					})
+				if err != nil {
+					return err
+				}
+				pi.Pack(d)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				err := w.Metastores.Assign(ctx, create)
+				if err != nil {
+					return err
+				}
+				pi.Pack(d)
+				return nil
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreID, err := NewMetastoreAssignmentAPI(ctx, c).getAssignedMetastoreID()
-			d.Set("metastore_id", metastoreID)
-			return err
-		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ma MetastoreAssignment
-			common.DataToStructPointer(d, s, &ma)
-			return NewMetastoreAssignmentAPI(ctx, c).updateMetastoreAssignment(ma)
-		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			workspaceID, metastoreID, err := pi.Unpack(d)
+			first, _, err := pi.Unpack(d)
 			if err != nil {
 				return err
 			}
-			return NewMetastoreAssignmentAPI(ctx, c).deleteMetastoreAssignment(workspaceID, metastoreID)
+			workspaceId, err := strconv.ParseInt(first, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				ma, err := acc.MetastoreAssignments.GetByWorkspaceId(ctx, workspaceId)
+				if err != nil {
+					return err
+				}
+				return common.StructToData(ma, s, d)
+			}, func(w *databricks.WorkspaceClient) error {
+				//this only works when managing the metastore assigned to the current workspace.
+				//plus we don't know the workspace we're logged into.
+				ma, err := w.Metastores.Current(ctx)
+				if err != nil {
+					return err
+				}
+				d.Set("metastore_id", ma.MetastoreId)
+				d.Set("default_catalog_name", ma.DefaultCatalogName)
+				d.Set("workspace_id", workspaceId)
+				return nil
+			})
 		},
-	}.ToResource()
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			workspaceId := int64(d.Get("workspace_id").(int))
+			metastoreId := d.Get("metastore_id").(string)
+			var update catalog.UpdateMetastoreAssignment
+			common.DataToStructPointer(d, s, &update)
+			update.WorkspaceId = workspaceId
+
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				return acc.MetastoreAssignments.Update(ctx,
+					catalog.AccountsUpdateMetastoreAssignment{
+						WorkspaceId:         workspaceId,
+						MetastoreId:         metastoreId,
+						MetastoreAssignment: &update,
+					})
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.Metastores.UpdateAssignment(ctx, update)
+			})
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			first, metastoreId, err := pi.Unpack(d)
+			if err != nil {
+				return err
+			}
+			workspaceId, err := strconv.ParseInt(first, 10, 64)
+			if err != nil {
+				return err
+			}
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				return acc.MetastoreAssignments.DeleteByWorkspaceIdAndMetastoreId(ctx, workspaceId, metastoreId)
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.Metastores.Unassign(ctx, catalog.UnassignRequest{
+					MetastoreId: metastoreId,
+					WorkspaceId: workspaceId,
+				})
+			})
+		},
+	}
 }

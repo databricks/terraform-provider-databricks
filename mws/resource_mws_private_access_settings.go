@@ -2,7 +2,8 @@ package mws
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -10,100 +11,69 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// NewPrivateAccessSettingsAPI creates VPCEndpointAPI instance from provider meta
-func NewPrivateAccessSettingsAPI(ctx context.Context, m any) PrivateAccessSettingsAPI {
-	return PrivateAccessSettingsAPI{m.(*common.DatabricksClient), ctx}
-}
+func ResourceMwsPrivateAccessSettings() common.Resource {
+	pasSchema := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(m, "private_access_settings_name").SetValidateFunc(validation.StringLenBetween(4, 256))
+		common.CustomizeSchemaPath(m, "private_access_settings_name").SetRequired()
 
-// PrivateAccessSettingsAPI exposes the PAS API
-type PrivateAccessSettingsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
+		common.CustomizeSchemaPath(m, "region").SetRequired()
 
-// Create creates the PAS ceation process
-func (a PrivateAccessSettingsAPI) Create(pas *PrivateAccessSettings) error {
-	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings", pas.AccountID)
-	return a.client.Post(a.context, pasAPIPath, pas, &pas)
-}
+		common.CustomizeSchemaPath(m, "private_access_settings_id").SetComputed()
 
-// Read returns the PAS object along with metadata and any additional errors
-func (a PrivateAccessSettingsAPI) Read(mwsAcctID, pasID string) (PrivateAccessSettings, error) {
-	var pas PrivateAccessSettings
-	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", mwsAcctID, pasID)
-	err := a.client.Get(a.context, pasAPIPath, nil, &pas)
-	return pas, err
-}
+		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
+		common.CustomizeSchemaPath(m, "private_access_level").SetDefault("ACCOUNT")
 
-func (a PrivateAccessSettingsAPI) Update(pas *PrivateAccessSettings) error {
-	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", pas.AccountID, pas.PasID)
-	return a.client.Put(a.context, pasAPIPath, pas)
-}
-
-// Delete deletes the PAS object given a pas id
-func (a PrivateAccessSettingsAPI) Delete(mwsAcctID, pasID string) error {
-	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", mwsAcctID, pasID)
-	if err := a.client.Delete(a.context, pasAPIPath, nil); err != nil {
-		return err
-	}
-	return nil
-}
-
-// List lists all the available PAS objects in the mws account
-func (a PrivateAccessSettingsAPI) List(mwsAcctID string) ([]PrivateAccessSettings, error) {
-	var pasList []PrivateAccessSettings
-	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings", mwsAcctID)
-	err := a.client.Get(a.context, pasAPIPath, nil, &pasList)
-	return pasList, err
-}
-
-func ResourceMwsPrivateAccessSettings() *schema.Resource {
-	s := common.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// nolint
-		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
-		s["private_access_level"].ValidateFunc = validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true)
-		return s
+		common.AddAccountIdField(m)
+		return m
 	})
 	p := common.NewPairSeparatedID("account_id", "private_access_settings_id", "/")
 	return common.Resource{
-		Schema: s,
+		Schema: pasSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var pas PrivateAccessSettings
-			common.DataToStructPointer(d, s, &pas)
-			if err := NewPrivateAccessSettingsAPI(ctx, c).Create(&pas); err != nil {
+			a, err := c.AccountClientWithAccountIdFromConfig(d)
+			if err != nil {
 				return err
 			}
-			d.Set("private_access_settings_id", pas.PasID)
+			var pas provisioning.UpsertPrivateAccessSettingsRequest
+			common.DataToStructPointer(d, pasSchema, &pas)
+			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
+			res, err := a.PrivateAccess.Create(ctx, pas)
+			if err != nil {
+				return err
+			}
+			d.Set("private_access_settings_id", res.PrivateAccessSettingsId)
+			d.Set("account_id", res.AccountId)
 			p.Pack(d)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			accountID, pasID, err := p.Unpack(d)
+			a, pasID, err := c.AccountClientWithAccountIdFromPair(d, p)
 			if err != nil {
 				return err
 			}
-			pas, err := NewPrivateAccessSettingsAPI(ctx, c).Read(accountID, pasID)
+			pas, err := a.PrivateAccess.GetByPrivateAccessSettingsId(ctx, pasID)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(pas, s, d)
+			return common.StructToData(pas, pasSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			_, pasID, err := p.Unpack(d)
+			a, pasID, err := c.AccountClientWithAccountIdFromPair(d, p)
 			if err != nil {
 				return err
 			}
-			var pas PrivateAccessSettings
-			common.DataToStructPointer(d, s, &pas)
-			pas.PasID = pasID
-			return NewPrivateAccessSettingsAPI(ctx, c).Update(&pas)
+			var pas provisioning.UpsertPrivateAccessSettingsRequest
+			common.DataToStructPointer(d, pasSchema, &pas)
+			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
+			pas.PrivateAccessSettingsId = pasID
+			return a.PrivateAccess.Replace(ctx, pas)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			accountID, pasID, err := p.Unpack(d)
+			a, pasID, err := c.AccountClientWithAccountIdFromPair(d, p)
 			if err != nil {
 				return err
 			}
-			return NewPrivateAccessSettingsAPI(ctx, c).Delete(accountID, pasID)
+			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
 		},
-	}.ToResource()
+	}
 }

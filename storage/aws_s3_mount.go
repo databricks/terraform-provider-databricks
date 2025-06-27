@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -17,7 +16,7 @@ type AWSIamMount struct {
 }
 
 // Source ...
-func (m AWSIamMount) Source() string {
+func (m AWSIamMount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("s3a://%s", m.S3BucketName)
 }
 
@@ -36,9 +35,9 @@ func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
 }
 
 // ResourceAWSS3Mount ...
-func ResourceAWSS3Mount() *schema.Resource {
+func ResourceAWSS3Mount() common.Resource {
 	tpl := AWSIamMount{}
-	r := &schema.Resource{
+	r := common.Resource{
 		DeprecationMessage: "Resource is deprecated and will be removed in further versions. " +
 			"Please rewrite configuration using `databricks_mount` resource. More info at " +
 			"https://registry.terraform.io/providers/databricks/databricks/latest/docs/" +
@@ -76,21 +75,21 @@ func ResourceAWSS3Mount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+	r.Create = func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		return mountCreate(tpl, r)(ctx, d, m)
 	}
-	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+	r.Read = func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		return mountRead(tpl, r)(ctx, d, m)
 	}
-	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+	r.Delete = func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		return mountDelete(tpl, r)(ctx, d, m)
 	}

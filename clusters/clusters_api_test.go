@@ -2,13 +2,13 @@ package clusters
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	// "reflect"
-	"strings"
+
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -27,24 +27,24 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: SparkVersionsList{
-				SparkVersions: []SparkVersion{
+			Resource:     "/api/2.1/clusters/spark-versions",
+			Response: compute.GetSparkVersionsResponse{
+				Versions: []compute.SparkVersion{
 					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+						Key:  "7.1.x-cpu-ml-scala2.12",
+						Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 					},
 					{
-						Version:     "apache-spark-2.4.x-scala2.11",
-						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+						Key:  "apache-spark-2.4.x-scala2.11",
+						Name: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
 					},
 					{
-						Version:     "7.3.x-scala2.12",
-						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+						Key:  "7.3.x-scala2.12",
+						Name: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
 					},
 					{
-						Version:     "6.4.x-scala2.11",
-						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+						Key:  "6.4.x-scala2.11",
+						Name: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
 					},
 				},
 			},
@@ -52,7 +52,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 			Response: compute.ListNodeTypesResponse{
 				NodeTypes: []compute.NodeType{
 					{
@@ -174,7 +174,7 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "Nope",
 			},
 			Status: 404,
@@ -204,7 +204,7 @@ func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "I am a teapot",
 			},
 			Status: 418,
@@ -643,7 +643,7 @@ func TestStartAndGetInfo_StartingError(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "I am a teapot!",
 			},
 			Status: 418,
@@ -680,7 +680,7 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "unpin the cluster first",
 			},
 			Status: 400,
@@ -1016,119 +1016,6 @@ func TestEventsEmptyResult(t *testing.T) {
 	assert.Equal(t, len(clusterEvents), 0)
 }
 
-func TestListSparkVersions(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/spark-versions",
-			Response: SparkVersionsList{
-				SparkVersions: []SparkVersion{
-					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-					},
-					{
-						Version:     "apache-spark-2.4.x-scala2.11",
-						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
-					},
-					{
-						Version:     "7.3.x-hls-scala2.12",
-						Description: "7.3 LTS Genomics (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "6.4.x-scala2.11",
-						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
-					},
-				},
-			},
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	sparkVersions, err := NewClustersAPI(ctx, client).ListSparkVersions()
-	require.NoError(t, err)
-	require.Equal(t, 4, len(sparkVersions.SparkVersions))
-	require.Equal(t, "6.4.x-scala2.11", sparkVersions.SparkVersions[3].Version)
-}
-
-func TestListSparkVersionsWithError(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/spark-versions",
-			Response: "{garbage....",
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	_, err = NewClustersAPI(ctx, client).ListSparkVersions()
-	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
-}
-
-func TestGetLatestSparkVersion(t *testing.T) {
-	versions := SparkVersionsList{
-		SparkVersions: []SparkVersion{
-			{
-				Version:     "7.1.x-cpu-ml-scala2.12",
-				Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-			},
-			{
-				Version:     "apache-spark-2.4.x-scala2.11",
-				Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
-			},
-			{
-				Version:     "7.3.x-hls-scala2.12",
-				Description: "7.3 LTS Genomics (includes Apache Spark 3.0.1, Scala 2.12)",
-			},
-			{
-				Version:     "6.4.x-scala2.11",
-				Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
-			},
-			{
-				Version:     "7.3.x-scala2.12",
-				Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
-			},
-			{
-				Version:     "7.4.x-scala2.12",
-				Description: "7.4 (includes Apache Spark 3.0.1, Scala 2.12)",
-			},
-			{
-				Version:     "7.1.x-scala2.12",
-				Description: "7.1 (includes Apache Spark 3.0.0, Scala 2.12)",
-			},
-		},
-	}
-
-	version, err := versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", Latest: true})
-	require.NoError(t, err)
-	require.Equal(t, "7.4.x-scala2.12", version)
-
-	version, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", LongTermSupport: true, Latest: true})
-	require.NoError(t, err)
-	require.Equal(t, "7.3.x-scala2.12", version)
-
-	version, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", Latest: true, SparkVersion: "3.0.0"})
-	require.NoError(t, err)
-	require.Equal(t, "7.1.x-scala2.12", version)
-
-	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12"})
-	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "query returned multiple results"))
-
-	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", ML: true, Genomics: true})
-	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
-
-	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", SparkVersion: "3.10"})
-	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
-}
-
 func TestClusterState_CanReach(t *testing.T) {
 	tests := []struct {
 		from ClusterState
@@ -1258,7 +1145,11 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/unpin",
 			Status:   418,
-			Response: apierr.NotFound("missing"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "missing",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewClustersAPI(ctx, client)
@@ -1271,7 +1162,7 @@ func TestWrapMissingClusterError(t *testing.T) {
 	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
 	assert.EqualError(t, wrapMissingClusterError(&apierr.APIError{
 		Message: "Cluster abc does not exist",
-	}, "abc"), "Cluster abc does not exist")
+	}, "abc"), databricks.ErrResourceDoesNotExist.Error())
 }
 
 func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
@@ -1279,7 +1170,5 @@ func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
 		ErrorCode: "INVALID_STATE",
 		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
-	var ae *apierr.APIError
-	assert.True(t, errors.As(err, &ae))
-	assert.Equal(t, 404, ae.StatusCode)
+	assert.EqualError(t, err, databricks.ErrResourceDoesNotExist.Error())
 }

@@ -1,22 +1,24 @@
 ---
-page_title: "Provisioning AWS Databricks E2 with a AWS Firewall"
+page_title: "Provisioning AWS Databricks workspace with a AWS Firewall"
 ---
 
-# Provisioning AWS Databricks E2 with a AWS Firewall
+# Provisioning AWS Databricks workspace with a AWS Firewall
 
-You can provision multiple Databricks workspaces with Terraform. This example shows how to deploy a Databricks workspace into a VPC which uses AWS Network firewall to manage egress out to the public network. For smaller Databricks deployments this would be our recommended configuration. For larger deployments see [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](aws-e2-firewall-hub-and-spoke.md). 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
-For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
+You can provision multiple Databricks workspaces with Terraform. This example shows how to deploy a Databricks workspace into a VPC, which uses an AWS Network firewall to manage egress out to the public network. For smaller Databricks deployments, this is our recommended configuration; for larger deployments, see [Provisioning AWS Databricks workspace with a Hub & Spoke firewall for data exfiltration protection](aws-e2-firewall-hub-and-spoke.md).
 
-![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-workspace.png)
+For more information, please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-## Provider initialization for E2 workspaces
+![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-workspace.png)
 
-This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as is and assumes you'll use it as the basis for your setup. If you are using AWS Firewall to block most traffic but allow the URLs that Databricks needs to connect to please update the configuration based on your region. You can get the configuration details for your region from [Firewall Appliance](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#firewall-appliance-infrastructure) document.
+## Provider initialization for AWS workspaces
+
+This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](../resources/service_principal.md), `client_secret`, which is its secret, and `databricks_account_id`, which can be found in the top right corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup. If you are using AWS Firewall to block most traffic but allow the URLs that Databricks needs to connect to, please update the configuration based on your region. You can get the configuration details for your region from [Firewall Appliance](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#firewall-appliance-infrastructure) document.
 
 ```hcl
-variable "databricks_account_username" {}
-variable "databricks_account_password" {}
+variable "client_id" {}
+variable "client_secret" {}
 variable "databricks_account_id" {}
 
 variable "tags" {
@@ -75,14 +77,15 @@ locals {
 ```
 
 Before [managing workspace](workspace-management.md), you have to create:
-  - [VPC](#vpc)
-  - [AWS Network Firewall](#aws-network-firewall)
-  - [Root bucket](aws-workspace.md#root-bucket)
-  - [Cross-account role](aws-workspace.md#cross-account-iam-role)
-  - [Databricks E2 workspace](aws-workspace.md#databricks-e2-workspace)
-  - [Host and Token outputs](aws-workspace.md#provider-configuration) 
 
-> Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
+- [VPC](#vpc)
+- [AWS Network Firewall](#aws-network-firewall)
+- [Root bucket](aws-workspace.md#root-bucket)
+- [Cross-account role](aws-workspace.md#cross-account-iam-role)
+- [Databricks workspace](aws-workspace.md#databricks-workspace)
+- [Host and Token outputs](aws-workspace.md#provider-configuration)
+
+> Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually, this module creates VPC and IAM roles as well.
 
 ```hcl
 terraform {
@@ -103,10 +106,11 @@ provider "aws" {
 
 // initialize provider in "MWS" mode to provision new workspace
 provider "databricks" {
-  alias    = "mws"
-  host     = "https://accounts.cloud.databricks.com"
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
@@ -188,21 +192,24 @@ resource "aws_nat_gateway" "db_nat" {
 }
 
 ```
+
 ### Security Group
+
 Databricks must have access to at least one AWS security group and no more than five security groups. You can reuse existing security groups rather than create new ones.
 Security groups must have the following rules:
 
 ***Egress (outbound):***
 
-* Allow all TCP and UDP access to the workspace security group (for internal traffic)
-* Allow TCP access to 0.0.0.0/0 for these ports:
-  * 443: for Databricks infrastructure, cloud data sources, and library repositories
-  * 3306: for the metastore
-  * 6666: only required if you use PrivateLink
+- Allow all TCP and UDP access to the workspace security group (for internal traffic)
+- Allow TCP access to 0.0.0.0/0 for these ports:
+  - 443: for Databricks infrastructure, cloud data sources, and library repositories
+  - 3306: for the metastore
+  - 6666: only required if you use PrivateLink
 
 ***Ingress (inbound):*** Required for all workspaces (these can be separate rules or combined into one):
-* Allow TCP on all ports when traffic source uses the same security group
-* Allow UDP on all ports when traffic source uses the same security group
+
+- Allow TCP on all ports when the traffic source uses the same security group
+- Allow UDP on all ports when the traffic source uses the same security group
 
 ```hcl
 /* VPC's Default Security Group */
@@ -246,8 +253,10 @@ resource "aws_security_group" "default_sg" {
 }
 ```
 
-### Register AWS VPC as the databricks_mws_networks resource 
+### Register AWS VPC as the databricks_mws_networks resource
+
 Now, we configure VPC & subnets for new workspaces within AWS.
+
 ```hcl
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
@@ -258,8 +267,10 @@ resource "databricks_mws_networks" "this" {
   vpc_id             = aws_vpc.db_vpc.id
 }
 ```
+
 ### Route Tables
-Next, we're going to create route tables for VPC subnets, NAT gateway, Internet Gateway and add some routes.
+
+Next, we will create route tables for VPC subnets, NAT gateway, and Internet Gateway and add some routes.
 
 ```hcl
 /* Routing table for private subnet */
@@ -339,7 +350,9 @@ resource "aws_main_route_table_association" "set-worker-default-rt-assoc" {
 ```
 
 ### VPC Endpoints
-For STS, S3 and Kinesis, it's important to create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints.
+
+For STS, S3, and Kinesis, it's important to create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network for more direct connections and reduced cost compared to AWS global endpoints.
+
 ```hcl
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
@@ -385,11 +398,12 @@ module "vpc_endpoints" {
 
 ## AWS Network Firewall
 
-Once [VPC](#vpc) is ready, create AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
+Once [VPC](#vpc) is ready, create an AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
 
 ### AWS Firewall Rule Groups
 
-First we are going to create a Firewall Rule group for accessing hive metastore and public repositories.
+First, we will create a Firewall Rule group for accessing hive metastore and public repositories.
+
 ```hcl
 resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
   capacity = 100
@@ -416,7 +430,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
 }
 ```
 
-As the next step, we are going to create a Firewall Rule group that allows control plane traffic from the VPC.
+As the next step, we will create a Firewall Rule group that allows control plane traffic from the VPC.
 
 ```hcl
 resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
@@ -461,7 +475,8 @@ locals {
   protocols_control_plane = ["TCP"]
 }
 ```
-Finally, we are going to add some basic deny rules to cater for common firewall scenarios such as preventing the use of protocols like SSH/SFTP, FTP and ICMP.
+
+Finally, we will add some basic deny rules to cater for common firewall scenarios, such as preventing the use of protocols like SSH/SFTP, FTP, and ICMP.
 
 ```hcl
 /* Firewall Rule group for dropping ICMP, FTP, SSH*/
@@ -503,8 +518,10 @@ resource "aws_networkfirewall_rule_group" "deny_protocols_rg" {
   tags = var.tags
 }
 ```
+
 ### AWS Network Firewall Policy
-First, we are going to create AWS Firewall Policy and include stateful firewall rule groups created in previous steps. 
+
+First, we will create an AWS Firewall Policy and include stateful firewall rule groups created in previous steps.
 
 ```hcl
 resource "aws_networkfirewall_firewall_policy" "egress_policy" {
@@ -525,9 +542,10 @@ resource "aws_networkfirewall_firewall_policy" "egress_policy" {
   tags = var.tags
 }
 ```
+
 ### AWS Firewall
 
-As the next step, we are going to create an AWS Network Firewall with the Firewall Policy that we defined in the previous step.
+As the next step, we will create an AWS Network Firewall with the Firewall Policy we defined in the previous step.
 
 ```hcl
 resource "aws_networkfirewall_firewall" "exfiltration_firewall" {
@@ -557,7 +575,8 @@ data "aws_vpc_endpoint" "firewall" {
 
 ```
 
-Finally, AWS Network Firewall is now deployed and configured, all you need to do now is route traffic to it.
+Finally, the AWS Network Firewall is now deployed and configured - all you need to do now is route traffic to it.
+
 ```hcl
 /* Add Route from Nat Gateway to Firewall */
 resource "aws_route" "db_nat_firewall" {
@@ -575,6 +594,6 @@ resource "aws_route" "db_igw_nat_firewall" {
 }
 ```
 
-
 ## Troubleshooting
+
 If the Databricks clusters cannot reach DBFS or VPC endpoints do not work as intended, for example if your data sources are inaccessible or if the traffic is bypassing the endpoints please visit [Troubleshoot regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#troubleshoot-regional-endpoints)

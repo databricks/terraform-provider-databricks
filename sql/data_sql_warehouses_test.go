@@ -3,28 +3,27 @@ package sql
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestWarehousesData(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-				Response: map[string]interface{}{
-					"warehouses": []SQLEndpoint{
-						{
-							ID:   "1",
-							Name: "bar",
-						},
-						{
-							ID:   "2",
-							Name: "bar",
-						},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWarehousesAPI().EXPECT().
+				ListAll(mock.Anything, sql.ListWarehousesRequest{}).
+				Return([]sql.EndpointInfo{
+					{
+						Id:   "1",
+						Name: "bar",
 					},
-				},
-			},
+					{
+						Id:   "2",
+						Name: "bar",
+					},
+				}, nil)
 		},
 		Resource:    DataSourceWarehouses(),
 		HCL:         ``,
@@ -38,23 +37,19 @@ func TestWarehousesData(t *testing.T) {
 
 func TestWarehousesDataContains(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-				Response: map[string]interface{}{
-					"warehouses": []SQLEndpoint{
-						{
-							ID:   "111",
-							Name: "bar",
-						},
-						{
-							ID:   "2",
-							Name: "br",
-						},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWarehousesAPI().EXPECT().
+				ListAll(mock.Anything, sql.ListWarehousesRequest{}).
+				Return([]sql.EndpointInfo{
+					{
+						Id:   "111",
+						Name: "bar",
 					},
-				},
-			},
+					{
+						Id:   "2",
+						Name: "br",
+					},
+				}, nil)
 		},
 		Resource:    DataSourceWarehouses(),
 		HCL:         `warehouse_name_contains = "ba"`,
@@ -68,10 +63,14 @@ func TestWarehousesDataContains(t *testing.T) {
 
 func TestWarehousesData_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockWarehousesAPI().EXPECT().
+				ListAll(mock.Anything, sql.ListWarehousesRequest{}).
+				Return(nil, qa.ErrImATeapot)
+		},
 		Resource:    DataSourceWarehouses(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

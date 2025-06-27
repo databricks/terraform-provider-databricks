@@ -31,14 +31,41 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourcePermissionAssignment(),
-		Create:    true,
-		AccountID: "abc",
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
 		HCL: `
 		principal_id = 345
 		permissions  = ["USER"]
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentRead(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: PermissionAssignmentList{
+					PermissionAssignments: []PermissionAssignment{
+						{
+							Permissions: []string{"USER"},
+							Principal: Principal{
+								PrincipalID: 345,
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Read:     true,
+		New:      true,
+		ID:       "345",
+	}.ApplyAndExpectData(t, map[string]any{
+		"principal_id": 345,
+		"permissions":  []any{"USER"},
+	})
 }
 
 func TestPermissionAssignmentReadNotFound(t *testing.T) {

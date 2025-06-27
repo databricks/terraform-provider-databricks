@@ -1,5 +1,20 @@
 package mws
 
+import (
+	"fmt"
+
+	"github.com/databricks/databricks-sdk-go/marshal"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
+)
+
+func getGkeDeprecationMessage(fieldName string, docOptions docs.DocOptions) string {
+	return fmt.Sprintf(
+		"%s is deprecated and will be removed in a future release. For more information, review the documentation at %s",
+		fieldName,
+		docs.DocumentationUrl(docOptions),
+	)
+}
+
 // StsRole is the object that contains cross account role arn and external app id
 type StsRole struct {
 	RoleArn    string `json:"role_arn,omitempty"`
@@ -48,23 +63,23 @@ type NetworkVPCEndpoints struct {
 
 // GcpNetworkInfo is the object that configures byovpc settings for gcp
 type GcpNetworkInfo struct {
-	NetworkProjectId   string `json:"network_project_id"`
-	VpcId              string `json:"vpc_id"`
-	SubnetId           string `json:"subnet_id"`
-	SubnetRegion       string `json:"subnet_region"`
-	PodIpRangeName     string `json:"pod_ip_range_name"`
-	ServiceIpRangeName string `json:"service_ip_range_name"`
+	NetworkProjectId   string `json:"network_project_id" tf:"force_new"`
+	VpcId              string `json:"vpc_id" tf:"force_new"`
+	SubnetId           string `json:"subnet_id" tf:"force_new"`
+	SubnetRegion       string `json:"subnet_region" tf:"force_new"`
+	PodIpRangeName     string `json:"pod_ip_range_name,omitempty"`
+	ServiceIpRangeName string `json:"service_ip_range_name,omitempty"`
 }
 
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
-	AccountID        string               `json:"account_id"`
+	AccountID        string               `json:"account_id" tf:"force_new"`
 	NetworkID        string               `json:"network_id,omitempty" tf:"computed"`
-	NetworkName      string               `json:"network_name"`
-	VPCID            string               `json:"vpc_id,omitempty"`
-	SubnetIds        []string             `json:"subnet_ids,omitempty" tf:"slice_set"`
+	NetworkName      string               `json:"network_name" tf:"force_new"`
+	VPCID            string               `json:"vpc_id,omitempty" tf:"force_new"`
+	SubnetIds        []string             `json:"subnet_ids,omitempty" tf:"slice_set,force_new"`
 	VPCEndpoints     *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed,force_new"`
-	SecurityGroupIds []string             `json:"security_group_ids,omitempty" tf:"slice_set"`
+	SecurityGroupIds []string             `json:"security_group_ids,omitempty" tf:"slice_set,force_new"`
 	VPCStatus        string               `json:"vpc_status,omitempty" tf:"computed"`
 	ErrorMessages    []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
 	WorkspaceID      int64                `json:"workspace_id,omitempty" tf:"computed"`
@@ -105,4 +120,14 @@ type PrivateAccessSettings struct {
 	PublicAccessEnabled   bool     `json:"public_access_enabled,omitempty"`
 	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
 	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
+
+	ForceSendFields []string `json:"-"`
+}
+
+func (s *PrivateAccessSettings) UnmarshalJSON(b []byte) error {
+	return marshal.Unmarshal(b, s)
+}
+
+func (s PrivateAccessSettings) MarshalJSON() ([]byte, error) {
+	return marshal.Marshal(s)
 }

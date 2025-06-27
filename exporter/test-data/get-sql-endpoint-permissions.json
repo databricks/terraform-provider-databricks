@@ -1,6 +1,6 @@
 {
   "object_id": "/sql/warehouses/f562046bc1272886",
-  "object_type": "endpoints",
+  "object_type": "warehouses",
   "access_control_list": [
     {
       "user_name": "user@domain.com",

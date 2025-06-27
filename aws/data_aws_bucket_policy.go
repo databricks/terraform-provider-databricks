@@ -4,18 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DataAwsBucketPolicy ...
-func DataAwsBucketPolicy() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataAwsBucketPolicy() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			bucket := d.Get("bucket").(string)
+			awsPartition := d.Get("aws_partition").(string)
+			databricksAwsAccountId := AwsConfig[awsPartition]["accountId"]
+			awsNamespace := AwsConfig[awsPartition]["awsNamespace"]
+
+			if databricksAwsAccountId == "" {
+				databricksAwsAccountId = AwsConfig[awsPartition]["accountId"]
+			}
+
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
 				Statements: []*awsIamPolicyStatement{
@@ -30,11 +37,11 @@ func DataAwsBucketPolicy() *schema.Resource {
 							"s3:GetBucketLocation",
 						},
 						Resources: []string{
-							fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
-							fmt.Sprintf("arn:aws:s3:::%s", bucket),
+							fmt.Sprintf("arn:%s:s3:::%s/*", awsNamespace, bucket),
+							fmt.Sprintf("arn:%s:s3:::%s", awsNamespace, bucket),
 						},
 						Principal: map[string]string{
-							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
+							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, databricksAwsAccountId),
 						},
 					},
 				},
@@ -52,7 +59,7 @@ func DataAwsBucketPolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(bucket)
 			// nolint
@@ -60,10 +67,16 @@ func DataAwsBucketPolicy() *schema.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
+			"aws_partition": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(AwsPartitions, false),
+				Default:      "aws",
+			},
 			"databricks_account_id": {
-				Type:     schema.TypeString,
-				Default:  "414351767826",
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "databricks_account_id will be will be removed in the next major release.",
 			},
 			"databricks_e2_account_id": {
 				Type:     schema.TypeString,
@@ -74,11 +87,9 @@ func DataAwsBucketPolicy() *schema.Resource {
 				Optional: true,
 			},
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
-					"must contain only alphanumeric, underscore, and hyphen characters"),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(AwsBucketNameRegex, AwsBucketNameRegexError),
 			},
 			"json": {
 				Type:     schema.TypeString,

@@ -3,32 +3,36 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTablesData(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: catalog.ListTablesResponse{
-					Tables: []catalog.TableInfo{
-						{
-							FullName: "a.b.c",
-							Name:     "c",
-						},
-						{
-							FullName: "a.b.d",
-							Name:     "d",
-						},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTablesAPI().EXPECT().
+				ListAll(mock.Anything, catalog.ListTablesRequest{
+					CatalogName: "a",
+					SchemaName:  "b",
+				}).
+				Return([]catalog.TableInfo{
+					{
+						FullName:  "a.b.c",
+						Name:      "c",
+						TableType: "TABLE",
 					},
-				},
-			},
+					{
+						FullName:  "a.b.d",
+						Name:      "d",
+						TableType: "TABLE",
+					},
+				}, nil)
 		},
 		Resource: DataSourceTables(),
 		HCL: `
@@ -37,30 +41,33 @@ func TestTablesData(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"ids": []string{"a.b.c", "a.b.d"},
+	})
 }
 
 // https://github.com/databricks/terraform-provider-databricks/issues/1264
 func TestTablesDataIssue1264(t *testing.T) {
 	r := DataSourceTables()
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: catalog.ListTablesResponse{
-					Tables: []catalog.TableInfo{
-						{
-							Name:     "a",
-							FullName: "a.b.a",
-						},
-						{
-							Name:     "b",
-							FullName: "a.b.b",
-						},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTablesAPI().EXPECT().
+				ListAll(mock.Anything, catalog.ListTablesRequest{
+					CatalogName: "a",
+					SchemaName:  "b",
+				}).
+				Return([]catalog.TableInfo{
+					{
+						Name:      "a",
+						FullName:  "a.b.a",
+						TableType: "TABLE",
 					},
-				},
-			},
+					{
+						Name:      "b",
+						FullName:  "a.b.b",
+						TableType: "TABLE",
+					},
+				}, nil)
 		},
 		Resource: r,
 		HCL: `
@@ -76,23 +83,24 @@ func TestTablesDataIssue1264(t *testing.T) {
 	assert.True(t, s.Contains("a.b.a"))
 
 	d, err = qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: catalog.ListTablesResponse{
-					Tables: []catalog.TableInfo{
-						{
-							Name:     "c",
-							FullName: "a.b.c",
-						},
-						{
-							Name:     "d",
-							FullName: "a.b.d",
-						},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTablesAPI().EXPECT().
+				ListAll(mock.Anything, catalog.ListTablesRequest{
+					CatalogName: "a",
+					SchemaName:  "b",
+				}).
+				Return([]catalog.TableInfo{
+					{
+						Name:      "c",
+						FullName:  "a.b.c",
+						TableType: "TABLE",
 					},
-				},
-			},
+					{
+						Name:      "d",
+						FullName:  "a.b.d",
+						TableType: "TABLE",
+					},
+				}, nil)
 		},
 		Resource: r,
 		HCL: `
@@ -110,10 +118,20 @@ func TestTablesDataIssue1264(t *testing.T) {
 
 func TestTablesData_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTablesAPI().EXPECT().
+				ListAll(mock.Anything, catalog.ListTablesRequest{
+					CatalogName: "",
+					SchemaName:  "",
+				}).
+				Return(nil, &apierr.APIError{
+					ErrorCode: "BAD_REQUEST",
+					Message:   "Bad request: unable to list tables",
+				})
+		},
 		Resource:    DataSourceTables(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "Bad request: unable to list tables")
 }

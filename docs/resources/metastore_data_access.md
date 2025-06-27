@@ -3,7 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
-Each [databricks_metastore](docs/resources/metastore.md) requires an IAM role that will be assumed by Unity Catalog to access data. `databricks_metastore_data_access` defines this
+-> This resource can be used with an account or workspace-level provider.
+
+Optionally, each [databricks_metastore](metastore.md) can have a default [databricks_storage_credential](storage_credential.md) defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
 
 ## Example Usage
 
@@ -14,6 +16,7 @@ resource "databricks_metastore" "this" {
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = "uc admins"
+  region        = "us-east-1"
   force_destroy = true
 }
 
@@ -36,6 +39,7 @@ resource "databricks_metastore" "this" {
     azurerm_storage_container.unity_catalog.name,
   azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
+  region        = "eastus"
   force_destroy = true
 }
 
@@ -49,55 +53,31 @@ resource "databricks_metastore_data_access" "this" {
 }
 ```
 
-For Azure using service principal as credential
-
-```hcl
-resource "databricks_metastore" "this" {
-  name = "primary"
-  storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_container.unity_catalog.name,
-  azurerm_storage_account.unity_catalog.name)
-  owner         = "uc admins"
-  force_destroy = true
-}
-
-resource "databricks_metastore_data_access" "this" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sp_dac"
-  azure_service_principal {
-    directory_id   = var.tenant_id
-    application_id = azuread_application.unity_catalog.application_id
-    client_secret  = azuread_application_password.unity_catalog.value
-  }
-  is_default = true
-}
-```
-
 ## Argument Reference
 
-The following arguments are required:
+The arguments are the same as of [databricks_storage_credential](storage_credential.md). Additionally
 
-* `name` - Name of Data Access Configuration, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-* `metastore_id` - Unique identifier of the parent Metastore
+* `is_default` -  whether to set this credential as the default for the metastore. In practice, this should always be true.
 
-`aws_iam_role` optional configuration block for credential details for AWS:
+## Attribute Reference
 
-* `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+In addition to all arguments above, the following attributes are exported:
 
-`azure_service_principal` optional configuration block for credential details for Azure:
-
-* `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
-* `application_id` - The application ID of the application registration within the referenced AAD tenant
-* `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
-
-`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
-
-* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
-
-`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
-
-* `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+* `id` - ID of this data access configuration in form of `<metastore_id>|<name>`.
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by combination of metastore id and the data access name.
+
+```hcl
+import {
+  to = databricks_metastore_data_access.this
+  id = "<metastore_id>|<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_metastore_data_access.this "<metastore_id>|<name>"
+```

@@ -8,6 +8,10 @@ To work with external tables, Unity Catalog introduces two new objects to access
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
+-> This resource can be used with an account or workspace-level provider.
+
+On AWS, the IAM role for a storage credential requires a trust policy. See [documentation](https://docs.databricks.com/en/connect/unity-catalog/cloud-storage/storage-credentials.html#step-1-create-an-iam-role) for more details. The data source [databricks_aws_unity_catalog_assume_role_policy](../data-sources/aws_unity_catalog_assume_role_policy.md) can be used to create the necessary AWS Unity Catalog assume role policy.
+
 ## Example Usage
 
 For AWS
@@ -25,7 +29,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
@@ -42,10 +46,10 @@ resource "databricks_storage_credential" "external_mi" {
 }
 
 resource "databricks_grants" "external_creds" {
-  storage_credential = databricks_storage_credential.external.id
+  storage_credential = databricks_storage_credential.external_mi.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
@@ -62,7 +66,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
@@ -72,7 +76,13 @@ resource "databricks_grants" "external_creds" {
 The following arguments are required:
 
 - `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `metastore_id` - (Required for account-level) Unique identifier of the parent Metastore. If set for workspace-level, it must match the ID of the metastore assigned to the worspace. When changing the metastore assigned to a workspace, this field becomes required.
 - `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
+- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
+- `skip_validation` - (Optional) Suppress validation errors if any & force save the storage credential.
+- `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
+- `force_update` - (Optional) Update storage credential regardless of its dependents.
+- `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
@@ -80,22 +90,45 @@ The following arguments are required:
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
-- `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+- `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`.
 
-`azure_service_principal` optional configuration block to use service principal as credential details for Azure:
+- `managed_identity_id` - (Optional) The Resource ID of the Azure User Assigned Managed Identity associated with Azure Databricks Access Connector, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/user-managed-identity-name`.
+
+`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
+
+- `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+
+`cloudflare_api_token` optional configuration block for using a Cloudflare API Token as credential details. This requires account admin access:
+
+- `account_id` - R2 account ID
+- `access_key_id` - R2 API token access key ID
+- `secret_access_key` - R2 API token secret access key
+
+`azure_service_principal` optional configuration block to use service principal as credential details for Azure (Legacy):
 
 - `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 - `application_id` - The application ID of the application registration within the referenced AAD tenant
 - `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
-`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
+## Attribute Reference
 
-- `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
-- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
+In addition to all arguments above, the following attributes are exported:
+
+- `id` - ID of this storage credential - same as the `name`.
+- `storage_credential_id` - Unique ID of storage credential.
 
 ## Import
 
 This resource can be imported by name:
+
+```hcl
+import {
+  to = databricks_storage_credential.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_storage_credential.this <name>

@@ -46,5 +46,25 @@ func TestCatalogsData_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
+}
+
+func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+
+				Response: []Workspace{},
+			},
+		},
+		AccountID:   "abc",
+		Resource:    DataSourceMwsWorkspaces(),
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ApplyAndExpectData(t, map[string]any{
+		"ids": map[string]any{},
+	})
 }

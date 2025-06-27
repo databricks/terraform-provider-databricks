@@ -10,6 +10,7 @@
 * Use single-node cluster for `databricks_sql_permissions` ([#4813](https://github.com/databricks/terraform-provider-databricks/pull/4813)).
 
 ### Bug Fixes
+ * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
 ### Documentation
 

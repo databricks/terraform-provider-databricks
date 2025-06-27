@@ -2486,6 +2486,9 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 					JobID: 789,
 					NewSettings: &JobSettings{
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Tasks: []JobTaskSettings{
 							{
 								TaskKey: "task1",
@@ -2610,6 +2613,9 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 							},
 						},
 						Name: "My job",
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2704,6 +2710,9 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 						},
 						Name:              "Featurizer New",
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2786,6 +2795,9 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 						},
 						Name:              "Featurizer New",
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2857,6 +2869,9 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 				Response: Job{

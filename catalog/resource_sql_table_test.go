@@ -2089,7 +2089,7 @@ func TestFormatViewDefinition(t *testing.T) {
 
 	expected := "SELECT\n    *\nFROM\n    my_table\nWHERE\n    column = 'value'"
 
-	formatViewDefinition(ti)
+	ti.formatViewDefinition()
 
 	if ti.ViewDefinition != expected {
 		t.Errorf("Expected view definition: %s, but got: %s", expected, ti.ViewDefinition)

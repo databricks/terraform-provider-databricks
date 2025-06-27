@@ -428,7 +428,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 
 	if ti.TableType == "VIEW" {
 		// View only attributes
-		formatViewDefinition(ti)
+		ti.formatViewDefinition()
 		if ti.ViewDefinition != oldti.ViewDefinition {
 			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.SQLFullName(), ti.ViewDefinition))
 		}
@@ -470,7 +470,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 
 // formatViewDefinition removes empty lines and changes tabs to 4 spaces
 // in order to compare view definitions correctly
-func formatViewDefinition(ti *SqlTableInfo) {
+func (ti *SqlTableInfo) formatViewDefinition() {
 
 	// remove empty lines
 	// 1\n\n\n2 => 1\n2

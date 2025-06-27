@@ -1,19 +1,23 @@
 # NEXT CHANGELOG
 
-## Release v1.83.0
+## Release v1.85.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
 
- * Support for `uc_securable` resource in `databricks_app` ([#4767](https://github.com/databricks/terraform-provider-databricks/pull/4767))
- * Add `schema_id` to the output of `databricks_schema` resource ([#4773](https://github.com/databricks/terraform-provider-databricks/pull/4773)).
+* Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4812](https://github.com/databricks/terraform-provider-databricks/pull/4812)).
+* Use single-node cluster for `databricks_sql_permissions` ([#4813](https://github.com/databricks/terraform-provider-databricks/pull/4813)).
 
 ### Bug Fixes
  * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
 ### Documentation
 
+* Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
+
 ### Exporter
 
 ### Internal Changes
+
+ * Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).

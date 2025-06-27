@@ -153,7 +153,6 @@ func (o *AddExchangeForListingResponse_SdkV2) SetExchangeForListing(ctx context.
 	o.ExchangeForListing = types.ListValueMust(t, vs)
 }
 
-// Get one batch of listings. One may specify up to 50 IDs per request.
 type BatchGetListingsRequest_SdkV2 struct {
 	Ids types.List `tfsdk:"-"`
 }
@@ -296,7 +295,6 @@ func (o *BatchGetListingsResponse_SdkV2) SetListings(ctx context.Context, v []Li
 	o.Listings = types.ListValueMust(t, vs)
 }
 
-// Get one batch of providers. One may specify up to 50 IDs per request.
 type BatchGetProvidersRequest_SdkV2 struct {
 	Ids types.List `tfsdk:"-"`
 }
@@ -1577,7 +1575,6 @@ func (o DataRefreshInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an exchange filter
 type DeleteExchangeFilterRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -1654,7 +1651,6 @@ func (o DeleteExchangeFilterResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete an exchange
 type DeleteExchangeRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -1731,7 +1727,6 @@ func (o DeleteExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a file
 type DeleteFileRequest_SdkV2 struct {
 	FileId types.String `tfsdk:"-"`
 }
@@ -1808,7 +1803,6 @@ func (o DeleteFileResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Uninstall from a listing
 type DeleteInstallationRequest_SdkV2 struct {
 	InstallationId types.String `tfsdk:"-"`
 
@@ -1889,7 +1883,6 @@ func (o DeleteInstallationResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a listing
 type DeleteListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -1966,7 +1959,6 @@ func (o DeleteListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete provider
 type DeleteProviderRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -2529,7 +2521,6 @@ func (o FileParent_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an exchange
 type GetExchangeRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -2643,7 +2634,6 @@ func (o *GetExchangeResponse_SdkV2) SetExchange(ctx context.Context, v Exchange_
 	o.Exchange = types.ListValueMust(t, vs)
 }
 
-// Get a file
 type GetFileRequest_SdkV2 struct {
 	FileId types.String `tfsdk:"-"`
 }
@@ -2805,7 +2795,6 @@ func (o GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) Type(ctx conte
 	}
 }
 
-// Get listing content metadata
 type GetListingContentMetadataRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 
@@ -2931,7 +2920,6 @@ func (o *GetListingContentMetadataResponse_SdkV2) SetSharedDataObjects(ctx conte
 	o.SharedDataObjects = types.ListValueMust(t, vs)
 }
 
-// Get listing
 type GetListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -3045,7 +3033,6 @@ func (o *GetListingResponse_SdkV2) SetListing(ctx context.Context, v Listing_Sdk
 	o.Listing = types.ListValueMust(t, vs)
 }
 
-// List listings
 type GetListingsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -3167,7 +3154,6 @@ func (o *GetListingsResponse_SdkV2) SetListings(ctx context.Context, v []Listing
 	o.Listings = types.ListValueMust(t, vs)
 }
 
-// Get the personalization request for a listing
 type GetPersonalizationRequestRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 }
@@ -3280,7 +3266,6 @@ func (o *GetPersonalizationRequestResponse_SdkV2) SetPersonalizationRequests(ctx
 	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
-// Get a provider
 type GetProviderRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -3639,7 +3624,6 @@ func (o *InstallationDetail_SdkV2) SetTokens(ctx context.Context, v []TokenInfo_
 	o.Tokens = types.ListValueMust(t, vs)
 }
 
-// List all installations
 type ListAllInstallationsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -3761,7 +3745,6 @@ func (o *ListAllInstallationsResponse_SdkV2) SetInstallations(ctx context.Contex
 	o.Installations = types.ListValueMust(t, vs)
 }
 
-// List all personalization requests
 type ListAllPersonalizationRequestsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -3883,7 +3866,6 @@ func (o *ListAllPersonalizationRequestsResponse_SdkV2) SetPersonalizationRequest
 	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
-// List exchange filters
 type ListExchangeFiltersRequest_SdkV2 struct {
 	ExchangeId types.String `tfsdk:"-"`
 
@@ -4009,7 +3991,6 @@ func (o *ListExchangeFiltersResponse_SdkV2) SetFilters(ctx context.Context, v []
 	o.Filters = types.ListValueMust(t, vs)
 }
 
-// List exchanges for listing
 type ListExchangesForListingRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 
@@ -4135,7 +4116,6 @@ func (o *ListExchangesForListingResponse_SdkV2) SetExchangeListing(ctx context.C
 	o.ExchangeListing = types.ListValueMust(t, vs)
 }
 
-// List exchanges
 type ListExchangesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -4257,7 +4237,6 @@ func (o *ListExchangesResponse_SdkV2) SetExchanges(ctx context.Context, v []Exch
 	o.Exchanges = types.ListValueMust(t, vs)
 }
 
-// List files
 type ListFilesRequest_SdkV2 struct {
 	FileParent types.List `tfsdk:"-"`
 
@@ -4413,7 +4392,6 @@ func (o *ListFilesResponse_SdkV2) SetFileInfos(ctx context.Context, v []FileInfo
 	o.FileInfos = types.ListValueMust(t, vs)
 }
 
-// List all listing fulfillments
 type ListFulfillmentsRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 
@@ -4539,7 +4517,6 @@ func (o *ListFulfillmentsResponse_SdkV2) SetFulfillments(ctx context.Context, v 
 	o.Fulfillments = types.ListValueMust(t, vs)
 }
 
-// List installations for a listing
 type ListInstallationsRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 
@@ -4665,7 +4642,6 @@ func (o *ListInstallationsResponse_SdkV2) SetInstallations(ctx context.Context, 
 	o.Installations = types.ListValueMust(t, vs)
 }
 
-// List listings for exchange
 type ListListingsForExchangeRequest_SdkV2 struct {
 	ExchangeId types.String `tfsdk:"-"`
 
@@ -4791,7 +4767,6 @@ func (o *ListListingsForExchangeResponse_SdkV2) SetExchangeListings(ctx context.
 	o.ExchangeListings = types.ListValueMust(t, vs)
 }
 
-// List listings
 type ListListingsRequest_SdkV2 struct {
 	// Matches any of the following asset types
 	Assets types.List `tfsdk:"-"`
@@ -5117,7 +5092,6 @@ func (o ListProviderAnalyticsDashboardResponse_SdkV2) Type(ctx context.Context) 
 	}
 }
 
-// List providers
 type ListProvidersRequest_SdkV2 struct {
 	IsFeatured types.Bool `tfsdk:"-"`
 
@@ -6687,7 +6661,6 @@ func (o RegionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove an exchange for listing
 type RemoveExchangeForListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6867,7 +6840,6 @@ func (o RepoInstallation_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Search listings
 type SearchListingsRequest_SdkV2 struct {
 	// Matches any of the following asset types
 	Assets types.List `tfsdk:"-"`

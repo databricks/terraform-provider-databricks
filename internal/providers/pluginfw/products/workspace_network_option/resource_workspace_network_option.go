@@ -68,8 +68,10 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan settin
 		return
 	}
 
-	var updateRequest = settings.UpdateWorkspaceNetworkOptionRequest{WorkspaceNetworkOption: workspace_network_option}
-	updateRequest.WorkspaceId = plan.WorkspaceId.ValueInt64()
+	updateRequest := settings.UpdateWorkspaceNetworkOptionRequest{
+		WorkspaceNetworkOption: workspace_network_option,
+		WorkspaceId:            plan.WorkspaceId.ValueInt64(),
+	}
 
 	response, err := client.WorkspaceNetworkConfiguration.UpdateWorkspaceNetworkOptionRpc(ctx, updateRequest)
 	if err != nil {

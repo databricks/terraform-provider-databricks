@@ -200,6 +200,9 @@ type CleanRoomAsset_SdkV2 struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
+	// The name of the clean room this asset belongs to. This is an output-only
+	// field to ensure proper resource identification.
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTable types.List `tfsdk:"foreign_table"`
@@ -247,6 +250,7 @@ func (newState *CleanRoomAsset_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c CleanRoomAsset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
@@ -299,6 +303,7 @@ func (o CleanRoomAsset_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"added_at":                    o.AddedAt,
 			"asset_type":                  o.AssetType,
+			"clean_room_name":             o.CleanRoomName,
 			"foreign_table":               o.ForeignTable,
 			"foreign_table_local_details": o.ForeignTableLocalDetails,
 			"name":                        o.Name,
@@ -317,8 +322,9 @@ func (o CleanRoomAsset_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CleanRoomAsset_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":   types.Int64Type,
-			"asset_type": types.StringType,
+			"added_at":        types.Int64Type,
+			"asset_type":      types.StringType,
+			"clean_room_name": types.StringType,
 			"foreign_table": basetypes.ListType{
 				ElemType: CleanRoomAssetForeignTable_SdkV2{}.Type(ctx),
 			},
@@ -1560,7 +1566,7 @@ func (c CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator"] = attrs["creator"].SetComputed()
@@ -1888,7 +1894,6 @@ func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Con
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
-// Create an asset
 type CreateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
 	Asset types.List `tfsdk:"asset"`
@@ -1959,7 +1964,6 @@ func (o *CreateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v Clea
 	o.Asset = types.ListValueMust(t, vs)
 }
 
-// Create an output catalog
 type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2108,7 +2112,6 @@ func (o *CreateCleanRoomOutputCatalogResponse_SdkV2) SetOutputCatalog(ctx contex
 	o.OutputCatalog = types.ListValueMust(t, vs)
 }
 
-// Create a clean room
 type CreateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 }
@@ -2174,15 +2177,14 @@ func (o *CreateCleanRoomRequest_SdkV2) SetCleanRoom(ctx context.Context, v Clean
 	o.CleanRoom = types.ListValueMust(t, vs)
 }
 
-// Delete an asset
 type DeleteCleanRoomAssetRequest_SdkV2 struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2203,9 +2205,9 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2213,9 +2215,9 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 func (o DeleteCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
@@ -2263,7 +2265,6 @@ func (o DeleteCleanRoomAssetResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete a clean room
 type DeleteCleanRoomRequest_SdkV2 struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
@@ -2330,15 +2331,14 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an asset
 type GetCleanRoomAssetRequest_SdkV2 struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2359,9 +2359,9 @@ func (o GetCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2369,14 +2369,13 @@ func (o GetCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 func (o GetCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
 
-// Get a clean room
 type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2412,7 +2411,6 @@ func (o GetCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List assets
 type ListCleanRoomAssetsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2538,7 +2536,6 @@ func (o *ListCleanRoomAssetsResponse_SdkV2) SetAssets(ctx context.Context, v []C
 	o.Assets = types.ListValueMust(t, vs)
 }
 
-// List notebook task runs
 type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2673,7 +2670,6 @@ func (o *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SetRuns(ctx context.Contex
 	o.Runs = types.ListValueMust(t, vs)
 }
 
-// List clean rooms
 type ListCleanRoomsRequest_SdkV2 struct {
 	// Maximum number of clean rooms to return (i.e., the page length). Defaults
 	// to 100.
@@ -2799,7 +2795,6 @@ func (o *ListCleanRoomsResponse_SdkV2) SetCleanRooms(ctx context.Context, v []Cl
 	o.CleanRooms = types.ListValueMust(t, vs)
 }
 
-// Update an asset
 type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
 	Asset types.List `tfsdk:"asset"`

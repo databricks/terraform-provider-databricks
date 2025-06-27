@@ -223,15 +223,14 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
 			SparkVersion:           "15.4.x-scala2.12",
-			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			NumWorkers:             1,
-			// CustomTags: map[string]string{
-			// 	"ResourceClass": "SingleNode",
-			// },
-			// SparkConf: map[string]string{
-			// 	"spark.databricks.cluster.profile": "singleNode",
-			// 	"spark.master":                     "local[*]",
-			// },
+			DataSecurityMode:       "USER_ISOLATION",
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+			SparkConf: map[string]string{
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
+			},
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",
@@ -244,10 +243,10 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Response: clusters.ClusterInfo{
 			ClusterID:        "bcd",
 			State:            "RUNNING",
-			DataSecurityMode: "LEGACY_TABLE_ACL",
-			// SparkConf: map[string]string{
-			// 	"spark.databricks.cluster.profile": "singleNode",
-			// },
+			DataSecurityMode: "USER_ISOLATION",
+			SparkConf: map[string]string{
+				"spark.databricks.cluster.profile": "singleNode",
+			},
 		},
 	},
 }
@@ -301,15 +300,14 @@ var createSharedCluster = []qa.HTTPFixture{
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
 			SparkVersion:           "15.4.x-scala2.12",
-			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			NumWorkers:             1,
-			// CustomTags: map[string]string{
-			// 	"ResourceClass": "SingleNode",
-			// },
-			// SparkConf: map[string]string{
-			// 	"spark.databricks.cluster.profile": "singleNode",
-			// 	"spark.master":                     "local[*]",
-			// },
+			DataSecurityMode:       "USER_ISOLATION",
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+			SparkConf: map[string]string{
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
+			},
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",

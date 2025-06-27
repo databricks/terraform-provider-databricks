@@ -125,22 +125,12 @@ resource "databricks_mws_workspaces" "this" {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
     master_ip_range   = "10.3.0.0/28"
   }
-
-  token {
-    comment = "Terraform"
-  }
-
   # this makes sure that the NAT is created for outbound traffic before creating the workspace
   depends_on = [google_compute_router_nat.nat]
 }
 
 output "databricks_host" {
   value = databricks_mws_workspaces.this.workspace_url
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 

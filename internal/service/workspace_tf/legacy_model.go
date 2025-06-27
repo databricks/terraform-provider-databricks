@@ -794,7 +794,6 @@ func (o DeleteAclResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a credential
 type DeleteCredentialsRequest_SdkV2 struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
@@ -872,7 +871,6 @@ func (o DeleteCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a repo
 type DeleteRepoRequest_SdkV2 struct {
 	// The ID for the corresponding repo to delete.
 	RepoId types.Int64 `tfsdk:"-"`
@@ -1163,7 +1161,6 @@ func (o DeleteSecretResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Export a workspace object
 type ExportRequest_SdkV2 struct {
 	// This specifies the format of the exported file. By default, this is
 	// `SOURCE`.
@@ -1274,7 +1271,6 @@ func (o ExportResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get secret ACL details
 type GetAclRequest_SdkV2 struct {
 	// The principal to fetch ACL information for.
 	Principal types.String `tfsdk:"-"`
@@ -1315,7 +1311,6 @@ func (o GetAclRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a credential entry
 type GetCredentialsRequest_SdkV2 struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
@@ -1411,7 +1406,6 @@ func (o GetCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get repo permission levels
 type GetRepoPermissionLevelsRequest_SdkV2 struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
@@ -1526,7 +1520,6 @@ func (o *GetRepoPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get repo permissions
 type GetRepoPermissionsRequest_SdkV2 struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
@@ -1563,7 +1556,6 @@ func (o GetRepoPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a repo
 type GetRepoRequest_SdkV2 struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
@@ -1709,7 +1701,6 @@ func (o *GetRepoResponse_SdkV2) SetSparseCheckout(ctx context.Context, v SparseC
 	o.SparseCheckout = types.ListValueMust(t, vs)
 }
 
-// Get a secret
 type GetSecretRequest_SdkV2 struct {
 	// The key to fetch secret for.
 	Key types.String `tfsdk:"-"`
@@ -1803,7 +1794,6 @@ func (o GetSecretResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get status
 type GetStatusRequest_SdkV2 struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"-"`
@@ -1840,7 +1830,6 @@ func (o GetStatusRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get workspace object permission levels
 type GetWorkspaceObjectPermissionLevelsRequest_SdkV2 struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
@@ -1959,7 +1948,6 @@ func (o *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SetPermissionLevels(c
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get workspace object permissions
 type GetWorkspaceObjectPermissionsRequest_SdkV2 struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
@@ -2129,7 +2117,6 @@ func (o ImportResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Lists ACLs
 type ListAclsRequest_SdkV2 struct {
 	// The name of the scope to fetch ACL information from.
 	Scope types.String `tfsdk:"-"`
@@ -2322,7 +2309,6 @@ func (o *ListCredentialsResponse_SdkV2) SetCredentials(ctx context.Context, v []
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
-// Get repos
 type ListReposRequest_SdkV2 struct {
 	// Token used to get the next page of results. If not specified, returns the
 	// first page of results as well as a next page token if there are more
@@ -2607,7 +2593,6 @@ func (o *ListScopesResponse_SdkV2) SetScopes(ctx context.Context, v []SecretScop
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
-// List secret keys
 type ListSecretsRequest_SdkV2 struct {
 	// The name of the scope to list secrets within.
 	Scope types.String `tfsdk:"-"`
@@ -2722,7 +2707,6 @@ func (o *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []SecretMe
 	o.Secrets = types.ListValueMust(t, vs)
 }
 
-// List contents
 type ListWorkspaceRequest_SdkV2 struct {
 	// UTC timestamp in milliseconds
 	NotebooksModifiedAfter types.Int64 `tfsdk:"-"`

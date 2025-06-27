@@ -44,6 +44,11 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 				name = "tf-{var.RANDOM}"
 				region = "{env.AWS_REGION}"
 			}
+
+			resource "databricks_mws_ncc_private_endpoint_rule" "this" {
+				network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+				resource_names = ["{env.TEST_LOGDELIVERY_BUCKET}"]
+			}
 			`,
 		}, acceptance.Step{
 			Template: `
@@ -52,6 +57,11 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 				name = "tf-{var.RANDOM}"
 				region = "{env.AWS_REGION}"
 			}
+				
+			resource "databricks_mws_ncc_private_endpoint_rule" "this" {
+				network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+				resource_names = ["{env.TEST_LOGDELIVERY_BUCKET}"]
+			}				
 			`,
 		})
 	}

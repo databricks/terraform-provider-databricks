@@ -287,16 +287,14 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
-			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			// TODO: return back after backend fix is rolled out
-			NumWorkers: 1,
-			// SparkConf: map[string]string{
-			// 	"spark.databricks.cluster.profile": "singleNode",
-			// 	"spark.master":                     "local[*]",
-			// },
-			// CustomTags: map[string]string{
-			// 	"ResourceClass": "SingleNode",
-			// },
+			DataSecurityMode:       "USER_ISOLATION",
+			SparkConf: map[string]string{
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
+			},
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
 		})
 	if err != nil {
 		return "", err

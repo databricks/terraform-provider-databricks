@@ -1680,7 +1680,6 @@ func (o BaseChunkInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Cancel statement execution
 type CancelExecutionRequest_SdkV2 struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
@@ -2338,7 +2337,6 @@ func (o *CreateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// Create an alert
 type CreateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 }
@@ -2665,6 +2663,22 @@ type CreateQueryVisualizationsLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"query_id"`
 	// The type of visualization: chart, table, pivot table, and so on.
 	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryVisualizationsLegacyRequest_SdkV2) {
+}
+
+func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateQueryVisualizationsLegacyRequest_SdkV2) {
+}
+
+func (c CreateQueryVisualizationsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["type"] = attrs["type"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryVisualizationsLegacyRequest.
@@ -4090,7 +4104,6 @@ func (o DateValue_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an alert
 type DeleteAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -4126,7 +4139,6 @@ func (o DeleteAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove a dashboard
 type DeleteDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -4162,7 +4174,6 @@ func (o DeleteDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove widget
 type DeleteDashboardWidgetRequest_SdkV2 struct {
 	// Widget ID returned by :method:dashboardwidgets/create
 	Id types.String `tfsdk:"-"`
@@ -4199,7 +4210,6 @@ func (o DeleteDashboardWidgetRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete a query
 type DeleteQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -4235,7 +4245,6 @@ func (o DeleteQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove visualization
 type DeleteQueryVisualizationsLegacyRequest_SdkV2 struct {
 	// Widget ID returned by :method:queryvizualisations/create
 	Id types.String `tfsdk:"-"`
@@ -4302,7 +4311,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Remove a visualization
 type DeleteVisualizationRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -4338,7 +4346,6 @@ func (o DeleteVisualizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a warehouse
 type DeleteWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -5607,7 +5614,7 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// [`USE SCHEMA`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html
 	Schema types.String `tfsdk:"schema"`
 	// The SQL statement to execute. The statement can optionally be
-	// parameterized, see `parameters`.
+	// parameterized, see `parameters`. The maximum query text size is 16 MiB.
 	Statement types.String `tfsdk:"statement"`
 	// The time in seconds the call will wait for the statement's result set as
 	// `Ns`, where `N` can be set to 0 or to a value between 5 and 50.
@@ -6032,7 +6039,6 @@ func (o ExternalQuerySourceJobInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6068,7 +6074,6 @@ func (o GetAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6104,7 +6109,6 @@ func (o GetAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an alert
 type GetAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -6140,7 +6144,6 @@ func (o GetAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Retrieve a definition
 type GetDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -6176,7 +6179,6 @@ func (o GetDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get object ACL
 type GetDbsqlPermissionRequest_SdkV2 struct {
 	// Object ID. An ACL is returned for the object with this UUID.
 	ObjectId types.String `tfsdk:"-"`
@@ -6217,7 +6219,6 @@ func (o GetDbsqlPermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a query definition.
 type GetQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -6253,7 +6254,6 @@ func (o GetQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a query
 type GetQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -6376,7 +6376,6 @@ func (o *GetResponse_SdkV2) SetAccessControlList(ctx context.Context, v []Access
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
-// Get status, manifest, and result first chunk
 type GetStatementRequest_SdkV2 struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
@@ -6414,7 +6413,6 @@ func (o GetStatementRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get result chunk by index
 type GetStatementResultChunkNRequest_SdkV2 struct {
 	ChunkIndex types.Int64 `tfsdk:"-"`
 	// The statement ID is returned upon successfully submitting a SQL
@@ -6455,7 +6453,6 @@ func (o GetStatementResultChunkNRequest_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get SQL warehouse permission levels
 type GetWarehousePermissionLevelsRequest_SdkV2 struct {
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
@@ -6570,7 +6567,6 @@ func (o *GetWarehousePermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx con
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get SQL warehouse permissions
 type GetWarehousePermissionsRequest_SdkV2 struct {
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
@@ -6607,7 +6603,6 @@ func (o GetWarehousePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get warehouse info
 type GetWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -7863,7 +7858,6 @@ func (o *LegacyVisualization_SdkV2) SetQuery(ctx context.Context, v LegacyQuery_
 	o.Query = types.ListValueMust(t, vs)
 }
 
-// List alerts
 type ListAlertsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8142,7 +8136,6 @@ func (o *ListAlertsResponseAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// List alerts
 type ListAlertsV2Request_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8264,7 +8257,6 @@ func (o *ListAlertsV2Response_SdkV2) SetResults(ctx context.Context, v []AlertV2
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// Get dashboard objects
 type ListDashboardsRequest_SdkV2 struct {
 	// Name of dashboard attribute to order by.
 	Order types.String `tfsdk:"-"`
@@ -8313,7 +8305,6 @@ func (o ListDashboardsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a list of queries
 type ListQueriesLegacyRequest_SdkV2 struct {
 	// Name of query attribute to order by. Default sort order is ascending.
 	// Append a dash (`-`) to order descending instead.
@@ -8375,7 +8366,6 @@ func (o ListQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List queries
 type ListQueriesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8503,9 +8493,11 @@ func (o *ListQueriesResponse_SdkV2) SetRes(ctx context.Context, v []QueryInfo_Sd
 	o.Res = types.ListValueMust(t, vs)
 }
 
-// List Queries
 type ListQueryHistoryRequest_SdkV2 struct {
-	// A filter to limit query history results. This field is optional.
+	// An optional filter object to limit query history results. Accepts
+	// parameters such as user IDs, endpoint IDs, and statuses to narrow the
+	// returned data. In a URL, the parameters of this filter are specified with
+	// dot notation. For example: `filter_by.statement_ids`.
 	FilterBy types.List `tfsdk:"-"`
 	// Whether to include the query metrics with each query. Only use this for a
 	// small subset of queries (max_results). Defaults to false.
@@ -8946,7 +8938,6 @@ func (o *ListResponse_SdkV2) SetResults(ctx context.Context, v []Dashboard_SdkV2
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// List visualizations on a query
 type ListVisualizationsForQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 
@@ -9072,7 +9063,6 @@ func (o *ListVisualizationsForQueryResponse_SdkV2) SetResults(ctx context.Contex
 	o.Results = types.ListValueMust(t, vs)
 }
 
-// List warehouses
 type ListWarehousesRequest_SdkV2 struct {
 	// Service Principal which will be used to fetch the list of warehouses. If
 	// not specified, the user from the session header is used.
@@ -9899,12 +9889,15 @@ func (o *QueryEditContent_SdkV2) SetTags(ctx context.Context, v []types.String) 
 }
 
 type QueryFilter_SdkV2 struct {
-	// A range filter for query submitted time. The time range must be <= 30
-	// days.
+	// A range filter for query submitted time. The time range must be less than
+	// or equal to 30 days.
 	QueryStartTimeRange types.List `tfsdk:"query_start_time_range"`
 	// A list of statement IDs.
 	StatementIds types.List `tfsdk:"statement_ids"`
-
+	// A list of statuses (QUEUED, RUNNING, CANCELED, FAILED, FINISHED) to match
+	// query results. Corresponds to the `status` field in the response.
+	// Filtering for multiple statuses is not recommended. Instead, opt to
+	// filter by a single status multiple times and then combine the results.
 	Statuses types.List `tfsdk:"statuses"`
 	// A list of user IDs who ran the queries.
 	UserIds types.List `tfsdk:"user_ids"`
@@ -10122,7 +10115,9 @@ type QueryInfo_SdkV2 struct {
 	// provided by client applications. While values are expected to remain
 	// static over time, this cannot be guaranteed.
 	ClientApplication types.String `tfsdk:"client_application"`
-	// Total execution time of the statement ( excluding result fetch time ).
+	// Total time of the statement execution. This value does not include the
+	// time taken to retrieve the results, which can result in a discrepancy
+	// between this value and the start-to-finish wall-clock time.
 	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
@@ -10522,6 +10517,10 @@ type QueryMetrics_SdkV2 struct {
 	// Size of data temporarily written to disk while executing the query, in
 	// bytes.
 	SpillToDiskBytes types.Int64 `tfsdk:"spill_to_disk_bytes"`
+	// sum of task times completed in a range of wall clock time, approximated
+	// to a configurable number of points aggregated over all stages and jobs in
+	// the query (based on task_total_time_ms)
+	TaskTimeOverTimeRange types.List `tfsdk:"task_time_over_time_range"`
 	// Sum of execution time for all of the query’s tasks, in milliseconds.
 	TaskTotalTimeMs types.Int64 `tfsdk:"task_total_time_ms"`
 	// Total execution time of the query from the client’s point of view, in
@@ -10558,6 +10557,8 @@ func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["rows_produced_count"] = attrs["rows_produced_count"].SetOptional()
 	attrs["rows_read_count"] = attrs["rows_read_count"].SetOptional()
 	attrs["spill_to_disk_bytes"] = attrs["spill_to_disk_bytes"].SetOptional()
+	attrs["task_time_over_time_range"] = attrs["task_time_over_time_range"].SetOptional()
+	attrs["task_time_over_time_range"] = attrs["task_time_over_time_range"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["task_total_time_ms"] = attrs["task_total_time_ms"].SetOptional()
 	attrs["total_time_ms"] = attrs["total_time_ms"].SetOptional()
 	attrs["write_remote_bytes"] = attrs["write_remote_bytes"].SetOptional()
@@ -10573,7 +10574,9 @@ func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a QueryMetrics_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"task_time_over_time_range": reflect.TypeOf(TaskTimeOverRange_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10602,6 +10605,7 @@ func (o QueryMetrics_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"rows_produced_count":                o.RowsProducedCount,
 			"rows_read_count":                    o.RowsReadCount,
 			"spill_to_disk_bytes":                o.SpillToDiskBytes,
+			"task_time_over_time_range":          o.TaskTimeOverTimeRange,
 			"task_total_time_ms":                 o.TaskTotalTimeMs,
 			"total_time_ms":                      o.TotalTimeMs,
 			"write_remote_bytes":                 o.WriteRemoteBytes,
@@ -10631,11 +10635,40 @@ func (o QueryMetrics_SdkV2) Type(ctx context.Context) attr.Type {
 			"rows_produced_count":                types.Int64Type,
 			"rows_read_count":                    types.Int64Type,
 			"spill_to_disk_bytes":                types.Int64Type,
-			"task_total_time_ms":                 types.Int64Type,
-			"total_time_ms":                      types.Int64Type,
-			"write_remote_bytes":                 types.Int64Type,
+			"task_time_over_time_range": basetypes.ListType{
+				ElemType: TaskTimeOverRange_SdkV2{}.Type(ctx),
+			},
+			"task_total_time_ms": types.Int64Type,
+			"total_time_ms":      types.Int64Type,
+			"write_remote_bytes": types.Int64Type,
 		},
 	}
+}
+
+// GetTaskTimeOverTimeRange returns the value of the TaskTimeOverTimeRange field in QueryMetrics_SdkV2 as
+// a TaskTimeOverRange_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryMetrics_SdkV2) GetTaskTimeOverTimeRange(ctx context.Context) (TaskTimeOverRange_SdkV2, bool) {
+	var e TaskTimeOverRange_SdkV2
+	if o.TaskTimeOverTimeRange.IsNull() || o.TaskTimeOverTimeRange.IsUnknown() {
+		return e, false
+	}
+	var v []TaskTimeOverRange_SdkV2
+	d := o.TaskTimeOverTimeRange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTaskTimeOverTimeRange sets the value of the TaskTimeOverTimeRange field in QueryMetrics_SdkV2.
+func (o *QueryMetrics_SdkV2) SetTaskTimeOverTimeRange(ctx context.Context, v TaskTimeOverRange_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_time_over_time_range"]
+	o.TaskTimeOverTimeRange = types.ListValueMust(t, vs)
 }
 
 type QueryOptions_SdkV2 struct {
@@ -11234,7 +11267,6 @@ func (o *RepeatedEndpointConfPairs_SdkV2) SetConfigurationPairs(ctx context.Cont
 	o.ConfigurationPairs = types.ListValueMust(t, vs)
 }
 
-// Restore a dashboard
 type RestoreDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -11270,7 +11302,6 @@ func (o RestoreDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Restore a query
 type RestoreQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
@@ -11774,6 +11805,20 @@ type SetRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRequest_SdkV2) {
+}
+
+func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetRequest_SdkV2) {
+}
+
+func (c SetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["objectId"] = attrs["objectId"].SetRequired()
+	attrs["objectType"] = attrs["objectType"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12241,7 +12286,6 @@ func (o SetWorkspaceWarehouseConfigResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Start a warehouse
 type StartRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -12631,7 +12675,6 @@ func (o *StatementStatus_SdkV2) SetError(ctx context.Context, v ServiceError_Sdk
 	o.Error = types.ListValueMust(t, vs)
 }
 
-// Stop a warehouse
 type StopRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -12752,6 +12795,139 @@ func (o Success_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
+		},
+	}
+}
+
+type TaskTimeOverRange_SdkV2 struct {
+	Entries types.List `tfsdk:"entries"`
+	// interval length for all entries (difference in start time and end time of
+	// an entry range) the same for all entries start time of first interval is
+	// query_start_time_ms
+	Interval types.Int64 `tfsdk:"interval"`
+}
+
+func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRange_SdkV2) {
+}
+
+func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRange_SdkV2) {
+}
+
+func (c TaskTimeOverRange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entries"] = attrs["entries"].SetOptional()
+	attrs["interval"] = attrs["interval"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskTimeOverRange.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskTimeOverRange_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"entries": reflect.TypeOf(TaskTimeOverRangeEntry_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskTimeOverRange_SdkV2
+// only implements ToObjectValue() and Type().
+func (o TaskTimeOverRange_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entries":  o.Entries,
+			"interval": o.Interval,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TaskTimeOverRange_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entries": basetypes.ListType{
+				ElemType: TaskTimeOverRangeEntry_SdkV2{}.Type(ctx),
+			},
+			"interval": types.Int64Type,
+		},
+	}
+}
+
+// GetEntries returns the value of the Entries field in TaskTimeOverRange_SdkV2 as
+// a slice of TaskTimeOverRangeEntry_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskTimeOverRange_SdkV2) GetEntries(ctx context.Context) ([]TaskTimeOverRangeEntry_SdkV2, bool) {
+	if o.Entries.IsNull() || o.Entries.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskTimeOverRangeEntry_SdkV2
+	d := o.Entries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntries sets the value of the Entries field in TaskTimeOverRange_SdkV2.
+func (o *TaskTimeOverRange_SdkV2) SetEntries(ctx context.Context, v []TaskTimeOverRangeEntry_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entries"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Entries = types.ListValueMust(t, vs)
+}
+
+type TaskTimeOverRangeEntry_SdkV2 struct {
+	// total task completion time in this time range, aggregated over all stages
+	// and jobs in the query
+	TaskCompletedTimeMs types.Int64 `tfsdk:"task_completed_time_ms"`
+}
+
+func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRangeEntry_SdkV2) {
+}
+
+func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRangeEntry_SdkV2) {
+}
+
+func (c TaskTimeOverRangeEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["task_completed_time_ms"] = attrs["task_completed_time_ms"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskTimeOverRangeEntry.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskTimeOverRangeEntry_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskTimeOverRangeEntry_SdkV2
+// only implements ToObjectValue() and Type().
+func (o TaskTimeOverRangeEntry_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"task_completed_time_ms": o.TaskCompletedTimeMs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TaskTimeOverRangeEntry_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"task_completed_time_ms": types.Int64Type,
 		},
 	}
 }
@@ -13003,6 +13179,21 @@ type TransferOwnershipRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransferOwnershipRequest_SdkV2) {
+}
+
+func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipRequest_SdkV2) {
+}
+
+func (c TransferOwnershipRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["new_owner"] = attrs["new_owner"].SetOptional()
+	attrs["objectId"] = attrs["objectId"].SetRequired()
+	attrs["objectId"] = attrs["objectId"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["objectType"] = attrs["objectType"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransferOwnershipRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13068,7 +13259,6 @@ func (o *TransferOwnershipRequest_SdkV2) SetObjectId(ctx context.Context, v Tran
 	o.ObjectId = types.ListValueMust(t, vs)
 }
 
-// Delete an alert
 type TrashAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13104,7 +13294,6 @@ func (o TrashAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an alert
 type TrashAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13140,7 +13329,6 @@ func (o TrashAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a query
 type TrashQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -13405,7 +13593,6 @@ func (o *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
-// Update an alert
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 	// UUID identifying the alert.

@@ -1665,7 +1665,6 @@ func (o *CreateIpAccessListResponse_SdkV2) SetIpAccessList(ctx context.Context, 
 	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
-// Create a network connectivity configuration
 type CreateNetworkConnectivityConfigRequest_SdkV2 struct {
 	// Properties of the new network connectivity configuration.
 	NetworkConnectivityConfig types.List `tfsdk:"network_connectivity_config"`
@@ -1791,7 +1790,6 @@ func (o CreateNetworkConnectivityConfiguration_SdkV2) Type(ctx context.Context) 
 	}
 }
 
-// Create a network policy
 type CreateNetworkPolicyRequest_SdkV2 struct {
 	NetworkPolicy types.List `tfsdk:"network_policy"`
 }
@@ -2088,13 +2086,16 @@ func (o *CreateOboTokenResponse_SdkV2) SetTokenInfo(ctx context.Context, v Token
 // Properties of the new private endpoint rule. Note that you must approve the
 // endpoint in Azure portal after initialization.
 type CreatePrivateEndpointRule_SdkV2 struct {
-	// Only used by private endpoints to customer-managed resources.
+	// Only used by private endpoints to customer-managed private endpoint
+	// services.
 	//
 	// Domain names of target private link service. When updating this field,
 	// the full list of target domain_names must be specified.
 	DomainNames types.List `tfsdk:"domain_names"`
-	// Only used by private endpoints to Azure first-party services. Enum: blob
-	// | dfs | sqlServer | mysqlServer
+	// The full target AWS endpoint service name that connects to the
+	// destination resources of the private endpoint.
+	EndpointService types.String `tfsdk:"endpoint_service"`
+	// Not used by customer-managed private endpoint services.
 	//
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
@@ -2102,6 +2103,13 @@ type CreatePrivateEndpointRule_SdkV2 struct {
 	GroupId types.String `tfsdk:"group_id"`
 	// The Azure resource ID of the target resource.
 	ResourceId types.String `tfsdk:"resource_id"`
+	// Only used by private endpoints towards AWS S3 service.
+	//
+	// The globally unique S3 bucket names that will be accessed via the VPC
+	// endpoint. The bucket names must be in the same region as the NCC/endpoint
+	// service. When updating this field, we perform full update on this field.
+	// Please ensure a full list of desired resource_names is provided.
+	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
 func (newState *CreatePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePrivateEndpointRule_SdkV2) {
@@ -2112,8 +2120,10 @@ func (newState *CreatePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(e
 
 func (c CreatePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
+	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetOptional()
-	attrs["resource_id"] = attrs["resource_id"].SetRequired()
+	attrs["resource_id"] = attrs["resource_id"].SetOptional()
+	attrs["resource_names"] = attrs["resource_names"].SetOptional()
 
 	return attrs
 }
@@ -2127,7 +2137,8 @@ func (c CreatePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[str
 // SDK values.
 func (a CreatePrivateEndpointRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"domain_names": reflect.TypeOf(types.String{}),
+		"domain_names":   reflect.TypeOf(types.String{}),
+		"resource_names": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2138,9 +2149,11 @@ func (o CreatePrivateEndpointRule_SdkV2) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"domain_names": o.DomainNames,
-			"group_id":     o.GroupId,
-			"resource_id":  o.ResourceId,
+			"domain_names":     o.DomainNames,
+			"endpoint_service": o.EndpointService,
+			"group_id":         o.GroupId,
+			"resource_id":      o.ResourceId,
+			"resource_names":   o.ResourceNames,
 		})
 }
 
@@ -2151,8 +2164,12 @@ func (o CreatePrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
 			"domain_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"group_id":    types.StringType,
-			"resource_id": types.StringType,
+			"endpoint_service": types.StringType,
+			"group_id":         types.StringType,
+			"resource_id":      types.StringType,
+			"resource_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -2183,7 +2200,32 @@ func (o *CreatePrivateEndpointRule_SdkV2) SetDomainNames(ctx context.Context, v 
 	o.DomainNames = types.ListValueMust(t, vs)
 }
 
-// Create a private endpoint rule
+// GetResourceNames returns the value of the ResourceNames field in CreatePrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePrivateEndpointRule_SdkV2) GetResourceNames(ctx context.Context) ([]types.String, bool) {
+	if o.ResourceNames.IsNull() || o.ResourceNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ResourceNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResourceNames sets the value of the ResourceNames field in CreatePrivateEndpointRule_SdkV2.
+func (o *CreatePrivateEndpointRule_SdkV2) SetResourceNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ResourceNames = types.ListValueMust(t, vs)
+}
+
 type CreatePrivateEndpointRuleRequest_SdkV2 struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -2578,6 +2620,301 @@ func (o *CspEnablementAccountSetting_SdkV2) SetCspEnablementAccount(ctx context.
 	o.CspEnablementAccount = types.ListValueMust(t, vs)
 }
 
+// Properties of the new private endpoint rule. Note that for private endpoints
+// towards a VPC endpoint service behind a customer-managed NLB, you must
+// approve the endpoint in AWS console after initialization.
+type CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2 struct {
+	// Databricks account ID. You can find your account ID from the Accounts
+	// Console.
+	AccountId types.String `tfsdk:"account_id"`
+	// The current status of this private endpoint. The private endpoint rules
+	// are effective only if the connection state is ESTABLISHED. Remember that
+	// you must approve new endpoints on your resources in the AWS console
+	// before they take effect. The possible values are: - PENDING: The endpoint
+	// has been created and pending approval. - ESTABLISHED: The endpoint has
+	// been approved and is ready to use in your serverless compute resources. -
+	// REJECTED: Connection was rejected by the private link resource owner. -
+	// DISCONNECTED: Connection was removed by the private link resource owner,
+	// the private endpoint becomes informative and should be deleted for
+	// clean-up. - EXPIRED: If the endpoint is created but not approved in 14
+	// days, it is EXPIRED.
+	ConnectionState types.String `tfsdk:"connection_state"`
+	// Time in epoch milliseconds when this object was created.
+	CreationTime types.Int64 `tfsdk:"creation_time"`
+	// Whether this private endpoint is deactivated.
+	Deactivated types.Bool `tfsdk:"deactivated"`
+	// Time in epoch milliseconds when this object was deactivated.
+	DeactivatedAt types.Int64 `tfsdk:"deactivated_at"`
+	// Only used by private endpoints towards a VPC endpoint service for
+	// customer-managed VPC endpoint service.
+	//
+	// The target AWS resource FQDNs accessible via the VPC endpoint service.
+	// When updating this field, we perform full update on this field. Please
+	// ensure a full list of desired domain_names is provided.
+	DomainNames types.List `tfsdk:"domain_names"`
+	// Only used by private endpoints towards an AWS S3 service.
+	//
+	// Update this field to activate/deactivate this private endpoint to allow
+	// egress access from serverless compute resources.
+	Enabled types.Bool `tfsdk:"enabled"`
+	// The full target AWS endpoint service name that connects to the
+	// destination resources of the private endpoint.
+	EndpointService types.String `tfsdk:"endpoint_service"`
+	// The ID of a network connectivity configuration, which is the parent
+	// resource of this private endpoint rule object.
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
+	// Only used by private endpoints towards AWS S3 service.
+	//
+	// The globally unique S3 bucket names that will be accessed via the VPC
+	// endpoint. The bucket names must be in the same region as the NCC/endpoint
+	// service. When updating this field, we perform full update on this field.
+	// Please ensure a full list of desired resource_names is provided.
+	ResourceNames types.List `tfsdk:"resource_names"`
+	// The ID of a private endpoint rule.
+	RuleId types.String `tfsdk:"rule_id"`
+	// Time in epoch milliseconds when this object was updated.
+	UpdatedTime types.Int64 `tfsdk:"updated_time"`
+	// The AWS VPC endpoint ID. You can use this ID to identify VPC endpoint
+	// created by Databricks.
+	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
+}
+
+func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) {
+}
+
+func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) {
+}
+
+func (c CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["deactivated"] = attrs["deactivated"].SetOptional()
+	attrs["deactivated_at"] = attrs["deactivated_at"].SetOptional()
+	attrs["domain_names"] = attrs["domain_names"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
+	attrs["resource_names"] = attrs["resource_names"].SetOptional()
+	attrs["rule_id"] = attrs["rule_id"].SetOptional()
+	attrs["updated_time"] = attrs["updated_time"].SetOptional()
+	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"domain_names":   reflect.TypeOf(types.String{}),
+		"resource_names": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":                     o.AccountId,
+			"connection_state":               o.ConnectionState,
+			"creation_time":                  o.CreationTime,
+			"deactivated":                    o.Deactivated,
+			"deactivated_at":                 o.DeactivatedAt,
+			"domain_names":                   o.DomainNames,
+			"enabled":                        o.Enabled,
+			"endpoint_service":               o.EndpointService,
+			"network_connectivity_config_id": o.NetworkConnectivityConfigId,
+			"resource_names":                 o.ResourceNames,
+			"rule_id":                        o.RuleId,
+			"updated_time":                   o.UpdatedTime,
+			"vpc_endpoint_id":                o.VpcEndpointId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":       types.StringType,
+			"connection_state": types.StringType,
+			"creation_time":    types.Int64Type,
+			"deactivated":      types.BoolType,
+			"deactivated_at":   types.Int64Type,
+			"domain_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"enabled":                        types.BoolType,
+			"endpoint_service":               types.StringType,
+			"network_connectivity_config_id": types.StringType,
+			"resource_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"rule_id":         types.StringType,
+			"updated_time":    types.Int64Type,
+			"vpc_endpoint_id": types.StringType,
+		},
+	}
+}
+
+// GetDomainNames returns the value of the DomainNames field in CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) GetDomainNames(ctx context.Context) ([]types.String, bool) {
+	if o.DomainNames.IsNull() || o.DomainNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DomainNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDomainNames sets the value of the DomainNames field in CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2.
+func (o *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) SetDomainNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["domain_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DomainNames = types.ListValueMust(t, vs)
+}
+
+// GetResourceNames returns the value of the ResourceNames field in CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) GetResourceNames(ctx context.Context) ([]types.String, bool) {
+	if o.ResourceNames.IsNull() || o.ResourceNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ResourceNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResourceNames sets the value of the ResourceNames field in CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2.
+func (o *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) SetResourceNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ResourceNames = types.ListValueMust(t, vs)
+}
+
+type DashboardEmailSubscriptions_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *DashboardEmailSubscriptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardEmailSubscriptions_SdkV2) {
+}
+
+func (newState *DashboardEmailSubscriptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState DashboardEmailSubscriptions_SdkV2) {
+}
+
+func (c DashboardEmailSubscriptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetRequired()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardEmailSubscriptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DashboardEmailSubscriptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardEmailSubscriptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DashboardEmailSubscriptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DashboardEmailSubscriptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in DashboardEmailSubscriptions_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardEmailSubscriptions_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := o.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in DashboardEmailSubscriptions_SdkV2.
+func (o *DashboardEmailSubscriptions_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	o.BooleanVal = types.ListValueMust(t, vs)
+}
+
 // This represents the setting configuration for the default namespace in the
 // Databricks workspace. Setting the default catalog for the workspace
 // determines the catalog that is used when queries do not reference a fully
@@ -2686,7 +3023,6 @@ func (o *DefaultNamespaceSetting_SdkV2) SetNamespace(ctx context.Context, v Stri
 	o.Namespace = types.ListValueMust(t, vs)
 }
 
-// Delete the account IP access toggle setting
 type DeleteAccountIpAccessEnableRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -2784,7 +3120,6 @@ func (o DeleteAccountIpAccessEnableResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Delete access list
 type DeleteAccountIpAccessListRequest_SdkV2 struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -2821,7 +3156,6 @@ func (o DeleteAccountIpAccessListRequest_SdkV2) Type(ctx context.Context) attr.T
 	}
 }
 
-// Delete the AI/BI dashboard embedding access policy
 type DeleteAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -2919,7 +3253,6 @@ func (o DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) Type(ctx 
 	}
 }
 
-// Delete AI/BI dashboard embedding approved domains
 type DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3017,7 +3350,103 @@ func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) Type(c
 	}
 }
 
-// Delete the default namespace setting
+type DeleteDashboardEmailSubscriptionsRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardEmailSubscriptionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDashboardEmailSubscriptionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDashboardEmailSubscriptionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteDashboardEmailSubscriptionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDashboardEmailSubscriptionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteDashboardEmailSubscriptionsResponse_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (newState *DeleteDashboardEmailSubscriptionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDashboardEmailSubscriptionsResponse_SdkV2) {
+}
+
+func (newState *DeleteDashboardEmailSubscriptionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardEmailSubscriptionsResponse_SdkV2) {
+}
+
+func (c DeleteDashboardEmailSubscriptionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardEmailSubscriptionsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDashboardEmailSubscriptionsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDashboardEmailSubscriptionsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteDashboardEmailSubscriptionsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDashboardEmailSubscriptionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type DeleteDefaultNamespaceSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3115,7 +3544,6 @@ func (o DeleteDefaultNamespaceSettingResponse_SdkV2) Type(ctx context.Context) a
 	}
 }
 
-// Delete Legacy Access Disablement Status
 type DeleteDisableLegacyAccessRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3213,7 +3641,6 @@ func (o DeleteDisableLegacyAccessResponse_SdkV2) Type(ctx context.Context) attr.
 	}
 }
 
-// Delete the disable legacy DBFS setting
 type DeleteDisableLegacyDbfsRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3311,7 +3738,6 @@ func (o DeleteDisableLegacyDbfsResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Delete the disable legacy features setting
 type DeleteDisableLegacyFeaturesRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3409,7 +3835,6 @@ func (o DeleteDisableLegacyFeaturesResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Delete access list
 type DeleteIpAccessListRequest_SdkV2 struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -3446,7 +3871,6 @@ func (o DeleteIpAccessListRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the enable partner powered AI features workspace setting
 type DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3544,7 +3968,6 @@ func (o DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) Type(ctx context.Co
 	}
 }
 
-// Delete a network connectivity configuration
 type DeleteNetworkConnectivityConfigurationRequest_SdkV2 struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -3611,7 +4034,6 @@ func (o DeleteNetworkConnectivityConfigurationResponse_SdkV2) Type(ctx context.C
 	}
 }
 
-// Delete a network policy
 type DeleteNetworkPolicyRequest_SdkV2 struct {
 	// The unique identifier of the network policy to delete.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -3678,7 +4100,6 @@ func (o DeleteNetworkPolicyRpcResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete a notification destination
 type DeleteNotificationDestinationRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -3714,7 +4135,6 @@ func (o DeleteNotificationDestinationRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Delete Personal Compute setting
 type DeletePersonalComputeSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3812,7 +4232,6 @@ func (o DeletePersonalComputeSettingResponse_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Delete a private endpoint rule
 type DeletePrivateEndpointRuleRequest_SdkV2 struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -3883,7 +4302,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the restrict workspace admins setting
 type DeleteRestrictWorkspaceAdminsSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3981,7 +4399,103 @@ func (o DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) Type(ctx context.Con
 	}
 }
 
-// Delete a token
+type DeleteSqlResultsDownloadRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSqlResultsDownloadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteSqlResultsDownloadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSqlResultsDownloadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteSqlResultsDownloadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteSqlResultsDownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteSqlResultsDownloadResponse_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (newState *DeleteSqlResultsDownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSqlResultsDownloadResponse_SdkV2) {
+}
+
+func (newState *DeleteSqlResultsDownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteSqlResultsDownloadResponse_SdkV2) {
+}
+
+func (c DeleteSqlResultsDownloadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSqlResultsDownloadResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteSqlResultsDownloadResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSqlResultsDownloadResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteSqlResultsDownloadResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteSqlResultsDownloadResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type DeleteTokenManagementRequest_SdkV2 struct {
 	// The ID of the token to revoke.
 	TokenId types.String `tfsdk:"-"`
@@ -5119,7 +5633,7 @@ type EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2 struct {
 	AzureStorageService types.String `tfsdk:"azure_storage_service"`
 
 	BucketName types.String `tfsdk:"bucket_name"`
-	// The region of the S3 bucket.
+
 	Region types.String `tfsdk:"region"`
 	// The type of storage destination.
 	StorageDestinationType types.String `tfsdk:"storage_destination_type"`
@@ -6333,7 +6847,6 @@ func (o GenericWebhookConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the account IP access toggle setting
 type GetAccountIpAccessEnableRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6376,7 +6889,6 @@ func (o GetAccountIpAccessEnableRequest_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get IP access list
 type GetAccountIpAccessListRequest_SdkV2 struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -6413,7 +6925,6 @@ func (o GetAccountIpAccessListRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Retrieve the AI/BI dashboard embedding access policy
 type GetAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6456,7 +6967,6 @@ func (o GetAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) Type(ctx cont
 	}
 }
 
-// Retrieve the list of domains approved to host embedded AI/BI dashboards
 type GetAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6499,7 +7009,6 @@ func (o GetAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) Type(ctx c
 	}
 }
 
-// Get the automatic cluster update setting
 type GetAutomaticClusterUpdateSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6542,7 +7051,6 @@ func (o GetAutomaticClusterUpdateSettingRequest_SdkV2) Type(ctx context.Context)
 	}
 }
 
-// Get the compliance security profile setting
 type GetComplianceSecurityProfileSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6585,7 +7093,6 @@ func (o GetComplianceSecurityProfileSettingRequest_SdkV2) Type(ctx context.Conte
 	}
 }
 
-// Get the compliance security profile setting for new workspaces
 type GetCspEnablementAccountSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6628,7 +7135,48 @@ func (o GetCspEnablementAccountSettingRequest_SdkV2) Type(ctx context.Context) a
 	}
 }
 
-// Get the default namespace setting
+type GetDashboardEmailSubscriptionsRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardEmailSubscriptionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetDashboardEmailSubscriptionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDashboardEmailSubscriptionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetDashboardEmailSubscriptionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetDashboardEmailSubscriptionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type GetDefaultNamespaceSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6671,7 +7219,6 @@ func (o GetDefaultNamespaceSettingRequest_SdkV2) Type(ctx context.Context) attr.
 	}
 }
 
-// Retrieve Legacy Access Disablement Status
 type GetDisableLegacyAccessRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6714,7 +7261,6 @@ func (o GetDisableLegacyAccessRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Get the disable legacy DBFS setting
 type GetDisableLegacyDbfsRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6757,7 +7303,6 @@ func (o GetDisableLegacyDbfsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the disable legacy features setting
 type GetDisableLegacyFeaturesRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6800,7 +7345,6 @@ func (o GetDisableLegacyFeaturesRequest_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get the enhanced security monitoring setting
 type GetEnhancedSecurityMonitoringSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6843,7 +7387,6 @@ func (o GetEnhancedSecurityMonitoringSettingRequest_SdkV2) Type(ctx context.Cont
 	}
 }
 
-// Get the enhanced security monitoring setting for new workspaces
 type GetEsmEnablementAccountSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6886,7 +7429,6 @@ func (o GetEsmEnablementAccountSettingRequest_SdkV2) Type(ctx context.Context) a
 	}
 }
 
-// Get access list
 type GetIpAccessListRequest_SdkV2 struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -7080,7 +7622,6 @@ func (o *GetIpAccessListsResponse_SdkV2) SetIpAccessLists(ctx context.Context, v
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
-// Get the enable partner powered AI features account setting
 type GetLlmProxyPartnerPoweredAccountRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7123,7 +7664,6 @@ func (o GetLlmProxyPartnerPoweredAccountRequest_SdkV2) Type(ctx context.Context)
 	}
 }
 
-// Get the enforcement status of partner powered AI features account setting
 type GetLlmProxyPartnerPoweredEnforceRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7166,7 +7706,6 @@ func (o GetLlmProxyPartnerPoweredEnforceRequest_SdkV2) Type(ctx context.Context)
 	}
 }
 
-// Get the enable partner powered AI features workspace setting
 type GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7209,7 +7748,6 @@ func (o GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) Type(ctx context.Contex
 	}
 }
 
-// Get a network connectivity configuration
 type GetNetworkConnectivityConfigurationRequest_SdkV2 struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -7246,7 +7784,6 @@ func (o GetNetworkConnectivityConfigurationRequest_SdkV2) Type(ctx context.Conte
 	}
 }
 
-// Get a network policy
 type GetNetworkPolicyRequest_SdkV2 struct {
 	// The unique identifier of the network policy to retrieve.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -7283,7 +7820,6 @@ func (o GetNetworkPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a notification destination
 type GetNotificationDestinationRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -7319,7 +7855,6 @@ func (o GetNotificationDestinationRequest_SdkV2) Type(ctx context.Context) attr.
 	}
 }
 
-// Get Personal Compute setting
 type GetPersonalComputeSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7362,7 +7897,6 @@ func (o GetPersonalComputeSettingRequest_SdkV2) Type(ctx context.Context) attr.T
 	}
 }
 
-// Gets a private endpoint rule
 type GetPrivateEndpointRuleRequest_SdkV2 struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -7403,7 +7937,6 @@ func (o GetPrivateEndpointRuleRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Get the restrict workspace admins setting
 type GetRestrictWorkspaceAdminsSettingRequest_SdkV2 struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7446,7 +7979,48 @@ func (o GetRestrictWorkspaceAdminsSettingRequest_SdkV2) Type(ctx context.Context
 	}
 }
 
-// Check configuration status
+type GetSqlResultsDownloadRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSqlResultsDownloadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetSqlResultsDownloadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSqlResultsDownloadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetSqlResultsDownloadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetSqlResultsDownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type GetStatusRequest_SdkV2 struct {
 	Keys types.String `tfsdk:"-"`
 }
@@ -7482,7 +8056,6 @@ func (o GetStatusRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get token info
 type GetTokenManagementRequest_SdkV2 struct {
 	// The ID of the token to get.
 	TokenId types.String `tfsdk:"-"`
@@ -7676,7 +8249,6 @@ func (o *GetTokenResponse_SdkV2) SetTokenInfo(ctx context.Context, v TokenInfo_S
 	o.TokenInfo = types.ListValueMust(t, vs)
 }
 
-// Get workspace network configuration
 type GetWorkspaceNetworkOptionRequest_SdkV2 struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -7920,91 +8492,6 @@ func (o *ListIpAccessListResponse_SdkV2) SetIpAccessLists(ctx context.Context, v
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
-// The private endpoint rule list was successfully retrieved.
-type ListNccAzurePrivateEndpointRulesResponse_SdkV2 struct {
-	Items types.List `tfsdk:"items"`
-	// A token that can be used to get the next page of results. If null, there
-	// are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token"`
-}
-
-func (newState *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNccAzurePrivateEndpointRulesResponse_SdkV2) {
-}
-
-func (newState *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListNccAzurePrivateEndpointRulesResponse_SdkV2) {
-}
-
-func (c ListNccAzurePrivateEndpointRulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["items"] = attrs["items"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNccAzurePrivateEndpointRulesResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListNccAzurePrivateEndpointRulesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"items": reflect.TypeOf(NccAzurePrivateEndpointRule_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListNccAzurePrivateEndpointRulesResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListNccAzurePrivateEndpointRulesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"items":           o.Items,
-			"next_page_token": o.NextPageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListNccAzurePrivateEndpointRulesResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items": basetypes.ListType{
-				ElemType: NccAzurePrivateEndpointRule_SdkV2{}.Type(ctx),
-			},
-			"next_page_token": types.StringType,
-		},
-	}
-}
-
-// GetItems returns the value of the Items field in ListNccAzurePrivateEndpointRulesResponse_SdkV2 as
-// a slice of NccAzurePrivateEndpointRule_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListNccAzurePrivateEndpointRulesResponse_SdkV2) GetItems(ctx context.Context) ([]NccAzurePrivateEndpointRule_SdkV2, bool) {
-	if o.Items.IsNull() || o.Items.IsUnknown() {
-		return nil, false
-	}
-	var v []NccAzurePrivateEndpointRule_SdkV2
-	d := o.Items.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetItems sets the value of the Items field in ListNccAzurePrivateEndpointRulesResponse_SdkV2.
-func (o *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SetItems(ctx context.Context, v []NccAzurePrivateEndpointRule_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Items = types.ListValueMust(t, vs)
-}
-
-// List network connectivity configurations
 type ListNetworkConnectivityConfigurationsRequest_SdkV2 struct {
 	// Pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -8125,7 +8612,6 @@ func (o *ListNetworkConnectivityConfigurationsResponse_SdkV2) SetItems(ctx conte
 	o.Items = types.ListValueMust(t, vs)
 }
 
-// List network policies
 type ListNetworkPoliciesRequest_SdkV2 struct {
 	// Pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -8246,7 +8732,6 @@ func (o *ListNetworkPoliciesResponse_SdkV2) SetItems(ctx context.Context, v []Ac
 	o.Items = types.ListValueMust(t, vs)
 }
 
-// List notification destinations
 type ListNotificationDestinationsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8428,7 +8913,6 @@ func (o ListNotificationDestinationsResult_SdkV2) Type(ctx context.Context) attr
 	}
 }
 
-// List private endpoint rules
 type ListPrivateEndpointRulesRequest_SdkV2 struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -8467,6 +8951,90 @@ func (o ListPrivateEndpointRulesRequest_SdkV2) Type(ctx context.Context) attr.Ty
 			"page_token":                     types.StringType,
 		},
 	}
+}
+
+// The private endpoint rule list was successfully retrieved.
+type ListPrivateEndpointRulesResponse_SdkV2 struct {
+	Items types.List `tfsdk:"items"`
+	// A token that can be used to get the next page of results. If null, there
+	// are no more results to show.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListPrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPrivateEndpointRulesResponse_SdkV2) {
+}
+
+func (newState *ListPrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPrivateEndpointRulesResponse_SdkV2) {
+}
+
+func (c ListPrivateEndpointRulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["items"] = attrs["items"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPrivateEndpointRulesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListPrivateEndpointRulesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"items": reflect.TypeOf(NccPrivateEndpointRule_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPrivateEndpointRulesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListPrivateEndpointRulesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"items":           o.Items,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListPrivateEndpointRulesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"items": basetypes.ListType{
+				ElemType: NccPrivateEndpointRule_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetItems returns the value of the Items field in ListPrivateEndpointRulesResponse_SdkV2 as
+// a slice of NccPrivateEndpointRule_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPrivateEndpointRulesResponse_SdkV2) GetItems(ctx context.Context) ([]NccPrivateEndpointRule_SdkV2, bool) {
+	if o.Items.IsNull() || o.Items.IsUnknown() {
+		return nil, false
+	}
+	var v []NccPrivateEndpointRule_SdkV2
+	d := o.Items.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetItems sets the value of the Items field in ListPrivateEndpointRulesResponse_SdkV2.
+func (o *ListPrivateEndpointRulesResponse_SdkV2) SetItems(ctx context.Context, v []NccPrivateEndpointRule_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Items = types.ListValueMust(t, vs)
 }
 
 type ListPublicTokensResponse_SdkV2 struct {
@@ -8547,7 +9115,6 @@ func (o *ListPublicTokensResponse_SdkV2) SetTokenInfos(ctx context.Context, v []
 	o.TokenInfos = types.ListValueMust(t, vs)
 }
 
-// List all tokens
 type ListTokenManagementRequest_SdkV2 struct {
 	// User ID of the user that created the token.
 	CreatedById types.Int64 `tfsdk:"-"`
@@ -9117,15 +9684,14 @@ type NccAzurePrivateEndpointRule_SdkV2 struct {
 	Deactivated types.Bool `tfsdk:"deactivated"`
 	// Time in epoch milliseconds when this object was deactivated.
 	DeactivatedAt types.Int64 `tfsdk:"deactivated_at"`
-	// Only used by private endpoints to customer-managed resources.
+	// Not used by customer-managed private endpoint services.
 	//
 	// Domain names of target private link service. When updating this field,
 	// the full list of target domain_names must be specified.
 	DomainNames types.List `tfsdk:"domain_names"`
 	// The name of the Azure private endpoint resource.
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// Only used by private endpoints to Azure first-party services. Enum: blob
-	// | dfs | sqlServer | mysqlServer
+	// Only used by private endpoints to Azure first-party services.
 	//
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
@@ -9605,6 +10171,10 @@ func (o *NccEgressDefaultRules_SdkV2) SetAzureServiceEndpointRule(ctx context.Co
 // Target rule controls the egress rules that are dedicated to specific
 // resources.
 type NccEgressTargetRules_SdkV2 struct {
+	// AWS private endpoint rule controls the AWS private endpoint based egress
+	// rules.
+	AwsPrivateEndpointRules types.List `tfsdk:"aws_private_endpoint_rules"`
+
 	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
@@ -9615,6 +10185,7 @@ func (newState *NccEgressTargetRules_SdkV2) SyncEffectiveFieldsDuringRead(existi
 }
 
 func (c NccEgressTargetRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_private_endpoint_rules"] = attrs["aws_private_endpoint_rules"].SetOptional()
 	attrs["azure_private_endpoint_rules"] = attrs["azure_private_endpoint_rules"].SetOptional()
 
 	return attrs
@@ -9629,6 +10200,7 @@ func (c NccEgressTargetRules_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a NccEgressTargetRules_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"aws_private_endpoint_rules":   reflect.TypeOf(CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2{}),
 		"azure_private_endpoint_rules": reflect.TypeOf(NccAzurePrivateEndpointRule_SdkV2{}),
 	}
 }
@@ -9640,6 +10212,7 @@ func (o NccEgressTargetRules_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"aws_private_endpoint_rules":   o.AwsPrivateEndpointRules,
 			"azure_private_endpoint_rules": o.AzurePrivateEndpointRules,
 		})
 }
@@ -9648,11 +10221,40 @@ func (o NccEgressTargetRules_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (o NccEgressTargetRules_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"aws_private_endpoint_rules": basetypes.ListType{
+				ElemType: CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2{}.Type(ctx),
+			},
 			"azure_private_endpoint_rules": basetypes.ListType{
 				ElemType: NccAzurePrivateEndpointRule_SdkV2{}.Type(ctx),
 			},
 		},
 	}
+}
+
+// GetAwsPrivateEndpointRules returns the value of the AwsPrivateEndpointRules field in NccEgressTargetRules_SdkV2 as
+// a slice of CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressTargetRules_SdkV2) GetAwsPrivateEndpointRules(ctx context.Context) ([]CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2, bool) {
+	if o.AwsPrivateEndpointRules.IsNull() || o.AwsPrivateEndpointRules.IsUnknown() {
+		return nil, false
+	}
+	var v []CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2
+	d := o.AwsPrivateEndpointRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAwsPrivateEndpointRules sets the value of the AwsPrivateEndpointRules field in NccEgressTargetRules_SdkV2.
+func (o *NccEgressTargetRules_SdkV2) SetAwsPrivateEndpointRules(ctx context.Context, v []CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_private_endpoint_rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AwsPrivateEndpointRules = types.ListValueMust(t, vs)
 }
 
 // GetAzurePrivateEndpointRules returns the value of the AzurePrivateEndpointRules field in NccEgressTargetRules_SdkV2 as
@@ -9681,9 +10283,224 @@ func (o *NccEgressTargetRules_SdkV2) SetAzurePrivateEndpointRules(ctx context.Co
 	o.AzurePrivateEndpointRules = types.ListValueMust(t, vs)
 }
 
+// Properties of the new private endpoint rule. Note that you must approve the
+// endpoint in Azure portal after initialization.
+type NccPrivateEndpointRule_SdkV2 struct {
+	// Databricks account ID. You can find your account ID from the Accounts
+	// Console.
+	AccountId types.String `tfsdk:"account_id"`
+	// The current status of this private endpoint. The private endpoint rules
+	// are effective only if the connection state is ESTABLISHED. Remember that
+	// you must approve new endpoints on your resources in the Cloud console
+	// before they take effect. The possible values are: - PENDING: The endpoint
+	// has been created and pending approval. - ESTABLISHED: The endpoint has
+	// been approved and is ready to use in your serverless compute resources. -
+	// REJECTED: Connection was rejected by the private link resource owner. -
+	// DISCONNECTED: Connection was removed by the private link resource owner,
+	// the private endpoint becomes informative and should be deleted for
+	// clean-up. - EXPIRED: If the endpoint was created but not approved in 14
+	// days, it will be EXPIRED.
+	ConnectionState types.String `tfsdk:"connection_state"`
+	// Time in epoch milliseconds when this object was created.
+	CreationTime types.Int64 `tfsdk:"creation_time"`
+	// Whether this private endpoint is deactivated.
+	Deactivated types.Bool `tfsdk:"deactivated"`
+	// Time in epoch milliseconds when this object was deactivated.
+	DeactivatedAt types.Int64 `tfsdk:"deactivated_at"`
+	// Only used by private endpoints to customer-managed private endpoint
+	// services.
+	//
+	// Domain names of target private link service. When updating this field,
+	// the full list of target domain_names must be specified.
+	DomainNames types.List `tfsdk:"domain_names"`
+	// Only used by private endpoints towards an AWS S3 service.
+	//
+	// Update this field to activate/deactivate this private endpoint to allow
+	// egress access from serverless compute resources.
+	Enabled types.Bool `tfsdk:"enabled"`
+	// The name of the Azure private endpoint resource.
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// The full target AWS endpoint service name that connects to the
+	// destination resources of the private endpoint.
+	EndpointService types.String `tfsdk:"endpoint_service"`
+	// Not used by customer-managed private endpoint services.
+	//
+	// The sub-resource type (group ID) of the target resource. Note that to
+	// connect to workspace root storage (root DBFS), you need two endpoints,
+	// one for blob and one for dfs.
+	GroupId types.String `tfsdk:"group_id"`
+	// The ID of a network connectivity configuration, which is the parent
+	// resource of this private endpoint rule object.
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
+	// The Azure resource ID of the target resource.
+	ResourceId types.String `tfsdk:"resource_id"`
+	// Only used by private endpoints towards AWS S3 service.
+	//
+	// The globally unique S3 bucket names that will be accessed via the VPC
+	// endpoint. The bucket names must be in the same region as the NCC/endpoint
+	// service. When updating this field, we perform full update on this field.
+	// Please ensure a full list of desired resource_names is provided.
+	ResourceNames types.List `tfsdk:"resource_names"`
+	// The ID of a private endpoint rule.
+	RuleId types.String `tfsdk:"rule_id"`
+	// Time in epoch milliseconds when this object was updated.
+	UpdatedTime types.Int64 `tfsdk:"updated_time"`
+	// The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint
+	// created by Databricks.
+	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
+}
+
+func (newState *NccPrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccPrivateEndpointRule_SdkV2) {
+}
+
+func (newState *NccPrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccPrivateEndpointRule_SdkV2) {
+}
+
+func (c NccPrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["deactivated"] = attrs["deactivated"].SetOptional()
+	attrs["deactivated_at"] = attrs["deactivated_at"].SetOptional()
+	attrs["domain_names"] = attrs["domain_names"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
+	attrs["resource_id"] = attrs["resource_id"].SetOptional()
+	attrs["resource_names"] = attrs["resource_names"].SetOptional()
+	attrs["rule_id"] = attrs["rule_id"].SetOptional()
+	attrs["updated_time"] = attrs["updated_time"].SetOptional()
+	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NccPrivateEndpointRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NccPrivateEndpointRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"domain_names":   reflect.TypeOf(types.String{}),
+		"resource_names": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NccPrivateEndpointRule_SdkV2
+// only implements ToObjectValue() and Type().
+func (o NccPrivateEndpointRule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":                     o.AccountId,
+			"connection_state":               o.ConnectionState,
+			"creation_time":                  o.CreationTime,
+			"deactivated":                    o.Deactivated,
+			"deactivated_at":                 o.DeactivatedAt,
+			"domain_names":                   o.DomainNames,
+			"enabled":                        o.Enabled,
+			"endpoint_name":                  o.EndpointName,
+			"endpoint_service":               o.EndpointService,
+			"group_id":                       o.GroupId,
+			"network_connectivity_config_id": o.NetworkConnectivityConfigId,
+			"resource_id":                    o.ResourceId,
+			"resource_names":                 o.ResourceNames,
+			"rule_id":                        o.RuleId,
+			"updated_time":                   o.UpdatedTime,
+			"vpc_endpoint_id":                o.VpcEndpointId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NccPrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":       types.StringType,
+			"connection_state": types.StringType,
+			"creation_time":    types.Int64Type,
+			"deactivated":      types.BoolType,
+			"deactivated_at":   types.Int64Type,
+			"domain_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"enabled":                        types.BoolType,
+			"endpoint_name":                  types.StringType,
+			"endpoint_service":               types.StringType,
+			"group_id":                       types.StringType,
+			"network_connectivity_config_id": types.StringType,
+			"resource_id":                    types.StringType,
+			"resource_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"rule_id":         types.StringType,
+			"updated_time":    types.Int64Type,
+			"vpc_endpoint_id": types.StringType,
+		},
+	}
+}
+
+// GetDomainNames returns the value of the DomainNames field in NccPrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccPrivateEndpointRule_SdkV2) GetDomainNames(ctx context.Context) ([]types.String, bool) {
+	if o.DomainNames.IsNull() || o.DomainNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DomainNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDomainNames sets the value of the DomainNames field in NccPrivateEndpointRule_SdkV2.
+func (o *NccPrivateEndpointRule_SdkV2) SetDomainNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["domain_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DomainNames = types.ListValueMust(t, vs)
+}
+
+// GetResourceNames returns the value of the ResourceNames field in NccPrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccPrivateEndpointRule_SdkV2) GetResourceNames(ctx context.Context) ([]types.String, bool) {
+	if o.ResourceNames.IsNull() || o.ResourceNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ResourceNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResourceNames sets the value of the ResourceNames field in NccPrivateEndpointRule_SdkV2.
+func (o *NccPrivateEndpointRule_SdkV2) SetResourceNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ResourceNames = types.ListValueMust(t, vs)
+}
+
 // Properties of the new network connectivity configuration.
 type NetworkConnectivityConfiguration_SdkV2 struct {
-	// The Databricks account ID that hosts the credential.
+	// Your Databricks account ID. You can find your account ID in your
+	// Databricks accounts console.
 	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
@@ -10749,6 +11566,104 @@ func (o SlackConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"url_set": types.BoolType,
 		},
 	}
+}
+
+type SqlResultsDownload_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *SqlResultsDownload_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlResultsDownload_SdkV2) {
+}
+
+func (newState *SqlResultsDownload_SdkV2) SyncEffectiveFieldsDuringRead(existingState SqlResultsDownload_SdkV2) {
+}
+
+func (c SqlResultsDownload_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetRequired()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlResultsDownload.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlResultsDownload_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlResultsDownload_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SqlResultsDownload_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SqlResultsDownload_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in SqlResultsDownload_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlResultsDownload_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := o.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in SqlResultsDownload_SdkV2.
+func (o *SqlResultsDownload_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	o.BooleanVal = types.ListValueMust(t, vs)
 }
 
 type StringMessage_SdkV2 struct {
@@ -11954,6 +12869,107 @@ func (o *UpdateCspEnablementAccountSettingRequest_SdkV2) GetSetting(ctx context.
 
 // SetSetting sets the value of the Setting field in UpdateCspEnablementAccountSettingRequest_SdkV2.
 func (o *UpdateCspEnablementAccountSettingRequest_SdkV2) SetSetting(ctx context.Context, v CspEnablementAccountSetting_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
+// Details required to update a setting.
+type UpdateDashboardEmailSubscriptionsRequest_SdkV2 struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.List `tfsdk:"setting"`
+}
+
+func (newState *UpdateDashboardEmailSubscriptionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardEmailSubscriptionsRequest_SdkV2) {
+}
+
+func (newState *UpdateDashboardEmailSubscriptionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardEmailSubscriptionsRequest_SdkV2) {
+}
+
+func (c UpdateDashboardEmailSubscriptionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDashboardEmailSubscriptionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDashboardEmailSubscriptionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(DashboardEmailSubscriptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDashboardEmailSubscriptionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateDashboardEmailSubscriptionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDashboardEmailSubscriptionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: DashboardEmailSubscriptions_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateDashboardEmailSubscriptionsRequest_SdkV2 as
+// a DashboardEmailSubscriptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDashboardEmailSubscriptionsRequest_SdkV2) GetSetting(ctx context.Context) (DashboardEmailSubscriptions_SdkV2, bool) {
+	var e DashboardEmailSubscriptions_SdkV2
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardEmailSubscriptions_SdkV2
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDashboardEmailSubscriptionsRequest_SdkV2.
+func (o *UpdateDashboardEmailSubscriptionsRequest_SdkV2) SetSetting(ctx context.Context, v DashboardEmailSubscriptions_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
 	o.Setting = types.ListValueMust(t, vs)
@@ -13283,9 +14299,9 @@ func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) SetSetting(ctx cont
 	o.Setting = types.ListValueMust(t, vs)
 }
 
-// Update a private endpoint rule
-type UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2 struct {
-	// Your Network Connectivity Configuration ID.
+type UpdateNccPrivateEndpointRuleRequest_SdkV2 struct {
+	// The ID of a network connectivity configuration, which is the parent
+	// resource of this private endpoint rule object.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
 	// Properties of the new private endpoint rule. Note that you must approve
 	// the endpoint in Azure portal after initialization.
@@ -13301,23 +14317,23 @@ type UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2 struct {
 	UpdateMask types.String `tfsdk:"-"`
 }
 
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNccAzurePrivateEndpointRulePublicRequest.
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNccPrivateEndpointRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
 // retrieve the type information of the elements in complex fields at runtime. The values of the map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateNccPrivateEndpointRuleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"private_endpoint_rule": reflect.TypeOf(UpdatePrivateEndpointRule_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateNccPrivateEndpointRuleRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateNccPrivateEndpointRuleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -13329,7 +14345,7 @@ func (o UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) ToObjectValue(ctx 
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (o UpdateNccPrivateEndpointRuleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"network_connectivity_config_id": types.StringType,
@@ -13342,10 +14358,10 @@ func (o UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) Type(ctx context.C
 	}
 }
 
-// GetPrivateEndpointRule returns the value of the PrivateEndpointRule field in UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2 as
+// GetPrivateEndpointRule returns the value of the PrivateEndpointRule field in UpdateNccPrivateEndpointRuleRequest_SdkV2 as
 // a UpdatePrivateEndpointRule_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) GetPrivateEndpointRule(ctx context.Context) (UpdatePrivateEndpointRule_SdkV2, bool) {
+func (o *UpdateNccPrivateEndpointRuleRequest_SdkV2) GetPrivateEndpointRule(ctx context.Context) (UpdatePrivateEndpointRule_SdkV2, bool) {
 	var e UpdatePrivateEndpointRule_SdkV2
 	if o.PrivateEndpointRule.IsNull() || o.PrivateEndpointRule.IsUnknown() {
 		return e, false
@@ -13361,14 +14377,13 @@ func (o *UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) GetPrivateEndpoin
 	return v[0], true
 }
 
-// SetPrivateEndpointRule sets the value of the PrivateEndpointRule field in UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2.
-func (o *UpdateNccAzurePrivateEndpointRulePublicRequest_SdkV2) SetPrivateEndpointRule(ctx context.Context, v UpdatePrivateEndpointRule_SdkV2) {
+// SetPrivateEndpointRule sets the value of the PrivateEndpointRule field in UpdateNccPrivateEndpointRuleRequest_SdkV2.
+func (o *UpdateNccPrivateEndpointRuleRequest_SdkV2) SetPrivateEndpointRule(ctx context.Context, v UpdatePrivateEndpointRule_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["private_endpoint_rule"]
 	o.PrivateEndpointRule = types.ListValueMust(t, vs)
 }
 
-// Update a network policy
 type UpdateNetworkPolicyRequest_SdkV2 struct {
 	NetworkPolicy types.List `tfsdk:"network_policy"`
 	// The unique identifier for the network policy.
@@ -13632,11 +14647,24 @@ func (o *UpdatePersonalComputeSettingRequest_SdkV2) SetSetting(ctx context.Conte
 // Properties of the new private endpoint rule. Note that you must approve the
 // endpoint in Azure portal after initialization.
 type UpdatePrivateEndpointRule_SdkV2 struct {
-	// Only used by private endpoints to customer-managed resources.
+	// Only used by private endpoints to customer-managed private endpoint
+	// services.
 	//
 	// Domain names of target private link service. When updating this field,
 	// the full list of target domain_names must be specified.
 	DomainNames types.List `tfsdk:"domain_names"`
+	// Only used by private endpoints towards an AWS S3 service.
+	//
+	// Update this field to activate/deactivate this private endpoint to allow
+	// egress access from serverless compute resources.
+	Enabled types.Bool `tfsdk:"enabled"`
+	// Only used by private endpoints towards AWS S3 service.
+	//
+	// The globally unique S3 bucket names that will be accessed via the VPC
+	// endpoint. The bucket names must be in the same region as the NCC/endpoint
+	// service. When updating this field, we perform full update on this field.
+	// Please ensure a full list of desired resource_names is provided.
+	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
 func (newState *UpdatePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePrivateEndpointRule_SdkV2) {
@@ -13647,6 +14675,8 @@ func (newState *UpdatePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(e
 
 func (c UpdatePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["resource_names"] = attrs["resource_names"].SetOptional()
 
 	return attrs
 }
@@ -13660,7 +14690,8 @@ func (c UpdatePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[str
 // SDK values.
 func (a UpdatePrivateEndpointRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"domain_names": reflect.TypeOf(types.String{}),
+		"domain_names":   reflect.TypeOf(types.String{}),
+		"resource_names": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -13671,7 +14702,9 @@ func (o UpdatePrivateEndpointRule_SdkV2) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"domain_names": o.DomainNames,
+			"domain_names":   o.DomainNames,
+			"enabled":        o.Enabled,
+			"resource_names": o.ResourceNames,
 		})
 }
 
@@ -13680,6 +14713,10 @@ func (o UpdatePrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"domain_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"enabled": types.BoolType,
+			"resource_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -13710,6 +14747,32 @@ func (o *UpdatePrivateEndpointRule_SdkV2) SetDomainNames(ctx context.Context, v 
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["domain_names"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DomainNames = types.ListValueMust(t, vs)
+}
+
+// GetResourceNames returns the value of the ResourceNames field in UpdatePrivateEndpointRule_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePrivateEndpointRule_SdkV2) GetResourceNames(ctx context.Context) ([]types.String, bool) {
+	if o.ResourceNames.IsNull() || o.ResourceNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ResourceNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResourceNames sets the value of the ResourceNames field in UpdatePrivateEndpointRule_SdkV2.
+func (o *UpdatePrivateEndpointRule_SdkV2) SetResourceNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ResourceNames = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse_SdkV2 struct {
@@ -13843,7 +14906,107 @@ func (o *UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) SetSetting(ctx conte
 	o.Setting = types.ListValueMust(t, vs)
 }
 
-// Update workspace network configuration
+// Details required to update a setting.
+type UpdateSqlResultsDownloadRequest_SdkV2 struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.List `tfsdk:"setting"`
+}
+
+func (newState *UpdateSqlResultsDownloadRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSqlResultsDownloadRequest_SdkV2) {
+}
+
+func (newState *UpdateSqlResultsDownloadRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateSqlResultsDownloadRequest_SdkV2) {
+}
+
+func (c UpdateSqlResultsDownloadRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSqlResultsDownloadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateSqlResultsDownloadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(SqlResultsDownload_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSqlResultsDownloadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateSqlResultsDownloadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateSqlResultsDownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: SqlResultsDownload_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateSqlResultsDownloadRequest_SdkV2 as
+// a SqlResultsDownload_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateSqlResultsDownloadRequest_SdkV2) GetSetting(ctx context.Context) (SqlResultsDownload_SdkV2, bool) {
+	var e SqlResultsDownload_SdkV2
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []SqlResultsDownload_SdkV2
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateSqlResultsDownloadRequest_SdkV2.
+func (o *UpdateSqlResultsDownloadRequest_SdkV2) SetSetting(ctx context.Context, v SqlResultsDownload_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 type UpdateWorkspaceNetworkOptionRequest_SdkV2 struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`

@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -39,7 +39,7 @@ func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.Me
 }
 
 func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, catalog_tf.DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, database_tf.DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
@@ -54,30 +54,32 @@ func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseInstanceResource) update(ctx context.Context, plan catalog_tf.DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *DatabaseInstanceResource) update(ctx context.Context, plan database_tf.DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
 	}
 
-	var database_instance catalog.DatabaseInstance
+	var database_instance database.DatabaseInstance
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if diags.HasError() {
 		return
 	}
 
-	var updateRequest = catalog.UpdateDatabaseInstanceRequest{DatabaseInstance: database_instance}
-	updateRequest.Name = plan.Name.ValueString()
-	updateRequest.UpdateMask = "admin_password,admin_rolename,capacity,stopped"
+	updateRequest := database.UpdateDatabaseInstanceRequest{
+		DatabaseInstance: database_instance,
+		Name:             plan.Name.ValueString(),
+		UpdateMask:       "capacity,stopped",
+	}
 
-	response, err := client.DatabaseInstances.UpdateDatabaseInstance(ctx, updateRequest)
+	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update database_instance", err.Error())
 		return
 	}
 
-	var newState catalog_tf.DatabaseInstance
+	var newState database_tf.DatabaseInstance
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -96,25 +98,29 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	var plan catalog_tf.DatabaseInstance
+	var plan database_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var database_instance catalog.DatabaseInstance
+	var database_instance database.DatabaseInstance
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.DatabaseInstances.CreateDatabaseInstance(ctx, catalog.CreateDatabaseInstanceRequest{DatabaseInstance: database_instance})
+	createRequest := database.CreateDatabaseInstanceRequest{
+		DatabaseInstance: database_instance,
+	}
+
+	response, err := client.Database.CreateDatabaseInstance(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create database_instance", err.Error())
 		return
 	}
 
-	var newState catalog_tf.DatabaseInstance
+	var newState database_tf.DatabaseInstance
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -139,19 +145,19 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var existingState catalog_tf.DatabaseInstance
+	var existingState database_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest catalog.GetDatabaseInstanceRequest
+	var readRequest database.GetDatabaseInstanceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.DatabaseInstances.GetDatabaseInstance(ctx, readRequest)
+	response, err := client.Database.GetDatabaseInstance(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
@@ -162,7 +168,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var newState catalog_tf.DatabaseInstance
+	var newState database_tf.DatabaseInstance
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -176,7 +182,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan catalog_tf.DatabaseInstance
+	var plan database_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,19 +200,19 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	var state catalog_tf.DatabaseInstance
+	var state database_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest catalog.DeleteDatabaseInstanceRequest
+	var deleteRequest database.DeleteDatabaseInstanceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := client.DatabaseInstances.DeleteDatabaseInstance(ctx, deleteRequest)
+	err := client.Database.DeleteDatabaseInstance(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_instance", err.Error())
 		return

@@ -538,7 +538,7 @@ func TestGroupCacheAndSearchError(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=10000&startIndex=1",
 			Status:       404,
 			Response: &apierr.APIError{
 				ErrorCode:  "NOT_FOUND",
@@ -1677,7 +1677,7 @@ func TestImportStorageCredentialGrants(t *testing.T) {
 			Method:       "GET",
 			Status:       200,
 			Resource:     "/api/2.1/unity-catalog/permissions/storage_credential/abc",
-			Response: sdk_uc.PermissionsList{
+			Response: sdk_uc.GetPermissionsResponse{
 				PrivilegeAssignments: []sdk_uc.PrivilegeAssignment{
 					{
 						Principal:  "principal",
@@ -1720,7 +1720,7 @@ func TestImportExternalLocationGrants(t *testing.T) {
 			Method:       "GET",
 			Status:       200,
 			Resource:     "/api/2.1/unity-catalog/permissions/external-locations/abc",
-			Response: sdk_uc.PermissionsList{
+			Response: sdk_uc.GetPermissionsResponse{
 				PrivilegeAssignments: []sdk_uc.PrivilegeAssignment{
 					{
 						Principal:  "principal",

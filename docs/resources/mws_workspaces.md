@@ -85,13 +85,6 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id               = databricks_mws_networks.this.network_id
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -201,19 +194,12 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
-  token {}
-
   # Optional Custom Tags
   custom_tags = {
 
     "SoldToCode" = "1234"
 
   }
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -264,13 +250,6 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -304,13 +283,6 @@ resource "databricks_mws_workspaces" "this" {
       project_id = data.google_client_config.current.project
     }
   }
-
-  token {}
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -338,9 +310,11 @@ The following arguments are available:
 * `pricing_tier` - (Optional) - The pricing tier of the workspace.
 * `compute_mode` - (Optional) - The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace.
 
-### token block
+~> Databricks strongly recommends using OAuth instead of PATs for user account client authentication and authorization due to the improved security
 
-You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
+### token block (legacy)
+
+You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
 -> Tokens managed by `token {}` block are recreated when expired.
 

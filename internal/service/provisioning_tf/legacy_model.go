@@ -1780,7 +1780,6 @@ func (o *CustomerManagedKey_SdkV2) SetUseCases(ctx context.Context, v []types.St
 	o.UseCases = types.ListValueMust(t, vs)
 }
 
-// Delete credential configuration
 type DeleteCredentialRequest_SdkV2 struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -1817,7 +1816,6 @@ func (o DeleteCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete encryption key configuration
 type DeleteEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -1854,7 +1852,6 @@ func (o DeleteEncryptionKeyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a network configuration
 type DeleteNetworkRequest_SdkV2 struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -1891,7 +1888,6 @@ func (o DeleteNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a private access settings object
 type DeletePrivateAccesRequest_SdkV2 struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -1958,7 +1954,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete storage configuration
 type DeleteStorageRequest_SdkV2 struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -1995,7 +1990,6 @@ func (o DeleteStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete VPC endpoint configuration
 type DeleteVpcEndpointRequest_SdkV2 struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2032,7 +2026,6 @@ func (o DeleteVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a workspace
 type DeleteWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2411,7 +2404,6 @@ func (o GcpVpcEndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get credential configuration
 type GetCredentialRequest_SdkV2 struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -2448,7 +2440,6 @@ func (o GetCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get encryption key configuration
 type GetEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -2485,7 +2476,6 @@ func (o GetEncryptionKeyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a network configuration
 type GetNetworkRequest_SdkV2 struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -2522,7 +2512,6 @@ func (o GetNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a private access settings object
 type GetPrivateAccesRequest_SdkV2 struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -2559,7 +2548,6 @@ func (o GetPrivateAccesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get storage configuration
 type GetStorageRequest_SdkV2 struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -2596,7 +2584,6 @@ func (o GetStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a VPC endpoint configuration
 type GetVpcEndpointRequest_SdkV2 struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2633,7 +2620,6 @@ func (o GetVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a workspace
 type GetWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`

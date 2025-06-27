@@ -1501,7 +1501,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_model_serving"].Schema
 			var mse serving.CreateServingEndpoint
 			common.DataToStructPointer(r.Data, s, &mse)
-			if mse.Config.ServedEntities != nil {
+			if mse.Config != nil {
 				for _, se := range mse.Config.ServedEntities {
 					if se.EntityName != "" {
 						if se.EntityVersion != "" { // we have an UC model or model from model registry
@@ -1549,7 +1549,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
-			if mse.Config.AutoCaptureConfig != nil && mse.Config.AutoCaptureConfig.CatalogName != "" &&
+			if mse.Config != nil && mse.Config.AutoCaptureConfig != nil && mse.Config.AutoCaptureConfig.CatalogName != "" &&
 				mse.Config.AutoCaptureConfig.SchemaName != "" {
 				ic.Emit(&resource{
 					Resource: "databricks_schema",

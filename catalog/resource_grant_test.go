@@ -18,7 +18,7 @@ func TestResourceGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -47,7 +47,7 @@ func TestResourceGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -63,7 +63,7 @@ func TestResourceGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -101,7 +101,7 @@ func TestResourceGrantCreateMetastoreId(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -130,7 +130,7 @@ func TestResourceGrantCreateMetastoreId(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -146,7 +146,7 @@ func TestResourceGrantCreateMetastoreId(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -198,7 +198,7 @@ func TestResourceGrantWaitUntilReady(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -228,7 +228,7 @@ func TestResourceGrantWaitUntilReady(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -244,7 +244,7 @@ func TestResourceGrantWaitUntilReady(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -260,7 +260,7 @@ func TestResourceGrantWaitUntilReady(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -291,7 +291,7 @@ func TestResourceGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "someone-else",
@@ -315,7 +315,7 @@ func TestResourceGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -331,7 +331,7 @@ func TestResourceGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -387,7 +387,7 @@ func TestResourceGrantDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -415,7 +415,7 @@ func TestResourceGrantDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "someone-else",
@@ -504,28 +504,24 @@ func TestResourceGrantCreatePrivilegesRequired(t *testing.T) {
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		catalog.PermissionsList{ // config
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a"},
-				},
-				{
-					Principal:  "c",
-					Privileges: []catalog.Privilege{"a"},
-				},
+		[]catalog.PrivilegeAssignment{ // config
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a"},
+			},
+			{
+				Principal:  "c",
+				Privileges: []catalog.Privilege{"a"},
 			},
 		},
-		catalog.PermissionsList{
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a"},
-				},
-				{
-					Principal:  "b",
-					Privileges: []catalog.Privilege{"a"},
-				},
+		[]catalog.PrivilegeAssignment{ // platform
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a"},
+			},
+			{
+				Principal:  "b",
+				Privileges: []catalog.Privilege{"a"},
 			},
 		},
 	)
@@ -535,28 +531,24 @@ func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T
 func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		catalog.PermissionsList{ // config
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{
-				{
-					Principal:  "A",
-					Privileges: []catalog.Privilege{"a"},
-				},
-				{
-					Principal:  "c",
-					Privileges: []catalog.Privilege{"a"},
-				},
+		[]catalog.PrivilegeAssignment{ // config
+			{
+				Principal:  "A",
+				Privileges: []catalog.Privilege{"a"},
+			},
+			{
+				Principal:  "c",
+				Privileges: []catalog.Privilege{"a"},
 			},
 		},
-		catalog.PermissionsList{
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a"},
-				},
-				{
-					Principal:  "b",
-					Privileges: []catalog.Privilege{"a"},
-				},
+		[]catalog.PrivilegeAssignment{ // platform
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a"},
+			},
+			{
+				Principal:  "b",
+				Privileges: []catalog.Privilege{"a"},
 			},
 		},
 	)
@@ -566,20 +558,16 @@ func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		catalog.PermissionsList{ // config
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a"},
-				},
+		[]catalog.PrivilegeAssignment{ // config
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a"},
 			},
 		},
-		catalog.PermissionsList{
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a", "b"},
-				},
+		[]catalog.PrivilegeAssignment{ // platform
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a", "b"},
 			},
 		},
 	)
@@ -592,20 +580,16 @@ func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 func TestResourceGrantPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		catalog.PermissionsList{ // config
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"a", "b"},
-				},
+		[]catalog.PrivilegeAssignment{ // config
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"a", "b"},
 			},
 		},
-		catalog.PermissionsList{
-			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
-				{
-					Principal:  "a",
-					Privileges: []catalog.Privilege{"b", "c"},
-				},
+		[]catalog.PrivilegeAssignment{ // platform
+			{
+				Principal:  "a",
+				Privileges: []catalog.Privilege{"b", "c"},
 			},
 		},
 	)
@@ -622,7 +606,7 @@ func TestResourceGrantShareGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
 				},
 			},
@@ -641,7 +625,7 @@ func TestResourceGrantShareGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -653,7 +637,7 @@ func TestResourceGrantShareGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -680,7 +664,7 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -704,7 +688,7 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -720,7 +704,7 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -756,7 +740,7 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
 				},
 			},
@@ -775,7 +759,7 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -787,7 +771,7 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -814,7 +798,7 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
 				},
 			},
@@ -833,7 +817,7 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
@@ -845,7 +829,7 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
-				Response: catalog.PermissionsList{
+				Response: catalog.GetPermissionsResponse{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",

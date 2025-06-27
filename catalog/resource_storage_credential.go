@@ -48,6 +48,9 @@ func ResourceStorageCredential() common.Resource {
 			common.DataToStructPointer(d, storageCredentialSchema, &create)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Get("name").(string)
+			if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				update.DatabricksGcpServiceAccount = nil
+			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
@@ -97,7 +100,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, bindings.BindingsSecurableTypeStorageCredential)
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -255,7 +258,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, bindings.BindingsSecurableTypeStorageCredential)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

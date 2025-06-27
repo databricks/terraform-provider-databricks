@@ -12,7 +12,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -156,7 +155,8 @@ func TestAccLibraryUpdate(t *testing.T) {
 
 var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
 	"databricks": func() (tfprotov6.ProviderServer, error) {
-		return providers.GetProviderServer(context.Background(), providers.WithSdkV2FallbackOptions(pluginfw.WithSdkV2ResourceFallbacks("databricks_library")))
+		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_library"})
+		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 	},
 }
 
@@ -175,32 +175,6 @@ func TestAccLibraryUpdateTransitionFromSdkV2(t *testing.T) {
 				`,
 		},
 		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					package = "networkx"
-				}
-			}
-			`,
-		},
-	)
-}
-
-// Testing the transition from plugin framework to sdkv2.
-func TestAccLibraryUpdateTransitionFromPluginFw(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-					cluster_id = databricks_cluster.this.id
-					pypi {
-						repo = "https://pypi.org/simple"
-						package = "databricks-sdk"
-					}
-				}
-				`,
-		},
-		acceptance.Step{
-			ProtoV6ProviderFactories: sdkV2FallbackFactory,
 			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
 				cluster_id = databricks_cluster.this.id
 				pypi {

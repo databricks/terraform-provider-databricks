@@ -23,6 +23,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -72,6 +74,7 @@ func (c CleanRoom_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["output_catalog"] = attrs["output_catalog"].SetComputed()
 	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -197,6 +200,9 @@ type CleanRoomAsset_SdkV2 struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
+	// The name of the clean room this asset belongs to. This is an output-only
+	// field to ensure proper resource identification.
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTable types.List `tfsdk:"foreign_table"`
@@ -244,6 +250,7 @@ func (newState *CleanRoomAsset_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c CleanRoomAsset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
@@ -296,6 +303,7 @@ func (o CleanRoomAsset_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"added_at":                    o.AddedAt,
 			"asset_type":                  o.AssetType,
+			"clean_room_name":             o.CleanRoomName,
 			"foreign_table":               o.ForeignTable,
 			"foreign_table_local_details": o.ForeignTableLocalDetails,
 			"name":                        o.Name,
@@ -314,8 +322,9 @@ func (o CleanRoomAsset_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CleanRoomAsset_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":   types.Int64Type,
-			"asset_type": types.StringType,
+			"added_at":        types.Int64Type,
+			"asset_type":      types.StringType,
+			"clean_room_name": types.StringType,
 			"foreign_table": basetypes.ListType{
 				ElemType: CleanRoomAssetForeignTable_SdkV2{}.Type(ctx),
 			},
@@ -683,7 +692,7 @@ func (o CleanRoomAssetForeignTableLocalDetails_SdkV2) Type(ctx context.Context) 
 }
 
 type CleanRoomAssetNotebook_SdkV2 struct {
-	// Server generated checksum that represents the notebook version.
+	// Server generated etag that represents the notebook version.
 	Etag types.String `tfsdk:"etag"`
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
@@ -693,7 +702,7 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	// All existing approvals or rejections
 	Reviews types.List `tfsdk:"reviews"`
 	// collaborators that can run the notebook
-	RunnerCollaborators types.List `tfsdk:"runner_collaborators"`
+	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
 func (newState *CleanRoomAssetNotebook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook_SdkV2) {
@@ -707,7 +716,7 @@ func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetOptional()
 	attrs["reviews"] = attrs["reviews"].SetOptional()
-	attrs["runner_collaborators"] = attrs["runner_collaborators"].SetOptional()
+	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
 
 	return attrs
 }
@@ -721,8 +730,8 @@ func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (a CleanRoomAssetNotebook_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"reviews":              reflect.TypeOf(CleanRoomNotebookReview_SdkV2{}),
-		"runner_collaborators": reflect.TypeOf(CleanRoomCollaborator_SdkV2{}),
+		"reviews":                     reflect.TypeOf(CleanRoomNotebookReview_SdkV2{}),
+		"runner_collaborator_aliases": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -733,11 +742,11 @@ func (o CleanRoomAssetNotebook_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":                 o.Etag,
-			"notebook_content":     o.NotebookContent,
-			"review_state":         o.ReviewState,
-			"reviews":              o.Reviews,
-			"runner_collaborators": o.RunnerCollaborators,
+			"etag":                        o.Etag,
+			"notebook_content":            o.NotebookContent,
+			"review_state":                o.ReviewState,
+			"reviews":                     o.Reviews,
+			"runner_collaborator_aliases": o.RunnerCollaboratorAliases,
 		})
 }
 
@@ -751,8 +760,8 @@ func (o CleanRoomAssetNotebook_SdkV2) Type(ctx context.Context) attr.Type {
 			"reviews": basetypes.ListType{
 				ElemType: CleanRoomNotebookReview_SdkV2{}.Type(ctx),
 			},
-			"runner_collaborators": basetypes.ListType{
-				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
+			"runner_collaborator_aliases": basetypes.ListType{
+				ElemType: types.StringType,
 			},
 		},
 	}
@@ -784,30 +793,30 @@ func (o *CleanRoomAssetNotebook_SdkV2) SetReviews(ctx context.Context, v []Clean
 	o.Reviews = types.ListValueMust(t, vs)
 }
 
-// GetRunnerCollaborators returns the value of the RunnerCollaborators field in CleanRoomAssetNotebook_SdkV2 as
-// a slice of CleanRoomCollaborator_SdkV2 values.
+// GetRunnerCollaboratorAliases returns the value of the RunnerCollaboratorAliases field in CleanRoomAssetNotebook_SdkV2 as
+// a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetNotebook_SdkV2) GetRunnerCollaborators(ctx context.Context) ([]CleanRoomCollaborator_SdkV2, bool) {
-	if o.RunnerCollaborators.IsNull() || o.RunnerCollaborators.IsUnknown() {
+func (o *CleanRoomAssetNotebook_SdkV2) GetRunnerCollaboratorAliases(ctx context.Context) ([]types.String, bool) {
+	if o.RunnerCollaboratorAliases.IsNull() || o.RunnerCollaboratorAliases.IsUnknown() {
 		return nil, false
 	}
-	var v []CleanRoomCollaborator_SdkV2
-	d := o.RunnerCollaborators.ElementsAs(ctx, &v, true)
+	var v []types.String
+	d := o.RunnerCollaboratorAliases.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
 	return v, true
 }
 
-// SetRunnerCollaborators sets the value of the RunnerCollaborators field in CleanRoomAssetNotebook_SdkV2.
-func (o *CleanRoomAssetNotebook_SdkV2) SetRunnerCollaborators(ctx context.Context, v []CleanRoomCollaborator_SdkV2) {
+// SetRunnerCollaboratorAliases sets the value of the RunnerCollaboratorAliases field in CleanRoomAssetNotebook_SdkV2.
+func (o *CleanRoomAssetNotebook_SdkV2) SetRunnerCollaboratorAliases(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
+		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runner_collaborators"]
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runner_collaborator_aliases"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.RunnerCollaborators = types.ListValueMust(t, vs)
+	o.RunnerCollaboratorAliases = types.ListValueMust(t, vs)
 }
 
 type CleanRoomAssetTable_SdkV2 struct {
@@ -918,7 +927,7 @@ func (c CleanRoomAssetTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs m
 // SDK values.
 func (a CleanRoomAssetTableLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"partitions": reflect.TypeOf(sharing_tf.PartitionSpecificationPartition_SdkV2{}),
+		"partitions": reflect.TypeOf(sharing_tf.Partition_SdkV2{}),
 	}
 }
 
@@ -940,20 +949,20 @@ func (o CleanRoomAssetTableLocalDetails_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
 			"partitions": basetypes.ListType{
-				ElemType: sharing_tf.PartitionSpecificationPartition_SdkV2{}.Type(ctx),
+				ElemType: sharing_tf.Partition_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetPartitions returns the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2 as
-// a slice of sharing_tf.PartitionSpecificationPartition_SdkV2 values.
+// a slice of sharing_tf.Partition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Context) ([]sharing_tf.PartitionSpecificationPartition_SdkV2, bool) {
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Context) ([]sharing_tf.Partition_SdkV2, bool) {
 	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
 		return nil, false
 	}
-	var v []sharing_tf.PartitionSpecificationPartition_SdkV2
+	var v []sharing_tf.Partition_SdkV2
 	d := o.Partitions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -962,7 +971,7 @@ func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Contex
 }
 
 // SetPartitions sets the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2.
-func (o *CleanRoomAssetTableLocalDetails_SdkV2) SetPartitions(ctx context.Context, v []sharing_tf.PartitionSpecificationPartition_SdkV2) {
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) SetPartitions(ctx context.Context, v []sharing_tf.Partition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1189,9 +1198,11 @@ func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringRead(exist
 
 func (c CleanRoomCollaborator_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetRequired()
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
+	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetOptional()
 	attrs["organization_name"] = attrs["organization_name"].SetComputed()
 
@@ -1246,6 +1257,8 @@ type CleanRoomNotebookReview_SdkV2 struct {
 	CreatedAtMillis types.Int64 `tfsdk:"created_at_millis"`
 	// review outcome
 	ReviewState types.String `tfsdk:"review_state"`
+	// specified when the review was not explicitly made by a user
+	ReviewSubReason types.String `tfsdk:"review_sub_reason"`
 	// collaborator alias of the reviewer
 	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
 }
@@ -1260,6 +1273,7 @@ func (c CleanRoomNotebookReview_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at_millis"] = attrs["created_at_millis"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["review_sub_reason"] = attrs["review_sub_reason"].SetOptional()
 	attrs["reviewer_collaborator_alias"] = attrs["reviewer_collaborator_alias"].SetOptional()
 
 	return attrs
@@ -1286,6 +1300,7 @@ func (o CleanRoomNotebookReview_SdkV2) ToObjectValue(ctx context.Context) basety
 			"comment":                     o.Comment,
 			"created_at_millis":           o.CreatedAtMillis,
 			"review_state":                o.ReviewState,
+			"review_sub_reason":           o.ReviewSubReason,
 			"reviewer_collaborator_alias": o.ReviewerCollaboratorAlias,
 		})
 }
@@ -1297,6 +1312,7 @@ func (o CleanRoomNotebookReview_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":                     types.StringType,
 			"created_at_millis":           types.Int64Type,
 			"review_state":                types.StringType,
+			"review_sub_reason":           types.StringType,
 			"reviewer_collaborator_alias": types.StringType,
 		},
 	}
@@ -1309,10 +1325,15 @@ type CleanRoomNotebookTaskRun_SdkV2 struct {
 	// workspace the API is being called. If the task run was in a different
 	// workspace under the same metastore, only the workspace_id is included.
 	CollaboratorJobRunInfo types.List `tfsdk:"collaborator_job_run_info"`
+	// Etag of the notebook executed in this task run, used to identify the
+	// notebook version.
+	NotebookEtag types.String `tfsdk:"notebook_etag"`
 	// State of the task run.
 	NotebookJobRunState types.List `tfsdk:"notebook_job_run_state"`
 	// Asset name of the notebook executed in this task run.
 	NotebookName types.String `tfsdk:"notebook_name"`
+	// The timestamp of when the notebook was last updated.
+	NotebookUpdatedAt types.Int64 `tfsdk:"notebook_updated_at"`
 	// Expiration time of the output schema of the task run (if any), in epoch
 	// milliseconds.
 	OutputSchemaExpirationTime types.Int64 `tfsdk:"output_schema_expiration_time"`
@@ -1334,9 +1355,11 @@ func (newState *CleanRoomNotebookTaskRun_SdkV2) SyncEffectiveFieldsDuringRead(ex
 func (c CleanRoomNotebookTaskRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["collaborator_job_run_info"] = attrs["collaborator_job_run_info"].SetOptional()
 	attrs["collaborator_job_run_info"] = attrs["collaborator_job_run_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["notebook_etag"] = attrs["notebook_etag"].SetOptional()
 	attrs["notebook_job_run_state"] = attrs["notebook_job_run_state"].SetOptional()
 	attrs["notebook_job_run_state"] = attrs["notebook_job_run_state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
+	attrs["notebook_updated_at"] = attrs["notebook_updated_at"].SetOptional()
 	attrs["output_schema_expiration_time"] = attrs["output_schema_expiration_time"].SetOptional()
 	attrs["output_schema_name"] = attrs["output_schema_name"].SetOptional()
 	attrs["run_duration"] = attrs["run_duration"].SetOptional()
@@ -1367,8 +1390,10 @@ func (o CleanRoomNotebookTaskRun_SdkV2) ToObjectValue(ctx context.Context) baset
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"collaborator_job_run_info":     o.CollaboratorJobRunInfo,
+			"notebook_etag":                 o.NotebookEtag,
 			"notebook_job_run_state":        o.NotebookJobRunState,
 			"notebook_name":                 o.NotebookName,
+			"notebook_updated_at":           o.NotebookUpdatedAt,
 			"output_schema_expiration_time": o.OutputSchemaExpirationTime,
 			"output_schema_name":            o.OutputSchemaName,
 			"run_duration":                  o.RunDuration,
@@ -1383,10 +1408,12 @@ func (o CleanRoomNotebookTaskRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"collaborator_job_run_info": basetypes.ListType{
 				ElemType: CollaboratorJobRunInfo_SdkV2{}.Type(ctx),
 			},
+			"notebook_etag": types.StringType,
 			"notebook_job_run_state": basetypes.ListType{
 				ElemType: jobs_tf.CleanRoomTaskRunState_SdkV2{}.Type(ctx),
 			},
 			"notebook_name":                 types.StringType,
+			"notebook_updated_at":           types.Int64Type,
 			"output_schema_expiration_time": types.Int64Type,
 			"output_schema_name":            types.StringType,
 			"run_duration":                  types.Int64Type,
@@ -1537,14 +1564,18 @@ func (newState *CleanRoomRemoteDetail_SdkV2) SyncEffectiveFieldsDuringRead(exist
 func (c CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
+	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetOptional()
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["creator"] = attrs["creator"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
+	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["region"] = attrs["region"].SetOptional()
+	attrs["region"] = attrs["region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1863,7 +1894,6 @@ func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Con
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
-// Create an asset
 type CreateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
 	Asset types.List `tfsdk:"asset"`
@@ -1934,7 +1964,6 @@ func (o *CreateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v Clea
 	o.Asset = types.ListValueMust(t, vs)
 }
 
-// Create an output catalog
 type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2083,7 +2112,6 @@ func (o *CreateCleanRoomOutputCatalogResponse_SdkV2) SetOutputCatalog(ctx contex
 	o.OutputCatalog = types.ListValueMust(t, vs)
 }
 
-// Create a clean room
 type CreateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 }
@@ -2149,15 +2177,14 @@ func (o *CreateCleanRoomRequest_SdkV2) SetCleanRoom(ctx context.Context, v Clean
 	o.CleanRoom = types.ListValueMust(t, vs)
 }
 
-// Delete an asset
 type DeleteCleanRoomAssetRequest_SdkV2 struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2178,9 +2205,9 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2188,9 +2215,9 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 func (o DeleteCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
@@ -2238,7 +2265,6 @@ func (o DeleteCleanRoomAssetResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete a clean room
 type DeleteCleanRoomRequest_SdkV2 struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
@@ -2305,15 +2331,14 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an asset
 type GetCleanRoomAssetRequest_SdkV2 struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2334,9 +2359,9 @@ func (o GetCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2344,14 +2369,13 @@ func (o GetCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 func (o GetCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
 
-// Get a clean room
 type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2387,7 +2411,6 @@ func (o GetCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List assets
 type ListCleanRoomAssetsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2513,13 +2536,13 @@ func (o *ListCleanRoomAssetsResponse_SdkV2) SetAssets(ctx context.Context, v []C
 	o.Assets = types.ListValueMust(t, vs)
 }
 
-// List notebook task runs
 type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 	// Notebook name
 	NotebookName types.String `tfsdk:"-"`
-	// The maximum number of task runs to return
+	// The maximum number of task runs to return. Currently ignored - all runs
+	// will be returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -2647,7 +2670,6 @@ func (o *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SetRuns(ctx context.Contex
 	o.Runs = types.ListValueMust(t, vs)
 }
 
-// List clean rooms
 type ListCleanRoomsRequest_SdkV2 struct {
 	// Maximum number of clean rooms to return (i.e., the page length). Defaults
 	// to 100.
@@ -2773,7 +2795,6 @@ func (o *ListCleanRoomsResponse_SdkV2) SetCleanRooms(ctx context.Context, v []Cl
 	o.CleanRooms = types.ListValueMust(t, vs)
 }
 
-// Update an asset
 type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
 	Asset types.List `tfsdk:"asset"`

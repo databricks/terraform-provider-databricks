@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -16,6 +15,7 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 	bucket := d.Get("bucket_name").(string)
 	awsAccountId := d.Get("aws_account_id").(string)
 	awsPartition := d.Get("aws_partition").(string)
+	awsNamespace := AwsConfig[awsPartition]["awsNamespace"]
 	roleName := d.Get("role_name").(string)
 	policy := awsIamPolicy{
 		Version: "2012-10-17",
@@ -28,10 +28,14 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"s3:DeleteObject",
 					"s3:ListBucket",
 					"s3:GetBucketLocation",
+					// Multipart uploads support
+					"s3:ListBucketMultipartUploads",
+					"s3:ListMultipartUploadParts",
+					"s3:AbortMultipartUpload",
 				},
 				Resources: []string{
-					fmt.Sprintf("arn:%s:s3:::%s/*", awsPartition, bucket),
-					fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
+					fmt.Sprintf("arn:%s:s3:::%s/*", awsNamespace, bucket),
+					fmt.Sprintf("arn:%s:s3:::%s", awsNamespace, bucket),
 				},
 			},
 			{
@@ -40,13 +44,13 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"sts:AssumeRole",
 				},
 				Resources: []string{
-					fmt.Sprintf("arn:%s:iam::%s:role/%s", awsPartition, awsAccountId, roleName),
+					fmt.Sprintf("arn:%s:iam::%s:role/%s", awsNamespace, awsAccountId, roleName),
 				},
 			},
 		},
 	}
 	if kmsKey, ok := d.GetOk("kms_name"); ok {
-		kmsArn := fmt.Sprintf("arn:%s:kms:%s", awsPartition, kmsKey)
+		kmsArn := fmt.Sprintf("arn:%s:kms:%s", awsNamespace, kmsKey)
 		if strings.HasPrefix(kmsKey.(string), fmt.Sprintf("arn:%s", awsPartition)) {
 			kmsArn = kmsKey.(string)
 		}
@@ -85,9 +89,9 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 			"sqs:PurgeQueue",
 		},
 		Resources: []string{
-			fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
-			fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
-			fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
+			fmt.Sprintf("arn:%s:s3:::%s", awsNamespace, bucket),
+			fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsNamespace, awsAccountId),
+			fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsNamespace, awsAccountId),
 		},
 	},
 		&awsIamPolicyStatement{
@@ -99,8 +103,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sns:ListTopics",
 			},
 			Resources: []string{
-				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
-				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
+				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsNamespace, awsAccountId),
+				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsNamespace, awsAccountId),
 			},
 		},
 		&awsIamPolicyStatement{
@@ -112,8 +116,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sqs:DeleteQueue",
 			},
 			Resources: []string{
-				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
-				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
+				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsNamespace, awsAccountId),
+				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsNamespace, awsAccountId),
 			},
 		})
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")
@@ -135,11 +139,9 @@ func validateSchema() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"bucket_name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
-				"must contain only alphanumeric, underscore, and hyphen characters"),
+			Type:         schema.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringMatch(AwsBucketNameRegex, AwsBucketNameRegexError),
 		},
 		"role_name": {
 			Type:     schema.TypeString,

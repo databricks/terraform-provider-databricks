@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error.
 
+-> This resource can only be used with a workspace-level provider!
+
 -> `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
 
 ## Plugin Framework Migration
@@ -145,5 +147,5 @@ The following resources are often used in the same context:
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

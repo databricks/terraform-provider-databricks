@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +22,14 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
-		m["state"].Computed = true
+		m["auto_enabled"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Computed: true,
+		}
+		m["state"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return m
 	})
 	pi := common.NewPairID("metastore_id", "schema").Schema(
@@ -49,16 +57,21 @@ func ResourceSystemSchema() common.Resource {
 			MetastoreId: metastoreSummary.MetastoreId,
 			SchemaName:  new,
 		})
-		//ignore "schema <schema-name> already exists" error
-		if err != nil && !strings.Contains(err.Error(), "already exists") {
-			return err
+		if err != nil {
+			//ignore "<schema-name> system schema can only be enabled by Databricks" error, also mark it to make delete no-op
+			d.Set("auto_enabled", strings.Contains(err.Error(), "can only be enabled by Databricks"))
+			//ignore "schema <schema-name> already exists" error
+			if !strings.Contains(err.Error(), "already exists") && !strings.Contains(err.Error(), "can only be enabled by Databricks") {
+				return err
+			}
 		}
 		//disable old schemas if needed
 		if old != "" {
-			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
-				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  old,
-			})
+			if d.Get("auto_enabled").(bool) {
+				log.Printf("[WARN] %s is auto enabled, ignoring it", old)
+				return nil
+			}
+			err = safeDisable(ctx, w, metastoreSummary.MetastoreId, old)
 			if err != nil {
 				return err
 			}
@@ -94,9 +107,9 @@ func ResourceSystemSchema() common.Resource {
 						return err
 					}
 					// only track enabled/legacy schemas
-					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
-						schema.State != catalog.SystemSchemaInfoStateEnableInitialized &&
-						schema.State != catalog.SystemSchemaInfoStateUnavailable {
+					if schema.State != string(SystemSchemaInfoStateEnableCompleted) &&
+						schema.State != string(SystemSchemaInfoStateEnableInitialized) &&
+						schema.State != string(SystemSchemaInfoStateUnavailable) {
 						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
 						d.SetId("")
 						return nil
@@ -116,6 +129,10 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
+			if d.Get("auto_enabled").(bool) {
+				log.Printf("[WARN] %s is auto enabled, ignoring it", schemaName)
+				return nil
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -124,10 +141,22 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
-				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  schemaName,
-			})
+			return safeDisable(ctx, w, metastoreSummary.MetastoreId, schemaName)
 		},
 	}
+}
+
+func safeDisable(ctx context.Context, w *databricks.WorkspaceClient, metastoreId, schemaName string) error {
+	err := w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
+		MetastoreId: metastoreId,
+		SchemaName:  schemaName,
+	})
+	if err != nil {
+		//ignore "<schema-name> system schema can only be disabled by Databricks" error
+		if !strings.Contains(err.Error(), "can only be disabled by Databricks") {
+			return err
+		}
+		log.Printf("[WARN] %s can be disabled only by Databricks, ignoring it", schemaName)
+	}
+	return nil
 }

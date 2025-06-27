@@ -82,7 +82,11 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, apierr.NotFound(fmt.Sprintf("Unable to locate token: %s", tokenID))
+	return tokenInfo, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
+	}
 }
 
 // Delete will delete the token given a token id
@@ -155,7 +159,7 @@ func ResourceToken() common.Resource {
 			if err != nil {
 				return err
 			}
-			if time.Now().UnixMilli() > tokenInfo.ExpiryTime {
+			if tokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > tokenInfo.ExpiryTime {
 				log.Printf("[INFO] token with id %s is expired, recreating it", d.Id())
 				d.SetId("")
 			}

@@ -24,7 +24,7 @@ func DataAwsUnityCatalogAssumeRolePolicy() common.Resource {
 		if !slices.Contains(AwsPartitions, data.AwsPartition) {
 			return errors.New(AwsPartitionsValidationError)
 		}
-
+		awsNamespace := AwsConfig[data.AwsPartition]["awsNamespace"]
 		if data.UnityCatalogIamArn == "" {
 			data.UnityCatalogIamArn = AwsConfig[data.AwsPartition]["unityCatalogueIamArn"]
 		}
@@ -51,11 +51,14 @@ func DataAwsUnityCatalogAssumeRolePolicy() common.Resource {
 					Actions: "sts:AssumeRole",
 					Condition: map[string]map[string]string{
 						"ArnLike": {
-							"aws:PrincipalArn": fmt.Sprintf("arn:%s:iam::%s:role/%s", data.AwsPartition, data.AwsAccountId, data.RoleName),
+							"aws:PrincipalArn": fmt.Sprintf("arn:%s:iam::%s:role/%s", awsNamespace, data.AwsAccountId, data.RoleName),
+						},
+						"StringEquals": {
+							"sts:ExternalId": data.ExternalId,
 						},
 					},
 					Principal: map[string]string{
-						"AWS": fmt.Sprintf("arn:%s:iam::%s:root", data.AwsPartition, data.AwsAccountId),
+						"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, data.AwsAccountId),
 					},
 				},
 			},

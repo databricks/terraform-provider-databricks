@@ -27,15 +27,15 @@ type PermissionsList struct {
 }
 
 // diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
-func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+func diffPermissions(pl []catalog.PrivilegeAssignment, existing []catalog.PrivilegeAssignment) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}
-	for _, v := range pl.PrivilegeAssignments {
+	for _, v := range pl {
 		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
-	for _, v := range existing.PrivilegeAssignments {
+	for _, v := range existing {
 		remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
@@ -74,22 +74,22 @@ func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsLis
 }
 
 // replaceAllPermissions merges removal diff of existing permissions on the platform
-func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.PermissionsList) error {
+func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.GetPermissionsResponse) error {
 	securableType := permissions.Mappings.GetSecurableType(securable)
 	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
 		return err
 	}
-	err = a.UpdatePermissions(securableType, name, diffPermissions(list, *existing))
+	err = a.UpdatePermissions(securableType, name, diffPermissions(list.PrivilegeAssignments, existing.PrivilegeAssignments))
 	if err != nil {
 		return err
 	}
-	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
-		return diffPermissions(desired, *current)
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list.PrivilegeAssignments, func(current []catalog.PrivilegeAssignment, desired []catalog.PrivilegeAssignment) []catalog.PermissionsChange {
+		return diffPermissions(desired, current)
 	})
 }
 
-func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
+func (pl PermissionsList) toSdkPermissionsList() (out catalog.GetPermissionsResponse) {
 	for _, v := range pl.Assignments {
 		privileges := []catalog.Privilege{}
 		for _, p := range v.Privileges {
@@ -103,8 +103,8 @@ func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
 	return
 }
 
-func sdkPermissionsListToPermissionsList(sdkPermissionsList catalog.PermissionsList) (out PermissionsList) {
-	for _, v := range sdkPermissionsList.PrivilegeAssignments {
+func sdkPermissionsListToPermissionsList(sdkPermissionsList []catalog.PrivilegeAssignment) (out PermissionsList) {
+	for _, v := range sdkPermissionsList {
 		privileges := []string{}
 		for _, p := range v.Privileges {
 			privileges = append(privileges, p.String())
@@ -190,10 +190,14 @@ func ResourceGrants() common.Resource {
 				return err
 			}
 			if len(grants.PrivilegeAssignments) == 0 {
-				return apierr.NotFound("got empty permissions list")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "got empty permissions list",
+				}
 			}
 
-			err = common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
+			err = common.StructToData(sdkPermissionsListToPermissionsList(grants.PrivilegeAssignments), s, d)
 			if err != nil {
 				return err
 			}
@@ -231,7 +235,7 @@ func ResourceGrants() common.Resource {
 				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.GetPermissionsResponse{})
 		},
 	}
 }

@@ -3,6 +3,8 @@ subcategory: "Apps"
 ---
 # databricks_app Data Source
 
+-> This data source can only be used with a workspace-level provider!
+
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
 [Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer’s Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
@@ -45,6 +47,9 @@ In addition to all arguments above, the following attributes are exported:
   * `service_principal_id` - id of the app service principal
   * `service_principal_name` - name of the app service principal
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
+  * `budget_policy_id` - The Budget Policy ID set for this resource.
+  * `effective_budget_policy_id` - The effective budget policy ID.
+  * `effective_user_api_scopes` - A list of effective api scopes granted to the user access token.
 
 ### resources Attribute
 
@@ -68,6 +73,10 @@ Exactly one of the following attributes will be provided:
 * `job` attribute
   * `id` - Id of the job to grant permission on.
   * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
+* `uc_securable` attribute
+  * `securable_type` - the type of UC securable, i.e. `VOLUME`.
+  * `securable_full_name` - the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.
+  * `permission` - Permissions to grant on UC securable, i.e. `READ_VOLUME`, `WRITE_VOLUME`.
 
 ## Related Resources
 

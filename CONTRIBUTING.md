@@ -426,14 +426,18 @@ func TestAccSecretAclResource(t *testing.T) {
 }
 ```
 
-## Testing
+## Integration Testing
 
-- [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.
-- Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
-- Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
-- All tests should be capable of repeatedly running on "dirty" environment, which means not requiring a new clean environment every time the test runs.
-- All tests should re-use compute resources whenever possible.
-- Prefer `require.NoError` (stops the test on error) to `assert.NoError` (continues the test on error) when checking the results.
+Integration tests are run as part of every PR made to the Databricks Terraform provider. Tests are run against AWS, Azure, and GCP infrastructure, in workspaces and accounts, and in Unity Catalog and non-Unity Catalog environments.
+
+Tests, where possible, should be entirely self-contained. They should not depend on external or preprovisioned resources, and they should not make changes to any existing resources.
+
+There is a default filter for tests based on the test name:
+- Tests beginning with `TestAcc` are run in non-UC workspace enviroments across all clouds.
+- Tests beginning with `TestMwsAcc` are run in non-UC account environments across all clouds.
+- Tests beginning with `TestUcAcc` are run in UC workspace and account enviroments across all clouds.
+
+In general, all PRs that affect the behavior of the provider should include at least an integration test to ensure that any assumptions made about the Databricks platform in the implementation of the feature are correct. Integration tests must be added in the same directory as the resource or data source being tested. The name of the file should be `<resource_name>_test.go` for resources or `data_<data_source_name>_test.go` for data sources.
 
 ## Code conventions
 

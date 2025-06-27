@@ -5,10 +5,11 @@ subcategory: "Storage"
 
 This resource allows uploading and downloading files in [databricks_volume](volume.md).
 
-Notes:
+-> This resource can only be used with a workspace-level provider!
 
-* Currently the limit is 5GiB in octet-stream.
-* Currently, only UC volumes are supported. The list of destinations may change.
+~> Currently the limit is 5GiB in octet-stream.
+
+-> Currently, only UC volumes are supported. The list of destinations may change.
 
 ## Example Usage
 
@@ -79,6 +80,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource `databricks_file` can be imported using the path of the file:
+
+```hcl
+import {
+  to = databricks_file.this
+  id = "<path>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_file.this <path>

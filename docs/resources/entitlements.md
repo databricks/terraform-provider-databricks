@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to set entitlements to existing [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md).
 
+-> This resource can only be used with a workspace-level provider!
+
 -> You must define entitlements of a principal using either `databricks_entitlements` or directly within one of [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md). Having entitlements defined in both resources will result in non-deterministic behaviour.
 
 ## Example Usage
@@ -64,7 +66,8 @@ The following entitlements are available.
 * `allow_cluster_create` -  (Optional) Allow the principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
 * `allow_instance_pool_create` -  (Optional) Allow the principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
 * `databricks_sql_access` - (Optional) This is a field to allow the principal to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
-* `workspace_access` - (Optional) This is a field to allow the principal to have access to Databricks Workspace.
+* `workspace_access` - (Optional) This is a field to allow the principal to have access to a Databricks Workspace.
+* `workspace_consume` - (Optional) This is a field to allow the principal to have access to a Databricks Workspace as consumer, with limited access to workspace UI.  Couldn't be used with `workspace_access` or `databricks_sql_access`.
 
 ## Import
 
@@ -73,6 +76,15 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 * `user/user_id` - user `user_id`.
 * `group/group_id` - group `group_id`.
 * `spn/spn_id` - service principal `spn_id`.
+
+```hcl
+import {
+  to = databricks_entitlements.me
+  id = "user/<user-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_entitlements.me user/<user-id>

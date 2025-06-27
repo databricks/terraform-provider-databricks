@@ -388,7 +388,7 @@ func TestUpdateSchemaForceNew(t *testing.T) {
 func TestDeleteSchema(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "b.a").Return(nil)
+			w.GetMockSchemasAPI().EXPECT().Delete(mock.Anything, catalog.DeleteSchemaRequest{FullName: "b.a"}).Return(nil)
 		},
 		Resource: ResourceSchema(),
 		Delete:   true,
@@ -405,77 +405,7 @@ func TestDeleteSchema(t *testing.T) {
 func TestForceDeleteSchema(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			t := w.GetMockTablesAPI().EXPECT()
-			t.ListAll(mock.Anything, catalog.ListTablesRequest{
-				CatalogName: "b",
-				SchemaName:  "a",
-			}).Return([]catalog.TableInfo{
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "c",
-					FullName:    "b.a.c",
-					TableType:   "MANAGED",
-				},
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "d",
-					FullName:    "b.a.d",
-					TableType:   "VIEW",
-				},
-			}, nil)
-			t.DeleteByFullName(mock.Anything, "b.a.c").Return(nil)
-			t.DeleteByFullName(mock.Anything, "b.a.d").Return(nil)
-			v := w.GetMockVolumesAPI().EXPECT()
-			v.ListAll(mock.Anything, catalog.ListVolumesRequest{
-				CatalogName: "b",
-				SchemaName:  "a",
-			}).Return([]catalog.VolumeInfo{
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "c",
-					FullName:    "b.a.c",
-					VolumeType:  catalog.VolumeTypeManaged,
-				},
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "d",
-					FullName:    "b.a.d",
-					VolumeType:  catalog.VolumeTypeExternal,
-				},
-			}, nil)
-			v.DeleteByName(mock.Anything, "b.a.c").Return(nil)
-			v.DeleteByName(mock.Anything, "b.a.d").Return(nil)
-			f := w.GetMockFunctionsAPI().EXPECT()
-			f.ListAll(mock.Anything, catalog.ListFunctionsRequest{
-				CatalogName: "b",
-				SchemaName:  "a",
-			}).Return([]catalog.FunctionInfo{
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "c",
-					FullName:    "b.a.c",
-				},
-			}, nil)
-			f.DeleteByName(mock.Anything, "b.a.c").Return(nil)
-			m := w.GetMockRegisteredModelsAPI().EXPECT()
-			m.ListAll(mock.Anything, catalog.ListRegisteredModelsRequest{
-				CatalogName: "b",
-				SchemaName:  "a",
-			}).Return([]catalog.RegisteredModelInfo{
-				{
-					CatalogName: "b",
-					SchemaName:  "a",
-					Name:        "c",
-					FullName:    "b.a.c",
-				},
-			}, nil)
-			m.DeleteByFullName(mock.Anything, "b.a.c").Return(nil)
-			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "b.a").Return(nil)
+			w.GetMockSchemasAPI().EXPECT().Delete(mock.Anything, catalog.DeleteSchemaRequest{FullName: "b.a", Force: true}).Return(nil)
 		},
 		Resource: ResourceSchema(),
 		Delete:   true,

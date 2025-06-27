@@ -1763,7 +1763,6 @@ func (o *CustomerManagedKey) SetUseCases(ctx context.Context, v []types.String) 
 	o.UseCases = types.ListValueMust(t, vs)
 }
 
-// Delete credential configuration
 type DeleteCredentialRequest struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -1800,7 +1799,6 @@ func (o DeleteCredentialRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete encryption key configuration
 type DeleteEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -1837,7 +1835,6 @@ func (o DeleteEncryptionKeyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a network configuration
 type DeleteNetworkRequest struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -1874,7 +1871,6 @@ func (o DeleteNetworkRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a private access settings object
 type DeletePrivateAccesRequest struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -1941,7 +1937,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete storage configuration
 type DeleteStorageRequest struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -1978,7 +1973,6 @@ func (o DeleteStorageRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete VPC endpoint configuration
 type DeleteVpcEndpointRequest struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2015,7 +2009,6 @@ func (o DeleteVpcEndpointRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a workspace
 type DeleteWorkspaceRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2394,7 +2387,6 @@ func (o GcpVpcEndpointInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get credential configuration
 type GetCredentialRequest struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -2431,7 +2423,6 @@ func (o GetCredentialRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get encryption key configuration
 type GetEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -2468,7 +2459,6 @@ func (o GetEncryptionKeyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a network configuration
 type GetNetworkRequest struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -2505,7 +2495,6 @@ func (o GetNetworkRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a private access settings object
 type GetPrivateAccesRequest struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -2542,7 +2531,6 @@ func (o GetPrivateAccesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get storage configuration
 type GetStorageRequest struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -2579,7 +2567,6 @@ func (o GetStorageRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a VPC endpoint configuration
 type GetVpcEndpointRequest struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2616,7 +2603,6 @@ func (o GetVpcEndpointRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a workspace
 type GetWorkspaceRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2768,7 +2754,7 @@ func (c Network) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["network_name"] = attrs["network_name"].SetOptional()
 	attrs["security_group_ids"] = attrs["security_group_ids"].SetOptional()
 	attrs["subnet_ids"] = attrs["subnet_ids"].SetOptional()
-	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetOptional()
+	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetComputed()
 	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
 	attrs["vpc_status"] = attrs["vpc_status"].SetComputed()
 	attrs["warning_messages"] = attrs["warning_messages"].SetComputed()
@@ -4120,7 +4106,7 @@ func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace
 func (c Workspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["aws_region"] = attrs["aws_region"].SetOptional()
-	attrs["azure_workspace_info"] = attrs["azure_workspace_info"].SetOptional()
+	attrs["azure_workspace_info"] = attrs["azure_workspace_info"].SetComputed()
 	attrs["cloud"] = attrs["cloud"].SetOptional()
 	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()

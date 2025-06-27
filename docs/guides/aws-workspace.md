@@ -4,7 +4,7 @@ page_title: "Provisioning AWS Databricks workspace"
 
 # Provisioning AWS Databricks workspace
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform.
 
@@ -278,19 +278,10 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id               = databricks_mws_networks.this.network_id
-
-  token {
-    comment = "Terraform"
-  }
 }
 
 output "databricks_host" {
   value = databricks_mws_workspaces.this.workspace_url
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 
@@ -310,12 +301,13 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = module.e2.workspace_url
-  token = module.e2.token_value
+  host          = module.e2.workspace_url
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
-We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#databricks-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#databricks-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project and `workspace_url` is the output attribute of that module. This provider configuration will allow you to authenticate to the created workspace after workspace creation.
 
 ### Credentials validation checks errors
 

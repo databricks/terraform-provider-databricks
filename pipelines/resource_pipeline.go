@@ -71,6 +71,12 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	// Workspaces not enrolled in the private preview must not send run_as in the update request.
+	// If run_as was persisted in state because of a `terraform refresh`, there will not be a planned change
+	// as long as the user hasn't specified a value.
+	if !d.HasChange("run_as") {
+		updatePipelineRequest.RunAs = nil
+	}
 
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
@@ -168,6 +174,7 @@ type Pipeline struct {
 	Health               pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
 	LastModified         int64                               `json:"last_modified,omitempty"`
 	LatestUpdates        []pipelines.UpdateStateInfo         `json:"latest_updates,omitempty"`
+	RunAs                pipelines.RunAs                     `json:"run_as,omitempty"`
 	RunAsUserName        string                              `json:"run_as_user_name,omitempty"`
 	ExpectedLastModified int64                               `json:"expected_last_modified,omitempty"`
 	State                pipelines.PipelineState             `json:"state,omitempty"`
@@ -205,27 +212,30 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
 	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
+	// Required fields
+	s.SchemaPath("library", "glob", "include").SetRequired()
+	s.SchemaPath("library", "notebook", "path").SetRequired()
+	s.SchemaPath("library", "file", "path").SetRequired()
+
 	// Computed fields
-	s.SchemaPath("id").SetComputed()
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
 	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
-	s.SchemaPath("url").SetComputed()
 
-	s.SchemaPath("state").SetComputed()
-	s.SchemaPath("latest_updates").SetComputed()
-	s.SchemaPath("last_modified").SetComputed()
-	s.SchemaPath("health").SetComputed()
-	s.SchemaPath("cause").SetComputed()
-	s.SchemaPath("cluster_id").SetComputed()
-	s.SchemaPath("creator_user_name").SetComputed()
-	s.SchemaPath("run_as_user_name").SetComputed()
+	for _, field := range []string{"id", "state", "latest_updates", "last_modified",
+		"health", "cause", "cluster_id", "creator_user_name", "run_as", "url", "run_as_user_name"} {
+		s.SchemaPath(field).SetComputed()
+	}
+
+	// customize event_log
+	s.SchemaPath("event_log", "name").SetRequired()
+	s.SchemaPath("event_log", "catalog").SetComputed()
+	s.SchemaPath("event_log", "schema").SetComputed()
 
 	// SuppressDiff fields
 	s.SchemaPath("edition").SetSuppressDiff()
 	s.SchemaPath("channel").SetSuppressDiff()
 	s.SchemaPath("cluster", "spark_conf").SetCustomSuppressDiff(clusters.SparkConfDiffSuppressFunc)
-	s.SchemaPath("cluster", "aws_attributes", "zone_id").SetCustomSuppressDiff(clusters.ZoneDiffSuppress)
 	s.SchemaPath("cluster", "autoscale", "mode").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("edition").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("storage").SetCustomSuppressDiff(suppressStorageDiff)
@@ -268,7 +278,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetValidateFunc(validation.StringInSlice([]string{"pro", "core", "advanced"}, true))
 
 	// RequiredWith fields
-	s.SchemaPath("gateway_definition").SetRequiredWith([]string{"gateway_definition.0.gateway_storage_name", "gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema"})
 	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
 	return s
@@ -311,6 +320,17 @@ func ResourcePipeline() common.Resource {
 				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
+			}
+			if readPipeline.RunAsUserName != "" {
+				if common.StringIsUUID(readPipeline.RunAsUserName) {
+					p.RunAs = pipelines.RunAs{
+						ServicePrincipalName: readPipeline.RunAsUserName,
+					}
+				} else {
+					p.RunAs = pipelines.RunAs{
+						UserName: readPipeline.RunAsUserName,
+					}
+				}
 			}
 			return common.StructToData(p, pipelineSchema, d)
 		},

@@ -117,7 +117,6 @@ resource "databricks_metastore_assignment" "this" {
   provider             = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
 ```
 
@@ -141,6 +140,40 @@ resource "databricks_storage_credential" "ext" {
   name = "the-creds"
   databricks_gcp_service_account {}
   depends_on = [databricks_metastore_assignment.this]
+}
+
+resource "google_project_iam_custom_role" "uc_file_events" {
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  permissions = [
+    "pubsub.subscriptions.consume",
+    "pubsub.subscriptions.create",
+    "pubsub.subscriptions.delete",
+    "pubsub.subscriptions.get",
+    "pubsub.subscriptions.list",
+    "pubsub.subscriptions.update",
+    "pubsub.topics.attachSubscription",
+    "pubsub.topics.create",
+    "pubsub.topics.delete",
+    "pubsub.topics.get",
+    "pubsub.topics.list",
+    "pubsub.topics.update",
+    "storage.buckets.update"
+  ]
+}
+
+data "google_storage_project_service_account" "gcs_account" {}
+
+resource "google_project_iam_member" "uc_project_file_events_admin" {
+  project = var.project
+  role    = google_project_iam_custom_role.uc_file_events.id
+  member  = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_project_iam_member" "cloud_storage_sa_pubsub_publisher" {
+  project = var.project
+  role  = "roles/pubsub.publisher"
+  member = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
@@ -264,7 +297,7 @@ resource "databricks_cluster" "unity_shared" {
 ```
 
 - To use those advanced cluster features or languages like Machine Learning Runtime and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
+  The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 

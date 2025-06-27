@@ -3,22 +3,21 @@ page_title: "Experimental resource exporter"
 ---
 # Experimental resource exporter
 
--> **Note** This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future provider versions.
+-> This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future provider versions.
 
--> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise, it could cause changes in the ownership of the objects.
+-> Use the same user who did the exporting to import the exported templates.  Otherwise, it could cause changes in the ownership of the objects.
 
 Generates `*.tf` files for Databricks resources together with `import.sh` that is used to import objects into the Terraform state. Available as part of provider binary. The only way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used when you need to export Terraform configuration for an existing Databricks workspace quickly. After generating the configuration, we strongly recommend manually reviewing all created files.
 
 ## Example Usage
 
-After downloading the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it and place it in the same folder. You may have already downloaded this binary - check the `.terraform` folder of any state directory where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databricks/databricks/*/*/terraform-provider-databricks`. 
+After downloading the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it and place it in the same folder. You may have already downloaded this binary - check the `.terraform` folder of any state directory where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databricks/databricks/*/*/terraform-provider-databricks`.
 
 Here's the tool in action:
 
 [![asciicast](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy.svg)](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy)
 
--> **Note**
-  Please note that in the interactive mode, the selected services are passed as the `-listing` option, not as `-services` option (see below).
+-> Please note that in the interactive mode, the selected services are passed as the `-listing` option, not as `-services` option (see below).
 
 Exporter can also be used in a non-interactive mode that allows a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
 
@@ -26,14 +25,14 @@ Exporter can also be used in a non-interactive mode that allows a more granular 
 export DATABRICKS_HOST=...
 export DATABRICKS_TOKEN=...
 ./terraform-provider-databricks exporter -skip-interactive \
- -services=groups,secrets,access,compute,users,jobs,storage \
- -listing=jobs,compute \
- -debug
+  -services=groups,secrets,access,compute,users,jobs,storage \
+  -listing=jobs,compute \
+  -debug
 ```
 
 The exporter is also supported on the account level for resources that could be defined on an account level. For example, we can export everything defined on the account level:
 
-```
+```sh
 export DATABRICKS_HOST=https://accounts.azuredatabricks.net
 export DATABRICKS_ACCOUNT_ID=...
 ./terraform-provider-databricks exporter -skip-interactive
@@ -41,17 +40,16 @@ export DATABRICKS_ACCOUNT_ID=...
 
 Or export only specific resources - users and groups:
 
+```sh
+DATABRICKS_HOST=https://accounts.azuredatabricks.net \
+  DATABRICKS_ACCOUNT_ID=<uuid>  \
+  ./terraform-provider-databricks exporter -directory output \
+   -listing groups,users -skip-interactive
 ```
-DATABRICKS_HOST=https://accounts.azuredatabricks.net \ 
-DATABRICKS_ACCOUNT_ID=<uuid>  \
-./terraform-provider-databricks exporter -directory output \
-  -listing groups,users -skip-interactive
-```
-
 
 ## Argument Reference
 
-!> **Warning** This tooling was only extensively tested with administrator privileges.
+!> This tooling was only extensively tested with administrator privileges.
 
 All arguments are optional, and they tune what code is being generated.
 
@@ -62,7 +60,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-services` - Comma-separated list of services to import. By default, all services are imported.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default, it is empty, which matches everything.
 * `-matchRegex` - Match resource names against a given regex during listing operation. Applicable to all resources selected for listing.
-* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.  
+* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc. 
 * `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify condition for `/Users` as well, so regex will be `^(/Users|/Users/[a-c].*)$`*.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
@@ -82,7 +80,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ### Use of `-listing` and `-services` for granular resources selection
 
-The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.
+The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option. 
 
 For example, if we have a job comprising two notebooks and one SQL dashboard, and tasks have Python libraries on DBFS attached. If we just specify the `-listing jobs`, then it will export the following resources:
 
@@ -106,29 +104,62 @@ but if we also specify `-services notebooks,storage` then it will export only:
 
 The rest of the values, like SQL object IDs, etc. will be hard-coded and not portable between workspaces.
 
+You can also use predefined aliases (`all` and `uc`) to specify multiple services at once.  For example, if `-listing` has value `all,-uc`, then we will discover all services except of Unity Catalog + vector search.
+
+We can also exclude specific services  For example, we can specify `-services` as `-all,-uc-tables` and then we won't generate code for `databricks_sql_table`.
+
+### Migration between workspaces with identity federation enabled
+
+When Unity Catalog metastore is attached to a workspace, the Identity Federation is enabled on it.  With Identity Federation users, service principals, and groups are coming from the account level via assignment to a workspace.  But there is still an ability to create workspace-level groups via API and `databricks_group` resource uses it and always creates workspace-level.  As a result, we shouldn't generate resources for account-level groups, because they will be turned into workspace-level groups.  Due to the limitations of APIs we can't use `databricks_permission_assignment` on workspace-level to emulate the assignment.
+
+So migration of resources between two workspaces with Identity Federation enabled should be done in a few steps:
+
+1. On the account level export `databricks_mws_permission_assignment` resources for your source workspace:
+
+  ```sh
+  DATABRICKS_CONFIG_PROFILE=<cli-profile> DATABRICKS_ACCOUNT_ID=<account-id> ./terraform-provider-databricks exporter \
+    -matchRegex '^<source-workspace-id>$' -listing idfed -services idfed \
+    -directory output -skip-interactive -noformat
+  ```
+
+2. Replace source workspace ID with destination workspace ID in the generated `idfed.tf` file, i.e. with `sed`:
+
+  ```sh
+  sed -ibak -e 's|workspace_id = <source-workspace-id>|workspace_id = <destination-workspace-id>|' idfed.tf
+  ```
+
+  and do `terraform apply` on the account level to assign users, service principals, and groups to a destination workspace.
+
+3. Export resources from the source workspace using the exporter on the workspace level. It will automatically detect that Identity Federation is enabled and export account-level objects as data sources instead of resources.
+
+4. Apply exported code against the destination workspace.
+
 ## Services
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
 
--> **Note**
-  Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
+Services could be specified in combination with predefined aliases (`all` - for all services and listings, `uc` - for all UC services, including the vector search).  The service could be specified as the service name, or it could have `-` prepended to the service, to exclude it from the list (including `-uc` to exclude all UC-related services).
 
-* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+-> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
+
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
-* `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
+* `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
+* `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md).  When listing allows filtering assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
+* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) and [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md).  **Note** we can't export [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) because of the missing API.
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
 * `queries` - **listing** [databricks_query](../resources/query.md).
-* `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in artbitrary locations).
+* `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in arbitrary locations).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
@@ -149,7 +180,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
-* `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
+* `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If Identity Federation is enabled on the workspace (when UC Metastore is attached), then users and service principals are exposed as data sources because they are defined on an account level.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `vector-search` - **listing** exports [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) and [databricks_vector_search_index](../resources/vector_search_index.md)
 * `wsconf` - **listing** exports Workspace-level configuration: [databricks_workspace_conf](../resources/workspace_conf.md), [databricks_sql_global_config](../resources/sql_global_config.md) and [databricks_global_init_script](../resources/global_init_script.md).
 * `wsfiles` - **listing** [databricks_workspace_file](../resources/workspace_file.md).
@@ -165,7 +196,7 @@ To speed up export, Terraform Exporter performs many operations, such as listing
 * `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
 * `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `300000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; default value should be ok for most cases); otherwise, there is a chance of deadlock.
 * `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources as this environment variable.
-* `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling of resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase its size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
+* `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase its size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
 * `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` is the size of the shared channel (default: `200000`). You may need to increase it if you have a huge workspace.
 
 ## Support Matrix
@@ -202,6 +233,9 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes | Yes | No |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
+| [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
+| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | No | No | No | No |
+| [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md) | Yes | No | No | Yes |
 | [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
 | [databricks_notification_destination](../resources/notification_destination.md) | Yes | No | Yes\*\* | No |

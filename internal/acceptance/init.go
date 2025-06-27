@@ -22,9 +22,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -90,8 +94,10 @@ type Step struct {
 	PreConfig func()
 
 	Destroy                   bool
+	Taint                     []string
 	ExpectNonEmptyPlan        bool
 	ExpectError               *regexp.Regexp
+	ConfigPlanChecks          resource.ConfigPlanChecks
 	PlanOnly                  bool
 	PreventDiskCleanup        bool
 	PreventPostDestroyRefresh bool
@@ -108,7 +114,7 @@ type Step struct {
 	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 }
 
-func createUuid() string {
+func CreateUuid() string {
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -122,7 +128,7 @@ func createUuid() string {
 func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
 	vars := map[string]string{
 		"RANDOM":      qa.RandomName("t"),
-		"RANDOM_UUID": createUuid(),
+		"RANDOM_UUID": CreateUuid(),
 	}
 	if len(otherVars) > 1 {
 		Skipf(t)("cannot have more than one custom variable map")
@@ -159,6 +165,31 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
+// ProvidersWithResourceFallbacks creates test providers, falling back to the SDKv2 provider for the
+// specified resources. This is a convenience constructor that ensures that the resulting mux'ed provider
+// uses the SDKv2 implementation for the specified resources.
+func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provider, provider.Provider) {
+	pluginfwOpt := pluginfw.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
+	return sdkV2Provider, pluginFrameworkProvider
+}
+
+// SdkV2ProviderForTest creates a test provider with the default config customizer.
+func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
+	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer), sdkv2.WithConfigCustomizer(OidcConfigCustomizer))
+	return sdkv2.DatabricksProvider(opts...)
+}
+
+// PluginFrameworkProviderForTest creates a test provider with the default config customizer.
+func PluginFrameworkProviderForTest(pluginFwOptions ...pluginfw.PluginFrameworkOption) provider.Provider {
+	opts := append(pluginFwOptions, pluginfw.WithConfigCustomizer(DefaultConfigCustomizer), pluginfw.WithConfigCustomizer(OidcConfigCustomizer))
+	return pluginfw.GetDatabricksProviderPluginFramework(opts...)
+}
+
 // Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
 func run(t *testing.T, steps []Step) {
@@ -171,7 +202,12 @@ func run(t *testing.T, steps []Step) {
 		"databricks": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
 
-			return providers.GetProviderServer(ctx)
+			// The SDKv2 and Plugin Framework providers are customized to increase the default HTTP timeout.
+			// Otherwise, they are no different from the production provider.
+			sdkPluginProvider := SdkV2ProviderForTest()
+			pluginFrameworkProvider := PluginFrameworkProviderForTest()
+
+			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
 		},
 	}
 	cwd, err := os.Getwd()
@@ -218,7 +254,9 @@ func run(t *testing.T, steps []Step) {
 			},
 			Config:                               stepConfig,
 			Destroy:                              s.Destroy,
+			Taint:                                s.Taint,
 			ExpectNonEmptyPlan:                   s.ExpectNonEmptyPlan,
+			ConfigPlanChecks:                     s.ConfigPlanChecks,
 			PlanOnly:                             s.PlanOnly,
 			PreventDiskCleanup:                   s.PreventDiskCleanup,
 			PreventPostDestroyRefresh:            s.PreventPostDestroyRefresh,
@@ -248,8 +286,45 @@ func run(t *testing.T, steps []Step) {
 	})
 }
 
+// DefaultConfigCustomizer modifies the SDK configuration, setting the HTTP timeout to 10 minutes.
+// Most APIs have a default timeout of 1 minute, but some have longer. Extending the HTTP timeout
+// ensures that tests don't fail even if individual requests take longer than 1 minute.
+func DefaultConfigCustomizer(cfg *config.Config) error {
+	cfg.HTTPTimeoutSeconds = 10 * 60
+	return nil
+}
+
+// OidcConfigCustomizer customizes the SDK configuration to use OIDC when running in Github Actions without
+// busting Go test caching.
+// The Go test cache is busted when using OIDC because the URL and token in Github are different in each test run.
+// The environment variables are cleared in the action to prevent the Go SDK from reading them during test runs.
+// The resulting values are written to a hard-coded location, which we read from if present to use OIDC.
+// It is not an error if these files are not present.
+func OidcConfigCustomizer(cfg *config.Config) error {
+	// This is a no-op for non-AWS and for non-UC AWS workspace environments because the OIDC auth is not supported.
+	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
+		return nil
+	}
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err == nil {
+		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
+		if err != nil {
+			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
+		}
+		cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
+	}
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN"); err == nil {
+		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+		if err != nil {
+			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN: %w", err)
+		}
+		cfg.ActionsIDTokenRequestToken = strings.TrimSpace(string(bs))
+	}
+	cfg.AuthType = "github-oidc"
+	return nil
+}
+
 // resourceCheck calls back a function with client and resource id
-func resourceCheck(name string,
+func ResourceCheck(name string,
 	cb func(ctx context.Context, client *common.DatabricksClient, id string) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -267,7 +342,7 @@ func resourceCheck(name string,
 }
 
 // resourceCheckWithState calls back a function with client and resource instance state
-func resourceCheckWithState(name string,
+func ResourceCheckWithState(name string,
 	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -416,28 +491,14 @@ func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
 	return slices.Contains(cloudEnvs, cloudEnv)
 }
 
-func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
-	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx)
-	if err != nil {
-		return false, err
-	}
-	for _, emailValue := range user.Emails {
-		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
 func initTest(t *testing.T, key string) {
 	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, key)
+	LoadDebugEnvIfRunsFromIDE(t, key)
 	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 }
 
 // loads debug environment from ~/.databricks/debug-env.json
-func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
+func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	if !isInDebug() {
 		return
 	}
@@ -461,4 +522,29 @@ func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	for k, v := range vars {
 		os.Setenv(k, v)
 	}
+}
+
+func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	user, err := w.CurrentUser.Me(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, emailValue := range user.Emails {
+		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func GetRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	if err != nil {
+		t.Fatalf("cannot determine the user: %s", err)
+	}
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
 }

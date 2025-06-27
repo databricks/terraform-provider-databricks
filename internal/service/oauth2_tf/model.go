@@ -18,11 +18,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Create account federation policy
 type CreateAccountFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -107,6 +108,10 @@ type CreateCustomAppIntegration struct {
 	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration) {
@@ -121,6 +126,7 @@ func (c CreateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -134,9 +140,10 @@ func (c CreateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a CreateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"scopes":              reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -147,11 +154,12 @@ func (o CreateCustomAppIntegration) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"confidential":        o.Confidential,
-			"name":                o.Name,
-			"redirect_urls":       o.RedirectUrls,
-			"scopes":              o.Scopes,
-			"token_access_policy": o.TokenAccessPolicy,
+			"confidential":           o.Confidential,
+			"name":                   o.Name,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -168,6 +176,9 @@ func (o CreateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"token_access_policy": TokenAccessPolicy{}.Type(ctx),
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -250,6 +261,32 @@ func (o *CreateCustomAppIntegration) GetTokenAccessPolicy(ctx context.Context) (
 func (o *CreateCustomAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
 	vs := v.ToObjectValue(ctx)
 	o.TokenAccessPolicy = vs
+}
+
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in CreateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomAppIntegration) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in CreateCustomAppIntegration.
+func (o *CreateCustomAppIntegration) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
 type CreateCustomAppIntegrationOutput struct {
@@ -443,7 +480,6 @@ func (o CreatePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Create service principal federation policy
 type CreateServicePrincipalFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -519,10 +555,25 @@ func (o *CreateServicePrincipalFederationPolicyRequest) SetPolicy(ctx context.Co
 	o.Policy = vs
 }
 
-// Create service principal secret
 type CreateServicePrincipalSecretRequest struct {
+	// The lifetime of the secret in seconds. If this parameter is not provided,
+	// the secret will have a default lifetime of 730 days (63072000s).
+	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest) {
+}
+
+func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest) {
+}
+
+func (c CreateServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lifetime"] = attrs["lifetime"].SetOptional()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -543,6 +594,7 @@ func (o CreateServicePrincipalSecretRequest) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"lifetime":             o.Lifetime,
 			"service_principal_id": o.ServicePrincipalId,
 		})
 }
@@ -551,6 +603,7 @@ func (o CreateServicePrincipalSecretRequest) ToObjectValue(ctx context.Context) 
 func (o CreateServicePrincipalSecretRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"lifetime":             types.StringType,
 			"service_principal_id": types.Int64Type,
 		},
 	}
@@ -559,6 +612,9 @@ func (o CreateServicePrincipalSecretRequest) Type(ctx context.Context) attr.Type
 type CreateServicePrincipalSecretResponse struct {
 	// UTC time when the secret was created
 	CreateTime types.String `tfsdk:"create_time"`
+	// UTC time when the secret will expire. If the field is not present, the
+	// secret does not expire.
+	ExpireTime types.String `tfsdk:"expire_time"`
 	// ID of the secret
 	Id types.String `tfsdk:"id"`
 	// Secret Value
@@ -579,6 +635,7 @@ func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringR
 
 func (c CreateServicePrincipalSecretResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["secret"] = attrs["secret"].SetOptional()
 	attrs["secret_hash"] = attrs["secret_hash"].SetOptional()
@@ -607,6 +664,7 @@ func (o CreateServicePrincipalSecretResponse) ToObjectValue(ctx context.Context)
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": o.CreateTime,
+			"expire_time": o.ExpireTime,
 			"id":          o.Id,
 			"secret":      o.Secret,
 			"secret_hash": o.SecretHash,
@@ -620,6 +678,7 @@ func (o CreateServicePrincipalSecretResponse) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
+			"expire_time": types.StringType,
 			"id":          types.StringType,
 			"secret":      types.StringType,
 			"secret_hash": types.StringType,
@@ -629,7 +688,6 @@ func (o CreateServicePrincipalSecretResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete account federation policy
 type DeleteAccountFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -707,7 +765,6 @@ func (o DeleteCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete Custom OAuth App Integration
 type DeleteCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -784,7 +841,6 @@ func (o DeletePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete Published OAuth App Integration
 type DeletePublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -850,7 +906,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete service principal federation policy
 type DeleteServicePrincipalFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -891,7 +946,6 @@ func (o DeleteServicePrincipalFederationPolicyRequest) Type(ctx context.Context)
 	}
 }
 
-// Delete service principal secret
 type DeleteServicePrincipalSecretRequest struct {
 	// The secret ID.
 	SecretId types.String `tfsdk:"-"`
@@ -948,6 +1002,11 @@ type FederationPolicy struct {
 	// Specifies the policy to use for validating OIDC claims in your federated
 	// tokens.
 	OidcPolicy types.Object `tfsdk:"oidc_policy"`
+	// The ID of the federation policy.
+	PolicyId types.String `tfsdk:"policy_id"`
+	// The service principal ID that this federation policy applies to. Only set
+	// for service principal federation policies.
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 	// Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`
 	// Last update time of the federation policy.
@@ -962,10 +1021,16 @@ func (newState *FederationPolicy) SyncEffectiveFieldsDuringRead(existingState Fe
 
 func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -991,12 +1056,14 @@ func (o FederationPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": o.CreateTime,
-			"description": o.Description,
-			"name":        o.Name,
-			"oidc_policy": o.OidcPolicy,
-			"uid":         o.Uid,
-			"update_time": o.UpdateTime,
+			"create_time":          o.CreateTime,
+			"description":          o.Description,
+			"name":                 o.Name,
+			"oidc_policy":          o.OidcPolicy,
+			"policy_id":            o.PolicyId,
+			"service_principal_id": o.ServicePrincipalId,
+			"uid":                  o.Uid,
+			"update_time":          o.UpdateTime,
 		})
 }
 
@@ -1004,12 +1071,14 @@ func (o FederationPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o FederationPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
-			"description": types.StringType,
-			"name":        types.StringType,
-			"oidc_policy": OidcFederationPolicy{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": types.StringType,
+			"create_time":          types.StringType,
+			"description":          types.StringType,
+			"name":                 types.StringType,
+			"oidc_policy":          OidcFederationPolicy{}.Type(ctx),
+			"policy_id":            types.StringType,
+			"service_principal_id": types.Int64Type,
+			"uid":                  types.StringType,
+			"update_time":          types.StringType,
 		},
 	}
 }
@@ -1042,7 +1111,6 @@ func (o *FederationPolicy) SetOidcPolicy(ctx context.Context, v OidcFederationPo
 	o.OidcPolicy = vs
 }
 
-// Get account federation policy
 type GetAccountFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1101,6 +1169,10 @@ type GetCustomAppIntegrationOutput struct {
 	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
@@ -1120,6 +1192,7 @@ func (c GetCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[strin
 	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -1133,9 +1206,10 @@ func (c GetCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[strin
 // SDK values.
 func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"scopes":              reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1146,16 +1220,17 @@ func (o GetCustomAppIntegrationOutput) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client_id":           o.ClientId,
-			"confidential":        o.Confidential,
-			"create_time":         o.CreateTime,
-			"created_by":          o.CreatedBy,
-			"creator_username":    o.CreatorUsername,
-			"integration_id":      o.IntegrationId,
-			"name":                o.Name,
-			"redirect_urls":       o.RedirectUrls,
-			"scopes":              o.Scopes,
-			"token_access_policy": o.TokenAccessPolicy,
+			"client_id":              o.ClientId,
+			"confidential":           o.Confidential,
+			"create_time":            o.CreateTime,
+			"created_by":             o.CreatedBy,
+			"creator_username":       o.CreatorUsername,
+			"integration_id":         o.IntegrationId,
+			"name":                   o.Name,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -1177,6 +1252,9 @@ func (o GetCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"token_access_policy": TokenAccessPolicy{}.Type(ctx),
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -1261,7 +1339,32 @@ func (o *GetCustomAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Context
 	o.TokenAccessPolicy = vs
 }
 
-// Get OAuth Custom App Integration
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in GetCustomAppIntegrationOutput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationOutput) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in GetCustomAppIntegrationOutput.
+func (o *GetCustomAppIntegrationOutput) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
+}
+
 type GetCustomAppIntegrationRequest struct {
 	// The OAuth app integration ID.
 	IntegrationId types.String `tfsdk:"-"`
@@ -1484,7 +1587,6 @@ func (o *GetPublishedAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Cont
 	o.TokenAccessPolicy = vs
 }
 
-// Get OAuth Published App Integration
 type GetPublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -1687,7 +1789,6 @@ func (o *GetPublishedAppsOutput) SetApps(ctx context.Context, v []PublishedAppOu
 	o.Apps = types.ListValueMust(t, vs)
 }
 
-// Get service principal federation policy
 type GetServicePrincipalFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1728,7 +1829,6 @@ func (o GetServicePrincipalFederationPolicyRequest) Type(ctx context.Context) at
 	}
 }
 
-// List account federation policies
 type ListAccountFederationPoliciesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -1768,7 +1868,6 @@ func (o ListAccountFederationPoliciesRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get custom oauth app integrations
 type ListCustomAppIntegrationsRequest struct {
 	IncludeCreatorUsername types.Bool `tfsdk:"-"`
 
@@ -1894,7 +1993,6 @@ func (o *ListFederationPoliciesResponse) SetPolicies(ctx context.Context, v []Fe
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// Get all the published OAuth apps
 type ListOAuthPublishedAppsRequest struct {
 	// The max number of OAuth published apps to return in one page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1935,7 +2033,6 @@ func (o ListOAuthPublishedAppsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get published oauth app integrations
 type ListPublishedAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -1975,7 +2072,6 @@ func (o ListPublishedAppIntegrationsRequest) Type(ctx context.Context) attr.Type
 	}
 }
 
-// List service principal federation policies
 type ListServicePrincipalFederationPoliciesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -2019,7 +2115,6 @@ func (o ListServicePrincipalFederationPoliciesRequest) Type(ctx context.Context)
 	}
 }
 
-// List service principal secrets
 type ListServicePrincipalSecretsRequest struct {
 	// An opaque page token which was the `next_page_token` in the response of
 	// the previous request to list the secrets for this service principal.
@@ -2165,11 +2260,19 @@ type OidcFederationPolicy struct {
 	// tokens.
 	Issuer types.String `tfsdk:"issuer"`
 	// The public keys used to validate the signature of federated tokens, in
-	// JWKS format. If unspecified (recommended), Databricks automatically
-	// fetches the public keys from your issuer’s well known endpoint.
-	// Databricks strongly recommends relying on your issuer’s well known
-	// endpoint for discovering public keys.
+	// JWKS format. Most use cases should not need to specify this field. If
+	// jwks_uri and jwks_json are both unspecified (recommended), Databricks
+	// automatically fetches the public keys from your issuer’s well known
+	// endpoint. Databricks strongly recommends relying on your issuer’s well
+	// known endpoint for discovering public keys.
 	JwksJson types.String `tfsdk:"jwks_json"`
+	// URL of the public keys used to validate the signature of federated
+	// tokens, in JWKS format. Most use cases should not need to specify this
+	// field. If jwks_uri and jwks_json are both unspecified (recommended),
+	// Databricks automatically fetches the public keys from your issuer’s
+	// well known endpoint. Databricks strongly recommends relying on your
+	// issuer’s well known endpoint for discovering public keys.
+	JwksUri types.String `tfsdk:"jwks_uri"`
 	// The required token subject, as specified in the subject claim of
 	// federated tokens. Must be specified for service principal federation
 	// policies. Must not be specified for account federation policies.
@@ -2189,6 +2292,7 @@ func (c OidcFederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["audiences"] = attrs["audiences"].SetOptional()
 	attrs["issuer"] = attrs["issuer"].SetOptional()
 	attrs["jwks_json"] = attrs["jwks_json"].SetOptional()
+	attrs["jwks_uri"] = attrs["jwks_uri"].SetOptional()
 	attrs["subject"] = attrs["subject"].SetOptional()
 	attrs["subject_claim"] = attrs["subject_claim"].SetOptional()
 
@@ -2218,6 +2322,7 @@ func (o OidcFederationPolicy) ToObjectValue(ctx context.Context) basetypes.Objec
 			"audiences":     o.Audiences,
 			"issuer":        o.Issuer,
 			"jwks_json":     o.JwksJson,
+			"jwks_uri":      o.JwksUri,
 			"subject":       o.Subject,
 			"subject_claim": o.SubjectClaim,
 		})
@@ -2232,6 +2337,7 @@ func (o OidcFederationPolicy) Type(ctx context.Context) attr.Type {
 			},
 			"issuer":        types.StringType,
 			"jwks_json":     types.StringType,
+			"jwks_uri":      types.StringType,
 			"subject":       types.StringType,
 			"subject_claim": types.StringType,
 		},
@@ -2406,6 +2512,9 @@ func (o *PublishedAppOutput) SetScopes(ctx context.Context, v []types.String) {
 type SecretInfo struct {
 	// UTC time when the secret was created
 	CreateTime types.String `tfsdk:"create_time"`
+	// UTC time when the secret will expire. If the field is not present, the
+	// secret does not expire.
+	ExpireTime types.String `tfsdk:"expire_time"`
 	// ID of the secret
 	Id types.String `tfsdk:"id"`
 	// Secret Hash
@@ -2424,6 +2533,7 @@ func (newState *SecretInfo) SyncEffectiveFieldsDuringRead(existingState SecretIn
 
 func (c SecretInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["secret_hash"] = attrs["secret_hash"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -2451,6 +2561,7 @@ func (o SecretInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": o.CreateTime,
+			"expire_time": o.ExpireTime,
 			"id":          o.Id,
 			"secret_hash": o.SecretHash,
 			"status":      o.Status,
@@ -2463,6 +2574,7 @@ func (o SecretInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
+			"expire_time": types.StringType,
 			"id":          types.StringType,
 			"secret_hash": types.StringType,
 			"status":      types.StringType,
@@ -2524,7 +2636,6 @@ func (o TokenAccessPolicy) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update account federation policy
 type UpdateAccountFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy.
@@ -2614,6 +2725,10 @@ type UpdateCustomAppIntegration struct {
 	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy to be updated in the custom OAuth app integration
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration) {
@@ -2627,6 +2742,7 @@ func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -2640,9 +2756,10 @@ func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a UpdateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"scopes":              reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2653,10 +2770,11 @@ func (o UpdateCustomAppIntegration) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"integration_id":      o.IntegrationId,
-			"redirect_urls":       o.RedirectUrls,
-			"scopes":              o.Scopes,
-			"token_access_policy": o.TokenAccessPolicy,
+			"integration_id":         o.IntegrationId,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -2672,6 +2790,9 @@ func (o UpdateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"token_access_policy": TokenAccessPolicy{}.Type(ctx),
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -2754,6 +2875,32 @@ func (o *UpdateCustomAppIntegration) GetTokenAccessPolicy(ctx context.Context) (
 func (o *UpdateCustomAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
 	vs := v.ToObjectValue(ctx)
 	o.TokenAccessPolicy = vs
+}
+
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in UpdateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in UpdateCustomAppIntegration.
+func (o *UpdateCustomAppIntegration) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
 type UpdateCustomAppIntegrationOutput struct {
@@ -2920,7 +3067,6 @@ func (o UpdatePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Update service principal federation policy
 type UpdateServicePrincipalFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy.

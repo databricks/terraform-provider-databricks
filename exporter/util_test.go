@@ -3,6 +3,7 @@ package exporter
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -32,6 +33,18 @@ func TestImportClusterEmitsInitScripts(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /mnt/abc/test.sh)"])
 }
 
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "foo", eitherString("foo", "bar"))
+	assert.Equal(t, "bar", eitherString(nil, "bar"))
+	assert.Equal(t, "foo", eitherString("foo", ""))
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
+	assert.Equal(t, "a", eitherString(1, "a"))
+	assert.Equal(t, "", eitherString(1, nil))
+	assert.Equal(t, "", eitherString(1, 1))
+}
+
 func TestAddAwsMounts(t *testing.T) {
 	ic := importContextForTest()
 	ic.mountMap = map[string]mount{}
@@ -45,7 +58,7 @@ func TestAddAwsMounts(t *testing.T) {
 var (
 	userListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 		Response: iam.ListUsersResponse{
 			Resources: []iam.User{
 				{
@@ -60,7 +73,7 @@ var (
 	}
 	userListIdUsernameFixture2 = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=2",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
 		Response: iam.ListUsersResponse{
 			Resources:    []iam.User{},
 			TotalResults: 1,
@@ -86,7 +99,7 @@ var (
 	}
 	spListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=1",
 		Response: iam.ListServicePrincipalResponse{
 			Resources: []iam.ServicePrincipal{
 				{
@@ -100,7 +113,7 @@ var (
 	}
 	spListIdUsernameFixture2 = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=2",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=2",
 		Response: iam.ListServicePrincipalResponse{
 			Resources:    []iam.ServicePrincipal{},
 			TotalResults: 1,
@@ -164,7 +177,7 @@ func TestEmitUserError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{},
 			},
@@ -181,7 +194,7 @@ func TestEmitUserServiceNotEnabled(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{},
 			},
@@ -441,4 +454,63 @@ func TestDirectoryIncrementalMode(t *testing.T) {
 
 	// test emit during workspace listing
 	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
+}
+
+func TestParsingServices(t *testing.T) {
+	ic := importContextForTest()
+	allServices, allListing := ic.allServicesAndListing()
+	// test for all listings
+	listing := ic.parseServicesList("all", true)
+	assert.ElementsMatch(t, strings.Split(allListing, ","), listing)
+	// Test for all services
+	services := ic.parseServicesList("all", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	//
+	services = ic.parseServicesList("all,-uc,+uc", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	// Test for all except UC
+	exceptUcServices := ic.parseServicesList("all,-uc", false)
+	expectedExceptUcServices := []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if !strings.HasPrefix(s, "uc-") && s != "vector-search" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+	// Test for all UC except some services
+	exceptUcServices = ic.parseServicesList("uc,-uc-tables", false)
+	expectedExceptUcServices = []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if (strings.HasPrefix(s, "uc-") || s == "vector-search") && s != "uc-tables" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+
+	// specific things
+	specificServices := ic.parseServicesList("+uc-tables", false)
+	expectedServices := []string{"uc-tables"}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+	//
+	specificServices = ic.parseServicesList("+uc-tables,-uc-tables", false)
+	expectedServices = []string{}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+
+}
+
+func TestAnalyzeNotebook(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,wsfiles,volumes,storage")
+	content := `
+		%pip install -U pandas /dbfs/tmp/mypkg.whl numpy==1.23.5
+		# %pip install -U pandas /dbfs/tmp/mypkg2.whl numpy==1.23.5
+		%pip install -U pandas /Volumes/default/main/tmp/mypkg3.whl numpy==1.23.5
+		%pip install -U pandas /Workspace/Shared/tmp/mypkg4.whl numpy==1.23.5
+
+	`
+	analyzeNotebook(ic, content)
+	assert.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /tmp/mypkg.whl)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/default/main/tmp/mypkg3.whl)"])
+	assert.True(t, ic.testEmits["databricks_workspace_file[<unknown>] (id: /Shared/tmp/mypkg4.whl)"])
 }

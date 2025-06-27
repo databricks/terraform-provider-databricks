@@ -30,6 +30,8 @@ type App_SdkV2 struct {
 
 	AppStatus types.List `tfsdk:"app_status"`
 
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
 	ComputeStatus types.List `tfsdk:"compute_status"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time"`
@@ -41,9 +43,19 @@ type App_SdkV2 struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
+
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The effective api scopes granted to the user access token.
+	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
+	// The unique identifier of the app.
+	Id types.String `tfsdk:"id"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
+
+	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
+
+	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
 	PendingDeployment types.List `tfsdk:"pending_deployment"`
@@ -61,6 +73,8 @@ type App_SdkV2 struct {
 	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url"`
+
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
 func (newState *App_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan App_SdkV2) {
@@ -74,13 +88,19 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["active_deployment"] = attrs["active_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["app_status"] = attrs["app_status"].SetComputed()
 	attrs["app_status"] = attrs["app_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["compute_status"] = attrs["compute_status"].SetComputed()
 	attrs["compute_status"] = attrs["compute_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
+	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["pending_deployment"] = attrs["pending_deployment"].SetComputed()
 	attrs["pending_deployment"] = attrs["pending_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["resources"] = attrs["resources"].SetOptional()
@@ -90,6 +110,7 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
+	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
 
 	return attrs
 }
@@ -103,11 +124,13 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (a App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"active_deployment":  reflect.TypeOf(AppDeployment_SdkV2{}),
-		"app_status":         reflect.TypeOf(ApplicationStatus_SdkV2{}),
-		"compute_status":     reflect.TypeOf(ComputeStatus_SdkV2{}),
-		"pending_deployment": reflect.TypeOf(AppDeployment_SdkV2{}),
-		"resources":          reflect.TypeOf(AppResource_SdkV2{}),
+		"active_deployment":         reflect.TypeOf(AppDeployment_SdkV2{}),
+		"app_status":                reflect.TypeOf(ApplicationStatus_SdkV2{}),
+		"compute_status":            reflect.TypeOf(ComputeStatus_SdkV2{}),
+		"effective_user_api_scopes": reflect.TypeOf(types.String{}),
+		"pending_deployment":        reflect.TypeOf(AppDeployment_SdkV2{}),
+		"resources":                 reflect.TypeOf(AppResource_SdkV2{}),
+		"user_api_scopes":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -120,12 +143,18 @@ func (o App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"active_deployment":           o.ActiveDeployment,
 			"app_status":                  o.AppStatus,
+			"budget_policy_id":            o.BudgetPolicyId,
 			"compute_status":              o.ComputeStatus,
 			"create_time":                 o.CreateTime,
 			"creator":                     o.Creator,
 			"default_source_code_path":    o.DefaultSourceCodePath,
 			"description":                 o.Description,
+			"effective_budget_policy_id":  o.EffectiveBudgetPolicyId,
+			"effective_user_api_scopes":   o.EffectiveUserApiScopes,
+			"id":                          o.Id,
 			"name":                        o.Name,
+			"oauth2_app_client_id":        o.Oauth2AppClientId,
+			"oauth2_app_integration_id":   o.Oauth2AppIntegrationId,
 			"pending_deployment":          o.PendingDeployment,
 			"resources":                   o.Resources,
 			"service_principal_client_id": o.ServicePrincipalClientId,
@@ -134,6 +163,7 @@ func (o App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"update_time":                 o.UpdateTime,
 			"updater":                     o.Updater,
 			"url":                         o.Url,
+			"user_api_scopes":             o.UserApiScopes,
 		})
 }
 
@@ -147,14 +177,22 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"app_status": basetypes.ListType{
 				ElemType: ApplicationStatus_SdkV2{}.Type(ctx),
 			},
+			"budget_policy_id": types.StringType,
 			"compute_status": basetypes.ListType{
 				ElemType: ComputeStatus_SdkV2{}.Type(ctx),
 			},
-			"create_time":              types.StringType,
-			"creator":                  types.StringType,
-			"default_source_code_path": types.StringType,
-			"description":              types.StringType,
-			"name":                     types.StringType,
+			"create_time":                types.StringType,
+			"creator":                    types.StringType,
+			"default_source_code_path":   types.StringType,
+			"description":                types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"effective_user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"id":                        types.StringType,
+			"name":                      types.StringType,
+			"oauth2_app_client_id":      types.StringType,
+			"oauth2_app_integration_id": types.StringType,
 			"pending_deployment": basetypes.ListType{
 				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
@@ -167,6 +205,9 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time":                 types.StringType,
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
+			"user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -249,6 +290,32 @@ func (o *App_SdkV2) SetComputeStatus(ctx context.Context, v ComputeStatus_SdkV2)
 	o.ComputeStatus = types.ListValueMust(t, vs)
 }
 
+// GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in App_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App_SdkV2) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if o.EffectiveUserApiScopes.IsNull() || o.EffectiveUserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveUserApiScopes sets the value of the EffectiveUserApiScopes field in App_SdkV2.
+func (o *App_SdkV2) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+}
+
 // GetPendingDeployment returns the value of the PendingDeployment field in App_SdkV2 as
 // a AppDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -299,6 +366,32 @@ func (o *App_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
+}
+
+// GetUserApiScopes returns the value of the UserApiScopes field in App_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserApiScopes.IsNull() || o.UserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserApiScopes sets the value of the UserApiScopes field in App_SdkV2.
+func (o *App_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserApiScopes = types.ListValueMust(t, vs)
 }
 
 type AppAccessControlRequest_SdkV2 struct {
@@ -1035,6 +1128,8 @@ type AppResource_SdkV2 struct {
 	ServingEndpoint types.List `tfsdk:"serving_endpoint"`
 
 	SqlWarehouse types.List `tfsdk:"sql_warehouse"`
+
+	UcSecurable types.List `tfsdk:"uc_securable"`
 }
 
 func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource_SdkV2) {
@@ -1054,6 +1149,8 @@ func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["serving_endpoint"] = attrs["serving_endpoint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sql_warehouse"] = attrs["sql_warehouse"].SetOptional()
 	attrs["sql_warehouse"] = attrs["sql_warehouse"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["uc_securable"] = attrs["uc_securable"].SetOptional()
+	attrs["uc_securable"] = attrs["uc_securable"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1071,6 +1168,7 @@ func (a AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 		"secret":           reflect.TypeOf(AppResourceSecret_SdkV2{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint_SdkV2{}),
 		"sql_warehouse":    reflect.TypeOf(AppResourceSqlWarehouse_SdkV2{}),
+		"uc_securable":     reflect.TypeOf(AppResourceUcSecurable_SdkV2{}),
 	}
 }
 
@@ -1087,6 +1185,7 @@ func (o AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"secret":           o.Secret,
 			"serving_endpoint": o.ServingEndpoint,
 			"sql_warehouse":    o.SqlWarehouse,
+			"uc_securable":     o.UcSecurable,
 		})
 }
 
@@ -1107,6 +1206,9 @@ func (o AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"sql_warehouse": basetypes.ListType{
 				ElemType: AppResourceSqlWarehouse_SdkV2{}.Type(ctx),
+			},
+			"uc_securable": basetypes.ListType{
+				ElemType: AppResourceUcSecurable_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1214,6 +1316,32 @@ func (o *AppResource_SdkV2) SetSqlWarehouse(ctx context.Context, v AppResourceSq
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
 	o.SqlWarehouse = types.ListValueMust(t, vs)
+}
+
+// GetUcSecurable returns the value of the UcSecurable field in AppResource_SdkV2 as
+// a AppResourceUcSecurable_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource_SdkV2) GetUcSecurable(ctx context.Context) (AppResourceUcSecurable_SdkV2, bool) {
+	var e AppResourceUcSecurable_SdkV2
+	if o.UcSecurable.IsNull() || o.UcSecurable.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceUcSecurable_SdkV2
+	d := o.UcSecurable.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUcSecurable sets the value of the UcSecurable field in AppResource_SdkV2.
+func (o *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable"]
+	o.UcSecurable = types.ListValueMust(t, vs)
 }
 
 type AppResourceJob_SdkV2 struct {
@@ -1437,6 +1565,63 @@ func (o AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type AppResourceUcSecurable_SdkV2 struct {
+	Permission types.String `tfsdk:"permission"`
+
+	SecurableFullName types.String `tfsdk:"securable_full_name"`
+
+	SecurableType types.String `tfsdk:"securable_type"`
+}
+
+func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable_SdkV2) {
+}
+
+func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceUcSecurable_SdkV2) {
+}
+
+func (c AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceUcSecurable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppResourceUcSecurable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceUcSecurable_SdkV2
+// only implements ToObjectValue() and Type().
+func (o AppResourceUcSecurable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission":          o.Permission,
+			"securable_full_name": o.SecurableFullName,
+			"securable_type":      o.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission":          types.StringType,
+			"securable_full_name": types.StringType,
+			"securable_type":      types.StringType,
+		},
+	}
+}
+
 type ApplicationStatus_SdkV2 struct {
 	// Application status message
 	Message types.String `tfsdk:"message"`
@@ -1543,7 +1728,6 @@ func (o ComputeStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create an app deployment
 type CreateAppDeploymentRequest_SdkV2 struct {
 	AppDeployment types.List `tfsdk:"app_deployment"`
 	// The name of the app.
@@ -1613,7 +1797,6 @@ func (o *CreateAppDeploymentRequest_SdkV2) SetAppDeployment(ctx context.Context,
 	o.AppDeployment = types.ListValueMust(t, vs)
 }
 
-// Create an app
 type CreateAppRequest_SdkV2 struct {
 	App types.List `tfsdk:"app"`
 	// If true, the app will not be started after creation.
@@ -1683,7 +1866,6 @@ func (o *CreateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 	o.App = types.ListValueMust(t, vs)
 }
 
-// Delete an app
 type DeleteAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -1720,7 +1902,6 @@ func (o DeleteAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app deployment
 type GetAppDeploymentRequest_SdkV2 struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -1761,7 +1942,6 @@ func (o GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get app permission levels
 type GetAppPermissionLevelsRequest_SdkV2 struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -1876,7 +2056,6 @@ func (o *GetAppPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.C
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get app permissions
 type GetAppPermissionsRequest_SdkV2 struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -1913,7 +2092,6 @@ func (o GetAppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app
 type GetAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -1950,7 +2128,6 @@ func (o GetAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List app deployments
 type ListAppDeploymentsRequest_SdkV2 struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -2079,7 +2256,6 @@ func (o *ListAppDeploymentsResponse_SdkV2) SetAppDeployments(ctx context.Context
 	o.AppDeployments = types.ListValueMust(t, vs)
 }
 
-// List apps
 type ListAppsRequest_SdkV2 struct {
 	// Upper bound for items returned.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2299,7 +2475,6 @@ func (o StopAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update an app
 type UpdateAppRequest_SdkV2 struct {
 	App types.List `tfsdk:"app"`
 	// The name of the app. The name must contain only lowercase alphanumeric

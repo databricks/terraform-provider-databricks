@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
@@ -35,6 +34,7 @@ resource "databricks_sql_table" "myInferenceTable" {
 	name = "bar{var.STICKY_RANDOM}_inference"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
+	warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 	
 	column {
 		name = "model_id"
@@ -63,6 +63,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -73,11 +74,13 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "myTimeseries" {
+				depends_on = [databricks_quality_monitor.testMonitorInference]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_timeseries"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"
@@ -89,6 +92,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myTimeseries.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				time_series {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -96,11 +100,13 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "mySnapshot" {
+				depends_on = [databricks_quality_monitor.testMonitorTimeseries]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_snapshot"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"
@@ -112,6 +118,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.mySnapshot.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				snapshot {
 				} 
 			}
@@ -129,6 +136,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -144,6 +152,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			inference_log {
 				granularities = ["1 hour"]
 				timestamp_col = "timestamp"
@@ -158,7 +167,8 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 
 var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
 	"databricks": func() (tfprotov6.ProviderServer, error) {
-		return providers.GetProviderServer(context.Background(), providers.WithSdkV2FallbackOptions(pluginfw.WithSdkV2ResourceFallbacks("databricks_quality_monitor")))
+		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_quality_monitor"})
+		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 	},
 }
 
@@ -228,6 +238,7 @@ func TestUcAccUpdateQualityMonitorTransitionFromPluginFw(t *testing.T) {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			inference_log {
 				granularities = ["1 hour"]
 				timestamp_col = "timestamp"

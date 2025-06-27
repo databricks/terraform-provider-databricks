@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -31,7 +32,7 @@ func TestWorkspaceBindings_Create(t *testing.T) {
 					SecurableName: "my_catalog",
 					SecurableType: "catalog",
 				},
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.UpdateWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
@@ -42,7 +43,7 @@ func TestWorkspaceBindings_Create(t *testing.T) {
 			}, {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
@@ -77,7 +78,7 @@ func TestWorkspaceBindingsReadOnly_Create(t *testing.T) {
 					SecurableName: "my_catalog",
 					SecurableType: "catalog",
 				},
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.UpdateWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -88,7 +89,7 @@ func TestWorkspaceBindingsReadOnly_Create(t *testing.T) {
 			}, {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -124,7 +125,7 @@ func TestSecurableWorkspaceBindings_Create(t *testing.T) {
 					SecurableName: "my_catalog",
 					SecurableType: "catalog",
 				},
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.UpdateWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -135,7 +136,7 @@ func TestSecurableWorkspaceBindings_Create(t *testing.T) {
 			}, {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -167,8 +168,8 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 				},
 				},
 				SecurableName: "external_location",
-				SecurableType: catalog.UpdateBindingsSecurableTypeExternalLocation,
-			}).Return(&catalog.WorkspaceBindingsResponse{
+				SecurableType: string(bindings.BindingsSecurableTypeExternalLocation),
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
@@ -176,7 +177,7 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, catalog.GetBindingsSecurableTypeExternalLocation, "external_location").Return(&catalog.WorkspaceBindingsResponse{
+			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, string(bindings.BindingsSecurableTypeExternalLocation), "external_location").Return(&catalog.GetWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(1234567890101112),
@@ -210,7 +211,7 @@ func TestSecurableWorkspaceBindings_Delete(t *testing.T) {
 					SecurableName: "my_catalog",
 					SecurableType: "catalog",
 				},
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.UpdateWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -221,7 +222,7 @@ func TestSecurableWorkspaceBindings_Delete(t *testing.T) {
 			}, {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -243,13 +244,39 @@ func TestSecurableWorkspaceBindings_Delete(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestWorkspaceBindingsRead_OldStyleSecurableType(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/bindings/external_location/my_catalog?",
+				Response: catalog.GetWorkspaceBindingsResponse{
+					Bindings: []catalog.WorkspaceBinding{
+						{
+							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
+							WorkspaceId: int64(1234567890101112),
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceWorkspaceBinding(),
+		ID:       "1234567890101112|external-location|my_catalog",
+		Read:     true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id":   1234567890101112,
+		"securable_type": string(bindings.BindingsSecurableTypeExternalLocation),
+		"securable_name": "my_catalog",
+	})
+}
+
 func TestWorkspaceBindingsReadImport(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
+				Response: catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,

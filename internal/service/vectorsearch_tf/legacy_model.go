@@ -72,9 +72,11 @@ func (o ColumnInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateEndpoint_SdkV2 struct {
-	// Type of endpoint.
+	// The budget policy id to be applied
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// Type of endpoint
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Name of endpoint
+	// Name of the vector search endpoint
 	Name types.String `tfsdk:"name"`
 }
 
@@ -85,6 +87,7 @@ func (newState *CreateEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 }
 
 func (c CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 
@@ -109,8 +112,9 @@ func (o CreateEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"endpoint_type": o.EndpointType,
-			"name":          o.Name,
+			"budget_policy_id": o.BudgetPolicyId,
+			"endpoint_type":    o.EndpointType,
+			"name":             o.Name,
 		})
 }
 
@@ -118,8 +122,9 @@ func (o CreateEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CreateEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoint_type": types.StringType,
-			"name":          types.StringType,
+			"budget_policy_id": types.StringType,
+			"endpoint_type":    types.StringType,
+			"name":             types.StringType,
 		},
 	}
 }
@@ -133,13 +138,12 @@ type CreateVectorIndexRequest_SdkV2 struct {
 	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes:
-	//
-	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
-	// Table, automatically and incrementally updating the index as the
-	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
-	// that supports direct read and write of vectors and metadata through our
-	// REST and SDK APIs. With this model, the user manages index updates.
+	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
+	// automatically syncs with a source Delta Table, automatically and
+	// incrementally updating the index as the underlying data in the Delta
+	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
+	// write of vectors and metadata through our REST and SDK APIs. With this
+	// model, the user manages index updates.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`
@@ -266,85 +270,59 @@ func (o *CreateVectorIndexRequest_SdkV2) SetDirectAccessIndexSpec(ctx context.Co
 	o.DirectAccessIndexSpec = types.ListValueMust(t, vs)
 }
 
-type CreateVectorIndexResponse_SdkV2 struct {
-	VectorIndex types.List `tfsdk:"vector_index"`
+type CustomTag_SdkV2 struct {
+	// Key field for a vector search endpoint tag.
+	Key types.String `tfsdk:"key"`
+	// [Optional] Value field for a vector search endpoint tag.
+	Value types.String `tfsdk:"value"`
 }
 
-func (newState *CreateVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexResponse_SdkV2) {
+func (newState *CustomTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomTag_SdkV2) {
 }
 
-func (newState *CreateVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexResponse_SdkV2) {
+func (newState *CustomTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomTag_SdkV2) {
 }
 
-func (c CreateVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["vector_index"] = attrs["vector_index"].SetOptional()
-	attrs["vector_index"] = attrs["vector_index"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+func (c CustomTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
 
 	return attrs
 }
 
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexResponse.
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomTag.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
 // retrieve the type information of the elements in complex fields at runtime. The values of the map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateVectorIndexResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"vector_index": reflect.TypeOf(VectorIndex_SdkV2{}),
-	}
+func (a CustomTag_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateVectorIndexResponse_SdkV2
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTag_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateVectorIndexResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CustomTag_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"vector_index": o.VectorIndex,
+			"key":   o.Key,
+			"value": o.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (o CustomTag_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"vector_index": basetypes.ListType{
-				ElemType: VectorIndex_SdkV2{}.Type(ctx),
-			},
+			"key":   types.StringType,
+			"value": types.StringType,
 		},
 	}
 }
 
-// GetVectorIndex returns the value of the VectorIndex field in CreateVectorIndexResponse_SdkV2 as
-// a VectorIndex_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateVectorIndexResponse_SdkV2) GetVectorIndex(ctx context.Context) (VectorIndex_SdkV2, bool) {
-	var e VectorIndex_SdkV2
-	if o.VectorIndex.IsNull() || o.VectorIndex.IsUnknown() {
-		return e, false
-	}
-	var v []VectorIndex_SdkV2
-	d := o.VectorIndex.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetVectorIndex sets the value of the VectorIndex field in CreateVectorIndexResponse_SdkV2.
-func (o *CreateVectorIndexResponse_SdkV2) SetVectorIndex(ctx context.Context, v VectorIndex_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vector_index"]
-	o.VectorIndex = types.ListValueMust(t, vs)
-}
-
-// Result of the upsert or delete operation.
 type DeleteDataResult_SdkV2 struct {
 	// List of primary keys for rows that failed to process.
 	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
@@ -428,26 +406,12 @@ func (o *DeleteDataResult_SdkV2) SetFailedPrimaryKeys(ctx context.Context, v []t
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Request payload for deleting data from a vector index.
 type DeleteDataVectorIndexRequest_SdkV2 struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
 	// List of primary keys for the data to be deleted.
-	PrimaryKeys types.List `tfsdk:"primary_keys"`
-}
-
-func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexRequest_SdkV2) {
-}
-
-func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest_SdkV2) {
-}
-
-func (c DeleteDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["primary_keys"] = attrs["primary_keys"].SetRequired()
-
-	return attrs
+	PrimaryKeys types.List `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexRequest.
@@ -513,7 +477,6 @@ func (o *DeleteDataVectorIndexRequest_SdkV2) SetPrimaryKeys(ctx context.Context,
 	o.PrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse_SdkV2 struct {
 	// Result of the upsert or delete operation.
 	Result types.List `tfsdk:"result"`
@@ -598,9 +561,8 @@ func (o *DeleteDataVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v D
 	o.Result = types.ListValueMust(t, vs)
 }
 
-// Delete an endpoint
 type DeleteEndpointRequest_SdkV2 struct {
-	// Name of the endpoint
+	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
 }
 
@@ -638,6 +600,17 @@ func (o DeleteEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteEndpointResponse_SdkV2 struct {
 }
 
+func (newState *DeleteEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse_SdkV2) {
+}
+
+func (newState *DeleteEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse_SdkV2) {
+}
+
+func (c DeleteEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -665,7 +638,6 @@ func (o DeleteEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an index
 type DeleteIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -705,6 +677,17 @@ func (o DeleteIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexResponse_SdkV2 struct {
 }
 
+func (newState *DeleteIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexResponse_SdkV2) {
+}
+
+func (newState *DeleteIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse_SdkV2) {
+}
+
+func (c DeleteIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -740,21 +723,18 @@ type DeltaSyncVectorIndexSpecRequest_SdkV2 struct {
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors. The format should be
-	// array[double].
+	// The columns that contain the embedding vectors.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
-	// [Optional] Automatically sync the vector index contents and computed
-	// embeddings to the specified Delta table. The only supported table name is
-	// the index name with the suffix `_writeback_table`.
+	// [Optional] Name of the Delta table to sync the vector index contents and
+	// computed embeddings to.
 	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
-	// Pipeline execution mode.
-	//
-	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
-	// system stops processing after successfully refreshing the source table in
-	// the pipeline once, ensuring the table is updated based on the data
-	// available when the update started. - `CONTINUOUS`: If the pipeline uses
-	// continuous execution, the pipeline processes new data as it arrives in
-	// the source table to keep vector index fresh.
+	// Pipeline execution mode. - `TRIGGERED`: If the pipeline uses the
+	// triggered execution mode, the system stops processing after successfully
+	// refreshing the source table in the pipeline once, ensuring the table is
+	// updated based on the data available when the update started. -
+	// `CONTINUOUS`: If the pipeline uses continuous execution, the pipeline
+	// processes new data as it arrives in the source table to keep vector index
+	// fresh.
 	PipelineType types.String `tfsdk:"pipeline_type"`
 	// The name of the source table.
 	SourceTable types.String `tfsdk:"source_table"`
@@ -916,14 +896,13 @@ type DeltaSyncVectorIndexSpecResponse_SdkV2 struct {
 	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
 	// The ID of the pipeline that is used to sync the index.
 	PipelineId types.String `tfsdk:"pipeline_id"`
-	// Pipeline execution mode.
-	//
-	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
-	// system stops processing after successfully refreshing the source table in
-	// the pipeline once, ensuring the table is updated based on the data
-	// available when the update started. - `CONTINUOUS`: If the pipeline uses
-	// continuous execution, the pipeline processes new data as it arrives in
-	// the source table to keep vector index fresh.
+	// Pipeline execution mode. - `TRIGGERED`: If the pipeline uses the
+	// triggered execution mode, the system stops processing after successfully
+	// refreshing the source table in the pipeline once, ensuring the table is
+	// updated based on the data available when the update started. -
+	// `CONTINUOUS`: If the pipeline uses continuous execution, the pipeline
+	// processes new data as it arrives in the source table to keep vector index
+	// fresh.
 	PipelineType types.String `tfsdk:"pipeline_type"`
 	// The name of the source table.
 	SourceTable types.String `tfsdk:"source_table"`
@@ -1047,15 +1026,14 @@ func (o *DeltaSyncVectorIndexSpecResponse_SdkV2) SetEmbeddingVectorColumns(ctx c
 }
 
 type DirectAccessVectorIndexSpec_SdkV2 struct {
-	// Contains the optional model endpoint to use during query time.
+	// The columns that contain the embedding source. The format should be
+	// array[double].
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-
+	// The columns that contain the embedding vectors. The format should be
+	// array[double].
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
-	// The schema of the index in JSON format.
-	//
-	// Supported types are `integer`, `long`, `float`, `double`, `boolean`,
-	// `string`, `date`, `timestamp`.
-	//
+	// The schema of the index in JSON format. Supported types are `integer`,
+	// `long`, `float`, `double`, `boolean`, `string`, `date`, `timestamp`.
 	// Supported types for vector column: `array<float>`, `array<double>`,`.
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
@@ -1279,9 +1257,13 @@ type EndpointInfo_SdkV2 struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Creator of the endpoint
 	Creator types.String `tfsdk:"creator"`
+	// The custom tags assigned to the endpoint
+	CustomTags types.List `tfsdk:"custom_tags"`
+	// The budget policy id applied to the endpoint
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Current status of the endpoint
 	EndpointStatus types.List `tfsdk:"endpoint_status"`
-	// Type of endpoint.
+	// Type of endpoint
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Unique identifier of the endpoint
 	Id types.String `tfsdk:"id"`
@@ -1289,7 +1271,7 @@ type EndpointInfo_SdkV2 struct {
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// User who last updated the endpoint
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
-	// Name of endpoint
+	// Name of the vector search endpoint
 	Name types.String `tfsdk:"name"`
 	// Number of indexes on the endpoint
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
@@ -1304,6 +1286,8 @@ func (newState *EndpointInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["endpoint_status"] = attrs["endpoint_status"].SetOptional()
 	attrs["endpoint_status"] = attrs["endpoint_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetOptional()
@@ -1325,6 +1309,7 @@ func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // SDK values.
 func (a EndpointInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"custom_tags":     reflect.TypeOf(CustomTag_SdkV2{}),
 		"endpoint_status": reflect.TypeOf(EndpointStatus_SdkV2{}),
 	}
 }
@@ -1336,15 +1321,17 @@ func (o EndpointInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":     o.CreationTimestamp,
-			"creator":                o.Creator,
-			"endpoint_status":        o.EndpointStatus,
-			"endpoint_type":          o.EndpointType,
-			"id":                     o.Id,
-			"last_updated_timestamp": o.LastUpdatedTimestamp,
-			"last_updated_user":      o.LastUpdatedUser,
-			"name":                   o.Name,
-			"num_indexes":            o.NumIndexes,
+			"creation_timestamp":         o.CreationTimestamp,
+			"creator":                    o.Creator,
+			"custom_tags":                o.CustomTags,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"endpoint_status":            o.EndpointStatus,
+			"endpoint_type":              o.EndpointType,
+			"id":                         o.Id,
+			"last_updated_timestamp":     o.LastUpdatedTimestamp,
+			"last_updated_user":          o.LastUpdatedUser,
+			"name":                       o.Name,
+			"num_indexes":                o.NumIndexes,
 		})
 }
 
@@ -1354,6 +1341,10 @@ func (o EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"creation_timestamp": types.Int64Type,
 			"creator":            types.StringType,
+			"custom_tags": basetypes.ListType{
+				ElemType: CustomTag_SdkV2{}.Type(ctx),
+			},
+			"effective_budget_policy_id": types.StringType,
 			"endpoint_status": basetypes.ListType{
 				ElemType: EndpointStatus_SdkV2{}.Type(ctx),
 			},
@@ -1365,6 +1356,32 @@ func (o EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"num_indexes":            types.Int64Type,
 		},
 	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in EndpointInfo_SdkV2 as
+// a slice of CustomTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo_SdkV2) GetCustomTags(ctx context.Context) ([]CustomTag_SdkV2, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v []CustomTag_SdkV2
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in EndpointInfo_SdkV2.
+func (o *EndpointInfo_SdkV2) SetCustomTags(ctx context.Context, v []CustomTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CustomTags = types.ListValueMust(t, vs)
 }
 
 // GetEndpointStatus returns the value of the EndpointStatus field in EndpointInfo_SdkV2 as
@@ -1447,7 +1464,6 @@ func (o EndpointStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an endpoint
 type GetEndpointRequest_SdkV2 struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1484,7 +1500,6 @@ func (o GetEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an index
 type GetIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1605,7 +1620,6 @@ func (o *ListEndpointResponse_SdkV2) SetEndpoints(ctx context.Context, v []Endpo
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// List all endpoints
 type ListEndpointsRequest_SdkV2 struct {
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
@@ -1642,7 +1656,6 @@ func (o ListEndpointsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List indexes
 type ListIndexesRequest_SdkV2 struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1684,6 +1697,7 @@ func (o ListIndexesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListValue_SdkV2 struct {
+	// Repeated field of dynamically typed values.
 	Values types.List `tfsdk:"values"`
 }
 
@@ -1934,13 +1948,12 @@ type MiniVectorIndex_SdkV2 struct {
 	Creator types.String `tfsdk:"creator"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes:
-	//
-	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
-	// Table, automatically and incrementally updating the index as the
-	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
-	// that supports direct read and write of vectors and metadata through our
-	// REST and SDK APIs. With this model, the user manages index updates.
+	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
+	// automatically syncs with a source Delta Table, automatically and
+	// incrementally updating the index as the underlying data in the Delta
+	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
+	// write of vectors and metadata through our REST and SDK APIs. With this
+	// model, the user manages index updates.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`
@@ -1999,6 +2012,107 @@ func (o MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,
+		},
+	}
+}
+
+type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
+	// The budget policy id to be applied
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// Name of the vector search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (newState *PatchEndpointBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (newState *PatchEndpointBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (c PatchEndpointBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointBudgetPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PatchEndpointBudgetPolicyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchEndpointBudgetPolicyRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PatchEndpointBudgetPolicyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"budget_policy_id": o.BudgetPolicyId,
+			"endpoint_name":    o.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PatchEndpointBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"budget_policy_id": types.StringType,
+			"endpoint_name":    types.StringType,
+		},
+	}
+}
+
+type PatchEndpointBudgetPolicyResponse_SdkV2 struct {
+	// The budget policy applied to the vector search endpoint.
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+}
+
+func (newState *PatchEndpointBudgetPolicyResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyResponse_SdkV2) {
+}
+
+func (newState *PatchEndpointBudgetPolicyResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchEndpointBudgetPolicyResponse_SdkV2) {
+}
+
+func (c PatchEndpointBudgetPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointBudgetPolicyResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PatchEndpointBudgetPolicyResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchEndpointBudgetPolicyResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PatchEndpointBudgetPolicyResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PatchEndpointBudgetPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"effective_budget_policy_id": types.StringType,
 		},
 	}
 }
@@ -2066,12 +2180,16 @@ func (o QueryVectorIndexNextPageRequest_SdkV2) Type(ctx context.Context) attr.Ty
 type QueryVectorIndexRequest_SdkV2 struct {
 	// List of column names to include in the response.
 	Columns types.List `tfsdk:"columns"`
+	// Column names used to retrieve data to send to the reranker.
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
 	// JSON string representing query filters.
 	//
-	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
-	// 5}`: Filter for id greater than 5. - `{"id <=": 5}`: Filter for id less
-	// than equal to 5. - `{"id >=": 5}`: Filter for id greater than equal to 5.
-	// - `{"id": 5}`: Filter for id equal to 5.
+	// Example filters:
+	//
+	// - `{"id <": 5}`: Filter for id less than 5. - `{"id >": 5}`: Filter for
+	// id greater than 5. - `{"id <=": 5}`: Filter for id less than equal to 5.
+	// - `{"id >=": 5}`: Filter for id greater than equal to 5. - `{"id": 5}`:
+	// Filter for id equal to 5.
 	FiltersJson types.String `tfsdk:"filters_json"`
 	// Name of the vector index to query.
 	IndexName types.String `tfsdk:"-"`
@@ -2096,6 +2214,7 @@ func (newState *QueryVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(exi
 
 func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["columns"] = attrs["columns"].SetRequired()
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
 	attrs["filters_json"] = attrs["filters_json"].SetOptional()
 	attrs["index_name"] = attrs["index_name"].SetRequired()
 	attrs["num_results"] = attrs["num_results"].SetOptional()
@@ -2116,8 +2235,9 @@ func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // SDK values.
 func (a QueryVectorIndexRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns":      reflect.TypeOf(types.String{}),
-		"query_vector": reflect.TypeOf(types.Float64{}),
+		"columns":           reflect.TypeOf(types.String{}),
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+		"query_vector":      reflect.TypeOf(types.Float64{}),
 	}
 }
 
@@ -2128,14 +2248,15 @@ func (o QueryVectorIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"columns":         o.Columns,
-			"filters_json":    o.FiltersJson,
-			"index_name":      o.IndexName,
-			"num_results":     o.NumResults,
-			"query_text":      o.QueryText,
-			"query_type":      o.QueryType,
-			"query_vector":    o.QueryVector,
-			"score_threshold": o.ScoreThreshold,
+			"columns":           o.Columns,
+			"columns_to_rerank": o.ColumnsToRerank,
+			"filters_json":      o.FiltersJson,
+			"index_name":        o.IndexName,
+			"num_results":       o.NumResults,
+			"query_text":        o.QueryText,
+			"query_type":        o.QueryType,
+			"query_vector":      o.QueryVector,
+			"score_threshold":   o.ScoreThreshold,
 		})
 }
 
@@ -2144,6 +2265,9 @@ func (o QueryVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"columns_to_rerank": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"filters_json": types.StringType,
@@ -2185,6 +2309,32 @@ func (o *QueryVectorIndexRequest_SdkV2) SetColumns(ctx context.Context, v []type
 	o.Columns = types.ListValueMust(t, vs)
 }
 
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in QueryVectorIndexRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest_SdkV2) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in QueryVectorIndexRequest_SdkV2.
+func (o *QueryVectorIndexRequest_SdkV2) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
+}
+
 // GetQueryVector returns the value of the QueryVector field in QueryVectorIndexRequest_SdkV2 as
 // a slice of types.Float64 values.
 // If the field is unknown or null, the boolean return value is false.
@@ -2217,6 +2367,7 @@ type QueryVectorIndexResponse_SdkV2 struct {
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
+	// The maximum number of results that can be returned is 10,000.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Data returned in the query result.
 	Result types.List `tfsdk:"result"`
@@ -2502,7 +2653,6 @@ func (o *ResultManifest_SdkV2) SetColumns(ctx context.Context, v []ColumnInfo_Sd
 	o.Columns = types.ListValueMust(t, vs)
 }
 
-// Request payload for scanning data from a vector index.
 type ScanVectorIndexRequest_SdkV2 struct {
 	// Name of the vector index to scan.
 	IndexName types.String `tfsdk:"-"`
@@ -2723,7 +2873,6 @@ func (o *Struct_SdkV2) SetFields(ctx context.Context, v []MapStringValueEntry_Sd
 	o.Fields = types.ListValueMust(t, vs)
 }
 
-// Synchronize an index
 type SyncIndexRequest_SdkV2 struct {
 	// Name of the vector index to synchronize. Must be a Delta Sync Index.
 	IndexName types.String `tfsdk:"-"`
@@ -2763,6 +2912,17 @@ func (o SyncIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type SyncIndexResponse_SdkV2 struct {
 }
 
+func (newState *SyncIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexResponse_SdkV2) {
+}
+
+func (newState *SyncIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse_SdkV2) {
+}
+
+func (c SyncIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2790,7 +2950,172 @@ func (o SyncIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Result of the upsert or delete operation.
+type UpdateEndpointCustomTagsRequest_SdkV2 struct {
+	// The new custom tags for the vector search endpoint
+	CustomTags types.List `tfsdk:"custom_tags"`
+	// Name of the vector search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateEndpointCustomTagsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (newState *UpdateEndpointCustomTagsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (c UpdateEndpointCustomTagsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEndpointCustomTagsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateEndpointCustomTagsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_tags": reflect.TypeOf(CustomTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEndpointCustomTagsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateEndpointCustomTagsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_tags":   o.CustomTags,
+			"endpoint_name": o.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateEndpointCustomTagsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_tags": basetypes.ListType{
+				ElemType: CustomTag_SdkV2{}.Type(ctx),
+			},
+			"endpoint_name": types.StringType,
+		},
+	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in UpdateEndpointCustomTagsRequest_SdkV2 as
+// a slice of CustomTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEndpointCustomTagsRequest_SdkV2) GetCustomTags(ctx context.Context) ([]CustomTag_SdkV2, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v []CustomTag_SdkV2
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in UpdateEndpointCustomTagsRequest_SdkV2.
+func (o *UpdateEndpointCustomTagsRequest_SdkV2) SetCustomTags(ctx context.Context, v []CustomTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CustomTags = types.ListValueMust(t, vs)
+}
+
+type UpdateEndpointCustomTagsResponse_SdkV2 struct {
+	// All the custom tags that are applied to the vector search endpoint.
+	CustomTags types.List `tfsdk:"custom_tags"`
+	// The name of the vector search endpoint whose custom tags were updated.
+	Name types.String `tfsdk:"name"`
+}
+
+func (newState *UpdateEndpointCustomTagsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsResponse_SdkV2) {
+}
+
+func (newState *UpdateEndpointCustomTagsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateEndpointCustomTagsResponse_SdkV2) {
+}
+
+func (c UpdateEndpointCustomTagsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEndpointCustomTagsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateEndpointCustomTagsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_tags": reflect.TypeOf(CustomTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEndpointCustomTagsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateEndpointCustomTagsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_tags": o.CustomTags,
+			"name":        o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateEndpointCustomTagsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_tags": basetypes.ListType{
+				ElemType: CustomTag_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in UpdateEndpointCustomTagsResponse_SdkV2 as
+// a slice of CustomTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEndpointCustomTagsResponse_SdkV2) GetCustomTags(ctx context.Context) ([]CustomTag_SdkV2, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v []CustomTag_SdkV2
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in UpdateEndpointCustomTagsResponse_SdkV2.
+func (o *UpdateEndpointCustomTagsResponse_SdkV2) SetCustomTags(ctx context.Context, v []CustomTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CustomTags = types.ListValueMust(t, vs)
+}
+
 type UpsertDataResult_SdkV2 struct {
 	// List of primary keys for rows that failed to process.
 	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
@@ -2874,7 +3199,6 @@ func (o *UpsertDataResult_SdkV2) SetFailedPrimaryKeys(ctx context.Context, v []t
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Request payload for upserting data into a vector index.
 type UpsertDataVectorIndexRequest_SdkV2 struct {
 	// Name of the vector index where data is to be upserted. Must be a Direct
 	// Vector Access Index.
@@ -2929,7 +3253,6 @@ func (o UpsertDataVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Response to an upsert data vector index request.
 type UpsertDataVectorIndexResponse_SdkV2 struct {
 	// Result of the upsert or delete operation.
 	Result types.List `tfsdk:"result"`
@@ -3019,8 +3342,6 @@ type Value_SdkV2 struct {
 
 	ListValue types.List `tfsdk:"list_value"`
 
-	NullValue types.String `tfsdk:"null_value"`
-
 	NumberValue types.Float64 `tfsdk:"number_value"`
 
 	StringValue types.String `tfsdk:"string_value"`
@@ -3038,7 +3359,6 @@ func (c Value_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["bool_value"] = attrs["bool_value"].SetOptional()
 	attrs["list_value"] = attrs["list_value"].SetOptional()
 	attrs["list_value"] = attrs["list_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["null_value"] = attrs["null_value"].SetOptional()
 	attrs["number_value"] = attrs["number_value"].SetOptional()
 	attrs["string_value"] = attrs["string_value"].SetOptional()
 	attrs["struct_value"] = attrs["struct_value"].SetOptional()
@@ -3070,7 +3390,6 @@ func (o Value_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"bool_value":   o.BoolValue,
 			"list_value":   o.ListValue,
-			"null_value":   o.NullValue,
 			"number_value": o.NumberValue,
 			"string_value": o.StringValue,
 			"struct_value": o.StructValue,
@@ -3085,7 +3404,6 @@ func (o Value_SdkV2) Type(ctx context.Context) attr.Type {
 			"list_value": basetypes.ListType{
 				ElemType: ListValue_SdkV2{}.Type(ctx),
 			},
-			"null_value":   types.StringType,
 			"number_value": types.Float64Type,
 			"string_value": types.StringType,
 			"struct_value": basetypes.ListType{
@@ -3156,13 +3474,12 @@ type VectorIndex_SdkV2 struct {
 	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes:
-	//
-	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
-	// Table, automatically and incrementally updating the index as the
-	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
-	// that supports direct read and write of vectors and metadata through our
-	// REST and SDK APIs. With this model, the user manages index updates.
+	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
+	// automatically syncs with a source Delta Table, automatically and
+	// incrementally updating the index as the underlying data in the Delta
+	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
+	// write of vectors and metadata through our REST and SDK APIs. With this
+	// model, the user manages index updates.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`

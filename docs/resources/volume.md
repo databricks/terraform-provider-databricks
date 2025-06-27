@@ -3,13 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volume (Resource)
 
--> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
 
 -> This resource can only be used with a workspace-level provider!
 
-Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
-
-A volume resides in the third layer of Unity Catalog’s three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
+A volume resides in the third layer of Unity Catalog's three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
 
 A volume can be **managed** or **external**.
 
@@ -98,6 +96,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<name>`
+
+```hcl
+import {
+  to = databricks_volume.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>

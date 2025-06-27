@@ -1,3 +1,4 @@
+# Generated file. DO NOT EDIT.
 name: tagging
 
 on:
@@ -7,7 +8,7 @@ on:
   #  - cron: '0 0 * * TUE'
 
 # Ensure that only a single instance of the workflow is running at a time.
-concurrency: 
+concurrency:
   group: "tagging"
 
 
@@ -20,7 +21,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.DECO_SDK_TAGGING_APP_ID }}
           private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}
@@ -31,12 +32,20 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
-      # NOTE: actions/create-github-app-token automatically masks the output token,
-      # so the token is not exposed in the logs even as part of the remote.
+      #NOTE: email must be the GitHub App email or the commit will not be verified.
       - name: Set up Git configuration
         run: |
           git config user.name "Databricks SDK Release Bot"
+          git config user.email "DECO-SDK-Tagging[bot]@users.noreply.github.com"
 
-      - name: Run Deco Taggging script
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyGithub
+
+      - name: Run script
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python tagging.py

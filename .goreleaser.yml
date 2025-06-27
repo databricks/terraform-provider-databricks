@@ -20,7 +20,7 @@ builds:
     - arm64
 
 archives:
-- format: zip
+- formats: [zip]
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
   files:
     - LICENSE*
@@ -32,7 +32,7 @@ checksum:
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}"
 
 signs:
   - artifacts: checksum
@@ -51,5 +51,4 @@ changelog:
     - '^docs:'
     - '^test:'
 
-release:
-  draft: true
+release: {}

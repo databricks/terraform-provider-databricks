@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -9,37 +10,33 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// This structure contains the fields of catalog.UpdateConnection and catalog.CreateConnection
-// We need to create this because we need Owner, FullNameArg, SchemaName and CatalogName which aren't present in a single of them.
-// We also need to annotate tf:"computed" for the Owner field.
-type ConnectionInfo struct {
-	// User-provided free-form text description.
-	Comment string `json:"comment,omitempty" tf:"force_new"`
-	// The type of connection.
-	ConnectionType string `json:"connection_type" tf:"force_new"`
-	// Unique identifier of parent metastore.
-	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
-	// Name of the connection.
-	Name string `json:"name"`
-	// Name of the connection.
-	NameArg string `json:"-" url:"-"`
-	// A map of key-value properties attached to the securable.
-	Options map[string]string `json:"options" tf:"sensitive"`
-	// Username of current owner of the connection.
-	Owner string `json:"owner,omitempty" tf:"computed"`
-	// An object containing map of key-value properties attached to the
-	// connection.
-	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
-	// If the connection is read only.
-	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,computed"`
+var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
+	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token"}
+
+func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData) bool {
+	if k == "options.pem_private_key_expiration_epoch_sec" {
+		log.Printf("[INFO] Suppressing diff on %s", k)
+		return true
+	}
+	return false
 }
 
-var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
-
 func ResourceConnection() common.Resource {
-	s := common.StructToSchema(ConnectionInfo{},
+	s := common.StructToSchema(catalog.ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			for _, v := range []string{"url", "metastore_id", "credential_type", "connection_id",
+				"created_at", "created_by", "full_name", "provisioning_info", "securable_type", "updated_at", "updated_by"} {
+				common.CustomizeSchemaPath(m, v).SetReadOnly()
+			}
+			for _, v := range []string{"owner", "read_only"} {
+				common.CustomizeSchemaPath(m, v).SetComputed()
+			}
+			for _, v := range []string{"read_only", "properties", "comment", "connection_type"} {
+				common.CustomizeSchemaPath(m, v).SetForceNew()
+			}
+			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressPemPrivateKeyExpiration)
+			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -90,13 +87,20 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			// We need to preserve original sensitive options as API doesn't return them
-			var cOrig catalog.CreateConnection
-			common.DataToStructPointer(d, s, &cOrig)
 			// If there are no options returned, need to initialize the map
 			if conn.Options == nil {
 				conn.Options = map[string]string{}
 			}
+			// remove not necessary parameters for builtin HMS to avoid configuration drift
+			if val, exists := conn.Options["builtin"]; exists && val == "true" {
+				delete(conn.Options, "host")
+				delete(conn.Options, "port")
+				delete(conn.Options, "home_workspace_id")
+				delete(conn.Options, "database")
+			}
+			// We need to preserve original sensitive options as API doesn't return them
+			var cOrig catalog.CreateConnection
+			common.DataToStructPointer(d, s, &cOrig)
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
@@ -132,6 +136,7 @@ func ResourceConnection() common.Resource {
 			}
 
 			updateConnectionRequest.Owner = ""
+			delete(updateConnectionRequest.Options, "pem_private_key_expiration_epoch_sec")
 			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
 				if d.HasChange("owner") {

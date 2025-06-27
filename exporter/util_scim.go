@@ -200,7 +200,7 @@ func (ic *importContext) cacheGroups() error {
 		ic.allGroups = make([]scim.Group, 0, groupsCount)
 		for i, g := range *groups {
 			err = runWithRetries(func() error {
-				group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+				group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members,meta")
 				if err != nil {
 					return err
 				}
@@ -249,11 +249,11 @@ func (ic *importContext) getUsersMapping() {
 			for _, user := range users {
 				ic.allUsersMapping[user.UserName] = user.Id
 			}
-			log.Printf("[DEBUG] users are copied")
+			log.Printf("[DEBUG] all %d users are copied", len(users))
 			return nil
 		}, "error fetching full list of users")
 		if err != nil {
-			log.Fatalf("[ERROR] can't fetch list of users after few retries: error=%v", err)
+			log.Panicf("[ERROR] can't fetch list of users after few retries: error=%v", err)
 		}
 	}
 }

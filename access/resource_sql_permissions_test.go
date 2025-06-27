@@ -188,8 +188,8 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Response: compute.GetSparkVersionsResponse{
 			Versions: []compute.SparkVersion{
 				{
-					Key:  "7.1.x-cpu-ml-scala2.12",
-					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "15.4.x-scala2.12",
+					Name: "15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)",
 				},
 			},
 		},
@@ -222,7 +222,8 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "11.3.x-scala2.12",
+			SparkVersion:           "15.4.x-scala2.12",
+			DataSecurityMode:       "USER_ISOLATION",
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
 			},
@@ -230,7 +231,6 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 				"spark.databricks.cluster.profile": "singleNode",
 				"spark.master":                     "local[*]",
 			},
-			DataSecurityMode: "LEGACY_TABLE_ACL",
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",
@@ -243,7 +243,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Response: clusters.ClusterInfo{
 			ClusterID:        "bcd",
 			State:            "RUNNING",
-			DataSecurityMode: "LEGACY_TABLE_ACL",
+			DataSecurityMode: "USER_ISOLATION",
 			SparkConf: map[string]string{
 				"spark.databricks.cluster.profile": "singleNode",
 			},
@@ -265,8 +265,8 @@ var createSharedCluster = []qa.HTTPFixture{
 		Response: compute.GetSparkVersionsResponse{
 			Versions: []compute.SparkVersion{
 				{
-					Key:  "7.1.x-cpu-ml-scala2.12",
-					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "15.4.x-scala2.12",
+					Name: "15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)",
 				},
 			},
 		},
@@ -299,11 +299,11 @@ var createSharedCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "11.3.x-scala2.12",
+			SparkVersion:           "15.4.x-scala2.12",
+			DataSecurityMode:       "USER_ISOLATION",
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
 			},
-			DataSecurityMode: "LEGACY_TABLE_ACL",
 			SparkConf: map[string]string{
 				"spark.databricks.cluster.profile": "singleNode",
 				"spark.master":                     "local[*]",

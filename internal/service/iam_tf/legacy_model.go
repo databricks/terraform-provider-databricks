@@ -431,7 +431,6 @@ func (o ConsistencyToken_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group
 type DeleteAccountGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -468,7 +467,6 @@ func (o DeleteAccountGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal
 type DeleteAccountServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -505,7 +503,6 @@ func (o DeleteAccountServicePrincipalRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Delete a user
 type DeleteAccountUserRequest_SdkV2 struct {
 	// Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -542,7 +539,6 @@ func (o DeleteAccountUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group
 type DeleteGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -609,7 +605,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal
 type DeleteServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -646,7 +641,6 @@ func (o DeleteServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete a user
 type DeleteUserRequest_SdkV2 struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -683,7 +677,6 @@ func (o DeleteUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete permissions assignment
 type DeleteWorkspaceAssignmentRequest_SdkV2 struct {
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
@@ -765,7 +758,6 @@ func (o DeleteWorkspacePermissionAssignmentResponse_SdkV2) Type(ctx context.Cont
 	}
 }
 
-// Get group details
 type GetAccountGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -802,7 +794,6 @@ func (o GetAccountGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details
 type GetAccountServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -839,7 +830,6 @@ func (o GetAccountServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.
 	}
 }
 
-// Get user details
 type GetAccountUserRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -911,9 +901,14 @@ func (o GetAccountUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest_SdkV2 struct {
 	// The resource name for which assignable roles will be listed.
+	//
+	// Examples | Summary :--- | :--- `resource=accounts/<ACCOUNT_ID>` | A
+	// resource name for the account.
+	// `resource=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>` | A resource name for
+	// the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
+	// resource name for the service principal.
 	Resource types.String `tfsdk:"-"`
 }
 
@@ -1025,7 +1020,6 @@ func (o *GetAssignableRolesForResourceResponse_SdkV2) SetRoles(ctx context.Conte
 	o.Roles = types.ListValueMust(t, vs)
 }
 
-// Get group details
 type GetGroupRequest_SdkV2 struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1140,11 +1134,13 @@ func (o *GetPasswordPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx cont
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permission levels
 type GetPermissionLevelsRequest_SdkV2 struct {
-	// <needs content>
 	RequestObjectId types.String `tfsdk:"-"`
-	// <needs content>
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -1259,7 +1255,6 @@ func (o *GetPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Cont
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permissions
 type GetPermissionRequest_SdkV2 struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
@@ -1304,7 +1299,6 @@ func (o GetPermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a rule set
 type GetRuleSetRequest_SdkV2 struct {
 	// Etag used for versioning. The response is at least as fresh as the eTag
 	// provided. Etag is used for optimistic concurrency control as a way to
@@ -1314,8 +1308,21 @@ type GetRuleSetRequest_SdkV2 struct {
 	// avoid race conditions that is get an etag from a GET rule set request,
 	// and pass it with the PUT update request to identify the rule set version
 	// you are updating.
+	//
+	// Examples | Summary :--- | :--- `etag=` | An empty etag can only be used
+	// in GET to indicate no freshness requirements.
+	// `etag=RENUAAABhSweA4NvVmmUYdiU717H3Tgy0UJdor3gE4a+mq/oj9NjAf8ZsQ==` | An
+	// etag encoded a specific version of the rule set to get or to be updated.
 	Etag types.String `tfsdk:"-"`
 	// The ruleset name associated with the request.
+	//
+	// Examples | Summary :--- | :---
+	// `name=accounts/<ACCOUNT_ID>/ruleSets/default` | A name for a rule set on
+	// the account.
+	// `name=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>/ruleSets/default` | A name
+	// for a rule set on the group.
+	// `name=accounts/<ACCOUNT_ID>/servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>/ruleSets/default`
+	// | A name for a rule set on the service principal.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1352,7 +1359,6 @@ func (o GetRuleSetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details
 type GetServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1389,7 +1395,6 @@ func (o GetServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get user details
 type GetUserRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1461,7 +1466,6 @@ func (o GetUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List workspace permissions
 type GetWorkspaceAssignmentRequest_SdkV2 struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -1499,7 +1503,11 @@ func (o GetWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type GrantRule_SdkV2 struct {
-	// Principals this grant rule applies to.
+	// Principals this grant rule applies to. A principal can be a user (for end
+	// users), a service principal (for applications and compute workloads), or
+	// an account group. Each principal has its own identifier format: *
+	// users/<USERNAME> * groups/<GROUP_NAME> *
+	// servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>
 	Principals types.List `tfsdk:"principals"`
 	// Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role"`
@@ -1848,7 +1856,6 @@ func (o *Group_SdkV2) SetSchemas(ctx context.Context, v []types.String) {
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List group details
 type ListAccountGroupsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1915,7 +1922,6 @@ func (o ListAccountGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List service principals
 type ListAccountServicePrincipalsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1982,7 +1988,6 @@ func (o ListAccountServicePrincipalsRequest_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// List users
 type ListAccountUsersRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2050,7 +2055,6 @@ func (o ListAccountUsersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List group details
 type ListGroupsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2373,7 +2377,6 @@ func (o *ListServicePrincipalResponse_SdkV2) SetSchemas(ctx context.Context, v [
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List service principals
 type ListServicePrincipalsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2440,7 +2443,6 @@ func (o ListServicePrincipalsRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// List users
 type ListUsersRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2636,7 +2638,6 @@ func (o *ListUsersResponse_SdkV2) SetSchemas(ctx context.Context, v []types.Stri
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// Get permission assignments
 type ListWorkspaceAssignmentRequest_SdkV2 struct {
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2926,7 +2927,7 @@ func (o *ObjectPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []
 }
 
 type PartialUpdate_SdkV2 struct {
-	// Unique ID for a user in the Databricks workspace.
+	// Unique ID in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 
 	Operations types.List `tfsdk:"Operations"`
@@ -3985,97 +3986,6 @@ func (o PermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type PermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
-	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
-	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *PermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsRequest_SdkV2) {
-}
-
-func (newState *PermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PermissionsRequest_SdkV2) {
-}
-
-func (c PermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(AccessControlRequest_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionsRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o PermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest_SdkV2{}.Type(ctx),
-			},
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
-}
-
-// GetAccessControlList returns the value of the AccessControlList field in PermissionsRequest_SdkV2 as
-// a slice of AccessControlRequest_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *PermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]AccessControlRequest_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessControlRequest_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetAccessControlList sets the value of the AccessControlList field in PermissionsRequest_SdkV2.
-func (o *PermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []AccessControlRequest_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
-}
-
 // Information about the principal assigned to the workspace.
 type PrincipalOutput_SdkV2 struct {
 	// The display name of the principal.
@@ -4244,7 +4154,15 @@ func (o Role_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RuleSetResponse_SdkV2 struct {
-	// Identifies the version of the rule set returned.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`
@@ -4259,9 +4177,9 @@ func (newState *RuleSetResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c RuleSetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetRequired()
 	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -4332,9 +4250,15 @@ func (o *RuleSetResponse_SdkV2) SetGrantRules(ctx context.Context, v []GrantRule
 }
 
 type RuleSetUpdateRequest_SdkV2 struct {
-	// The expected etag of the rule set to update. The update will fail if the
-	// value does not match the value that is stored in account access control
-	// service.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`
@@ -4629,6 +4553,188 @@ func (o *ServicePrincipal_SdkV2) SetSchemas(ctx context.Context, v []types.Strin
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
+type SetObjectPermissions_SdkV2 struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The id of the request object.
+	RequestObjectId types.String `tfsdk:"-"`
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
+	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetObjectPermissions_SdkV2) {
+}
+
+func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetObjectPermissions_SdkV2) {
+}
+
+func (c SetObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SetObjectPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(AccessControlRequest_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SetObjectPermissions_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SetObjectPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"request_object_id":   o.RequestObjectId,
+			"request_object_type": o.RequestObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SetObjectPermissions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: AccessControlRequest_SdkV2{}.Type(ctx),
+			},
+			"request_object_id":   types.StringType,
+			"request_object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in SetObjectPermissions_SdkV2 as
+// a slice of AccessControlRequest_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetObjectPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]AccessControlRequest_SdkV2, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlRequest_SdkV2
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SetObjectPermissions_SdkV2.
+func (o *SetObjectPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []AccessControlRequest_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+type UpdateObjectPermissions_SdkV2 struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The id of the request object.
+	RequestObjectId types.String `tfsdk:"-"`
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
+	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateObjectPermissions_SdkV2) {
+}
+
+func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateObjectPermissions_SdkV2) {
+}
+
+func (c UpdateObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateObjectPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(AccessControlRequest_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateObjectPermissions_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateObjectPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"request_object_id":   o.RequestObjectId,
+			"request_object_type": o.RequestObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateObjectPermissions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: AccessControlRequest_SdkV2{}.Type(ctx),
+			},
+			"request_object_id":   types.StringType,
+			"request_object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in UpdateObjectPermissions_SdkV2 as
+// a slice of AccessControlRequest_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateObjectPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]AccessControlRequest_SdkV2, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlRequest_SdkV2
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in UpdateObjectPermissions_SdkV2.
+func (o *UpdateObjectPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []AccessControlRequest_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type UpdateResponse_SdkV2 struct {
 }
 
@@ -4857,8 +4963,7 @@ type User_SdkV2 struct {
 	ExternalId types.String `tfsdk:"externalId"`
 
 	Groups types.List `tfsdk:"groups"`
-	// Databricks user ID. This is automatically set by Databricks. Any value
-	// provided by the client will be ignored.
+	// Databricks user ID.
 	Id types.String `tfsdk:"id"`
 
 	Name types.List `tfsdk:"name"`

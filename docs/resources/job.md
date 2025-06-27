@@ -6,11 +6,13 @@ subcategory: "Compute"
 
 The `databricks_job` resource allows you to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 -> In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, and additional arguments described below.
+It is possible to create [a Databricks job](https://docs.databricks.com/aws/en/jobs/) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, and additional arguments described below.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -109,6 +111,9 @@ The resource supports the following arguments:
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 * `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
+* `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are:
+  * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
+  * `STANDARD`: Enables cost-efficient execution of serverless workloads.
 
 ### task Configuration Block
 
@@ -118,10 +123,12 @@ This block describes individual tasks:
 * `*_task` - (Required) one of the specific task blocks described below:
   * `clean_rooms_notebook_task`
   * `condition_task`
+  * `dashboard_task`
   * `dbt_task`
   * `for_each_task`
   * `notebook_task`
   * `pipeline_task`
+  * `power_bi_task`
   * `python_wheel_task`
   * `run_job_task`
   * `spark_jar_task`
@@ -166,6 +173,19 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 
 This task does not require a cluster to execute and does not support retries or notifications.
 
+#### dashboard_task Configuration Block
+
+The `dashboard_task` refreshes a dashboard and sends a snapshot to subscribers.
+
+* `dashboard_id` (Required) The identifier of the dashboard to refresh
+* `subscription` (Optional) Represents a subscription configuration for scheduled dashboard snapshots.
+  * `custom_subject` (Optional) Allows users to specify a custom subject line on the email sent to subscribers.
+  * `paused` (Optional) When true, the subscription will not send emails.
+  * `subscribers` The list of subscribers to send the snapshot of the dashboard to.
+    * `destination_id` (Optional) A snapshot of the dashboard will be sent to the destination when the `destination_id` field is present.
+    * `user_name` (Optional) A snapshot of the dashboard will be sent to the user's email when the `user_name` field is present.
+* `warehouse_id` (Optional) The warehouse id to execute the dashboard with for the schedule. If not specified, will use the default warehouse of dashboard
+
 #### dbt_task Configuration Block
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
@@ -190,7 +210,7 @@ You also need to include a `git_source` block to configure the repository that c
 
 * `notebook_path` - (Required) The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required.
 * `source` - (Optional) Location type of the notebook, can only be `WORKSPACE` or `GIT`. When set to `WORKSPACE`, the notebook will be retrieved from the local Databricks workspace. When set to `GIT`, the notebook will be retrieved from a Git repository defined in `git_source`. If the value is empty, the task will use `GIT` if `git_source` is defined and `WORKSPACE` otherwise.
-* `base_parameters` - (Optional) (Map) Base parameters to be used for each run of this job. If the run is initiated by a call to run-now with parameters specified, the two parameters maps will be merged. If the same key is specified in base_parameters and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified in the job’s base_parameters or the run-now override parameters, the default value from the notebook will be used. Retrieve these parameters in a notebook using `dbutils.widgets.get`.
+* `base_parameters` - (Optional) (Map) Base parameters to be used for each run of this job. If the run is initiated by a call to run-now with parameters specified, the two parameters maps will be merged. If the same key is specified in base_parameters and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified in the job's base_parameters or the run-now override parameters, the default value from the notebook will be used. Retrieve these parameters in a notebook using `dbutils.widgets.get`.
 * `warehouse_id` - (Optional) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task with SQL notebook.
 
 #### pipeline_task Configuration Block
@@ -199,6 +219,25 @@ You also need to include a `git_source` block to configure the repository that c
 * `full_refresh` - (Optional) (Bool) Specifies if there should be full refresh of the pipeline.
 
 -> The following configuration blocks are only supported inside a `task` block
+
+#### power_bi_task Configuration Block
+
+The `power_bi_task` triggers a Power BI semantic model update.
+
+* `tables` (Required) (Array) The tables to be exported to Power BI. Block consists of following fields:
+  * `storage_mode` (Required) The Power BI storage mode of the table
+  * `catalog` (Required) The catalog name in Databricks
+  * `schema` (Required) The schema name in Databricks
+  * `name` (Optional) The table name in Databricks. If empty, all tables under the schema are selected.
+* `warehouse_id` (Required) The SQL warehouse ID to use as the Power BI data source
+* `power_bi_model` (Required) The semantic model to update. Block consists of following fields:
+  * `workspace_name` (Required) The name of the Power BI workspace of the model
+  * `model_name` (Required) The name of the Power BI model
+  * `storage_mode` (Required) The default storage mode of the Power BI model
+  * `authentication_method` (Required) How the published Power BI model authenticates to Databricks
+  * `overwrite_existing` (Optional) Whether to overwrite existing Power BI models. Default is false
+* `connection_resource_name` (Required) The resource name of the UC connection to authenticate from Databricks to Power BI
+* `refresh_after_update` (Optional) Whether the model should be refreshed after the update. Default is false
 
 #### python_wheel_task Configuration Block
 
@@ -219,8 +258,10 @@ You also need to include a `git_source` block to configure the repository that c
 
 #### spark_python_task Configuration Block
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. For files stored in a remote repository, the path must be relative. This field is required.
-* `source` - (Optional) Location type of the Python file, can only be `GIT`. When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/`. For files stored in a remote repository, the path must be relative. This field is required.
+* `source` - (Optional) Location type of the Python file. When set to `WORKSPACE` or not specified, the file will be retrieved from the local Databricks workspace or cloud location (if the python_file has a URI format). When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+  * `WORKSPACE`: The Python file is located in a Databricks workspace or at a cloud filesystem URI.
+  * `GIT`: The Python file is located in a remote Git repository.
 * `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
 #### spark_submit_task Configuration Block
@@ -292,19 +333,32 @@ resource "databricks_job" "sql_aggregation_job" {
 
 #### library Configuration Block
 
-This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+This block descripes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
 resource "databricks_job" "this" {
-  library {
-    pypi {
-      package = "databricks-mosaic==0.3.14"
+  task {
+    task_key = "some_task"
+    # ....
+    library {
+      pypi {
+        package = "databricks-mosaic==0.3.14"
+      }
     }
   }
 }
 ```
 
-#### environment Configuration Block
+#### depends_on Configuration Block
+
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
+
+* `task_key` - (Required) The name of the task this task depends on.
+* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
+
+-> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
+
+### environment Confaguration Block
 
 This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
 
@@ -322,15 +376,6 @@ environment {
   environment_key = "Default"
 }
 ```
-
-#### depends_on Configuration Block
-
-This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
-
-* `task_key` - (Required) The name of the task this task depends on.
-* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
-
--> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
 ### run_as Configuration Block
 
@@ -415,6 +460,7 @@ This block can be configured on both job and task levels for corresponding effec
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of emails to notify when any streaming backlog thresholds are exceeded for any stream.
 
 The following parameter is only available for the job level configuration.
 
@@ -428,6 +474,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of notification IDs to call when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of notification IDs to call when any streaming backlog thresholds are exceeded for any stream.
 
 Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
 
@@ -464,7 +511,7 @@ The following parameter is only available on task level.
 This block describes health conditions for a given job or an individual task. It consists of the following attributes:
 
 * `rules` - (List) list of rules that are represented as objects with the following attributes:
-  * `metric` - (Required) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
+  * `metric` - (Required) string specifying the metric to check, like `RUN_DURATION_SECONDS`, `STREAMING_BACKLOG_FILES`, etc. - check the [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create#health-rules-metric) for the full list of supported metrics.
   * `op` - (Required) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
   * `value` - (Required) integer value used to compare to the given metric.
 
@@ -493,7 +540,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Access Control
 
-By default, all users can create and modify jobs unless an administrator [enables jobs access control](https://docs.databricks.com/administration-guide/access-control/jobs-acl.html). With jobs access control, individual permissions determine a user’s abilities.
+By default, all users can create and modify jobs unless an administrator [enables jobs access control](https://docs.databricks.com/administration-guide/access-control/jobs-acl.html). With jobs access control, individual permissions determine a user's abilities.
 
 * [databricks_permissions](permissions.md#Job-usage) can control which groups or individual users can *Can View*, *Can Manage Run*, and *Can Manage*.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create for jobs.
@@ -562,7 +609,16 @@ timeouts {
 
 ## Import
 
-The resource job can be imported using the id of the job
+The resource job can be imported using the id of the job:
+
+```hcl
+import {
+  to = databricks_job.this
+  id = "<job-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_job.this <job-id>
@@ -586,7 +642,7 @@ The following resources are often used in the same context:
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
 * [databricks_workspace_conf](workspace_conf.md) to manage workspace configuration for expert usage.

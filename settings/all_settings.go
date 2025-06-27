@@ -15,10 +15,15 @@ import (
 //  3. Add a new entry to the AllSettingsResources map below. The final resource name will be "databricks_<SETTING_NAME>_setting".
 func AllSettingsResources() map[string]common.Resource {
 	return map[string]common.Resource{
-		"default_namespace":                      makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
-		"restrict_workspace_admins":              makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
-		"compliance_security_profile_workspace":  makeSettingResource[settings.ComplianceSecurityProfileSetting, *databricks.WorkspaceClient](complianceSecurityProfileSetting),
-		"enhanced_security_monitoring_workspace": makeSettingResource[settings.EnhancedSecurityMonitoringSetting, *databricks.WorkspaceClient](enhancedSecurityMonitoringSetting),
-		"automatic_cluster_update_workspace":     makeSettingResource[settings.AutomaticClusterUpdateSetting, *databricks.WorkspaceClient](automaticClusterUpdateSetting),
+		"default_namespace":                         makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
+		"restrict_workspace_admins":                 makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
+		"compliance_security_profile_workspace":     makeSettingResource[settings.ComplianceSecurityProfileSetting, *databricks.WorkspaceClient](complianceSecurityProfileSetting),
+		"enhanced_security_monitoring_workspace":    makeSettingResource[settings.EnhancedSecurityMonitoringSetting, *databricks.WorkspaceClient](enhancedSecurityMonitoringSetting),
+		"automatic_cluster_update_workspace":        makeSettingResource[settings.AutomaticClusterUpdateSetting, *databricks.WorkspaceClient](automaticClusterUpdateSetting),
+		"aibi_dashboard_embedding_access_policy":    makeSettingResource[settings.AibiDashboardEmbeddingAccessPolicySetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingAccessPolicySetting),
+		"aibi_dashboard_embedding_approved_domains": makeSettingResource[settings.AibiDashboardEmbeddingApprovedDomainsSetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingApprovedDomainsSetting),
+		"disable_legacy_access":                     makeSettingResource[settings.DisableLegacyAccess, *databricks.WorkspaceClient](disableLegacyAccess),
+		"disable_legacy_dbfs":                       makeSettingResource[settings.DisableLegacyDbfs, *databricks.WorkspaceClient](disableLegacyDbfs),
+		"disable_legacy_features":                   makeSettingResource[settings.DisableLegacyFeatures, *databricks.AccountClient](disableLegacyFeatures),
 	}
 }

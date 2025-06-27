@@ -82,13 +82,16 @@ func ResourceCredential() common.Resource {
 			var update catalog.UpdateCredentialRequest
 			common.DataToStructPointer(d, credentialSchema, &update)
 			update.NameArg = d.Id()
+			if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				update.DatabricksGcpServiceAccount = nil
+			}
 			_, err = w.Credentials.UpdateCredential(ctx, update)
 			if err != nil {
 				return err
 			}
 
 			// Bind the current workspace if the credential is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, catalog.UpdateBindingsSecurableTypeCredential)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, bindings.BindingsSecurableTypeCredential)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -166,7 +169,7 @@ func ResourceCredential() common.Resource {
 				return err
 			}
 			// Bind the current workspace if the credential is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCredRequest.NameArg, catalog.UpdateBindingsSecurableTypeCredential)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCredRequest.NameArg, bindings.BindingsSecurableTypeCredential)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

@@ -44,6 +44,38 @@ func TestResourceTokenRead(t *testing.T) {
 	assert.Equal(t, "", d.Get("token_value"))
 }
 
+func TestResourceTokenRead_NoExpire(t *testing.T) {
+	creationTime := time.Now().UnixMilli()
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							Comment:      "Hello, world!",
+							CreationTime: creationTime,
+							ExpiryTime:   -1,
+							TokenID:      "abc",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		Read:     true,
+		New:      true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "Hello, world!", d.Get("comment"))
+	assert.Equal(t, creationTime, int64(d.Get("creation_time").(int)))
+	assert.Equal(t, int64(-1), int64(d.Get("expiry_time").(int)))
+	assert.Equal(t, "", d.Get("token_value"))
+}
+
 func TestResourceTokenRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -256,8 +288,12 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: apierr.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
-				Status:   404,
+				Response: apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "RESOURCE_DOES_NOT_EXIST secret not found",
+				}, // per documentation this is the error response
+				Status: 404,
 			},
 		},
 		Resource: ResourceToken(),

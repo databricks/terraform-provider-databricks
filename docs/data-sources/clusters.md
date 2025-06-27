@@ -3,9 +3,9 @@ subcategory: "Compute"
 ---
 # databricks_clusters Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves a list of [databricks_cluster](../resources/cluster.md#cluster_id) ids, that were created by Terraform or manually, with or without [databricks_cluster_policy](../resources/cluster_policy.md).
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -21,6 +21,36 @@ Retrieve cluster IDs for all clusters having "Shared" in the cluster name:
 ```hcl
 data "databricks_clusters" "all_shared" {
   cluster_name_contains = "shared"
+}
+```
+
+### Filtering clusters
+
+Listing clusters can be slow for workspaces containing many clusters. Use filters to limit the number of clusters returned for better performance. You can filter clusters by state, source, policy, or pinned status:
+
+```hcl
+data "databricks_clusters" "all_running_clusters" {
+  filter_by {
+    cluster_states = ["RUNNING"]
+  }
+}
+
+data "databricks_clusters" "all_clusters_with_policy" {
+  filter_by {
+    policy_id = "1234-5678-9012"
+  }
+}
+
+data "databricks_clusters" "all_api_clusters" {
+  filter_by {
+    cluster_sources = ["API"]
+  }
+}
+
+data "databricks_clusters" "all_pinned_clusters" {
+  filter_by {
+    is_pinned = true
+  }
 }
 ```
 

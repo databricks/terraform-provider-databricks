@@ -5,9 +5,12 @@ subcategory: "Unity Catalog"
 
 This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
 
-A `databricks_quality_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference. 
+-> This resource can only be used with a workspace-level provider!
+
+A `databricks_quality_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference.
 
 ## Plugin Framework Migration
+
 The quality monitor resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_quality_monitor"`.
 
 ## Example Usage
@@ -114,9 +117,9 @@ table.
 * `schedule` - The schedule for automatically updating and refreshing metric tables.  This block consists of following fields:
     * `quartz_cron_expression` - string expression that determines when to run the monitor. See [Quartz documentation](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) for examples.
     * `timezone_id` - string with timezone id (e.g., `PST`) in which to evaluate the Quartz expression.
-* `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.
+* `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation).
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
-* `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.
+* `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)
 
 ## Attribute Reference
 

@@ -790,7 +790,6 @@ func (o DeleteAclResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a credential
 type DeleteCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
@@ -868,7 +867,6 @@ func (o DeleteCredentialsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a repo
 type DeleteRepoRequest struct {
 	// The ID for the corresponding repo to delete.
 	RepoId types.Int64 `tfsdk:"-"`
@@ -1159,7 +1157,6 @@ func (o DeleteSecretResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Export a workspace object
 type ExportRequest struct {
 	// This specifies the format of the exported file. By default, this is
 	// `SOURCE`.
@@ -1214,6 +1211,8 @@ func (o ExportRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The request field `direct_download` determines whether a JSON response or
+// binary contents are returned by this endpoint.
 type ExportResponse struct {
 	// The base64-encoded content. If the limit (10MB) is exceeded, exception
 	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
@@ -1268,7 +1267,6 @@ func (o ExportResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get secret ACL details
 type GetAclRequest struct {
 	// The principal to fetch ACL information for.
 	Principal types.String `tfsdk:"-"`
@@ -1309,7 +1307,6 @@ func (o GetAclRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a credential entry
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
@@ -1405,7 +1402,6 @@ func (o GetCredentialsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get repo permission levels
 type GetRepoPermissionLevelsRequest struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
@@ -1520,7 +1516,6 @@ func (o *GetRepoPermissionLevelsResponse) SetPermissionLevels(ctx context.Contex
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get repo permissions
 type GetRepoPermissionsRequest struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
@@ -1557,7 +1552,6 @@ func (o GetRepoPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a repo
 type GetRepoRequest struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
@@ -1702,7 +1696,6 @@ func (o *GetRepoResponse) SetSparseCheckout(ctx context.Context, v SparseCheckou
 	o.SparseCheckout = vs
 }
 
-// Get a secret
 type GetSecretRequest struct {
 	// The key to fetch secret for.
 	Key types.String `tfsdk:"-"`
@@ -1796,7 +1789,6 @@ func (o GetSecretResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get status
 type GetStatusRequest struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"-"`
@@ -1833,7 +1825,6 @@ func (o GetStatusRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get workspace object permission levels
 type GetWorkspaceObjectPermissionLevelsRequest struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
@@ -1952,7 +1943,6 @@ func (o *GetWorkspaceObjectPermissionLevelsResponse) SetPermissionLevels(ctx con
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get workspace object permissions
 type GetWorkspaceObjectPermissionsRequest struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
@@ -2122,7 +2112,6 @@ func (o ImportResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Lists ACLs
 type ListAclsRequest struct {
 	// The name of the scope to fetch ACL information from.
 	Scope types.String `tfsdk:"-"`
@@ -2315,7 +2304,6 @@ func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
-// Get repos
 type ListReposRequest struct {
 	// Token used to get the next page of results. If not specified, returns the
 	// first page of results as well as a next page token if there are more
@@ -2600,7 +2588,6 @@ func (o *ListScopesResponse) SetScopes(ctx context.Context, v []SecretScope) {
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
-// List secret keys
 type ListSecretsRequest struct {
 	// The name of the scope to list secrets within.
 	Scope types.String `tfsdk:"-"`
@@ -2715,7 +2702,6 @@ func (o *ListSecretsResponse) SetSecrets(ctx context.Context, v []SecretMetadata
 	o.Secrets = types.ListValueMust(t, vs)
 }
 
-// List contents
 type ListWorkspaceRequest struct {
 	// UTC timestamp in milliseconds
 	NotebooksModifiedAfter types.Int64 `tfsdk:"-"`
@@ -2847,11 +2833,13 @@ func (o MkdirsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The information of the object in workspace. It will be returned by “list“
+// and “get-status“.
 type ObjectInfo struct {
 	// Only applicable to files. The creation UTC timestamp.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The language of the object. This value is set only if the object type is
-	// `NOTEBOOK`.
+	// ``NOTEBOOK``.
 	Language types.String `tfsdk:"language"`
 	// Only applicable to files, the last modified UTC timestamp.
 	ModifiedAt types.Int64 `tfsdk:"modified_at"`

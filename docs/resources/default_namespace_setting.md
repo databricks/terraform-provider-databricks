@@ -4,9 +4,10 @@ subcategory: "Settings"
 
 # databricks_default_namespace_setting Resource
 
+The `databricks_default_namespace_setting` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
+
 -> This resource can only be used with a workspace-level provider!
 
-The `databricks_default_namespace_setting` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
 Setting the default catalog for the workspace determines the catalog that is used when queries do not reference
 a fully qualified 3 level name. For example, if the default catalog is set to 'retail_prod' then a query
 'SELECT * FROM myTable' would reference the object 'retail_prod.default.myTable'
@@ -33,6 +34,15 @@ The resource supports the following arguments:
 ## Import
 
 This resource can be imported by predefined name `global`:
+
+```hcl
+import {
+  to = databricks_default_namespace_setting.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_default_namespace_setting.this global

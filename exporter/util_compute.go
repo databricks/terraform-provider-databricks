@@ -47,21 +47,25 @@ func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 
 func (ic *importContext) emitLibraries(libs []compute.Library) {
 	for _, lib := range libs {
-		// Files on DBFS
-		ic.emitIfDbfsFile(lib.Whl)
-		ic.emitIfDbfsFile(lib.Jar)
-		ic.emitIfDbfsFile(lib.Egg)
-		// Files on WSFS
-		ic.emitIfWsfsFile(lib.Whl)
-		ic.emitIfWsfsFile(lib.Jar)
-		ic.emitIfWsfsFile(lib.Egg)
-		ic.emitIfWsfsFile(lib.Requirements)
-		// Files on UC Volumes
-		ic.emitIfVolumeFile(lib.Whl)
-		// TODO: we should emit UC allow list as well
-		ic.emitIfVolumeFile(lib.Jar)
-		ic.emitIfVolumeFile(lib.Requirements)
+		ic.emitLibrary(&lib)
 	}
+}
+
+func (ic *importContext) emitLibrary(lib *compute.Library) {
+	// Files on DBFS
+	ic.emitIfDbfsFile(lib.Whl)
+	ic.emitIfDbfsFile(lib.Jar)
+	ic.emitIfDbfsFile(lib.Egg)
+	// Files on WSFS
+	ic.emitIfWsfsFile(lib.Whl)
+	ic.emitIfWsfsFile(lib.Jar)
+	ic.emitIfWsfsFile(lib.Egg)
+	ic.emitIfWsfsFile(lib.Requirements)
+	// Files on UC Volumes
+	ic.emitIfVolumeFile(lib.Whl)
+	// TODO: we should emit UC allow list as well
+	ic.emitIfVolumeFile(lib.Jar)
+	ic.emitIfVolumeFile(lib.Requirements)
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
@@ -71,22 +75,16 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 	return nil
 }
 
-func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+func (ic *importContext) importClusterLibraries(d *schema.ResourceData) error {
 	libraries := ic.workspaceClient.Libraries
 	cll, err := libraries.ClusterStatusByClusterId(ic.Context, d.Id())
 	if err != nil {
 		return err
 	}
 	for _, lib := range cll.LibraryStatuses {
-		ic.emitIfDbfsFile(lib.Library.Egg)
-		ic.emitIfDbfsFile(lib.Library.Jar)
-		ic.emitIfDbfsFile(lib.Library.Whl)
-		// Files on UC Volumes
-		ic.emitIfVolumeFile(lib.Library.Whl)
-		ic.emitIfVolumeFile(lib.Library.Jar)
-		// Files on WSFS
-		ic.emitIfWsfsFile(lib.Library.Whl)
-		ic.emitIfWsfsFile(lib.Library.Jar)
+		if lib.Library != nil {
+			ic.emitLibrary(lib.Library)
+		}
 	}
 	return nil
 }
@@ -117,8 +115,9 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema,
+	d *schema.ResourceData, r *resource) bool {
+	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 		prefix := ""
 		if regex != nil {
 			if res := regex.FindStringSubmatch(pathString); res != nil {
@@ -148,6 +147,6 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
 		}
 
-		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 	}
 }

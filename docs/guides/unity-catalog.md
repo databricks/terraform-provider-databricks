@@ -184,8 +184,9 @@ resource "databricks_metastore_assignment" "default_metastore" {
   for_each             = toset(var.databricks_workspace_ids)
   workspace_id         = each.key
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
+
+
 ```
 
 ## Configure external locations and credentials
@@ -263,10 +264,14 @@ resource "aws_iam_policy" "external_data_access" {
 resource "aws_iam_role" "external_data_access" {
   name                = local.uc_iam_role
   assume_role_policy  = data.databricks_aws_unity_catalog_assume_role_policy.this.json
-  managed_policy_arns = [aws_iam_policy.external_data_access.arn]
   tags = merge(var.tags, {
     Name = "${local.prefix}-unity-catalog external access IAM role"
   })
+}
+
+resource "aws_iam_role_policy_attachment" "external_data_access" {
+  role       = aws_iam_role.external_data_access.name
+  policy_arn = aws_iam_policy.external_data_access.arn
 }
 ```
 

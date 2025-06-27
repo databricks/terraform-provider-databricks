@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to a [databricks_service_principal](service_principal.md).
 
+-> This resource can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Granting a service principal access to an instance profile
@@ -24,12 +26,27 @@ resource "databricks_service_principal_role" "my_service_principal_instance_prof
 }
 ```
 
+Granting a service principal the Account Admin role.
+
+-> This can only be used with an account-level provider.
+
+```hcl
+resource "databricks_service_principal" "tf_admin" {
+  display_name = "Terraform Admin"
+}
+
+resource "databricks_service_principal_role" "tf_admin_account" {
+  service_principal_id = databricks_service_principal.tf_admin.id
+  role                 = "account_admin"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `service_principal_id` - (Required) This is the id of the [service principal](service_principal.md) resource.
-* `role` -  (Required) This is the id of the role or [instance profile](instance_profile.md) resource.
+* `role` -  (Required) This is the role name, role id, or [instance profile](instance_profile.md) resource.
 
 ## Attribute Reference
 
@@ -50,3 +67,4 @@ The following resources are often used in the same context:
 * [databricks_group_instance_profile](group_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
+* [databricks_access_control_rule_set](access_control_rule_set.md#grant_rules) to attach other roles to account level resources.

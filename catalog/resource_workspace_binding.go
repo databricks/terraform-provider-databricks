@@ -9,11 +9,40 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+// The current state of enablement for the system schema. An empty string means
+// the system schema is available and ready for opt-in.
+type SystemSchemaInfoState string
+
+const SystemSchemaInfoStateAvailable SystemSchemaInfoState = `AVAILABLE`
+const SystemSchemaInfoStateDisableInitialized SystemSchemaInfoState = `DISABLE_INITIALIZED`
+const SystemSchemaInfoStateEnableCompleted SystemSchemaInfoState = `ENABLE_COMPLETED`
+const SystemSchemaInfoStateEnableInitialized SystemSchemaInfoState = `ENABLE_INITIALIZED`
+const SystemSchemaInfoStateUnavailable SystemSchemaInfoState = `UNAVAILABLE`
+
+func (f *SystemSchemaInfoState) String() string {
+	return string(*f)
+}
+
+func (f *SystemSchemaInfoState) Set(v string) error {
+	switch v {
+	case `AVAILABLE`, `DISABLE_INITIALIZED`, `ENABLE_COMPLETED`, `ENABLE_INITIALIZED`, `UNAVAILABLE`:
+		*f = SystemSchemaInfoState(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "AVAILABLE", "DISABLE_INITIALIZED", "ENABLE_COMPLETED", "ENABLE_INITIALIZED", "UNAVAILABLE"`, v)
+	}
+}
+
+func (f *SystemSchemaInfoState) Type() string {
+	return "SystemSchemaInfoState"
+}
 
 var getSecurableName = func(d *schema.ResourceData) string {
 	securableName, ok := d.GetOk("securable_name")
@@ -72,11 +101,11 @@ func ResourceWorkspaceBinding() common.Resource {
 			var update catalog.WorkspaceBinding
 			common.DataToStructPointer(d, workspaceBindingSchema, &update)
 			securableName := getSecurableName(d)
-			securableType := catalog.UpdateBindingsSecurableType(d.Get("securable_type").(string))
+			securableType := bindings.BindingsSecurableType(d.Get("securable_type").(string))
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Add:           []catalog.WorkspaceBinding{update},
 				SecurableName: securableName,
-				SecurableType: securableType,
+				SecurableType: string(securableType),
 			})
 			d.SetId(fmt.Sprintf("%d|%s|%s", update.WorkspaceId, securableType, securableName))
 			return err
@@ -91,15 +120,17 @@ func ResourceWorkspaceBinding() common.Resource {
 				return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
 			}
 			securableName := parts[2]
-			securableType := catalog.GetBindingsSecurableType(parts[1])
+			// Previously, users could specify "external-location" and "storage-credential" as the securable type.
+			// We need to convert them to "external_location" and "storage_credential" respectively.
+			securableType := bindings.BindingsSecurableType(strings.Replace(parts[1], "-", "_", -1))
 			workspaceId, err := strconv.ParseInt(parts[0], 10, 0)
 			if err != nil {
 				return fmt.Errorf("can't parse workspace_id: %w", err)
 			}
 			d.Set("securable_name", securableName)
-			d.Set("securable_type", securableType)
+			d.Set("securable_type", string(securableType))
 			d.Set("workspace_id", workspaceId)
-			bindings, err := w.WorkspaceBindings.GetBindingsBySecurableTypeAndSecurableName(ctx, securableType, securableName)
+			bindings, err := w.WorkspaceBindings.GetBindingsBySecurableTypeAndSecurableName(ctx, string(securableType), securableName)
 			if err != nil {
 				return err
 			}
@@ -108,7 +139,11 @@ func ResourceWorkspaceBinding() common.Resource {
 					return common.StructToData(binding, workspaceBindingSchema, d)
 				}
 			}
-			return apierr.NotFound(fmt.Sprintf("%s has no binding to this workspace", securableName))
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    fmt.Sprintf("%s has no binding to this workspace", securableName),
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -120,7 +155,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Remove:        []catalog.WorkspaceBinding{update},
 				SecurableName: getSecurableName(d),
-				SecurableType: catalog.UpdateBindingsSecurableType(d.Get("securable_type").(string)),
+				SecurableType: string(bindings.BindingsSecurableType(d.Get("securable_type").(string))),
 			})
 			return err
 		},

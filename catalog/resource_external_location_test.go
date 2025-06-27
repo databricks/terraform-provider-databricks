@@ -99,7 +99,7 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
 					},
 				},
-			}).Return(&catalog.WorkspaceBindingsResponse{
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),
@@ -233,7 +233,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
-					AccessPoint:    "some_access_point",
 					EncryptionDetails: &catalog.EncryptionDetails{
 						SseEncryptionDetails: &catalog.SseEncryptionDetails{
 							Algorithm:    "AWS_SSE_KMS",
@@ -246,7 +245,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
-					AccessPoint:    "some_access_point",
 					EncryptionDetails: &catalog.EncryptionDetails{
 						SseEncryptionDetails: &catalog.SseEncryptionDetails{
 							Algorithm:    "AWS_SSE_KMS",
@@ -272,7 +270,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
-		access_point = "some_access_point"
 	    encryption_details {
           sse_encryption_details {
             algorithm     = "AWS_SSE_KMS"
@@ -325,6 +322,49 @@ func TestUpdateExternalLocation(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateExternalLocationName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					ReadOnly:       false,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+		},
+		Resource:    ResourceExternalLocation(),
+		Update:      true,
+		RequiresNew: true,
+		ID:          "abc",
+		InstanceState: map[string]string{
+			"name":            "abc-old",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -332,12 +372,13 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: catalog.UpdateExternalLocation{
-					Url:             "s3://foo/bar",
-					CredentialName:  "bcd",
-					Comment:         "def",
-					ReadOnly:        false,
-					Fallback:        false,
-					ForceSendFields: []string{"ReadOnly", "Fallback"},
+					Url:              "s3://foo/bar",
+					CredentialName:   "bcd",
+					Comment:          "def",
+					ReadOnly:         false,
+					Fallback:         false,
+					EnableFileEvents: false,
+					ForceSendFields:  []string{"ReadOnly", "Fallback", "EnableFileEvents"},
 				},
 			},
 			{
@@ -356,12 +397,13 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 		Update:   true,
 		ID:       "abc",
 		InstanceState: map[string]string{
-			"name":            "abc",
-			"url":             "s3://foo/bar",
-			"credential_name": "abc",
-			"comment":         "def",
-			"read_only":       "true",
-			"fallback":        "true",
+			"name":               "abc",
+			"url":                "s3://foo/bar",
+			"credential_name":    "abc",
+			"comment":            "def",
+			"read_only":          "true",
+			"fallback":           "true",
+			"enable_file_events": "true",
 		},
 		HCL: `
 		name = "abc"
@@ -370,6 +412,7 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 		comment = "def"
 		read_only = false
 		fallback = false
+		enable_file_events = false
 		`,
 	}.ApplyNoError(t)
 }

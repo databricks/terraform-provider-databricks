@@ -48,6 +48,9 @@ func TestDataAwsUnityCatalogAssumeRolePolicy(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
                 }
               }
             }
@@ -96,6 +99,9 @@ func TestDataAwsUnityCatalogAssumeRolePolicyWithoutUcArn(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
                 }
               }
             }
@@ -145,7 +151,62 @@ func TestDataAwsUnityCatalogAssumeRolePolicyGovWithoutUcArn(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws-us-gov:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
                 }
+              }
+            }
+          ]
+        }`
+	compareJSON(t, j, p)
+}
+
+func TestDataAwsUnityCatalogAssumeRolePolicyGovDoDWithoutUcArn(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsUnityCatalogAssumeRolePolicy(),
+		NonWritable: true,
+		ID:          ".",
+		HCL: `
+        aws_account_id = "123456789098"
+        aws_partition = "aws-us-gov-dod"
+        role_name = "databricks-role"
+        external_id = "12345"
+        `,
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json").(string)
+	p := `{
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "UnityCatalogAssumeRole",
+              "Effect": "Allow",
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "AWS": "arn:aws-us-gov:iam::170661010020:role/unity-catalog-prod-UCMasterRole-1DI6DL6ZP26AS"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
+                }
+              }
+            },
+            {
+              "Sid": "ExplicitSelfRoleAssumption",
+              "Effect": "Allow",
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "AWS": "arn:aws-us-gov:iam::123456789098:root"
+              },
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": "arn:aws-us-gov:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
+                }                
               }
             }
           ]

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -49,7 +50,7 @@ type SqlTableInfo struct {
 	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
-	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
+	Partitions            []string          `json:"partitions,omitempty" tf:"force_new,computed"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
@@ -304,7 +305,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	if len(ti.ClusterKeys) > 0 {
-		statements = append(statements, fmt.Sprintf("\nCLUSTER BY (%s)", ti.getWrappedClusterKeys())) // CLUSTER BY (`university`, `major`)
+		statements = append(statements, fmt.Sprintf("\nCLUSTER BY %s", ti.getWrappedClusterKeys())) // CLUSTER BY (`university`, `major`)
 	}
 
 	if ti.Comment != "" {
@@ -339,7 +340,14 @@ func (ci SqlColumnInfo) getWrappedColumnName() string {
 
 // Wrapping column name with backticks to avoid special character messing things up.
 func (ti *SqlTableInfo) getWrappedClusterKeys() string {
-	return "`" + strings.Join(ti.ClusterKeys, "`,`") + "`"
+	if len(ti.ClusterKeys) == 1 {
+		clusterKey := strings.ToUpper(ti.ClusterKeys[0])
+		// If the cluster key is AUTO or NONE, we don't need to wrap it with backticks.
+		if slices.Contains([]string{"AUTO", "NONE"}, clusterKey) {
+			return clusterKey
+		}
+	}
+	return "(`" + strings.Join(ti.ClusterKeys, "`,`") + "`)"
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
@@ -429,7 +437,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		}
 		equal := slices.Equal(ti.ClusterKeys, oldti.ClusterKeys)
 		if !equal {
-			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY (%s)", ti.SQLFullName(), ti.getWrappedClusterKeys()))
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY %s", ti.SQLFullName(), ti.getWrappedClusterKeys()))
 		}
 	}
 
@@ -668,6 +676,15 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			partitionInfo, err := w.Tables.GetByFullName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			partitionIndexes := map[int]string{}
 			for i := range ti.ColumnInfos {
 				c := &ti.ColumnInfos[i]
 				c.Identity, err = reconstructIdentity(c)
@@ -675,6 +692,21 @@ func ResourceSqlTable() common.Resource {
 					return err
 				}
 			}
+
+			for i := range partitionInfo.Columns {
+				c := &partitionInfo.Columns[i]
+				if slices.Contains(c.ForceSendFields, "PartitionIndex") {
+					partitionIndexes[c.PartitionIndex] = c.Name
+				}
+			}
+			indexes := slices.Sorted(maps.Keys(partitionIndexes))
+
+			partitions := []string{}
+			for _, p := range indexes {
+				partitions = append(partitions, partitionIndexes[p])
+			}
+
+			d.Set("partitions", partitions)
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

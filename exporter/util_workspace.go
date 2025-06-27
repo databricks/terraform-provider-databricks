@@ -133,6 +133,7 @@ func (ic *importContext) emitWorkspaceObject(objType, path string) {
 }
 
 func (ic *importContext) emitDirectoryOrRepo(path string) {
+	log.Printf("[DEBUG] Emitting directory or repo for %s", path)
 	ic.emitWorkspaceObject("databricks_directory", path)
 }
 
@@ -200,11 +201,11 @@ func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectS
 	return ic.allWorkspaceObjects
 }
 
-func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "md5" { // `md5` is kind of computed, but not declared as it...
 		return true
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 }
 
 func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {
@@ -246,6 +247,9 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj
 			}
 			if data != nil {
 				data = ic.generateNewData(data, resourceType, path, obj)
+				if data != nil {
+					workspace.SetWorkspaceObjectComputedProperties(data, ic.Client)
+				}
 			}
 		}
 		ic.Emit(&resource{

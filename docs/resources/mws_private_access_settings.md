@@ -5,6 +5,8 @@ subcategory: "Deployment"
 
 Allows you to create a Private Access Setting resource that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html)
 
+-> This resource can only be used with an account-level provider!
+
 It is strongly recommended that customers read the [Enable AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) [Enable GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation before trying to leverage this resource.
 
 ## Example Usage
@@ -54,10 +56,7 @@ resource "databricks_mws_workspaces" "this" {
       project_id = var.google_project
     }
   }
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
+
   network_id                 = databricks_mws_networks.this.network_id
   private_access_settings_id = databricks_mws_private_access_settings.pas.private_access_settings_id
   pricing_tier               = "PREMIUM"
@@ -86,6 +85,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by Databricks account ID and private access settings ID.
+
+```hcl
+import {
+  to = databricks_mws_private_access_settings.this
+  id = "<account_id>/<private_access_settings_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_mws_private_access_settings.this '<account_id>/<private_access_settings_id>'

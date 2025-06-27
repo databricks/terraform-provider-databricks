@@ -284,9 +284,9 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	createType := ti.getTableTypeString()
 
 	if !isView && ti.DataSourceFormat == "DELTA" {
-		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s%s %s", externalFragment, createType, ti.SQLFullName()))
+		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s %s", createType, ti.SQLFullName()))
 	} else {
-		statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
+		statements = append(statements, fmt.Sprintf("CREATE %s %s", createType, ti.SQLFullName()))
 	}
 
 	if len(ti.ColumnInfos) > 0 {
@@ -745,17 +745,10 @@ func ResourceSqlTable() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
-			if ti.DataSourceFormat == "DELTA" {
-				log.Printf("[INFO] DataSourceFormat is: %s. Skipping DROP TABLE", ti.DataSourceFormat)
-				return nil
-			} else {
-				log.Printf("[INFO] DataSourceFormat is: %s. Initiating DROP TABLE", ti.DataSourceFormat)
-				if err := ti.initCluster(ctx, d, c); err != nil {
-					return err
-				}
-				return ti.deleteTable()
+			if err := ti.initCluster(ctx, d, c); err != nil {
+				return err
 			}
-
+			return ti.deleteTable()
 		},
 	}
 }

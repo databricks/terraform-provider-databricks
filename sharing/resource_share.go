@@ -2,7 +2,6 @@ package sharing
 
 import (
 	"context"
-
 	"reflect"
 	"sort"
 
@@ -66,7 +65,7 @@ func (si *ShareInfo) sortSharesByName() {
 }
 
 func (si *ShareInfo) suppressCDFEnabledDiff() {
-	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
+	// suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
 	for i := range si.Objects {
 		if si.Objects[i].HistoryDataSharingStatus == "ENABLED" {
 			si.Objects[i].CdfEnabled = false
@@ -100,7 +99,7 @@ func Equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	if other.SharedAs == "" {
 		other.SharedAs = this.SharedAs
 	}
-	//don't compare computed fields
+	// don't compare computed fields
 	other.AddedAt = this.AddedAt
 	other.AddedBy = this.AddedBy
 	other.Status = this.Status
@@ -163,7 +162,7 @@ func ResourceShare() common.Resource {
 				return err
 			}
 
-			//can only create empty share, objects & owners have to be added using update API
+			// can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(string(sharing.SharedDataObjectUpdateActionAdd))
@@ -171,7 +170,7 @@ func ResourceShare() common.Resource {
 			shareChanges.Comment = si.Comment
 			shareChanges.Owner = si.Owner
 			if _, err := w.Shares.Update(ctx, shareChanges); err != nil {
-				//delete orphaned share if update fails
+				// delete orphaned share if update fails
 				if d_err := w.Shares.DeleteByName(ctx, si.Name); d_err != nil {
 					return d_err
 				}
@@ -190,7 +189,7 @@ func ResourceShare() common.Resource {
 				Name:              d.Id(),
 				IncludeSharedData: true,
 			})
-			var si = ShareInfo{*shareInfo}
+			si := ShareInfo{*shareInfo}
 			si.sortSharesByName()
 			si.suppressCDFEnabledDiff()
 			if err != nil {
@@ -213,32 +212,12 @@ func ResourceShare() common.Resource {
 				return err
 			}
 
-			var beforeSi = ShareInfo{*si}
+			beforeSi := ShareInfo{*si}
 			beforeSi.sortSharesByName()
 			beforeSi.suppressCDFEnabledDiff()
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
-
-			if d.HasChange("owner") {
-				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
-					Name:  afterSi.Name,
-					Owner: afterSi.Owner,
-				})
-				if err != nil {
-					return err
-				}
-			}
-
-			if d.HasChange("comment") {
-				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
-					Name:    afterSi.Name,
-					Comment: afterSi.Comment,
-				})
-				if err != nil {
-					return err
-				}
-			}
 
 			if !d.HasChangesExcept("owner") {
 				return nil
@@ -250,6 +229,8 @@ func ResourceShare() common.Resource {
 
 			_, err = client.Shares.Update(ctx, sharing.UpdateShare{
 				Name:    d.Id(),
+				Owner:   afterSi.Owner,
+				Comment: afterSi.Comment,
 				Updates: changes,
 			})
 			if err != nil {

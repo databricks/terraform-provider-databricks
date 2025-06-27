@@ -31,7 +31,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	secondShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -47,7 +48,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	thirdShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -63,7 +65,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "d",
 				},
-			}},
+			},
+		},
 	}
 	fourthShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -79,7 +82,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	diffAdd := []sharing.SharedDataObjectUpdate{
 		{
@@ -199,7 +203,8 @@ func TestCreateShare(t *testing.T) {
 					ShareInfo: sharing.ShareInfo{
 						Name:    "a",
 						Comment: "b",
-					}},
+					},
+				},
 			},
 			{
 				Method:   "PATCH",
@@ -252,7 +257,8 @@ func TestCreateShare(t *testing.T) {
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -294,7 +300,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -308,13 +315,8 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Owner:   "admin",
 					Comment: "cba",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/shares/abc",
-				ExpectedRequest: sharing.UpdateShare{
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -368,7 +370,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -415,7 +418,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -429,13 +433,8 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Owner:   "updatedOwner",
 					Comment: "updatedComment",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/shares/abc",
-				ExpectedRequest: sharing.UpdateShare{
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -508,7 +507,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -560,7 +560,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								ForceSendFields: []string{"Name", "Comment", "DataObjectType"},
 							},
 						},
-					}},
+					},
+				},
 			},
 			{
 				Method:   "GET",
@@ -578,7 +579,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								AddedBy:        "",
 							},
 						},
-					}},
+					},
+				},
 			},
 		},
 		ID:          "abc",
@@ -727,7 +729,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -769,7 +772,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},

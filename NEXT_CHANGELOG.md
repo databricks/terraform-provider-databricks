@@ -13,8 +13,10 @@
 
 ### Documentation
 
-* Update documentation for single-node clusters in `databricks_cluster` resource.
+* Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
 
 ### Exporter
 
 ### Internal Changes
+
+ * Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).

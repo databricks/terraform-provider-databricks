@@ -1010,3 +1010,26 @@ func TestAccPermissions_App(t *testing.T) {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for apps, allowed levels: CAN_MANAGE"),
 	})
 }
+
+// Temporary disabled until #4823 is fixed
+// func TestAccPermissions_DatabaseInstance(t *testing.T) {
+// 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	if acceptance.IsGcp(t) {
+// 		acceptance.Skipf(t)("not available on GCP")
+// 	}
+// 	queryTemplate := `
+// 		resource "databricks_database_instance" "this" {
+// 			name = "{var.RANDOM}"
+// 			capacity = "CU_1"
+// 		}`
+// 	acceptance.WorkspaceLevel(t, acceptance.Step{
+// 		Template: queryTemplate + makePermissionsTestStage("database_instance_name", "databricks_database_instance.this.name", groupPermissions("CAN_USE")),
+// 	}, acceptance.Step{
+// 		Template: queryTemplate + makePermissionsTestStage("database_instance_name", "databricks_database_instance.this.name",
+// 			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+// 	}, acceptance.Step{
+// 		Template: queryTemplate + makePermissionsTestStage("database_instance_name", "databricks_database_instance.this.name",
+// 			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for database instance, allowed levels: CAN_MANAGE"),
+// 	})
+// }

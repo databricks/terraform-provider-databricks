@@ -70,8 +70,8 @@ func (r *QualityMonitorV2Resource) update(ctx context.Context, plan qualitymonit
 
 	updateRequest := qualitymonitorv2.UpdateQualityMonitorRequest{
 		QualityMonitor: quality_monitor,
-		ObjectType:     plan.ObjectType.ValueString(),
 		ObjectId:       plan.ObjectId.ValueString(),
+		ObjectType:     plan.ObjectType.ValueString(),
 	}
 
 	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)

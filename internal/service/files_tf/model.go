@@ -259,7 +259,6 @@ func (o Create) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create a directory
 type CreateDirectoryRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -430,7 +429,6 @@ func (o Delete) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a directory
 type DeleteDirectoryRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -497,7 +495,6 @@ func (o DeleteDirectoryResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a file
 type DeleteFileRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -644,7 +641,6 @@ func (o DirectoryEntry) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Download a file
 type DownloadRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -792,7 +788,6 @@ func (o FileInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get directory metadata
 type GetDirectoryMetadataRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -859,7 +854,6 @@ func (o GetDirectoryMetadataResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get file metadata
 type GetMetadataRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -940,7 +934,6 @@ func (o GetMetadataResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the information of a file or directory
 type GetStatusRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
@@ -978,7 +971,6 @@ func (o GetStatusRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List directory contents or file details
 type ListDbfsRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
@@ -1016,7 +1008,6 @@ func (o ListDbfsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List directory contents
 type ListDirectoryContentsRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -1523,7 +1514,6 @@ func (o PutResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the contents of a file
 type ReadDbfsRequest struct {
 	// The number of bytes to read starting from the offset. This has a limit of
 	// 1 MB, and a default value of 0.5 MB.
@@ -1624,7 +1614,6 @@ func (o ReadResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Upload a file
 type UploadRequest struct {
 	Contents types.Object `tfsdk:"-"`
 	// The absolute path of the file.

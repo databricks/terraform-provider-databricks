@@ -1716,7 +1716,6 @@ func (o ComputeStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create an app deployment
 type CreateAppDeploymentRequest struct {
 	AppDeployment types.Object `tfsdk:"app_deployment"`
 	// The name of the app.
@@ -1786,7 +1785,6 @@ func (o *CreateAppDeploymentRequest) SetAppDeployment(ctx context.Context, v App
 	o.AppDeployment = vs
 }
 
-// Create an app
 type CreateAppRequest struct {
 	App types.Object `tfsdk:"app"`
 	// If true, the app will not be started after creation.
@@ -1856,7 +1854,6 @@ func (o *CreateAppRequest) SetApp(ctx context.Context, v App) {
 	o.App = vs
 }
 
-// Delete an app
 type DeleteAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -1893,7 +1890,6 @@ func (o DeleteAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app deployment
 type GetAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -1934,7 +1930,6 @@ func (o GetAppDeploymentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get app permission levels
 type GetAppPermissionLevelsRequest struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -2049,7 +2044,6 @@ func (o *GetAppPermissionLevelsResponse) SetPermissionLevels(ctx context.Context
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get app permissions
 type GetAppPermissionsRequest struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -2086,7 +2080,6 @@ func (o GetAppPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app
 type GetAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -2123,7 +2116,6 @@ func (o GetAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List app deployments
 type ListAppDeploymentsRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -2252,7 +2244,6 @@ func (o *ListAppDeploymentsResponse) SetAppDeployments(ctx context.Context, v []
 	o.AppDeployments = types.ListValueMust(t, vs)
 }
 
-// List apps
 type ListAppsRequest struct {
 	// Upper bound for items returned.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2472,7 +2463,6 @@ func (o StopAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update an app
 type UpdateAppRequest struct {
 	App types.Object `tfsdk:"app"`
 	// The name of the app. The name must contain only lowercase alphanumeric

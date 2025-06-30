@@ -33,9 +33,6 @@ const fastApp = `
 
 func TestAccAppDataSource(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: fastApp + `
 		data "databricks_app" "this" {

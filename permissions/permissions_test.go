@@ -991,9 +991,6 @@ func TestAccPermissions_Query(t *testing.T) {
 
 func TestAccPermissions_App(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	queryTemplate := `
 		resource "databricks_app" "this" {
 			name = "{var.RANDOM}"

@@ -351,6 +351,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		// if there are any other changes, update the share with the changes
 		upToDateShareInfo, err = client.Shares.Update(ctx, sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
+			Comment: plan.Comment.ValueString(),
 			Updates: changes,
 		})
 

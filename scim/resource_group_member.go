@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bluele/gcache"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,27 +19,53 @@ type GroupMembersInfo struct {
 }
 
 type GroupCache struct {
-	cache gcache.Cache
+	cache      map[string]*GroupMembersInfo
+	created    time.Time
+	expiration time.Duration
+	lock       sync.Mutex
 }
 
 func NewGroupsCache(expiration time.Duration) *GroupCache {
 	return &GroupCache{
-		cache: gcache.New(1000).LRU().LoaderFunc(func(key interface{}) (interface{}, error) {
-			return &GroupMembersInfo{
-				initialized: false,
-				members:     make(map[string]struct{}),
-				lock:        &sync.Mutex{},
-			}, nil
-		}).Expiration(expiration).Build(),
+		cache:      make(map[string]*GroupMembersInfo),
+		created:    time.Now(),
+		expiration: expiration,
+		lock:       sync.Mutex{},
 	}
 }
 
-func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
-	entry, err := c.cache.Get(groupID)
-	if err != nil {
-		return nil, err
+func (c *GroupCache) isExpired() bool {
+	return time.Since(c.created) > c.expiration
+}
+
+func (c *GroupCache) clearCache() {
+	c.cache = make(map[string]*GroupMembersInfo)
+	c.created = time.Now()
+}
+
+func (c *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	// Check if cache is expired
+	if c.isExpired() {
+		c.clearCache()
 	}
-	groupInfo := entry.(*GroupMembersInfo)
+
+	groupInfo, exists := c.cache[groupID]
+	if !exists {
+		groupInfo = &GroupMembersInfo{
+			initialized: false,
+			members:     make(map[string]struct{}),
+			lock:        &sync.Mutex{},
+		}
+		c.cache[groupID] = groupInfo
+	}
+	return groupInfo
+}
+
+func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+	groupInfo := c.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
@@ -63,15 +88,11 @@ func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struc
 }
 
 func (c *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
-	entry, err := c.cache.Get(groupID)
-	if err != nil {
-		return err
-	}
-	groupInfo := entry.(*GroupMembersInfo)
+	groupInfo := c.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
-	err = api.Patch(groupID, PatchRequest(
+	err := api.Patch(groupID, PatchRequest(
 		"remove", fmt.Sprintf(`members[value eq "%s"]`, memberID)))
 	if err != nil {
 		return err
@@ -82,19 +103,14 @@ func (c *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string
 		delete(groupInfo.members, memberKey)
 	}
 	return err
-
 }
 
 func (c *GroupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
-	entry, err := c.cache.Get(groupID)
-	if err != nil {
-		return err
-	}
-	groupInfo := entry.(*GroupMembersInfo)
+	groupInfo := c.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
-	err = api.Patch(groupID, PatchRequestWithValue("add", "members", memberID))
+	err := api.Patch(groupID, PatchRequestWithValue("add", "members", memberID))
 	if err != nil {
 		return err
 	}

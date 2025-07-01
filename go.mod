@@ -3,7 +3,6 @@ module github.com/databricks/terraform-provider-databricks
 go 1.24.0
 
 require (
-	github.com/bluele/gcache v0.0.2
 	github.com/databricks/databricks-sdk-go v0.72.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/hashicorp/go-cty v1.5.0

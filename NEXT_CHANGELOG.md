@@ -1,30 +1,25 @@
 # NEXT CHANGELOG
 
-## Release v1.84.0
+## Release v1.85.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
- * Added `time_rotating` argument to `databricks_service_principal_secret` to enable secret rotation ([#4789](https://github.com/databricks/terraform-provider-databricks/pull/4789)).
 
-
-* Add AWS support for `databricks_mws_ncc_private_endpoint_rule` ([#4804](https://github.com/databricks/terraform-provider-databricks/pull/4804)).
-* Added `key` argument to `databricks_jobs` data source to enable mapping by job ID and allow duplicate job names ([#4796](https://github.com/databricks/terraform-provider-databricks/pull/4796)).
+* Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4812](https://github.com/databricks/terraform-provider-databricks/pull/4812)).
+* Use single-node cluster for `databricks_sql_permissions` ([#4813](https://github.com/databricks/terraform-provider-databricks/pull/4813)).
 
 ### Bug Fixes
 
 ### Documentation
 
-* Added link to Workload Identity Federation page ([#4786](https://github.com/databricks/terraform-provider-databricks/pull/4786)).
-* auto `zone_id` can only be used for fleet node types in `databricks_instance_pool` resource ([#4782](https://github.com/databricks/terraform-provider-databricks/pull/4782)).
-* Document `tags` attribute in `databricks_pipeline` resource ([#4783](https://github.com/databricks/terraform-provider-databricks/pull/4783)).
-* Recommend OAuth instead of PAT in guides ([#4787](https://github.com/databricks/terraform-provider-databricks/pull/4787))
-* Document new options in `databricks_model_serving` resource ([#4789](https://github.com/databricks/terraform-provider-databricks/pull/4789))
+* Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
 
 ### Exporter
 
-* Fix crash when importing model serving endpoint ([#4806](https://github.com/databricks/terraform-provider-databricks/pull/4806))
+* Fix generation of columns in `databricks_sql_table` resource ([#4819](https://github.com/databricks/terraform-provider-databricks/pull/4819)).
 
 ### Internal Changes
 
+* Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).
 * Use caching for group membership and user information retrieval to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

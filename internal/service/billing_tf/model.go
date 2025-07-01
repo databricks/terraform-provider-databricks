@@ -1613,7 +1613,6 @@ func (o *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
-// Delete budget
 type DeleteBudgetConfigurationRequest struct {
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
@@ -1691,7 +1690,6 @@ func (o DeleteBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a budget policy
 type DeleteBudgetPolicyRequest struct {
 	// The Id of the policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1758,7 +1756,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Return billable usage logs
 type DownloadRequest struct {
 	// Format: `YYYY-MM`. Last month to return billable usage logs for. This
 	// field is required.
@@ -1905,7 +1902,6 @@ func (o Filter) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get usage dashboard
 type GetBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
@@ -2002,7 +1998,6 @@ func (o GetBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get budget
 type GetBudgetConfigurationRequest struct {
 	// The budget configuration ID
 	BudgetId types.String `tfsdk:"-"`
@@ -2116,7 +2111,6 @@ func (o *GetBudgetConfigurationResponse) SetBudget(ctx context.Context, v Budget
 	o.Budget = vs
 }
 
-// Get a budget policy
 type GetBudgetPolicyRequest struct {
 	// The Id of the policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -2231,7 +2225,6 @@ func (o *GetLogDeliveryConfigurationResponse) SetLogDeliveryConfiguration(ctx co
 	o.LogDeliveryConfiguration = vs
 }
 
-// Get log delivery configuration
 type GetLogDeliveryRequest struct {
 	// The log delivery configuration id of customer
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
@@ -2311,7 +2304,6 @@ func (o LimitConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get all budgets
 type ListBudgetConfigurationsRequest struct {
 	// A page token received from a previous get all budget configurations call.
 	// This token can be used to retrieve the subsequent page. Requests first
@@ -2433,7 +2425,6 @@ func (o *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []B
 	o.Budgets = types.ListValueMust(t, vs)
 }
 
-// List policies
 type ListBudgetPoliciesRequest struct {
 	// A filter to apply to the list of policies.
 	FilterBy types.Object `tfsdk:"-"`
@@ -2640,7 +2631,6 @@ func (o *ListBudgetPoliciesResponse) SetPolicies(ctx context.Context, v []Budget
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// Get all log delivery configurations
 type ListLogDeliveryRequest struct {
 	// The Credentials id to filter the search results with
 	CredentialsId types.String `tfsdk:"-"`
@@ -3374,7 +3364,6 @@ func (o *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v Bud
 	o.Budget = vs
 }
 
-// Update a budget policy
 type UpdateBudgetPolicyRequest struct {
 	// DEPRECATED. This is redundant field as LimitConfig is part of the
 	// BudgetPolicy

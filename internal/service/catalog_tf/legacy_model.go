@@ -1082,8 +1082,10 @@ func (o AwsIamRole_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The AWS IAM role configuration
 type AwsIamRoleRequest_SdkV2 struct {
-	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
+	// The Amazon Resource Name (ARN) of the AWS IAM role used to vend temporary
+	// credentials.
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
@@ -1130,11 +1132,13 @@ func (o AwsIamRoleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The AWS IAM role configuration
 type AwsIamRoleResponse_SdkV2 struct {
-	// The external ID used in role assumption to prevent confused deputy
-	// problem..
+	// The external ID used in role assumption to prevent the confused deputy
+	// problem.
 	ExternalId types.String `tfsdk:"external_id"`
-	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
+	// The Amazon Resource Name (ARN) of the AWS IAM role used to vend temporary
+	// credentials.
 	RoleArn types.String `tfsdk:"role_arn"`
 	// The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks.
 	// This is the identity that is going to assume the AWS IAM role.
@@ -1148,9 +1152,9 @@ func (newState *AwsIamRoleResponse_SdkV2) SyncEffectiveFieldsDuringRead(existing
 }
 
 func (c AwsIamRoleResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["external_id"] = attrs["external_id"].SetComputed()
 	attrs["role_arn"] = attrs["role_arn"].SetRequired()
-	attrs["unity_catalog_iam_arn"] = attrs["unity_catalog_iam_arn"].SetOptional()
+	attrs["unity_catalog_iam_arn"] = attrs["unity_catalog_iam_arn"].SetComputed()
 
 	return attrs
 }
@@ -1304,10 +1308,7 @@ type AzureManagedIdentity_SdkV2 struct {
 	// format
 	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
-	// The Databricks internal ID that represents this managed identity. This
-	// field is only used to persist the credential_id once it is fetched from
-	// the credentials manager - as we only use the protobuf serializer to store
-	// credentials, this ID gets persisted to the database. .
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
 	// The Azure resource ID of the managed identity. Use the format,
 	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
@@ -1367,17 +1368,18 @@ func (o AzureManagedIdentity_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The Azure managed identity configuration.
 type AzureManagedIdentityRequest_SdkV2 struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}.
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
-	// The Azure resource ID of the managed identity. Use the format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}.
+	// The Azure resource ID of the managed identity. Use the format,
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
 	// This is only available for user-assgined identities. For system-assigned
 	// identities, the access_connector_id is used to identify the identity. If
 	// this field is not provided, then we assume the AzureManagedIdentity is
-	// for a system-assigned identity.
+	// using the system-assigned identity.
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
@@ -1427,19 +1429,20 @@ func (o AzureManagedIdentityRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The Azure managed identity configuration.
 type AzureManagedIdentityResponse_SdkV2 struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}.
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
 	AccessConnectorId types.String `tfsdk:"access_connector_id"`
 	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
-	// The Azure resource ID of the managed identity. Use the format
-	// /subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}.
+	// The Azure resource ID of the managed identity. Use the format,
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
 	// This is only available for user-assgined identities. For system-assigned
 	// identities, the access_connector_id is used to identify the identity. If
 	// this field is not provided, then we assume the AzureManagedIdentity is
-	// for a system-assigned identity.
+	// using the system-assigned identity.
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
@@ -1451,7 +1454,7 @@ func (newState *AzureManagedIdentityResponse_SdkV2) SyncEffectiveFieldsDuringRea
 
 func (c AzureManagedIdentityResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_connector_id"] = attrs["access_connector_id"].SetRequired()
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
 	attrs["managed_identity_id"] = attrs["managed_identity_id"].SetOptional()
 
 	return attrs
@@ -1673,7 +1676,6 @@ func (o AzureUserDelegationSas_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Cancel refresh
 type CancelRefreshRequest_SdkV2 struct {
 	// ID of the refresh.
 	RefreshId types.String `tfsdk:"-"`
@@ -2028,12 +2030,14 @@ func (o *CatalogInfo_SdkV2) SetProvisioningInfo(ctx context.Context, v Provision
 	o.ProvisioningInfo = types.ListValueMust(t, vs)
 }
 
+// The Cloudflare API token configuration. Read more at
+// https://developers.cloudflare.com/r2/api/s3/tokens/
 type CloudflareApiToken_SdkV2 struct {
-	// The Cloudflare access key id of the token.
+	// The access key ID associated with the API token.
 	AccessKeyId types.String `tfsdk:"access_key_id"`
-	// The account id associated with the API token.
+	// The ID of the account associated with the API token.
 	AccountId types.String `tfsdk:"account_id"`
-	// The secret access token generated for the access key id
+	// The secret access token generated for the above access key ID.
 	SecretAccessKey types.String `tfsdk:"secret_access_key"`
 }
 
@@ -2900,17 +2904,15 @@ func (o *CreateConnection_SdkV2) SetProperties(ctx context.Context, v map[string
 }
 
 type CreateCredentialRequest_SdkV2 struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
@@ -4073,7 +4075,6 @@ func (o *CreateMonitor_SdkV2) SetTimeSeries(ctx context.Context, v MonitorTimeSe
 	o.TimeSeries = types.ListValueMust(t, vs)
 }
 
-// Create an Online Table
 type CreateOnlineTableRequest_SdkV2 struct {
 	// Online Table information.
 	Table types.List `tfsdk:"table"`
@@ -4350,9 +4351,11 @@ type CreateStorageCredential_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
-	// The credential name. The name must be unique within the metastore.
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
 	Name types.String `tfsdk:"name"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Supplying true to this argument skips validation of the created
 	// credential.
@@ -4742,12 +4745,11 @@ func (o CreateVolumeRequestContent_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CredentialInfo_SdkV2 struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
@@ -4755,8 +4757,7 @@ type CredentialInfo_SdkV2 struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The full name of the credential.
 	FullName types.String `tfsdk:"full_name"`
@@ -5057,10 +5058,7 @@ func (o CredentialValidationResult_SdkV2) Type(ctx context.Context) attr.Type {
 // GCP long-lived credential. Databricks-created Google Cloud Storage service
 // account.
 type DatabricksGcpServiceAccount_SdkV2 struct {
-	// The Databricks internal ID that represents this managed identity. This
-	// field is only used to persist the credential_id once it is fetched from
-	// the credentials manager - as we only use the protobuf serializer to store
-	// credentials, this ID gets persisted to the database
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
 	// The email of the service account.
 	Email types.String `tfsdk:"email"`
@@ -5117,6 +5115,8 @@ func (o DatabricksGcpServiceAccount_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
 type DatabricksGcpServiceAccountRequest_SdkV2 struct {
 }
 
@@ -5158,11 +5158,12 @@ func (o DatabricksGcpServiceAccountRequest_SdkV2) Type(ctx context.Context) attr
 	}
 }
 
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
 type DatabricksGcpServiceAccountResponse_SdkV2 struct {
-	// The Databricks internal ID that represents this service account. This is
-	// an output-only field.
+	// The Databricks internal ID that represents this managed identity.
 	CredentialId types.String `tfsdk:"credential_id"`
-	// The email of the service account. This is an output-only field.
+	// The email of the service account.
 	Email types.String `tfsdk:"email"`
 }
 
@@ -5173,8 +5174,8 @@ func (newState *DatabricksGcpServiceAccountResponse_SdkV2) SyncEffectiveFieldsDu
 }
 
 func (c DatabricksGcpServiceAccountResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
-	attrs["email"] = attrs["email"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
+	attrs["email"] = attrs["email"].SetComputed()
 
 	return attrs
 }
@@ -5212,7 +5213,6 @@ func (o DatabricksGcpServiceAccountResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Delete a metastore assignment
 type DeleteAccountMetastoreAssignmentRequest_SdkV2 struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
@@ -5253,7 +5253,6 @@ func (o DeleteAccountMetastoreAssignmentRequest_SdkV2) Type(ctx context.Context)
 	}
 }
 
-// Delete a metastore
 type DeleteAccountMetastoreRequest_SdkV2 struct {
 	// Force deletion even if the metastore is not empty. Default is false.
 	Force types.Bool `tfsdk:"-"`
@@ -5294,7 +5293,6 @@ func (o DeleteAccountMetastoreRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete a storage credential
 type DeleteAccountStorageCredentialRequest_SdkV2 struct {
 	// Force deletion even if the Storage Credential is not empty. Default is
 	// false.
@@ -5340,7 +5338,6 @@ func (o DeleteAccountStorageCredentialRequest_SdkV2) Type(ctx context.Context) a
 	}
 }
 
-// Delete a Registered Model Alias
 type DeleteAliasRequest_SdkV2 struct {
 	// The name of the alias
 	Alias types.String `tfsdk:"-"`
@@ -5411,7 +5408,6 @@ func (o DeleteAliasResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a catalog
 type DeleteCatalogRequest_SdkV2 struct {
 	// Force deletion even if the catalog is not empty.
 	Force types.Bool `tfsdk:"-"`
@@ -5452,7 +5448,6 @@ func (o DeleteCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a connection
 type DeleteConnectionRequest_SdkV2 struct {
 	// The name of the connection to be deleted.
 	Name types.String `tfsdk:"-"`
@@ -5489,7 +5484,6 @@ func (o DeleteConnectionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a credential
 type DeleteCredentialRequest_SdkV2 struct {
 	// Force an update even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
@@ -5573,7 +5567,6 @@ func (o DeleteCredentialResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an external location
 type DeleteExternalLocationRequest_SdkV2 struct {
 	// Force deletion even if there are dependent external tables or mounts.
 	Force types.Bool `tfsdk:"-"`
@@ -5614,7 +5607,6 @@ func (o DeleteExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete a function
 type DeleteFunctionRequest_SdkV2 struct {
 	// Force deletion even if the function is notempty.
 	Force types.Bool `tfsdk:"-"`
@@ -5656,7 +5648,6 @@ func (o DeleteFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a metastore
 type DeleteMetastoreRequest_SdkV2 struct {
 	// Force deletion even if the metastore is not empty. Default is false.
 	Force types.Bool `tfsdk:"-"`
@@ -5697,7 +5688,6 @@ func (o DeleteMetastoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Model Version
 type DeleteModelVersionRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the model version
 	FullName types.String `tfsdk:"-"`
@@ -5738,7 +5728,6 @@ func (o DeleteModelVersionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an Online Table
 type DeleteOnlineTableRequest_SdkV2 struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"-"`
@@ -5775,7 +5764,6 @@ func (o DeleteOnlineTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a table monitor
 type DeleteQualityMonitorRequest_SdkV2 struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
@@ -5812,7 +5800,6 @@ func (o DeleteQualityMonitorRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Registered Model
 type DeleteRegisteredModelRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
@@ -5890,7 +5877,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a schema
 type DeleteSchemaRequest_SdkV2 struct {
 	// Force deletion even if the schema is not empty.
 	Force types.Bool `tfsdk:"-"`
@@ -5931,10 +5917,10 @@ func (o DeleteSchemaRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a credential
 type DeleteStorageCredentialRequest_SdkV2 struct {
-	// Force deletion even if there are dependent external locations or external
-	// tables.
+	// Force an update even if there are dependent external locations or
+	// external tables (when purpose is **STORAGE**) or dependent services (when
+	// purpose is **SERVICE**).
 	Force types.Bool `tfsdk:"-"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -5973,7 +5959,6 @@ func (o DeleteStorageCredentialRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete a table constraint
 type DeleteTableConstraintRequest_SdkV2 struct {
 	// If true, try deleting all child constraints of the current constraint. If
 	// false, reject this operation if the current constraint has any child
@@ -6020,7 +6005,6 @@ func (o DeleteTableConstraintRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Delete a table
 type DeleteTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
@@ -6057,7 +6041,6 @@ func (o DeleteTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a Volume
 type DeleteVolumeRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the volume
 	Name types.String `tfsdk:"-"`
@@ -6370,7 +6353,6 @@ func (o *DependencyList_SdkV2) SetDependencies(ctx context.Context, v []Dependen
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
-// Disable a system schema
 type DisableRequest_SdkV2 struct {
 	// The metastore ID under which the system schema lives.
 	MetastoreId types.String `tfsdk:"-"`
@@ -6924,7 +6906,6 @@ func (o *EncryptionDetails_SdkV2) SetSseEncryptionDetails(ctx context.Context, v
 	o.SseEncryptionDetails = types.ListValueMust(t, vs)
 }
 
-// Get boolean reflecting if table exists
 type ExistsRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
@@ -8797,7 +8778,6 @@ func (o *GenerateTemporaryTableCredentialResponse_SdkV2) SetR2TempCredentials(ct
 	o.R2TempCredentials = types.ListValueMust(t, vs)
 }
 
-// Gets the metastore assignment for a workspace
 type GetAccountMetastoreAssignmentRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -8834,7 +8814,6 @@ func (o GetAccountMetastoreAssignmentRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Get a metastore
 type GetAccountMetastoreRequest_SdkV2 struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
@@ -8871,7 +8850,6 @@ func (o GetAccountMetastoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Gets the named storage credential
 type GetAccountStorageCredentialRequest_SdkV2 struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
@@ -8912,7 +8890,6 @@ func (o GetAccountStorageCredentialRequest_SdkV2) Type(ctx context.Context) attr
 	}
 }
 
-// Get an artifact allowlist
 type GetArtifactAllowlistRequest_SdkV2 struct {
 	// The artifact type of the allowlist.
 	ArtifactType types.String `tfsdk:"-"`
@@ -8949,7 +8926,6 @@ func (o GetArtifactAllowlistRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get securable workspace bindings
 type GetBindingsRequest_SdkV2 struct {
 	// Maximum number of workspace bindings to return. - When set to 0, the page
 	// length is set to a server configured value (recommended); - When set to a
@@ -9004,7 +8980,6 @@ func (o GetBindingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get Model Version By Alias
 type GetByAliasRequest_SdkV2 struct {
 	// The name of the alias
 	Alias types.String `tfsdk:"-"`
@@ -9050,7 +9025,6 @@ func (o GetByAliasRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a catalog
 type GetCatalogRequest_SdkV2 struct {
 	// Whether to include catalogs in the response for which the principal can
 	// only access selective metadata for
@@ -9170,7 +9144,6 @@ func (o *GetCatalogWorkspaceBindingsResponse_SdkV2) SetWorkspaces(ctx context.Co
 	o.Workspaces = types.ListValueMust(t, vs)
 }
 
-// Get a connection
 type GetConnectionRequest_SdkV2 struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
@@ -9207,7 +9180,6 @@ func (o GetConnectionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a credential
 type GetCredentialRequest_SdkV2 struct {
 	// Name of the credential.
 	NameArg types.String `tfsdk:"-"`
@@ -9244,7 +9216,6 @@ func (o GetCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get effective permissions
 type GetEffectiveRequest_SdkV2 struct {
 	// Full name of securable.
 	FullName types.String `tfsdk:"-"`
@@ -9309,7 +9280,6 @@ func (o GetEffectiveRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an external location
 type GetExternalLocationRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
 	// principal can only access selective metadata for
@@ -9351,7 +9321,6 @@ func (o GetExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a function
 type GetFunctionRequest_SdkV2 struct {
 	// Whether to include functions in the response for which the principal can
 	// only access selective metadata for
@@ -9394,7 +9363,6 @@ func (o GetFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get permissions
 type GetGrantRequest_SdkV2 struct {
 	// Full name of securable.
 	FullName types.String `tfsdk:"-"`
@@ -9459,7 +9427,6 @@ func (o GetGrantRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a metastore
 type GetMetastoreRequest_SdkV2 struct {
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-"`
@@ -9638,7 +9605,6 @@ func (o GetMetastoreSummaryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Model Version
 type GetModelVersionRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the model version
 	FullName types.String `tfsdk:"-"`
@@ -9689,7 +9655,6 @@ func (o GetModelVersionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an Online Table
 type GetOnlineTableRequest_SdkV2 struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"-"`
@@ -9811,7 +9776,6 @@ func (o *GetPermissionsResponse_SdkV2) SetPrivilegeAssignments(ctx context.Conte
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
-// Get a table monitor
 type GetQualityMonitorRequest_SdkV2 struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
@@ -9848,7 +9812,6 @@ func (o GetQualityMonitorRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get information for a single resource quota.
 type GetQuotaRequest_SdkV2 struct {
 	// Full name of the parent resource. Provide the metastore ID if the parent
 	// is a metastore.
@@ -9974,7 +9937,6 @@ func (o *GetQuotaResponse_SdkV2) SetQuotaInfo(ctx context.Context, v QuotaInfo_S
 	o.QuotaInfo = types.ListValueMust(t, vs)
 }
 
-// Get refresh
 type GetRefreshRequest_SdkV2 struct {
 	// ID of the refresh.
 	RefreshId types.String `tfsdk:"-"`
@@ -10015,7 +9977,6 @@ func (o GetRefreshRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Registered Model
 type GetRegisteredModelRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
@@ -10061,7 +10022,6 @@ func (o GetRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a schema
 type GetSchemaRequest_SdkV2 struct {
 	// Full name of the schema.
 	FullName types.String `tfsdk:"-"`
@@ -10103,7 +10063,6 @@ func (o GetSchemaRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a credential
 type GetStorageCredentialRequest_SdkV2 struct {
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -10140,7 +10099,6 @@ func (o GetStorageCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a table
 type GetTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
@@ -10190,7 +10148,6 @@ func (o GetTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get catalog workspace bindings
 type GetWorkspaceBindingRequest_SdkV2 struct {
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
@@ -10312,7 +10269,6 @@ func (o *GetWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context, v 
 	o.Bindings = types.ListValueMust(t, vs)
 }
 
-// Get all workspaces assigned to a metastore
 type ListAccountMetastoreAssignmentsRequest_SdkV2 struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
@@ -10427,7 +10383,6 @@ func (o *ListAccountMetastoreAssignmentsResponse_SdkV2) SetWorkspaceIds(ctx cont
 	o.WorkspaceIds = types.ListValueMust(t, vs)
 }
 
-// Get all storage credentials assigned to a metastore
 type ListAccountStorageCredentialsRequest_SdkV2 struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
@@ -10542,7 +10497,6 @@ func (o *ListAccountStorageCredentialsResponse_SdkV2) SetStorageCredentials(ctx 
 	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
-// List catalogs
 type ListCatalogsRequest_SdkV2 struct {
 	// Whether to include catalogs in the response for which the principal can
 	// only access selective metadata for
@@ -10681,7 +10635,6 @@ func (o *ListCatalogsResponse_SdkV2) SetCatalogs(ctx context.Context, v []Catalo
 	o.Catalogs = types.ListValueMust(t, vs)
 }
 
-// List connections
 type ListConnectionsRequest_SdkV2 struct {
 	// Maximum number of connections to return. - If not set, all connections
 	// are returned (not recommended). - when set to a value greater than 0, the
@@ -10812,7 +10765,6 @@ func (o *ListConnectionsResponse_SdkV2) SetConnections(ctx context.Context, v []
 	o.Connections = types.ListValueMust(t, vs)
 }
 
-// List credentials
 type ListCredentialsRequest_SdkV2 struct {
 	// Maximum number of credentials to return. - If not set, the default max
 	// page size is used. - When set to a value greater than 0, the page length
@@ -10945,7 +10897,6 @@ func (o *ListCredentialsResponse_SdkV2) SetCredentials(ctx context.Context, v []
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
-// List external locations
 type ListExternalLocationsRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
 	// principal can only access selective metadata for
@@ -11081,7 +11032,6 @@ func (o *ListExternalLocationsResponse_SdkV2) SetExternalLocations(ctx context.C
 	o.ExternalLocations = types.ListValueMust(t, vs)
 }
 
-// List functions
 type ListFunctionsRequest_SdkV2 struct {
 	// Name of parent catalog for functions of interest.
 	CatalogName types.String `tfsdk:"-"`
@@ -11225,7 +11175,6 @@ func (o *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 	o.Functions = types.ListValueMust(t, vs)
 }
 
-// List metastores
 type ListMetastoresRequest_SdkV2 struct {
 	// Maximum number of metastores to return. - when set to a value greater
 	// than 0, the page length is the minimum of this value and a server
@@ -11359,7 +11308,6 @@ func (o *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 	o.Metastores = types.ListValueMust(t, vs)
 }
 
-// List Model Versions
 type ListModelVersionsRequest_SdkV2 struct {
 	// The full three-level name of the registered model under which to list
 	// model versions
@@ -11500,7 +11448,6 @@ func (o *ListModelVersionsResponse_SdkV2) SetModelVersions(ctx context.Context, 
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
-// List all resource quotas under a metastore.
 type ListQuotasRequest_SdkV2 struct {
 	// The number of quotas to return.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -11626,7 +11573,6 @@ func (o *ListQuotasResponse_SdkV2) SetQuotas(ctx context.Context, v []QuotaInfo_
 	o.Quotas = types.ListValueMust(t, vs)
 }
 
-// List refreshes
 type ListRefreshesRequest_SdkV2 struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
@@ -11663,7 +11609,6 @@ func (o ListRefreshesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List Registered Models
 type ListRegisteredModelsRequest_SdkV2 struct {
 	// The identifier of the catalog under which to list registered models. If
 	// specified, schema_name must be specified.
@@ -11819,7 +11764,6 @@ func (o *ListRegisteredModelsResponse_SdkV2) SetRegisteredModels(ctx context.Con
 	o.RegisteredModels = types.ListValueMust(t, vs)
 }
 
-// List schemas
 type ListSchemasRequest_SdkV2 struct {
 	// Parent catalog for schemas of interest.
 	CatalogName types.String `tfsdk:"-"`
@@ -11959,7 +11903,6 @@ func (o *ListSchemasResponse_SdkV2) SetSchemas(ctx context.Context, v []SchemaIn
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List credentials
 type ListStorageCredentialsRequest_SdkV2 struct {
 	// Maximum number of storage credentials to return. If not set, all the
 	// storage credentials are returned (not recommended). - when set to a value
@@ -12090,7 +12033,6 @@ func (o *ListStorageCredentialsResponse_SdkV2) SetStorageCredentials(ctx context
 	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
-// List table summaries
 type ListSummariesRequest_SdkV2 struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
@@ -12155,7 +12097,6 @@ func (o ListSummariesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List system schemas
 type ListSystemSchemasRequest_SdkV2 struct {
 	// Maximum number of schemas to return. - When set to 0, the page length is
 	// set to a server configured value (recommended); - When set to a value
@@ -12375,7 +12316,6 @@ func (o *ListTableSummariesResponse_SdkV2) SetTables(ctx context.Context, v []Ta
 	o.Tables = types.ListValueMust(t, vs)
 }
 
-// List tables
 type ListTablesRequest_SdkV2 struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
@@ -12540,7 +12480,6 @@ func (o *ListTablesResponse_SdkV2) SetTables(ctx context.Context, v []TableInfo_
 	o.Tables = types.ListValueMust(t, vs)
 }
 
-// List Volumes
 type ListVolumesRequest_SdkV2 struct {
 	// The identifier of the catalog
 	CatalogName types.String `tfsdk:"-"`
@@ -15603,7 +15542,6 @@ func (o R2Credentials_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a Volume
 type ReadVolumeRequest_SdkV2 struct {
 	// Whether to include volumes in the response for which the principal can
 	// only access selective metadata for
@@ -15954,7 +15892,6 @@ func (o *RegisteredModelInfo_SdkV2) SetAliases(ctx context.Context, v []Register
 	o.Aliases = types.ListValueMust(t, vs)
 }
 
-// Queue a metric refresh for a monitor
 type RunRefreshRequest_SdkV2 struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
@@ -16412,7 +16349,7 @@ type StorageCredentialInfo_SdkV2 struct {
 	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// Time at which this Credential was created, in epoch milliseconds.
+	// Time at which this credential was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by"`
@@ -16422,22 +16359,25 @@ type StorageCredentialInfo_SdkV2 struct {
 	FullName types.String `tfsdk:"full_name"`
 	// The unique identifier of the credential.
 	Id types.String `tfsdk:"id"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Unique identifier of parent metastore.
+	// Unique identifier of the parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// The credential name. The name must be unique within the metastore.
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
 	Name types.String `tfsdk:"name"`
 	// Username of current owner of credential.
 	Owner types.String `tfsdk:"owner"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Time at which this credential was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified the credential.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// Whether this credential is the current metastore's root storage
-	// credential.
+	// credential. Only applicable when purpose is **STORAGE**.
 	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage"`
 }
 
@@ -17888,7 +17828,6 @@ func (o *TriggeredUpdateStatus_SdkV2) SetTriggeredUpdateProgress(ctx context.Con
 	o.TriggeredUpdateProgress = types.ListValueMust(t, vs)
 }
 
-// Delete an assignment
 type UnassignRequest_SdkV2 struct {
 	// Query for the ID of the metastore to delete.
 	MetastoreId types.String `tfsdk:"-"`
@@ -18327,17 +18266,15 @@ func (o *UpdateConnection_SdkV2) SetOptions(ctx context.Context, v map[string]ty
 }
 
 type UpdateCredentialRequest_SdkV2 struct {
-	// The AWS IAM role configuration
+	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration. Only applicable when purpose
-	// is **STORAGE**.
+	// The Azure service principal configuration.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// Force an update even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
@@ -19723,7 +19660,8 @@ type UpdateStorageCredential_SdkV2 struct {
 	// Force update even if there are dependent external locations or external
 	// tables.
 	Force types.Bool `tfsdk:"force"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -19731,7 +19669,8 @@ type UpdateStorageCredential_SdkV2 struct {
 	NewName types.String `tfsdk:"new_name"`
 	// Username of current owner of credential.
 	Owner types.String `tfsdk:"owner"`
-	// Whether the storage credential is only usable for read operations.
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// Supplying true to this argument skips validation of the updated
 	// credential.
@@ -20684,7 +20623,8 @@ type ValidateStorageCredential_SdkV2 struct {
 	ExternalLocationName types.String `tfsdk:"external_location_name"`
 	// Whether the storage credential is only usable for read operations.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// The name of the storage credential to validate.
+	// Required. The name of an existing credential or long-lived cloud
+	// credential to validate.
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
 	// The external location url to validate.
 	Url types.String `tfsdk:"url"`

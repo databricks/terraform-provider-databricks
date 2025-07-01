@@ -1311,7 +1311,6 @@ func (o BearerTokenAuth) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get build logs for a served model
 type BuildLogsRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -2298,7 +2297,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a serving endpoint
 type DeleteServingEndpointRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -3301,7 +3299,6 @@ func (o *EndpointTags) SetTags(ctx context.Context, v []EndpointTag) {
 	o.Tags = types.ListValueMust(t, vs)
 }
 
-// Get metrics of a serving endpoint
 type ExportMetricsRequest struct {
 	// The name of the serving endpoint to retrieve metrics for. This field is
 	// required.
@@ -3995,7 +3992,6 @@ func (o FoundationModel) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the schema for a serving endpoint
 type GetOpenApiRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -4068,7 +4064,6 @@ func (o GetOpenApiResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get serving endpoint permission levels
 type GetServingEndpointPermissionLevelsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4183,7 +4178,6 @@ func (o *GetServingEndpointPermissionLevelsResponse) SetPermissionLevels(ctx con
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get serving endpoint permissions
 type GetServingEndpointPermissionsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4220,7 +4214,6 @@ func (o GetServingEndpointPermissionsRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get a single serving endpoint
 type GetServingEndpointRequest struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
@@ -4455,7 +4448,6 @@ func (o *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []ServingEnd
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// Get the latest logs for a served model
 type LogsRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -7537,6 +7529,8 @@ type ServingEndpoint struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
+	// Description of the endpoint
+	Description types.String `tfsdk:"description"`
 	// System-generated ID of the endpoint, included to be used by the
 	// Permissions API.
 	Id types.String `tfsdk:"id"`
@@ -7564,6 +7558,7 @@ func (c ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -7602,6 +7597,7 @@ func (o ServingEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
+			"description":            o.Description,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
 			"name":                   o.Name,
@@ -7620,6 +7616,7 @@ func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 			"config":                 EndpointCoreConfigSummary{}.Type(ctx),
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
+			"description":            types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
@@ -7918,6 +7915,8 @@ type ServingEndpointDetailed struct {
 	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
 	DataPlaneInfo types.Object `tfsdk:"data_plane_info"`
+	// Description of the serving model
+	Description types.String `tfsdk:"description"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -7955,6 +7954,7 @@ func (c ServingEndpointDetailed) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -8000,6 +8000,7 @@ func (o ServingEndpointDetailed) ToObjectValue(ctx context.Context) basetypes.Ob
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
 			"data_plane_info":        o.DataPlaneInfo,
+			"description":            o.Description,
 			"endpoint_url":           o.EndpointUrl,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -8023,6 +8024,7 @@ func (o ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
 			"data_plane_info":        ModelDataPlaneInfo{}.Type(ctx),
+			"description":            types.StringType,
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,

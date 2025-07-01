@@ -11,7 +11,7 @@ import (
 )
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
-	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
+	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token"}
 
 func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData) bool {
 	if k == "options.pem_private_key_expiration_epoch_sec" {

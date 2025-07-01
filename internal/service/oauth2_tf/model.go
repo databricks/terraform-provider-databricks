@@ -18,11 +18,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Create account federation policy
 type CreateAccountFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -479,7 +480,6 @@ func (o CreatePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Create service principal federation policy
 type CreateServicePrincipalFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -688,7 +688,6 @@ func (o CreateServicePrincipalSecretResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete account federation policy
 type DeleteAccountFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -766,7 +765,6 @@ func (o DeleteCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete Custom OAuth App Integration
 type DeleteCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -843,7 +841,6 @@ func (o DeletePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete Published OAuth App Integration
 type DeletePublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -909,7 +906,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete service principal federation policy
 type DeleteServicePrincipalFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -950,7 +946,6 @@ func (o DeleteServicePrincipalFederationPolicyRequest) Type(ctx context.Context)
 	}
 }
 
-// Delete service principal secret
 type DeleteServicePrincipalSecretRequest struct {
 	// The secret ID.
 	SecretId types.String `tfsdk:"-"`
@@ -1026,12 +1021,16 @@ func (newState *FederationPolicy) SyncEffectiveFieldsDuringRead(existingState Fe
 
 func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -1112,7 +1111,6 @@ func (o *FederationPolicy) SetOidcPolicy(ctx context.Context, v OidcFederationPo
 	o.OidcPolicy = vs
 }
 
-// Get account federation policy
 type GetAccountFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1367,7 +1365,6 @@ func (o *GetCustomAppIntegrationOutput) SetUserAuthorizedScopes(ctx context.Cont
 	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
-// Get OAuth Custom App Integration
 type GetCustomAppIntegrationRequest struct {
 	// The OAuth app integration ID.
 	IntegrationId types.String `tfsdk:"-"`
@@ -1590,7 +1587,6 @@ func (o *GetPublishedAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Cont
 	o.TokenAccessPolicy = vs
 }
 
-// Get OAuth Published App Integration
 type GetPublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -1793,7 +1789,6 @@ func (o *GetPublishedAppsOutput) SetApps(ctx context.Context, v []PublishedAppOu
 	o.Apps = types.ListValueMust(t, vs)
 }
 
-// Get service principal federation policy
 type GetServicePrincipalFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1834,7 +1829,6 @@ func (o GetServicePrincipalFederationPolicyRequest) Type(ctx context.Context) at
 	}
 }
 
-// List account federation policies
 type ListAccountFederationPoliciesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -1874,7 +1868,6 @@ func (o ListAccountFederationPoliciesRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get custom oauth app integrations
 type ListCustomAppIntegrationsRequest struct {
 	IncludeCreatorUsername types.Bool `tfsdk:"-"`
 
@@ -2000,7 +1993,6 @@ func (o *ListFederationPoliciesResponse) SetPolicies(ctx context.Context, v []Fe
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// Get all the published OAuth apps
 type ListOAuthPublishedAppsRequest struct {
 	// The max number of OAuth published apps to return in one page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2041,7 +2033,6 @@ func (o ListOAuthPublishedAppsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get published oauth app integrations
 type ListPublishedAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -2081,7 +2072,6 @@ func (o ListPublishedAppIntegrationsRequest) Type(ctx context.Context) attr.Type
 	}
 }
 
-// List service principal federation policies
 type ListServicePrincipalFederationPoliciesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -2125,7 +2115,6 @@ func (o ListServicePrincipalFederationPoliciesRequest) Type(ctx context.Context)
 	}
 }
 
-// List service principal secrets
 type ListServicePrincipalSecretsRequest struct {
 	// An opaque page token which was the `next_page_token` in the response of
 	// the previous request to list the secrets for this service principal.
@@ -2647,7 +2636,6 @@ func (o TokenAccessPolicy) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update account federation policy
 type UpdateAccountFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy.
@@ -3079,7 +3067,6 @@ func (o UpdatePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Update service principal federation policy
 type UpdateServicePrincipalFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// The identifier for the federation policy.

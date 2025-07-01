@@ -406,7 +406,6 @@ func (o *DeleteDataResult_SdkV2) SetFailedPrimaryKeys(ctx context.Context, v []t
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Delete data from index
 type DeleteDataVectorIndexRequest_SdkV2 struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
@@ -562,7 +561,6 @@ func (o *DeleteDataVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v D
 	o.Result = types.ListValueMust(t, vs)
 }
 
-// Delete an endpoint
 type DeleteEndpointRequest_SdkV2 struct {
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -640,7 +638,6 @@ func (o DeleteEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an index
 type DeleteIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1467,7 +1464,6 @@ func (o EndpointStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an endpoint
 type GetEndpointRequest_SdkV2 struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1504,7 +1500,6 @@ func (o GetEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an index
 type GetIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1625,7 +1620,6 @@ func (o *ListEndpointResponse_SdkV2) SetEndpoints(ctx context.Context, v []Endpo
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// List all endpoints
 type ListEndpointsRequest_SdkV2 struct {
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
@@ -1662,7 +1656,6 @@ func (o ListEndpointsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List indexes
 type ListIndexesRequest_SdkV2 struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -2880,7 +2873,6 @@ func (o *Struct_SdkV2) SetFields(ctx context.Context, v []MapStringValueEntry_Sd
 	o.Fields = types.ListValueMust(t, vs)
 }
 
-// Synchronize an index
 type SyncIndexRequest_SdkV2 struct {
 	// Name of the vector index to synchronize. Must be a Delta Sync Index.
 	IndexName types.String `tfsdk:"-"`

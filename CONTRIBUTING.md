@@ -4,6 +4,7 @@
 
 - [Issues for new contributors](#issues-for-new-contributors)
 - [Contribution Workflow](#contribution-workflow)
+- [Changelog](#changelog)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
@@ -51,6 +52,8 @@ Code contributions—bug fixes, new development, test improvement — all follow
     git commit -m "commit message here"
     ```
 
+1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading. See the [Changelog](#changelog) section for more details.
+
 1. Push your changes to your GitHub repo.
 
     ```bash
@@ -66,6 +69,30 @@ Additional git and GitHub resources:
 [Git documentation](https://git-scm.com/documentation)
 [Git development workflow](https://docs.scipy.org/doc/numpy/dev/development_workflow.html)
 [Resolving merge conflicts](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/)
+
+## Changelog
+
+All PRs that introduce a new feature, fix a bug, improve documentation, or change the behavior of the exporter must include a description of the change in the `NEXT_CHANGELOG.md` file. This file is prepended to the `CHANGELOG.md` file when a new release is created, then cleared out for the next release. Add your changelog entry to the appropriate section of the `NEXT_CHANGELOG.md` file.
+
+If the proposed change has no user-facing impact or does not require an additional changelog entry (e.g. correcting a typo in the documentation), do not add an entry to the `NEXT_CHANGELOG.md` file, and add the text `NO_CHANGELOG=true` to your PR description.
+
+The entries of the changelog must have the following format:
+
+```
+ * <Summary of the change> ([#<PR number>](<PR link>)).
+
+   <Optional additional information>
+```
+
+For example:
+
+```
+ * Added support for new feature ([#123](https://github.com/databricks/terraform-provider-databricks/pull/123)).
+```
+
+Include additional information to provide context for the change, if necessary. For example, you may include links to the Databricks documentation website, the Terraform documentation website, examples, or other relevant resources.
+
+The `NEXT_CHANGELOG.md` file also determines the next version to be released. The version number in the `NEXT_CHANGELOG.md` is automatically set to the next minor version. If there are any new features or breaking changes, leave this as is. Otherwise, set the version to the next patch version. You can see the current version at the top of the `CHANGELOG.md` file.
 
 ## Installing from source
 

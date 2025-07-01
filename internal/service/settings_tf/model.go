@@ -1648,7 +1648,6 @@ func (o *CreateIpAccessListResponse) SetIpAccessList(ctx context.Context, v IpAc
 	o.IpAccessList = vs
 }
 
-// Create a network connectivity configuration
 type CreateNetworkConnectivityConfigRequest struct {
 	// Properties of the new network connectivity configuration.
 	NetworkConnectivityConfig types.Object `tfsdk:"network_connectivity_config"`
@@ -1774,7 +1773,6 @@ func (o CreateNetworkConnectivityConfiguration) Type(ctx context.Context) attr.T
 	}
 }
 
-// Create a network policy
 type CreateNetworkPolicyRequest struct {
 	NetworkPolicy types.Object `tfsdk:"network_policy"`
 }
@@ -2209,7 +2207,6 @@ func (o *CreatePrivateEndpointRule) SetResourceNames(ctx context.Context, v []ty
 	o.ResourceNames = types.ListValueMust(t, vs)
 }
 
-// Create a private endpoint rule
 type CreatePrivateEndpointRuleRequest struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -3003,7 +3000,6 @@ func (o *DefaultNamespaceSetting) SetNamespace(ctx context.Context, v StringMess
 	o.Namespace = vs
 }
 
-// Delete the account IP access toggle setting
 type DeleteAccountIpAccessEnableRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3101,7 +3097,6 @@ func (o DeleteAccountIpAccessEnableResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete access list
 type DeleteAccountIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -3138,7 +3133,6 @@ func (o DeleteAccountIpAccessListRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the AI/BI dashboard embedding access policy
 type DeleteAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3236,7 +3230,6 @@ func (o DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) Type(ctx contex
 	}
 }
 
-// Delete AI/BI dashboard embedding approved domains
 type DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3334,7 +3327,6 @@ func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) Type(ctx con
 	}
 }
 
-// Delete the Dashboard Email Subscriptions setting
 type DeleteDashboardEmailSubscriptionsRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3432,7 +3424,6 @@ func (o DeleteDashboardEmailSubscriptionsResponse) Type(ctx context.Context) att
 	}
 }
 
-// Delete the default namespace setting
 type DeleteDefaultNamespaceSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3530,7 +3521,6 @@ func (o DeleteDefaultNamespaceSettingResponse) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Delete Legacy Access Disablement Status
 type DeleteDisableLegacyAccessRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3628,7 +3618,6 @@ func (o DeleteDisableLegacyAccessResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the disable legacy DBFS setting
 type DeleteDisableLegacyDbfsRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3726,7 +3715,6 @@ func (o DeleteDisableLegacyDbfsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the disable legacy features setting
 type DeleteDisableLegacyFeaturesRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3824,7 +3812,6 @@ func (o DeleteDisableLegacyFeaturesResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Delete access list
 type DeleteIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -3861,7 +3848,6 @@ func (o DeleteIpAccessListRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the enable partner powered AI features workspace setting
 type DeleteLlmProxyPartnerPoweredWorkspaceRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3959,7 +3945,6 @@ func (o DeleteLlmProxyPartnerPoweredWorkspaceResponse) Type(ctx context.Context)
 	}
 }
 
-// Delete a network connectivity configuration
 type DeleteNetworkConnectivityConfigurationRequest struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -4026,7 +4011,6 @@ func (o DeleteNetworkConnectivityConfigurationResponse) Type(ctx context.Context
 	}
 }
 
-// Delete a network policy
 type DeleteNetworkPolicyRequest struct {
 	// The unique identifier of the network policy to delete.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -4093,7 +4077,6 @@ func (o DeleteNetworkPolicyRpcResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a notification destination
 type DeleteNotificationDestinationRequest struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -4129,7 +4112,6 @@ func (o DeleteNotificationDestinationRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete Personal Compute setting
 type DeletePersonalComputeSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -4227,7 +4209,6 @@ func (o DeletePersonalComputeSettingResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete a private endpoint rule
 type DeletePrivateEndpointRuleRequest struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -4298,7 +4279,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete the restrict workspace admins setting
 type DeleteRestrictWorkspaceAdminsSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -4396,7 +4376,6 @@ func (o DeleteRestrictWorkspaceAdminsSettingResponse) Type(ctx context.Context) 
 	}
 }
 
-// Delete the SQL Results Download setting
 type DeleteSqlResultsDownloadRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -4494,7 +4473,6 @@ func (o DeleteSqlResultsDownloadResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a token
 type DeleteTokenManagementRequest struct {
 	// The ID of the token to revoke.
 	TokenId types.String `tfsdk:"-"`
@@ -5626,7 +5604,7 @@ type EgressNetworkPolicyNetworkAccessPolicyStorageDestination struct {
 	AzureStorageService types.String `tfsdk:"azure_storage_service"`
 
 	BucketName types.String `tfsdk:"bucket_name"`
-	// The region of the S3 bucket.
+
 	Region types.String `tfsdk:"region"`
 	// The type of storage destination.
 	StorageDestinationType types.String `tfsdk:"storage_destination_type"`
@@ -6833,7 +6811,6 @@ func (o GenericWebhookConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the account IP access toggle setting
 type GetAccountIpAccessEnableRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6876,7 +6853,6 @@ func (o GetAccountIpAccessEnableRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get IP access list
 type GetAccountIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -6913,7 +6889,6 @@ func (o GetAccountIpAccessListRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Retrieve the AI/BI dashboard embedding access policy
 type GetAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6956,7 +6931,6 @@ func (o GetAibiDashboardEmbeddingAccessPolicySettingRequest) Type(ctx context.Co
 	}
 }
 
-// Retrieve the list of domains approved to host embedded AI/BI dashboards
 type GetAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6999,7 +6973,6 @@ func (o GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) Type(ctx context
 	}
 }
 
-// Get the automatic cluster update setting
 type GetAutomaticClusterUpdateSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7042,7 +7015,6 @@ func (o GetAutomaticClusterUpdateSettingRequest) Type(ctx context.Context) attr.
 	}
 }
 
-// Get the compliance security profile setting
 type GetComplianceSecurityProfileSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7085,7 +7057,6 @@ func (o GetComplianceSecurityProfileSettingRequest) Type(ctx context.Context) at
 	}
 }
 
-// Get the compliance security profile setting for new workspaces
 type GetCspEnablementAccountSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7128,7 +7099,6 @@ func (o GetCspEnablementAccountSettingRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get the Dashboard Email Subscriptions setting
 type GetDashboardEmailSubscriptionsRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7171,7 +7141,6 @@ func (o GetDashboardEmailSubscriptionsRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get the default namespace setting
 type GetDefaultNamespaceSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7214,7 +7183,6 @@ func (o GetDefaultNamespaceSettingRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Retrieve Legacy Access Disablement Status
 type GetDisableLegacyAccessRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7257,7 +7225,6 @@ func (o GetDisableLegacyAccessRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the disable legacy DBFS setting
 type GetDisableLegacyDbfsRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7300,7 +7267,6 @@ func (o GetDisableLegacyDbfsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the disable legacy features setting
 type GetDisableLegacyFeaturesRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7343,7 +7309,6 @@ func (o GetDisableLegacyFeaturesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the enhanced security monitoring setting
 type GetEnhancedSecurityMonitoringSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7386,7 +7351,6 @@ func (o GetEnhancedSecurityMonitoringSettingRequest) Type(ctx context.Context) a
 	}
 }
 
-// Get the enhanced security monitoring setting for new workspaces
 type GetEsmEnablementAccountSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7429,7 +7393,6 @@ func (o GetEsmEnablementAccountSettingRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Get access list
 type GetIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
@@ -7622,7 +7585,6 @@ func (o *GetIpAccessListsResponse) SetIpAccessLists(ctx context.Context, v []IpA
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
-// Get the enable partner powered AI features account setting
 type GetLlmProxyPartnerPoweredAccountRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7665,7 +7627,6 @@ func (o GetLlmProxyPartnerPoweredAccountRequest) Type(ctx context.Context) attr.
 	}
 }
 
-// Get the enforcement status of partner powered AI features account setting
 type GetLlmProxyPartnerPoweredEnforceRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7708,7 +7669,6 @@ func (o GetLlmProxyPartnerPoweredEnforceRequest) Type(ctx context.Context) attr.
 	}
 }
 
-// Get the enable partner powered AI features workspace setting
 type GetLlmProxyPartnerPoweredWorkspaceRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7751,7 +7711,6 @@ func (o GetLlmProxyPartnerPoweredWorkspaceRequest) Type(ctx context.Context) att
 	}
 }
 
-// Get a network connectivity configuration
 type GetNetworkConnectivityConfigurationRequest struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -7788,7 +7747,6 @@ func (o GetNetworkConnectivityConfigurationRequest) Type(ctx context.Context) at
 	}
 }
 
-// Get a network policy
 type GetNetworkPolicyRequest struct {
 	// The unique identifier of the network policy to retrieve.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -7825,7 +7783,6 @@ func (o GetNetworkPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a notification destination
 type GetNotificationDestinationRequest struct {
 	Id types.String `tfsdk:"-"`
 }
@@ -7861,7 +7818,6 @@ func (o GetNotificationDestinationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get Personal Compute setting
 type GetPersonalComputeSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7904,7 +7860,6 @@ func (o GetPersonalComputeSettingRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Gets a private endpoint rule
 type GetPrivateEndpointRuleRequest struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -7945,7 +7900,6 @@ func (o GetPrivateEndpointRuleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the restrict workspace admins setting
 type GetRestrictWorkspaceAdminsSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7988,7 +7942,6 @@ func (o GetRestrictWorkspaceAdminsSettingRequest) Type(ctx context.Context) attr
 	}
 }
 
-// Get the SQL Results Download setting
 type GetSqlResultsDownloadRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -8031,7 +7984,6 @@ func (o GetSqlResultsDownloadRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Check configuration status
 type GetStatusRequest struct {
 	Keys types.String `tfsdk:"-"`
 }
@@ -8067,7 +8019,6 @@ func (o GetStatusRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get token info
 type GetTokenManagementRequest struct {
 	// The ID of the token to get.
 	TokenId types.String `tfsdk:"-"`
@@ -8260,7 +8211,6 @@ func (o *GetTokenResponse) SetTokenInfo(ctx context.Context, v TokenInfo) {
 	o.TokenInfo = vs
 }
 
-// Get workspace network option
 type GetWorkspaceNetworkOptionRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -8504,7 +8454,6 @@ func (o *ListIpAccessListResponse) SetIpAccessLists(ctx context.Context, v []IpA
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
-// List network connectivity configurations
 type ListNetworkConnectivityConfigurationsRequest struct {
 	// Pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -8625,7 +8574,6 @@ func (o *ListNetworkConnectivityConfigurationsResponse) SetItems(ctx context.Con
 	o.Items = types.ListValueMust(t, vs)
 }
 
-// List network policies
 type ListNetworkPoliciesRequest struct {
 	// Pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -8746,7 +8694,6 @@ func (o *ListNetworkPoliciesResponse) SetItems(ctx context.Context, v []AccountN
 	o.Items = types.ListValueMust(t, vs)
 }
 
-// List notification destinations
 type ListNotificationDestinationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -8928,7 +8875,6 @@ func (o ListNotificationDestinationsResult) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// List private endpoint rules
 type ListPrivateEndpointRulesRequest struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
@@ -9131,7 +9077,6 @@ func (o *ListPublicTokensResponse) SetTokenInfos(ctx context.Context, v []Public
 	o.TokenInfos = types.ListValueMust(t, vs)
 }
 
-// List all tokens
 type ListTokenManagementRequest struct {
 	// User ID of the user that created the token.
 	CreatedById types.Int64 `tfsdk:"-"`
@@ -14284,7 +14229,6 @@ func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest) SetSetting(ctx context.Co
 	o.Setting = vs
 }
 
-// Update a private endpoint rule
 type UpdateNccPrivateEndpointRuleRequest struct {
 	// The ID of a network connectivity configuration, which is the parent
 	// resource of this private endpoint rule object.
@@ -14370,7 +14314,6 @@ func (o *UpdateNccPrivateEndpointRuleRequest) SetPrivateEndpointRule(ctx context
 	o.PrivateEndpointRule = vs
 }
 
-// Update a network policy
 type UpdateNetworkPolicyRequest struct {
 	NetworkPolicy types.Object `tfsdk:"network_policy"`
 	// The unique identifier for the network policy.
@@ -14990,7 +14933,6 @@ func (o *UpdateSqlResultsDownloadRequest) SetSetting(ctx context.Context, v SqlR
 	o.Setting = vs
 }
 
-// Update workspace network option
 type UpdateWorkspaceNetworkOptionRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`

@@ -11,6 +11,8 @@
 
 ### Bug Fixes
 
+* Don't redeploy `databricks_sql_table` when view definition contains newlines or tabs ([#4003](https://github.com/databricks/terraform-provider-databricks/pull/4003)).
+
 ### Documentation
 
 * Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).

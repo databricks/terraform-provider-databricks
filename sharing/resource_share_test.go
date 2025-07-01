@@ -315,7 +315,6 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
-					Owner:   "admin",
 					Comment: "cba",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
@@ -433,7 +432,6 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
-					Owner:   "updatedOwner",
 					Comment: "updatedComment",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
@@ -489,7 +487,6 @@ func TestUpdateShareRollback(t *testing.T) {
 					sharing.ShareInfo{
 						Name:    "abc",
 						Comment: "cba",
-						Owner:   "admin",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "a",

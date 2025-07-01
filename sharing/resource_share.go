@@ -219,7 +219,17 @@ func ResourceShare() common.Resource {
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
 
-			if !d.HasChangesExcept("owner") {
+			if d.HasChange("owner") {
+				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
+					Name:  afterSi.Name,
+					Owner: afterSi.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangeExcept("owner") {
 				return nil
 			}
 
@@ -229,7 +239,6 @@ func ResourceShare() common.Resource {
 
 			_, err = client.Shares.Update(ctx, sharing.UpdateShare{
 				Name:    d.Id(),
-				Owner:   afterSi.Owner,
 				Comment: afterSi.Comment,
 				Updates: changes,
 			})

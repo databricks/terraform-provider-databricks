@@ -547,7 +547,8 @@ var columnTypeAliases = map[string]string{
 }
 
 func getColumnType(columnType string) string {
-	caseInsensitiveColumnType := strings.ToLower(columnType)
+	columnTypeNoBackticks := strings.ReplaceAll(columnType, "`", "")
+	caseInsensitiveColumnType := strings.ToLower(columnTypeNoBackticks)
 	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
 		return alias
 	}

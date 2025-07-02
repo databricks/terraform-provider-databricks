@@ -281,14 +281,13 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	isView := ti.TableType == "VIEW"
 
-	externalFragment := ""
-	if ti.TableType == "EXTERNAL" {
-		externalFragment = "EXTERNAL "
-	}
-
 	createType := ti.getTableTypeString()
 
-	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
+	if !isView && ti.DataSourceFormat == "DELTA" {
+		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s %s", createType, ti.SQLFullName()))
+	} else {
+		statements = append(statements, fmt.Sprintf("CREATE %s %s", createType, ti.SQLFullName()))
+	}
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))

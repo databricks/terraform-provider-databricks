@@ -91,6 +91,14 @@ resource "databricks_external_location" "some" {
   credential_name = databricks_storage_credential.ext.id
   comment         = "Managed by TF"
 }
+
+resource "databricks_grants" "some" {
+  external_location = databricks_external_location.some.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
+  }
+}
 ```
 
 Example `encryption_details` specifying SSE_S3 encryption:

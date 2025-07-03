@@ -757,7 +757,7 @@ func allResourcePermissions() []resourcePermissions {
 		},
 		{
 			field:             "id",
-			objectType:        "alertsv2",
+			objectType:        "alertv2",
 			requestObjectType: "alertsv2",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_VIEW":   {isManagementPermission: false},

@@ -24,3 +24,4 @@
 ### Internal Changes
 
  * Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).
+ * Added Alert v2 to resource permissions ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).

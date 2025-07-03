@@ -755,5 +755,16 @@ func allResourcePermissions() []resourcePermissions {
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 		},
+		{
+			field:             "alert_v2_id",
+			objectType:        "alert_v2",
+			requestObjectType: "alert_v2",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE":    {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
 	}
 }

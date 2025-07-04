@@ -11,6 +11,8 @@
 
 ### Bug Fixes
 
+* Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+
 ### Documentation
 
 * Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).

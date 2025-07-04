@@ -22,16 +22,16 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
 	@go tool cover -html=coverage.txt
 
-build: vendor
+build: #vendor
 	@echo "✓ Building source code with go build ..."
-	@go build -mod vendor -v -o terraform-provider-databricks
+	@go build -v -o terraform-provider-databricks
 
 install: build
 	@echo "✓ Installing provider for Terraform 1.0+ into ~/.terraform.d/plugins ..."
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
 	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"
-	@echo 
+	@echo
 	@echo "terraform {"
 	@echo "  required_providers {"
 	@echo "    databricks = {"

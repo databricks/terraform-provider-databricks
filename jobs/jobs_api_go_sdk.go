@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -156,8 +159,82 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
-	err := clusters.ModifyRequestOnInstancePool(clusterSpec)
+// This function checks if the `_apply_policy_default_values_except_fields` field is set.
+// If it is, only the fields it contains are sent to the API.
+// Only users who use the `apply_policy_default_values` setting with cluster policy defaults need this.
+func observeApplyPolicyDefaultValuesAllowList(d *schema.ResourceData, prefix string, clusterSpec *compute.ClusterSpec) error {
+	_, new := d.GetChange(prefix + "._do_not_use_this_apply_policy_default_values_allow_list")
+	if new == nil {
+		return nil
+	}
+
+	log.Printf("[DEBUG] new: %v", new)
+
+	var output compute.ClusterSpec
+
+	// Copy only the fields from the allow list from the input to the output.
+	// The input is the cluster spec as it is in the resource data.
+	// The output is the cluster spec as it is in the API.
+	// Use reflection to copy only the allowed fields from input to output
+	inputValue := reflect.ValueOf(clusterSpec).Elem()
+	outputValue := reflect.ValueOf(&output).Elem()
+
+	// Create a map of allowed field names for quick lookup
+	allowedFields := make(map[string]bool)
+	for _, field := range new.([]any) {
+		fieldStr, ok := field.(string)
+		if !ok {
+			return fmt.Errorf("expected string for %s._do_not_use_this_apply_policy_default_values_allow_list, got %T", prefix, field)
+		}
+		allowedFields[fieldStr] = true
+	}
+
+	// Always allow the `policy_id` and the `apply_policy_default_values` fields.
+	allowedFields["policy_id"] = true
+	allowedFields["apply_policy_default_values"] = true
+
+	// Iterate through all fields of the input struct
+	inputType := inputValue.Type()
+	for i := 0; i < inputValue.NumField(); i++ {
+		field := inputValue.Field(i)
+		fieldType := inputType.Field(i)
+
+		// Get the JSON tag to identify the field
+		jsonTag := fieldType.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			continue // Skip fields without JSON tags or explicitly ignored
+		}
+
+		// Extract the field name from the JSON tag (remove omitempty, etc.)
+		fieldName := strings.Split(jsonTag, ",")[0]
+
+		// Check if this field is in the allow list
+		if allowedFields[fieldName] {
+			// Find the corresponding field in the output struct
+			outputField := outputValue.FieldByName(fieldType.Name)
+			if outputField.IsValid() && outputField.CanSet() {
+				// Copy the field value
+				outputField.Set(field)
+				log.Printf("[DEBUG] Copied field %s (%s) from input to output", fieldType.Name, fieldName)
+			} else {
+				log.Printf("[DEBUG] Could not set field %s (%s) in output", fieldType.Name, fieldName)
+			}
+		} else {
+			log.Printf("[DEBUG] Skipping field %s (%s) because it is not in the allow list", fieldType.Name, fieldName)
+		}
+	}
+
+	// Replace the input with the filtered output
+	*clusterSpec = output
+	return nil
+}
+
+func updateJobClusterSpec(d *schema.ResourceData, prefix string, clusterSpec *compute.ClusterSpec) error {
+	err := observeApplyPolicyDefaultValuesAllowList(d, prefix, clusterSpec)
+	if err != nil {
+		return err
+	}
+	err = clusters.ModifyRequestOnInstancePool(clusterSpec)
 	if err != nil {
 		return err
 	}
@@ -174,21 +251,21 @@ func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceDa
 
 func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsResource) error {
 	if js.NewCluster != nil {
-		err := updateJobClusterSpec(js.NewCluster, d)
+		err := updateJobClusterSpec(d, "new_cluster.0", js.NewCluster)
 		if err != nil {
 			return err
 		}
 	}
-	for _, task := range js.Tasks {
-		if task.NewCluster != nil {
-			err := updateJobClusterSpec(task.NewCluster, d)
+	for i := range js.Tasks {
+		if js.Tasks[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("task.%d.new_cluster.0", i), js.Tasks[i].NewCluster)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range js.JobClusters {
-		err := updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &js.JobClusters[i].NewCluster)
 		if err != nil {
 			return err
 		}
@@ -199,16 +276,16 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruct) error {
 	// We always need to add NumWorkers into ForceSendField for the go-sdk client.
 	// Before the go-sdk migration, the field `num_workers` was required, so we always sent it.
-	for _, task := range jc.Tasks {
-		if task.NewCluster != nil {
-			err := updateJobClusterSpec(task.NewCluster, d)
+	for i := range jc.Tasks {
+		if jc.Tasks[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("task.%d.new_cluster.0", i), jc.Tasks[i].NewCluster)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range jc.JobClusters {
-		err := updateJobClusterSpec(&jc.JobClusters[i].NewCluster, d)
+		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &jc.JobClusters[i].NewCluster)
 		if err != nil {
 			return err
 		}

@@ -541,6 +541,16 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	jobSettingsSchema(s.GetSchemaMap(), "")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "task"), "task.0.")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "job_cluster"), "job_cluster.0.")
+
+	sub := common.MustSchemaMap(s.GetSchemaMap(), "job_cluster", "new_cluster")
+	sub["_do_not_use_this_apply_policy_default_values_allow_list"] = &schema.Schema{
+		Optional: true,
+		Type:     schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+
 	gitSourceSchema(common.MustSchemaMap(s.GetSchemaMap(), "git_source"), "")
 
 	s.SchemaPath("schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))

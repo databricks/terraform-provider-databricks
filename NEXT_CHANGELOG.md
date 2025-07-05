@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+* Add a new resource `databricks_service_principal_federation_policy` ([#4635](https://github.com/databricks/terraform-provider-databricks/pull/4635))
+
 ### New Features and Improvements
 
 * Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4812](https://github.com/databricks/terraform-provider-databricks/pull/4812)).

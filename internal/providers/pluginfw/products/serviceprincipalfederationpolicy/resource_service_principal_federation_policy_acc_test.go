@@ -19,7 +19,7 @@ const baseResources = `
    oidc_policy = {
 	 issuer    = "https://accounts.google.com"
 	 audiences = ["%s"]
-	 subject   = "subjcect"
+	 subject   = "subject"
    }
   }
 `
@@ -38,7 +38,7 @@ resource "databricks_service_principal" "this2" {
    oidc_policy = {
 	 issuer    = "https://accounts.google.com"
 	 audiences = ["%s"]
-	 subject   = "subjcect"
+	 subject   = "subject"
    }
   }
 `

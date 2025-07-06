@@ -43,7 +43,7 @@ resource "databricks_service_principal" "this2" {
   }
 `
 
-func TestAccDatabricksServicePrincipalFederationPolicyResourceNewServicePrincipal(t *testing.T) {
+func TestMwsAccDatabricksServicePrincipalFederationPolicyResourceNewServicePrincipal(t *testing.T) {
 	var updateTime string
 	var createTime string
 	var servicePrincipalId string
@@ -74,7 +74,7 @@ func TestAccDatabricksServicePrincipalFederationPolicyResourceNewServicePrincipa
 		})
 }
 
-func TestAccDatabricksServicePrincipalFederationPolicyResourceNewAudiences(t *testing.T) {
+func TestMwsAccDatabricksServicePrincipalFederationPolicyResourceNewAudiences(t *testing.T) {
 	var updateTime string
 	var createTime string
 	acceptance.LoadAccountEnv(t)

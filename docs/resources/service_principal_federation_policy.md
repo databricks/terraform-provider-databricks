@@ -56,4 +56,4 @@ In addition to all arguments above, the following attributes are exported:
 
 The following resources are often used in the same context:
 
-- [databricks_service_principal_secret](service_principal.md) to Directly manage service principal
+- [databricks_service_principal](service_principal.md) to Directly manage service principal

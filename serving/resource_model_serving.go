@@ -78,6 +78,7 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name string, newAiGateway serving.AiGatewayConfig, d *schema.ResourceData) error {
 	_, err := w.ServingEndpoints.PutAiGateway(ctx, serving.PutAiGatewayRequest{
 		Name:                 name,
+		FallbackConfig:       newAiGateway.FallbackConfig,
 		Guardrails:           newAiGateway.Guardrails,
 		InferenceTableConfig: newAiGateway.InferenceTableConfig,
 		RateLimits:           newAiGateway.RateLimits,

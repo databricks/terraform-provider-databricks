@@ -1321,7 +1321,6 @@ func (o BearerTokenAuth_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get build logs for a served model
 type BuildLogsRequest_SdkV2 struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -2314,7 +2313,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a serving endpoint
 type DeleteServingEndpointRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -3323,7 +3321,6 @@ func (o *EndpointTags_SdkV2) SetTags(ctx context.Context, v []EndpointTag_SdkV2)
 	o.Tags = types.ListValueMust(t, vs)
 }
 
-// Get metrics of a serving endpoint
 type ExportMetricsRequest_SdkV2 struct {
 	// The name of the serving endpoint to retrieve metrics for. This field is
 	// required.
@@ -4026,7 +4023,6 @@ func (o FoundationModel_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the schema for a serving endpoint
 type GetOpenApiRequest_SdkV2 struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -4099,7 +4095,6 @@ func (o GetOpenApiResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get serving endpoint permission levels
 type GetServingEndpointPermissionLevelsRequest_SdkV2 struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4214,7 +4209,6 @@ func (o *GetServingEndpointPermissionLevelsResponse_SdkV2) SetPermissionLevels(c
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get serving endpoint permissions
 type GetServingEndpointPermissionsRequest_SdkV2 struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4251,7 +4245,6 @@ func (o GetServingEndpointPermissionsRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Get a single serving endpoint
 type GetServingEndpointRequest_SdkV2 struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
@@ -4486,7 +4479,6 @@ func (o *ListEndpointsResponse_SdkV2) SetEndpoints(ctx context.Context, v []Serv
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// Get the latest logs for a served model
 type LogsRequest_SdkV2 struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -7587,6 +7579,8 @@ type ServingEndpoint_SdkV2 struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
+	// Description of the endpoint
+	Description types.String `tfsdk:"description"`
 	// System-generated ID of the endpoint, included to be used by the
 	// Permissions API.
 	Id types.String `tfsdk:"id"`
@@ -7616,6 +7610,7 @@ func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -7655,6 +7650,7 @@ func (o ServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
+			"description":            o.Description,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
 			"name":                   o.Name,
@@ -7677,6 +7673,7 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
+			"description":            types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
@@ -7971,6 +7968,8 @@ type ServingEndpointDetailed_SdkV2 struct {
 	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
 	DataPlaneInfo types.List `tfsdk:"data_plane_info"`
+	// Description of the serving model
+	Description types.String `tfsdk:"description"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -8011,6 +8010,7 @@ func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -8058,6 +8058,7 @@ func (o ServingEndpointDetailed_SdkV2) ToObjectValue(ctx context.Context) basety
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
 			"data_plane_info":        o.DataPlaneInfo,
+			"description":            o.Description,
 			"endpoint_url":           o.EndpointUrl,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -8087,6 +8088,7 @@ func (o ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_plane_info": basetypes.ListType{
 				ElemType: ModelDataPlaneInfo_SdkV2{}.Type(ctx),
 			},
+			"description":            types.StringType,
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,

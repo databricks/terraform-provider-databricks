@@ -70,8 +70,6 @@ func (rspfp *resourceServicePrincipalFederationPolicy) Create(ctx context.Contex
 
 func (rspfp *resourceServicePrincipalFederationPolicy) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 
-	//panic("read")
-
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	ac, diags := rspfp.client.GetAccountClient()
 	response.Diagnostics.Append(diags...)
@@ -137,7 +135,7 @@ func (rspfp *resourceServicePrincipalFederationPolicy) Update(ctx context.Contex
 		},
 	)
 	if err != nil {
-		response.Diagnostics.AddError("failed to update app", err.Error())
+		response.Diagnostics.AddError("failed to update ServicePrincipalFederationPolicy", err.Error())
 		return
 	}
 

@@ -1554,7 +1554,7 @@ func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
@@ -1879,7 +1879,6 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
-// Create an asset
 type CreateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
 	Asset types.Object `tfsdk:"asset"`
@@ -1950,7 +1949,6 @@ func (o *CreateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomA
 	o.Asset = vs
 }
 
-// Create an output catalog
 type CreateCleanRoomOutputCatalogRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2098,7 +2096,6 @@ func (o *CreateCleanRoomOutputCatalogResponse) SetOutputCatalog(ctx context.Cont
 	o.OutputCatalog = vs
 }
 
-// Create a clean room
 type CreateCleanRoomRequest struct {
 	CleanRoom types.Object `tfsdk:"clean_room"`
 }
@@ -2164,7 +2161,6 @@ func (o *CreateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) 
 	o.CleanRoom = vs
 }
 
-// Delete an asset
 type DeleteCleanRoomAssetRequest struct {
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
@@ -2253,7 +2249,6 @@ func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a clean room
 type DeleteCleanRoomRequest struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
@@ -2320,7 +2315,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an asset
 type GetCleanRoomAssetRequest struct {
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
@@ -2366,7 +2360,6 @@ func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a clean room
 type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2402,7 +2395,6 @@ func (o GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List assets
 type ListCleanRoomAssetsRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2528,7 +2520,6 @@ func (o *ListCleanRoomAssetsResponse) SetAssets(ctx context.Context, v []CleanRo
 	o.Assets = types.ListValueMust(t, vs)
 }
 
-// List notebook task runs
 type ListCleanRoomNotebookTaskRunsRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2663,7 +2654,6 @@ func (o *ListCleanRoomNotebookTaskRunsResponse) SetRuns(ctx context.Context, v [
 	o.Runs = types.ListValueMust(t, vs)
 }
 
-// List clean rooms
 type ListCleanRoomsRequest struct {
 	// Maximum number of clean rooms to return (i.e., the page length). Defaults
 	// to 100.
@@ -2789,7 +2779,6 @@ func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoo
 	o.CleanRooms = types.ListValueMust(t, vs)
 }
 
-// Update an asset
 type UpdateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
 	Asset types.Object `tfsdk:"asset"`

@@ -171,7 +171,6 @@ func (o AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create dashboard
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 }
@@ -237,7 +236,6 @@ func (o *CreateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 	o.Dashboard = vs
 }
 
-// Create dashboard schedule
 type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -308,7 +306,6 @@ func (o *CreateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
 	o.Schedule = vs
 }
 
-// Create schedule subscription
 type CreateSubscriptionRequest struct {
 	// UUID identifying the dashboard to which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -491,7 +488,7 @@ func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
-	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -549,7 +546,6 @@ func (o Dashboard) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete dashboard schedule
 type DeleteScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -625,7 +621,6 @@ func (o DeleteScheduleResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete schedule subscription
 type DeleteSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -959,7 +954,6 @@ func (o GenieCreateConversationMessageRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Execute message attachment SQL query
 type GenieExecuteMessageAttachmentQueryRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1008,7 +1002,6 @@ func (o GenieExecuteMessageAttachmentQueryRequest) Type(ctx context.Context) att
 	}
 }
 
-// [Deprecated] Execute SQL query in a conversation message
 type GenieExecuteMessageQueryRequest struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"-"`
@@ -1053,7 +1046,6 @@ func (o GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Generate full query result download
 type GenieGenerateDownloadFullQueryResultRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1151,7 +1143,6 @@ func (o GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) 
 	}
 }
 
-// Get conversation message
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1198,7 +1189,6 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Get download full query result
 type GenieGetDownloadFullQueryResultRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1331,7 +1321,6 @@ func (o *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx conte
 	o.StatementResponse = vs
 }
 
-// Get message attachment SQL query result
 type GenieGetMessageAttachmentQueryResultRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1380,7 +1369,6 @@ func (o GenieGetMessageAttachmentQueryResultRequest) Type(ctx context.Context) a
 	}
 }
 
-// [Deprecated] Get conversation message SQL query result
 type GenieGetMessageQueryResultRequest struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"-"`
@@ -1504,7 +1492,6 @@ func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Co
 	o.StatementResponse = vs
 }
 
-// [Deprecated] Get conversation message SQL query result
 type GenieGetQueryResultByAttachmentRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1553,7 +1540,6 @@ func (o GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.T
 	}
 }
 
-// Get Genie Space
 type GenieGetSpaceRequest struct {
 	// The ID associated with the Genie space
 	SpaceId types.String `tfsdk:"-"`
@@ -1590,7 +1576,6 @@ func (o GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List Genie spaces
 type GenieListSpacesRequest struct {
 	// Maximum number of spaces to return per page
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2319,7 +2304,6 @@ func (o *GenieStartConversationResponse) SetMessage(ctx context.Context, v Genie
 	o.Message = vs
 }
 
-// Get dashboard
 type GetDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2356,7 +2340,6 @@ func (o GetDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get published dashboard
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2393,7 +2376,6 @@ func (o GetPublishedDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Read an information of a published dashboard to mint an OAuth token.
 type GetPublishedDashboardTokenInfoRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2530,7 +2512,6 @@ func (o *GetPublishedDashboardTokenInfoResponse) SetAuthorizationDetails(ctx con
 	o.AuthorizationDetails = types.ListValueMust(t, vs)
 }
 
-// Get dashboard schedule
 type GetScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -2571,7 +2552,6 @@ func (o GetScheduleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get schedule subscription
 type GetSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -2616,7 +2596,6 @@ func (o GetSubscriptionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List dashboards
 type ListDashboardsRequest struct {
 	// The number of dashboards to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2750,7 +2729,6 @@ func (o *ListDashboardsResponse) SetDashboards(ctx context.Context, v []Dashboar
 	o.Dashboards = types.ListValueMust(t, vs)
 }
 
-// List dashboard schedules
 type ListSchedulesRequest struct {
 	// UUID identifying the dashboard to which the schedules belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -2881,7 +2859,6 @@ func (o *ListSchedulesResponse) SetSchedules(ctx context.Context, v []Schedule) 
 	o.Schedules = types.ListValueMust(t, vs)
 }
 
-// List schedule subscriptions
 type ListSubscriptionsRequest struct {
 	// UUID identifying the dashboard which the subscriptions belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -3820,7 +3797,6 @@ func (o TextAttachment) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Trash dashboard
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -3898,7 +3874,6 @@ func (o TrashDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Unpublish dashboard
 type UnpublishDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -3976,7 +3951,6 @@ func (o UnpublishDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update dashboard
 type UpdateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
@@ -4046,7 +4020,6 @@ func (o *UpdateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 	o.Dashboard = vs
 }
 
-// Update dashboard schedule
 type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`

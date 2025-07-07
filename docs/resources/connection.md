@@ -87,6 +87,7 @@ resource "databricks_connection" "http_bearer" {
     bearer_token = "bearer_token"
   }
 }
+```
 
 Create a HTTP connection with OAuth M2M
 

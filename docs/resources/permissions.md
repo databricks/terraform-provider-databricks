@@ -861,7 +861,35 @@ resource "databricks_permissions" "query_usage" {
 }
 ```
 
-## SQL Alert usage
+## SQL Alert (AlertV2) usage
+
+[Alert V2](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) which is the new version of SQL Alert have 4 possible permission levels: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. 
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "app_usage" {
+  alert_v2_id = "12345"
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+## SQL Alert (legacy) usage 
 
 [SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
@@ -888,36 +916,6 @@ resource "databricks_permissions" "alert_usage" {
   }
 }
 ```
-
-## Alert V2
-
-Alert V2 have 4 possible [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#notebook-permissions) for [databricks_alert_v2](alert_v2.md): `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
-
-
-```hcl
-resource "databricks_group" "auto" {
-  display_name = "Automation"
-}
-
-resource "databricks_group" "eng" {
-  display_name = "Engineering"
-}
-
-resource "databricks_permissions" "app_usage" {
-  alert_v2_id = "12345"
-
-  access_control {
-    group_name       = databricks_group.auto.display_name
-    permission_level = "CAN_RUN"
-  }
-
-  access_control {
-    group_name       = databricks_group.eng.display_name
-    permission_level = "CAN_EDIT"
-  }
-}
-```
-
 
 ## Databricks Apps usage
 

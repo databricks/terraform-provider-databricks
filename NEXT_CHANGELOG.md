@@ -10,6 +10,8 @@
 * Use single-node cluster for `databricks_sql_permissions` ([#4813](https://github.com/databricks/terraform-provider-databricks/pull/4813)).
 * Don't redeploy `databricks_sql_table` for tables with struct subcolumns ([#4001](https://github.com/databricks/terraform-provider-databricks/pull/4001)).
 * Add support for Lakebase `databricks_database_instance` in  `databricks_permissions` ([#4824](https://github.com/databricks/terraform-provider-databricks/pull/4824)).
+* Added support for Alert V2 in `databricks_permissions` ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).
+* Replace instead of dropping Delta `databricks_sql_table` ([#2424](https://github.com/databricks/terraform-provider-databricks/pull/2424)).
 
 ### Bug Fixes
 

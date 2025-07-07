@@ -760,7 +760,7 @@ func allResourcePermissions() []resourcePermissions {
 			objectType:        "alertv2",
 			requestObjectType: "alertsv2",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
-				"CAN_VIEW":   {isManagementPermission: false},
+				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},

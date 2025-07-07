@@ -889,6 +889,36 @@ resource "databricks_permissions" "alert_usage" {
 }
 ```
 
+## Alert V2
+
+Alert V2 have 4 possible [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#notebook-permissions) for [databricks_alert_v2](alert_v2.md): `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "app_usage" {
+  alert_v2_id = "12345"
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+
 ## Databricks Apps usage
 
 [Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:

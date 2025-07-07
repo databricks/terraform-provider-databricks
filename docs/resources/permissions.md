@@ -943,6 +943,30 @@ resource "databricks_permissions" "app_usage" {
 }
 ```
 
+## Lakebase Database Instances usage
+
+[Databricks Lakebase](https://docs.databricks.com/aws/en/oltp/) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "app_usage" {
+  database_instance_name = "my_database"
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Instance Profiles
 
 [Instance Profiles](instance_profile.md) are not managed by General Permissions API and therefore [databricks_group_instance_profile](group_instance_profile.md) and [databricks_user_instance_profile](user_instance_profile.md) should be used to allow usage of specific AWS EC2 IAM roles to users or groups.

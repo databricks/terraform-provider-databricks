@@ -15,6 +15,7 @@
 ### Bug Fixes
 
 * Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+* * Fixed `databricks_secret_acl` resource creation to properly verify ACL application with retry logic when API returns success but doesn't actually create the ACL.
 
 ### Documentation
 

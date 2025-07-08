@@ -26,7 +26,7 @@ import (
 type AccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -1056,6 +1056,36 @@ func (o GetGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetPasswordPermissionLevelsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPasswordPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionLevelsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetPasswordPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPasswordPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetPasswordPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels"`
@@ -1132,6 +1162,36 @@ func (o *GetPasswordPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx cont
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
+type GetPasswordPermissionsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPasswordPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetPasswordPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPasswordPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type GetPermissionLevelsRequest_SdkV2 struct {
@@ -2674,6 +2734,36 @@ func (o ListWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
+type MeRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MeRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MeRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MeRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o MeRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MeRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type MigratePermissionsRequest_SdkV2 struct {
 	// The name of the workspace group that permissions will be migrated from.
 	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name"`
@@ -2684,21 +2774,6 @@ type MigratePermissionsRequest_SdkV2 struct {
 	// WorkspaceId of the associated workspace where the permission migration
 	// will occur.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
-}
-
-func (newState *MigratePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsRequest_SdkV2) {
-}
-
-func (newState *MigratePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsRequest_SdkV2) {
-}
-
-func (c MigratePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
-	attrs["size"] = attrs["size"].SetOptional()
-	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsRequest.
@@ -2934,20 +3009,6 @@ type PartialUpdate_SdkV2 struct {
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
-}
-
-func (newState *PartialUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartialUpdate_SdkV2) {
-}
-
-func (newState *PartialUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState PartialUpdate_SdkV2) {
-}
-
-func (c PartialUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["Operations"] = attrs["Operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartialUpdate.
@@ -3435,18 +3496,6 @@ type PasswordPermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 }
 
-func (newState *PasswordPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsRequest_SdkV2) {
-}
-
-func (newState *PasswordPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsRequest_SdkV2) {
-}
-
-func (c PasswordPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3600,7 +3649,7 @@ type Permission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3936,7 +3985,7 @@ func (o PermissionOutput_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -4565,20 +4614,6 @@ type SetObjectPermissions_SdkV2 struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
-func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetObjectPermissions_SdkV2) {
-}
-
-func (newState *SetObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetObjectPermissions_SdkV2) {
-}
-
-func (c SetObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4654,20 +4689,6 @@ type UpdateObjectPermissions_SdkV2 struct {
 	// pipelines, queries, registered-models, repos, serving-endpoints, or
 	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateObjectPermissions_SdkV2) {
-}
-
-func (newState *UpdateObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateObjectPermissions_SdkV2) {
-}
-
-func (c UpdateObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
@@ -4772,20 +4793,6 @@ type UpdateRuleSetRequest_SdkV2 struct {
 	RuleSet types.List `tfsdk:"rule_set"`
 }
 
-func (newState *UpdateRuleSetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest_SdkV2) {
-}
-
-func (newState *UpdateRuleSetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRuleSetRequest_SdkV2) {
-}
-
-func (c UpdateRuleSetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRuleSetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4861,20 +4868,6 @@ type UpdateWorkspaceAssignments_SdkV2 struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *UpdateWorkspaceAssignments_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceAssignments_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceAssignments_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceAssignments_SdkV2) {
-}
-
-func (c UpdateWorkspaceAssignments_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignments.

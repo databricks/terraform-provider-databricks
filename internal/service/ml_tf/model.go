@@ -22,24 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Activity recorded for the action.
+// For activities, this contains the activity recorded for the action. For
+// comments, this contains the comment details. For transition requests, this
+// contains the transition request details.
 type Activity struct {
-	// Type of activity. Valid values are: * `APPLIED_TRANSITION`: User applied
-	// the corresponding stage transition.
-	//
-	// * `REQUESTED_TRANSITION`: User requested the corresponding stage
-	// transition.
-	//
-	// * `CANCELLED_REQUEST`: User cancelled an existing transition request.
-	//
-	// * `APPROVED_REQUEST`: User approved the corresponding stage transition.
-	//
-	// * `REJECTED_REQUEST`: User rejected the coressponding stage transition.
-	//
-	// * `SYSTEM_TRANSITION`: For events performed as a side effect, such as
-	// archiving existing model versions in a stage.
 	ActivityType types.String `tfsdk:"activity_type"`
-	// User-provided comment associated with the activity.
+	// User-provided comment associated with the activity, comment, or
+	// transition request.
 	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
@@ -145,6 +134,8 @@ func (o Activity) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Details required to identify and approve a model version stage transition
+// request.
 type ApproveTransitionRequest struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
@@ -165,22 +156,6 @@ type ApproveTransitionRequest struct {
 	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequest) {
-}
-
-func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequest) {
-}
-
-func (c ApproveTransitionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["archive_existing_versions"] = attrs["archive_existing_versions"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["stage"] = attrs["stage"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApproveTransitionRequest.
@@ -223,7 +198,7 @@ func (o ApproveTransitionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ApproveTransitionRequestResponse struct {
-	// Activity recorded for the action.
+	// New activity generated as a result of this operation.
 	Activity types.Object `tfsdk:"activity"`
 }
 
@@ -300,15 +275,18 @@ func (o *ApproveTransitionRequestResponse) SetActivity(ctx context.Context, v Ac
 	o.Activity = vs
 }
 
-// Comment details.
+// For activities, this contains the activity recorded for the action. For
+// comments, this contains the comment details. For transition requests, this
+// contains the transition request details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
 	AvailableActions types.List `tfsdk:"available_actions"`
-	// User-provided comment on the action.
+	// User-provided comment associated with the activity, comment, or
+	// transition request.
 	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// Comment ID
+	// Unique identifier for the object.
 	Id types.String `tfsdk:"id"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
@@ -404,6 +382,7 @@ func (o *CommentObject) SetAvailableActions(ctx context.Context, v []types.Strin
 	o.AvailableActions = types.ListValueMust(t, vs)
 }
 
+// Details required to create a comment on a model version.
 type CreateComment struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment"`
@@ -411,20 +390,6 @@ type CreateComment struct {
 	Name types.String `tfsdk:"name"`
 	// Version of the model.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *CreateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateComment) {
-}
-
-func (newState *CreateComment) SyncEffectiveFieldsDuringRead(existingState CreateComment) {
-}
-
-func (c CreateComment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateComment.
@@ -463,7 +428,7 @@ func (o CreateComment) Type(ctx context.Context) attr.Type {
 }
 
 type CreateCommentResponse struct {
-	// Comment details.
+	// New comment object
 	Comment types.Object `tfsdk:"comment"`
 }
 
@@ -552,20 +517,6 @@ type CreateExperiment struct {
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
 	Tags types.List `tfsdk:"tags"`
-}
-
-func (newState *CreateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperiment) {
-}
-
-func (newState *CreateExperiment) SyncEffectiveFieldsDuringRead(existingState CreateExperiment) {
-}
-
-func (c CreateExperiment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["artifact_location"] = attrs["artifact_location"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExperiment.
@@ -681,6 +632,79 @@ func (o CreateExperimentResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateFeatureTagRequest struct {
+	FeatureName types.String `tfsdk:"-"`
+
+	FeatureTag types.Object `tfsdk:"feature_tag"`
+
+	TableName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFeatureTagRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateFeatureTagRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_tag": reflect.TypeOf(FeatureTag{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateFeatureTagRequest
+// only implements ToObjectValue() and Type().
+func (o CreateFeatureTagRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"feature_tag":  o.FeatureTag,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateFeatureTagRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"feature_tag":  FeatureTag{}.Type(ctx),
+			"table_name":   types.StringType,
+		},
+	}
+}
+
+// GetFeatureTag returns the value of the FeatureTag field in CreateFeatureTagRequest as
+// a FeatureTag value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFeatureTagRequest) GetFeatureTag(ctx context.Context) (FeatureTag, bool) {
+	var e FeatureTag
+	if o.FeatureTag.IsNull() || o.FeatureTag.IsUnknown() {
+		return e, false
+	}
+	var v []FeatureTag
+	d := o.FeatureTag.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFeatureTag sets the value of the FeatureTag field in CreateFeatureTagRequest.
+func (o *CreateFeatureTagRequest) SetFeatureTag(ctx context.Context, v FeatureTag) {
+	vs := v.ToObjectValue(ctx)
+	o.FeatureTag = vs
+}
+
 type CreateForecastingExperimentRequest struct {
 	// The column in the training table used to customize weights for each time
 	// series.
@@ -742,34 +766,6 @@ type CreateForecastingExperimentRequest struct {
 	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list includes all supported
 	// frameworks.
 	TrainingFrameworks types.List `tfsdk:"training_frameworks"`
-}
-
-func (newState *CreateForecastingExperimentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateForecastingExperimentRequest) {
-}
-
-func (newState *CreateForecastingExperimentRequest) SyncEffectiveFieldsDuringRead(existingState CreateForecastingExperimentRequest) {
-}
-
-func (c CreateForecastingExperimentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_weights_column"] = attrs["custom_weights_column"].SetOptional()
-	attrs["experiment_path"] = attrs["experiment_path"].SetOptional()
-	attrs["forecast_granularity"] = attrs["forecast_granularity"].SetRequired()
-	attrs["forecast_horizon"] = attrs["forecast_horizon"].SetRequired()
-	attrs["future_feature_data_path"] = attrs["future_feature_data_path"].SetOptional()
-	attrs["holiday_regions"] = attrs["holiday_regions"].SetOptional()
-	attrs["include_features"] = attrs["include_features"].SetOptional()
-	attrs["max_runtime"] = attrs["max_runtime"].SetOptional()
-	attrs["prediction_data_path"] = attrs["prediction_data_path"].SetOptional()
-	attrs["primary_metric"] = attrs["primary_metric"].SetOptional()
-	attrs["register_to"] = attrs["register_to"].SetOptional()
-	attrs["split_column"] = attrs["split_column"].SetOptional()
-	attrs["target_column"] = attrs["target_column"].SetRequired()
-	attrs["time_column"] = attrs["time_column"].SetRequired()
-	attrs["timeseries_identifier_columns"] = attrs["timeseries_identifier_columns"].SetOptional()
-	attrs["train_data_path"] = attrs["train_data_path"].SetRequired()
-	attrs["training_frameworks"] = attrs["training_frameworks"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateForecastingExperimentRequest.
@@ -1015,23 +1011,6 @@ type CreateLoggedModelRequest struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *CreateLoggedModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLoggedModelRequest) {
-}
-
-func (newState *CreateLoggedModelRequest) SyncEffectiveFieldsDuringRead(existingState CreateLoggedModelRequest) {
-}
-
-func (c CreateLoggedModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-	attrs["model_type"] = attrs["model_type"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["params"] = attrs["params"].SetOptional()
-	attrs["source_run_id"] = attrs["source_run_id"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateLoggedModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1219,20 +1198,6 @@ type CreateModelRequest struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *CreateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelRequest) {
-}
-
-func (newState *CreateModelRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelRequest) {
-}
-
-func (c CreateModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1392,23 +1357,6 @@ type CreateModelVersionRequest struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionRequest) {
-}
-
-func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionRequest) {
-}
-
-func (c CreateModelVersionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["run_link"] = attrs["run_link"].SetOptional()
-	attrs["source"] = attrs["source"].SetRequired()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelVersionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1559,8 +1507,7 @@ func (o *CreateModelVersionResponse) SetModelVersion(ctx context.Context, v Mode
 }
 
 type CreateOnlineStoreRequest struct {
-	// An OnlineStore is a logical database instance that stores and serves
-	// features online.
+	// Online store to create.
 	OnlineStore types.Object `tfsdk:"online_store"`
 }
 
@@ -1625,6 +1572,7 @@ func (o *CreateOnlineStoreRequest) SetOnlineStore(ctx context.Context, v OnlineS
 	o.OnlineStore = vs
 }
 
+// Details required to create a registry webhook.
 type CreateRegistryWebhook struct {
 	// User-specified description for the webhook.
 	Description types.String `tfsdk:"description"`
@@ -1662,9 +1610,9 @@ type CreateRegistryWebhook struct {
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
 	Events types.List `tfsdk:"events"`
-
+	// External HTTPS URL called on event trigger (by using a POST request).
 	HttpUrlSpec types.Object `tfsdk:"http_url_spec"`
-
+	// ID of the job that the webhook runs.
 	JobSpec types.Object `tfsdk:"job_spec"`
 	// If model name is not specified, a registry-wide webhook is created that
 	// listens for the specified events across all versions of all registered
@@ -1679,23 +1627,6 @@ type CreateRegistryWebhook struct {
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
 	Status types.String `tfsdk:"status"`
-}
-
-func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegistryWebhook) {
-}
-
-func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState CreateRegistryWebhook) {
-}
-
-func (c CreateRegistryWebhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["events"] = attrs["events"].SetRequired()
-	attrs["http_url_spec"] = attrs["http_url_spec"].SetOptional()
-	attrs["job_spec"] = attrs["job_spec"].SetOptional()
-	attrs["model_name"] = attrs["model_name"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRegistryWebhook.
@@ -1840,22 +1771,6 @@ type CreateRun struct {
 	// 1.0, and will be removed in a future MLflow release. Use 'mlflow.user'
 	// tag instead.
 	UserId types.String `tfsdk:"user_id"`
-}
-
-func (newState *CreateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRun) {
-}
-
-func (newState *CreateRun) SyncEffectiveFieldsDuringRead(existingState CreateRun) {
-}
-
-func (c CreateRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
-	attrs["run_name"] = attrs["run_name"].SetOptional()
-	attrs["start_time"] = attrs["start_time"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["user_id"] = attrs["user_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRun.
@@ -2005,6 +1920,7 @@ func (o *CreateRunResponse) SetRun(ctx context.Context, v Run) {
 	o.Run = vs
 }
 
+// Details required to create a model version stage transition request.
 type CreateTransitionRequest struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment"`
@@ -2022,21 +1938,6 @@ type CreateTransitionRequest struct {
 	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequest) {
-}
-
-func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequest) {
-}
-
-func (c CreateTransitionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["stage"] = attrs["stage"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTransitionRequest.
@@ -2077,7 +1978,7 @@ func (o CreateTransitionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CreateTransitionRequestResponse struct {
-	// Transition request details.
+	// New activity generated for stage transition request.
 	Request types.Object `tfsdk:"request"`
 }
 
@@ -2467,6 +2368,17 @@ func (o DeleteCommentRequest) Type(ctx context.Context) attr.Type {
 type DeleteCommentResponse struct {
 }
 
+func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCommentResponse) {
+}
+
+func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCommentResponse) {
+}
+
+func (c DeleteCommentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCommentResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2497,18 +2409,6 @@ func (o DeleteCommentResponse) Type(ctx context.Context) attr.Type {
 type DeleteExperiment struct {
 	// ID of the associated experiment.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-}
-
-func (newState *DeleteExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExperiment) {
-}
-
-func (newState *DeleteExperiment) SyncEffectiveFieldsDuringRead(existingState DeleteExperiment) {
-}
-
-func (c DeleteExperiment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExperiment.
@@ -2580,6 +2480,50 @@ func (o DeleteExperimentResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o DeleteExperimentResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteFeatureTagRequest struct {
+	// The name of the feature within the feature table.
+	FeatureName types.String `tfsdk:"-"`
+	// The key of the tag to delete.
+	Key types.String `tfsdk:"-"`
+	// The name of the feature table.
+	TableName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFeatureTagRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteFeatureTagRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteFeatureTagRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteFeatureTagRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"key":          o.Key,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteFeatureTagRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"key":          types.StringType,
+			"table_name":   types.StringType,
+		},
 	}
 }
 
@@ -2780,6 +2724,17 @@ func (o DeleteModelRequest) Type(ctx context.Context) attr.Type {
 type DeleteModelResponse struct {
 }
 
+func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelResponse) {
+}
+
+func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelResponse) {
+}
+
+func (c DeleteModelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteModelResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2851,6 +2806,17 @@ func (o DeleteModelTagRequest) Type(ctx context.Context) attr.Type {
 type DeleteModelTagResponse struct {
 }
 
+func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelTagResponse) {
+}
+
+func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelTagResponse) {
+}
+
+func (c DeleteModelTagResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteModelTagResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2919,6 +2885,17 @@ func (o DeleteModelVersionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteModelVersionResponse struct {
+}
+
+func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionResponse) {
+}
+
+func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionResponse) {
+}
+
+func (c DeleteModelVersionResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteModelVersionResponse.
@@ -2996,6 +2973,17 @@ func (o DeleteModelVersionTagRequest) Type(ctx context.Context) attr.Type {
 type DeleteModelVersionTagResponse struct {
 }
 
+func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionTagResponse) {
+}
+
+func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionTagResponse) {
+}
+
+func (c DeleteModelVersionTagResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteModelVersionTagResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3059,51 +3047,9 @@ func (o DeleteOnlineStoreRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteOnlineStoreResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteOnlineStoreResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteOnlineStoreResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteOnlineStoreResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteOnlineStoreResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteOnlineStoreResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteRun struct {
 	// ID of the run to delete.
 	RunId types.String `tfsdk:"run_id"`
-}
-
-func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
-}
-
-func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
-}
-
-func (c DeleteRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -3188,20 +3134,6 @@ type DeleteRuns struct {
 	// deleting runs. Only runs created prior to or at this timestamp are
 	// deleted.
 	MaxTimestampMillis types.Int64 `tfsdk:"max_timestamp_millis"`
-}
-
-func (newState *DeleteRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRuns) {
-}
-
-func (newState *DeleteRuns) SyncEffectiveFieldsDuringRead(existingState DeleteRuns) {
-}
-
-func (c DeleteRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-	attrs["max_runs"] = attrs["max_runs"].SetOptional()
-	attrs["max_timestamp_millis"] = attrs["max_timestamp_millis"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRuns.
@@ -3292,19 +3224,6 @@ type DeleteTag struct {
 	Key types.String `tfsdk:"key"`
 	// ID of the run that the tag was logged under. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
-}
-
-func (newState *DeleteTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTag) {
-}
-
-func (newState *DeleteTag) SyncEffectiveFieldsDuringRead(existingState DeleteTag) {
-}
-
-func (c DeleteTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTag.
@@ -3444,6 +3363,20 @@ func (o DeleteTransitionRequestRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteTransitionRequestResponse struct {
+	// New activity generated as a result of this operation.
+	Activity types.Object `tfsdk:"activity"`
+}
+
+func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTransitionRequestResponse) {
+}
+
+func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState DeleteTransitionRequestResponse) {
+}
+
+func (c DeleteTransitionRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity"] = attrs["activity"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTransitionRequestResponse.
@@ -3454,7 +3387,9 @@ type DeleteTransitionRequestResponse struct {
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a DeleteTransitionRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"activity": reflect.TypeOf(Activity{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3463,14 +3398,46 @@ func (a DeleteTransitionRequestResponse) GetComplexFieldTypes(ctx context.Contex
 func (o DeleteTransitionRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"activity": o.Activity,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (o DeleteTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"activity": Activity{}.Type(ctx),
+		},
 	}
+}
+
+// GetActivity returns the value of the Activity field in DeleteTransitionRequestResponse as
+// a Activity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteTransitionRequestResponse) GetActivity(ctx context.Context) (Activity, bool) {
+	var e Activity
+	if o.Activity.IsNull() || o.Activity.IsUnknown() {
+		return e, false
+	}
+	var v []Activity
+	d := o.Activity.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetActivity sets the value of the Activity field in DeleteTransitionRequestResponse.
+func (o *DeleteTransitionRequestResponse) SetActivity(ctx context.Context, v Activity) {
+	vs := v.ToObjectValue(ctx)
+	o.Activity = vs
 }
 
 type DeleteWebhookRequest struct {
@@ -3510,6 +3477,17 @@ func (o DeleteWebhookRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteWebhookResponse struct {
+}
+
+func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWebhookResponse) {
+}
+
+func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWebhookResponse) {
+}
+
+func (c DeleteWebhookResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWebhookResponse.
@@ -3652,7 +3630,7 @@ func (o *Experiment) SetTags(ctx context.Context, v []ExperimentTag) {
 type ExperimentAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -3814,7 +3792,7 @@ type ExperimentPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3986,7 +3964,7 @@ func (o *ExperimentPermissions) SetAccessControlList(ctx context.Context, v []Ex
 
 type ExperimentPermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -4040,19 +4018,6 @@ type ExperimentPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The experiment for which to get or manage permissions.
 	ExperimentId types.String `tfsdk:"-"`
-}
-
-func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissionsRequest) {
-}
-
-func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsRequest) {
-}
-
-func (c ExperimentPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentPermissionsRequest.
@@ -4172,6 +4137,496 @@ func (o ExperimentTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Feature for model version.
+type Feature struct {
+	// Feature name
+	FeatureName types.String `tfsdk:"feature_name"`
+	// Feature table id
+	FeatureTableId types.String `tfsdk:"feature_table_id"`
+	// Feature table name
+	FeatureTableName types.String `tfsdk:"feature_table_name"`
+}
+
+func (newState *Feature) SyncEffectiveFieldsDuringCreateOrUpdate(plan Feature) {
+}
+
+func (newState *Feature) SyncEffectiveFieldsDuringRead(existingState Feature) {
+}
+
+func (c Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_name"] = attrs["feature_name"].SetOptional()
+	attrs["feature_table_id"] = attrs["feature_table_id"].SetOptional()
+	attrs["feature_table_name"] = attrs["feature_table_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Feature.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Feature
+// only implements ToObjectValue() and Type().
+func (o Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name":       o.FeatureName,
+			"feature_table_id":   o.FeatureTableId,
+			"feature_table_name": o.FeatureTableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Feature) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name":       types.StringType,
+			"feature_table_id":   types.StringType,
+			"feature_table_name": types.StringType,
+		},
+	}
+}
+
+type FeatureLineage struct {
+	// List of feature specs that contain this feature.
+	FeatureSpecs types.List `tfsdk:"feature_specs"`
+	// List of Unity Catalog models that were trained on this feature.
+	Models types.List `tfsdk:"models"`
+	// List of online features that use this feature as source.
+	OnlineFeatures types.List `tfsdk:"online_features"`
+}
+
+func (newState *FeatureLineage) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureLineage) {
+}
+
+func (newState *FeatureLineage) SyncEffectiveFieldsDuringRead(existingState FeatureLineage) {
+}
+
+func (c FeatureLineage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_specs"] = attrs["feature_specs"].SetOptional()
+	attrs["models"] = attrs["models"].SetOptional()
+	attrs["online_features"] = attrs["online_features"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureLineage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureLineage) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_specs":   reflect.TypeOf(FeatureLineageFeatureSpec{}),
+		"models":          reflect.TypeOf(FeatureLineageModel{}),
+		"online_features": reflect.TypeOf(FeatureLineageOnlineFeature{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureLineage
+// only implements ToObjectValue() and Type().
+func (o FeatureLineage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_specs":   o.FeatureSpecs,
+			"models":          o.Models,
+			"online_features": o.OnlineFeatures,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureLineage) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_specs": basetypes.ListType{
+				ElemType: FeatureLineageFeatureSpec{}.Type(ctx),
+			},
+			"models": basetypes.ListType{
+				ElemType: FeatureLineageModel{}.Type(ctx),
+			},
+			"online_features": basetypes.ListType{
+				ElemType: FeatureLineageOnlineFeature{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetFeatureSpecs returns the value of the FeatureSpecs field in FeatureLineage as
+// a slice of FeatureLineageFeatureSpec values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FeatureLineage) GetFeatureSpecs(ctx context.Context) ([]FeatureLineageFeatureSpec, bool) {
+	if o.FeatureSpecs.IsNull() || o.FeatureSpecs.IsUnknown() {
+		return nil, false
+	}
+	var v []FeatureLineageFeatureSpec
+	d := o.FeatureSpecs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeatureSpecs sets the value of the FeatureSpecs field in FeatureLineage.
+func (o *FeatureLineage) SetFeatureSpecs(ctx context.Context, v []FeatureLineageFeatureSpec) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["feature_specs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.FeatureSpecs = types.ListValueMust(t, vs)
+}
+
+// GetModels returns the value of the Models field in FeatureLineage as
+// a slice of FeatureLineageModel values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FeatureLineage) GetModels(ctx context.Context) ([]FeatureLineageModel, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []FeatureLineageModel
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in FeatureLineage.
+func (o *FeatureLineage) SetModels(ctx context.Context, v []FeatureLineageModel) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
+}
+
+// GetOnlineFeatures returns the value of the OnlineFeatures field in FeatureLineage as
+// a slice of FeatureLineageOnlineFeature values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FeatureLineage) GetOnlineFeatures(ctx context.Context) ([]FeatureLineageOnlineFeature, bool) {
+	if o.OnlineFeatures.IsNull() || o.OnlineFeatures.IsUnknown() {
+		return nil, false
+	}
+	var v []FeatureLineageOnlineFeature
+	d := o.OnlineFeatures.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnlineFeatures sets the value of the OnlineFeatures field in FeatureLineage.
+func (o *FeatureLineage) SetOnlineFeatures(ctx context.Context, v []FeatureLineageOnlineFeature) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["online_features"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OnlineFeatures = types.ListValueMust(t, vs)
+}
+
+type FeatureLineageFeatureSpec struct {
+	// The full name of the feature spec in Unity Catalog.
+	Name types.String `tfsdk:"name"`
+}
+
+func (newState *FeatureLineageFeatureSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureLineageFeatureSpec) {
+}
+
+func (newState *FeatureLineageFeatureSpec) SyncEffectiveFieldsDuringRead(existingState FeatureLineageFeatureSpec) {
+}
+
+func (c FeatureLineageFeatureSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureLineageFeatureSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureLineageFeatureSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureLineageFeatureSpec
+// only implements ToObjectValue() and Type().
+func (o FeatureLineageFeatureSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureLineageFeatureSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type FeatureLineageModel struct {
+	// The full name of the model in Unity Catalog.
+	Name types.String `tfsdk:"name"`
+	// The version of the model.
+	Version types.Int64 `tfsdk:"version"`
+}
+
+func (newState *FeatureLineageModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureLineageModel) {
+}
+
+func (newState *FeatureLineageModel) SyncEffectiveFieldsDuringRead(existingState FeatureLineageModel) {
+}
+
+func (c FeatureLineageModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureLineageModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureLineageModel) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureLineageModel
+// only implements ToObjectValue() and Type().
+func (o FeatureLineageModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":    o.Name,
+			"version": o.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureLineageModel) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":    types.StringType,
+			"version": types.Int64Type,
+		},
+	}
+}
+
+type FeatureLineageOnlineFeature struct {
+	// The name of the online feature (column name).
+	FeatureName types.String `tfsdk:"feature_name"`
+	// The full name of the online table in Unity Catalog.
+	TableName types.String `tfsdk:"table_name"`
+}
+
+func (newState *FeatureLineageOnlineFeature) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureLineageOnlineFeature) {
+}
+
+func (newState *FeatureLineageOnlineFeature) SyncEffectiveFieldsDuringRead(existingState FeatureLineageOnlineFeature) {
+}
+
+func (c FeatureLineageOnlineFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_name"] = attrs["feature_name"].SetOptional()
+	attrs["table_name"] = attrs["table_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureLineageOnlineFeature.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureLineageOnlineFeature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureLineageOnlineFeature
+// only implements ToObjectValue() and Type().
+func (o FeatureLineageOnlineFeature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureLineageOnlineFeature) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"table_name":   types.StringType,
+		},
+	}
+}
+
+// Feature list wrap all the features for a model version
+type FeatureList struct {
+	Features types.List `tfsdk:"features"`
+}
+
+func (newState *FeatureList) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureList) {
+}
+
+func (newState *FeatureList) SyncEffectiveFieldsDuringRead(existingState FeatureList) {
+}
+
+func (c FeatureList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["features"] = attrs["features"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureList.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"features": reflect.TypeOf(Feature{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureList
+// only implements ToObjectValue() and Type().
+func (o FeatureList) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"features": o.Features,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureList) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"features": basetypes.ListType{
+				ElemType: Feature{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetFeatures returns the value of the Features field in FeatureList as
+// a slice of Feature values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FeatureList) GetFeatures(ctx context.Context) ([]Feature, bool) {
+	if o.Features.IsNull() || o.Features.IsUnknown() {
+		return nil, false
+	}
+	var v []Feature
+	d := o.Features.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeatures sets the value of the Features field in FeatureList.
+func (o *FeatureList) SetFeatures(ctx context.Context, v []Feature) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["features"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Features = types.ListValueMust(t, vs)
+}
+
+// Represents a tag on a feature in a feature table.
+type FeatureTag struct {
+	Key types.String `tfsdk:"key"`
+
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *FeatureTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan FeatureTag) {
+}
+
+func (newState *FeatureTag) SyncEffectiveFieldsDuringRead(existingState FeatureTag) {
+}
+
+func (c FeatureTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FeatureTag) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureTag
+// only implements ToObjectValue() and Type().
+func (o FeatureTag) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FeatureTag) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
 // Metadata of a single artifact file or directory.
 type FileInfo struct {
 	// The size in bytes of the file. Unset for directories.
@@ -4238,19 +4693,6 @@ type FinalizeLoggedModelRequest struct {
 	// ``"LOGGED_MODEL_UPLOAD_FAILED"`` indicates that something went wrong when
 	// logging the model weights / agent code.
 	Status types.String `tfsdk:"status"`
-}
-
-func (newState *FinalizeLoggedModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan FinalizeLoggedModelRequest) {
-}
-
-func (newState *FinalizeLoggedModelRequest) SyncEffectiveFieldsDuringRead(existingState FinalizeLoggedModelRequest) {
-}
-
-func (c FinalizeLoggedModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["model_id"] = attrs["model_id"].SetRequired()
-	attrs["status"] = attrs["status"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FinalizeLoggedModelRequest.
@@ -4802,6 +5244,89 @@ func (o *GetExperimentResponse) SetExperiment(ctx context.Context, v Experiment)
 	o.Experiment = vs
 }
 
+type GetFeatureLineageRequest struct {
+	// The name of the feature.
+	FeatureName types.String `tfsdk:"-"`
+	// The full name of the feature table in Unity Catalog.
+	TableName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFeatureLineageRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetFeatureLineageRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetFeatureLineageRequest
+// only implements ToObjectValue() and Type().
+func (o GetFeatureLineageRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetFeatureLineageRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"table_name":   types.StringType,
+		},
+	}
+}
+
+type GetFeatureTagRequest struct {
+	FeatureName types.String `tfsdk:"-"`
+
+	Key types.String `tfsdk:"-"`
+
+	TableName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFeatureTagRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetFeatureTagRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetFeatureTagRequest
+// only implements ToObjectValue() and Type().
+func (o GetFeatureTagRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"key":          o.Key,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetFeatureTagRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"key":          types.StringType,
+			"table_name":   types.StringType,
+		},
+	}
+}
+
 type GetForecastingExperimentRequest struct {
 	// The unique ID of a forecasting experiment
 	ExperimentId types.String `tfsdk:"-"`
@@ -4898,19 +5423,6 @@ type GetLatestVersionsRequest struct {
 	Name types.String `tfsdk:"name"`
 	// List of stages.
 	Stages types.List `tfsdk:"stages"`
-}
-
-func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsRequest) {
-}
-
-func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsRequest) {
-}
-
-func (c GetLatestVersionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["stages"] = attrs["stages"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLatestVersionsRequest.
@@ -6132,9 +6644,9 @@ func (o JobSpec) Type(ctx context.Context) attr.Type {
 type JobSpecWithoutSecret struct {
 	// ID of the job that the webhook runs.
 	JobId types.String `tfsdk:"job_id"`
-	// URL of the workspace containing the job that this webhook runs. Defaults
-	// to the workspace URL in which the webhook is created. If not specified,
-	// the job’s workspace is assumed to be the same as the webhook’s.
+	// URL of the workspace containing the job that this webhook runs. If not
+	// specified, the job’s workspace URL is assumed to be the same as the
+	// workspace where the webhook is created.
 	WorkspaceUrl types.String `tfsdk:"workspace_url"`
 }
 
@@ -6459,6 +6971,136 @@ func (o *ListExperimentsResponse) SetExperiments(ctx context.Context, v []Experi
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Experiments = types.ListValueMust(t, vs)
+}
+
+type ListFeatureTagsRequest struct {
+	FeatureName types.String `tfsdk:"-"`
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page based on a previous query.
+	PageToken types.String `tfsdk:"-"`
+
+	TableName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFeatureTagsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListFeatureTagsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListFeatureTagsRequest
+// only implements ToObjectValue() and Type().
+func (o ListFeatureTagsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"page_size":    o.PageSize,
+			"page_token":   o.PageToken,
+			"table_name":   o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListFeatureTagsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"table_name":   types.StringType,
+		},
+	}
+}
+
+// Response message for ListFeatureTag.
+type ListFeatureTagsResponse struct {
+	FeatureTags types.List `tfsdk:"feature_tags"`
+	// Pagination token to request the next page of results for this query.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListFeatureTagsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFeatureTagsResponse) {
+}
+
+func (newState *ListFeatureTagsResponse) SyncEffectiveFieldsDuringRead(existingState ListFeatureTagsResponse) {
+}
+
+func (c ListFeatureTagsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_tags"] = attrs["feature_tags"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFeatureTagsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListFeatureTagsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_tags": reflect.TypeOf(FeatureTag{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListFeatureTagsResponse
+// only implements ToObjectValue() and Type().
+func (o ListFeatureTagsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_tags":    o.FeatureTags,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListFeatureTagsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_tags": basetypes.ListType{
+				ElemType: FeatureTag{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetFeatureTags returns the value of the FeatureTags field in ListFeatureTagsResponse as
+// a slice of FeatureTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFeatureTagsResponse) GetFeatureTags(ctx context.Context) ([]FeatureTag, bool) {
+	if o.FeatureTags.IsNull() || o.FeatureTags.IsUnknown() {
+		return nil, false
+	}
+	var v []FeatureTag
+	d := o.FeatureTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeatureTags sets the value of the FeatureTags field in ListFeatureTagsResponse.
+func (o *ListFeatureTagsResponse) SetFeatureTags(ctx context.Context, v []FeatureTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["feature_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.FeatureTags = types.ListValueMust(t, vs)
 }
 
 type ListModelsRequest struct {
@@ -6792,7 +7434,7 @@ func (o *ListRegistryWebhooks) SetWebhooks(ctx context.Context, v []RegistryWebh
 }
 
 type ListTransitionRequestsRequest struct {
-	// Name of the model.
+	// Name of the registered model.
 	Name types.String `tfsdk:"-"`
 	// Version of the model.
 	Version types.String `tfsdk:"-"`
@@ -6910,12 +7552,48 @@ func (o *ListTransitionRequestsResponse) SetRequests(ctx context.Context, v []Ac
 }
 
 type ListWebhooksRequest struct {
+	// Events that trigger the webhook. * `MODEL_VERSION_CREATED`: A new model
+	// version was created for the associated model.
+	//
+	// * `MODEL_VERSION_TRANSITIONED_STAGE`: A model version’s stage was
+	// changed.
+	//
+	// * `TRANSITION_REQUEST_CREATED`: A user requested a model version’s
+	// stage be transitioned.
+	//
+	// * `COMMENT_CREATED`: A user wrote a comment on a registered model.
+	//
+	// * `REGISTERED_MODEL_CREATED`: A new registered model was created. This
+	// event type can only be specified for a registry-wide webhook, which can
+	// be created by not specifying a model name in the create request.
+	//
+	// * `MODEL_VERSION_TAG_SET`: A user set a tag on the model version.
+	//
+	// * `MODEL_VERSION_TRANSITIONED_TO_STAGING`: A model version was
+	// transitioned to staging.
+	//
+	// * `MODEL_VERSION_TRANSITIONED_TO_PRODUCTION`: A model version was
+	// transitioned to production.
+	//
+	// * `MODEL_VERSION_TRANSITIONED_TO_ARCHIVED`: A model version was archived.
+	//
+	// * `TRANSITION_REQUEST_TO_STAGING_CREATED`: A user requested a model
+	// version be transitioned to staging.
+	//
+	// * `TRANSITION_REQUEST_TO_PRODUCTION_CREATED`: A user requested a model
+	// version be transitioned to production.
+	//
+	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
+	// version be archived.
+	//
 	// If `events` is specified, any webhook with one or more of the specified
 	// trigger events is included in the output. If `events` is not specified,
 	// webhooks of all event types are included in the output.
 	Events types.List `tfsdk:"-"`
-	// If not specified, all webhooks associated with the specified events are
-	// listed, regardless of their associated model.
+
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Registered model name If not specified, all webhooks associated with the
+	// specified events are listed, regardless of their associated model.
 	ModelName types.String `tfsdk:"-"`
 	// Token indicating the page of artifact results to fetch
 	PageToken types.String `tfsdk:"-"`
@@ -6941,9 +7619,10 @@ func (o ListWebhooksRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"events":     o.Events,
-			"model_name": o.ModelName,
-			"page_token": o.PageToken,
+			"events":      o.Events,
+			"max_results": o.MaxResults,
+			"model_name":  o.ModelName,
+			"page_token":  o.PageToken,
 		})
 }
 
@@ -6954,8 +7633,9 @@ func (o ListWebhooksRequest) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"model_name": types.StringType,
-			"page_token": types.StringType,
+			"max_results": types.Int64Type,
+			"model_name":  types.StringType,
+			"page_token":  types.StringType,
 		},
 	}
 }
@@ -6998,21 +7678,6 @@ type LogBatch struct {
 	// Tags to log. A single request can contain up to 100 tags, and up to 1000
 	// metrics, params, and tags in total.
 	Tags types.List `tfsdk:"tags"`
-}
-
-func (newState *LogBatch) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogBatch) {
-}
-
-func (newState *LogBatch) SyncEffectiveFieldsDuringRead(existingState LogBatch) {
-}
-
-func (c LogBatch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metrics"] = attrs["metrics"].SetOptional()
-	attrs["params"] = attrs["params"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogBatch.
@@ -7190,20 +7855,6 @@ type LogInputs struct {
 	RunId types.String `tfsdk:"run_id"`
 }
 
-func (newState *LogInputs) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogInputs) {
-}
-
-func (newState *LogInputs) SyncEffectiveFieldsDuringRead(existingState LogInputs) {
-}
-
-func (c LogInputs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["datasets"] = attrs["datasets"].SetOptional()
-	attrs["models"] = attrs["models"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogInputs.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7346,19 +7997,6 @@ type LogLoggedModelParamsRequest struct {
 	Params types.List `tfsdk:"params"`
 }
 
-func (newState *LogLoggedModelParamsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogLoggedModelParamsRequest) {
-}
-
-func (newState *LogLoggedModelParamsRequest) SyncEffectiveFieldsDuringRead(existingState LogLoggedModelParamsRequest) {
-}
-
-func (c LogLoggedModelParamsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["model_id"] = attrs["model_id"].SetRequired()
-	attrs["params"] = attrs["params"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogLoggedModelParamsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7488,26 +8126,6 @@ type LogMetric struct {
 	Value types.Float64 `tfsdk:"value"`
 }
 
-func (newState *LogMetric) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogMetric) {
-}
-
-func (newState *LogMetric) SyncEffectiveFieldsDuringRead(existingState LogMetric) {
-}
-
-func (c LogMetric) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
-	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["model_id"] = attrs["model_id"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
-	attrs["step"] = attrs["step"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetRequired()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogMetric.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7603,19 +8221,6 @@ type LogModel struct {
 	RunId types.String `tfsdk:"run_id"`
 }
 
-func (newState *LogModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogModel) {
-}
-
-func (newState *LogModel) SyncEffectiveFieldsDuringRead(existingState LogModel) {
-}
-
-func (c LogModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["model_json"] = attrs["model_json"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogModel.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7695,19 +8300,6 @@ type LogOutputsRequest struct {
 	Models types.List `tfsdk:"models"`
 	// The ID of the Run from which to log outputs.
 	RunId types.String `tfsdk:"run_id"`
-}
-
-func (newState *LogOutputsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogOutputsRequest) {
-}
-
-func (newState *LogOutputsRequest) SyncEffectiveFieldsDuringRead(existingState LogOutputsRequest) {
-}
-
-func (c LogOutputsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["models"] = attrs["models"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogOutputsRequest.
@@ -7824,21 +8416,6 @@ type LogParam struct {
 	RunUuid types.String `tfsdk:"run_uuid"`
 	// String value of the param being logged. Maximum size is 500 bytes.
 	Value types.String `tfsdk:"value"`
-}
-
-func (newState *LogParam) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogParam) {
-}
-
-func (newState *LogParam) SyncEffectiveFieldsDuringRead(existingState LogParam) {
-}
-
-func (c LogParam) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogParam.
@@ -8625,14 +9202,13 @@ type ModelDatabricks struct {
 	Description types.String `tfsdk:"description"`
 	// Unique identifier for the object.
 	Id types.String `tfsdk:"id"`
-	// Time of the object at last update, as a Unix timestamp in milliseconds.
+	// Last update time of the object, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Array of model versions, each the latest version for its stage.
 	LatestVersions types.List `tfsdk:"latest_versions"`
 	// Name of the model.
 	Name types.String `tfsdk:"name"`
-	// Permission level of the requesting user on the object. For what is
-	// allowed at each level, see [MLflow Model permissions](..).
+	// Permission level granted for the requesting user on this registered model
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// Array of tags associated with the model.
 	Tags types.List `tfsdk:"tags"`
@@ -8869,6 +9445,7 @@ func (o ModelOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Tag for a registered model
 type ModelTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key"`
@@ -9066,24 +9643,25 @@ func (o *ModelVersion) SetTags(ctx context.Context, v []ModelVersionTag) {
 type ModelVersionDatabricks struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// Stage of the model version. Valid values are:
-	//
-	// * `None`: The initial stage of a model version.
-	//
-	// * `Staging`: Staging or pre-production stage.
-	//
-	// * `Production`: Production stage.
-	//
-	// * `Archived`: Archived stage.
+
 	CurrentStage types.String `tfsdk:"current_stage"`
 	// User-specified description for the object.
 	Description types.String `tfsdk:"description"`
+	// Email Subscription Status: This is the subscription status of the user to
+	// the model version Users get subscribed by interacting with the model
+	// version.
+	EmailSubscriptionStatus types.String `tfsdk:"email_subscription_status"`
+	// Feature lineage of `model_version`.
+	FeatureList types.Object `tfsdk:"feature_list"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Name of the model.
 	Name types.String `tfsdk:"name"`
-	// Permission level of the requesting user on the object. For what is
-	// allowed at each level, see [MLflow Model permissions](..).
+	// Open requests for this `model_versions`. Gap in sequence number is
+	// intentional and is done in order to match field sequence numbers of
+	// `ModelVersion` proto message
+	OpenRequests types.List `tfsdk:"open_requests"`
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// Unique identifier for the MLflow tracking run associated with the source
 	// model artifacts.
@@ -9095,14 +9673,7 @@ type ModelVersionDatabricks struct {
 	// URI that indicates the location of the source model artifacts. This is
 	// used when creating the model version.
 	Source types.String `tfsdk:"source"`
-	// The status of the model version. Valid values are: *
-	// `PENDING_REGISTRATION`: Request to register a new model version is
-	// pending as server performs background tasks.
-	//
-	// * `FAILED_REGISTRATION`: Request to register a new model version has
-	// failed.
-	//
-	// * `READY`: Model version is ready for use.
+
 	Status types.String `tfsdk:"status"`
 	// Details on the current status, for example why registration failed.
 	StatusMessage types.String `tfsdk:"status_message"`
@@ -9124,8 +9695,11 @@ func (c ModelVersionDatabricks) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["current_stage"] = attrs["current_stage"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["email_subscription_status"] = attrs["email_subscription_status"].SetOptional()
+	attrs["feature_list"] = attrs["feature_list"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["open_requests"] = attrs["open_requests"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_link"] = attrs["run_link"].SetOptional()
@@ -9148,7 +9722,9 @@ func (c ModelVersionDatabricks) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (a ModelVersionDatabricks) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(ModelVersionTag{}),
+		"feature_list":  reflect.TypeOf(FeatureList{}),
+		"open_requests": reflect.TypeOf(Activity{}),
+		"tags":          reflect.TypeOf(ModelVersionTag{}),
 	}
 }
 
@@ -9159,20 +9735,23 @@ func (o ModelVersionDatabricks) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":     o.CreationTimestamp,
-			"current_stage":          o.CurrentStage,
-			"description":            o.Description,
-			"last_updated_timestamp": o.LastUpdatedTimestamp,
-			"name":                   o.Name,
-			"permission_level":       o.PermissionLevel,
-			"run_id":                 o.RunId,
-			"run_link":               o.RunLink,
-			"source":                 o.Source,
-			"status":                 o.Status,
-			"status_message":         o.StatusMessage,
-			"tags":                   o.Tags,
-			"user_id":                o.UserId,
-			"version":                o.Version,
+			"creation_timestamp":        o.CreationTimestamp,
+			"current_stage":             o.CurrentStage,
+			"description":               o.Description,
+			"email_subscription_status": o.EmailSubscriptionStatus,
+			"feature_list":              o.FeatureList,
+			"last_updated_timestamp":    o.LastUpdatedTimestamp,
+			"name":                      o.Name,
+			"open_requests":             o.OpenRequests,
+			"permission_level":          o.PermissionLevel,
+			"run_id":                    o.RunId,
+			"run_link":                  o.RunLink,
+			"source":                    o.Source,
+			"status":                    o.Status,
+			"status_message":            o.StatusMessage,
+			"tags":                      o.Tags,
+			"user_id":                   o.UserId,
+			"version":                   o.Version,
 		})
 }
 
@@ -9180,17 +9759,22 @@ func (o ModelVersionDatabricks) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o ModelVersionDatabricks) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"creation_timestamp":     types.Int64Type,
-			"current_stage":          types.StringType,
-			"description":            types.StringType,
-			"last_updated_timestamp": types.Int64Type,
-			"name":                   types.StringType,
-			"permission_level":       types.StringType,
-			"run_id":                 types.StringType,
-			"run_link":               types.StringType,
-			"source":                 types.StringType,
-			"status":                 types.StringType,
-			"status_message":         types.StringType,
+			"creation_timestamp":        types.Int64Type,
+			"current_stage":             types.StringType,
+			"description":               types.StringType,
+			"email_subscription_status": types.StringType,
+			"feature_list":              FeatureList{}.Type(ctx),
+			"last_updated_timestamp":    types.Int64Type,
+			"name":                      types.StringType,
+			"open_requests": basetypes.ListType{
+				ElemType: Activity{}.Type(ctx),
+			},
+			"permission_level": types.StringType,
+			"run_id":           types.StringType,
+			"run_link":         types.StringType,
+			"source":           types.StringType,
+			"status":           types.StringType,
+			"status_message":   types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: ModelVersionTag{}.Type(ctx),
 			},
@@ -9198,6 +9782,60 @@ func (o ModelVersionDatabricks) Type(ctx context.Context) attr.Type {
 			"version": types.StringType,
 		},
 	}
+}
+
+// GetFeatureList returns the value of the FeatureList field in ModelVersionDatabricks as
+// a FeatureList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersionDatabricks) GetFeatureList(ctx context.Context) (FeatureList, bool) {
+	var e FeatureList
+	if o.FeatureList.IsNull() || o.FeatureList.IsUnknown() {
+		return e, false
+	}
+	var v []FeatureList
+	d := o.FeatureList.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFeatureList sets the value of the FeatureList field in ModelVersionDatabricks.
+func (o *ModelVersionDatabricks) SetFeatureList(ctx context.Context, v FeatureList) {
+	vs := v.ToObjectValue(ctx)
+	o.FeatureList = vs
+}
+
+// GetOpenRequests returns the value of the OpenRequests field in ModelVersionDatabricks as
+// a slice of Activity values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersionDatabricks) GetOpenRequests(ctx context.Context) ([]Activity, bool) {
+	if o.OpenRequests.IsNull() || o.OpenRequests.IsUnknown() {
+		return nil, false
+	}
+	var v []Activity
+	d := o.OpenRequests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOpenRequests sets the value of the OpenRequests field in ModelVersionDatabricks.
+func (o *ModelVersionDatabricks) SetOpenRequests(ctx context.Context, v []Activity) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["open_requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OpenRequests = types.ListValueMust(t, vs)
 }
 
 // GetTags returns the value of the Tags field in ModelVersionDatabricks as
@@ -9303,7 +9941,7 @@ func (newState *OnlineStore) SyncEffectiveFieldsDuringRead(existingState OnlineS
 }
 
 func (c OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["capacity"] = attrs["capacity"].SetOptional()
+	attrs["capacity"] = attrs["capacity"].SetRequired()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -9409,7 +10047,6 @@ type PublishSpec struct {
 	// The name of the target online store.
 	OnlineStore types.String `tfsdk:"online_store"`
 	// The full three-part (catalog, schema, table) name of the online table.
-	// Auto-generated if not specified.
 	OnlineTableName types.String `tfsdk:"online_table_name"`
 	// The publish mode of the pipeline that syncs the online table with the
 	// source table. Defaults to TRIGGERED if not specified. All publish modes
@@ -9425,7 +10062,7 @@ func (newState *PublishSpec) SyncEffectiveFieldsDuringRead(existingState Publish
 
 func (c PublishSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["online_store"] = attrs["online_store"].SetRequired()
-	attrs["online_table_name"] = attrs["online_table_name"].SetOptional()
+	attrs["online_table_name"] = attrs["online_table_name"].SetRequired()
 	attrs["publish_mode"] = attrs["publish_mode"].SetOptional()
 
 	return attrs
@@ -9471,19 +10108,6 @@ type PublishTableRequest struct {
 	PublishSpec types.Object `tfsdk:"publish_spec"`
 	// The full three-part (catalog, schema, table) name of the source table.
 	SourceTableName types.String `tfsdk:"-"`
-}
-
-func (newState *PublishTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishTableRequest) {
-}
-
-func (newState *PublishTableRequest) SyncEffectiveFieldsDuringRead(existingState PublishTableRequest) {
-}
-
-func (c PublishTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["publish_spec"] = attrs["publish_spec"].SetRequired()
-	attrs["source_table_name"] = attrs["source_table_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishTableRequest.
@@ -9605,7 +10229,7 @@ func (o PublishTableResponse) Type(ctx context.Context) attr.Type {
 type RegisteredModelAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -9767,7 +10391,7 @@ type RegisteredModelPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -9939,7 +10563,7 @@ func (o *RegisteredModelPermissions) SetAccessControlList(ctx context.Context, v
 
 type RegisteredModelPermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -9993,19 +10617,6 @@ type RegisteredModelPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
-}
-
-func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissionsRequest) {
-}
-
-func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsRequest) {
-}
-
-func (c RegisteredModelPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["registered_model_id"] = attrs["registered_model_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelPermissionsRequest.
@@ -10120,14 +10731,7 @@ type RegistryWebhook struct {
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Name of the model whose events would trigger this webhook.
 	ModelName types.String `tfsdk:"model_name"`
-	// Enable or disable triggering the webhook, or put the webhook into test
-	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
-	// associated event happens.
-	//
-	// * `DISABLED`: Webhook is not triggered.
-	//
-	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
-	// not triggered on a real event.
+
 	Status types.String `tfsdk:"status"`
 }
 
@@ -10286,6 +10890,8 @@ func (o *RegistryWebhook) SetJobSpec(ctx context.Context, v JobSpecWithoutSecret
 	o.JobSpec = vs
 }
 
+// Details required to identify and reject a model version stage transition
+// request.
 type RejectTransitionRequest struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment"`
@@ -10303,21 +10909,6 @@ type RejectTransitionRequest struct {
 	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequest) {
-}
-
-func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequest) {
-}
-
-func (c RejectTransitionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["stage"] = attrs["stage"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RejectTransitionRequest.
@@ -10358,7 +10949,7 @@ func (o RejectTransitionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type RejectTransitionRequestResponse struct {
-	// Activity recorded for the action.
+	// New activity generated as a result of this operation.
 	Activity types.Object `tfsdk:"activity"`
 }
 
@@ -10440,19 +11031,6 @@ type RenameModelRequest struct {
 	Name types.String `tfsdk:"name"`
 	// If provided, updates the name for this `registered_model`.
 	NewName types.String `tfsdk:"new_name"`
-}
-
-func (newState *RenameModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelRequest) {
-}
-
-func (newState *RenameModelRequest) SyncEffectiveFieldsDuringRead(existingState RenameModelRequest) {
-}
-
-func (c RenameModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RenameModelRequest.
@@ -10570,18 +11148,6 @@ type RestoreExperiment struct {
 	ExperimentId types.String `tfsdk:"experiment_id"`
 }
 
-func (newState *RestoreExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreExperiment) {
-}
-
-func (newState *RestoreExperiment) SyncEffectiveFieldsDuringRead(existingState RestoreExperiment) {
-}
-
-func (c RestoreExperiment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreExperiment.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10657,18 +11223,6 @@ func (o RestoreExperimentResponse) Type(ctx context.Context) attr.Type {
 type RestoreRun struct {
 	// ID of the run to restore.
 	RunId types.String `tfsdk:"run_id"`
-}
-
-func (newState *RestoreRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRun) {
-}
-
-func (newState *RestoreRun) SyncEffectiveFieldsDuringRead(existingState RestoreRun) {
-}
-
-func (c RestoreRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_id"] = attrs["run_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRun.
@@ -10753,20 +11307,6 @@ type RestoreRuns struct {
 	// restoring runs. Only runs deleted no earlier than this timestamp are
 	// restored.
 	MinTimestampMillis types.Int64 `tfsdk:"min_timestamp_millis"`
-}
-
-func (newState *RestoreRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRuns) {
-}
-
-func (newState *RestoreRuns) SyncEffectiveFieldsDuringRead(existingState RestoreRuns) {
-}
-
-func (c RestoreRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-	attrs["max_runs"] = attrs["max_runs"].SetOptional()
-	attrs["min_timestamp_millis"] = attrs["min_timestamp_millis"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRuns.
@@ -11431,22 +11971,6 @@ type SearchExperiments struct {
 	ViewType types.String `tfsdk:"view_type"`
 }
 
-func (newState *SearchExperiments) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchExperiments) {
-}
-
-func (newState *SearchExperiments) SyncEffectiveFieldsDuringRead(existingState SearchExperiments) {
-}
-
-func (c SearchExperiments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["order_by"] = attrs["order_by"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["view_type"] = attrs["view_type"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchExperiments.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11745,23 +12269,6 @@ type SearchLoggedModelsRequest struct {
 	OrderBy types.List `tfsdk:"order_by"`
 	// The token indicating the page of logged models to fetch.
 	PageToken types.String `tfsdk:"page_token"`
-}
-
-func (newState *SearchLoggedModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchLoggedModelsRequest) {
-}
-
-func (newState *SearchLoggedModelsRequest) SyncEffectiveFieldsDuringRead(existingState SearchLoggedModelsRequest) {
-}
-
-func (c SearchLoggedModelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["datasets"] = attrs["datasets"].SetOptional()
-	attrs["experiment_ids"] = attrs["experiment_ids"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["order_by"] = attrs["order_by"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchLoggedModelsRequest.
@@ -12339,23 +12846,6 @@ type SearchRuns struct {
 	RunViewType types.String `tfsdk:"run_view_type"`
 }
 
-func (newState *SearchRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRuns) {
-}
-
-func (newState *SearchRuns) SyncEffectiveFieldsDuringRead(existingState SearchRuns) {
-}
-
-func (c SearchRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_ids"] = attrs["experiment_ids"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["order_by"] = attrs["order_by"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["run_view_type"] = attrs["run_view_type"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchRuns.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12549,20 +13039,6 @@ type SetExperimentTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *SetExperimentTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetExperimentTag) {
-}
-
-func (newState *SetExperimentTag) SyncEffectiveFieldsDuringRead(existingState SetExperimentTag) {
-}
-
-func (c SetExperimentTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetExperimentTag.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12644,19 +13120,6 @@ type SetLoggedModelTagsRequest struct {
 	ModelId types.String `tfsdk:"-"`
 	// The tags to set on the logged model.
 	Tags types.List `tfsdk:"tags"`
-}
-
-func (newState *SetLoggedModelTagsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetLoggedModelTagsRequest) {
-}
-
-func (newState *SetLoggedModelTagsRequest) SyncEffectiveFieldsDuringRead(existingState SetLoggedModelTagsRequest) {
-}
-
-func (c SetLoggedModelTagsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["model_id"] = attrs["model_id"].SetRequired()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetLoggedModelTagsRequest.
@@ -12777,20 +13240,6 @@ type SetModelTagRequest struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelTagRequest) {
-}
-
-func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelTagRequest) {
-}
-
-func (c SetModelTagRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelTagRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12881,21 +13330,6 @@ type SetModelVersionTagRequest struct {
 	Value types.String `tfsdk:"value"`
 	// Model version number.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelVersionTagRequest) {
-}
-
-func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagRequest) {
-}
-
-func (c SetModelVersionTagRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["value"] = attrs["value"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelVersionTagRequest.
@@ -12989,21 +13423,6 @@ type SetTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *SetTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTag) {
-}
-
-func (newState *SetTag) SyncEffectiveFieldsDuringRead(existingState SetTag) {
-}
-
-func (c SetTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetTag.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13082,60 +13501,7 @@ func (o SetTagResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Test webhook response object.
-type TestRegistryWebhook struct {
-	// Body of the response from the webhook URL
-	Body types.String `tfsdk:"body"`
-	// Status code returned by the webhook URL
-	StatusCode types.Int64 `tfsdk:"status_code"`
-}
-
-func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhook) {
-}
-
-func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhook) {
-}
-
-func (c TestRegistryWebhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["body"] = attrs["body"].SetOptional()
-	attrs["status_code"] = attrs["status_code"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhook.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a TestRegistryWebhook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TestRegistryWebhook
-// only implements ToObjectValue() and Type().
-func (o TestRegistryWebhook) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"body":        o.Body,
-			"status_code": o.StatusCode,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o TestRegistryWebhook) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"body":        types.StringType,
-			"status_code": types.Int64Type,
-		},
-	}
-}
-
+// Details required to test a registry webhook.
 type TestRegistryWebhookRequest struct {
 	// If `event` is specified, the test trigger uses the specified event. If
 	// `event` is not specified, the test trigger uses a randomly chosen event
@@ -13143,19 +13509,6 @@ type TestRegistryWebhookRequest struct {
 	Event types.String `tfsdk:"event"`
 	// Webhook ID
 	Id types.String `tfsdk:"id"`
-}
-
-func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookRequest) {
-}
-
-func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookRequest) {
-}
-
-func (c TestRegistryWebhookRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["event"] = attrs["event"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhookRequest.
@@ -13192,8 +13545,10 @@ func (o TestRegistryWebhookRequest) Type(ctx context.Context) attr.Type {
 }
 
 type TestRegistryWebhookResponse struct {
-	// Test webhook response object.
-	Webhook types.Object `tfsdk:"webhook"`
+	// Body of the response from the webhook URL
+	Body types.String `tfsdk:"body"`
+	// Status code returned by the webhook URL
+	StatusCode types.Int64 `tfsdk:"status_code"`
 }
 
 func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookResponse) {
@@ -13203,7 +13558,8 @@ func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringRead(exist
 }
 
 func (c TestRegistryWebhookResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["webhook"] = attrs["webhook"].SetOptional()
+	attrs["body"] = attrs["body"].SetOptional()
+	attrs["status_code"] = attrs["status_code"].SetOptional()
 
 	return attrs
 }
@@ -13216,9 +13572,7 @@ func (c TestRegistryWebhookResponse) ApplySchemaCustomizations(attrs map[string]
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a TestRegistryWebhookResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"webhook": reflect.TypeOf(TestRegistryWebhook{}),
-	}
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -13228,7 +13582,8 @@ func (o TestRegistryWebhookResponse) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"webhook": o.Webhook,
+			"body":        o.Body,
+			"status_code": o.StatusCode,
 		})
 }
 
@@ -13236,39 +13591,13 @@ func (o TestRegistryWebhookResponse) ToObjectValue(ctx context.Context) basetype
 func (o TestRegistryWebhookResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"webhook": TestRegistryWebhook{}.Type(ctx),
+			"body":        types.StringType,
+			"status_code": types.Int64Type,
 		},
 	}
 }
 
-// GetWebhook returns the value of the Webhook field in TestRegistryWebhookResponse as
-// a TestRegistryWebhook value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *TestRegistryWebhookResponse) GetWebhook(ctx context.Context) (TestRegistryWebhook, bool) {
-	var e TestRegistryWebhook
-	if o.Webhook.IsNull() || o.Webhook.IsUnknown() {
-		return e, false
-	}
-	var v []TestRegistryWebhook
-	d := o.Webhook.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetWebhook sets the value of the Webhook field in TestRegistryWebhookResponse.
-func (o *TestRegistryWebhookResponse) SetWebhook(ctx context.Context, v TestRegistryWebhook) {
-	vs := v.ToObjectValue(ctx)
-	o.Webhook = vs
-}
-
+// Details required to transition a model version's stage.
 type TransitionModelVersionStageDatabricks struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
@@ -13289,22 +13618,6 @@ type TransitionModelVersionStageDatabricks struct {
 	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionModelVersionStageDatabricks) {
-}
-
-func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuringRead(existingState TransitionModelVersionStageDatabricks) {
-}
-
-func (c TransitionModelVersionStageDatabricks) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["archive_existing_versions"] = attrs["archive_existing_versions"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["stage"] = attrs["stage"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionModelVersionStageDatabricks.
@@ -13346,11 +13659,14 @@ func (o TransitionModelVersionStageDatabricks) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Transition request details.
+// For activities, this contains the activity recorded for the action. For
+// comments, this contains the comment details. For transition requests, this
+// contains the transition request details.
 type TransitionRequest struct {
 	// Array of actions on the activity allowed for the current viewer.
 	AvailableActions types.List `tfsdk:"available_actions"`
-	// User-provided comment associated with the transition request.
+	// User-provided comment associated with the activity, comment, or
+	// transition request.
 	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
@@ -13455,7 +13771,8 @@ func (o *TransitionRequest) SetAvailableActions(ctx context.Context, v []types.S
 }
 
 type TransitionStageResponse struct {
-	ModelVersion types.Object `tfsdk:"model_version"`
+	// Updated model version
+	ModelVersionDatabricks types.Object `tfsdk:"model_version_databricks"`
 }
 
 func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionStageResponse) {
@@ -13465,7 +13782,7 @@ func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringRead(existingS
 }
 
 func (c TransitionStageResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version_databricks"] = attrs["model_version_databricks"].SetOptional()
 
 	return attrs
 }
@@ -13479,7 +13796,7 @@ func (c TransitionStageResponse) ApplySchemaCustomizations(attrs map[string]tfsc
 // SDK values.
 func (a TransitionStageResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_version": reflect.TypeOf(ModelVersionDatabricks{}),
+		"model_version_databricks": reflect.TypeOf(ModelVersionDatabricks{}),
 	}
 }
 
@@ -13490,7 +13807,7 @@ func (o TransitionStageResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"model_version": o.ModelVersion,
+			"model_version_databricks": o.ModelVersionDatabricks,
 		})
 }
 
@@ -13498,21 +13815,21 @@ func (o TransitionStageResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o TransitionStageResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_version": ModelVersionDatabricks{}.Type(ctx),
+			"model_version_databricks": ModelVersionDatabricks{}.Type(ctx),
 		},
 	}
 }
 
-// GetModelVersion returns the value of the ModelVersion field in TransitionStageResponse as
+// GetModelVersionDatabricks returns the value of the ModelVersionDatabricks field in TransitionStageResponse as
 // a ModelVersionDatabricks value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TransitionStageResponse) GetModelVersion(ctx context.Context) (ModelVersionDatabricks, bool) {
+func (o *TransitionStageResponse) GetModelVersionDatabricks(ctx context.Context) (ModelVersionDatabricks, bool) {
 	var e ModelVersionDatabricks
-	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+	if o.ModelVersionDatabricks.IsNull() || o.ModelVersionDatabricks.IsUnknown() {
 		return e, false
 	}
 	var v []ModelVersionDatabricks
-	d := o.ModelVersion.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := o.ModelVersionDatabricks.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -13525,30 +13842,18 @@ func (o *TransitionStageResponse) GetModelVersion(ctx context.Context) (ModelVer
 	return v[0], true
 }
 
-// SetModelVersion sets the value of the ModelVersion field in TransitionStageResponse.
-func (o *TransitionStageResponse) SetModelVersion(ctx context.Context, v ModelVersionDatabricks) {
+// SetModelVersionDatabricks sets the value of the ModelVersionDatabricks field in TransitionStageResponse.
+func (o *TransitionStageResponse) SetModelVersionDatabricks(ctx context.Context, v ModelVersionDatabricks) {
 	vs := v.ToObjectValue(ctx)
-	o.ModelVersion = vs
+	o.ModelVersionDatabricks = vs
 }
 
+// Details required to edit a comment on a model version.
 type UpdateComment struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment"`
 	// Unique identifier of an activity
 	Id types.String `tfsdk:"id"`
-}
-
-func (newState *UpdateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComment) {
-}
-
-func (newState *UpdateComment) SyncEffectiveFieldsDuringRead(existingState UpdateComment) {
-}
-
-func (c UpdateComment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateComment.
@@ -13585,7 +13890,7 @@ func (o UpdateComment) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateCommentResponse struct {
-	// Comment details.
+	// Updated comment object
 	Comment types.Object `tfsdk:"comment"`
 }
 
@@ -13670,19 +13975,6 @@ type UpdateExperiment struct {
 	NewName types.String `tfsdk:"new_name"`
 }
 
-func (newState *UpdateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExperiment) {
-}
-
-func (newState *UpdateExperiment) SyncEffectiveFieldsDuringRead(existingState UpdateExperiment) {
-}
-
-func (c UpdateExperiment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExperiment.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13757,24 +14049,92 @@ func (o UpdateExperimentResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type UpdateFeatureTagRequest struct {
+	FeatureName types.String `tfsdk:"-"`
+
+	FeatureTag types.Object `tfsdk:"feature_tag"`
+
+	Key types.String `tfsdk:"-"`
+
+	TableName types.String `tfsdk:"-"`
+	// The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateFeatureTagRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateFeatureTagRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_tag": reflect.TypeOf(FeatureTag{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateFeatureTagRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateFeatureTagRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name": o.FeatureName,
+			"feature_tag":  o.FeatureTag,
+			"key":          o.Key,
+			"table_name":   o.TableName,
+			"update_mask":  o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateFeatureTagRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name": types.StringType,
+			"feature_tag":  FeatureTag{}.Type(ctx),
+			"key":          types.StringType,
+			"table_name":   types.StringType,
+			"update_mask":  types.StringType,
+		},
+	}
+}
+
+// GetFeatureTag returns the value of the FeatureTag field in UpdateFeatureTagRequest as
+// a FeatureTag value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateFeatureTagRequest) GetFeatureTag(ctx context.Context) (FeatureTag, bool) {
+	var e FeatureTag
+	if o.FeatureTag.IsNull() || o.FeatureTag.IsUnknown() {
+		return e, false
+	}
+	var v []FeatureTag
+	d := o.FeatureTag.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFeatureTag sets the value of the FeatureTag field in UpdateFeatureTagRequest.
+func (o *UpdateFeatureTagRequest) SetFeatureTag(ctx context.Context, v FeatureTag) {
+	vs := v.ToObjectValue(ctx)
+	o.FeatureTag = vs
+}
+
 type UpdateModelRequest struct {
 	// If provided, updates the description for this `registered_model`.
 	Description types.String `tfsdk:"description"`
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name"`
-}
-
-func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelRequest) {
-}
-
-func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelRequest) {
-}
-
-func (c UpdateModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelRequest.
@@ -13811,6 +14171,19 @@ func (o UpdateModelRequest) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateModelResponse struct {
+	RegisteredModel types.Object `tfsdk:"registered_model"`
+}
+
+func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelResponse) {
+}
+
+func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelResponse) {
+}
+
+func (c UpdateModelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["registered_model"] = attrs["registered_model"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelResponse.
@@ -13821,7 +14194,9 @@ type UpdateModelResponse struct {
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a UpdateModelResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"registered_model": reflect.TypeOf(Model{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -13830,14 +14205,46 @@ func (a UpdateModelResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 func (o UpdateModelResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"registered_model": o.RegisteredModel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (o UpdateModelResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"registered_model": Model{}.Type(ctx),
+		},
 	}
+}
+
+// GetRegisteredModel returns the value of the RegisteredModel field in UpdateModelResponse as
+// a Model value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateModelResponse) GetRegisteredModel(ctx context.Context) (Model, bool) {
+	var e Model
+	if o.RegisteredModel.IsNull() || o.RegisteredModel.IsUnknown() {
+		return e, false
+	}
+	var v []Model
+	d := o.RegisteredModel.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRegisteredModel sets the value of the RegisteredModel field in UpdateModelResponse.
+func (o *UpdateModelResponse) SetRegisteredModel(ctx context.Context, v Model) {
+	vs := v.ToObjectValue(ctx)
+	o.RegisteredModel = vs
 }
 
 type UpdateModelVersionRequest struct {
@@ -13847,20 +14254,6 @@ type UpdateModelVersionRequest struct {
 	Name types.String `tfsdk:"name"`
 	// Model version number
 	Version types.String `tfsdk:"version"`
-}
-
-func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest) {
-}
-
-func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest) {
-}
-
-func (c UpdateModelVersionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelVersionRequest.
@@ -13899,6 +14292,20 @@ func (o UpdateModelVersionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateModelVersionResponse struct {
+	// Return new version number generated for this model in registry.
+	ModelVersion types.Object `tfsdk:"model_version"`
+}
+
+func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionResponse) {
+}
+
+func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionResponse) {
+}
+
+func (c UpdateModelVersionResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelVersionResponse.
@@ -13909,7 +14316,9 @@ type UpdateModelVersionResponse struct {
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a UpdateModelVersionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"model_version": reflect.TypeOf(ModelVersion{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -13918,22 +14327,53 @@ func (a UpdateModelVersionResponse) GetComplexFieldTypes(ctx context.Context) ma
 func (o UpdateModelVersionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"model_version": o.ModelVersion,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (o UpdateModelVersionResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"model_version": ModelVersion{}.Type(ctx),
+		},
 	}
+}
+
+// GetModelVersion returns the value of the ModelVersion field in UpdateModelVersionResponse as
+// a ModelVersion value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateModelVersionResponse) GetModelVersion(ctx context.Context) (ModelVersion, bool) {
+	var e ModelVersion
+	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+		return e, false
+	}
+	var v []ModelVersion
+	d := o.ModelVersion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersion sets the value of the ModelVersion field in UpdateModelVersionResponse.
+func (o *UpdateModelVersionResponse) SetModelVersion(ctx context.Context, v ModelVersion) {
+	vs := v.ToObjectValue(ctx)
+	o.ModelVersion = vs
 }
 
 type UpdateOnlineStoreRequest struct {
 	// The name of the online store. This is the unique identifier for the
 	// online store.
 	Name types.String `tfsdk:"-"`
-	// An OnlineStore is a logical database instance that stores and serves
-	// features online.
+	// Online store to update.
 	OnlineStore types.Object `tfsdk:"online_store"`
 	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
@@ -14004,6 +14444,9 @@ func (o *UpdateOnlineStoreRequest) SetOnlineStore(ctx context.Context, v OnlineS
 	o.OnlineStore = vs
 }
 
+// Details required to update a registry webhook. Only the fields that need to
+// be updated should be specified, and both `http_url_spec` and `job_spec`
+// should not be specified in the same request.
 type UpdateRegistryWebhook struct {
 	// User-specified description for the webhook.
 	Description types.String `tfsdk:"description"`
@@ -14047,32 +14490,8 @@ type UpdateRegistryWebhook struct {
 	Id types.String `tfsdk:"id"`
 
 	JobSpec types.Object `tfsdk:"job_spec"`
-	// Enable or disable triggering the webhook, or put the webhook into test
-	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
-	// associated event happens.
-	//
-	// * `DISABLED`: Webhook is not triggered.
-	//
-	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
-	// not triggered on a real event.
+
 	Status types.String `tfsdk:"status"`
-}
-
-func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegistryWebhook) {
-}
-
-func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState UpdateRegistryWebhook) {
-}
-
-func (c UpdateRegistryWebhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["events"] = attrs["events"].SetOptional()
-	attrs["http_url_spec"] = attrs["http_url_spec"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["job_spec"] = attrs["job_spec"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRegistryWebhook.
@@ -14218,22 +14637,6 @@ type UpdateRun struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *UpdateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRun) {
-}
-
-func (newState *UpdateRun) SyncEffectiveFieldsDuringRead(existingState UpdateRun) {
-}
-
-func (c UpdateRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["end_time"] = attrs["end_time"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
-	attrs["run_name"] = attrs["run_name"].SetOptional()
-	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14352,6 +14755,19 @@ func (o *UpdateRunResponse) SetRunInfo(ctx context.Context, v RunInfo) {
 }
 
 type UpdateWebhookResponse struct {
+	Webhook types.Object `tfsdk:"webhook"`
+}
+
+func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWebhookResponse) {
+}
+
+func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringRead(existingState UpdateWebhookResponse) {
+}
+
+func (c UpdateWebhookResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["webhook"] = attrs["webhook"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWebhookResponse.
@@ -14362,7 +14778,9 @@ type UpdateWebhookResponse struct {
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a UpdateWebhookResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"webhook": reflect.TypeOf(RegistryWebhook{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -14371,12 +14789,44 @@ func (a UpdateWebhookResponse) GetComplexFieldTypes(ctx context.Context) map[str
 func (o UpdateWebhookResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"webhook": o.Webhook,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (o UpdateWebhookResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"webhook": RegistryWebhook{}.Type(ctx),
+		},
 	}
+}
+
+// GetWebhook returns the value of the Webhook field in UpdateWebhookResponse as
+// a RegistryWebhook value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWebhookResponse) GetWebhook(ctx context.Context) (RegistryWebhook, bool) {
+	var e RegistryWebhook
+	if o.Webhook.IsNull() || o.Webhook.IsUnknown() {
+		return e, false
+	}
+	var v []RegistryWebhook
+	d := o.Webhook.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhook sets the value of the Webhook field in UpdateWebhookResponse.
+func (o *UpdateWebhookResponse) SetWebhook(ctx context.Context, v RegistryWebhook) {
+	vs := v.ToObjectValue(ctx)
+	o.Webhook = vs
 }

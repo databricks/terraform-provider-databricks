@@ -9,8 +9,8 @@ subcategory: "Machine Learning"
 
 ## Arguments
 The following arguments are supported:
+* `capacity` (string, required) - The capacity of the online store. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
-* `capacity` (string, optional) - The capacity of the online store. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

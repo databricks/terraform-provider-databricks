@@ -69,6 +69,8 @@ The following arguments are supported:
 * `evaluation` (AlertV2Evaluation, optional) - 
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string, optional) - Text of the query to be run
+* `run_as_user_name` (string, optional) - The run as username or application ID of service principal. This field is set to "Unavailable" if the user has been deleted.
+  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. If not specified it'll default to be request user
 * `schedule` (CronSchedule, optional) - 
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
 
@@ -116,7 +118,6 @@ In addition to the above arguments, the following attributes are exported:
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
-* `run_as_user_name` (string) - The run as username. This field is set to "Unavailable" if the user has been deleted
 * `update_time` (string) - The timestamp indicating when the alert was updated
 
 ### AlertV2Evaluation

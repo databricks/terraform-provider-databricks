@@ -114,23 +114,6 @@ type CreateCustomAppIntegration struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration) {
-}
-
-func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration) {
-}
-
-func (c CreateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["confidential"] = attrs["confidential"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -356,19 +339,6 @@ type CreatePublishedAppIntegration struct {
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
-func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration) {
-}
-
-func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration) {
-}
-
-func (c CreatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["app_id"] = attrs["app_id"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePublishedAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -561,19 +531,6 @@ type CreateServicePrincipalSecretRequest struct {
 	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest) {
-}
-
-func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest) {
-}
-
-func (c CreateServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["lifetime"] = attrs["lifetime"].SetOptional()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -999,8 +956,7 @@ type FederationPolicy struct {
 	// which does not need to be specified in create or update requests. If
 	// specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name"`
-	// Specifies the policy to use for validating OIDC claims in your federated
-	// tokens.
+
 	OidcPolicy types.Object `tfsdk:"oidc_policy"`
 	// The ID of the federation policy.
 	PolicyId types.String `tfsdk:"policy_id"`
@@ -2731,22 +2687,6 @@ type UpdateCustomAppIntegration struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration) {
-}
-
-func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration) {
-}
-
-func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2948,19 +2888,6 @@ type UpdatePublishedAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
-}
-
-func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration) {
-}
-
-func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration) {
-}
-
-func (c UpdatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePublishedAppIntegration.

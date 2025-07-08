@@ -368,15 +368,7 @@ func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string,
 	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		// HasChange allows to check if the field is explicitly changed in the configuration.
-		// // If the field is explicitly set in the configuration, we should not suppress the diff.
-		// log.Printf("[DEBUG] IsNull: %v: %v", k, d.GetRawConfig().IsNull())
-
-		// v, ok := d.GetOkExists(k)
-		// log.Printf("[DEBUG] GetOkExists: %v: (%v, %v)", k, v, ok)
-
-		// old1, new1 := d.GetChange(k)
-		// log.Printf("[DEBUG] GetChange: %v: (%v, %v)", k, old1, new1)
-
+		// If the field is explicitly set in the configuration, we should not suppress the diff.
 		if new == zero && old != zero && !d.HasChange(k) {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true

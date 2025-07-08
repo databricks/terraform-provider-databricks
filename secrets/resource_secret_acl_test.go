@@ -1,6 +1,7 @@
 package secrets
 
 import (
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -79,6 +80,10 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 }
 
 func TestResourceSecretACLCreate(t *testing.T) {
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -88,6 +93,21 @@ func TestResourceSecretACLCreate(t *testing.T) {
 					Principal:  "something",
 					Permission: "MANAGE",
 					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
+			// Additional GET for ApplyAndExpectData's automatic read verification
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
 				},
 			},
 		},
@@ -107,6 +127,10 @@ func TestResourceSecretACLCreate(t *testing.T) {
 }
 
 func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -116,6 +140,21 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 					Principal:  "something",
 					Permission: workspace.AclPermissionManage,
 					Scope:      "myapplication/branch",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=myapplication%2Fbranch",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
+			// Additional GET for ApplyAndExpectData's automatic read verification
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=myapplication%2Fbranch",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
 				},
 			},
 		},
@@ -135,13 +174,99 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 }
 
 func TestResourceSecretACLCreate_Error(t *testing.T) {
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
+	// Add 3 failures to test that all 3 retries are attempted
+	fixtures := []qa.HTTPFixture{}
+	for i := 0; i < 3; i++ {
+		fixtures = append(fixtures, qa.HTTPFixture{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/put",
+			Response: internalErrorResponse,
+			Status:   400,
+		})
+	}
+	
 	d, err := qa.ResourceFixture{
+		Fixtures: fixtures,
+		Resource: ResourceSecretACL(),
+		State: map[string]any{
+			"permission": "MANAGE",
+			"principal":  "something",
+			"scope":      "global",
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "failed to create Secret ACL after 3 attempts")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceSecretACLCreate_RetriesOnVerificationFailure(t *testing.T) {
+	// This test verifies that the create operation retries when verification fails
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{ // read log output for better stub url...
+			// First attempt - PUT succeeds, GET fails
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/put",
-				Response: internalErrorResponse,
-				Status:   400,
+				ExpectedRequest: workspace.PutAcl{
+					Principal:  "something",
+					Permission: "MANAGE",
+					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: doesNotExistResponse,
+				Status:   404,
+			},
+			// Second attempt - PUT succeeds, GET fails
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/put",
+				ExpectedRequest: workspace.PutAcl{
+					Principal:  "something",
+					Permission: "MANAGE",
+					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: doesNotExistResponse,
+				Status:   404,
+			},
+			// Third attempt - PUT succeeds, GET succeeds
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/put",
+				ExpectedRequest: workspace.PutAcl{
+					Principal:  "something",
+					Permission: "MANAGE",
+					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
+			// Additional GET for ApplyAndExpectData's automatic read verification
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
 			},
 		},
 		Resource: ResourceSecretACL(),
@@ -151,9 +276,119 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			"scope":      "global",
 		},
 		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"permission": "MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+		"id":         "global|||something",
+	})
+}
+
+func TestResourceSecretACLCreate_RetriesOnPermissionMismatch(t *testing.T) {
+	// This test verifies that the create operation retries when permission doesn't match
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			// First attempt - PUT succeeds, GET returns wrong permission
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/put",
+				ExpectedRequest: workspace.PutAcl{
+					Principal:  "something",
+					Permission: "MANAGE",
+					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "READ", // Wrong permission
+				},
+			},
+			// Second attempt - PUT succeeds, GET returns correct permission
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/put",
+				ExpectedRequest: workspace.PutAcl{
+					Principal:  "something",
+					Permission: "MANAGE",
+					Scope:      "global",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
+			// Additional GET for ApplyAndExpectData's automatic read verification
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
+		},
+		Resource: ResourceSecretACL(),
+		State: map[string]any{
+			"permission": "MANAGE",
+			"principal":  "something",
+			"scope":      "global",
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"permission": "MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+		"id":         "global|||something",
+	})
+}
+
+func TestResourceSecretACLCreate_ExhaustsRetries(t *testing.T) {
+	// This test verifies that the create operation fails after 3 attempts
+	// Set retry interval to 1ms for faster testing
+	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
+	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
+	
+	fixtures := []qa.HTTPFixture{}
+	
+	// Add 3 attempts, each with PUT success but GET failure
+	for i := 0; i < 3; i++ {
+		fixtures = append(fixtures, qa.HTTPFixture{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/put",
+			ExpectedRequest: workspace.PutAcl{
+				Principal:  "something",
+				Permission: "MANAGE",
+				Scope:      "global",
+			},
+		})
+		fixtures = append(fixtures, qa.HTTPFixture{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+			Response: doesNotExistResponse,
+			Status:   404,
+		})
+	}
+	
+	d, err := qa.ResourceFixture{
+		Fixtures: fixtures,
+		Resource: ResourceSecretACL(),
+		State: map[string]any{
+			"permission": "MANAGE",
+			"principal":  "something",
+			"scope":      "global",
+		},
+		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	qa.AssertErrorStartsWith(t, err, "secret ACL creation could not be verified after 3 attempts")
+	assert.Equal(t, "", d.Id(), "Id should be empty when all retries are exhausted")
 }
 
 func TestResourceSecretACLDelete(t *testing.T) {

@@ -4,10 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"reflect"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -159,73 +156,43 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-// This function checks if the `_apply_policy_default_values_except_fields` field is set.
-// If it is, only the fields it contains are sent to the API.
-// Only users who use the `apply_policy_default_values` setting with cluster policy defaults need this.
+const (
+	applyPolicyDefaultValuesAllowListField = "__apply_policy_default_values_allow_list"
+)
+
+// This function filters the cluster specification based on the `__apply_policy_default_values_allow_list` field.
+// When this field is configured, only the specified fields are included in the API request.
+// This feature is specifically designed for users leveraging cluster policy defaults with the `apply_policy_default_values` setting.
+//
+// The `__apply_policy_default_values_allow_list` field contains a list of allowed field names within the cluster specification.
+// These field names correspond to the actual fields in the cluster spec structure.
 func observeApplyPolicyDefaultValuesAllowList(d *schema.ResourceData, prefix string, clusterSpec *compute.ClusterSpec) error {
-	_, new := d.GetChange(prefix + "._do_not_use_this_apply_policy_default_values_allow_list")
-	if new == nil {
+	// Skip if the `apply_policy_default_values` setting is not enabled.
+	applyPolicyDefaultValues, ok := d.GetOk(prefix + ".apply_policy_default_values")
+	if !ok || !applyPolicyDefaultValues.(bool) {
 		return nil
 	}
 
-	log.Printf("[DEBUG] new: %v", new)
-
-	var output compute.ClusterSpec
-
-	// Copy only the fields from the allow list from the input to the output.
-	// The input is the cluster spec as it is in the resource data.
-	// The output is the cluster spec as it is in the API.
-	// Use reflection to copy only the allowed fields from input to output
-	inputValue := reflect.ValueOf(clusterSpec).Elem()
-	outputValue := reflect.ValueOf(&output).Elem()
-
-	// Create a map of allowed field names for quick lookup
-	allowedFields := make(map[string]bool)
-	for _, field := range new.([]any) {
-		fieldStr, ok := field.(string)
-		if !ok {
-			return fmt.Errorf("expected string for %s._do_not_use_this_apply_policy_default_values_allow_list, got %T", prefix, field)
-		}
-		allowedFields[fieldStr] = true
+	// Skip if the `__apply_policy_default_values_allow_list` is not set or empty.
+	v, ok := d.GetOk(prefix + "." + applyPolicyDefaultValuesAllowListField)
+	if !ok {
+		return nil
 	}
 
-	// Always allow the `policy_id` and the `apply_policy_default_values` fields.
-	allowedFields["policy_id"] = true
-	allowedFields["apply_policy_default_values"] = true
-
-	// Iterate through all fields of the input struct
-	inputType := inputValue.Type()
-	for i := 0; i < inputValue.NumField(); i++ {
-		field := inputValue.Field(i)
-		fieldType := inputType.Field(i)
-
-		// Get the JSON tag to identify the field
-		jsonTag := fieldType.Tag.Get("json")
-		if jsonTag == "" || jsonTag == "-" {
-			continue // Skip fields without JSON tags or explicitly ignored
-		}
-
-		// Extract the field name from the JSON tag (remove omitempty, etc.)
-		fieldName := strings.Split(jsonTag, ",")[0]
-
-		// Check if this field is in the allow list
-		if allowedFields[fieldName] {
-			// Find the corresponding field in the output struct
-			outputField := outputValue.FieldByName(fieldType.Name)
-			if outputField.IsValid() && outputField.CanSet() {
-				// Copy the field value
-				outputField.Set(field)
-				log.Printf("[DEBUG] Copied field %s (%s) from input to output", fieldType.Name, fieldName)
-			} else {
-				log.Printf("[DEBUG] Could not set field %s (%s) in output", fieldType.Name, fieldName)
-			}
-		} else {
-			log.Printf("[DEBUG] Skipping field %s (%s) because it is not in the allow list", fieldType.Name, fieldName)
-		}
+	// Load as a list of strings.
+	var allowList []string
+	for _, v := range v.([]any) {
+		allowList = append(allowList, v.(string))
 	}
+
+	// Always include the fields associated with usage of this feature.
+	allowList = append(allowList, "apply_policy_default_values", "policy_id")
+
+	// Copy the fields from the allow list from the input to the output.
+	out := common.CopyViaJSON(clusterSpec, allowList)
 
 	// Replace the input with the filtered output
-	*clusterSpec = output
+	*clusterSpec = *out
 	return nil
 }
 

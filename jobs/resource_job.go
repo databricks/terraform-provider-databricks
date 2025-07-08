@@ -542,13 +542,23 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "task"), "task.0.")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "job_cluster"), "job_cluster.0.")
 
-	sub := common.MustSchemaMap(s.GetSchemaMap(), "job_cluster", "new_cluster")
-	sub["_do_not_use_this_apply_policy_default_values_allow_list"] = &schema.Schema{
-		Optional: true,
-		Type:     schema.TypeList,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
+	// Include an additional field to the cluster schema.
+	// This field can be set to control which fields are sent to the API.
+	// This is necessary to avoid including previously set server-side defaults when
+	// updating a job, when the user intent is to apply new cluster policy defaults.
+	for _, sub := range []map[string]*schema.Schema{
+		// Cluster specs can be configured in a task.
+		common.MustSchemaMap(s.GetSchemaMap(), "task", "new_cluster"),
+		// Cluster specs can be configured in a job cluster.
+		common.MustSchemaMap(s.GetSchemaMap(), "job_cluster", "new_cluster"),
+	} {
+		sub[applyPolicyDefaultValuesAllowListField] = &schema.Schema{
+			Optional: true,
+			Type:     schema.TypeList,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		}
 	}
 
 	gitSourceSchema(common.MustSchemaMap(s.GetSchemaMap(), "git_source"), "")

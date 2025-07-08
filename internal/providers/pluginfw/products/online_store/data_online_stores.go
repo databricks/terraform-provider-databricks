@@ -90,17 +90,17 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	var online_stores = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var online_store ml_tf.OnlineStore
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &online_store)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		online_stores = append(online_stores, online_store.ToObjectValue(ctx))
+		results = append(results, online_store.ToObjectValue(ctx))
 	}
 
 	var newState OnlineStoresList
-	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), online_stores)
+	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

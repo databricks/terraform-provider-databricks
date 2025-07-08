@@ -1544,8 +1544,7 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	//
 	// 2. Its invite_recipient_email is empty.
 	Collaborators types.List `tfsdk:"collaborators"`
-	// The compliance security profile used to process regulated data following
-	// compliance standards.
+
 	ComplianceSecurityProfile types.List `tfsdk:"compliance_security_profile"`
 	// Collaborator who creates the clean room.
 	Creator types.List `tfsdk:"creator"`
@@ -1895,7 +1894,6 @@ func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Con
 }
 
 type CreateCleanRoomAssetRequest_SdkV2 struct {
-	// Metadata of the clean room asset
 	Asset types.List `tfsdk:"asset"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2298,36 +2296,6 @@ func (o DeleteCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 		},
-	}
-}
-
-type DeleteResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -2796,7 +2764,8 @@ func (o *ListCleanRoomsResponse_SdkV2) SetCleanRooms(ctx context.Context, v []Cl
 }
 
 type UpdateCleanRoomAssetRequest_SdkV2 struct {
-	// Metadata of the clean room asset
+	// The asset to update. The asset's `name` and `asset_type` fields are used
+	// to identify the asset to update.
 	Asset types.List `tfsdk:"asset"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
@@ -2883,20 +2852,6 @@ type UpdateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomRequest_SdkV2) {
-}
-
-func (newState *UpdateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest_SdkV2) {
-}
-
-func (c UpdateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room"] = attrs["clean_room"].SetOptional()
-	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.

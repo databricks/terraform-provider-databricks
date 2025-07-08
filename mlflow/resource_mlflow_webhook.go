@@ -95,7 +95,8 @@ func ResourceMlflowWebhook() common.Resource {
 			var m ml.UpdateRegistryWebhook
 			common.DataToStructPointer(d, s, &m)
 			m.Id = d.Id()
-			return w.ModelRegistry.UpdateWebhook(ctx, m)
+			_, err = w.ModelRegistry.UpdateWebhook(ctx, m)
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

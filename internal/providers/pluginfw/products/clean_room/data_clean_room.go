@@ -1,51 +1,51 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package quality_monitor_v2
+package clean_room
 
 import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
+	"github.com/databricks/databricks-sdk-go/service/cleanrooms"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/cleanrooms_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
-const dataSourceName = "quality_monitor_v2"
+const dataSourceName = "clean_room"
 
-var _ datasource.DataSourceWithConfigure = &QualityMonitorDataSource{}
+var _ datasource.DataSourceWithConfigure = &CleanRoomDataSource{}
 
-func DataSourceQualityMonitor() datasource.DataSource {
-	return &QualityMonitorDataSource{}
+func DataSourceCleanRoom() datasource.DataSource {
+	return &CleanRoomDataSource{}
 }
 
-type QualityMonitorDataSource struct {
+type CleanRoomDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *QualityMonitorDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *CleanRoomDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *QualityMonitorDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, qualitymonitorv2_tf.QualityMonitor{}, nil)
+func (r *CleanRoomDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, cleanrooms_tf.CleanRoom{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks QualityMonitor",
+		Description: "Terraform schema for Databricks CleanRoom",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *QualityMonitorDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *CleanRoomDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *CleanRoomDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -54,30 +54,30 @@ func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var config qualitymonitorv2_tf.QualityMonitor
+	var config cleanrooms_tf.CleanRoom
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest qualitymonitorv2.GetQualityMonitorRequest
+	var readRequest cleanrooms.GetCleanRoomRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.QualityMonitorV2.GetQualityMonitor(ctx, readRequest)
+	response, err := client.CleanRooms.Get(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get quality_monitor_v2", err.Error())
+		resp.Diagnostics.AddError("failed to get clean_room", err.Error())
 		return
 	}
 
-	var newState qualitymonitorv2_tf.QualityMonitor
+	var newState cleanrooms_tf.CleanRoom
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

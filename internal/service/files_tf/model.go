@@ -30,19 +30,6 @@ type AddBlock struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock) {
-}
-
-func (newState *AddBlock) SyncEffectiveFieldsDuringRead(existingState AddBlock) {
-}
-
-func (c AddBlock) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data"] = attrs["data"].SetRequired()
-	attrs["handle"] = attrs["handle"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -122,18 +109,6 @@ type Close struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
-}
-
-func (newState *Close) SyncEffectiveFieldsDuringRead(existingState Close) {
-}
-
-func (c Close) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["handle"] = attrs["handle"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -211,19 +186,6 @@ type Create struct {
 	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The path of the new file. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path"`
-}
-
-func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
-}
-
-func (newState *Create) SyncEffectiveFieldsDuringRead(existingState Create) {
-}
-
-func (c Create) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
@@ -381,19 +343,6 @@ type Delete struct {
 	// Whether or not to recursively delete the directory's contents. Deleting
 	// empty directories can be done without providing the recursive flag.
 	Recursive types.Bool `tfsdk:"recursive"`
-}
-
-func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
-}
-
-func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
-}
-
-func (c Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-	attrs["recursive"] = attrs["recursive"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
@@ -1235,18 +1184,6 @@ type MkDirs struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
-}
-
-func (newState *MkDirs) SyncEffectiveFieldsDuringRead(existingState MkDirs) {
-}
-
-func (c MkDirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1326,19 +1263,6 @@ type Move struct {
 	// The source path of the file or directory. The path should be the absolute
 	// DBFS path.
 	SourcePath types.String `tfsdk:"source_path"`
-}
-
-func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
-}
-
-func (newState *Move) SyncEffectiveFieldsDuringRead(existingState Move) {
-}
-
-func (c Move) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_path"] = attrs["destination_path"].SetRequired()
-	attrs["source_path"] = attrs["source_path"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
@@ -1422,20 +1346,6 @@ type Put struct {
 	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The path of the new file. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path"`
-}
-
-func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
-}
-
-func (newState *Put) SyncEffectiveFieldsDuringRead(existingState Put) {
-}
-
-func (c Put) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.

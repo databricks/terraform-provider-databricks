@@ -61,7 +61,8 @@ func ResourceMlflowModel() common.Resource {
 			}
 			var req ml.UpdateModelRequest
 			common.DataToStructPointer(d, s, &req)
-			return w.ModelRegistry.UpdateModel(ctx, req)
+			_, err = w.ModelRegistry.UpdateModel(ctx, req)
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

@@ -25,6 +25,7 @@ import (
 )
 
 type CreateFederationPolicyRequest struct {
+	// Name of the policy. This is the name of the policy to be created.
 	Policy types.Object `tfsdk:"policy"`
 	// Name of the recipient. This is the name of the recipient for which the
 	// policy is being created.
@@ -95,7 +96,6 @@ func (o *CreateFederationPolicyRequest) SetPolicy(ctx context.Context, v Federat
 }
 
 type CreateProvider struct {
-	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type"`
 	// Description about the provider.
 	Comment types.String `tfsdk:"comment"`
@@ -104,21 +104,6 @@ type CreateProvider struct {
 	// This field is required when the __authentication_type__ is **TOKEN**,
 	// **OAUTH_CLIENT_CREDENTIALS** or not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str"`
-}
-
-func (newState *CreateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProvider) {
-}
-
-func (newState *CreateProvider) SyncEffectiveFieldsDuringRead(existingState CreateProvider) {
-}
-
-func (c CreateProvider) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["authentication_type"] = attrs["authentication_type"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["recipient_profile_str"] = attrs["recipient_profile_str"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProvider.
@@ -159,7 +144,6 @@ func (o CreateProvider) Type(ctx context.Context) attr.Type {
 }
 
 type CreateRecipient struct {
-	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type"`
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment"`
@@ -184,26 +168,6 @@ type CreateRecipient struct {
 	// The one-time sharing code provided by the data recipient. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code"`
-}
-
-func (newState *CreateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRecipient) {
-}
-
-func (newState *CreateRecipient) SyncEffectiveFieldsDuringRead(existingState CreateRecipient) {
-}
-
-func (c CreateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["authentication_type"] = attrs["authentication_type"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
-	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
-	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties_kvpairs"] = attrs["properties_kvpairs"].SetOptional()
-	attrs["sharing_code"] = attrs["sharing_code"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRecipient.
@@ -319,20 +283,6 @@ type CreateShare struct {
 	Name types.String `tfsdk:"name"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root"`
-}
-
-func (newState *CreateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateShare) {
-}
-
-func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateShare) {
-}
-
-func (c CreateShare) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateShare.
@@ -551,9 +501,8 @@ func (o DeleteShareRequest) Type(ctx context.Context) attr.Type {
 
 // Represents a UC dependency.
 type DeltaSharingDependency struct {
-	// A Function in UC as a dependency.
 	Function types.Object `tfsdk:"function"`
-	// A Table in UC as a dependency.
+
 	Table types.Object `tfsdk:"table"`
 }
 
@@ -3200,7 +3149,8 @@ func (o *PermissionsChange) SetRemove(ctx context.Context, v []types.String) {
 }
 
 type PrivilegeAssignment struct {
-	// The principal (user email address or group name).
+	// The principal (user email address or group name). For deleted principals,
+	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
@@ -3283,7 +3233,6 @@ func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.Strin
 }
 
 type ProviderInfo struct {
-	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type"`
 	// Cloud vendor of the provider's UC metastore. This field is only present
 	// when the __authentication_type__ is **DATABRICKS**.
@@ -3487,7 +3436,7 @@ type RecipientInfo struct {
 	// Full activation url to retrieve the access token. It will be empty if the
 	// token is already retrieved.
 	ActivationUrl types.String `tfsdk:"activation_url"`
-	// The delta sharing authentication type.
+
 	AuthenticationType types.String `tfsdk:"authentication_type"`
 	// Cloud vendor of the recipient's Unity Catalog Metastore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
@@ -4015,19 +3964,6 @@ type RotateRecipientToken struct {
 	ExistingTokenExpireInSeconds types.Int64 `tfsdk:"existing_token_expire_in_seconds"`
 	// The name of the Recipient.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan RotateRecipientToken) {
-}
-
-func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringRead(existingState RotateRecipientToken) {
-}
-
-func (c RotateRecipientToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["existing_token_expire_in_seconds"] = attrs["existing_token_expire_in_seconds"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RotateRecipientToken.
@@ -5015,22 +4951,6 @@ type UpdateProvider struct {
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str"`
 }
 
-func (newState *UpdateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvider) {
-}
-
-func (newState *UpdateProvider) SyncEffectiveFieldsDuringRead(existingState UpdateProvider) {
-}
-
-func (c UpdateProvider) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["recipient_profile_str"] = attrs["recipient_profile_str"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvider.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5088,24 +5008,6 @@ type UpdateRecipient struct {
 	// properties. To add and remove properties, one would need to perform a
 	// read-modify-write.
 	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs"`
-}
-
-func (newState *UpdateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRecipient) {
-}
-
-func (newState *UpdateRecipient) SyncEffectiveFieldsDuringRead(existingState UpdateRecipient) {
-}
-
-func (c UpdateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
-	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties_kvpairs"] = attrs["properties_kvpairs"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRecipient.
@@ -5226,30 +5128,6 @@ type UpdateShare struct {
 	Updates types.List `tfsdk:"updates"`
 }
 
-func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
-}
-
-func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
-	}
-}
-
-func (c UpdateShare) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-	attrs["updates"] = attrs["updates"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateShare.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5331,20 +5209,6 @@ type UpdateSharePermissions struct {
 	// Optional. Whether to return the latest permissions list of the share in
 	// the response.
 	OmitPermissionsList types.Bool `tfsdk:"omit_permissions_list"`
-}
-
-func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSharePermissions) {
-}
-
-func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingState UpdateSharePermissions) {
-}
-
-func (c UpdateSharePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["changes"] = attrs["changes"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["omit_permissions_list"] = attrs["omit_permissions_list"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSharePermissions.

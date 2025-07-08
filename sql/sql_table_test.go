@@ -169,6 +169,15 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			owner              = "account users"
 			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+
 			depends_on = [
 				databricks_external_location.some
 			]

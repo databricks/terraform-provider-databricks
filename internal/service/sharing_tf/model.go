@@ -19,11 +19,11 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Create recipient federation policy
 type CreateFederationPolicyRequest struct {
 	Policy types.Object `tfsdk:"policy"`
 	// Name of the recipient. This is the name of the recipient for which the
@@ -370,7 +370,6 @@ func (o CreateShare) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete recipient federation policy
 type DeleteFederationPolicyRequest struct {
 	// Name of the policy. This is the name of the policy to be deleted.
 	Name types.String `tfsdk:"-"`
@@ -412,7 +411,6 @@ func (o DeleteFederationPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a provider
 type DeleteProviderRequest struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
@@ -449,7 +447,6 @@ func (o DeleteProviderRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a share recipient
 type DeleteRecipientRequest struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
@@ -516,7 +513,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a share
 type DeleteShareRequest struct {
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
@@ -1118,7 +1114,9 @@ func (newState *FederationPolicy) SyncEffectiveFieldsDuringRead(existingState Fe
 func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetComputed()
+	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1380,7 +1378,6 @@ func (o *FunctionParameterInfos) SetParameters(ctx context.Context, v []Function
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
-// Get a share activation URL
 type GetActivationUrlInfoRequest struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
@@ -1458,7 +1455,6 @@ func (o GetActivationUrlInfoResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get recipient federation policy
 type GetFederationPolicyRequest struct {
 	// Name of the policy. This is the name of the policy to be retrieved.
 	Name types.String `tfsdk:"-"`
@@ -1500,7 +1496,6 @@ func (o GetFederationPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a provider
 type GetProviderRequest struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
@@ -1537,7 +1532,6 @@ func (o GetProviderRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a share recipient
 type GetRecipientRequest struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
@@ -1744,7 +1738,6 @@ func (o *GetSharePermissionsResponse) SetPrivilegeAssignments(ctx context.Contex
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
-// Get a share
 type GetShareRequest struct {
 	// Query for data to include in the share.
 	IncludeSharedData types.Bool `tfsdk:"-"`
@@ -1863,7 +1856,6 @@ func (o *IpAccessList) SetAllowedIpAddresses(ctx context.Context, v []types.Stri
 	o.AllowedIpAddresses = types.ListValueMust(t, vs)
 }
 
-// List recipient federation policies
 type ListFederationPoliciesRequest struct {
 	MaxResults types.Int64 `tfsdk:"-"`
 
@@ -1990,7 +1982,6 @@ func (o *ListFederationPoliciesResponse) SetPolicies(ctx context.Context, v []Fe
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// List assets by provider share
 type ListProviderShareAssetsRequest struct {
 	// Maximum number of functions to return.
 	FunctionMaxResults types.Int64 `tfsdk:"-"`
@@ -2314,7 +2305,6 @@ func (o *ListProviderSharesResponse) SetShares(ctx context.Context, v []Provider
 	o.Shares = types.ListValueMust(t, vs)
 }
 
-// List providers
 type ListProvidersRequest struct {
 	// If not provided, all providers will be returned. If no providers exist
 	// with this ID, no results will be returned.
@@ -2453,7 +2443,6 @@ func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderIn
 	o.Providers = types.ListValueMust(t, vs)
 }
 
-// List share recipients
 type ListRecipientsRequest struct {
 	// If not provided, all recipients will be returned. If no recipients exist
 	// with this ID, no results will be returned.
@@ -2592,7 +2581,6 @@ func (o *ListRecipientsResponse) SetRecipients(ctx context.Context, v []Recipien
 	o.Recipients = types.ListValueMust(t, vs)
 }
 
-// List shares by Provider
 type ListSharesRequest struct {
 	// Maximum number of shares to return. - when set to 0, the page length is
 	// set to a server configured value (recommended); - when set to a value
@@ -3920,7 +3908,6 @@ func (o RegisteredModelAlias) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an access token
 type RetrieveTokenRequest struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
@@ -4289,7 +4276,6 @@ func (o *ShareInfo) SetObjects(ctx context.Context, v []SharedDataObject) {
 	o.Objects = types.ListValueMust(t, vs)
 }
 
-// Get recipient share permissions
 type SharePermissionsRequest struct {
 	// Maximum number of permissions to return. - when set to 0, the page length
 	// is set to a server configured value (recommended); - when set to a value
@@ -4931,7 +4917,6 @@ func (o TableInternalAttributes) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update recipient federation policy
 type UpdateFederationPolicyRequest struct {
 	// Name of the policy. This is the name of the current name of the policy.
 	Name types.String `tfsdk:"-"`
@@ -5339,7 +5324,7 @@ func (o *UpdateShare) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate
 }
 
 type UpdateSharePermissions struct {
-	// Array of permission changes.
+	// Array of permissions change objects.
 	Changes types.List `tfsdk:"changes"`
 	// The name of the share.
 	Name types.String `tfsdk:"-"`

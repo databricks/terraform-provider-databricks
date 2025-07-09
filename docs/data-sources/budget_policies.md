@@ -33,7 +33,7 @@ The following arguments are supported:
 
 ### SortSpec
 * `descending` (boolean, optional) - Whether to sort in descending order
-* `field` (string, optional) - The filed to sort by. Possible values are: POLICY_NAME
+* `field` (string, optional) - The filed to sort by. Possible values are: `POLICY_NAME`
 
 
 ## Attributes
@@ -51,5 +51,5 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `key` (string) - The key of the tag.
   - Must be unique among all custom tags of the same policy
   - Cannot be “budget-policy-name”, “budget-policy-id” or "budget-policy-resolution-result" -
-  these tags are preserved.
-* `value` (string) - The value of the tag.
+  these tags are preserved
+* `value` (string) - The value of the tag

@@ -1501,7 +1501,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_model_serving"].Schema
 			var mse serving.CreateServingEndpoint
 			common.DataToStructPointer(r.Data, s, &mse)
-			if mse.Config.ServedEntities != nil {
+			if mse.Config != nil {
 				for _, se := range mse.Config.ServedEntities {
 					if se.EntityName != "" {
 						if se.EntityVersion != "" { // we have an UC model or model from model registry
@@ -1549,7 +1549,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
-			if mse.Config.AutoCaptureConfig != nil && mse.Config.AutoCaptureConfig.CatalogName != "" &&
+			if mse.Config != nil && mse.Config.AutoCaptureConfig != nil && mse.Config.AutoCaptureConfig.CatalogName != "" &&
 				mse.Config.AutoCaptureConfig.SchemaName != "" {
 				ic.Emit(&resource{
 					Resource: "databricks_schema",
@@ -1826,12 +1826,26 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import:         importSqlTable,
 		Ignore:         generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_table", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
+			log.Printf("[INFO] ShouldOmitField: %s", pathString)
 			switch pathString {
 			case "storage_location":
 				return d.Get("table_type").(string) == "MANAGED"
 			case "enable_predictive_optimization":
 				epo := d.Get(pathString).(string)
 				return epo == "" || epo == "INHERIT"
+			case "column", "partitions":
+				return d.Get("table_type").(string) == "VIEW"
+			}
+			if strings.HasPrefix(pathString, "column.") {
+				if d.Get("table_type").(string) == "VIEW" {
+					return true
+				}
+				if strings.HasSuffix(pathString, ".nullable") {
+					return d.Get(pathString).(bool)
+				}
+				if strings.HasSuffix(pathString, ".type") {
+					return false
+				}
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d, r)
 		},

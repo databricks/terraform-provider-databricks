@@ -198,6 +198,9 @@ type CleanRoomAsset struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
+	// The name of the clean room this asset belongs to. This is an output-only
+	// field to ensure proper resource identification.
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTable types.Object `tfsdk:"foreign_table"`
@@ -245,6 +248,7 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState Clea
 func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -289,6 +293,7 @@ func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		map[string]attr.Value{
 			"added_at":                    o.AddedAt,
 			"asset_type":                  o.AssetType,
+			"clean_room_name":             o.CleanRoomName,
 			"foreign_table":               o.ForeignTable,
 			"foreign_table_local_details": o.ForeignTableLocalDetails,
 			"name":                        o.Name,
@@ -309,6 +314,7 @@ func (o CleanRoomAsset) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"added_at":                    types.Int64Type,
 			"asset_type":                  types.StringType,
+			"clean_room_name":             types.StringType,
 			"foreign_table":               CleanRoomAssetForeignTable{}.Type(ctx),
 			"foreign_table_local_details": CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
 			"name":                        types.StringType,
@@ -1548,7 +1554,7 @@ func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
@@ -1873,7 +1879,6 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
-// Create an asset
 type CreateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
 	Asset types.Object `tfsdk:"asset"`
@@ -1944,7 +1949,6 @@ func (o *CreateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomA
 	o.Asset = vs
 }
 
-// Create an output catalog
 type CreateCleanRoomOutputCatalogRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2092,7 +2096,6 @@ func (o *CreateCleanRoomOutputCatalogResponse) SetOutputCatalog(ctx context.Cont
 	o.OutputCatalog = vs
 }
 
-// Create a clean room
 type CreateCleanRoomRequest struct {
 	CleanRoom types.Object `tfsdk:"clean_room"`
 }
@@ -2158,15 +2161,14 @@ func (o *CreateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) 
 	o.CleanRoom = vs
 }
 
-// Delete an asset
 type DeleteCleanRoomAssetRequest struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2187,9 +2189,9 @@ func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2197,9 +2199,9 @@ func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o DeleteCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
@@ -2247,7 +2249,6 @@ func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a clean room
 type DeleteCleanRoomRequest struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
@@ -2314,15 +2315,14 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an asset
 type GetCleanRoomAssetRequest struct {
-	// The fully qualified name of the asset, it is same as the name field in
-	// CleanRoomAsset.
-	AssetFullName types.String `tfsdk:"-"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
+	// The fully qualified name of the asset, it is same as the name field in
+	// CleanRoomAsset.
+	Name types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2343,9 +2343,9 @@ func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_full_name": o.AssetFullName,
 			"asset_type":      o.AssetType,
 			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
 		})
 }
 
@@ -2353,14 +2353,13 @@ func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_full_name": types.StringType,
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
+			"name":            types.StringType,
 		},
 	}
 }
 
-// Get a clean room
 type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2396,7 +2395,6 @@ func (o GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List assets
 type ListCleanRoomAssetsRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2522,7 +2520,6 @@ func (o *ListCleanRoomAssetsResponse) SetAssets(ctx context.Context, v []CleanRo
 	o.Assets = types.ListValueMust(t, vs)
 }
 
-// List notebook task runs
 type ListCleanRoomNotebookTaskRunsRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2657,7 +2654,6 @@ func (o *ListCleanRoomNotebookTaskRunsResponse) SetRuns(ctx context.Context, v [
 	o.Runs = types.ListValueMust(t, vs)
 }
 
-// List clean rooms
 type ListCleanRoomsRequest struct {
 	// Maximum number of clean rooms to return (i.e., the page length). Defaults
 	// to 100.
@@ -2783,7 +2779,6 @@ func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoo
 	o.CleanRooms = types.ListValueMust(t, vs)
 }
 
-// Update an asset
 type UpdateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
 	Asset types.Object `tfsdk:"asset"`

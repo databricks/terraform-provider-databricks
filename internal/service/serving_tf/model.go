@@ -1311,7 +1311,6 @@ func (o BearerTokenAuth) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get build logs for a served model
 type BuildLogsRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -2298,7 +2297,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a serving endpoint
 type DeleteServingEndpointRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -3301,7 +3299,6 @@ func (o *EndpointTags) SetTags(ctx context.Context, v []EndpointTag) {
 	o.Tags = types.ListValueMust(t, vs)
 }
 
-// Get metrics of a serving endpoint
 type ExportMetricsRequest struct {
 	// The name of the serving endpoint to retrieve metrics for. This field is
 	// required.
@@ -3995,7 +3992,6 @@ func (o FoundationModel) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the schema for a serving endpoint
 type GetOpenApiRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -4068,7 +4064,6 @@ func (o GetOpenApiResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get serving endpoint permission levels
 type GetServingEndpointPermissionLevelsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4183,7 +4178,6 @@ func (o *GetServingEndpointPermissionLevelsResponse) SetPermissionLevels(ctx con
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get serving endpoint permissions
 type GetServingEndpointPermissionsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
@@ -4220,7 +4214,6 @@ func (o GetServingEndpointPermissionsRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Get a single serving endpoint
 type GetServingEndpointRequest struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
@@ -4455,7 +4448,6 @@ func (o *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []ServingEnd
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// Get the latest logs for a served model
 type LogsRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
 	// field is required.
@@ -6401,8 +6393,14 @@ type ServedEntityInput struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of a served entity. It must be unique across an endpoint. A
@@ -6424,6 +6422,8 @@ type ServedEntityInput struct {
 	// provisioned concurrency). Additional custom workload sizes can also be
 	// used when available in the workspace. If scale-to-zero is enabled, the
 	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6447,7 +6447,9 @@ func (c ServedEntityInput) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["external_model"] = attrs["external_model"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
@@ -6479,18 +6481,20 @@ func (o ServedEntityInput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entity_name":                o.EntityName,
-			"entity_version":             o.EntityVersion,
-			"environment_vars":           o.EnvironmentVars,
-			"external_model":             o.ExternalModel,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"name":                       o.Name,
-			"provisioned_model_units":    o.ProvisionedModelUnits,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"entity_name":                 o.EntityName,
+			"entity_version":              o.EntityVersion,
+			"environment_vars":            o.EnvironmentVars,
+			"external_model":              o.ExternalModel,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6503,15 +6507,17 @@ func (o ServedEntityInput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"external_model":             ExternalModel{}.Type(ctx),
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"name":                       types.StringType,
-			"provisioned_model_units":    types.Int64Type,
-			"scale_to_zero_enabled":      types.BoolType,
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"external_model":              ExternalModel{}.Type(ctx),
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -6604,8 +6610,14 @@ type ServedEntityOutput struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of a served entity. It must be unique across an endpoint. A
@@ -6629,6 +6641,8 @@ type ServedEntityOutput struct {
 	// provisioned concurrency). Additional custom workload sizes can also be
 	// used when available in the workspace. If scale-to-zero is enabled, the
 	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6655,7 +6669,9 @@ func (c ServedEntityOutput) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["external_model"] = attrs["external_model"].SetOptional()
 	attrs["foundation_model"] = attrs["foundation_model"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
@@ -6690,22 +6706,24 @@ func (o ServedEntityOutput) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":         o.CreationTimestamp,
-			"creator":                    o.Creator,
-			"entity_name":                o.EntityName,
-			"entity_version":             o.EntityVersion,
-			"environment_vars":           o.EnvironmentVars,
-			"external_model":             o.ExternalModel,
-			"foundation_model":           o.FoundationModel,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"name":                       o.Name,
-			"provisioned_model_units":    o.ProvisionedModelUnits,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"state":                      o.State,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"creation_timestamp":          o.CreationTimestamp,
+			"creator":                     o.Creator,
+			"entity_name":                 o.EntityName,
+			"entity_version":              o.EntityVersion,
+			"environment_vars":            o.EnvironmentVars,
+			"external_model":              o.ExternalModel,
+			"foundation_model":            o.FoundationModel,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"state":                       o.State,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -6720,17 +6738,19 @@ func (o ServedEntityOutput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"external_model":             ExternalModel{}.Type(ctx),
-			"foundation_model":           FoundationModel{}.Type(ctx),
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"name":                       types.StringType,
-			"provisioned_model_units":    types.Int64Type,
-			"scale_to_zero_enabled":      types.BoolType,
-			"state":                      ServedModelState{}.Type(ctx),
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"external_model":              ExternalModel{}.Type(ctx),
+			"foundation_model":            FoundationModel{}.Type(ctx),
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"state":                       ServedModelState{}.Type(ctx),
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -6983,8 +7003,14 @@ type ServedModelInput struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 
@@ -7010,6 +7036,8 @@ type ServedModelInput struct {
 	// provisioned concurrency). Additional custom workload sizes can also be
 	// used when available in the workspace. If scale-to-zero is enabled, the
 	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -7030,7 +7058,9 @@ func (newState *ServedModelInput) SyncEffectiveFieldsDuringRead(existingState Se
 func (c ServedModelInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetRequired()
 	attrs["model_version"] = attrs["model_version"].SetRequired()
@@ -7063,17 +7093,19 @@ func (o ServedModelInput) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"environment_vars":           o.EnvironmentVars,
-			"instance_profile_arn":       o.InstanceProfileArn,
-			"max_provisioned_throughput": o.MaxProvisionedThroughput,
-			"min_provisioned_throughput": o.MinProvisionedThroughput,
-			"model_name":                 o.ModelName,
-			"model_version":              o.ModelVersion,
-			"name":                       o.Name,
-			"provisioned_model_units":    o.ProvisionedModelUnits,
-			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
-			"workload_size":              o.WorkloadSize,
-			"workload_type":              o.WorkloadType,
+			"environment_vars":            o.EnvironmentVars,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"max_provisioned_throughput":  o.MaxProvisionedThroughput,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"min_provisioned_throughput":  o.MinProvisionedThroughput,
+			"model_name":                  o.ModelName,
+			"model_version":               o.ModelVersion,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -7084,16 +7116,18 @@ func (o ServedModelInput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"instance_profile_arn":       types.StringType,
-			"max_provisioned_throughput": types.Int64Type,
-			"min_provisioned_throughput": types.Int64Type,
-			"model_name":                 types.StringType,
-			"model_version":              types.StringType,
-			"name":                       types.StringType,
-			"provisioned_model_units":    types.Int64Type,
-			"scale_to_zero_enabled":      types.BoolType,
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"max_provisioned_throughput":  types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_throughput":  types.Int64Type,
+			"model_name":                  types.StringType,
+			"model_version":               types.StringType,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -7138,6 +7172,12 @@ type ServedModelOutput struct {
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The maximum provisioned concurrency that the endpoint can scale up to. Do
+	// not use if workload_size is specified.
+	MaxProvisionedConcurrency types.Int64 `tfsdk:"max_provisioned_concurrency"`
+	// The minimum provisioned concurrency that the endpoint can scale down to.
+	// Do not use if workload_size is specified.
+	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 
 	ModelName types.String `tfsdk:"model_name"`
 
@@ -7163,6 +7203,8 @@ type ServedModelOutput struct {
 	// provisioned concurrency). Additional custom workload sizes can also be
 	// used when available in the workspace. If scale-to-zero is enabled, the
 	// lower bound of the provisioned concurrency for each workload size is 0.
+	// Do not use if min_provisioned_concurrency and max_provisioned_concurrency
+	// are specified.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -7185,6 +7227,8 @@ func (c ServedModelOutput) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
+	attrs["min_provisioned_concurrency"] = attrs["min_provisioned_concurrency"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["model_version"] = attrs["model_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -7218,18 +7262,20 @@ func (o ServedModelOutput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":      o.CreationTimestamp,
-			"creator":                 o.Creator,
-			"environment_vars":        o.EnvironmentVars,
-			"instance_profile_arn":    o.InstanceProfileArn,
-			"model_name":              o.ModelName,
-			"model_version":           o.ModelVersion,
-			"name":                    o.Name,
-			"provisioned_model_units": o.ProvisionedModelUnits,
-			"scale_to_zero_enabled":   o.ScaleToZeroEnabled,
-			"state":                   o.State,
-			"workload_size":           o.WorkloadSize,
-			"workload_type":           o.WorkloadType,
+			"creation_timestamp":          o.CreationTimestamp,
+			"creator":                     o.Creator,
+			"environment_vars":            o.EnvironmentVars,
+			"instance_profile_arn":        o.InstanceProfileArn,
+			"max_provisioned_concurrency": o.MaxProvisionedConcurrency,
+			"min_provisioned_concurrency": o.MinProvisionedConcurrency,
+			"model_name":                  o.ModelName,
+			"model_version":               o.ModelVersion,
+			"name":                        o.Name,
+			"provisioned_model_units":     o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":       o.ScaleToZeroEnabled,
+			"state":                       o.State,
+			"workload_size":               o.WorkloadSize,
+			"workload_type":               o.WorkloadType,
 		})
 }
 
@@ -7242,15 +7288,17 @@ func (o ServedModelOutput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"instance_profile_arn":    types.StringType,
-			"model_name":              types.StringType,
-			"model_version":           types.StringType,
-			"name":                    types.StringType,
-			"provisioned_model_units": types.Int64Type,
-			"scale_to_zero_enabled":   types.BoolType,
-			"state":                   ServedModelState{}.Type(ctx),
-			"workload_size":           types.StringType,
-			"workload_type":           types.StringType,
+			"instance_profile_arn":        types.StringType,
+			"max_provisioned_concurrency": types.Int64Type,
+			"min_provisioned_concurrency": types.Int64Type,
+			"model_name":                  types.StringType,
+			"model_version":               types.StringType,
+			"name":                        types.StringType,
+			"provisioned_model_units":     types.Int64Type,
+			"scale_to_zero_enabled":       types.BoolType,
+			"state":                       ServedModelState{}.Type(ctx),
+			"workload_size":               types.StringType,
+			"workload_type":               types.StringType,
 		},
 	}
 }
@@ -7481,6 +7529,8 @@ type ServingEndpoint struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
+	// Description of the endpoint
+	Description types.String `tfsdk:"description"`
 	// System-generated ID of the endpoint, included to be used by the
 	// Permissions API.
 	Id types.String `tfsdk:"id"`
@@ -7508,6 +7558,7 @@ func (c ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -7546,6 +7597,7 @@ func (o ServingEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
+			"description":            o.Description,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
 			"name":                   o.Name,
@@ -7564,6 +7616,7 @@ func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 			"config":                 EndpointCoreConfigSummary{}.Type(ctx),
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
+			"description":            types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
@@ -7862,6 +7915,8 @@ type ServingEndpointDetailed struct {
 	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
 	DataPlaneInfo types.Object `tfsdk:"data_plane_info"`
+	// Description of the serving model
+	Description types.String `tfsdk:"description"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -7899,6 +7954,7 @@ func (c ServingEndpointDetailed) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -7944,6 +8000,7 @@ func (o ServingEndpointDetailed) ToObjectValue(ctx context.Context) basetypes.Ob
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
 			"data_plane_info":        o.DataPlaneInfo,
+			"description":            o.Description,
 			"endpoint_url":           o.EndpointUrl,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -7967,6 +8024,7 @@ func (o ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
 			"data_plane_info":        ModelDataPlaneInfo{}.Type(ctx),
+			"description":            types.StringType,
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,

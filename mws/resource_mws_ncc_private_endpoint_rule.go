@@ -10,12 +10,26 @@ import (
 )
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
-	s := common.StructToSchema(settings.NccAzurePrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		for _, p := range []string{"network_connectivity_config_id", "group_id", "resource_id"} {
-			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
+	s := common.StructToSchema(settings.NccPrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		for _, p := range []string{"endpoint_service", "group_id", "resource_id"} {
+			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}
-		for _, p := range []string{"rule_id", "endpoint_name", "connection_state", "creation_time", "updated_time"} {
+		for _, p := range []string{"rule_id", "endpoint_name", "connection_state", "creation_time", "updated_time", "vpc_endpoint_id"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
+		}
+
+		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
+		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
+
+		supportedFields := []string{"group_id", "resource_names", "domain_names"}
+		for _, key := range supportedFields {
+			conflicts := make([]string, 0, len(supportedFields)-1)
+			for _, otherKey := range supportedFields {
+				if key != otherKey {
+					conflicts = append(conflicts, otherKey)
+				}
+			}
+			common.CustomizeSchemaPath(m, key).SetConflictsWith(conflicts)
 		}
 		return m
 	})

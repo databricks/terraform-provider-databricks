@@ -79,13 +79,13 @@ func genListFixtures[R scimResponse](resp R, path string) []HTTPFixture {
 	if resp.NumResources() > 0 {
 		res = append(res, HTTPFixture{
 			Method:   "GET",
-			Resource: fmt.Sprintf("%s&count=100&startIndex=1", path),
+			Resource: fmt.Sprintf("%s&count=10000&startIndex=1", path),
 			Response: resp,
 		})
 	}
 	res = append(res, HTTPFixture{
 		Method:   "GET",
-		Resource: fmt.Sprintf("%s&count=100&startIndex=%d", path, resp.NumResources()+1),
+		Resource: fmt.Sprintf("%s&count=10000&startIndex=%d", path, resp.NumResources()+1),
 		Response: resp.Empty(),
 	})
 	return res

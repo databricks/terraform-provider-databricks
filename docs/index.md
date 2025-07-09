@@ -35,7 +35,7 @@ Security
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
-* Manage data object access control lists with [databricks_sql_permissions](resources/sql_permissions.md)
+* Manage Unity Catalog permissions with [databricks_grant](resources/databricks_grant.md)
 * Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
 
 [Databricks workspace on AWS](../docs/guides/aws-workspace.md)

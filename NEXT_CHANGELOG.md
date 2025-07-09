@@ -12,7 +12,11 @@
 
 ### Bug Fixes
 
-* Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+* Fix updating of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+* Disable queue by default when updating `databricks_job` ([#4839](https://github.com/databricks/terraform-provider-databricks/pull/4839)).
+  Jobs API 2.2 enables queue by default. To avoid behavioral changes, Terraform 1.71.0 disabled the queue for new resources by default.
+  This fix repliactes the behavior for resources created with older versions of Terraform.
+   
 
 ### Documentation
 

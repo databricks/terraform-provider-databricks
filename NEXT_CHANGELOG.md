@@ -21,6 +21,7 @@
 * Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
 * Update GCP example for `databricks_external_location` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
 * Fix formatting for HTTP connection example in `databricks_connection` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
+* Update Databricks SQL objects documentation ([#4840](https://github.com/databricks/terraform-provider-databricks/pull/4840))
 
 ### Exporter
 

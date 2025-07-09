@@ -2028,6 +2028,68 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobUpdateNoQueue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: Job{
+					JobID:    789,
+					Settings: &JobSettings{},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+						Name: "Untitled",
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+						MaxConcurrentRuns: 1,
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						ExistingClusterID: "abc",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+						MaxConcurrentRuns: 1,
+					},
+				},
+			},
+		},
+		Update:   true,
+		Resource: ResourceJob(),
+		ID:       "789",
+		HCL: `
+		max_concurrent_runs = 1
+
+		task {
+			task_key = "b"
+		}`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceJobCreateWithWebhooks(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -244,6 +244,11 @@ func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context
 }
 
 func Update(jobID int64, js JobSettingsResource, w *databricks.WorkspaceClient, ctx context.Context) error {
+	if js.Queue == nil {
+		js.Queue = &jobs.QueueSettings{
+			Enabled: false,
+		}
+	}
 	err := w.Jobs.Reset(ctx, jobs.ResetJob{
 		JobId:       jobID,
 		NewSettings: js.JobSettings,

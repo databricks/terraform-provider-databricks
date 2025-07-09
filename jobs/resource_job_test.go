@@ -2045,15 +2045,15 @@ func TestResourceJobUpdateNoQueue(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Tasks: []JobTaskSettings{
 							{
 								TaskKey: "b",
 							},
 						},
-						Name: "Untitled",
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
+						Name:              "Untitled",
 						MaxConcurrentRuns: 1,
 					},
 				},
@@ -2547,6 +2547,9 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						MaxConcurrentRuns: 1,
 						Tasks: []JobTaskSettings{
 							{
@@ -2646,6 +2649,9 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						MaxConcurrentRuns: 1,
 						Tasks: []JobTaskSettings{
 							{
@@ -2742,6 +2748,9 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 				ExpectedRequest: jobs.ResetJob{
 					JobId: 789,
 					NewSettings: jobs.JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						JobClusters: []jobs.JobCluster{
 							{
 								JobClusterKey: "job_cluster_1",
@@ -2826,6 +2835,9 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 				ExpectedRequest: jobs.UpdateJob{
 					JobId: 789,
 					NewSettings: &jobs.JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Tasks: []jobs.Task{
 							{
 								TaskKey: "task1",
@@ -2908,6 +2920,9 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Name: "Featurizer New",
 						Tasks: []JobTaskSettings{
 							{

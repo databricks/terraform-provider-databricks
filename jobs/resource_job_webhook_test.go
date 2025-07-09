@@ -16,6 +16,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Name: "Webhook test",
 						Tasks: []JobTaskSettings{
 							{

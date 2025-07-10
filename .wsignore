@@ -1,5 +1,13 @@
+# Files to exempt from whitespace check.
+# Can contain patterns in Python's glob module format.
+
+# Generated files:
+.codegen/_openapi_sha
+
 # Binary files
 **/*.zip
 **/*.dbc
 **/*.png
+
+# Test fixtures
 workspace/acceptance/testdata/*

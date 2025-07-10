@@ -70,7 +70,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore
 	updateRequest := ml.UpdateOnlineStoreRequest{
 		OnlineStore: online_store,
 		Name:        plan.Name.ValueString(),
-		UpdateMask:  "capacity",
+		UpdateMask:  "capacity,read_replica_count",
 	}
 
 	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)

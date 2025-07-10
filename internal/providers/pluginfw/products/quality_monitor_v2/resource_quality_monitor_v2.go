@@ -24,21 +24,21 @@ import (
 
 const resourceName = "quality_monitor_v2"
 
-var _ resource.ResourceWithConfigure = &QualityMonitorV2Resource{}
+var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
 
-func ResourceQualityMonitorV2() resource.Resource {
-	return &QualityMonitorV2Resource{}
+func ResourceQualityMonitor() resource.Resource {
+	return &QualityMonitorResource{}
 }
 
-type QualityMonitorV2Resource struct {
+type QualityMonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *QualityMonitorV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *QualityMonitorV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, qualitymonitorv2_tf.QualityMonitor{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_id")
@@ -51,11 +51,11 @@ func (r *QualityMonitorV2Resource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *QualityMonitorV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *QualityMonitorV2Resource) update(ctx context.Context, plan qualitymonitorv2_tf.QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *QualityMonitorResource) update(ctx context.Context, plan qualitymonitorv2_tf.QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -90,7 +90,7 @@ func (r *QualityMonitorV2Resource) update(ctx context.Context, plan qualitymonit
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *QualityMonitorV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -137,7 +137,7 @@ func (r *QualityMonitorV2Resource) Create(ctx context.Context, req resource.Crea
 	}
 }
 
-func (r *QualityMonitorV2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -180,7 +180,7 @@ func (r *QualityMonitorV2Resource) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *QualityMonitorV2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	var plan qualitymonitorv2_tf.QualityMonitor
@@ -192,7 +192,7 @@ func (r *QualityMonitorV2Resource) Update(ctx context.Context, req resource.Upda
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *QualityMonitorV2Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -220,9 +220,9 @@ func (r *QualityMonitorV2Resource) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-var _ resource.ResourceWithImportState = &QualityMonitorV2Resource{}
+var _ resource.ResourceWithImportState = &QualityMonitorResource{}
 
-func (r *QualityMonitorV2Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

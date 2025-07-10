@@ -18,21 +18,21 @@ import (
 
 const dataSourceName = "quality_monitor_v2"
 
-var _ datasource.DataSourceWithConfigure = &QualityMonitorV2DataSource{}
+var _ datasource.DataSourceWithConfigure = &QualityMonitorDataSource{}
 
 func DataSourceQualityMonitor() datasource.DataSource {
-	return &QualityMonitorV2DataSource{}
+	return &QualityMonitorDataSource{}
 }
 
-type QualityMonitorV2DataSource struct {
+type QualityMonitorDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *QualityMonitorV2DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *QualityMonitorDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *QualityMonitorV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (r *QualityMonitorDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, qualitymonitorv2_tf.QualityMonitor{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks QualityMonitor",
@@ -41,11 +41,11 @@ func (r *QualityMonitorV2DataSource) Schema(ctx context.Context, req datasource.
 	}
 }
 
-func (r *QualityMonitorV2DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *QualityMonitorDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *QualityMonitorV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()

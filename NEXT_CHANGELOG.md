@@ -12,6 +12,9 @@
 * Add support for Lakebase `databricks_database_instance` in  `databricks_permissions` ([#4824](https://github.com/databricks/terraform-provider-databricks/pull/4824)).
 * Added support for Alert V2 in `databricks_permissions` ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).
 * Replace instead of dropping Delta `databricks_sql_table` ([#2424](https://github.com/databricks/terraform-provider-databricks/pull/2424)).
+* Added `clean_rooms_clean_room` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Added `external_metadata` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Added `materialized_features_feature_tag` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
 
 ### Bug Fixes
 
@@ -36,3 +39,4 @@
 
 * Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).
 * Add synthetic field to jobs resource to control behavior of `apply_policy_default_values` ([#4834](https://github.com/databricks/terraform-provider-databricks/pull/4834)).
+* Bump the Go SDK to v0.75.0 ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).

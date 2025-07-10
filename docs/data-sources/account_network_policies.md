@@ -2,10 +2,17 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policies Data Source
+This data source can be used to fetch the list of network policies.
 
+-> **Note** This data source can only be used with an account-level provider!
 
 ## Example Usage
+Getting a list of all network policies:
 
+```hcl
+data "databricks_network_policies" "all" {
+}
+```
 
 ## Arguments
 No arguments are supported for this resource.

@@ -10,7 +10,7 @@ subcategory: "Delta Sharing"
 ## Arguments
 The following arguments are supported:
 * `recipient_name` (string, required) - Name of the recipient. This is the name of the recipient for which the policies are being listed
-* `max_results` (integer, optional) - 
+* `max_results` (integer, optional) -
 
 
 
@@ -42,7 +42,7 @@ This data source exports a single attribute, `policies`. It is a list of resourc
   * U2M flow (user access): Use `oid`.
   * M2M flow (OAuth App access): Use `azp`.
   - For other IdPs, refer to the specific IdP documentation.
-  
+
   Supported `subject_claim` values are:
   - `oid`: Object ID of the user.
   - `azp`: Client ID of the OAuth app.

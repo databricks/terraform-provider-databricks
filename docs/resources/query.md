@@ -90,7 +90,7 @@ Under the hood, the new resource uses the same data as the `databricks_sql_query
   * the `name` attribute is now named `display_name`
   * the `parent` (if exists) is renamed to `parent_path` attribute, and should be converted from `folders/object_id` to the actual path.
   * Blocks that specify values in the `parameter` block were renamed (see above).
-  
+
 For example, if we have the original `databricks_sql_query` defined as:
 
 ```hcl

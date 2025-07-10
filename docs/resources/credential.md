@@ -56,7 +56,7 @@ resource "databricks_grants" "external_creds" {
 }
 ```
 
-For GCP 
+For GCP
 
 ```hcl
 resource "databricks_credential" "external_gcp_sa" {

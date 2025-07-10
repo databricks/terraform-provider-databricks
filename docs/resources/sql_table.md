@@ -157,7 +157,7 @@ resource "databricks_sql_table" "thing" {
   schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
   cluster_keys       = ["AUTO"]
-  
+
   column {
     name    = "name"
     type    = "string"

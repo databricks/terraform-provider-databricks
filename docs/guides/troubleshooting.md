@@ -189,7 +189,7 @@ See `databricks_grant` for managing grants for a single principal.
 After changing the metastore assigned to a workspace, some resources may fail to update with the following error:
 
 ```
-metastore_id must be empty or equal to the metastore id assigned to the workspace: <metastore_id>. 
+metastore_id must be empty or equal to the metastore id assigned to the workspace: <metastore_id>.
 If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set
 ```
 

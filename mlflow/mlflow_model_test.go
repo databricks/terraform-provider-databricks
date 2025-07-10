@@ -12,7 +12,7 @@ func TestAccMLflowModel(t *testing.T) {
 		resource "databricks_mlflow_model" "m1" {
 			name = "tf-{var.RANDOM}"
 			description = "tf-{var.RANDOM} description"
-			
+
 			tags {
 				key   = "key-{var.RANDOM}"
 				value = "{var.RANDOM}"

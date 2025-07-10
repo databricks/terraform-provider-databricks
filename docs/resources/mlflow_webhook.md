@@ -23,7 +23,7 @@ resource "databricks_notebook" "this" {
   language = "PYTHON"
   content_base64 = base64encode(<<-EOT
     import json
- 
+
     event_message = dbutils.widgets.get("event_message")
     event_message_dict = json.loads(event_message)
     print(f"event data={event_message_dict}")

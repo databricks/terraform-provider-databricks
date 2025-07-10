@@ -40,7 +40,7 @@ The following attributes are exported:
   * U2M flow (user access): Use `oid`.
   * M2M flow (OAuth App access): Use `azp`.
   - For other IdPs, refer to the specific IdP documentation.
-  
+
   Supported `subject_claim` values are:
   - `oid`: Object ID of the user.
   - `azp`: Client ID of the OAuth app.

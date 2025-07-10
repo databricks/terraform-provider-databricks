@@ -5,9 +5,9 @@ subcategory: "Unity Catalog"
 
 NOTE: This resource has been deprecated and will be removed soon. Please use the [databricks_quality_monitor resource](./quality_monitor.md) instead.
 
-This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
+This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks.
 
-A `databricks_lakehouse_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference. 
+A `databricks_lakehouse_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference.
 
 ## Example Usage
 
@@ -126,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 * `monitor_version` - The version of the monitor config (e.g. 1,2,3). If negative, the monitor may be corrupted
 * `drift_metrics_table_name` - The full name of the drift metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
 * `profile_metrics_table_name` - The full name of the profile metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
-* `status` - Status of the Monitor 
+* `status` - Status of the Monitor
 * `dashboard_id` - The ID of the generated dashboard.
 
 ## Related Resources

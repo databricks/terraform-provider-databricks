@@ -61,7 +61,7 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
     ```
 
 - resource definitions
-  
+
     ```hcl
     ##q1vx.tf
 

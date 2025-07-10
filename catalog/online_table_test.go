@@ -16,7 +16,7 @@ resource "databricks_catalog" "sandbox" {
 	}
 	force_destroy = true
   }
-  
+
   resource "databricks_schema" "things" {
 	catalog_name = databricks_catalog.sandbox.id
 	name         = "things_{var.STICKY_RANDOM}"
@@ -26,7 +26,7 @@ resource "databricks_catalog" "sandbox" {
 	}
 	force_destroy = true
   }
-  
+
     resource "databricks_sql_table" "table" {
 	catalog_name       = databricks_catalog.sandbox.id
 	schema_name        = databricks_schema.things.name
@@ -34,7 +34,7 @@ resource "databricks_catalog" "sandbox" {
 	table_type         = "MANAGED"
 	data_source_format = "DELTA"
 	warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-  
+
 	column {
 	  name = "id"
 	  type = "int"
@@ -43,7 +43,7 @@ resource "databricks_catalog" "sandbox" {
 	  name = "timestamp"
 	  type = "int"
 	}
-  
+
 	properties = {
 		"delta.enableChangeDataFeed" : true
 		"delta.feature.changeDataFeed" : "supported"
@@ -53,7 +53,7 @@ resource "databricks_catalog" "sandbox" {
 		"delta.feature.invariants" : "supported"
 	}
   }
-  
+
   resource "databricks_online_table" "this" {
 	name = "${databricks_sql_table.table.id}_ot"
 	spec {

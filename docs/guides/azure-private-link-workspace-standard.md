@@ -23,7 +23,7 @@ This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azur
 - A private endpoint is used for web authentication and deployed in the transit VNet.
 - A dedicated Databricks workspace, called Web Auth workspace, is used for web authentication traffic. This workspace is configured with the sub-resource **browser_authentication** and deployed using subnets in the transit VNet.
 
--> **Note**  
+-> **Note**
 - A separate Web Auth workspace is not mandatory but recommended.
 - DNS mapping for SSO login callbacks to the Azure Databricks web application can be managed by the Web Auth workspace or another workspace associated with the **browser_authentication** private endpoint.
 

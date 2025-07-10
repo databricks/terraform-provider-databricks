@@ -3,6 +3,7 @@
 
 # Generated files:
 .codegen/_openapi_sha
+.release_metadata.json
 
 # Binary files
 **/*.zip

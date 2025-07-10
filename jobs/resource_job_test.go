@@ -3004,6 +3004,9 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_Default(t *testing.T) {
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -3106,6 +3109,9 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_Empty(t *testing.T
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -3204,6 +3210,9 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_GcpAttributes(t *t
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},

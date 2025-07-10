@@ -91,7 +91,7 @@ const preTestTemplateUpdate = `
 func TestUcAccCreateShare(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -119,7 +119,7 @@ func TestUcAccCreateShare(t *testing.T) {
 		}
 
 		resource "databricks_grants" "some" {
-			share = databricks_share_pluginframework.myshare.name
+			share = databricks_share.myshare.name
 			grant {
 				principal  = databricks_recipient.db2open.name
 				privileges = ["SELECT"]
@@ -131,7 +131,7 @@ func TestUcAccCreateShare(t *testing.T) {
 
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "%s"
 			object {
@@ -159,7 +159,7 @@ func TestUcAccUpdateShare(t *testing.T) {
 func TestUcAccUpdateShareAddObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -178,7 +178,7 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -206,7 +206,7 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 func TestUcAccUpdateShareReorderObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -220,7 +220,7 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -231,6 +231,91 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 				name = databricks_table.mytable.id
 				data_object_type = "TABLE"
 			}
+		}`,
+	})
+}
+
+// TestUcAccUpdateShareNoChanges tests that updating a share with no actual changes doesn't cause issues
+func TestUcAccUpdateShareNoChanges(t *testing.T) {
+	shareConfig := preTestTemplate + preTestTemplateUpdate +
+		`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "stable comment"
+				data_object_type = "TABLE"
+			}
+		}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig,
+	}, acceptance.Step{
+		Template: shareConfig, // Same config - should not trigger any updates
+	})
+}
+
+// TestUcAccUpdateShareComplexObjectChanges tests complex scenarios with multiple object updates
+func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "original comment"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "second table"
+				data_object_type = "TABLE"
+			}
+		}`,
+	}, acceptance.Step{
+		// Remove one object, add another, and update comment on existing
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "updated comment"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_3.id
+				comment = "third table"
+				data_object_type = "TABLE"
+			}
+		}`,
+	})
+}
+
+// TestUcAccUpdateShareRemoveAllObjects tests removing all objects from a share
+func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "to be removed"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "also to be removed"
+				data_object_type = "TABLE"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
 		}`,
 	})
 }

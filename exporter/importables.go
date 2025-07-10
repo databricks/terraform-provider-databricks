@@ -30,7 +30,6 @@ import (
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tf_settings "github.com/databricks/terraform-provider-databricks/settings"
-	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -1992,31 +1991,36 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var share tf_sharing.ShareInfo
-			s := ic.Resources["databricks_share"].Schema
-			common.DataToStructPointer(r.Data, s, &share)
-			// TODO: how to link recipients to share?
+			// Handle share objects by reading them directly from the data
+			// since the resource has been migrated to pluginfw
 			ic.emitUCGrantsWithOwner("share/"+r.ID, r)
-			for _, obj := range share.Objects {
-				switch obj.DataObjectType {
+
+			// Get objects array from the resource data
+			objectsList := r.Data.Get("object").([]any)
+			for _, objRaw := range objectsList {
+				obj := objRaw.(map[string]any)
+				dataObjectType := obj["data_object_type"].(string)
+				name := obj["name"].(string)
+
+				switch dataObjectType {
 				case "TABLE":
 					ic.Emit(&resource{
 						Resource: "databricks_sql_table",
-						ID:       obj.Name,
+						ID:       name,
 					})
 				case "VOLUME":
 					ic.Emit(&resource{
 						Resource: "databricks_volume",
-						ID:       obj.Name,
+						ID:       name,
 					})
 				case "MODEL":
 					ic.Emit(&resource{
 						Resource: "databricks_registered_model",
-						ID:       obj.Name,
+						ID:       name,
 					})
 				default:
 					log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'",
-						obj.DataObjectType, obj.Name, r.ID)
+						dataObjectType, name, r.ID)
 				}
 			}
 

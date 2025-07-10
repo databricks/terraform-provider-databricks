@@ -91,7 +91,7 @@ const preTestTemplateUpdate = `
 func TestUcAccCreateShare(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + `		
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -119,7 +119,7 @@ func TestUcAccCreateShare(t *testing.T) {
 		}
 
 		resource "databricks_grants" "some" {
-			share = databricks_share_pluginframework.myshare.name
+			share = databricks_share.myshare.name
 			grant {
 				principal  = databricks_recipient.db2open.name
 				privileges = ["SELECT"]
@@ -131,7 +131,7 @@ func TestUcAccCreateShare(t *testing.T) {
 
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "%s"
 			object {
@@ -159,7 +159,7 @@ func TestUcAccUpdateShare(t *testing.T) {
 func TestUcAccUpdateShareAddObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -178,7 +178,7 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -206,7 +206,7 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 func TestUcAccUpdateShareReorderObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
@@ -220,7 +220,7 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share_pluginframework" "myshare" {
+			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {

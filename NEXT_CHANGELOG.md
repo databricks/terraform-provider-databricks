@@ -11,6 +11,7 @@
 * Add support for Lakebase `databricks_database_instance` in  `databricks_permissions` ([#4824](https://github.com/databricks/terraform-provider-databricks/pull/4824)).
 * Added support for Alert V2 in `databricks_permissions` ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).
 * Replace instead of dropping Delta `databricks_sql_table` ([#2424](https://github.com/databricks/terraform-provider-databricks/pull/2424)).
+* Promote Plugin Framework Share Resource to Production ([#4846](https://github.com/databricks/terraform-provider-databricks/pull/4846)).
 
 ### Bug Fixes
 

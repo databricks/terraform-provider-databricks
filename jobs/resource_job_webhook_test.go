@@ -29,6 +29,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 				Response: Job{

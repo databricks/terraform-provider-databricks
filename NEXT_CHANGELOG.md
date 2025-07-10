@@ -8,6 +8,8 @@
 
 * Added output attribute `endpoint_url` in `databricks_model_serving` ([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
 * Deprecate `egg` library type in `databricks_cluster`, `databricks_job`, and `databricks_library` ([#4881](https://github.com/databricks/terraform-provider-databricks/pull/4881)).
+* Added output attribute `endpoint_url` in `databricks_model_serving`([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+* Promote Plugin Framework Share Resource to Production ([#4846](https://github.com/databricks/terraform-provider-databricks/pull/4846)).
 
 ### Bug Fixes
 

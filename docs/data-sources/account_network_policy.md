@@ -10,7 +10,7 @@ This data source can be used to get a single network policy.
 Referring to a network policy by id:
 
 ```hcl
-data "databricks_network_policy" "this" {
+data "databricks_account_network_policy" "this" {
   policy_id = "test"
 }
 ```

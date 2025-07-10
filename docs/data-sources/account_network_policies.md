@@ -10,7 +10,7 @@ This data source can be used to fetch the list of network policies.
 Getting a list of all network policies:
 
 ```hcl
-data "databricks_network_policies" "all" {
+data "databricks_account_network_policies" "all" {
 }
 ```
 

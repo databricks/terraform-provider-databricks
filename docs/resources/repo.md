@@ -77,7 +77,7 @@ The following resources are often used in the same context:
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_git_credential](git_credential.md) to manage Git credentials.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt). 
+* [databricks_pipeline](pipeline.md) to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt). 
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_scope](secret_scope.md) to create [secret scopes](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

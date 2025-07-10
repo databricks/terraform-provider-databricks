@@ -147,5 +147,5 @@ The following resources are often used in the same context:
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
+* [databricks_pipeline](pipeline.md) to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

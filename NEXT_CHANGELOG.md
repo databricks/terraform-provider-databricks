@@ -15,6 +15,7 @@
 ### Bug Fixes
 
 * Don't redeploy `databricks_sql_table` when view definition contains newlines or tabs ([#4003](https://github.com/databricks/terraform-provider-databricks/pull/4003)).
+* Preserve `queue` setting for `databricks_job` resource when upgrading from provider version <1.71.0.
 * Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
 
 ### Documentation
@@ -22,6 +23,9 @@
 * Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
 * Update GCP example for `databricks_external_location` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
 * Fix formatting for HTTP connection example in `databricks_connection` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
+* Update Databricks SQL objects documentation ([#4840](https://github.com/databricks/terraform-provider-databricks/pull/4840))
+* Improve documentation for `databricks_git_credential` resource ([#4837](https://github.com/databricks/terraform-provider-databricks/pull/4837))
+* Rename DLT references to Lakeflow Declarative pipelines ([#4842](https://github.com/databricks/terraform-provider-databricks/pull/4842))
 
 ### Exporter
 

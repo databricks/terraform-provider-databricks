@@ -93,4 +93,4 @@ The following resources are often used in the same context:
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
 * [databricks_service_principal](service_principal.md) to manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) within workspace.
-* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
+* [databricks_grants](grant.md) to manage data access in Unity Catalog.

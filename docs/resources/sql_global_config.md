@@ -75,5 +75,5 @@ The following resources are often used in the same context:
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
 * [databricks_sql_dashboard](sql_dashboard.md) to manage Databricks SQL [Dashboards](https://docs.databricks.com/sql/user/dashboards/index.html).
-* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
-* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
+* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Warehouses](https://docs.databricks.com/sql/admin/sql-endpoints.html).
+* [databricks_grants](grant.md) to manage data access in Unity Catalog.

@@ -146,15 +146,27 @@ resource "azurerm_storage_container" "ext_storage" {
   container_access_type = "private"
 }
 
-resource "azurerm_role_assignment" "ext_storage" {
+resource "azurerm_role_assignment" "ext_storage_1" {
+  scope                = azurerm_storage_account.ext_storage.id
+  role_definition_name = "Storage Account Contributor"
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "ext_storage_2" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "ext_storage" {
+resource "azurerm_role_assignment" "ext_storage_3" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "ext_storage_4" {
+  scope                = azurerm_storage_account.ext_storage.id
+  role_definition_name = "EventGrid EventSubscription Contributor"
   principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
 }
 ```

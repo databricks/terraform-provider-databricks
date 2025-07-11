@@ -27,6 +27,7 @@
 * Update Databricks SQL objects documentation ([#4840](https://github.com/databricks/terraform-provider-databricks/pull/4840))
 * Improve documentation for `databricks_git_credential` resource ([#4837](https://github.com/databricks/terraform-provider-databricks/pull/4837))
 * Rename DLT references to Lakeflow Declarative pipelines ([#4842](https://github.com/databricks/terraform-provider-databricks/pull/4842))
+* Update the list of UC permissions in UC guide for Azure ([#4852](https://github.com/databricks/terraform-provider-databricks/pull/4852)).
 * Clarify and add more examples to `databricks_mws_network_connectivity_config` and `databricks_mws_ncc_private_endpoint_rule` documentation ([#4847](https://github.com/databricks/terraform-provider-databricks/pull/4847))
 
 ### Exporter

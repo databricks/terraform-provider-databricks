@@ -138,8 +138,15 @@ The following arguments are required:
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 - `force_update` - (Optional) Update external location regardless of its dependents.
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
-- `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
 - `isolation_mode` - (Optional) Whether the external location is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the external location to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
+
+### encryption_details block
+
+A block describing encryption options that apply to clients connecting to cloud storage. Consisting of the following attributes
+
+- sse_encryption_details - a block describing server-Side Encryption properties for clients communicating with AWS S3. Consists of the following attributes:
+  - `algorithm` - Encryption algorithm value. Sets the value of the `x-amz-server-side-encryption` header in S3 request.
+  - `aws_kms_key_arn` - Optional ARN of the SSE-KMS key used with the S3 location, when `algorithm = "SSE-KMS"`. Sets the value of the `x-amz-server-side-encryption-aws-kms-key-id` header.
 
 ### file_event_queue block
 
@@ -159,7 +166,6 @@ The `file_event_queue` block supports the following:
   - `queue_url` - (Required) The URL of the queue.
 - `provided_sqs` - (Optional) Configuration for provided Amazon SQS queue.
   - `queue_url` - (Required) The URL of the SQS queue.
-
 
 ## Attribute Reference
 

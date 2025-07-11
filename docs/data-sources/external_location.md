@@ -43,7 +43,10 @@ This data source exports the following attributes:
   * `updated_at` - Time at which this catalog was last modified, in epoch milliseconds.
   * `updated_by` - Username of user who last modified catalog.
   * `access_point` - The ARN of the s3 access point to use with the external location (AWS).
-  * `encryption_details` - The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
+  * `encryption_details` - A block describing encryption options that apply to clients connecting to cloud storage. Consisting of the following attributes:
+    * sse_encryption_details - a block describing server-Side Encryption properties for clients communicating with AWS S3. Consists of the following attributes:
+      * `algorithm` - Encryption algorithm value. Sets the value of the `x-amz-server-side-encryption` header in S3 request.
+      * `aws_kms_key_arn` - ARN of the SSE-KMS key used with the S3 location, when `algorithm = "SSE-KMS"`. 
 
 ## Related Resources
 

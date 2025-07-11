@@ -118,6 +118,11 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Computed = true
 			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Computed = true
 
+			common.MustSchemaPath(m, "ai_gateway", "guardrails", "input", "invalid_keywords").Deprecated = "Please use 'pii' and 'safety' instead."
+			common.MustSchemaPath(m, "ai_gateway", "guardrails", "input", "valid_topics").Deprecated = "Please use 'pii' and 'safety' instead."
+			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "invalid_keywords").Deprecated = "Please use 'pii' and 'safety' instead."
+			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "valid_topics").Deprecated = "Please use 'pii' and 'safety' instead."
+
 			// route_optimized cannot be updated.
 			common.MustSchemaPath(m, "route_optimized").ForceNew = true
 

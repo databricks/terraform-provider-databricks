@@ -30,7 +30,7 @@ resource "databricks_mws_ncc_binding" "ncc_binding" {
 
 The following arguments are available:
 
-* `name` - Name of Network Connectivity Config in Databricks Account. Change forces creation of a new resource.
+* `name` - Name of the network connectivity configuration. The name can contain alphanumeric characters, hyphens, and underscores. The length must be between 3 and 30 characters. The name must match the regular expression `^[0-9a-zA-Z-_]{3,30}$`. Change forces creation of a new resource.
 * `region` - Region of the Network Connectivity Config. NCCs can only be referenced by your workspaces in the same region. Change forces creation of a new resource.
 
 ## Attribute Reference
@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - combination of `account_id` and `network_connectivity_config_id` separated by `/` character
 * `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account
-* `egress_conf` - block containing information about network connectivity rules that apply to network traffic from your serverless compute resources. Consists of the following fields:
+* `egress_config` - block containing information about network connectivity rules that apply to network traffic from your serverless compute resources. Consists of the following fields:
   * `default_rules` - block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields:
     * `aws_stable_ip_rule` (AWS only) - block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:
       * `cidr_blocks` - list of IP CIDR blocks.
@@ -49,7 +49,9 @@ In addition to all arguments above, the following attributes are exported:
       * `target_services` - the Azure services to which this service endpoint rule applies to.
   * `target_rules` - block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields:
     * `azure_private_endpoint_rules` (Azure only) - list containing information about configure Azure Private Endpoints.
-
+    * `aws_private_endpoint_rules` (AWS only) - list containing information about configure AWS Private Endpoints.
+* `creation_time` - time in epoch milliseconds when this object was created.
+* `updated_time` - time in epoch milliseconds when this object was updated.
 
 ## Import
 

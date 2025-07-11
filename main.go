@@ -14,11 +14,11 @@ import (
 )
 
 const startMessageFormat = `Databricks Terraform Provider
-	
+
 Version %s
-	
+
 https://registry.terraform.io/providers/databricks/databricks/latest/docs
-	
+
 `
 
 func main() {

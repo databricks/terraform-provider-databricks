@@ -186,7 +186,7 @@ output "test_key_vault_secret" {
 }
 
 output "test_key_vault_secret_value" {
-  // this is for testing purposes only. 
+  // this is for testing purposes only.
   // must not be a practice for production.
   value = azurerm_key_vault_secret.this.value
   sensitive = true

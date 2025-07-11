@@ -23,7 +23,7 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 		resource "databricks_catalog" "prod" {
 			name           = "prod{var.RANDOM}"
 			isolation_mode = "ISOLATED"
-		}		
+		}
 
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"
@@ -42,13 +42,13 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 			skip_validation = true
 			isolation_mode = "ISOLATION_MODE_ISOLATED"
 		}
-		
+
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			isolation_mode  = "ISOLATION_MODE_ISOLATED"
-		}		
+		}
 
 		resource "databricks_workspace_binding" "dev" {
 			catalog_name = databricks_catalog.dev.name
@@ -60,7 +60,7 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 			securable_type = "catalog"
 			workspace_id   = %[1]s
 			binding_type   = "BINDING_TYPE_READ_ONLY"
-		}		
+		}
 
 		resource "databricks_workspace_binding" "ext" {
 			securable_name = databricks_external_location.some.id
@@ -73,7 +73,7 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 			securable_type = "storage_credential"
 			workspace_id   = %[1]s
 		}
-		
+
 		resource "databricks_workspace_binding" "service_cred" {
 			securable_name = databricks_credential.credential.id
 			securable_type = "credential"

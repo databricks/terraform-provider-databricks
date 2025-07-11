@@ -218,7 +218,7 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -276,7 +276,7 @@ func TestResourceSqlTableCreateTableWithOwner(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -356,7 +356,7 @@ func TestResourceSqlTableCreateTable_Error(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -1375,7 +1375,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -1450,7 +1450,7 @@ func TestResourceSqlTableCreateTableWithIdentityColumn_ExistingSQLWarehouse(t *t
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      	= "id"
 		  type 			= "bigint"
@@ -1551,8 +1551,8 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
-	
+
+
 		comment = "this table is managed by terraform"
 		`,
 		Fixtures: []qa.HTTPFixture{
@@ -1623,8 +1623,8 @@ func TestResourceSqlTableReadTableWithPartitionColumn_ExistingSQLWarehouse(t *te
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
-	
+
+
 		comment = "this table is managed by terraform"
 		`,
 		Fixtures: []qa.HTTPFixture{
@@ -1711,7 +1711,7 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"

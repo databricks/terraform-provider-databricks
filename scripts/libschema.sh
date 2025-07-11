@@ -2,7 +2,7 @@
 
 # Function to generate provider schema
 generate_schema() {
-  >&2 make install 
+  >&2 make install
   version=$(./terraform-provider-databricks version)
 
   local TMPDIR=$(mktemp -d)
@@ -23,4 +23,4 @@ EOF
   >&2 popd
   >&2 echo "Provider schema available in $TMPDIR/schema.json"
   echo "$TMPDIR/schema.json"
-} 
+}

@@ -19,6 +19,6 @@ jobs:
           if [ "$OPENAPI_SHA_GO_SDK" != "$OPENAPI_SHA" ]; then
             echo "OpenAPI SHA mismatch"
             exit 1
-          else 
+          else
             echo "OpenAPI SHA match"
           fi

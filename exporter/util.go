@@ -240,7 +240,7 @@ val readableMounts = dbutils.fs.mounts
             dbutils.fs.ls(mount.mountPoint)
             (mount.mountPoint
                 .replace("/mnt/", "")
-                .stripSuffix("/"), 
+                .stripSuffix("/"),
              mount.source)
         }, 5.second)
     } catch {

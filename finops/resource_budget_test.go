@@ -82,13 +82,13 @@ func TestResourceBudgetCreate(t *testing.T) {
 		AccountID: "account_id",
 		HCL: `
 		display_name = "budget_name"
-	
+
 		alert_configurations {
 			time_period         = "MONTH"
-			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
+			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED"
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
 			quantity_threshold  = "840.84"
-	
+
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"
 				target      = "me@databricks.com"
@@ -108,7 +108,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 				operator = "IN"
 				values   = [
 					1234567890098765
-				]                              
+				]
 			}
 		}
 		`,
@@ -192,13 +192,13 @@ func TestResourceBudgetUpdate(t *testing.T) {
 		Update:   true,
 		HCL: `
 		display_name = "budget_name_update"
-	
+
 		alert_configurations {
 			time_period         = "MONTH"
-			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
+			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED"
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
 			quantity_threshold  = "840.84"
-	
+
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"
 				target      = "me@databricks.com"
@@ -218,7 +218,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 				operator = "IN"
 				values   = [
 					1234567890098765
-				]                              
+				]
 			}
 		}
 		`,

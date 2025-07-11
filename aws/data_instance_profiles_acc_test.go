@@ -12,7 +12,7 @@ func TestAccDataSourceInstanceProfiles(t *testing.T) {
 		Template: `
 		data "databricks_instance_profiles" "this" {
 		}
-		
+
 		output "instance_profiles" {
 			value = data.databricks_instance_profiles.this.instance_profiles
 		}

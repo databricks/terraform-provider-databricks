@@ -8,9 +8,9 @@ import (
 
 func TestTrimLeadingWhitespace(t *testing.T) {
 	assert.Equal(t, "foo\nbar\n", TrimLeadingWhitespace(`
-	
+
     	    foo
             bar
-	
+
 	`))
 }

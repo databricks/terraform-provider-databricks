@@ -35,7 +35,7 @@ resource "databricks_sql_table" "myInferenceTable" {
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
 	warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-	
+
 	column {
 		name = "model_id"
 		type = "int"
@@ -70,7 +70,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				  prediction_col = "prediction"
 				  model_id_col = "model_id"
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
-				} 
+				}
 			}
 
 			resource "databricks_sql_table" "myTimeseries" {
@@ -96,7 +96,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				time_series {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
-				} 
+				}
 			}
 
 			resource "databricks_sql_table" "mySnapshot" {
@@ -120,7 +120,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				output_schema_name = databricks_schema.things.id
 				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				snapshot {
-				} 
+				}
 			}
 		`,
 	})
@@ -269,7 +269,7 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 				  prediction_col = "prediction"
 				  model_id_col = "model_id"
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
-				} 
+				}
 			}
 		`,
 		},

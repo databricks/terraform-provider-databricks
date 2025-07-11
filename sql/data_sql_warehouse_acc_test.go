@@ -12,7 +12,7 @@ func TestAccDataSourceWarehouse(t *testing.T) {
 		data "databricks_sql_warehouse" "this" {
 			id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 		}
-		
+
 		output "warehouse_info" {
 			value = data.databricks_sql_warehouse.this.name
 		}`,

@@ -36,7 +36,7 @@ func TestUcAccSchema(t *testing.T) {
 				privileges = ["USE_CATALOG"]
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.RANDOM}"

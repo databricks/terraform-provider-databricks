@@ -18,7 +18,7 @@ RUN \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install terraform 
+# Install terraform
 RUN \
     mkdir -p /tmp/docker-downloads \
     && curl -sSL -o /tmp/docker-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip \
@@ -34,7 +34,7 @@ RUN \
     go install -v golang.org/x/tools/cmd/goimports@latest \
     # # --> Gotestsum
     && go install -v gotest.tools/gotestsum@latest \
-    # # --> Go symbols and outline for go to symbol support and test support 
+    # # --> Go symbols and outline for go to symbol support and test support
     && go install github.com/acroca/go-symbols@v0.1.1 \
     # # --> Static checker
     && go install honnef.co/go/tools/cmd/staticcheck@v0.3.2 \

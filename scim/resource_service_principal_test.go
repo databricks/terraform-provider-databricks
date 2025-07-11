@@ -488,7 +488,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			force_delete_repos = true	
+			force_delete_repos = true
 		`,
 	}.ApplyNoError(t)
 }
@@ -547,7 +547,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 		 	application_id = "abc"
-			force_delete_home_dir = true	
+			force_delete_home_dir = true
 		`,
 	}.ApplyNoError(t)
 }

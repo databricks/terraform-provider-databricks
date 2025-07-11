@@ -104,7 +104,7 @@ module "vpc_endpoints" {
       service         = "s3"
       service_type    = "Gateway"
       route_table_ids = flatten([
-        module.vpc.private_route_table_ids, 
+        module.vpc.private_route_table_ids,
         module.vpc.public_route_table_ids])
       tags            = {
         Name = "${local.prefix}-s3-vpc-endpoint"
@@ -226,8 +226,8 @@ resource "aws_kms_grant" "databricks-grant" {
   key_id            = aws_kms_key.customer_managed_key.key_id
   grantee_principal = "arn:aws:iam::${var.databricks_aws_account_id}:root"
 
-  operations = ["Encrypt", "Decrypt", "DescribeKey", 
-    "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo", 
+  operations = ["Encrypt", "Decrypt", "DescribeKey",
+    "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo",
     "GenerateDataKeyWithoutPlaintext"]
 }
 

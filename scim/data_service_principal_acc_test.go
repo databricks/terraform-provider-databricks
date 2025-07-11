@@ -24,7 +24,7 @@ resource "databricks_service_principal" "this" {
 }
 
 data "databricks_service_principal" "this" {
-	scim_id = databricks_service_principal.this.id 
+	scim_id = databricks_service_principal.this.id
 	depends_on = [databricks_service_principal.this]
 }`
 

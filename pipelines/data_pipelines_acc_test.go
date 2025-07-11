@@ -57,7 +57,7 @@ func TestAccDataSourcePipelines(t *testing.T) {
 		resource "databricks_pipeline" "this" {
 			name = local.name
 			storage = "/test/${local.name}"
-			
+
 			configuration = {
 				key1 = "value1"
 				key2 = "value2"

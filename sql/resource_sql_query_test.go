@@ -560,7 +560,7 @@ func TestSqlQueryUpdateWithParams(t *testing.T) {
 			data_source_id = "xyz"
 			name = "name"
 			query = "SELECT 1, 2, 3, 4"
-			
+
 			parameter {
 				name = "1"
 				title = "Title for column 1"

@@ -9,7 +9,7 @@ import (
 
 func DataSource{{.CamelName}}() *schema.Resource {
 	type {{.LowerCamel}}Data struct {
-		// data resources output fields annotated with tf:"computed" 
+		// data resources output fields annotated with tf:"computed"
 		Ids []string {{.BT}}json:"ids,omitempty" tf:"computed,slice_set"{{.BT}}
 	}
 	return common.DataResource({{.LowerCamel}}Data{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {

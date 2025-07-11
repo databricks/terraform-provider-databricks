@@ -10,6 +10,9 @@ fmt-docs:
 	@echo "✓ Formatting code samples in documentation"
 	@terrafmt fmt -p '*.md' .
 
+ws:
+	./tools/validate_whitespace.py
+
 lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
 	@go tool staticcheck ./...
@@ -31,7 +34,7 @@ install: build
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
 	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databricks/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"
-	@echo 
+	@echo
 	@echo "terraform {"
 	@echo "  required_providers {"
 	@echo "    databricks = {"
@@ -82,4 +85,4 @@ schema:
 diff-schema:
 	@/bin/bash scripts/diff-schema.sh
 
-.PHONY: build fmt python-setup docs vendor build fmt coverage test lint
+.PHONY: build fmt python-setup docs vendor build fmt coverage test lint ws

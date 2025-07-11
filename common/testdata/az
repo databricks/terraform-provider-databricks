@@ -1,16 +1,16 @@
 #!/bin/bash
 
-if [ "yes" == "$FAIL" ]; then 
+if [ "yes" == "$FAIL" ]; then
     >&2 /bin/echo "This is just a failing script."
     exit 1
 fi
 
-if [ "logout" == "$FAIL" ]; then 
+if [ "logout" == "$FAIL" ]; then
     >&2 /bin/echo "No subscription found. Run 'az account set' to select a subscription."
     exit 1
 fi
 
-if [ "corrupt" == "$FAIL" ]; then 
+if [ "corrupt" == "$FAIL" ]; then
     /bin/echo "{accessToken: ..corrupt"
     exit
 fi

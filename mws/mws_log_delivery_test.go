@@ -13,13 +13,13 @@ func TestMwsAccLogDelivery(t *testing.T) {
 			credentials_name = "tf-acceptance-logdelivery-{var.RANDOM}"
 			role_arn         = "{env.TEST_LOGDELIVERY_ARN}"
 		}
-	
+
 		resource "databricks_mws_storage_configurations" "ld" {
 			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
 			storage_configuration_name = "tf-acceptance-logdelivery-{var.RANDOM}"
 			bucket_name                = "{env.TEST_LOGDELIVERY_BUCKET}"
 		}
-	
+
 		resource "databricks_mws_log_delivery" "usage_logs" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"
 			credentials_id = databricks_mws_credentials.ld.credentials_id
@@ -29,7 +29,7 @@ func TestMwsAccLogDelivery(t *testing.T) {
 			log_type = "BILLABLE_USAGE"
 			output_format = "CSV"
 		}
-		
+
 		resource "databricks_mws_log_delivery" "audit_logs" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"
 			credentials_id = databricks_mws_credentials.ld.credentials_id

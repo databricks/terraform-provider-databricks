@@ -14,9 +14,9 @@ func TestAccDataMlflowModel(t *testing.T) {
 			Template: `
 			resource "databricks_mlflow_model" "this" {
 			  name = "model-{var.RANDOM}"
-			
+
 			  description = "My MLflow model description"
-			
+
 			  tags {
 				key   = "key1"
 				value = "value1"
@@ -31,9 +31,9 @@ func TestAccDataMlflowModel(t *testing.T) {
 			Template: `
 			resource "databricks_mlflow_model" "this" {
 			  name = "model-{var.RANDOM}"
-			
+
 			  description = "My MLflow model description"
-			
+
 			  tags {
 				key   = "key1"
 				value = "value1"
@@ -42,7 +42,7 @@ func TestAccDataMlflowModel(t *testing.T) {
 				key   = "key2"
 				value = "value2"
 			  }
-			}			
+			}
 
 			data "databricks_mlflow_model" "this" {
 			  depends_on = [databricks_mlflow_model.this]

@@ -2837,7 +2837,7 @@ terraform import databricks_pipeline.def "def"
 			os.WriteFile(tmpDir+"/import.tf", []byte(
 				`import {
   id = "abc"
-  to = databricks_pipeline.abc 
+  to = databricks_pipeline.abc
 }
 import {
   id = "def"
@@ -2847,7 +2847,7 @@ import {
 
 			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
 }
-			
+
 resource "databricks_pipeline" "def" {
 }
 `), 0700)

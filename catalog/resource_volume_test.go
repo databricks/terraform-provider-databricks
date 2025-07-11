@@ -492,7 +492,7 @@ func TestVolumesValidateOnVolumesType(t *testing.T) {
 		volume_type = "unknown"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
-		comment = "This is a new test comment."		
+		comment = "This is a new test comment."
 		`,
 	}.Apply(t)
 	assert.ErrorContains(t, err, "expected volume_type to be one of [MANAGED EXTERNAL], got unknown")

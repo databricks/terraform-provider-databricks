@@ -7,7 +7,7 @@ if [[ $@ == *"--debug"* ]]; then
     echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
-if [ "" == "$TEST_FILTER" ]; then 
+if [ "" == "$TEST_FILTER" ]; then
     TEST_FILTER="TestAcc"
 fi
 

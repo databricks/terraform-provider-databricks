@@ -32,7 +32,7 @@ resource "databricks_cluster" "this" {
 resource "databricks_mount" "my_mount" {
 	name = "test-mount-{var.STICKY_RANDOM}"
 	cluster_id = databricks_cluster.this.id
-	
+
 	s3 {
 		bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
 	}

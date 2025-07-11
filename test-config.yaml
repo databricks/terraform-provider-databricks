@@ -22,7 +22,7 @@ ignored_tests:
       test_name: TestAccServicePrincipalResourceOnAzure
       comment: Failure due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
     - package: github.com/databricks/terraform-provider-databricks/mws
-      test_name: TestMwsAccGcpWorkspaces 
+      test_name: TestMwsAccGcpWorkspaces
       comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
     - package: github.com/databricks/terraform-provider-databricks/mws
       test_name: TestMwsAccGcpByovpcWorkspaces
@@ -110,7 +110,7 @@ ignored_tests:
       comment: Failure due to API timeouts in the permissions APIs.
     - package: github.com/databricks/terraform-provider-databricks/permissions
       test_name: TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle
-      comment: Failure due to stale results being returned from cache on using empty etag.  
+      comment: Failure due to stale results being returned from cache on using empty etag.
     - package: github.com/databricks/terraform-provider-databricks/permissions
       test_name: TestMwsAccAccountGroupRuleSetsFullLifeCycle
       comment: Failure due to stale results being returned from cache on using empty etag.

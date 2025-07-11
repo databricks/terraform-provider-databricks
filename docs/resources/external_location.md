@@ -144,7 +144,7 @@ The following arguments are required:
 
 A block describing encryption options that apply to clients connecting to cloud storage. Consisting of the following attributes
 
-- sse_encryption_details - a block describing server-Side Encryption properties for clients communicating with AWS S3. Consists of the following attributes:
+- `sse_encryption_details` - a block describing server-Side Encryption properties for clients communicating with AWS S3. Consists of the following attributes:
   - `algorithm` - Encryption algorithm value. Sets the value of the `x-amz-server-side-encryption` header in S3 request.
   - `aws_kms_key_arn` - Optional ARN of the SSE-KMS key used with the S3 location, when `algorithm = "SSE-KMS"`. Sets the value of the `x-amz-server-side-encryption-aws-kms-key-id` header.
 

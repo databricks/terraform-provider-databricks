@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volume Data Source
 
-Retrieves details about [databricks_volume](../resources/volume.md) that was created by Terraform or manually.
+Retrieves details about [databricks_volume](../resources/volume.md) that was created by Terraform or manually. 
 A volume can be identified by its three-level (fully qualified) name (in the form of: `catalog_name`.`schema_name`.`volume_name`) as input. This can be retrieved programmatically using [databricks_volumes](../data-sources/volumes.md) data source.
 
 -> This data source can only be used with a workspace-level provider!
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 * `volume_info` - `VolumeInfo` object for a Unity Catalog volume. This contains the following attributes:
   * `name` - Name of the volume, relative to parent schema.
   * `access_point` - the AWS access point to use when accessing s3 bucket for this volume's external location
-  * `browse_only` - indicates whether the principal is limited to retrieving metadata for the volume through the BROWSE privilege when include_browse is enabled in the request.
+  * `browse_only` - indicates whether the principal is limited to retrieving metadata for the volume through the BROWSE privilege when include_browse is enabled in the request. 
   * `catalog_name` - the name of the catalog where the schema and the volume are
   * `comment` - the comment attached to the volume
   * `created_at` - the Unix timestamp at the volume's creation

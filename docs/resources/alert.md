@@ -79,7 +79,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Migrating from `databricks_sql_alert` resource
 
-Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but is exposed via a different API. This means that we can migrate existing alerts without recreating them.
+Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but is exposed via a different API. This means that we can migrate existing alerts without recreating them.  
 
 -> It's also recommended to migrate to the `databricks_query` resource - see [databricks_query](query.md) for more details.
 
@@ -94,7 +94,7 @@ This operation is done in few steps:
     * the `column` attribute is becoming the `operand` block
     * the `value` attribute is becoming the `threshold` block.  **Please note that the old implementation always used strings so you may have changes after import if you use `double_value` or `bool_value` inside the block.**
   * the `rearm` attribute is renamed to `seconds_to_retrigger`.
-
+  
 For example, if we have the original `databricks_sql_alert` defined as:
 
 ```hcl

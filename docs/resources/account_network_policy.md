@@ -33,8 +33,8 @@ The following arguments are supported:
 ### EgressNetworkPolicyNetworkAccessPolicyStorageDestination
 * `azure_storage_account` (string, optional) - The Azure storage account name
 * `azure_storage_service` (string, optional) - The Azure storage service type (blob, dfs, etc.)
-* `bucket_name` (string, optional) -
-* `region` (string, optional) -
+* `bucket_name` (string, optional) - 
+* `region` (string, optional) - 
 * `storage_destination_type` (string, optional) - The type of storage destination. Possible values are: `AWS_S3`, `AZURE_STORAGE`, `GOOGLE_CLOUD_STORAGE`
 
 ### NetworkPolicyEgress

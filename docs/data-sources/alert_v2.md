@@ -31,14 +31,14 @@ The following attributes are exported:
 * `custom_description` (string) - Custom description for the alert. support mustache template
 * `custom_summary` (string) - Custom summary for the alert. support mustache template
 * `display_name` (string) - The display name of the alert
-* `evaluation` (AlertV2Evaluation) -
+* `evaluation` (AlertV2Evaluation) - 
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
 * `run_as_user_name` (string) - The run as username. This field is set to "Unavailable" if the user has been deleted
-* `schedule` (CronSchedule) -
+* `schedule` (CronSchedule) - 
 * `update_time` (string) - The timestamp indicating when the alert was updated
 * `warehouse_id` (string) - ID of the SQL warehouse attached to the alert
 
@@ -54,25 +54,25 @@ The following attributes are exported:
 ### AlertV2Notification
 * `notify_on_ok` (boolean) - Whether to notify alert subscribers when alert returns back to normal
 * `retrigger_seconds` (integer) - Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again
-* `subscriptions` (list of AlertV2Subscription) -
+* `subscriptions` (list of AlertV2Subscription) - 
 
 ### AlertV2Operand
-* `column` (AlertV2OperandColumn) -
-* `value` (AlertV2OperandValue) -
+* `column` (AlertV2OperandColumn) - 
+* `value` (AlertV2OperandValue) - 
 
 ### AlertV2OperandColumn
 * `aggregation` (string) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
-* `display` (string) -
-* `name` (string) -
+* `display` (string) - 
+* `name` (string) - 
 
 ### AlertV2OperandValue
-* `bool_value` (boolean) -
-* `double_value` (number) -
-* `string_value` (string) -
+* `bool_value` (boolean) - 
+* `double_value` (number) - 
+* `string_value` (string) - 
 
 ### AlertV2Subscription
-* `destination_id` (string) -
-* `user_email` (string) -
+* `destination_id` (string) - 
+* `user_email` (string) - 
 
 ### CronSchedule
 * `pause_status` (string) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`

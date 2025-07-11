@@ -23,7 +23,7 @@ resource "databricks_mlflow_experiment" "this" {
   tags {
     key   = "key2"
     value = "value2"
-  }
+  }  
 }
 ```
 

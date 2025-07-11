@@ -2,7 +2,7 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Resource
-Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema.
+Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
 
 
 -> **Note** This resource can only be used with an workspace-level provider!
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `anomaly_detection_config` (AnomalyDetectionConfig) -
+* `anomaly_detection_config` (AnomalyDetectionConfig) - 
 
 ### AnomalyDetectionConfig
 * `last_run_id` (string) - Run id of the last run of the workflow

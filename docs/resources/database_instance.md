@@ -2,11 +2,11 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Resource
-Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances.
+Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances. 
 
 ### Use Cases
 
-Database Instances can be accessed for reading and writing structured data via SQL.
+Database Instances can be accessed for reading and writing structured data via SQL. 
 
 Database Instances can be mapped to Catalogs and Tables within a Unity Catalog Metastore to enable read access via REST API and Feature Store.
 

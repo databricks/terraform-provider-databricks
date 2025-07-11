@@ -48,7 +48,7 @@ output "wildcard_pipelines" {
 This data source exports the following attributes:
 
 * `pipeline_name` - (Optional) Filter Lakeflow Declarative Pipelines by name for a given search term. `%` is the supported wildcard operator.
-
+  
 ## Attribute Reference
 
 This data source exports the following attributes:

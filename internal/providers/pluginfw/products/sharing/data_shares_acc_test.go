@@ -71,7 +71,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			}
 		}			
 		
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name = "{var.RANDOM}-terraform-delta-share"
 			object {
 				name = databricks_table.mytable.id
@@ -87,7 +87,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 		}
 
 		data "databricks_shares_pluginframework" "this" {
-			depends_on = [databricks_share_pluginframework.myshare]
+			depends_on = [databricks_share.myshare]
 		}
 		`,
 		Check: checkSharesDataSourcePopulated(t),

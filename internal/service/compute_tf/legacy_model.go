@@ -52,21 +52,6 @@ type AddInstanceProfile_SdkV2 struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 }
 
-func (newState *AddInstanceProfile_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddInstanceProfile_SdkV2) {
-}
-
-func (newState *AddInstanceProfile_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddInstanceProfile_SdkV2) {
-}
-
-func (c AddInstanceProfile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
-	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
-	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddInstanceProfile.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -255,11 +240,6 @@ func (o AutoScale_SdkV2) Type(ctx context.Context) attr.Type {
 // Attributes set during cluster creation which are related to Amazon Web
 // Services.
 type AwsAttributes_SdkV2 struct {
-	// Availability type used for all subsequent nodes past the
-	// `first_on_demand` ones.
-	//
-	// Note: If `first_on_demand` is zero, this availability type will be used
-	// for the entire cluster.
 	Availability types.String `tfsdk:"availability"`
 	// The number of volumes launched for each instance. Users can choose up to
 	// 10 volumes. This feature is only enabled for supported node types. Legacy
@@ -522,20 +502,6 @@ type CancelCommand_SdkV2 struct {
 	ContextId types.String `tfsdk:"contextId"`
 }
 
-func (newState *CancelCommand_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelCommand_SdkV2) {
-}
-
-func (newState *CancelCommand_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelCommand_SdkV2) {
-}
-
-func (c CancelCommand_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["commandId"] = attrs["commandId"].SetOptional()
-	attrs["contextId"] = attrs["contextId"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelCommand.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -616,19 +582,6 @@ type ChangeClusterOwner_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// New owner of the cluster_id after this RPC.
 	OwnerUsername types.String `tfsdk:"owner_username"`
-}
-
-func (newState *ChangeClusterOwner_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwner_SdkV2) {
-}
-
-func (newState *ChangeClusterOwner_SdkV2) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwner_SdkV2) {
-}
-
-func (c ChangeClusterOwner_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["owner_username"] = attrs["owner_username"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChangeClusterOwner.
@@ -887,7 +840,7 @@ func (o *CloudProviderNodeInfo_SdkV2) SetStatus(ctx context.Context, v []types.S
 type ClusterAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -1082,35 +1035,7 @@ type ClusterAttributes_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
@@ -1149,23 +1074,7 @@ type ClusterAttributes_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -1226,7 +1135,7 @@ type ClusterAttributes_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -1832,35 +1741,7 @@ type ClusterDetails_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
@@ -1921,23 +1802,7 @@ type ClusterDetails_SdkV2 struct {
 	// Port on which Spark JDBC server is listening, in the driver nod. No
 	// service will be listeningon on this port in executor nodes.
 	JdbcPort types.Int64 `tfsdk:"jdbc_port"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// the timestamp that the cluster was started/restarted
 	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time"`
@@ -2036,7 +1901,7 @@ type ClusterDetails_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -3137,7 +3002,7 @@ type ClusterPermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3309,7 +3174,7 @@ func (o *ClusterPermissions_SdkV2) SetAccessControlList(ctx context.Context, v [
 
 type ClusterPermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3363,19 +3228,6 @@ type ClusterPermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-"`
-}
-
-func (newState *ClusterPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsRequest_SdkV2) {
-}
-
-func (newState *ClusterPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsRequest_SdkV2) {
-}
-
-func (c ClusterPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermissionsRequest.
@@ -3444,7 +3296,7 @@ func (o *ClusterPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Conte
 type ClusterPolicyAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -3606,7 +3458,7 @@ type ClusterPolicyPermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3778,7 +3630,7 @@ func (o *ClusterPolicyPermissions_SdkV2) SetAccessControlList(ctx context.Contex
 
 type ClusterPolicyPermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -3832,19 +3684,6 @@ type ClusterPolicyPermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
-}
-
-func (newState *ClusterPolicyPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsRequest_SdkV2) {
-}
-
-func (newState *ClusterPolicyPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsRequest_SdkV2) {
-}
-
-func (c ClusterPolicyPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["cluster_policy_id"] = attrs["cluster_policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermissionsRequest.
@@ -4116,35 +3955,7 @@ type ClusterSpec_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
@@ -4183,23 +3994,7 @@ type ClusterSpec_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -4271,7 +4066,7 @@ type ClusterSpec_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -4814,21 +4609,6 @@ type Command_SdkV2 struct {
 	Language types.String `tfsdk:"language"`
 }
 
-func (newState *Command_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Command_SdkV2) {
-}
-
-func (newState *Command_SdkV2) SyncEffectiveFieldsDuringRead(existingState Command_SdkV2) {
-}
-
-func (c Command_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["command"] = attrs["command"].SetOptional()
-	attrs["contextId"] = attrs["contextId"].SetOptional()
-	attrs["language"] = attrs["language"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Command.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5134,35 +4914,7 @@ type CreateCluster_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
@@ -5201,23 +4953,7 @@ type CreateCluster_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -5289,60 +5025,8 @@ type CreateCluster_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
-}
-
-func (newState *CreateCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster_SdkV2) {
-}
-
-func (newState *CreateCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCluster_SdkV2) {
-}
-
-func (c CreateCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["clone_from"] = attrs["clone_from"].SetOptional()
-	attrs["clone_from"] = attrs["clone_from"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
-	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
-	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
-	attrs["kind"] = attrs["kind"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
-	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
-	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
-	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
-	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
-	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
-	attrs["spark_version"] = attrs["spark_version"].SetRequired()
-	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
-	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
-	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCluster.
@@ -5872,19 +5556,6 @@ type CreateContext_SdkV2 struct {
 	Language types.String `tfsdk:"language"`
 }
 
-func (newState *CreateContext_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateContext_SdkV2) {
-}
-
-func (newState *CreateContext_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateContext_SdkV2) {
-}
-
-func (c CreateContext_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetOptional()
-	attrs["language"] = attrs["language"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateContext.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5979,36 +5650,6 @@ type CreateInstancePool_SdkV2 struct {
 	// If set, what the total initial volume size (in GB) of the remote disks
 	// should be. Currently only supported for GCP HYPERDISK_BALANCED types.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
-}
-
-func (newState *CreateInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool_SdkV2) {
-}
-
-func (newState *CreateInstancePool_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateInstancePool_SdkV2) {
-}
-
-func (c CreateInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
-	attrs["disk_spec"] = attrs["disk_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
-	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
-	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
-	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
-	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
-	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
-	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
-	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstancePool.
@@ -6356,24 +5997,6 @@ type CreatePolicy_SdkV2 struct {
 	// `policy_family_definition_overrides` instead to customize the policy
 	// definition.
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
-}
-
-func (newState *CreatePolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicy_SdkV2) {
-}
-
-func (newState *CreatePolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePolicy_SdkV2) {
-}
-
-func (c CreatePolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["definition"] = attrs["definition"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
-	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePolicy.
@@ -6763,18 +6386,6 @@ type DeleteCluster_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *DeleteCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCluster_SdkV2) {
-}
-
-func (newState *DeleteCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCluster_SdkV2) {
-}
-
-func (c DeleteCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6888,18 +6499,6 @@ type DeleteInstancePool_SdkV2 struct {
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
-func (newState *DeleteInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePool_SdkV2) {
-}
-
-func (newState *DeleteInstancePool_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePool_SdkV2) {
-}
-
-func (c DeleteInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstancePool.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6975,18 +6574,6 @@ func (o DeleteInstancePoolResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeletePolicy_SdkV2 struct {
 	// The ID of the policy to delete.
 	PolicyId types.String `tfsdk:"policy_id"`
-}
-
-func (newState *DeletePolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicy_SdkV2) {
-}
-
-func (newState *DeletePolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePolicy_SdkV2) {
-}
-
-func (c DeletePolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicy.
@@ -7106,19 +6693,6 @@ type DestroyContext_SdkV2 struct {
 	ClusterId types.String `tfsdk:"clusterId"`
 
 	ContextId types.String `tfsdk:"contextId"`
-}
-
-func (newState *DestroyContext_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyContext_SdkV2) {
-}
-
-func (newState *DestroyContext_SdkV2) SyncEffectiveFieldsDuringRead(existingState DestroyContext_SdkV2) {
-}
-
-func (c DestroyContext_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clusterId"] = attrs["clusterId"].SetRequired()
-	attrs["contextId"] = attrs["contextId"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyContext.
@@ -7322,11 +6896,8 @@ func (o *DiskSpec_SdkV2) SetDiskType(ctx context.Context, v DiskType_SdkV2) {
 
 // Describes the disk type.
 type DiskType_SdkV2 struct {
-	// All Azure Disk types that Databricks supports. See
-	// https://docs.microsoft.com/en-us/azure/storage/storage-about-disks-and-vhds-linux#types-of-disks
 	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type"`
-	// All EBS volume types that Databricks supports. See
-	// https://aws.amazon.com/ebs/details/ for details.
+
 	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 }
 
@@ -7558,35 +7129,7 @@ type EditCluster_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
@@ -7625,23 +7168,7 @@ type EditCluster_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -7713,59 +7240,8 @@ type EditCluster_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
-}
-
-func (newState *EditCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster_SdkV2) {
-}
-
-func (newState *EditCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditCluster_SdkV2) {
-}
-
-func (c EditCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
-	attrs["aws_attributes"] = attrs["aws_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
-	attrs["azure_attributes"] = attrs["azure_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
-	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].SetOptional()
-	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
-	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
-	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
-	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
-	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
-	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
-	attrs["kind"] = attrs["kind"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
-	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
-	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
-	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
-	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
-	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
-	attrs["spark_version"] = attrs["spark_version"].SetRequired()
-	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
-	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
-	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].SetOptional()
-	attrs["workload_type"] = attrs["workload_type"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditCluster.
@@ -8293,26 +7769,6 @@ type EditInstancePool_SdkV2 struct {
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
-func (newState *EditInstancePool_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePool_SdkV2) {
-}
-
-func (newState *EditInstancePool_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditInstancePool_SdkV2) {
-}
-
-func (c EditInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
-	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
-	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
-	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
-	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditInstancePool.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8467,25 +7923,6 @@ type EditPolicy_SdkV2 struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 	// The ID of the policy to update.
 	PolicyId types.String `tfsdk:"policy_id"`
-}
-
-func (newState *EditPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicy_SdkV2) {
-}
-
-func (newState *EditPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPolicy_SdkV2) {
-}
-
-func (c EditPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["definition"] = attrs["definition"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
-	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPolicy.
@@ -8651,19 +8088,6 @@ type EnforceClusterComplianceRequest_SdkV2 struct {
 	// If set, previews the changes that would be made to a cluster to enforce
 	// compliance but does not update the cluster.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *EnforceClusterComplianceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceRequest_SdkV2) {
-}
-
-func (newState *EnforceClusterComplianceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceRequest_SdkV2) {
-}
-
-func (c EnforceClusterComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforceClusterComplianceRequest.
@@ -11000,21 +10424,6 @@ type GlobalInitScriptCreateRequest_SdkV2 struct {
 	Script types.String `tfsdk:"script"`
 }
 
-func (newState *GlobalInitScriptCreateRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptCreateRequest_SdkV2) {
-}
-
-func (newState *GlobalInitScriptCreateRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptCreateRequest_SdkV2) {
-}
-
-func (c GlobalInitScriptCreateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["position"] = attrs["position"].SetOptional()
-	attrs["script"] = attrs["script"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptCreateRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11251,22 +10660,6 @@ type GlobalInitScriptUpdateRequest_SdkV2 struct {
 	Script types.String `tfsdk:"script"`
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
-}
-
-func (newState *GlobalInitScriptUpdateRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptUpdateRequest_SdkV2) {
-}
-
-func (newState *GlobalInitScriptUpdateRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptUpdateRequest_SdkV2) {
-}
-
-func (c GlobalInitScriptUpdateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["position"] = attrs["position"].SetOptional()
-	attrs["script"] = attrs["script"].SetRequired()
-	attrs["script_id"] = attrs["script_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptUpdateRequest.
@@ -12053,19 +11446,6 @@ type InstallLibraries_SdkV2 struct {
 	Libraries types.List `tfsdk:"libraries"`
 }
 
-func (newState *InstallLibraries_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibraries_SdkV2) {
-}
-
-func (newState *InstallLibraries_SdkV2) SyncEffectiveFieldsDuringRead(existingState InstallLibraries_SdkV2) {
-}
-
-func (c InstallLibraries_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["libraries"] = attrs["libraries"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallLibraries.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12173,7 +11553,7 @@ func (o InstallLibrariesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type InstancePoolAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -12947,9 +12327,6 @@ func (o InstancePoolAzureAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Attributes set during instance pool creation which are related to GCP.
 type InstancePoolGcpAttributes_SdkV2 struct {
-	// This field determines whether the instance pool will contain preemptible
-	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
-	// if the former is unavailable.
 	GcpAvailability types.String `tfsdk:"gcp_availability"`
 	// If provided, each node in the instance pool will have this number of
 	// local SSDs attached. Each local SSD is 375GB in size. Refer to [GCP
@@ -13030,7 +12407,7 @@ type InstancePoolPermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -13202,7 +12579,7 @@ func (o *InstancePoolPermissions_SdkV2) SetAccessControlList(ctx context.Context
 
 type InstancePoolPermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -13256,19 +12633,6 @@ type InstancePoolPermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
-}
-
-func (newState *InstancePoolPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsRequest_SdkV2) {
-}
-
-func (newState *InstancePoolPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsRequest_SdkV2) {
-}
-
-func (c InstancePoolPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermissionsRequest.
@@ -13860,6 +13224,36 @@ func (o *LibraryFullStatus_SdkV2) SetMessages(ctx context.Context, v []types.Str
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Messages = types.ListValueMust(t, vs)
+}
+
+type ListAllClusterLibraryStatuses_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllClusterLibraryStatuses.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListAllClusterLibraryStatuses_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAllClusterLibraryStatuses_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListAllClusterLibraryStatuses_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListAllClusterLibraryStatuses_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ListAllClusterLibraryStatusesResponse_SdkV2 struct {
@@ -14582,6 +13976,36 @@ func (o ListClustersSortBy_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListGlobalInitScriptsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListGlobalInitScriptsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListGlobalInitScriptsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListGlobalInitScriptsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListGlobalInitScriptsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListGlobalInitScriptsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type ListGlobalInitScriptsResponse_SdkV2 struct {
 	Scripts types.List `tfsdk:"scripts"`
 }
@@ -14736,6 +14160,66 @@ func (o *ListInstancePools_SdkV2) SetInstancePools(ctx context.Context, v []Inst
 	o.InstancePools = types.ListValueMust(t, vs)
 }
 
+type ListInstancePoolsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstancePoolsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListInstancePoolsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListInstancePoolsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListInstancePoolsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListInstancePoolsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListInstanceProfilesRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstanceProfilesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListInstanceProfilesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListInstanceProfilesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListInstanceProfilesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListInstanceProfilesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type ListInstanceProfilesResponse_SdkV2 struct {
 	// A list of instance profiles that the user can access.
 	InstanceProfiles types.List `tfsdk:"instance_profiles"`
@@ -14812,6 +14296,36 @@ func (o *ListInstanceProfilesResponse_SdkV2) SetInstanceProfiles(ctx context.Con
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instance_profiles"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.InstanceProfiles = types.ListValueMust(t, vs)
+}
+
+type ListNodeTypesRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNodeTypesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListNodeTypesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListNodeTypesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListNodeTypesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListNodeTypesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ListNodeTypesResponse_SdkV2 struct {
@@ -15092,6 +14606,36 @@ func (o *ListPolicyFamiliesResponse_SdkV2) SetPolicyFamilies(ctx context.Context
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policy_families"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PolicyFamilies = types.ListValueMust(t, vs)
+}
+
+type ListZonesRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListZonesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListZonesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListZonesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListZonesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListZonesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type LocalFileInfo_SdkV2 struct {
@@ -15689,18 +15233,6 @@ type PermanentDeleteCluster_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *PermanentDeleteCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteCluster_SdkV2) {
-}
-
-func (newState *PermanentDeleteCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteCluster_SdkV2) {
-}
-
-func (c PermanentDeleteCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermanentDeleteCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -15775,18 +15307,6 @@ func (o PermanentDeleteClusterResponse_SdkV2) Type(ctx context.Context) attr.Typ
 
 type PinCluster_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
-}
-
-func (newState *PinCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinCluster_SdkV2) {
-}
-
-func (newState *PinCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState PinCluster_SdkV2) {
-}
-
-func (c PinCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PinCluster.
@@ -16194,18 +15714,6 @@ type RemoveInstanceProfile_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
-func (newState *RemoveInstanceProfile_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveInstanceProfile_SdkV2) {
-}
-
-func (newState *RemoveInstanceProfile_SdkV2) SyncEffectiveFieldsDuringRead(existingState RemoveInstanceProfile_SdkV2) {
-}
-
-func (c RemoveInstanceProfile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveInstanceProfile.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16296,21 +15804,6 @@ type ResizeCluster_SdkV2 struct {
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
-}
-
-func (newState *ResizeCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeCluster_SdkV2) {
-}
-
-func (newState *ResizeCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResizeCluster_SdkV2) {
-}
-
-func (c ResizeCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["autoscale"] = attrs["autoscale"].SetOptional()
-	attrs["autoscale"] = attrs["autoscale"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["num_workers"] = attrs["num_workers"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResizeCluster.
@@ -16424,19 +15917,6 @@ type RestartCluster_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	RestartUser types.String `tfsdk:"restart_user"`
-}
-
-func (newState *RestartCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartCluster_SdkV2) {
-}
-
-func (newState *RestartCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestartCluster_SdkV2) {
-}
-
-func (c RestartCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["restart_user"] = attrs["restart_user"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartCluster.
@@ -16983,21 +16463,39 @@ func (o SparkVersion_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SparkVersionsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkVersionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SparkVersionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparkVersionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SparkVersionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SparkVersionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type StartCluster_SdkV2 struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id"`
-}
-
-func (newState *StartCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartCluster_SdkV2) {
-}
-
-func (newState *StartCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartCluster_SdkV2) {
-}
-
-func (c StartCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartCluster.
@@ -17168,19 +16666,6 @@ type UninstallLibraries_SdkV2 struct {
 	Libraries types.List `tfsdk:"libraries"`
 }
 
-func (newState *UninstallLibraries_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibraries_SdkV2) {
-}
-
-func (newState *UninstallLibraries_SdkV2) SyncEffectiveFieldsDuringRead(existingState UninstallLibraries_SdkV2) {
-}
-
-func (c UninstallLibraries_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["libraries"] = attrs["libraries"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UninstallLibraries.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17289,18 +16774,6 @@ type UnpinCluster_SdkV2 struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *UnpinCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinCluster_SdkV2) {
-}
-
-func (newState *UnpinCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState UnpinCluster_SdkV2) {
-}
-
-func (c UnpinCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpinCluster.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17393,21 +16866,6 @@ type UpdateCluster_SdkV2 struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCluster_SdkV2) {
-}
-
-func (newState *UpdateCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCluster_SdkV2) {
-}
-
-func (c UpdateCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cluster"] = attrs["cluster"].SetOptional()
-	attrs["cluster"] = attrs["cluster"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCluster.
@@ -17514,35 +16972,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Data security mode decides what data governance model to use when
-	// accessing data from a cluster.
-	//
-	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
-	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
-	// access mode depending on your compute configuration. *
-	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
-	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
-	//
-	// The following modes can be used regardless of `kind`. * `NONE`: No
-	// security isolation for multiple users sharing the cluster. Data
-	// governance features are not available in this mode. * `SINGLE_USER`: A
-	// secure cluster that can only be exclusively used by a single user
-	// specified in `single_user_name`. Most programming languages, cluster
-	// features and data governance features are available in this mode. *
-	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
-	// Cluster users are fully isolated so that they cannot see each other's
-	// data and credentials. Most data governance features are supported in this
-	// mode. But programming languages and cluster features might be limited.
-	//
-	// The following modes are deprecated starting with Databricks Runtime 15.0
-	// and will be removed for future Databricks Runtime versions:
-	//
-	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
-	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
-	// from legacy Passthrough on high concurrency clusters. *
-	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
-	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
-	// mode provides a way that doesn’t have UC nor passthrough enabled.
+
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
@@ -17581,23 +17011,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// The kind of compute described by this compute specification.
-	//
-	// Depending on `kind`, different validations and default values will be
-	// applied.
-	//
-	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
-	// whereas clusters with no specified `kind` do not. *
-	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
-	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
-	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
-	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
-	// `DATA_SECURITY_MODE_STANDARD`
-	//
-	// By using the [simple form], your clusters are automatically using `kind =
-	// CLASSIC_PREVIEW`.
-	//
-	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -17669,7 +17083,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-	// Cluster Attributes showing for clusters workload types.
+
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 

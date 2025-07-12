@@ -392,7 +392,7 @@ func (o *App) SetUserApiScopes(ctx context.Context, v []types.String) {
 type AppAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -804,7 +804,7 @@ type AppPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -976,7 +976,7 @@ func (o *AppPermissions) SetAccessControlList(ctx context.Context, v []AppAccess
 
 type AppPermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -1030,19 +1030,6 @@ type AppPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsRequest) {
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState AppPermissionsRequest) {
-}
-
-func (c AppPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["app_name"] = attrs["app_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
@@ -1109,6 +1096,7 @@ func (o *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []Ap
 }
 
 type AppResource struct {
+	Database types.Object `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
 
@@ -1132,6 +1120,7 @@ func (newState *AppResource) SyncEffectiveFieldsDuringRead(existingState AppReso
 }
 
 func (c AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database"] = attrs["database"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["job"] = attrs["job"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -1152,6 +1141,7 @@ func (c AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"database":         reflect.TypeOf(AppResourceDatabase{}),
 		"job":              reflect.TypeOf(AppResourceJob{}),
 		"secret":           reflect.TypeOf(AppResourceSecret{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint{}),
@@ -1167,6 +1157,7 @@ func (o AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database":         o.Database,
 			"description":      o.Description,
 			"job":              o.Job,
 			"name":             o.Name,
@@ -1181,6 +1172,7 @@ func (o AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o AppResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database":         AppResourceDatabase{}.Type(ctx),
 			"description":      types.StringType,
 			"job":              AppResourceJob{}.Type(ctx),
 			"name":             types.StringType,
@@ -1190,6 +1182,34 @@ func (o AppResource) Type(ctx context.Context) attr.Type {
 			"uc_securable":     AppResourceUcSecurable{}.Type(ctx),
 		},
 	}
+}
+
+// GetDatabase returns the value of the Database field in AppResource as
+// a AppResourceDatabase value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetDatabase(ctx context.Context) (AppResourceDatabase, bool) {
+	var e AppResourceDatabase
+	if o.Database.IsNull() || o.Database.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceDatabase
+	d := o.Database.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabase sets the value of the Database field in AppResource.
+func (o *AppResource) SetDatabase(ctx context.Context, v AppResourceDatabase) {
+	vs := v.ToObjectValue(ctx)
+	o.Database = vs
 }
 
 // GetJob returns the value of the Job field in AppResource as
@@ -1330,6 +1350,63 @@ func (o *AppResource) GetUcSecurable(ctx context.Context) (AppResourceUcSecurabl
 func (o *AppResource) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable) {
 	vs := v.ToObjectValue(ctx)
 	o.UcSecurable = vs
+}
+
+type AppResourceDatabase struct {
+	DatabaseName types.String `tfsdk:"database_name"`
+
+	InstanceName types.String `tfsdk:"instance_name"`
+
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (newState *AppResourceDatabase) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceDatabase) {
+}
+
+func (newState *AppResourceDatabase) SyncEffectiveFieldsDuringRead(existingState AppResourceDatabase) {
+}
+
+func (c AppResourceDatabase) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceDatabase.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppResourceDatabase) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceDatabase
+// only implements ToObjectValue() and Type().
+func (o AppResourceDatabase) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database_name": o.DatabaseName,
+			"instance_name": o.InstanceName,
+			"permission":    o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppResourceDatabase) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database_name": types.StringType,
+			"instance_name": types.StringType,
+			"permission":    types.StringType,
+		},
+	}
 }
 
 type AppResourceJob struct {
@@ -1717,6 +1794,7 @@ func (o ComputeStatus) Type(ctx context.Context) attr.Type {
 }
 
 type CreateAppDeploymentRequest struct {
+	// The app deployment configuration.
 	AppDeployment types.Object `tfsdk:"app_deployment"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -2372,18 +2450,6 @@ type StartAppRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartAppRequest) {
-}
-
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringRead(existingState StartAppRequest) {
-}
-
-func (c StartAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2418,18 +2484,6 @@ func (o StartAppRequest) Type(ctx context.Context) attr.Type {
 type StopAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopAppRequest) {
-}
-
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
-}
-
-func (c StopAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.

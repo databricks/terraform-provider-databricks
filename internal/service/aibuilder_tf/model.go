@@ -27,18 +27,6 @@ type CancelCustomLlmOptimizationRunRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *CancelCustomLlmOptimizationRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelCustomLlmOptimizationRunRequest) {
-}
-
-func (newState *CancelCustomLlmOptimizationRunRequest) SyncEffectiveFieldsDuringRead(existingState CancelCustomLlmOptimizationRunRequest) {
-}
-
-func (c CancelCustomLlmOptimizationRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelCustomLlmOptimizationRunRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -70,36 +58,6 @@ func (o CancelCustomLlmOptimizationRunRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-type CancelOptimizeResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelOptimizeResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelOptimizeResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelOptimizeResponse
-// only implements ToObjectValue() and Type().
-func (o CancelOptimizeResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelOptimizeResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type CreateCustomLlmRequest struct {
 	// Optional: UC path for agent artifacts. If you are using a dataset that
 	// you only have read permissions, please provide a destination path where
@@ -114,22 +72,6 @@ type CreateCustomLlmRequest struct {
 	Instructions types.String `tfsdk:"instructions"`
 	// Name of the custom LLM. Only alphanumeric characters and dashes allowed.
 	Name types.String `tfsdk:"name"`
-}
-
-func (newState *CreateCustomLlmRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomLlmRequest) {
-}
-
-func (newState *CreateCustomLlmRequest) SyncEffectiveFieldsDuringRead(existingState CreateCustomLlmRequest) {
-}
-
-func (c CreateCustomLlmRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["agent_artifact_path"] = attrs["agent_artifact_path"].SetOptional()
-	attrs["datasets"] = attrs["datasets"].SetOptional()
-	attrs["guidelines"] = attrs["guidelines"].SetOptional()
-	attrs["instructions"] = attrs["instructions"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomLlmRequest.
@@ -496,36 +438,6 @@ func (o DeleteCustomLlmRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteCustomLlmResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCustomLlmResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteCustomLlmResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCustomLlmResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteCustomLlmResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteCustomLlmResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type GetCustomLlmRequest struct {
 	// The id of the custom llm
 	Id types.String `tfsdk:"-"`
@@ -565,18 +477,6 @@ func (o GetCustomLlmRequest) Type(ctx context.Context) attr.Type {
 type StartCustomLlmOptimizationRunRequest struct {
 	// The Id of the tile.
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *StartCustomLlmOptimizationRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartCustomLlmOptimizationRunRequest) {
-}
-
-func (newState *StartCustomLlmOptimizationRunRequest) SyncEffectiveFieldsDuringRead(existingState StartCustomLlmOptimizationRunRequest) {
-}
-
-func (c StartCustomLlmOptimizationRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartCustomLlmOptimizationRunRequest.
@@ -688,20 +588,6 @@ type UpdateCustomLlmRequest struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateCustomLlmRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomLlmRequest) {
-}
-
-func (newState *UpdateCustomLlmRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCustomLlmRequest) {
-}
-
-func (c UpdateCustomLlmRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_llm"] = attrs["custom_llm"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomLlmRequest.

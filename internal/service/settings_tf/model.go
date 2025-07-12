@@ -673,12 +673,7 @@ type ClusterAutoRestartMessage struct {
 	CanToggle types.Bool `tfsdk:"can_toggle"`
 
 	Enabled types.Bool `tfsdk:"enabled"`
-	// Contains an information about the enablement status judging (e.g. whether
-	// the enterprise tier is enabled) This is only additional information that
-	// MUST NOT be used to decide whether the setting is enabled or not. This is
-	// intended to use only for purposes like showing an error message to the
-	// customer with the additional details. For example, using these details we
-	// can check why exactly the feature is disabled for this customer.
+
 	EnablementDetails types.Object `tfsdk:"enablement_details"`
 
 	MaintenanceWindow types.Object `tfsdk:"maintenance_window"`
@@ -1166,7 +1161,6 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 }
 
 type ComplianceSecurityProfileSetting struct {
-	// SHIELD feature: CSP
 	ComplianceSecurityProfileWorkspace types.Object `tfsdk:"compliance_security_profile_workspace"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -1481,27 +1475,8 @@ type CreateIpAccessList struct {
 	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
-	// Type of IP access list. Valid values are as follows and are
-	// case-sensitive:
-	//
-	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
-	// list. Exclude this IP or range. IP addresses in the block list are
-	// excluded even if they are included in an allow list.
+
 	ListType types.String `tfsdk:"list_type"`
-}
-
-func (newState *CreateIpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessList) {
-}
-
-func (newState *CreateIpAccessList) SyncEffectiveFieldsDuringRead(existingState CreateIpAccessList) {
-}
-
-func (c CreateIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
-	attrs["label"] = attrs["label"].SetRequired()
-	attrs["list_type"] = attrs["list_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateIpAccessList.
@@ -1571,7 +1546,6 @@ func (o *CreateIpAccessList) SetIpAddresses(ctx context.Context, v []types.Strin
 
 // An IP access list was successfully created.
 type CreateIpAccessListResponse struct {
-	// Definition of an IP Access list
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
@@ -1649,7 +1623,6 @@ func (o *CreateIpAccessListResponse) SetIpAccessList(ctx context.Context, v IpAc
 }
 
 type CreateNetworkConnectivityConfigRequest struct {
-	// Properties of the new network connectivity configuration.
 	NetworkConnectivityConfig types.Object `tfsdk:"network_connectivity_config"`
 }
 
@@ -1774,6 +1747,7 @@ func (o CreateNetworkConnectivityConfiguration) Type(ctx context.Context) attr.T
 }
 
 type CreateNetworkPolicyRequest struct {
+	// Network policy configuration details.
 	NetworkPolicy types.Object `tfsdk:"network_policy"`
 }
 
@@ -1844,19 +1818,6 @@ type CreateNotificationDestinationRequest struct {
 	Config types.Object `tfsdk:"config"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-}
-
-func (newState *CreateNotificationDestinationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNotificationDestinationRequest) {
-}
-
-func (newState *CreateNotificationDestinationRequest) SyncEffectiveFieldsDuringRead(existingState CreateNotificationDestinationRequest) {
-}
-
-func (c CreateNotificationDestinationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["config"] = attrs["config"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNotificationDestinationRequest.
@@ -1930,20 +1891,6 @@ type CreateOboTokenRequest struct {
 	Comment types.String `tfsdk:"comment"`
 	// The number of seconds before the token expires.
 	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
-}
-
-func (newState *CreateOboTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOboTokenRequest) {
-}
-
-func (newState *CreateOboTokenRequest) SyncEffectiveFieldsDuringRead(existingState CreateOboTokenRequest) {
-}
-
-func (c CreateOboTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["application_id"] = attrs["application_id"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOboTokenRequest.
@@ -2210,8 +2157,7 @@ func (o *CreatePrivateEndpointRule) SetResourceNames(ctx context.Context, v []ty
 type CreatePrivateEndpointRuleRequest struct {
 	// Your Network Connectivity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
-	// Properties of the new private endpoint rule. Note that you must approve
-	// the endpoint in Azure portal after initialization.
+
 	PrivateEndpointRule types.Object `tfsdk:"private_endpoint_rule"`
 }
 
@@ -2285,19 +2231,6 @@ type CreateTokenRequest struct {
 	//
 	// If the lifetime is not specified, this token remains valid indefinitely.
 	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
-}
-
-func (newState *CreateTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTokenRequest) {
-}
-
-func (newState *CreateTokenRequest) SyncEffectiveFieldsDuringRead(existingState CreateTokenRequest) {
-}
-
-func (c CreateTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTokenRequest.
@@ -2502,7 +2435,6 @@ func (o *CspEnablementAccount) SetComplianceStandards(ctx context.Context, v []t
 }
 
 type CspEnablementAccountSetting struct {
-	// Account level policy for CSP
 	CspEnablementAccount types.Object `tfsdk:"csp_enablement_account"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -2998,6 +2930,104 @@ func (o *DefaultNamespaceSetting) GetNamespace(ctx context.Context) (StringMessa
 func (o *DefaultNamespaceSetting) SetNamespace(ctx context.Context, v StringMessage) {
 	vs := v.ToObjectValue(ctx)
 	o.Namespace = vs
+}
+
+type DefaultWarehouseId struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+
+	StringVal types.Object `tfsdk:"string_val"`
+}
+
+func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultWarehouseId) {
+}
+
+func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringRead(existingState DefaultWarehouseId) {
+}
+
+func (c DefaultWarehouseId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+	attrs["string_val"] = attrs["string_val"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultWarehouseId.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultWarehouseId) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"string_val": reflect.TypeOf(StringMessage{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultWarehouseId
+// only implements ToObjectValue() and Type().
+func (o DefaultWarehouseId) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+			"string_val":   o.StringVal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultWarehouseId) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+			"string_val":   StringMessage{}.Type(ctx),
+		},
+	}
+}
+
+// GetStringVal returns the value of the StringVal field in DefaultWarehouseId as
+// a StringMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultWarehouseId) GetStringVal(ctx context.Context) (StringMessage, bool) {
+	var e StringMessage
+	if o.StringVal.IsNull() || o.StringVal.IsUnknown() {
+		return e, false
+	}
+	var v []StringMessage
+	d := o.StringVal.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStringVal sets the value of the StringVal field in DefaultWarehouseId.
+func (o *DefaultWarehouseId) SetStringVal(ctx context.Context, v StringMessage) {
+	vs := v.ToObjectValue(ctx)
+	o.StringVal = vs
 }
 
 type DeleteAccountIpAccessEnableRequest struct {
@@ -3521,6 +3551,103 @@ func (o DeleteDefaultNamespaceSettingResponse) Type(ctx context.Context) attr.Ty
 	}
 }
 
+type DeleteDefaultWarehouseIdRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultWarehouseIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDefaultWarehouseIdRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultWarehouseIdRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteDefaultWarehouseIdRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDefaultWarehouseIdRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteDefaultWarehouseIdResponse struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultWarehouseIdResponse) {
+}
+
+func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultWarehouseIdResponse) {
+}
+
+func (c DeleteDefaultWarehouseIdResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultWarehouseIdResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDefaultWarehouseIdResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultWarehouseIdResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteDefaultWarehouseIdResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDefaultWarehouseIdResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type DeleteDisableLegacyAccessRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -3981,36 +4108,6 @@ func (o DeleteNetworkConnectivityConfigurationRequest) Type(ctx context.Context)
 	}
 }
 
-type DeleteNetworkConnectivityConfigurationResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteNetworkConnectivityConfigurationResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteNetworkConnectivityConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteNetworkConnectivityConfigurationResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteNetworkConnectivityConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteNetworkConnectivityConfigurationResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteNetworkPolicyRequest struct {
 	// The unique identifier of the network policy to delete.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -4044,36 +4141,6 @@ func (o DeleteNetworkPolicyRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"network_policy_id": types.StringType,
 		},
-	}
-}
-
-type DeleteNetworkPolicyRpcResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteNetworkPolicyRpcResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteNetworkPolicyRpcResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteNetworkPolicyRpcResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteNetworkPolicyRpcResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteNetworkPolicyRpcResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -4889,12 +4956,7 @@ type EgressNetworkPolicyInternetAccessPolicy struct {
 	// Optional. If not specified, assume the policy is enforced for all
 	// workloads.
 	LogOnlyMode types.Object `tfsdk:"log_only_mode"`
-	// At which level can Databricks and Databricks managed compute access
-	// Internet. FULL_ACCESS: Databricks can access Internet. No blocking rules
-	// will apply. RESTRICTED_ACCESS: Databricks can only access explicitly
-	// allowed internet and storage destinations, as well as UC connections and
-	// external locations. PRIVATE_ACCESS_ONLY (not used): Databricks can only
-	// access destinations via private link.
+
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
@@ -5043,11 +5105,7 @@ func (o *EgressNetworkPolicyInternetAccessPolicy) SetLogOnlyMode(ctx context.Con
 // being, though going forwards we want to support host names and IP addresses.
 type EgressNetworkPolicyInternetAccessPolicyInternetDestination struct {
 	Destination types.String `tfsdk:"destination"`
-	// The filtering protocol used by the DP. For private and public preview,
-	// SEG will only support TCP filtering (i.e. DNS based filtering, filtering
-	// by destination IP address), so protocol will be set to TCP by default and
-	// hidden from the user. In the future, users may be able to select HTTP
-	// filtering (i.e. SNI based filtering, filtering by FQDN).
+
 	Protocol types.String `tfsdk:"protocol"`
 
 	Type_ types.String `tfsdk:"type"`
@@ -6091,7 +6149,6 @@ func (o EnhancedSecurityMonitoring) Type(ctx context.Context) attr.Type {
 }
 
 type EnhancedSecurityMonitoringSetting struct {
-	// SHIELD feature: ESM
 	EnhancedSecurityMonitoringWorkspace types.Object `tfsdk:"enhanced_security_monitoring_workspace"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6237,7 +6294,6 @@ func (o EsmEnablementAccount) Type(ctx context.Context) attr.Type {
 }
 
 type EsmEnablementAccountSetting struct {
-	// Account level policy for ESM
 	EsmEnablementAccount types.Object `tfsdk:"esm_enablement_account"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -6444,20 +6500,6 @@ type ExchangeTokenRequest struct {
 	TokenType types.List `tfsdk:"tokenType"`
 }
 
-func (newState *ExchangeTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeTokenRequest) {
-}
-
-func (newState *ExchangeTokenRequest) SyncEffectiveFieldsDuringRead(existingState ExchangeTokenRequest) {
-}
-
-func (c ExchangeTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["partitionId"] = attrs["partitionId"].SetRequired()
-	attrs["scopes"] = attrs["scopes"].SetRequired()
-	attrs["tokenType"] = attrs["tokenType"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeTokenRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6661,7 +6703,6 @@ func (o *ExchangeTokenResponse) SetValues(ctx context.Context, v []ExchangeToken
 
 // An IP access list was successfully returned.
 type FetchIpAccessListResponse struct {
-	// Definition of an IP Access list
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
@@ -7183,6 +7224,48 @@ func (o GetDefaultNamespaceSettingRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetDefaultWarehouseIdRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDefaultWarehouseIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetDefaultWarehouseIdRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDefaultWarehouseIdRequest
+// only implements ToObjectValue() and Type().
+func (o GetDefaultWarehouseIdRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetDefaultWarehouseIdRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 type GetDisableLegacyAccessRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7309,6 +7392,96 @@ func (o GetDisableLegacyFeaturesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetEnableExportNotebookRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEnableExportNotebookRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetEnableExportNotebookRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetEnableExportNotebookRequest
+// only implements ToObjectValue() and Type().
+func (o GetEnableExportNotebookRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetEnableExportNotebookRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type GetEnableNotebookTableClipboardRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEnableNotebookTableClipboardRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetEnableNotebookTableClipboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetEnableNotebookTableClipboardRequest
+// only implements ToObjectValue() and Type().
+func (o GetEnableNotebookTableClipboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetEnableNotebookTableClipboardRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type GetEnableResultsDownloadingRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEnableResultsDownloadingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetEnableResultsDownloadingRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetEnableResultsDownloadingRequest
+// only implements ToObjectValue() and Type().
+func (o GetEnableResultsDownloadingRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetEnableResultsDownloadingRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetEnhancedSecurityMonitoringSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -7430,7 +7603,6 @@ func (o GetIpAccessListRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetIpAccessListResponse struct {
-	// Definition of an IP Access list
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
@@ -8055,6 +8227,36 @@ func (o GetTokenManagementRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetTokenPermissionLevelsRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTokenPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetTokenPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetTokenPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetTokenPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetTokenPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetTokenPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels"`
@@ -8131,6 +8333,36 @@ func (o *GetTokenPermissionLevelsResponse) SetPermissionLevels(ctx context.Conte
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
+type GetTokenPermissionsRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTokenPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetTokenPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetTokenPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o GetTokenPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetTokenPermissionsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Token with specified Token ID was successfully returned.
@@ -8263,12 +8495,7 @@ type IpAccessListInfo struct {
 	Label types.String `tfsdk:"label"`
 	// Universally unique identifier (UUID) of the IP access list.
 	ListId types.String `tfsdk:"list_id"`
-	// Type of IP access list. Valid values are as follows and are
-	// case-sensitive:
-	//
-	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
-	// list. Exclude this IP or range. IP addresses in the block list are
-	// excluded even if they are included in an allow list.
+
 	ListType types.String `tfsdk:"list_type"`
 	// Update timestamp in milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -8452,6 +8679,36 @@ func (o *ListIpAccessListResponse) SetIpAccessLists(ctx context.Context, v []IpA
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_lists"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAccessLists = types.ListValueMust(t, vs)
+}
+
+type ListIpAccessLists struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIpAccessLists.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListIpAccessLists) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListIpAccessLists
+// only implements ToObjectValue() and Type().
+func (o ListIpAccessLists) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListIpAccessLists) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ListNetworkConnectivityConfigurationsRequest struct {
@@ -9114,6 +9371,36 @@ func (o ListTokenManagementRequest) Type(ctx context.Context) attr.Type {
 			"created_by_id":       types.Int64Type,
 			"created_by_username": types.StringType,
 		},
+	}
+}
+
+type ListTokens struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTokens.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListTokens) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListTokens
+// only implements ToObjectValue() and Type().
+func (o ListTokens) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListTokens) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -10008,13 +10295,8 @@ func (o *NccEgressConfig) SetTargetRules(ctx context.Context, v NccEgressTargetR
 
 // Default rules don't have specific targets.
 type NccEgressDefaultRules struct {
-	// The stable AWS IP CIDR blocks. You can use these to configure the
-	// firewall of your resources to allow traffic from your Databricks
-	// workspace.
 	AwsStableIpRule types.Object `tfsdk:"aws_stable_ip_rule"`
-	// The stable Azure service endpoints. You can configure the firewall of
-	// your Azure resources to allow traffic from your Databricks serverless
-	// compute resources.
+
 	AzureServiceEndpointRule types.Object `tfsdk:"azure_service_endpoint_rule"`
 }
 
@@ -10852,13 +11134,6 @@ func (o PartitionId) Type(ctx context.Context) attr.Type {
 }
 
 type PersonalComputeMessage struct {
-	// ON: Grants all users in all workspaces access to the Personal Compute
-	// default policy, allowing all users to create single-machine compute
-	// resources. DELEGATE: Moves access control for the Personal Compute
-	// default policy to individual workspaces and requires a workspace’s
-	// users or groups to be added to the ACLs of that workspace’s Personal
-	// Compute default policy before they will be able to create compute
-	// resources through that policy.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -11077,29 +11352,8 @@ type ReplaceIpAccessList struct {
 	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
-	// Type of IP access list. Valid values are as follows and are
-	// case-sensitive:
-	//
-	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
-	// list. Exclude this IP or range. IP addresses in the block list are
-	// excluded even if they are included in an allow list.
+
 	ListType types.String `tfsdk:"list_type"`
-}
-
-func (newState *ReplaceIpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReplaceIpAccessList) {
-}
-
-func (newState *ReplaceIpAccessList) SyncEffectiveFieldsDuringRead(existingState ReplaceIpAccessList) {
-}
-
-func (c ReplaceIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetRequired()
-	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
-	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
-	attrs["label"] = attrs["label"].SetRequired()
-	attrs["list_type"] = attrs["list_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplaceIpAccessList.
@@ -11349,18 +11603,6 @@ func (o *RestrictWorkspaceAdminsSetting) SetRestrictWorkspaceAdmins(ctx context.
 type RevokeTokenRequest struct {
 	// The ID of the token to be revoked.
 	TokenId types.String `tfsdk:"token_id"`
-}
-
-func (newState *RevokeTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RevokeTokenRequest) {
-}
-
-func (newState *RevokeTokenRequest) SyncEffectiveFieldsDuringRead(existingState RevokeTokenRequest) {
-}
-
-func (c RevokeTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["token_id"] = attrs["token_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeTokenRequest.
@@ -11666,7 +11908,7 @@ func (o StringMessage) Type(ctx context.Context) attr.Type {
 type TokenAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -11918,7 +12160,7 @@ type TokenPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -12090,7 +12332,7 @@ func (o *TokenPermissions) SetAccessControlList(ctx context.Context, v []TokenAc
 
 type TokenPermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -12142,18 +12384,6 @@ func (o TokenPermissionsDescription) Type(ctx context.Context) attr.Type {
 
 type TokenPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
-}
-
-func (newState *TokenPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissionsRequest) {
-}
-
-func (newState *TokenPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsRequest) {
-}
-
-func (c TokenPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenPermissionsRequest.
@@ -12236,20 +12466,6 @@ type UpdateAccountIpAccessEnableRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateAccountIpAccessEnableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAccountIpAccessEnableRequest) {
-}
-
-func (newState *UpdateAccountIpAccessEnableRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAccountIpAccessEnableRequest) {
-}
-
-func (c UpdateAccountIpAccessEnableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccountIpAccessEnableRequest.
@@ -12338,20 +12554,6 @@ type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) {
-}
-
-func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) {
-}
-
-func (c UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAibiDashboardEmbeddingAccessPolicySettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12436,20 +12638,6 @@ type UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
-}
-
-func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
-}
-
-func (c UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest.
@@ -12538,20 +12726,6 @@ type UpdateAutomaticClusterUpdateSettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateAutomaticClusterUpdateSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAutomaticClusterUpdateSettingRequest) {
-}
-
-func (newState *UpdateAutomaticClusterUpdateSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAutomaticClusterUpdateSettingRequest) {
-}
-
-func (c UpdateAutomaticClusterUpdateSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAutomaticClusterUpdateSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12636,20 +12810,6 @@ type UpdateComplianceSecurityProfileSettingRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateComplianceSecurityProfileSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComplianceSecurityProfileSettingRequest) {
-}
-
-func (newState *UpdateComplianceSecurityProfileSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateComplianceSecurityProfileSettingRequest) {
-}
-
-func (c UpdateComplianceSecurityProfileSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateComplianceSecurityProfileSettingRequest.
@@ -12738,20 +12898,6 @@ type UpdateCspEnablementAccountSettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateCspEnablementAccountSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCspEnablementAccountSettingRequest) {
-}
-
-func (newState *UpdateCspEnablementAccountSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCspEnablementAccountSettingRequest) {
-}
-
-func (c UpdateCspEnablementAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCspEnablementAccountSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12838,20 +12984,6 @@ type UpdateDashboardEmailSubscriptionsRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateDashboardEmailSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardEmailSubscriptionsRequest) {
-}
-
-func (newState *UpdateDashboardEmailSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardEmailSubscriptionsRequest) {
-}
-
-func (c UpdateDashboardEmailSubscriptionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDashboardEmailSubscriptionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12934,30 +13066,8 @@ type UpdateDefaultNamespaceSettingRequest struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	FieldMask types.String `tfsdk:"field_mask"`
-	// This represents the setting configuration for the default namespace in
-	// the Databricks workspace. Setting the default catalog for the workspace
-	// determines the catalog that is used when queries do not reference a fully
-	// qualified 3 level name. For example, if the default catalog is set to
-	// 'retail_prod' then a query 'SELECT * FROM myTable' would reference the
-	// object 'retail_prod.default.myTable' (the schema 'default' is always
-	// assumed). This setting requires a restart of clusters and SQL warehouses
-	// to take effect. Additionally, the default namespace only applies when
-	// using Unity Catalog-enabled compute.
+
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateDefaultNamespaceSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDefaultNamespaceSettingRequest) {
-}
-
-func (newState *UpdateDefaultNamespaceSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDefaultNamespaceSettingRequest) {
-}
-
-func (c UpdateDefaultNamespaceSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultNamespaceSettingRequest.
@@ -13026,7 +13136,7 @@ func (o *UpdateDefaultNamespaceSettingRequest) SetSetting(ctx context.Context, v
 }
 
 // Details required to update a setting.
-type UpdateDisableLegacyAccessRequest struct {
+type UpdateDefaultWarehouseIdRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
 	AllowMissing types.Bool `tfsdk:"allow_missing"`
@@ -13046,18 +13156,90 @@ type UpdateDisableLegacyAccessRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateDisableLegacyAccessRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyAccessRequest) {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultWarehouseIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDefaultWarehouseIdRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(DefaultWarehouseId{}),
+	}
 }
 
-func (newState *UpdateDisableLegacyAccessRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyAccessRequest) {
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultWarehouseIdRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateDefaultWarehouseIdRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
 }
 
-func (c UpdateDisableLegacyAccessRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDefaultWarehouseIdRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting":       DefaultWarehouseId{}.Type(ctx),
+		},
+	}
+}
 
-	return attrs
+// GetSetting returns the value of the Setting field in UpdateDefaultWarehouseIdRequest as
+// a DefaultWarehouseId value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDefaultWarehouseIdRequest) GetSetting(ctx context.Context) (DefaultWarehouseId, bool) {
+	var e DefaultWarehouseId
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultWarehouseId
+	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDefaultWarehouseIdRequest.
+func (o *UpdateDefaultWarehouseIdRequest) SetSetting(ctx context.Context, v DefaultWarehouseId) {
+	vs := v.ToObjectValue(ctx)
+	o.Setting = vs
+}
+
+// Details required to update a setting.
+type UpdateDisableLegacyAccessRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.Object `tfsdk:"setting"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyAccessRequest.
@@ -13146,20 +13328,6 @@ type UpdateDisableLegacyDbfsRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateDisableLegacyDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyDbfsRequest) {
-}
-
-func (newState *UpdateDisableLegacyDbfsRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyDbfsRequest) {
-}
-
-func (c UpdateDisableLegacyDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyDbfsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13244,20 +13412,6 @@ type UpdateDisableLegacyFeaturesRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateDisableLegacyFeaturesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyFeaturesRequest) {
-}
-
-func (newState *UpdateDisableLegacyFeaturesRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyFeaturesRequest) {
-}
-
-func (c UpdateDisableLegacyFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyFeaturesRequest.
@@ -13346,20 +13500,6 @@ type UpdateEnableExportNotebookRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateEnableExportNotebookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableExportNotebookRequest) {
-}
-
-func (newState *UpdateEnableExportNotebookRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableExportNotebookRequest) {
-}
-
-func (c UpdateEnableExportNotebookRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableExportNotebookRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13444,20 +13584,6 @@ type UpdateEnableNotebookTableClipboardRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateEnableNotebookTableClipboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableNotebookTableClipboardRequest) {
-}
-
-func (newState *UpdateEnableNotebookTableClipboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableNotebookTableClipboardRequest) {
-}
-
-func (c UpdateEnableNotebookTableClipboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableNotebookTableClipboardRequest.
@@ -13546,20 +13672,6 @@ type UpdateEnableResultsDownloadingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateEnableResultsDownloadingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableResultsDownloadingRequest) {
-}
-
-func (newState *UpdateEnableResultsDownloadingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableResultsDownloadingRequest) {
-}
-
-func (c UpdateEnableResultsDownloadingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableResultsDownloadingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13644,20 +13756,6 @@ type UpdateEnhancedSecurityMonitoringSettingRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateEnhancedSecurityMonitoringSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnhancedSecurityMonitoringSettingRequest) {
-}
-
-func (newState *UpdateEnhancedSecurityMonitoringSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnhancedSecurityMonitoringSettingRequest) {
-}
-
-func (c UpdateEnhancedSecurityMonitoringSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnhancedSecurityMonitoringSettingRequest.
@@ -13746,20 +13844,6 @@ type UpdateEsmEnablementAccountSettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateEsmEnablementAccountSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEsmEnablementAccountSettingRequest) {
-}
-
-func (newState *UpdateEsmEnablementAccountSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEsmEnablementAccountSettingRequest) {
-}
-
-func (c UpdateEsmEnablementAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEsmEnablementAccountSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13835,29 +13919,8 @@ type UpdateIpAccessList struct {
 	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
-	// Type of IP access list. Valid values are as follows and are
-	// case-sensitive:
-	//
-	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
-	// list. Exclude this IP or range. IP addresses in the block list are
-	// excluded even if they are included in an allow list.
+
 	ListType types.String `tfsdk:"list_type"`
-}
-
-func (newState *UpdateIpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateIpAccessList) {
-}
-
-func (newState *UpdateIpAccessList) SyncEffectiveFieldsDuringRead(existingState UpdateIpAccessList) {
-}
-
-func (c UpdateIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enabled"] = attrs["enabled"].SetOptional()
-	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
-	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
-	attrs["label"] = attrs["label"].SetOptional()
-	attrs["list_type"] = attrs["list_type"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateIpAccessList.
@@ -13950,20 +14013,6 @@ type UpdateLlmProxyPartnerPoweredAccountRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateLlmProxyPartnerPoweredAccountRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredAccountRequest) {
-}
-
-func (newState *UpdateLlmProxyPartnerPoweredAccountRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredAccountRequest) {
-}
-
-func (c UpdateLlmProxyPartnerPoweredAccountRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredAccountRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14048,20 +14097,6 @@ type UpdateLlmProxyPartnerPoweredEnforceRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdateLlmProxyPartnerPoweredEnforceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredEnforceRequest) {
-}
-
-func (newState *UpdateLlmProxyPartnerPoweredEnforceRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredEnforceRequest) {
-}
-
-func (c UpdateLlmProxyPartnerPoweredEnforceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredEnforceRequest.
@@ -14150,20 +14185,6 @@ type UpdateLlmProxyPartnerPoweredWorkspaceRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateLlmProxyPartnerPoweredWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredWorkspaceRequest) {
-}
-
-func (newState *UpdateLlmProxyPartnerPoweredWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredWorkspaceRequest) {
-}
-
-func (c UpdateLlmProxyPartnerPoweredWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredWorkspaceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14233,8 +14254,7 @@ type UpdateNccPrivateEndpointRuleRequest struct {
 	// The ID of a network connectivity configuration, which is the parent
 	// resource of this private endpoint rule object.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
-	// Properties of the new private endpoint rule. Note that you must approve
-	// the endpoint in Azure portal after initialization.
+
 	PrivateEndpointRule types.Object `tfsdk:"private_endpoint_rule"`
 	// Your private endpoint rule ID.
 	PrivateEndpointRuleId types.String `tfsdk:"-"`
@@ -14315,6 +14335,7 @@ func (o *UpdateNccPrivateEndpointRuleRequest) SetPrivateEndpointRule(ctx context
 }
 
 type UpdateNetworkPolicyRequest struct {
+	// Updated network policy configuration details.
 	NetworkPolicy types.Object `tfsdk:"network_policy"`
 	// The unique identifier for the network policy.
 	NetworkPolicyId types.String `tfsdk:"-"`
@@ -14391,20 +14412,6 @@ type UpdateNotificationDestinationRequest struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying notification destination.
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateNotificationDestinationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateNotificationDestinationRequest) {
-}
-
-func (newState *UpdateNotificationDestinationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateNotificationDestinationRequest) {
-}
-
-func (c UpdateNotificationDestinationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["config"] = attrs["config"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNotificationDestinationRequest.
@@ -14491,20 +14498,6 @@ type UpdatePersonalComputeSettingRequest struct {
 	FieldMask types.String `tfsdk:"field_mask"`
 
 	Setting types.Object `tfsdk:"setting"`
-}
-
-func (newState *UpdatePersonalComputeSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalComputeSettingRequest) {
-}
-
-func (newState *UpdatePersonalComputeSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalComputeSettingRequest) {
-}
-
-func (c UpdatePersonalComputeSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalComputeSettingRequest.
@@ -14754,20 +14747,6 @@ type UpdateRestrictWorkspaceAdminsSettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateRestrictWorkspaceAdminsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRestrictWorkspaceAdminsSettingRequest) {
-}
-
-func (newState *UpdateRestrictWorkspaceAdminsSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRestrictWorkspaceAdminsSettingRequest) {
-}
-
-func (c UpdateRestrictWorkspaceAdminsSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRestrictWorkspaceAdminsSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14854,20 +14833,6 @@ type UpdateSqlResultsDownloadRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
-func (newState *UpdateSqlResultsDownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSqlResultsDownloadRequest) {
-}
-
-func (newState *UpdateSqlResultsDownloadRequest) SyncEffectiveFieldsDuringRead(existingState UpdateSqlResultsDownloadRequest) {
-}
-
-func (c UpdateSqlResultsDownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
-	attrs["field_mask"] = attrs["field_mask"].SetRequired()
-	attrs["setting"] = attrs["setting"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSqlResultsDownloadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14936,7 +14901,7 @@ func (o *UpdateSqlResultsDownloadRequest) SetSetting(ctx context.Context, v SqlR
 type UpdateWorkspaceNetworkOptionRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-
+	// The network option details for the workspace.
 	WorkspaceNetworkOption types.Object `tfsdk:"workspace_network_option"`
 }
 

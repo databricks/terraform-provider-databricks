@@ -426,10 +426,12 @@ func TestModelServingRead(t *testing.T) {
 							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
+									ServedEntityName:  "prod_model", // Server returns both fields with same value
 									TrafficPercentage: 90,
 								},
 								{
 									ServedModelName:   "candidate_model",
+									ServedEntityName:  "candidate_model", // Server returns both fields with same value
 									TrafficPercentage: 10,
 								},
 							},

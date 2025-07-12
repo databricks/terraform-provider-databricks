@@ -2,10 +2,18 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_network_option Data Source
+This data source can be used to get a single workspace network option.
 
+-> **Note** This data source can only be used with an account-level provider!
 
 ## Example Usage
+Referring to a network policy by id:
 
+```hcl
+data "databricks_workspace_network_option" "this" {
+  workspace_id = "9999999999999999"
+}
+```
 
 ## Arguments
 The following arguments are supported:

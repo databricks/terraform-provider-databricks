@@ -90,17 +90,17 @@ func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	var items = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var account_network_policy settings_tf.AccountNetworkPolicy
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &account_network_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		items = append(items, account_network_policy.ToObjectValue(ctx))
+		results = append(results, account_network_policy.ToObjectValue(ctx))
 	}
 
 	var newState AccountNetworkPoliciesList
-	newState.NetworkPolicies = types.ListValueMust(settings_tf.AccountNetworkPolicy{}.Type(ctx), items)
+	newState.NetworkPolicies = types.ListValueMust(settings_tf.AccountNetworkPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

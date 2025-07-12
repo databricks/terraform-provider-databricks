@@ -79,12 +79,7 @@ type CreatePipeline_SdkV2 struct {
 	// editing the pipeline in the Databricks user interface and it is added to
 	// sys.path when executing Python sources during pipeline execution.
 	RootPath types.String `tfsdk:"root_path"`
-	// Write-only setting, available only in Create/Update calls. Specifies the
-	// user or service principal that the pipeline runs as. If not specified,
-	// the pipeline runs as the user who created the pipeline.
-	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
@@ -103,56 +98,6 @@ type CreatePipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
-}
-
-func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline_SdkV2) {
-}
-
-func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePipeline_SdkV2) {
-}
-
-func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["dry_run"] = attrs["dry_run"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["environment"] = attrs["environment"].SetOptional()
-	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
@@ -976,12 +921,7 @@ type EditPipeline_SdkV2 struct {
 	// editing the pipeline in the Databricks user interface and it is added to
 	// sys.path when executing Python sources during pipeline execution.
 	RootPath types.String `tfsdk:"root_path"`
-	// Write-only setting, available only in Create/Update calls. Specifies the
-	// user or service principal that the pipeline runs as. If not specified,
-	// the pipeline runs as the user who created the pipeline.
-	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
@@ -1000,57 +940,6 @@ type EditPipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
-}
-
-func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline_SdkV2) {
-}
-
-func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPipeline_SdkV2) {
-}
-
-func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["environment"] = attrs["environment"].SetOptional()
-	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -2099,6 +1988,11 @@ type GetPipelineResponse_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
+	// The user or service principal that the pipeline runs as, if specified in
+	// the request. This field indicates the explicit configuration of `run_as`
+	// for the pipeline. To find the value in all cases, explicit or implicit,
+	// use `run_as_user_name`.
+	RunAs types.List `tfsdk:"run_as"`
 	// Username of the user that the pipeline will run on behalf of.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 	// The pipeline specification. This field is not returned when called by
@@ -2124,6 +2018,8 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2142,6 +2038,7 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 func (a GetPipelineResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"latest_updates": reflect.TypeOf(UpdateStateInfo_SdkV2{}),
+		"run_as":         reflect.TypeOf(RunAs_SdkV2{}),
 		"spec":           reflect.TypeOf(PipelineSpec_SdkV2{}),
 	}
 }
@@ -2162,6 +2059,7 @@ func (o GetPipelineResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"latest_updates":             o.LatestUpdates,
 			"name":                       o.Name,
 			"pipeline_id":                o.PipelineId,
+			"run_as":                     o.RunAs,
 			"run_as_user_name":           o.RunAsUserName,
 			"spec":                       o.Spec,
 			"state":                      o.State,
@@ -2181,8 +2079,11 @@ func (o GetPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo_SdkV2{}.Type(ctx),
 			},
-			"name":             types.StringType,
-			"pipeline_id":      types.StringType,
+			"name":        types.StringType,
+			"pipeline_id": types.StringType,
+			"run_as": basetypes.ListType{
+				ElemType: RunAs_SdkV2{}.Type(ctx),
+			},
 			"run_as_user_name": types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: PipelineSpec_SdkV2{}.Type(ctx),
@@ -2216,6 +2117,32 @@ func (o *GetPipelineResponse_SdkV2) SetLatestUpdates(ctx context.Context, v []Up
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_updates"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.LatestUpdates = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in GetPipelineResponse_SdkV2 as
+// a RunAs_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPipelineResponse_SdkV2) GetRunAs(ctx context.Context) (RunAs_SdkV2, bool) {
+	var e RunAs_SdkV2
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs_SdkV2
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in GetPipelineResponse_SdkV2.
+func (o *GetPipelineResponse_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetSpec returns the value of the Spec field in GetPipelineResponse_SdkV2 as
@@ -3606,7 +3533,7 @@ func (o PathPattern_SdkV2) Type(ctx context.Context) attr.Type {
 type PipelineAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -4753,7 +4680,7 @@ type PipelinePermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -4925,7 +4852,7 @@ func (o *PipelinePermissions_SdkV2) SetAccessControlList(ctx context.Context, v 
 
 type PipelinePermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -4979,19 +4906,6 @@ type PipelinePermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsRequest_SdkV2) {
-}
-
-func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest_SdkV2) {
-}
-
-func (c PipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
@@ -5650,7 +5564,7 @@ type PipelineStateInfo_SdkV2 struct {
 	// The username that the pipeline runs as. This is a read only value derived
 	// from the pipeline owner.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-	// The pipeline state.
+
 	State types.String `tfsdk:"state"`
 }
 
@@ -6544,7 +6458,6 @@ func (o StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type StartUpdate_SdkV2 struct {
-	// What triggered this update.
 	Cause types.String `tfsdk:"cause"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
@@ -6563,23 +6476,6 @@ type StartUpdate_SdkV2 struct {
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate_SdkV2) {
-}
-
-func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartUpdate_SdkV2) {
-}
-
-func (c StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cause"] = attrs["cause"].SetOptional()
-	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
-	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.
@@ -7316,7 +7212,7 @@ func (o *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 
 type UpdateStateInfo_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
-	// The update state.
+
 	State types.String `tfsdk:"state"`
 
 	UpdateId types.String `tfsdk:"update_id"`

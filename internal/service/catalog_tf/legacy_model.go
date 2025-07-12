@@ -27,19 +27,6 @@ type AccountsCreateMetastore_SdkV2 struct {
 	MetastoreInfo types.List `tfsdk:"metastore_info"`
 }
 
-func (newState *AccountsCreateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastore_SdkV2) {
-}
-
-func (newState *AccountsCreateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastore_SdkV2) {
-}
-
-func (c AccountsCreateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["metastore_info"] = attrs["metastore_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateMetastore.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -107,21 +94,6 @@ type AccountsCreateMetastoreAssignment_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *AccountsCreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *AccountsCreateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastoreAssignment_SdkV2) {
-}
-
-func (c AccountsCreateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateMetastoreAssignment.
@@ -193,20 +165,6 @@ type AccountsCreateStorageCredential_SdkV2 struct {
 	CredentialInfo types.List `tfsdk:"credential_info"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
-}
-
-func (newState *AccountsCreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateStorageCredential_SdkV2) {
-}
-
-func (newState *AccountsCreateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsCreateStorageCredential_SdkV2) {
-}
-
-func (c AccountsCreateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_info"] = attrs["credential_info"].SetOptional()
-	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsCreateStorageCredential.
@@ -513,20 +471,6 @@ type AccountsUpdateMetastore_SdkV2 struct {
 	MetastoreInfo types.List `tfsdk:"metastore_info"`
 }
 
-func (newState *AccountsUpdateMetastore_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastore_SdkV2) {
-}
-
-func (newState *AccountsUpdateMetastore_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastore_SdkV2) {
-}
-
-func (c AccountsUpdateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["metastore_info"] = attrs["metastore_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateMetastore.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -596,21 +540,6 @@ type AccountsUpdateMetastoreAssignment_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *AccountsUpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastoreAssignment_SdkV2) {
-}
-
-func (newState *AccountsUpdateMetastoreAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastoreAssignment_SdkV2) {
-}
-
-func (c AccountsUpdateMetastoreAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["metastore_assignment"] = attrs["metastore_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateMetastoreAssignment.
@@ -684,21 +613,6 @@ type AccountsUpdateStorageCredential_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"-"`
 	// Name of the storage credential.
 	StorageCredentialName types.String `tfsdk:"-"`
-}
-
-func (newState *AccountsUpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateStorageCredential_SdkV2) {
-}
-
-func (newState *AccountsUpdateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateStorageCredential_SdkV2) {
-}
-
-func (c AccountsUpdateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_info"] = attrs["credential_info"].SetOptional()
-	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountsUpdateStorageCredential.
@@ -1199,7 +1113,7 @@ type AwsSqsQueue_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format
-	// https://sqs.{region}.amazonaws.com/{account id}/{queue name} REQUIRED for
+	// https://sqs.{region}.amazonaws.com/{account id}/{queue name} Required for
 	// provided_sqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
@@ -1500,14 +1414,14 @@ type AzureQueueStorage_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format https://{storage
-	// account}.queue.core.windows.net/{queue name} REQUIRED for provided_aqs.
+	// account}.queue.core.windows.net/{queue name} Required for provided_aqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 	// The resource group for the queue, event grid subscription, and external
-	// location storage account. ONLY REQUIRED for locations with a service
+	// location storage account. Only required for locations with a service
 	// principal storage credential
 	ResourceGroup types.String `tfsdk:"resource_group"`
-	// OPTIONAL: The subscription id for the queue, event grid subscription, and
-	// external location storage account. REQUIRED for locations with a service
+	// Optional subscription id for the queue, event grid subscription, and
+	// external location storage account. Required for locations with a service
 	// principal storage credential
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
@@ -1751,7 +1665,7 @@ type CatalogInfo_SdkV2 struct {
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
-	// The type of the catalog.
+
 	CatalogType types.String `tfsdk:"catalog_type"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -1786,9 +1700,9 @@ type CatalogInfo_SdkV2 struct {
 	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
 	// remote sharing server.
 	ProviderName types.String `tfsdk:"provider_name"`
-	// Status of an asynchronously provisioned resource.
+
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
-	// The type of Unity Catalog securable.
+
 	SecurableType types.String `tfsdk:"securable_type"`
 	// The name of the share under the share provider.
 	ShareName types.String `tfsdk:"share_name"`
@@ -2310,6 +2224,108 @@ func (o *ColumnMask_SdkV2) SetUsingColumnNames(ctx context.Context, v []types.St
 	o.UsingColumnNames = types.ListValueMust(t, vs)
 }
 
+type ColumnRelationship_SdkV2 struct {
+	Source types.String `tfsdk:"source"`
+
+	Target types.String `tfsdk:"target"`
+}
+
+func (newState *ColumnRelationship_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnRelationship_SdkV2) {
+}
+
+func (newState *ColumnRelationship_SdkV2) SyncEffectiveFieldsDuringRead(existingState ColumnRelationship_SdkV2) {
+}
+
+func (c ColumnRelationship_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnRelationship.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ColumnRelationship_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnRelationship_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ColumnRelationship_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"source": o.Source,
+			"target": o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ColumnRelationship_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"source": types.StringType,
+			"target": types.StringType,
+		},
+	}
+}
+
+// A connection that is dependent on a SQL object.
+type ConnectionDependency_SdkV2 struct {
+	// Full name of the dependent connection, in the form of
+	// __connection_name__.
+	ConnectionName types.String `tfsdk:"connection_name"`
+}
+
+func (newState *ConnectionDependency_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConnectionDependency_SdkV2) {
+}
+
+func (newState *ConnectionDependency_SdkV2) SyncEffectiveFieldsDuringRead(existingState ConnectionDependency_SdkV2) {
+}
+
+func (c ConnectionDependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConnectionDependency.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ConnectionDependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConnectionDependency_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ConnectionDependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"connection_name": o.ConnectionName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ConnectionDependency_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"connection_name": types.StringType,
+		},
+	}
+}
+
 type ConnectionInfo_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -2335,11 +2351,11 @@ type ConnectionInfo_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// Status of an asynchronously provisioned resource.
+
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// The type of Unity Catalog securable.
+
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -2648,25 +2664,6 @@ type CreateCatalog_SdkV2 struct {
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
-func (newState *CreateCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCatalog_SdkV2) {
-}
-
-func (newState *CreateCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCatalog_SdkV2) {
-}
-
-func (c CreateCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["connection_name"] = attrs["connection_name"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["options"] = attrs["options"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["provider_name"] = attrs["provider_name"].SetOptional()
-	attrs["share_name"] = attrs["share_name"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCatalog.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2784,23 +2781,6 @@ type CreateConnection_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-}
-
-func (newState *CreateConnection_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateConnection_SdkV2) {
-}
-
-func (newState *CreateConnection_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateConnection_SdkV2) {
-}
-
-func (c CreateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["connection_type"] = attrs["connection_type"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["options"] = attrs["options"].SetRequired()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateConnection.
@@ -2925,30 +2905,6 @@ type CreateCredentialRequest_SdkV2 struct {
 	// Optional. Supplying true to this argument skips validation of the created
 	// set of credentials.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialRequest_SdkV2) {
-}
-
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest_SdkV2) {
-}
-
-func (c CreateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["purpose"] = attrs["purpose"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialRequest.
@@ -3115,21 +3071,85 @@ func (o *CreateCredentialRequest_SdkV2) SetDatabricksGcpServiceAccount(ctx conte
 	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
+type CreateExternalLineageRelationshipRequest_SdkV2 struct {
+	ExternalLineageRelationship types.List `tfsdk:"external_lineage_relationship"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExternalLineageRelationshipRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateExternalLineageRelationshipRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_lineage_relationship": reflect.TypeOf(CreateRequestExternalLineage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateExternalLineageRelationshipRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateExternalLineageRelationshipRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_lineage_relationship": o.ExternalLineageRelationship,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateExternalLineageRelationshipRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_lineage_relationship": basetypes.ListType{
+				ElemType: CreateRequestExternalLineage_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExternalLineageRelationship returns the value of the ExternalLineageRelationship field in CreateExternalLineageRelationshipRequest_SdkV2 as
+// a CreateRequestExternalLineage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExternalLineageRelationshipRequest_SdkV2) GetExternalLineageRelationship(ctx context.Context) (CreateRequestExternalLineage_SdkV2, bool) {
+	var e CreateRequestExternalLineage_SdkV2
+	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
+		return e, false
+	}
+	var v []CreateRequestExternalLineage_SdkV2
+	d := o.ExternalLineageRelationship.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in CreateExternalLineageRelationshipRequest_SdkV2.
+func (o *CreateExternalLineageRelationshipRequest_SdkV2) SetExternalLineageRelationship(ctx context.Context, v CreateRequestExternalLineage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_lineage_relationship"]
+	o.ExternalLineageRelationship = types.ListValueMust(t, vs)
+}
+
 type CreateExternalLocation_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// [Create:OPT Update:OPT] Whether to enable file events on this external
-	// location.
+	// Whether to enable file events on this external location.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-	// Encryption options that apply to clients connecting to cloud storage.
+
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// [Create:OPT Update:OPT] File event queue settings.
+	// File event queue settings.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -3140,29 +3160,6 @@ type CreateExternalLocation_SdkV2 struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 	// Path URL of the external location.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *CreateExternalLocation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExternalLocation_SdkV2) {
-}
-
-func (newState *CreateExternalLocation_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExternalLocation_SdkV2) {
-}
-
-func (c CreateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["credential_name"] = attrs["credential_name"].SetRequired()
-	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["fallback"] = attrs["fallback"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["url"] = attrs["url"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExternalLocation.
@@ -3271,6 +3268,71 @@ func (o *CreateExternalLocation_SdkV2) SetFileEventQueue(ctx context.Context, v 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_event_queue"]
 	o.FileEventQueue = types.ListValueMust(t, vs)
+}
+
+type CreateExternalMetadataRequest_SdkV2 struct {
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExternalMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateExternalMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_metadata": reflect.TypeOf(ExternalMetadata_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateExternalMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateExternalMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_metadata": o.ExternalMetadata,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_metadata": basetypes.ListType{
+				ElemType: ExternalMetadata_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExternalMetadata returns the value of the ExternalMetadata field in CreateExternalMetadataRequest_SdkV2 as
+// a ExternalMetadata_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExternalMetadataRequest_SdkV2) GetExternalMetadata(ctx context.Context) (ExternalMetadata_SdkV2, bool) {
+	var e ExternalMetadata_SdkV2
+	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalMetadata_SdkV2
+	d := o.ExternalMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalMetadata sets the value of the ExternalMetadata field in CreateExternalMetadataRequest_SdkV2.
+func (o *CreateExternalMetadataRequest_SdkV2) SetExternalMetadata(ctx context.Context, v ExternalMetadata_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_metadata"]
+	o.ExternalMetadata = types.ListValueMust(t, vs)
 }
 
 type CreateFunction_SdkV2 struct {
@@ -3521,19 +3583,6 @@ type CreateFunctionRequest_SdkV2 struct {
 	FunctionInfo types.List `tfsdk:"function_info"`
 }
 
-func (newState *CreateFunctionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFunctionRequest_SdkV2) {
-}
-
-func (newState *CreateFunctionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateFunctionRequest_SdkV2) {
-}
-
-func (c CreateFunctionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["function_info"] = attrs["function_info"].SetRequired()
-	attrs["function_info"] = attrs["function_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFunctionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3752,37 +3801,6 @@ type CreateMonitor_SdkV2 struct {
 	// Optional argument to specify the warehouse for dashboard creation. If not
 	// specified, the first running warehouse will be used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *CreateMonitor_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMonitor_SdkV2) {
-}
-
-func (newState *CreateMonitor_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateMonitor_SdkV2) {
-}
-
-func (c CreateMonitor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["assets_dir"] = attrs["assets_dir"].SetRequired()
-	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
-	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inference_log"] = attrs["inference_log"].SetOptional()
-	attrs["inference_log"] = attrs["inference_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["output_schema_name"] = attrs["output_schema_name"].SetRequired()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["skip_builtin_dashboard"] = attrs["skip_builtin_dashboard"].SetOptional()
-	attrs["slicing_exprs"] = attrs["slicing_exprs"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["time_series"] = attrs["time_series"].SetOptional()
-	attrs["time_series"] = attrs["time_series"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMonitor.
@@ -4076,7 +4094,7 @@ func (o *CreateMonitor_SdkV2) SetTimeSeries(ctx context.Context, v MonitorTimeSe
 }
 
 type CreateOnlineTableRequest_SdkV2 struct {
-	// Online Table information.
+	// Specification of the online table to be created.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -4155,22 +4173,6 @@ type CreateRegisteredModelRequest_SdkV2 struct {
 	StorageLocation types.String `tfsdk:"storage_location"`
 }
 
-func (newState *CreateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegisteredModelRequest_SdkV2) {
-}
-
-func (newState *CreateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRegisteredModelRequest_SdkV2) {
-}
-
-func (c CreateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRegisteredModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4208,6 +4210,193 @@ func (o CreateRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type 
 			"storage_location": types.StringType,
 		},
 	}
+}
+
+type CreateRequestExternalLineage_SdkV2 struct {
+	// List of column relationships between source and target objects.
+	Columns types.List `tfsdk:"columns"`
+	// Unique identifier of the external lineage relationship.
+	Id types.String `tfsdk:"id"`
+	// Key-value properties associated with the external lineage relationship.
+	Properties types.Map `tfsdk:"properties"`
+	// Source object of the external lineage relationship.
+	Source types.List `tfsdk:"source"`
+	// Target object of the external lineage relationship.
+	Target types.List `tfsdk:"target"`
+}
+
+func (newState *CreateRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRequestExternalLineage_SdkV2) {
+}
+
+func (newState *CreateRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRequestExternalLineage_SdkV2) {
+}
+
+func (c CreateRequestExternalLineage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target"] = attrs["target"].SetRequired()
+	attrs["target"] = attrs["target"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRequestExternalLineage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateRequestExternalLineage_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(ColumnRelationship_SdkV2{}),
+		"properties": reflect.TypeOf(types.String{}),
+		"source":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+		"target":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRequestExternalLineage_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateRequestExternalLineage_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":    o.Columns,
+			"id":         o.Id,
+			"properties": o.Properties,
+			"source":     o.Source,
+			"target":     o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateRequestExternalLineage_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: ColumnRelationship_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"source": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"target": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in CreateRequestExternalLineage_SdkV2 as
+// a slice of ColumnRelationship_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRequestExternalLineage_SdkV2) GetColumns(ctx context.Context) ([]ColumnRelationship_SdkV2, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnRelationship_SdkV2
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in CreateRequestExternalLineage_SdkV2.
+func (o *CreateRequestExternalLineage_SdkV2) SetColumns(ctx context.Context, v []ColumnRelationship_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in CreateRequestExternalLineage_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRequestExternalLineage_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CreateRequestExternalLineage_SdkV2.
+func (o *CreateRequestExternalLineage_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSource returns the value of the Source field in CreateRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRequestExternalLineage_SdkV2) GetSource(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Source.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in CreateRequestExternalLineage_SdkV2.
+func (o *CreateRequestExternalLineage_SdkV2) SetSource(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
+	o.Source = types.ListValueMust(t, vs)
+}
+
+// GetTarget returns the value of the Target field in CreateRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRequestExternalLineage_SdkV2) GetTarget(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Target.IsNull() || o.Target.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Target.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTarget sets the value of the Target field in CreateRequestExternalLineage_SdkV2.
+func (o *CreateRequestExternalLineage_SdkV2) SetTarget(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target"]
+	o.Target = types.ListValueMust(t, vs)
 }
 
 type CreateResponse_SdkV2 struct {
@@ -4251,22 +4440,6 @@ type CreateSchema_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// Storage root URL for managed tables within schema.
 	StorageRoot types.String `tfsdk:"storage_root"`
-}
-
-func (newState *CreateSchema_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSchema_SdkV2) {
-}
-
-func (newState *CreateSchema_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateSchema_SdkV2) {
-}
-
-func (c CreateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["storage_root"] = attrs["storage_root"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSchema.
@@ -4581,26 +4754,9 @@ func (o *CreateStorageCredential_SdkV2) SetDatabricksGcpServiceAccount(ctx conte
 }
 
 type CreateTableConstraint_SdkV2 struct {
-	// A table constraint, as defined by *one* of the following fields being
-	// set: __primary_key_constraint__, __foreign_key_constraint__,
-	// __named_table_constraint__.
 	Constraint types.List `tfsdk:"constraint"`
 	// The full name of the table referenced by the constraint.
 	FullNameArg types.String `tfsdk:"full_name_arg"`
-}
-
-func (newState *CreateTableConstraint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTableConstraint_SdkV2) {
-}
-
-func (newState *CreateTableConstraint_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTableConstraint_SdkV2) {
-}
-
-func (c CreateTableConstraint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["constraint"] = attrs["constraint"].SetRequired()
-	attrs["constraint"] = attrs["constraint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["full_name_arg"] = attrs["full_name_arg"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTableConstraint.
@@ -4677,30 +4833,8 @@ type CreateVolumeRequestContent_SdkV2 struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The storage location on the cloud
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// The type of the volume. An external volume is located in the specified
-	// external location. A managed volume is located in the default location
-	// which is specified by the parent schema, or the parent catalog, or the
-	// Metastore. [Learn more]
-	//
-	// [Learn more]: https://docs.databricks.com/aws/en/volumes/managed-vs-external
+
 	VolumeType types.String `tfsdk:"volume_type"`
-}
-
-func (newState *CreateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVolumeRequestContent_SdkV2) {
-}
-
-func (newState *CreateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVolumeRequestContent_SdkV2) {
-}
-
-func (c CreateVolumeRequestContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-	attrs["volume_type"] = attrs["volume_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVolumeRequestContent.
@@ -4740,6 +4874,56 @@ func (o CreateVolumeRequestContent_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema_name":      types.StringType,
 			"storage_location": types.StringType,
 			"volume_type":      types.StringType,
+		},
+	}
+}
+
+// A credential that is dependent on a SQL object.
+type CredentialDependency_SdkV2 struct {
+	// Full name of the dependent credential, in the form of
+	// __credential_name__.
+	CredentialName types.String `tfsdk:"credential_name"`
+}
+
+func (newState *CredentialDependency_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialDependency_SdkV2) {
+}
+
+func (newState *CredentialDependency_SdkV2) SyncEffectiveFieldsDuringRead(existingState CredentialDependency_SdkV2) {
+}
+
+func (c CredentialDependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_name"] = attrs["credential_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CredentialDependency.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CredentialDependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CredentialDependency_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CredentialDependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_name": o.CredentialName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CredentialDependency_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_name": types.StringType,
 		},
 	}
 }
@@ -5052,6 +5236,36 @@ func (o CredentialValidationResult_SdkV2) Type(ctx context.Context) attr.Type {
 			"message": types.StringType,
 			"result":  types.StringType,
 		},
+	}
+}
+
+type CurrentRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CurrentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CurrentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CurrentRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CurrentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CurrentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -5567,6 +5781,71 @@ func (o DeleteCredentialResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteExternalLineageRelationshipRequest_SdkV2 struct {
+	ExternalLineageRelationship types.List `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExternalLineageRelationshipRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteExternalLineageRelationshipRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_lineage_relationship": reflect.TypeOf(DeleteRequestExternalLineage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteExternalLineageRelationshipRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteExternalLineageRelationshipRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_lineage_relationship": o.ExternalLineageRelationship,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteExternalLineageRelationshipRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_lineage_relationship": basetypes.ListType{
+				ElemType: DeleteRequestExternalLineage_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExternalLineageRelationship returns the value of the ExternalLineageRelationship field in DeleteExternalLineageRelationshipRequest_SdkV2 as
+// a DeleteRequestExternalLineage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteExternalLineageRelationshipRequest_SdkV2) GetExternalLineageRelationship(ctx context.Context) (DeleteRequestExternalLineage_SdkV2, bool) {
+	var e DeleteRequestExternalLineage_SdkV2
+	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
+		return e, false
+	}
+	var v []DeleteRequestExternalLineage_SdkV2
+	d := o.ExternalLineageRelationship.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in DeleteExternalLineageRelationshipRequest_SdkV2.
+func (o *DeleteExternalLineageRelationshipRequest_SdkV2) SetExternalLineageRelationship(ctx context.Context, v DeleteRequestExternalLineage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_lineage_relationship"]
+	o.ExternalLineageRelationship = types.ListValueMust(t, vs)
+}
+
 type DeleteExternalLocationRequest_SdkV2 struct {
 	// Force deletion even if there are dependent external tables or mounts.
 	Force types.Bool `tfsdk:"-"`
@@ -5603,6 +5882,41 @@ func (o DeleteExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type
 		AttrTypes: map[string]attr.Type{
 			"force": types.BoolType,
 			"name":  types.StringType,
+		},
+	}
+}
+
+type DeleteExternalMetadataRequest_SdkV2 struct {
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExternalMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteExternalMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteExternalMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteExternalMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -5836,6 +6150,125 @@ func (o DeleteRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+type DeleteRequestExternalLineage_SdkV2 struct {
+	// Unique identifier of the external lineage relationship.
+	Id types.String `tfsdk:"id"`
+	// Source object of the external lineage relationship.
+	Source types.List `tfsdk:"source"`
+	// Target object of the external lineage relationship.
+	Target types.List `tfsdk:"target"`
+}
+
+func (newState *DeleteRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRequestExternalLineage_SdkV2) {
+}
+
+func (newState *DeleteRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRequestExternalLineage_SdkV2) {
+}
+
+func (c DeleteRequestExternalLineage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target"] = attrs["target"].SetRequired()
+	attrs["target"] = attrs["target"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRequestExternalLineage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteRequestExternalLineage_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"source": reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+		"target": reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRequestExternalLineage_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteRequestExternalLineage_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id":     o.Id,
+			"source": o.Source,
+			"target": o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteRequestExternalLineage_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+			"source": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"target": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSource returns the value of the Source field in DeleteRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteRequestExternalLineage_SdkV2) GetSource(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Source.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in DeleteRequestExternalLineage_SdkV2.
+func (o *DeleteRequestExternalLineage_SdkV2) SetSource(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
+	o.Source = types.ListValueMust(t, vs)
+}
+
+// GetTarget returns the value of the Target field in DeleteRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteRequestExternalLineage_SdkV2) GetTarget(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Target.IsNull() || o.Target.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Target.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTarget sets the value of the Target field in DeleteRequestExternalLineage_SdkV2.
+func (o *DeleteRequestExternalLineage_SdkV2) SetTarget(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target"]
+	o.Target = types.ListValueMust(t, vs)
+}
+
 type DeleteResponse_SdkV2 struct {
 }
 
@@ -6005,6 +6438,47 @@ func (o DeleteTableConstraintRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+type DeleteTableConstraintResponse_SdkV2 struct {
+}
+
+func (newState *DeleteTableConstraintResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTableConstraintResponse_SdkV2) {
+}
+
+func (newState *DeleteTableConstraintResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteTableConstraintResponse_SdkV2) {
+}
+
+func (c DeleteTableConstraintResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTableConstraintResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteTableConstraintResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteTableConstraintResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteTableConstraintResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteTableConstraintResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type DeleteTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
@@ -6158,12 +6632,15 @@ func (o *DeltaRuntimePropertiesKvPairs_SdkV2) SetDeltaRuntimeProperties(ctx cont
 	o.DeltaRuntimeProperties = types.MapValueMust(t, vs)
 }
 
-// A dependency of a SQL object. Either the __table__ field or the __function__
-// field must be defined.
+// A dependency of a SQL object. One of the following fields must be defined:
+// __table__, __function__, __connection__, or __credential__.
 type Dependency_SdkV2 struct {
-	// A function that is dependent on a SQL object.
+	Connection types.List `tfsdk:"connection"`
+
+	Credential types.List `tfsdk:"credential"`
+
 	Function types.List `tfsdk:"function"`
-	// A table that is dependent on a SQL object.
+
 	Table types.List `tfsdk:"table"`
 }
 
@@ -6174,6 +6651,10 @@ func (newState *Dependency_SdkV2) SyncEffectiveFieldsDuringRead(existingState De
 }
 
 func (c Dependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection"] = attrs["connection"].SetOptional()
+	attrs["connection"] = attrs["connection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["credential"] = attrs["credential"].SetOptional()
+	attrs["credential"] = attrs["credential"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetOptional()
 	attrs["function"] = attrs["function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table"] = attrs["table"].SetOptional()
@@ -6191,8 +6672,10 @@ func (c Dependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (a Dependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"function": reflect.TypeOf(FunctionDependency_SdkV2{}),
-		"table":    reflect.TypeOf(TableDependency_SdkV2{}),
+		"connection": reflect.TypeOf(ConnectionDependency_SdkV2{}),
+		"credential": reflect.TypeOf(CredentialDependency_SdkV2{}),
+		"function":   reflect.TypeOf(FunctionDependency_SdkV2{}),
+		"table":      reflect.TypeOf(TableDependency_SdkV2{}),
 	}
 }
 
@@ -6203,8 +6686,10 @@ func (o Dependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"function": o.Function,
-			"table":    o.Table,
+			"connection": o.Connection,
+			"credential": o.Credential,
+			"function":   o.Function,
+			"table":      o.Table,
 		})
 }
 
@@ -6212,6 +6697,12 @@ func (o Dependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o Dependency_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"connection": basetypes.ListType{
+				ElemType: ConnectionDependency_SdkV2{}.Type(ctx),
+			},
+			"credential": basetypes.ListType{
+				ElemType: CredentialDependency_SdkV2{}.Type(ctx),
+			},
 			"function": basetypes.ListType{
 				ElemType: FunctionDependency_SdkV2{}.Type(ctx),
 			},
@@ -6220,6 +6711,58 @@ func (o Dependency_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConnection returns the value of the Connection field in Dependency_SdkV2 as
+// a ConnectionDependency_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dependency_SdkV2) GetConnection(ctx context.Context) (ConnectionDependency_SdkV2, bool) {
+	var e ConnectionDependency_SdkV2
+	if o.Connection.IsNull() || o.Connection.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectionDependency_SdkV2
+	d := o.Connection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnection sets the value of the Connection field in Dependency_SdkV2.
+func (o *Dependency_SdkV2) SetConnection(ctx context.Context, v ConnectionDependency_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["connection"]
+	o.Connection = types.ListValueMust(t, vs)
+}
+
+// GetCredential returns the value of the Credential field in Dependency_SdkV2 as
+// a CredentialDependency_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dependency_SdkV2) GetCredential(ctx context.Context) (CredentialDependency_SdkV2, bool) {
+	var e CredentialDependency_SdkV2
+	if o.Credential.IsNull() || o.Credential.IsUnknown() {
+		return e, false
+	}
+	var v []CredentialDependency_SdkV2
+	d := o.Credential.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredential sets the value of the Credential field in Dependency_SdkV2.
+func (o *Dependency_SdkV2) SetCredential(ctx context.Context, v CredentialDependency_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential"]
+	o.Credential = types.ListValueMust(t, vs)
 }
 
 // GetFunction returns the value of the Function field in Dependency_SdkV2 as
@@ -6736,20 +7279,6 @@ type EnableRequest_SdkV2 struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
-func (newState *EnableRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableRequest_SdkV2) {
-}
-
-func (newState *EnableRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnableRequest_SdkV2) {
-}
-
-func (c EnableRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
-	attrs["schema_name"] = attrs["schema_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6942,6 +7471,1232 @@ func (o ExistsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ExternalLineageExternalMetadata_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+func (newState *ExternalLineageExternalMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageExternalMetadata_SdkV2) {
+}
+
+func (newState *ExternalLineageExternalMetadata_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageExternalMetadata_SdkV2) {
+}
+
+func (c ExternalLineageExternalMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageExternalMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageExternalMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageExternalMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageExternalMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageExternalMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Represents the external metadata object in the lineage event.
+type ExternalLineageExternalMetadataInfo_SdkV2 struct {
+	// Type of entity represented by the external metadata object.
+	EntityType types.String `tfsdk:"entity_type"`
+	// Timestamp of the lineage event.
+	EventTime types.String `tfsdk:"event_time"`
+	// Name of the external metadata object.
+	Name types.String `tfsdk:"name"`
+	// Type of external system.
+	SystemType types.String `tfsdk:"system_type"`
+}
+
+func (newState *ExternalLineageExternalMetadataInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageExternalMetadataInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageExternalMetadataInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageExternalMetadataInfo_SdkV2) {
+}
+
+func (c ExternalLineageExternalMetadataInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetOptional()
+	attrs["event_time"] = attrs["event_time"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["system_type"] = attrs["system_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageExternalMetadataInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageExternalMetadataInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageExternalMetadataInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageExternalMetadataInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_type": o.EntityType,
+			"event_time":  o.EventTime,
+			"name":        o.Name,
+			"system_type": o.SystemType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageExternalMetadataInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_type": types.StringType,
+			"event_time":  types.StringType,
+			"name":        types.StringType,
+			"system_type": types.StringType,
+		},
+	}
+}
+
+// Represents the path information in the lineage event.
+type ExternalLineageFileInfo_SdkV2 struct {
+	// Timestamp of the lineage event.
+	EventTime types.String `tfsdk:"event_time"`
+	// URL of the path.
+	Path types.String `tfsdk:"path"`
+	// The full name of the securable on the path.
+	SecurableName types.String `tfsdk:"securable_name"`
+	// The securable type of the securable on the path.
+	SecurableType types.String `tfsdk:"securable_type"`
+	// The storage location associated with securable on the path.
+	StorageLocation types.String `tfsdk:"storage_location"`
+}
+
+func (newState *ExternalLineageFileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageFileInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageFileInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageFileInfo_SdkV2) {
+}
+
+func (c ExternalLineageFileInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["event_time"] = attrs["event_time"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["securable_name"] = attrs["securable_name"].SetOptional()
+	attrs["securable_type"] = attrs["securable_type"].SetOptional()
+	attrs["storage_location"] = attrs["storage_location"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageFileInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageFileInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageFileInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageFileInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"event_time":       o.EventTime,
+			"path":             o.Path,
+			"securable_name":   o.SecurableName,
+			"securable_type":   o.SecurableType,
+			"storage_location": o.StorageLocation,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageFileInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"event_time":       types.StringType,
+			"path":             types.StringType,
+			"securable_name":   types.StringType,
+			"securable_type":   types.StringType,
+			"storage_location": types.StringType,
+		},
+	}
+}
+
+// Lineage response containing lineage information of a data asset.
+type ExternalLineageInfo_SdkV2 struct {
+	// Information about the edge metadata of the external lineage relationship.
+	ExternalLineageInfo types.List `tfsdk:"external_lineage_info"`
+	// Information about external metadata involved in the lineage relationship.
+	ExternalMetadataInfo types.List `tfsdk:"external_metadata_info"`
+	// Information about the file involved in the lineage relationship.
+	FileInfo types.List `tfsdk:"file_info"`
+	// Information about the model version involved in the lineage relationship.
+	ModelInfo types.List `tfsdk:"model_info"`
+	// Information about the table involved in the lineage relationship.
+	TableInfo types.List `tfsdk:"table_info"`
+}
+
+func (newState *ExternalLineageInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageInfo_SdkV2) {
+}
+
+func (c ExternalLineageInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_lineage_info"] = attrs["external_lineage_info"].SetOptional()
+	attrs["external_lineage_info"] = attrs["external_lineage_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["external_metadata_info"] = attrs["external_metadata_info"].SetOptional()
+	attrs["external_metadata_info"] = attrs["external_metadata_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["file_info"] = attrs["file_info"].SetOptional()
+	attrs["file_info"] = attrs["file_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["model_info"] = attrs["model_info"].SetOptional()
+	attrs["model_info"] = attrs["model_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table_info"] = attrs["table_info"].SetOptional()
+	attrs["table_info"] = attrs["table_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_lineage_info":  reflect.TypeOf(ExternalLineageRelationshipInfo_SdkV2{}),
+		"external_metadata_info": reflect.TypeOf(ExternalLineageExternalMetadataInfo_SdkV2{}),
+		"file_info":              reflect.TypeOf(ExternalLineageFileInfo_SdkV2{}),
+		"model_info":             reflect.TypeOf(ExternalLineageModelVersionInfo_SdkV2{}),
+		"table_info":             reflect.TypeOf(ExternalLineageTableInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_lineage_info":  o.ExternalLineageInfo,
+			"external_metadata_info": o.ExternalMetadataInfo,
+			"file_info":              o.FileInfo,
+			"model_info":             o.ModelInfo,
+			"table_info":             o.TableInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_lineage_info": basetypes.ListType{
+				ElemType: ExternalLineageRelationshipInfo_SdkV2{}.Type(ctx),
+			},
+			"external_metadata_info": basetypes.ListType{
+				ElemType: ExternalLineageExternalMetadataInfo_SdkV2{}.Type(ctx),
+			},
+			"file_info": basetypes.ListType{
+				ElemType: ExternalLineageFileInfo_SdkV2{}.Type(ctx),
+			},
+			"model_info": basetypes.ListType{
+				ElemType: ExternalLineageModelVersionInfo_SdkV2{}.Type(ctx),
+			},
+			"table_info": basetypes.ListType{
+				ElemType: ExternalLineageTableInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExternalLineageInfo returns the value of the ExternalLineageInfo field in ExternalLineageInfo_SdkV2 as
+// a ExternalLineageRelationshipInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageInfo_SdkV2) GetExternalLineageInfo(ctx context.Context) (ExternalLineageRelationshipInfo_SdkV2, bool) {
+	var e ExternalLineageRelationshipInfo_SdkV2
+	if o.ExternalLineageInfo.IsNull() || o.ExternalLineageInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageRelationshipInfo_SdkV2
+	d := o.ExternalLineageInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalLineageInfo sets the value of the ExternalLineageInfo field in ExternalLineageInfo_SdkV2.
+func (o *ExternalLineageInfo_SdkV2) SetExternalLineageInfo(ctx context.Context, v ExternalLineageRelationshipInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_lineage_info"]
+	o.ExternalLineageInfo = types.ListValueMust(t, vs)
+}
+
+// GetExternalMetadataInfo returns the value of the ExternalMetadataInfo field in ExternalLineageInfo_SdkV2 as
+// a ExternalLineageExternalMetadataInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageInfo_SdkV2) GetExternalMetadataInfo(ctx context.Context) (ExternalLineageExternalMetadataInfo_SdkV2, bool) {
+	var e ExternalLineageExternalMetadataInfo_SdkV2
+	if o.ExternalMetadataInfo.IsNull() || o.ExternalMetadataInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageExternalMetadataInfo_SdkV2
+	d := o.ExternalMetadataInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalMetadataInfo sets the value of the ExternalMetadataInfo field in ExternalLineageInfo_SdkV2.
+func (o *ExternalLineageInfo_SdkV2) SetExternalMetadataInfo(ctx context.Context, v ExternalLineageExternalMetadataInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_metadata_info"]
+	o.ExternalMetadataInfo = types.ListValueMust(t, vs)
+}
+
+// GetFileInfo returns the value of the FileInfo field in ExternalLineageInfo_SdkV2 as
+// a ExternalLineageFileInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageInfo_SdkV2) GetFileInfo(ctx context.Context) (ExternalLineageFileInfo_SdkV2, bool) {
+	var e ExternalLineageFileInfo_SdkV2
+	if o.FileInfo.IsNull() || o.FileInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageFileInfo_SdkV2
+	d := o.FileInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileInfo sets the value of the FileInfo field in ExternalLineageInfo_SdkV2.
+func (o *ExternalLineageInfo_SdkV2) SetFileInfo(ctx context.Context, v ExternalLineageFileInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_info"]
+	o.FileInfo = types.ListValueMust(t, vs)
+}
+
+// GetModelInfo returns the value of the ModelInfo field in ExternalLineageInfo_SdkV2 as
+// a ExternalLineageModelVersionInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageInfo_SdkV2) GetModelInfo(ctx context.Context) (ExternalLineageModelVersionInfo_SdkV2, bool) {
+	var e ExternalLineageModelVersionInfo_SdkV2
+	if o.ModelInfo.IsNull() || o.ModelInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageModelVersionInfo_SdkV2
+	d := o.ModelInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelInfo sets the value of the ModelInfo field in ExternalLineageInfo_SdkV2.
+func (o *ExternalLineageInfo_SdkV2) SetModelInfo(ctx context.Context, v ExternalLineageModelVersionInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_info"]
+	o.ModelInfo = types.ListValueMust(t, vs)
+}
+
+// GetTableInfo returns the value of the TableInfo field in ExternalLineageInfo_SdkV2 as
+// a ExternalLineageTableInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageInfo_SdkV2) GetTableInfo(ctx context.Context) (ExternalLineageTableInfo_SdkV2, bool) {
+	var e ExternalLineageTableInfo_SdkV2
+	if o.TableInfo.IsNull() || o.TableInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageTableInfo_SdkV2
+	d := o.TableInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableInfo sets the value of the TableInfo field in ExternalLineageInfo_SdkV2.
+func (o *ExternalLineageInfo_SdkV2) SetTableInfo(ctx context.Context, v ExternalLineageTableInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_info"]
+	o.TableInfo = types.ListValueMust(t, vs)
+}
+
+type ExternalLineageModelVersion_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+
+	Version types.String `tfsdk:"version"`
+}
+
+func (newState *ExternalLineageModelVersion_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageModelVersion_SdkV2) {
+}
+
+func (newState *ExternalLineageModelVersion_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageModelVersion_SdkV2) {
+}
+
+func (c ExternalLineageModelVersion_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageModelVersion.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageModelVersion_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageModelVersion_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageModelVersion_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":    o.Name,
+			"version": o.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageModelVersion_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":    types.StringType,
+			"version": types.StringType,
+		},
+	}
+}
+
+// Represents the model version information in the lineage event.
+type ExternalLineageModelVersionInfo_SdkV2 struct {
+	// Timestamp of the lineage event.
+	EventTime types.String `tfsdk:"event_time"`
+	// Name of the model.
+	ModelName types.String `tfsdk:"model_name"`
+	// Version number of the model.
+	Version types.Int64 `tfsdk:"version"`
+}
+
+func (newState *ExternalLineageModelVersionInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageModelVersionInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageModelVersionInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageModelVersionInfo_SdkV2) {
+}
+
+func (c ExternalLineageModelVersionInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["event_time"] = attrs["event_time"].SetOptional()
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageModelVersionInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageModelVersionInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageModelVersionInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageModelVersionInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"event_time": o.EventTime,
+			"model_name": o.ModelName,
+			"version":    o.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageModelVersionInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"event_time": types.StringType,
+			"model_name": types.StringType,
+			"version":    types.Int64Type,
+		},
+	}
+}
+
+type ExternalLineageObject_SdkV2 struct {
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
+
+	ModelVersion types.List `tfsdk:"model_version"`
+
+	Path types.List `tfsdk:"path"`
+
+	Table types.List `tfsdk:"table"`
+}
+
+func (newState *ExternalLineageObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageObject_SdkV2) {
+}
+
+func (newState *ExternalLineageObject_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageObject_SdkV2) {
+}
+
+func (c ExternalLineageObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_metadata"] = attrs["external_metadata"].SetOptional()
+	attrs["external_metadata"] = attrs["external_metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["path"] = attrs["path"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table"] = attrs["table"].SetOptional()
+	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageObject.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageObject_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_metadata": reflect.TypeOf(ExternalLineageExternalMetadata_SdkV2{}),
+		"model_version":     reflect.TypeOf(ExternalLineageModelVersion_SdkV2{}),
+		"path":              reflect.TypeOf(ExternalLineagePath_SdkV2{}),
+		"table":             reflect.TypeOf(ExternalLineageTable_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageObject_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageObject_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_metadata": o.ExternalMetadata,
+			"model_version":     o.ModelVersion,
+			"path":              o.Path,
+			"table":             o.Table,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageObject_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_metadata": basetypes.ListType{
+				ElemType: ExternalLineageExternalMetadata_SdkV2{}.Type(ctx),
+			},
+			"model_version": basetypes.ListType{
+				ElemType: ExternalLineageModelVersion_SdkV2{}.Type(ctx),
+			},
+			"path": basetypes.ListType{
+				ElemType: ExternalLineagePath_SdkV2{}.Type(ctx),
+			},
+			"table": basetypes.ListType{
+				ElemType: ExternalLineageTable_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExternalMetadata returns the value of the ExternalMetadata field in ExternalLineageObject_SdkV2 as
+// a ExternalLineageExternalMetadata_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageObject_SdkV2) GetExternalMetadata(ctx context.Context) (ExternalLineageExternalMetadata_SdkV2, bool) {
+	var e ExternalLineageExternalMetadata_SdkV2
+	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageExternalMetadata_SdkV2
+	d := o.ExternalMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalMetadata sets the value of the ExternalMetadata field in ExternalLineageObject_SdkV2.
+func (o *ExternalLineageObject_SdkV2) SetExternalMetadata(ctx context.Context, v ExternalLineageExternalMetadata_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_metadata"]
+	o.ExternalMetadata = types.ListValueMust(t, vs)
+}
+
+// GetModelVersion returns the value of the ModelVersion field in ExternalLineageObject_SdkV2 as
+// a ExternalLineageModelVersion_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageObject_SdkV2) GetModelVersion(ctx context.Context) (ExternalLineageModelVersion_SdkV2, bool) {
+	var e ExternalLineageModelVersion_SdkV2
+	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageModelVersion_SdkV2
+	d := o.ModelVersion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersion sets the value of the ModelVersion field in ExternalLineageObject_SdkV2.
+func (o *ExternalLineageObject_SdkV2) SetModelVersion(ctx context.Context, v ExternalLineageModelVersion_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_version"]
+	o.ModelVersion = types.ListValueMust(t, vs)
+}
+
+// GetPath returns the value of the Path field in ExternalLineageObject_SdkV2 as
+// a ExternalLineagePath_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageObject_SdkV2) GetPath(ctx context.Context) (ExternalLineagePath_SdkV2, bool) {
+	var e ExternalLineagePath_SdkV2
+	if o.Path.IsNull() || o.Path.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineagePath_SdkV2
+	d := o.Path.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPath sets the value of the Path field in ExternalLineageObject_SdkV2.
+func (o *ExternalLineageObject_SdkV2) SetPath(ctx context.Context, v ExternalLineagePath_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["path"]
+	o.Path = types.ListValueMust(t, vs)
+}
+
+// GetTable returns the value of the Table field in ExternalLineageObject_SdkV2 as
+// a ExternalLineageTable_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageObject_SdkV2) GetTable(ctx context.Context) (ExternalLineageTable_SdkV2, bool) {
+	var e ExternalLineageTable_SdkV2
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageTable_SdkV2
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in ExternalLineageObject_SdkV2.
+func (o *ExternalLineageObject_SdkV2) SetTable(ctx context.Context, v ExternalLineageTable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
+}
+
+type ExternalLineagePath_SdkV2 struct {
+	Url types.String `tfsdk:"url"`
+}
+
+func (newState *ExternalLineagePath_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineagePath_SdkV2) {
+}
+
+func (newState *ExternalLineagePath_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineagePath_SdkV2) {
+}
+
+func (c ExternalLineagePath_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineagePath.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineagePath_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineagePath_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineagePath_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"url": o.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineagePath_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"url": types.StringType,
+		},
+	}
+}
+
+type ExternalLineageRelationship_SdkV2 struct {
+	// List of column relationships between source and target objects.
+	Columns types.List `tfsdk:"columns"`
+	// Unique identifier of the external lineage relationship.
+	Id types.String `tfsdk:"id"`
+	// Key-value properties associated with the external lineage relationship.
+	Properties types.Map `tfsdk:"properties"`
+	// Source object of the external lineage relationship.
+	Source types.List `tfsdk:"source"`
+	// Target object of the external lineage relationship.
+	Target types.List `tfsdk:"target"`
+}
+
+func (newState *ExternalLineageRelationship_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageRelationship_SdkV2) {
+}
+
+func (newState *ExternalLineageRelationship_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageRelationship_SdkV2) {
+}
+
+func (c ExternalLineageRelationship_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target"] = attrs["target"].SetRequired()
+	attrs["target"] = attrs["target"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageRelationship.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageRelationship_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(ColumnRelationship_SdkV2{}),
+		"properties": reflect.TypeOf(types.String{}),
+		"source":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+		"target":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageRelationship_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageRelationship_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":    o.Columns,
+			"id":         o.Id,
+			"properties": o.Properties,
+			"source":     o.Source,
+			"target":     o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageRelationship_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: ColumnRelationship_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"source": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"target": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in ExternalLineageRelationship_SdkV2 as
+// a slice of ColumnRelationship_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationship_SdkV2) GetColumns(ctx context.Context) ([]ColumnRelationship_SdkV2, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnRelationship_SdkV2
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in ExternalLineageRelationship_SdkV2.
+func (o *ExternalLineageRelationship_SdkV2) SetColumns(ctx context.Context, v []ColumnRelationship_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in ExternalLineageRelationship_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationship_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in ExternalLineageRelationship_SdkV2.
+func (o *ExternalLineageRelationship_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSource returns the value of the Source field in ExternalLineageRelationship_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationship_SdkV2) GetSource(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Source.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in ExternalLineageRelationship_SdkV2.
+func (o *ExternalLineageRelationship_SdkV2) SetSource(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
+	o.Source = types.ListValueMust(t, vs)
+}
+
+// GetTarget returns the value of the Target field in ExternalLineageRelationship_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationship_SdkV2) GetTarget(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Target.IsNull() || o.Target.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Target.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTarget sets the value of the Target field in ExternalLineageRelationship_SdkV2.
+func (o *ExternalLineageRelationship_SdkV2) SetTarget(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target"]
+	o.Target = types.ListValueMust(t, vs)
+}
+
+type ExternalLineageRelationshipInfo_SdkV2 struct {
+	// List of column relationships between source and target objects.
+	Columns types.List `tfsdk:"columns"`
+	// Unique identifier of the external lineage relationship.
+	Id types.String `tfsdk:"id"`
+	// Key-value properties associated with the external lineage relationship.
+	Properties types.Map `tfsdk:"properties"`
+	// Source object of the external lineage relationship.
+	Source types.List `tfsdk:"source"`
+	// Target object of the external lineage relationship.
+	Target types.List `tfsdk:"target"`
+}
+
+func (newState *ExternalLineageRelationshipInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageRelationshipInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageRelationshipInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageRelationshipInfo_SdkV2) {
+}
+
+func (c ExternalLineageRelationshipInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target"] = attrs["target"].SetRequired()
+	attrs["target"] = attrs["target"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageRelationshipInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageRelationshipInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(ColumnRelationship_SdkV2{}),
+		"properties": reflect.TypeOf(types.String{}),
+		"source":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+		"target":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageRelationshipInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageRelationshipInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":    o.Columns,
+			"id":         o.Id,
+			"properties": o.Properties,
+			"source":     o.Source,
+			"target":     o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageRelationshipInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: ColumnRelationship_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"source": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"target": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in ExternalLineageRelationshipInfo_SdkV2 as
+// a slice of ColumnRelationship_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationshipInfo_SdkV2) GetColumns(ctx context.Context) ([]ColumnRelationship_SdkV2, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnRelationship_SdkV2
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in ExternalLineageRelationshipInfo_SdkV2.
+func (o *ExternalLineageRelationshipInfo_SdkV2) SetColumns(ctx context.Context, v []ColumnRelationship_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in ExternalLineageRelationshipInfo_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationshipInfo_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in ExternalLineageRelationshipInfo_SdkV2.
+func (o *ExternalLineageRelationshipInfo_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSource returns the value of the Source field in ExternalLineageRelationshipInfo_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationshipInfo_SdkV2) GetSource(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Source.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in ExternalLineageRelationshipInfo_SdkV2.
+func (o *ExternalLineageRelationshipInfo_SdkV2) SetSource(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
+	o.Source = types.ListValueMust(t, vs)
+}
+
+// GetTarget returns the value of the Target field in ExternalLineageRelationshipInfo_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLineageRelationshipInfo_SdkV2) GetTarget(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Target.IsNull() || o.Target.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Target.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTarget sets the value of the Target field in ExternalLineageRelationshipInfo_SdkV2.
+func (o *ExternalLineageRelationshipInfo_SdkV2) SetTarget(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target"]
+	o.Target = types.ListValueMust(t, vs)
+}
+
+type ExternalLineageTable_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+func (newState *ExternalLineageTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageTable_SdkV2) {
+}
+
+func (newState *ExternalLineageTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageTable_SdkV2) {
+}
+
+func (c ExternalLineageTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageTable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageTable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageTable_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageTable_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Represents the table information in the lineage event.
+type ExternalLineageTableInfo_SdkV2 struct {
+	// Name of Catalog.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// Timestamp of the lineage event.
+	EventTime types.String `tfsdk:"event_time"`
+	// Name of Table.
+	Name types.String `tfsdk:"name"`
+	// Name of Schema.
+	SchemaName types.String `tfsdk:"schema_name"`
+}
+
+func (newState *ExternalLineageTableInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLineageTableInfo_SdkV2) {
+}
+
+func (newState *ExternalLineageTableInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLineageTableInfo_SdkV2) {
+}
+
+func (c ExternalLineageTableInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["event_time"] = attrs["event_time"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLineageTableInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalLineageTableInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalLineageTableInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalLineageTableInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name": o.CatalogName,
+			"event_time":   o.EventTime,
+			"name":         o.Name,
+			"schema_name":  o.SchemaName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalLineageTableInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name": types.StringType,
+			"event_time":   types.StringType,
+			"name":         types.StringType,
+			"schema_name":  types.StringType,
+		},
+	}
+}
+
 type ExternalLocationInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -6957,16 +8712,15 @@ type ExternalLocationInfo_SdkV2 struct {
 	CredentialId types.String `tfsdk:"credential_id"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// [Create:OPT Update:OPT] Whether to enable file events on this external
-	// location.
+	// Whether to enable file events on this external location.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-	// Encryption options that apply to clients connecting to cloud storage.
+
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// [Create:OPT Update:OPT] File event queue settings.
+	// File event queue settings.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 
 	IsolationMode types.String `tfsdk:"isolation_mode"`
@@ -7140,6 +8894,178 @@ func (o *ExternalLocationInfo_SdkV2) SetFileEventQueue(ctx context.Context, v Fi
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_event_queue"]
 	o.FileEventQueue = types.ListValueMust(t, vs)
+}
+
+type ExternalMetadata_SdkV2 struct {
+	// List of columns associated with the external metadata object.
+	Columns types.List `tfsdk:"columns"`
+	// Time at which this external metadata object was created.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Username of external metadata object creator.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// User-provided free-form text description.
+	Description types.String `tfsdk:"description"`
+	// Type of entity within the external system.
+	EntityType types.String `tfsdk:"entity_type"`
+	// Unique identifier of the external metadata object.
+	Id types.String `tfsdk:"id"`
+	// Unique identifier of parent metastore.
+	MetastoreId types.String `tfsdk:"metastore_id"`
+	// Name of the external metadata object.
+	Name types.String `tfsdk:"name"`
+	// Owner of the external metadata object.
+	Owner types.String `tfsdk:"owner"`
+	// A map of key-value properties attached to the external metadata object.
+	Properties types.Map `tfsdk:"properties"`
+	// Type of external system.
+	SystemType types.String `tfsdk:"system_type"`
+	// Time at which this external metadata object was last modified.
+	UpdateTime types.String `tfsdk:"update_time"`
+	// Username of user who last modified external metadata object.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+	// URL associated with the external metadata object.
+	Url types.String `tfsdk:"url"`
+}
+
+func (newState *ExternalMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalMetadata_SdkV2) {
+}
+
+func (newState *ExternalMetadata_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalMetadata_SdkV2) {
+}
+
+func (c ExternalMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["system_type"] = attrs["system_type"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(types.String{}),
+		"properties": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":      o.Columns,
+			"create_time":  o.CreateTime,
+			"created_by":   o.CreatedBy,
+			"description":  o.Description,
+			"entity_type":  o.EntityType,
+			"id":           o.Id,
+			"metastore_id": o.MetastoreId,
+			"name":         o.Name,
+			"owner":        o.Owner,
+			"properties":   o.Properties,
+			"system_type":  o.SystemType,
+			"update_time":  o.UpdateTime,
+			"updated_by":   o.UpdatedBy,
+			"url":          o.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"create_time":  types.StringType,
+			"created_by":   types.StringType,
+			"description":  types.StringType,
+			"entity_type":  types.StringType,
+			"id":           types.StringType,
+			"metastore_id": types.StringType,
+			"name":         types.StringType,
+			"owner":        types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"system_type": types.StringType,
+			"update_time": types.StringType,
+			"updated_by":  types.StringType,
+			"url":         types.StringType,
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in ExternalMetadata_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalMetadata_SdkV2) GetColumns(ctx context.Context) ([]types.String, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in ExternalMetadata_SdkV2.
+func (o *ExternalMetadata_SdkV2) SetColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in ExternalMetadata_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalMetadata_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in ExternalMetadata_SdkV2.
+func (o *ExternalMetadata_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -7464,6 +9390,8 @@ type ForeignKeyConstraint_SdkV2 struct {
 	ParentColumns types.List `tfsdk:"parent_columns"`
 	// The full name of the parent constraint.
 	ParentTable types.String `tfsdk:"parent_table"`
+	// True if the constraint is RELY, false or unset if NORELY.
+	Rely types.Bool `tfsdk:"rely"`
 }
 
 func (newState *ForeignKeyConstraint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForeignKeyConstraint_SdkV2) {
@@ -7477,6 +9405,7 @@ func (c ForeignKeyConstraint_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["parent_columns"] = attrs["parent_columns"].SetRequired()
 	attrs["parent_table"] = attrs["parent_table"].SetRequired()
+	attrs["rely"] = attrs["rely"].SetOptional()
 
 	return attrs
 }
@@ -7506,6 +9435,7 @@ func (o ForeignKeyConstraint_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"name":           o.Name,
 			"parent_columns": o.ParentColumns,
 			"parent_table":   o.ParentTable,
+			"rely":           o.Rely,
 		})
 }
 
@@ -7521,6 +9451,7 @@ func (o ForeignKeyConstraint_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"parent_table": types.StringType,
+			"rely":         types.BoolType,
 		},
 	}
 }
@@ -7925,9 +9856,9 @@ type FunctionParameterInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Default value of the parameter.
 	ParameterDefault types.String `tfsdk:"parameter_default"`
-	// The mode of the function parameter.
+
 	ParameterMode types.String `tfsdk:"parameter_mode"`
-	// The type of function parameter.
+
 	ParameterType types.String `tfsdk:"parameter_type"`
 	// Ordinal position of column (starting at position 0).
 	Position types.Int64 `tfsdk:"position"`
@@ -8154,7 +10085,7 @@ type GcpPubsub_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The Pub/Sub subscription name in the format
-	// projects/{project}/subscriptions/{subscription name} REQUIRED for
+	// projects/{project}/subscriptions/{subscription name} Required for
 	// provided_pubsub.
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
@@ -8368,29 +10299,12 @@ func (o *GenerateTemporaryServiceCredentialGcpOptions_SdkV2) SetScopes(ctx conte
 }
 
 type GenerateTemporaryServiceCredentialRequest_SdkV2 struct {
-	// The Azure cloud options to customize the requested temporary credential
 	AzureOptions types.List `tfsdk:"azure_options"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name"`
-	// The GCP cloud options to customize the requested temporary credential
+
 	GcpOptions types.List `tfsdk:"gcp_options"`
-}
-
-func (newState *GenerateTemporaryServiceCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest_SdkV2) {
-}
-
-func (newState *GenerateTemporaryServiceCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialRequest_SdkV2) {
-}
-
-func (c GenerateTemporaryServiceCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["azure_options"] = attrs["azure_options"].SetOptional()
-	attrs["azure_options"] = attrs["azure_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credential_name"] = attrs["credential_name"].SetRequired()
-	attrs["gcp_options"] = attrs["gcp_options"].SetOptional()
-	attrs["gcp_options"] = attrs["gcp_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryServiceCredentialRequest.
@@ -8496,19 +10410,6 @@ type GenerateTemporaryTableCredentialRequest_SdkV2 struct {
 	TableId types.String `tfsdk:"table_id"`
 }
 
-func (newState *GenerateTemporaryTableCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryTableCredentialRequest_SdkV2) {
-}
-
-func (newState *GenerateTemporaryTableCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryTableCredentialRequest_SdkV2) {
-}
-
-func (c GenerateTemporaryTableCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operation"] = attrs["operation"].SetOptional()
-	attrs["table_id"] = attrs["table_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryTableCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8543,24 +10444,17 @@ func (o GenerateTemporaryTableCredentialRequest_SdkV2) Type(ctx context.Context)
 }
 
 type GenerateTemporaryTableCredentialResponse_SdkV2 struct {
-	// AWS temporary credentials for API authentication. Read more at
-	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-	// Azure Active Directory token, essentially the Oauth token for Azure
-	// Service Principal or Managed Identity. Read more at
-	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
+
 	AzureAad types.List `tfsdk:"azure_aad"`
-	// Azure temporary credentials for API authentication. Read more at
-	// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
+
 	AzureUserDelegationSas types.List `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-	// GCP temporary credentials for API authentication. Read more at
-	// https://developers.google.com/identity/protocols/oauth2/service-account
+
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
-	// R2 temporary credentials for API authentication. Read more at
-	// https://developers.cloudflare.com/r2/api/s3/tokens/.
+
 	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -9317,6 +11211,41 @@ func (o GetExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"include_browse": types.BoolType,
 			"name":           types.StringType,
+		},
+	}
+}
+
+type GetExternalMetadataRequest_SdkV2 struct {
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetExternalMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetExternalMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -10103,11 +12032,12 @@ type GetTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
 	// Whether to include tables in the response for which the principal can
-	// only access selective metadata for
+	// only access selective metadata for.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether delta metadata should be included in the response.
 	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
-	// Whether to include a manifest containing capabilities the table has.
+	// Whether to include a manifest containing table capabilities in the
+	// response.
 	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 }
 
@@ -10381,6 +12311,36 @@ func (o *ListAccountMetastoreAssignmentsResponse_SdkV2) SetWorkspaceIds(ctx cont
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.WorkspaceIds = types.ListValueMust(t, vs)
+}
+
+type ListAccountMetastoresRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountMetastoresRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListAccountMetastoresRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountMetastoresRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListAccountMetastoresRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListAccountMetastoresRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ListAccountStorageCredentialsRequest_SdkV2 struct {
@@ -10897,6 +12857,166 @@ func (o *ListCredentialsResponse_SdkV2) SetCredentials(ctx context.Context, v []
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
+type ListExternalLineageRelationshipsRequest_SdkV2 struct {
+	// The lineage direction to filter on.
+	LineageDirection types.String `tfsdk:"-"`
+	// The object to query external lineage relationship on.
+	ObjectInfo types.List `tfsdk:"-"`
+
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExternalLineageRelationshipsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListExternalLineageRelationshipsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"object_info": reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExternalLineageRelationshipsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListExternalLineageRelationshipsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"lineage_direction": o.LineageDirection,
+			"object_info":       o.ObjectInfo,
+			"page_size":         o.PageSize,
+			"page_token":        o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListExternalLineageRelationshipsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"lineage_direction": types.StringType,
+			"object_info": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// GetObjectInfo returns the value of the ObjectInfo field in ListExternalLineageRelationshipsRequest_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExternalLineageRelationshipsRequest_SdkV2) GetObjectInfo(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.ObjectInfo.IsNull() || o.ObjectInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.ObjectInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetObjectInfo sets the value of the ObjectInfo field in ListExternalLineageRelationshipsRequest_SdkV2.
+func (o *ListExternalLineageRelationshipsRequest_SdkV2) SetObjectInfo(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["object_info"]
+	o.ObjectInfo = types.ListValueMust(t, vs)
+}
+
+type ListExternalLineageRelationshipsResponse_SdkV2 struct {
+	ExternalLineageRelationships types.List `tfsdk:"external_lineage_relationships"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListExternalLineageRelationshipsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExternalLineageRelationshipsResponse_SdkV2) {
+}
+
+func (newState *ListExternalLineageRelationshipsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExternalLineageRelationshipsResponse_SdkV2) {
+}
+
+func (c ListExternalLineageRelationshipsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_lineage_relationships"] = attrs["external_lineage_relationships"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExternalLineageRelationshipsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListExternalLineageRelationshipsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_lineage_relationships": reflect.TypeOf(ExternalLineageInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExternalLineageRelationshipsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListExternalLineageRelationshipsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_lineage_relationships": o.ExternalLineageRelationships,
+			"next_page_token":                o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListExternalLineageRelationshipsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_lineage_relationships": basetypes.ListType{
+				ElemType: ExternalLineageInfo_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetExternalLineageRelationships returns the value of the ExternalLineageRelationships field in ListExternalLineageRelationshipsResponse_SdkV2 as
+// a slice of ExternalLineageInfo_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExternalLineageRelationshipsResponse_SdkV2) GetExternalLineageRelationships(ctx context.Context) ([]ExternalLineageInfo_SdkV2, bool) {
+	if o.ExternalLineageRelationships.IsNull() || o.ExternalLineageRelationships.IsUnknown() {
+		return nil, false
+	}
+	var v []ExternalLineageInfo_SdkV2
+	d := o.ExternalLineageRelationships.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExternalLineageRelationships sets the value of the ExternalLineageRelationships field in ListExternalLineageRelationshipsResponse_SdkV2.
+func (o *ListExternalLineageRelationshipsResponse_SdkV2) SetExternalLineageRelationships(ctx context.Context, v []ExternalLineageInfo_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_lineage_relationships"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExternalLineageRelationships = types.ListValueMust(t, vs)
+}
+
 type ListExternalLocationsRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
 	// principal can only access selective metadata for
@@ -11030,6 +13150,127 @@ func (o *ListExternalLocationsResponse_SdkV2) SetExternalLocations(ctx context.C
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_locations"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExternalLocations = types.ListValueMust(t, vs)
+}
+
+type ListExternalMetadataRequest_SdkV2 struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExternalMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListExternalMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExternalMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListExternalMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListExternalMetadataResponse_SdkV2 struct {
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListExternalMetadataResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExternalMetadataResponse_SdkV2) {
+}
+
+func (newState *ListExternalMetadataResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExternalMetadataResponse_SdkV2) {
+}
+
+func (c ListExternalMetadataResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_metadata"] = attrs["external_metadata"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExternalMetadataResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListExternalMetadataResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_metadata": reflect.TypeOf(ExternalMetadata_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExternalMetadataResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListExternalMetadataResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_metadata": o.ExternalMetadata,
+			"next_page_token":   o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListExternalMetadataResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_metadata": basetypes.ListType{
+				ElemType: ExternalMetadata_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetExternalMetadata returns the value of the ExternalMetadata field in ListExternalMetadataResponse_SdkV2 as
+// a slice of ExternalMetadata_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExternalMetadataResponse_SdkV2) GetExternalMetadata(ctx context.Context) ([]ExternalMetadata_SdkV2, bool) {
+	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
+		return nil, false
+	}
+	var v []ExternalMetadata_SdkV2
+	d := o.ExternalMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExternalMetadata sets the value of the ExternalMetadata field in ListExternalMetadataResponse_SdkV2.
+func (o *ListExternalMetadataResponse_SdkV2) SetExternalMetadata(ctx context.Context, v []ExternalMetadata_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_metadata"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExternalMetadata = types.ListValueMust(t, vs)
 }
 
 type ListFunctionsRequest_SdkV2 struct {
@@ -12036,7 +14277,8 @@ func (o *ListStorageCredentialsResponse_SdkV2) SetStorageCredentials(ctx context
 type ListSummariesRequest_SdkV2 struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include a manifest containing capabilities the table has.
+	// Whether to include a manifest containing table capabilities in the
+	// response.
 	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of summaries for tables to return. If not set, the page
 	// length is set to a server configured value (10000, as of 1/5/2024). -
@@ -12320,11 +14562,10 @@ type ListTablesRequest_SdkV2 struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
 	// Whether to include tables in the response for which the principal can
-	// only access selective metadata for
+	// only access selective metadata for.
 	IncludeBrowse types.Bool `tfsdk:"-"`
-	// Whether delta metadata should be included in the response.
-	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
-	// Whether to include a manifest containing capabilities the table has.
+	// Whether to include a manifest containing table capabilities in the
+	// response.
 	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of tables to return. If not set, all the tables are
 	// returned (not recommended). - when set to a value greater than 0, the
@@ -12366,7 +14607,6 @@ func (o ListTablesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"catalog_name":                  o.CatalogName,
 			"include_browse":                o.IncludeBrowse,
-			"include_delta_metadata":        o.IncludeDeltaMetadata,
 			"include_manifest_capabilities": o.IncludeManifestCapabilities,
 			"max_results":                   o.MaxResults,
 			"omit_columns":                  o.OmitColumns,
@@ -12383,7 +14623,6 @@ func (o ListTablesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"catalog_name":                  types.StringType,
 			"include_browse":                types.BoolType,
-			"include_delta_metadata":        types.BoolType,
 			"include_manifest_capabilities": types.BoolType,
 			"max_results":                   types.Int64Type,
 			"omit_columns":                  types.BoolType,
@@ -13393,7 +15632,7 @@ type MonitorInfo_SdkV2 struct {
 	SlicingExprs types.List `tfsdk:"slicing_exprs"`
 	// Configuration for monitoring snapshot tables.
 	Snapshot types.List `tfsdk:"snapshot"`
-	// The status of the monitor.
+
 	Status types.String `tfsdk:"status"`
 	// The full name of the table to monitor. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
@@ -14691,22 +16930,16 @@ func (o OnlineTableSpecTriggeredSchedulingPolicy_SdkV2) Type(ctx context.Context
 
 // Status of an online table.
 type OnlineTableStatus_SdkV2 struct {
-	// Detailed status of an online table. Shown if the online table is in the
-	// ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 	ContinuousUpdateStatus types.List `tfsdk:"continuous_update_status"`
 	// The state of the online table.
 	DetailedState types.String `tfsdk:"detailed_state"`
-	// Detailed status of an online table. Shown if the online table is in the
-	// OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
+
 	FailedStatus types.List `tfsdk:"failed_status"`
 	// A text description of the current state of the online table.
 	Message types.String `tfsdk:"message"`
-	// Detailed status of an online table. Shown if the online table is in the
-	// PROVISIONING_PIPELINE_RESOURCES or the PROVISIONING_INITIAL_SNAPSHOT
-	// state.
+
 	ProvisioningStatus types.List `tfsdk:"provisioning_status"`
-	// Detailed status of an online table. Shown if the online table is in the
-	// ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
+
 	TriggeredUpdateStatus types.List `tfsdk:"triggered_update_status"`
 }
 
@@ -14889,10 +17122,167 @@ func (o *OnlineTableStatus_SdkV2) SetTriggeredUpdateStatus(ctx context.Context, 
 	o.TriggeredUpdateStatus = types.ListValueMust(t, vs)
 }
 
+// Spec of an allowed option on a securable kind and its attributes. This is
+// mostly used by UI to provide user friendly hints and descriptions in order to
+// facilitate the securable creation process.
+type OptionSpec_SdkV2 struct {
+	// For drop down / radio button selections, UI will want to know the
+	// possible input values, it can also be used by other option types to limit
+	// input selections.
+	AllowedValues types.List `tfsdk:"allowed_values"`
+	// The default value of the option, for example, value '443' for 'port'
+	// option.
+	DefaultValue types.String `tfsdk:"default_value"`
+	// A concise user facing description of what the input value of this option
+	// should look like.
+	Description types.String `tfsdk:"description"`
+	// The hint is used on the UI to suggest what the input value can possibly
+	// be like, for example: example.com for 'host' option. Unlike default
+	// value, it will not be applied automatically without user input.
+	Hint types.String `tfsdk:"hint"`
+	// Indicates whether an option should be displayed with copy button on the
+	// UI.
+	IsCopiable types.Bool `tfsdk:"is_copiable"`
+	// Indicates whether an option can be provided by users in the create/update
+	// path of an entity.
+	IsCreatable types.Bool `tfsdk:"is_creatable"`
+	// Is the option value not user settable and is thus not shown on the UI.
+	IsHidden types.Bool `tfsdk:"is_hidden"`
+	// Specifies whether this option is safe to log, i.e. no sensitive
+	// information.
+	IsLoggable types.Bool `tfsdk:"is_loggable"`
+	// Is the option required.
+	IsRequired types.Bool `tfsdk:"is_required"`
+	// Is the option value considered secret and thus redacted on the UI.
+	IsSecret types.Bool `tfsdk:"is_secret"`
+	// Is the option updatable by users.
+	IsUpdatable types.Bool `tfsdk:"is_updatable"`
+	// The unique name of the option.
+	Name types.String `tfsdk:"name"`
+	// Specifies when the option value is displayed on the UI within the OAuth
+	// flow.
+	OauthStage types.String `tfsdk:"oauth_stage"`
+	// The type of the option.
+	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *OptionSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OptionSpec_SdkV2) {
+}
+
+func (newState *OptionSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState OptionSpec_SdkV2) {
+}
+
+func (c OptionSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_values"] = attrs["allowed_values"].SetOptional()
+	attrs["default_value"] = attrs["default_value"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["hint"] = attrs["hint"].SetOptional()
+	attrs["is_copiable"] = attrs["is_copiable"].SetOptional()
+	attrs["is_creatable"] = attrs["is_creatable"].SetOptional()
+	attrs["is_hidden"] = attrs["is_hidden"].SetOptional()
+	attrs["is_loggable"] = attrs["is_loggable"].SetOptional()
+	attrs["is_required"] = attrs["is_required"].SetOptional()
+	attrs["is_secret"] = attrs["is_secret"].SetOptional()
+	attrs["is_updatable"] = attrs["is_updatable"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["oauth_stage"] = attrs["oauth_stage"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OptionSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OptionSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_values": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OptionSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (o OptionSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_values": o.AllowedValues,
+			"default_value":  o.DefaultValue,
+			"description":    o.Description,
+			"hint":           o.Hint,
+			"is_copiable":    o.IsCopiable,
+			"is_creatable":   o.IsCreatable,
+			"is_hidden":      o.IsHidden,
+			"is_loggable":    o.IsLoggable,
+			"is_required":    o.IsRequired,
+			"is_secret":      o.IsSecret,
+			"is_updatable":   o.IsUpdatable,
+			"name":           o.Name,
+			"oauth_stage":    o.OauthStage,
+			"type":           o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o OptionSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_values": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"default_value": types.StringType,
+			"description":   types.StringType,
+			"hint":          types.StringType,
+			"is_copiable":   types.BoolType,
+			"is_creatable":  types.BoolType,
+			"is_hidden":     types.BoolType,
+			"is_loggable":   types.BoolType,
+			"is_required":   types.BoolType,
+			"is_secret":     types.BoolType,
+			"is_updatable":  types.BoolType,
+			"name":          types.StringType,
+			"oauth_stage":   types.StringType,
+			"type":          types.StringType,
+		},
+	}
+}
+
+// GetAllowedValues returns the value of the AllowedValues field in OptionSpec_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OptionSpec_SdkV2) GetAllowedValues(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedValues.IsNull() || o.AllowedValues.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedValues.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedValues sets the value of the AllowedValues field in OptionSpec_SdkV2.
+func (o *OptionSpec_SdkV2) SetAllowedValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_values"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedValues = types.ListValueMust(t, vs)
+}
+
 type PermissionsChange_SdkV2 struct {
 	// The set of privileges to add.
 	Add types.List `tfsdk:"add"`
-	// The principal whose privileges we are changing.
+	// The principal whose privileges we are changing. Only one of principal or
+	// principal_id should be specified, never both at the same time.
 	Principal types.String `tfsdk:"principal"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
@@ -15082,6 +17472,8 @@ type PrimaryKeyConstraint_SdkV2 struct {
 	ChildColumns types.List `tfsdk:"child_columns"`
 	// The name of the constraint.
 	Name types.String `tfsdk:"name"`
+	// True if the constraint is RELY, false or unset if NORELY.
+	Rely types.Bool `tfsdk:"rely"`
 	// Column names that represent a timeseries.
 	TimeseriesColumns types.List `tfsdk:"timeseries_columns"`
 }
@@ -15095,6 +17487,7 @@ func (newState *PrimaryKeyConstraint_SdkV2) SyncEffectiveFieldsDuringRead(existi
 func (c PrimaryKeyConstraint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["child_columns"] = attrs["child_columns"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rely"] = attrs["rely"].SetOptional()
 	attrs["timeseries_columns"] = attrs["timeseries_columns"].SetOptional()
 
 	return attrs
@@ -15123,6 +17516,7 @@ func (o PrimaryKeyConstraint_SdkV2) ToObjectValue(ctx context.Context) basetypes
 		map[string]attr.Value{
 			"child_columns":      o.ChildColumns,
 			"name":               o.Name,
+			"rely":               o.Rely,
 			"timeseries_columns": o.TimeseriesColumns,
 		})
 }
@@ -15135,6 +17529,7 @@ func (o PrimaryKeyConstraint_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"name": types.StringType,
+			"rely": types.BoolType,
 			"timeseries_columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -15195,7 +17590,8 @@ func (o *PrimaryKeyConstraint_SdkV2) SetTimeseriesColumns(ctx context.Context, v
 }
 
 type PrivilegeAssignment_SdkV2 struct {
-	// The principal (user email address or group name).
+	// The principal (user email address or group name). For deleted principals,
+	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
@@ -15589,19 +17985,6 @@ type RegenerateDashboardRequest_SdkV2 struct {
 	// Optional argument to specify the warehouse for dashboard regeneration. If
 	// not specified, the first running warehouse will be used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *RegenerateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegenerateDashboardRequest_SdkV2) {
-}
-
-func (newState *RegenerateDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegenerateDashboardRequest_SdkV2) {
-}
-
-func (c RegenerateDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegenerateDashboardRequest.
@@ -16125,6 +18508,163 @@ func (o *SchemaInfo_SdkV2) SetProperties(ctx context.Context, v map[string]types
 	o.Properties = types.MapValueMust(t, vs)
 }
 
+// Manifest of a specific securable kind.
+type SecurableKindManifest_SdkV2 struct {
+	// Privileges that can be assigned to the securable.
+	AssignablePrivileges types.List `tfsdk:"assignable_privileges"`
+	// A list of capabilities in the securable kind.
+	Capabilities types.List `tfsdk:"capabilities"`
+	// Detailed specs of allowed options.
+	Options types.List `tfsdk:"options"`
+	// Securable kind to get manifest of.
+	SecurableKind types.String `tfsdk:"securable_kind"`
+	// Securable Type of the kind.
+	SecurableType types.String `tfsdk:"securable_type"`
+}
+
+func (newState *SecurableKindManifest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurableKindManifest_SdkV2) {
+}
+
+func (newState *SecurableKindManifest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecurableKindManifest_SdkV2) {
+}
+
+func (c SecurableKindManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assignable_privileges"] = attrs["assignable_privileges"].SetOptional()
+	attrs["capabilities"] = attrs["capabilities"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["securable_kind"] = attrs["securable_kind"].SetOptional()
+	attrs["securable_type"] = attrs["securable_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SecurableKindManifest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SecurableKindManifest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"assignable_privileges": reflect.TypeOf(types.String{}),
+		"capabilities":          reflect.TypeOf(types.String{}),
+		"options":               reflect.TypeOf(OptionSpec_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurableKindManifest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SecurableKindManifest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assignable_privileges": o.AssignablePrivileges,
+			"capabilities":          o.Capabilities,
+			"options":               o.Options,
+			"securable_kind":        o.SecurableKind,
+			"securable_type":        o.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SecurableKindManifest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assignable_privileges": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"capabilities": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"options": basetypes.ListType{
+				ElemType: OptionSpec_SdkV2{}.Type(ctx),
+			},
+			"securable_kind": types.StringType,
+			"securable_type": types.StringType,
+		},
+	}
+}
+
+// GetAssignablePrivileges returns the value of the AssignablePrivileges field in SecurableKindManifest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurableKindManifest_SdkV2) GetAssignablePrivileges(ctx context.Context) ([]types.String, bool) {
+	if o.AssignablePrivileges.IsNull() || o.AssignablePrivileges.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AssignablePrivileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssignablePrivileges sets the value of the AssignablePrivileges field in SecurableKindManifest_SdkV2.
+func (o *SecurableKindManifest_SdkV2) SetAssignablePrivileges(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assignable_privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AssignablePrivileges = types.ListValueMust(t, vs)
+}
+
+// GetCapabilities returns the value of the Capabilities field in SecurableKindManifest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurableKindManifest_SdkV2) GetCapabilities(ctx context.Context) ([]types.String, bool) {
+	if o.Capabilities.IsNull() || o.Capabilities.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Capabilities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCapabilities sets the value of the Capabilities field in SecurableKindManifest_SdkV2.
+func (o *SecurableKindManifest_SdkV2) SetCapabilities(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["capabilities"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Capabilities = types.ListValueMust(t, vs)
+}
+
+// GetOptions returns the value of the Options field in SecurableKindManifest_SdkV2 as
+// a slice of OptionSpec_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurableKindManifest_SdkV2) GetOptions(ctx context.Context) ([]OptionSpec_SdkV2, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v []OptionSpec_SdkV2
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in SecurableKindManifest_SdkV2.
+func (o *SecurableKindManifest_SdkV2) SetOptions(ctx context.Context, v []OptionSpec_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Options = types.ListValueMust(t, vs)
+}
+
 type SetArtifactAllowlist_SdkV2 struct {
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
@@ -16136,22 +18676,6 @@ type SetArtifactAllowlist_SdkV2 struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-}
-
-func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetArtifactAllowlist_SdkV2) {
-}
-
-func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetArtifactAllowlist_SdkV2) {
-}
-
-func (c SetArtifactAllowlist_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetRequired()
-	attrs["artifact_type"] = attrs["artifact_type"].SetRequired()
-	attrs["created_at"] = attrs["created_at"].SetComputed()
-	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetArtifactAllowlist.
@@ -16230,20 +18754,6 @@ type SetRegisteredModelAliasRequest_SdkV2 struct {
 	FullName types.String `tfsdk:"full_name"`
 	// The version number of the model version to which the alias points
 	VersionNum types.Int64 `tfsdk:"version_num"`
-}
-
-func (newState *SetRegisteredModelAliasRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRegisteredModelAliasRequest_SdkV2) {
-}
-
-func (newState *SetRegisteredModelAliasRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetRegisteredModelAliasRequest_SdkV2) {
-}
-
-func (c SetRegisteredModelAliasRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alias"] = attrs["alias"].SetRequired()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["version_num"] = attrs["version_num"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRegisteredModelAliasRequest.
@@ -16626,6 +19136,36 @@ func (o *StorageCredentialInfo_SdkV2) SetDatabricksGcpServiceAccount(ctx context
 	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
+type SummaryRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SummaryRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SummaryRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SummaryRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SummaryRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SummaryRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type SystemSchemaInfo_SdkV2 struct {
 	// Name of the system schema.
 	Schema types.String `tfsdk:"schema"`
@@ -16950,7 +19490,7 @@ type TableInfo_SdkV2 struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Unique ID of the Data Access Configuration to use with the table data.
 	DataAccessConfigurationId types.String `tfsdk:"data_access_configuration_id"`
-	// Data source format
+
 	DataSourceFormat types.String `tfsdk:"data_source_format"`
 	// Time at which this table was deleted, in epoch milliseconds. Field is
 	// omitted if table is not deleted.
@@ -16961,7 +19501,7 @@ type TableInfo_SdkV2 struct {
 	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag"`
 
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
-	// Encryption options that apply to clients connecting to cloud storage.
+
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Full name of table, in form of
 	// __catalog_name__.__schema_name__.__table_name__
@@ -16981,12 +19521,14 @@ type TableInfo_SdkV2 struct {
 	RowFilter types.List `tfsdk:"row_filter"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
+	// SecurableKindManifest of table, including capabilities the table has.
+	SecurableKindManifest types.List `tfsdk:"securable_kind_manifest"`
 	// List of schemes whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path"`
 	// Name of the storage credential, when a storage credential is configured
 	// for use with this table.
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
-	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables)
+	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// List of table constraints. Note: this field is not set in the output of
 	// the __listTables__ API.
@@ -17043,6 +19585,8 @@ func (c TableInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["row_filter"] = attrs["row_filter"].SetOptional()
 	attrs["row_filter"] = attrs["row_filter"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+	attrs["securable_kind_manifest"] = attrs["securable_kind_manifest"].SetOptional()
+	attrs["securable_kind_manifest"] = attrs["securable_kind_manifest"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sql_path"] = attrs["sql_path"].SetOptional()
 	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
@@ -17073,6 +19617,7 @@ func (a TableInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"encryption_details":                     reflect.TypeOf(EncryptionDetails_SdkV2{}),
 		"properties":                             reflect.TypeOf(types.String{}),
 		"row_filter":                             reflect.TypeOf(TableRowFilter_SdkV2{}),
+		"securable_kind_manifest":                reflect.TypeOf(SecurableKindManifest_SdkV2{}),
 		"table_constraints":                      reflect.TypeOf(TableConstraint_SdkV2{}),
 		"view_dependencies":                      reflect.TypeOf(DependencyList_SdkV2{}),
 	}
@@ -17107,6 +19652,7 @@ func (o TableInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"properties":                             o.Properties,
 			"row_filter":                             o.RowFilter,
 			"schema_name":                            o.SchemaName,
+			"securable_kind_manifest":                o.SecurableKindManifest,
 			"sql_path":                               o.SqlPath,
 			"storage_credential_name":                o.StorageCredentialName,
 			"storage_location":                       o.StorageLocation,
@@ -17157,7 +19703,10 @@ func (o TableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"row_filter": basetypes.ListType{
 				ElemType: TableRowFilter_SdkV2{}.Type(ctx),
 			},
-			"schema_name":             types.StringType,
+			"schema_name": types.StringType,
+			"securable_kind_manifest": basetypes.ListType{
+				ElemType: SecurableKindManifest_SdkV2{}.Type(ctx),
+			},
 			"sql_path":                types.StringType,
 			"storage_credential_name": types.StringType,
 			"storage_location":        types.StringType,
@@ -17332,6 +19881,32 @@ func (o *TableInfo_SdkV2) SetRowFilter(ctx context.Context, v TableRowFilter_Sdk
 	o.RowFilter = types.ListValueMust(t, vs)
 }
 
+// GetSecurableKindManifest returns the value of the SecurableKindManifest field in TableInfo_SdkV2 as
+// a SecurableKindManifest_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo_SdkV2) GetSecurableKindManifest(ctx context.Context) (SecurableKindManifest_SdkV2, bool) {
+	var e SecurableKindManifest_SdkV2
+	if o.SecurableKindManifest.IsNull() || o.SecurableKindManifest.IsUnknown() {
+		return e, false
+	}
+	var v []SecurableKindManifest_SdkV2
+	d := o.SecurableKindManifest.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecurableKindManifest sets the value of the SecurableKindManifest field in TableInfo_SdkV2.
+func (o *TableInfo_SdkV2) SetSecurableKindManifest(ctx context.Context, v SecurableKindManifest_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["securable_kind_manifest"]
+	o.SecurableKindManifest = types.ListValueMust(t, vs)
+}
+
 // GetTableConstraints returns the value of the TableConstraints field in TableInfo_SdkV2 as
 // a slice of TableConstraint_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
@@ -17472,6 +20047,8 @@ func (o *TableRowFilter_SdkV2) SetInputColumnNames(ctx context.Context, v []type
 type TableSummary_SdkV2 struct {
 	// The full name of the table.
 	FullName types.String `tfsdk:"full_name"`
+	// SecurableKindManifest of table, including capabilities the table has.
+	SecurableKindManifest types.List `tfsdk:"securable_kind_manifest"`
 
 	TableType types.String `tfsdk:"table_type"`
 }
@@ -17484,6 +20061,8 @@ func (newState *TableSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c TableSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetOptional()
+	attrs["securable_kind_manifest"] = attrs["securable_kind_manifest"].SetOptional()
+	attrs["securable_kind_manifest"] = attrs["securable_kind_manifest"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_type"] = attrs["table_type"].SetOptional()
 
 	return attrs
@@ -17497,7 +20076,9 @@ func (c TableSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a TableSummary_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"securable_kind_manifest": reflect.TypeOf(SecurableKindManifest_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -17507,8 +20088,9 @@ func (o TableSummary_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name":  o.FullName,
-			"table_type": o.TableType,
+			"full_name":               o.FullName,
+			"securable_kind_manifest": o.SecurableKindManifest,
+			"table_type":              o.TableType,
 		})
 }
 
@@ -17516,10 +20098,39 @@ func (o TableSummary_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o TableSummary_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name":  types.StringType,
+			"full_name": types.StringType,
+			"securable_kind_manifest": basetypes.ListType{
+				ElemType: SecurableKindManifest_SdkV2{}.Type(ctx),
+			},
 			"table_type": types.StringType,
 		},
 	}
+}
+
+// GetSecurableKindManifest returns the value of the SecurableKindManifest field in TableSummary_SdkV2 as
+// a SecurableKindManifest_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSummary_SdkV2) GetSecurableKindManifest(ctx context.Context) (SecurableKindManifest_SdkV2, bool) {
+	var e SecurableKindManifest_SdkV2
+	if o.SecurableKindManifest.IsNull() || o.SecurableKindManifest.IsUnknown() {
+		return e, false
+	}
+	var v []SecurableKindManifest_SdkV2
+	d := o.SecurableKindManifest.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecurableKindManifest sets the value of the SecurableKindManifest field in TableSummary_SdkV2.
+func (o *TableSummary_SdkV2) SetSecurableKindManifest(ctx context.Context, v SecurableKindManifest_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["securable_kind_manifest"]
+	o.SecurableKindManifest = types.ListValueMust(t, vs)
 }
 
 type TagKeyValue_SdkV2 struct {
@@ -17576,18 +20187,13 @@ func (o TagKeyValue_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TemporaryCredentials_SdkV2 struct {
-	// AWS temporary credentials for API authentication. Read more at
-	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-	// Azure Active Directory token, essentially the Oauth token for Azure
-	// Service Principal or Managed Identity. Read more at
-	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
+
 	AzureAad types.List `tfsdk:"azure_aad"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-	// GCP temporary credentials for API authentication. Read more at
-	// https://developers.google.com/identity/protocols/oauth2/service-account
+
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
 }
 
@@ -17971,25 +20577,6 @@ type UpdateCatalog_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 }
 
-func (newState *UpdateCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCatalog_SdkV2) {
-}
-
-func (newState *UpdateCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCatalog_SdkV2) {
-}
-
-func (c UpdateCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["options"] = attrs["options"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCatalog.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18183,21 +20770,6 @@ type UpdateConnection_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateConnection_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateConnection_SdkV2) {
-}
-
-func (newState *UpdateConnection_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateConnection_SdkV2) {
-}
-
-func (c UpdateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["options"] = attrs["options"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateConnection.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18295,33 +20867,6 @@ type UpdateCredentialRequest_SdkV2 struct {
 	// Supply true to this argument to skip validation of the updated
 	// credential.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-}
-
-func (newState *UpdateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialRequest_SdkV2) {
-}
-
-func (newState *UpdateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialRequest_SdkV2) {
-}
-
-func (c UpdateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["force"] = attrs["force"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name_arg"] = attrs["name_arg"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCredentialRequest.
@@ -18494,21 +21039,99 @@ func (o *UpdateCredentialRequest_SdkV2) SetDatabricksGcpServiceAccount(ctx conte
 	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
+type UpdateExternalLineageRelationshipRequest_SdkV2 struct {
+	ExternalLineageRelationship types.List `tfsdk:"external_lineage_relationship"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExternalLineageRelationshipRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateExternalLineageRelationshipRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_lineage_relationship": reflect.TypeOf(UpdateRequestExternalLineage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateExternalLineageRelationshipRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateExternalLineageRelationshipRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_lineage_relationship": o.ExternalLineageRelationship,
+			"update_mask":                   o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateExternalLineageRelationshipRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_lineage_relationship": basetypes.ListType{
+				ElemType: UpdateRequestExternalLineage_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetExternalLineageRelationship returns the value of the ExternalLineageRelationship field in UpdateExternalLineageRelationshipRequest_SdkV2 as
+// a UpdateRequestExternalLineage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExternalLineageRelationshipRequest_SdkV2) GetExternalLineageRelationship(ctx context.Context) (UpdateRequestExternalLineage_SdkV2, bool) {
+	var e UpdateRequestExternalLineage_SdkV2
+	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateRequestExternalLineage_SdkV2
+	d := o.ExternalLineageRelationship.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in UpdateExternalLineageRelationshipRequest_SdkV2.
+func (o *UpdateExternalLineageRelationshipRequest_SdkV2) SetExternalLineageRelationship(ctx context.Context, v UpdateRequestExternalLineage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_lineage_relationship"]
+	o.ExternalLineageRelationship = types.ListValueMust(t, vs)
+}
+
 type UpdateExternalLocation_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// [Create:OPT Update:OPT] Whether to enable file events on this external
-	// location.
+	// Whether to enable file events on this external location.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-	// Encryption options that apply to clients connecting to cloud storage.
+
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// [Create:OPT Update:OPT] File event queue settings.
+	// File event queue settings.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
@@ -18528,33 +21151,6 @@ type UpdateExternalLocation_SdkV2 struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 	// Path URL of the external location.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *UpdateExternalLocation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExternalLocation_SdkV2) {
-}
-
-func (newState *UpdateExternalLocation_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExternalLocation_SdkV2) {
-}
-
-func (c UpdateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["credential_name"] = attrs["credential_name"].SetOptional()
-	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
-	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["fallback"] = attrs["fallback"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].SetOptional()
-	attrs["file_event_queue"] = attrs["file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["force"] = attrs["force"].SetOptional()
-	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExternalLocation.
@@ -18673,25 +21269,95 @@ func (o *UpdateExternalLocation_SdkV2) SetFileEventQueue(ctx context.Context, v 
 	o.FileEventQueue = types.ListValueMust(t, vs)
 }
 
+type UpdateExternalMetadataRequest_SdkV2 struct {
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
+	// Name of the external metadata object.
+	Name types.String `tfsdk:"-"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExternalMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateExternalMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"external_metadata": reflect.TypeOf(ExternalMetadata_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateExternalMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateExternalMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_metadata": o.ExternalMetadata,
+			"name":              o.Name,
+			"update_mask":       o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_metadata": basetypes.ListType{
+				ElemType: ExternalMetadata_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetExternalMetadata returns the value of the ExternalMetadata field in UpdateExternalMetadataRequest_SdkV2 as
+// a ExternalMetadata_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExternalMetadataRequest_SdkV2) GetExternalMetadata(ctx context.Context) (ExternalMetadata_SdkV2, bool) {
+	var e ExternalMetadata_SdkV2
+	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalMetadata_SdkV2
+	d := o.ExternalMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalMetadata sets the value of the ExternalMetadata field in UpdateExternalMetadataRequest_SdkV2.
+func (o *UpdateExternalMetadataRequest_SdkV2) SetExternalMetadata(ctx context.Context, v ExternalMetadata_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_metadata"]
+	o.ExternalMetadata = types.ListValueMust(t, vs)
+}
+
 type UpdateFunction_SdkV2 struct {
 	// The fully-qualified name of the function (of the form
 	// __catalog_name__.__schema_name__.__function__name__).
 	Name types.String `tfsdk:"-"`
 	// Username of current owner of function.
 	Owner types.String `tfsdk:"owner"`
-}
-
-func (newState *UpdateFunction_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateFunction_SdkV2) {
-}
-
-func (newState *UpdateFunction_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateFunction_SdkV2) {
-}
-
-func (c UpdateFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateFunction.
@@ -18881,20 +21547,6 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	Version types.Int64 `tfsdk:"-"`
 }
 
-func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest_SdkV2) {
-}
-
-func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest_SdkV2) {
-}
-
-func (c UpdateModelVersionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["version"] = attrs["version"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelVersionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -18964,35 +21616,6 @@ type UpdateMonitor_SdkV2 struct {
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
 	TimeSeries types.List `tfsdk:"time_series"`
-}
-
-func (newState *UpdateMonitor_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMonitor_SdkV2) {
-}
-
-func (newState *UpdateMonitor_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateMonitor_SdkV2) {
-}
-
-func (c UpdateMonitor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
-	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].SetOptional()
-	attrs["data_classification_config"] = attrs["data_classification_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inference_log"] = attrs["inference_log"].SetOptional()
-	attrs["inference_log"] = attrs["inference_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["output_schema_name"] = attrs["output_schema_name"].SetRequired()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["slicing_exprs"] = attrs["slicing_exprs"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].SetOptional()
-	attrs["snapshot"] = attrs["snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table_name"] = attrs["table_name"].SetRequired()
-	attrs["time_series"] = attrs["time_series"].SetOptional()
-	attrs["time_series"] = attrs["time_series"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateMonitor.
@@ -19290,20 +21913,6 @@ type UpdatePermissions_SdkV2 struct {
 	SecurableType types.String `tfsdk:"-"`
 }
 
-func (newState *UpdatePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissions_SdkV2) {
-}
-
-func (newState *UpdatePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePermissions_SdkV2) {
-}
-
-func (c UpdatePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["changes"] = attrs["changes"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["securable_type"] = attrs["securable_type"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19458,21 +22067,6 @@ type UpdateRegisteredModelRequest_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegisteredModelRequest_SdkV2) {
-}
-
-func (newState *UpdateRegisteredModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRegisteredModelRequest_SdkV2) {
-}
-
-func (c UpdateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRegisteredModelRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -19510,7 +22104,205 @@ func (o UpdateRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+type UpdateRequestExternalLineage_SdkV2 struct {
+	// List of column relationships between source and target objects.
+	Columns types.List `tfsdk:"columns"`
+	// Unique identifier of the external lineage relationship.
+	Id types.String `tfsdk:"id"`
+	// Key-value properties associated with the external lineage relationship.
+	Properties types.Map `tfsdk:"properties"`
+	// Source object of the external lineage relationship.
+	Source types.List `tfsdk:"source"`
+	// Target object of the external lineage relationship.
+	Target types.List `tfsdk:"target"`
+}
+
+func (newState *UpdateRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRequestExternalLineage_SdkV2) {
+}
+
+func (newState *UpdateRequestExternalLineage_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRequestExternalLineage_SdkV2) {
+}
+
+func (c UpdateRequestExternalLineage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target"] = attrs["target"].SetRequired()
+	attrs["target"] = attrs["target"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRequestExternalLineage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateRequestExternalLineage_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(ColumnRelationship_SdkV2{}),
+		"properties": reflect.TypeOf(types.String{}),
+		"source":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+		"target":     reflect.TypeOf(ExternalLineageObject_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRequestExternalLineage_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateRequestExternalLineage_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":    o.Columns,
+			"id":         o.Id,
+			"properties": o.Properties,
+			"source":     o.Source,
+			"target":     o.Target,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateRequestExternalLineage_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: ColumnRelationship_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"source": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+			"target": basetypes.ListType{
+				ElemType: ExternalLineageObject_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in UpdateRequestExternalLineage_SdkV2 as
+// a slice of ColumnRelationship_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRequestExternalLineage_SdkV2) GetColumns(ctx context.Context) ([]ColumnRelationship_SdkV2, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnRelationship_SdkV2
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in UpdateRequestExternalLineage_SdkV2.
+func (o *UpdateRequestExternalLineage_SdkV2) SetColumns(ctx context.Context, v []ColumnRelationship_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in UpdateRequestExternalLineage_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRequestExternalLineage_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in UpdateRequestExternalLineage_SdkV2.
+func (o *UpdateRequestExternalLineage_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSource returns the value of the Source field in UpdateRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRequestExternalLineage_SdkV2) GetSource(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Source.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in UpdateRequestExternalLineage_SdkV2.
+func (o *UpdateRequestExternalLineage_SdkV2) SetSource(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
+	o.Source = types.ListValueMust(t, vs)
+}
+
+// GetTarget returns the value of the Target field in UpdateRequestExternalLineage_SdkV2 as
+// a ExternalLineageObject_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRequestExternalLineage_SdkV2) GetTarget(ctx context.Context) (ExternalLineageObject_SdkV2, bool) {
+	var e ExternalLineageObject_SdkV2
+	if o.Target.IsNull() || o.Target.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalLineageObject_SdkV2
+	d := o.Target.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTarget sets the value of the Target field in UpdateRequestExternalLineage_SdkV2.
+func (o *UpdateRequestExternalLineage_SdkV2) SetTarget(ctx context.Context, v ExternalLineageObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target"]
+	o.Target = types.ListValueMust(t, vs)
+}
+
 type UpdateResponse_SdkV2 struct {
+}
+
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse_SdkV2) {
+}
+
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateResponse_SdkV2) {
+}
+
+func (c UpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
@@ -19554,23 +22346,6 @@ type UpdateSchema_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-}
-
-func (newState *UpdateSchema_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSchema_SdkV2) {
-}
-
-func (newState *UpdateSchema_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateSchema_SdkV2) {
-}
-
-func (c UpdateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSchema.
@@ -19907,25 +22682,11 @@ func (o *UpdateStorageCredential_SdkV2) SetDatabricksGcpServiceAccount(ctx conte
 	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
-// Update a table owner.
 type UpdateTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
-
+	// Username of current owner of table.
 	Owner types.String `tfsdk:"owner"`
-}
-
-func (newState *UpdateTableRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateTableRequest_SdkV2) {
-}
-
-func (newState *UpdateTableRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateTableRequest_SdkV2) {
-}
-
-func (c UpdateTableRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTableRequest.
@@ -19972,21 +22733,6 @@ type UpdateVolumeRequestContent_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 }
 
-func (newState *UpdateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVolumeRequestContent_SdkV2) {
-}
-
-func (newState *UpdateVolumeRequestContent_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateVolumeRequestContent_SdkV2) {
-}
-
-func (c UpdateVolumeRequestContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateVolumeRequestContent.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -20031,20 +22777,6 @@ type UpdateWorkspaceBindings_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// A list of workspace IDs.
 	UnassignWorkspaces types.List `tfsdk:"unassign_workspaces"`
-}
-
-func (newState *UpdateWorkspaceBindings_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindings_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceBindings_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindings_SdkV2) {
-}
-
-func (c UpdateWorkspaceBindings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["assign_workspaces"] = attrs["assign_workspaces"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["unassign_workspaces"] = attrs["unassign_workspaces"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceBindings.
@@ -20151,21 +22883,6 @@ type UpdateWorkspaceBindingsParameters_SdkV2 struct {
 	// The type of the securable to bind to a workspace (catalog,
 	// storage_credential, credential, or external_location).
 	SecurableType types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateWorkspaceBindingsParameters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindingsParameters_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceBindingsParameters_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindingsParameters_SdkV2) {
-}
-
-func (c UpdateWorkspaceBindingsParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["add"] = attrs["add"].SetOptional()
-	attrs["remove"] = attrs["remove"].SetOptional()
-	attrs["securable_name"] = attrs["securable_name"].SetRequired()
-	attrs["securable_type"] = attrs["securable_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceBindingsParameters.
@@ -20345,15 +23062,13 @@ func (o *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 
 // Next ID: 17
 type ValidateCredentialRequest_SdkV2 struct {
-	// The AWS IAM role configuration
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
-	// The Azure managed identity configuration.
+
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// GCP long-lived credential. Databricks-created Google Cloud Storage
-	// service account.
+
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate. Only applicable
 	// for storage credentials (purpose is **STORAGE**.)
@@ -20367,28 +23082,6 @@ type ValidateCredentialRequest_SdkV2 struct {
 	// The external location url to validate. Only applicable when purpose is
 	// **STORAGE**.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *ValidateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateCredentialRequest_SdkV2) {
-}
-
-func (newState *ValidateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ValidateCredentialRequest_SdkV2) {
-}
-
-func (c ValidateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credential_name"] = attrs["credential_name"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["external_location_name"] = attrs["external_location_name"].SetOptional()
-	attrs["purpose"] = attrs["purpose"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ValidateCredentialRequest.
@@ -20628,31 +23321,6 @@ type ValidateStorageCredential_SdkV2 struct {
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
 	// The external location url to validate.
 	Url types.String `tfsdk:"url"`
-}
-
-func (newState *ValidateStorageCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateStorageCredential_SdkV2) {
-}
-
-func (newState *ValidateStorageCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState ValidateStorageCredential_SdkV2) {
-}
-
-func (c ValidateStorageCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].SetOptional()
-	attrs["aws_iam_role"] = attrs["aws_iam_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].SetOptional()
-	attrs["azure_managed_identity"] = attrs["azure_managed_identity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].SetOptional()
-	attrs["azure_service_principal"] = attrs["azure_service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].SetOptional()
-	attrs["cloudflare_api_token"] = attrs["cloudflare_api_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].SetOptional()
-	attrs["databricks_gcp_service_account"] = attrs["databricks_gcp_service_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["external_location_name"] = attrs["external_location_name"].SetOptional()
-	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetOptional()
-	attrs["url"] = attrs["url"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ValidateStorageCredential.
@@ -21004,7 +23672,7 @@ type VolumeInfo_SdkV2 struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the volume
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Encryption options that apply to clients connecting to cloud storage.
+
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// The three-level (fully qualified) name of the volume
 	FullName types.String `tfsdk:"full_name"`
@@ -21024,12 +23692,7 @@ type VolumeInfo_SdkV2 struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// The unique identifier of the volume
 	VolumeId types.String `tfsdk:"volume_id"`
-	// The type of the volume. An external volume is located in the specified
-	// external location. A managed volume is located in the default location
-	// which is specified by the parent schema, or the parent catalog, or the
-	// Metastore. [Learn more]
-	//
-	// [Learn more]: https://docs.databricks.com/aws/en/volumes/managed-vs-external
+
 	VolumeType types.String `tfsdk:"volume_type"`
 }
 

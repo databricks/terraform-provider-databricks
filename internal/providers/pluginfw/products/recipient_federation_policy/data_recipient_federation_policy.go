@@ -18,21 +18,21 @@ import (
 
 const dataSourceName = "recipient_federation_policy"
 
-var _ datasource.DataSourceWithConfigure = &RecipientFederationPolicyDataSource{}
+var _ datasource.DataSourceWithConfigure = &FederationPolicyDataSource{}
 
 func DataSourceFederationPolicy() datasource.DataSource {
-	return &RecipientFederationPolicyDataSource{}
+	return &FederationPolicyDataSource{}
 }
 
-type RecipientFederationPolicyDataSource struct {
+type FederationPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *RecipientFederationPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *RecipientFederationPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (r *FederationPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sharing_tf.FederationPolicy{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
@@ -41,11 +41,11 @@ func (r *RecipientFederationPolicyDataSource) Schema(ctx context.Context, req da
 	}
 }
 
-func (r *RecipientFederationPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *FederationPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *RecipientFederationPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *FederationPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()

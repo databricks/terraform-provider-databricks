@@ -58,7 +58,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			}
 			lifetime := d.Get("lifetime").(string)
 			res, err := ac.ServicePrincipalSecrets.Create(ctx, oauth2.CreateServicePrincipalSecretRequest{
-				ServicePrincipalId: spIdNumeric,
+				ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),
 				Lifetime:           lifetime,
 			})
 			if err != nil {
@@ -80,15 +80,13 @@ func ResourceServicePrincipalSecret() common.Resource {
 				return err
 			}
 			spId := d.Get("service_principal_id").(string)
-			spIdNumeric, err := strconv.ParseInt(spId, 10, 64)
-			if err != nil {
-				return createFailedToConvertServicePrincipalIdToNumericError(err)
-			}
-			secrets, err := ac.ServicePrincipalSecrets.ListByServicePrincipalId(ctx, spIdNumeric)
+			secrets, err := ac.ServicePrincipalSecrets.ListAll(ctx, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: spId,
+			})
 			if err != nil {
 				return err
 			}
-			for _, v := range secrets.Secrets {
+			for _, v := range secrets {
 				if v.Id != d.Id() {
 					continue
 				}
@@ -130,7 +128,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			}
 			err = ac.ServicePrincipalSecrets.Delete(ctx, oauth2.DeleteServicePrincipalSecretRequest{
 				SecretId:           d.Id(),
-				ServicePrincipalId: spIdNumeric,
+				ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),
 			})
 			return common.IgnoreNotFoundError(err)
 		},

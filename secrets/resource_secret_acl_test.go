@@ -83,7 +83,7 @@ func TestResourceSecretACLCreate(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -130,7 +130,7 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -177,7 +177,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	// Add 3 failures to test that all 3 retries are attempted
 	fixtures := []qa.HTTPFixture{}
 	for i := 0; i < 3; i++ {
@@ -188,7 +188,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			Status:   400,
 		})
 	}
-	
+
 	d, err := qa.ResourceFixture{
 		Fixtures: fixtures,
 		Resource: ResourceSecretACL(),
@@ -208,7 +208,7 @@ func TestResourceSecretACLCreate_RetriesOnVerificationFailure(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			// First attempt - PUT succeeds, GET fails
@@ -289,7 +289,7 @@ func TestResourceSecretACLCreate_RetriesOnPermissionMismatch(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			// First attempt - PUT succeeds, GET returns wrong permission
@@ -355,9 +355,9 @@ func TestResourceSecretACLCreate_ExhaustsRetries(t *testing.T) {
 	// Set retry interval to 1ms for faster testing
 	os.Setenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS", "1")
 	defer os.Unsetenv("DATABRICKS_SECRET_ACL_TEST_RETRY_INTERVAL_MS")
-	
+
 	fixtures := []qa.HTTPFixture{}
-	
+
 	// Add 3 attempts, each with PUT success but GET failure
 	for i := 0; i < 3; i++ {
 		fixtures = append(fixtures, qa.HTTPFixture{
@@ -376,7 +376,7 @@ func TestResourceSecretACLCreate_ExhaustsRetries(t *testing.T) {
 			Status:   404,
 		})
 	}
-	
+
 	d, err := qa.ResourceFixture{
 		Fixtures: fixtures,
 		Resource: ResourceSecretACL(),

@@ -122,9 +122,6 @@ is required`)),
 func TestAccAppResource(t *testing.T) {
 	var updateTime string
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: makeTemplate("My app"),
 		Check: func(s *terraform.State) error {
@@ -150,9 +147,6 @@ func TestAccAppResource(t *testing.T) {
 
 func TestAccAppResource_NoCompute(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 	resource "databricks_secret_scope" "this" {

@@ -27,9 +27,12 @@
 * Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
 * Update GCP example for `databricks_external_location` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
 * Fix formatting for HTTP connection example in `databricks_connection` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
+* Document `encryption_details` block in `databricks_external_location` resource and data source ([#4849](https://github.com/databricks/terraform-provider-databricks/pull/4849))
 * Update Databricks SQL objects documentation ([#4840](https://github.com/databricks/terraform-provider-databricks/pull/4840))
 * Improve documentation for `databricks_git_credential` resource ([#4837](https://github.com/databricks/terraform-provider-databricks/pull/4837))
 * Rename DLT references to Lakeflow Declarative pipelines ([#4842](https://github.com/databricks/terraform-provider-databricks/pull/4842))
+* Update the list of UC permissions in UC guide for Azure ([#4852](https://github.com/databricks/terraform-provider-databricks/pull/4852)).
+* Clarify and add more examples to `databricks_mws_network_connectivity_config` and `databricks_mws_ncc_private_endpoint_rule` documentation ([#4847](https://github.com/databricks/terraform-provider-databricks/pull/4847))
 
 ### Exporter
 

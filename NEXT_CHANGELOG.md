@@ -22,6 +22,7 @@
 * Don't redeploy `databricks_sql_table` when view definition contains newlines or tabs ([#4003](https://github.com/databricks/terraform-provider-databricks/pull/4003)).
 * Preserve `queue` setting for `databricks_job` resource when upgrading from provider version <1.71.0.
 * Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+* Fixed `databricks_secret_acl` resource creation to properly verify ACL application with retry logic when API returns success but doesn't actually create the ACL.
 
 ### Documentation
 

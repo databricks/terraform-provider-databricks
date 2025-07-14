@@ -2,7 +2,7 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Data Source
-Preview Stage: `GA`
+Preview Stage: `PUBLIC_PREVIEW`
 
 This data source can be used to get a single Database Instance.
 

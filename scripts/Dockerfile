@@ -1,5 +1,5 @@
 FROM hashicorp/terraform:latest
-RUN apk add jq \ 
+RUN apk add jq \
     && apk add bash \
     && apk add go \
     && apk add python3 \

@@ -118,7 +118,7 @@ func TestConnectionsCreate(t *testing.T) {
 		}
 		properties = {
 			purpose = "testing"
-		}		
+		}
 		comment = "This is a test comment."
 		owner = "InitialOwner"
 		`,
@@ -216,7 +216,7 @@ func TestConnectionsCreate_Error(t *testing.T) {
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"
-		}		
+		}
 		comment = "This is a test comment."
 		`,
 	}.Apply(t)
@@ -249,7 +249,7 @@ func TestConnectionsRead(t *testing.T) {
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"
-		}		
+		}
 		comment = "This is a test comment."
 		`,
 	}.Apply(t)
@@ -470,7 +470,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"
-		}		
+		}
 		comment = "testComment"
 		`,
 	}.Apply(t)

@@ -1839,7 +1839,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 		access_control {
 			group_name       = "admins"
 			permission_level = "CAN_USE"
-		}		
+		}
 		`,
 		Create: true,
 	}.Apply(t)
@@ -1894,7 +1894,7 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 		access_control {
 			user_name        = "ben"
 			permission_level = "CAN_READ"
-		}	
+		}
 		`,
 		Create: true,
 	}.Apply(t)

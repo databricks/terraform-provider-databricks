@@ -34,10 +34,10 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 			force_destroy = true
 			lifecycle {
 			// fake storage root is causing issues
-			ignore_changes = [storage_root] 
+			ignore_changes = [storage_root]
 			}
 		}
-		
+
 		resource "databricks_recipient" "db2db" {
 			name = "{var.RANDOM}-terraform-db2db-recipient"
 			comment = "made by terraform"
@@ -64,7 +64,7 @@ func recipientTemplateWithOwner(comment string, owner string) string {
 		resource "databricks_recipient" "db2open" {
 			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
 			comment = "%s"
-			owner = "%s" 
+			owner = "%s"
 			authentication_type = "TOKEN"
 			sharing_code = "{var.STICKY_RANDOM}"
 			ip_access_list {

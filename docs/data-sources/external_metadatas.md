@@ -18,7 +18,8 @@ data "databricks_external_metadatas" "all"
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - 
+* `page_size` (integer, optional) - Specifies the maximum number of external metadata objects to return in a single response.
+  The value must be less than or equal to 1000
 
 
 

@@ -26,7 +26,7 @@ Alerts use Quartz cron syntax for scheduling. You can specify the timezone and p
 This example creates a basic alert that monitors a query and sends notifications to a user when the value exceeds a threshold:
 
 ```hcl
-resource "databricks_sql_alert" "basic_alert" {
+resource "databricks_alert_v2" "basic_alert" {
   display_name = "High Error Rate Alert"
   query_text   = "SELECT count(*) as error_count FROM logs WHERE level = 'ERROR' AND timestamp > now() - interval 1 hour"
   warehouse_id = "a7066a8ef796be84"

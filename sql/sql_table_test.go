@@ -220,7 +220,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "VIEW"
 			comment 		   = "this view is managed by terraform..."
-			view_definition    = format("SELECT id, name FROM %s", databricks_sql_table.this.id)
+			view_definition    = format("SELECT \n\n\n\tid, \tname FROM %s", databricks_sql_table.this.id)
 			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 			column {

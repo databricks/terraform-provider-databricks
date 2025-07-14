@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Resource
+Preview Stage: `GA`
+
 Lakebase Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances.
 
 ### Use Cases

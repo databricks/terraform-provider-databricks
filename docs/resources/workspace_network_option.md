@@ -2,6 +2,8 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_network_option Resource
+Preview Stage: `GA`
+
 Workspace network options allow configuration of network settings for Databricks workspaces by selecting which network policy to associate with the workspace.
 
 Each workspace is always associated with exactly one network policy that controls which network destinations can be accessed from the Databricks environment. By default, workspaces are associated with the `default-policy` network policy.

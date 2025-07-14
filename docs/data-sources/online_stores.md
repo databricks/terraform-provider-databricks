@@ -2,6 +2,8 @@
 subcategory: "Machine Learning"
 ---
 # databricks_online_stores Data Source
+Preview Stage: `PRIVATE_PREVIEW`
+
 
 
 ## Example Usage

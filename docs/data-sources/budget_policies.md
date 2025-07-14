@@ -2,6 +2,8 @@
 subcategory: "Billing"
 ---
 # databricks_budget_policies Data Source
+Preview Stage: `PUBLIC_PREVIEW`
+
 This data source can be used to fetch the list of budget policies.
 
 -> **Note** This data source can only be used with an account-level provider!

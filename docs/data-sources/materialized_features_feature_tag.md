@@ -2,6 +2,8 @@
 subcategory: "Machine Learning"
 ---
 # databricks_materialized_features_feature_tag Data Source
+Preview Stage: `PRIVATE_PREVIEW`
+
 
 
 ## Example Usage

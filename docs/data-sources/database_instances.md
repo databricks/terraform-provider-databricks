@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instances Data Source
+Preview Stage: `GA`
+
 This data source can be used to fetch the list of Database Instances within the workspace.
 The list can then be accessed via the data object's `database_instances` field.
 

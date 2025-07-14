@@ -2,6 +2,8 @@
 subcategory: "Clean Rooms"
 ---
 # databricks_clean_rooms_clean_room Data Source
+Preview Stage: `GA`
+
 # Datasource (Singular) Artifact
 
 This data source can be used to get a single clean room.

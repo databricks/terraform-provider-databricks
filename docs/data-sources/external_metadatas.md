@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_external_metadatas Data Source
+Preview Stage: `PUBLIC_PREVIEW`
+
 This data source can be used to fetch the list of external metadata objects.
 
 -> **Note** This resource can only be used with an workspace-level provider!

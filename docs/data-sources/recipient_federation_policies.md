@@ -2,6 +2,8 @@
 subcategory: "Delta Sharing"
 ---
 # databricks_recipient_federation_policies Data Source
+Preview Stage: `PRIVATE_PREVIEW`
+
 
 
 ## Example Usage

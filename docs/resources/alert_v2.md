@@ -2,8 +2,6 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
-Release Stage: PUBLIC_BETA
-
 The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
 Alerts run on a schedule and evaluate query results against defined thresholds. When an alert is triggered, notifications can be sent to specified users or destinations.
@@ -68,12 +66,12 @@ The following arguments are supported:
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
 * `display_name` (string, optional) - The display name of the alert
-* `evaluation` (AlertV2Evaluation, optional) - 
+* `evaluation` (AlertV2Evaluation, optional)
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string, optional) - Text of the query to be run
 * `run_as_user_name` (string, optional) - The run as username or application ID of service principal.
   On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role
-* `schedule` (CronSchedule, optional) - 
+* `schedule` (CronSchedule, optional)
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
 
 ### AlertV2Evaluation
@@ -86,25 +84,25 @@ The following arguments are supported:
 ### AlertV2Notification
 * `notify_on_ok` (boolean, optional) - Whether to notify alert subscribers when alert returns back to normal
 * `retrigger_seconds` (integer, optional) - Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again
-* `subscriptions` (list of AlertV2Subscription, optional) - 
+* `subscriptions` (list of AlertV2Subscription, optional)
 
 ### AlertV2Operand
-* `column` (AlertV2OperandColumn, optional) - 
-* `value` (AlertV2OperandValue, optional) - 
+* `column` (AlertV2OperandColumn, optional)
+* `value` (AlertV2OperandValue, optional)
 
 ### AlertV2OperandColumn
 * `aggregation` (string, optional) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
-* `display` (string, optional) - 
-* `name` (string, optional) - 
+* `display` (string, optional)
+* `name` (string, optional)
 
 ### AlertV2OperandValue
-* `bool_value` (boolean, optional) - 
-* `double_value` (number, optional) - 
-* `string_value` (string, optional) - 
+* `bool_value` (boolean, optional)
+* `double_value` (number, optional)
+* `string_value` (string, optional)
 
 ### AlertV2Subscription
-* `destination_id` (string, optional) - 
-* `user_email` (string, optional) - 
+* `destination_id` (string, optional)
+* `user_email` (string, optional)
 
 ### CronSchedule
 * `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`

@@ -2,8 +2,6 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_external_metadata Resource
-Release Stage: PUBLIC_PREVIEW
-
 To enrich lineage with workloads that are run outside of Databricks (for example, first mile ETL or last mile BI),
 Unity Catalog is introducing the external metadata object. UC lets you add external metadata objects to augment the data lineage it captures automatically, giving you an end-to-end lineage view in UC. 
 This is useful when you want to capture where data came from (for example, Salesforce or MySQL) before it was ingested into UC or where data is being consumed outside UC (for example, Tableau or PowerBI).

@@ -2,8 +2,6 @@
 subcategory: "Machine Learning"
 ---
 # databricks_materialized_features_feature_tag Resource
-Release Stage: PRIVATE_PREVIEW
-
 
 
 ## Example Usage
@@ -11,8 +9,8 @@ Release Stage: PRIVATE_PREVIEW
 
 ## Arguments
 The following arguments are supported:
-* `key` (string, required) - 
-* `value` (string, optional) - 
+* `key` (string, required)
+* `value` (string, optional)
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

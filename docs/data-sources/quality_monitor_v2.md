@@ -2,8 +2,6 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Data Source
-Preview Stage: `PUBLIC_BETA`
-
 This data source can be used to fetch a quality monitors v2.
 
 -> **Note** This data source can only be used with an workspace-level provider!

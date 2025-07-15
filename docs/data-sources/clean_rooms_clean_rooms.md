@@ -2,8 +2,6 @@
 subcategory: "Clean Rooms"
 ---
 # databricks_clean_rooms_clean_rooms Data Source
-Preview Stage: `GA`
-
 # Datasource (Plural) Artifact
 
 This data source can be used to fetch the list of clean rooms.

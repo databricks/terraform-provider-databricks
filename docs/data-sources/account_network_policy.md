@@ -2,8 +2,6 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policy Data Source
-Preview Stage: `GA`
-
 This data source can be used to get a single network policy.
 
 -> **Note** This data source can only be used with an account-level provider!

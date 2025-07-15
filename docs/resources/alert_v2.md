@@ -2,6 +2,8 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
+Release Stage: PUBLIC_BETA
+
 The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
 Alerts run on a schedule and evaluate query results against defined thresholds. When an alert is triggered, notifications can be sent to specified users or destinations.

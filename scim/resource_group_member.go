@@ -14,7 +14,7 @@ import (
 type GroupMembersInfo struct {
 	initialized bool
 	members     map[string]struct{}
-	lock        *sync.Mutex
+	lock        sync.Mutex
 }
 
 type GroupCache struct {
@@ -38,7 +38,7 @@ func (c *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
 		groupInfo = &GroupMembersInfo{
 			initialized: false,
 			members:     make(map[string]struct{}),
-			lock:        &sync.Mutex{},
+			lock:        sync.Mutex{},
 		}
 		c.cache[groupID] = groupInfo
 	}
@@ -62,10 +62,15 @@ func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struc
 			groupInfo.members[memberKey] = struct{}{}
 		}
 		groupInfo.initialized = true
-		return groupInfo.members, nil
+		tflog.Debug(api.context, fmt.Sprintf("Group %s has %d members (initialized)", groupID, len(groupInfo.members)))
+	} else {
+		tflog.Debug(api.context, fmt.Sprintf("Group %s has %d members (cached)", groupID, len(groupInfo.members)))
 	}
-	tflog.Debug(api.context, fmt.Sprintf("Group %s has %d members (cached)", groupID, len(groupInfo.members)))
-	return groupInfo.members, nil
+	membersCopy := make(map[string]struct{}, len(groupInfo.members))
+	for k, v := range groupInfo.members {
+		membersCopy[k] = v
+	}
+	return membersCopy, nil
 }
 
 func (c *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {

@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Document additional custom configuration properties for resource `workspace_conf`
+
 ### Exporter
 
 ### Internal Changes

@@ -64,7 +64,7 @@ func TestAccModelServing(t *testing.T) {
 
 			resource "databricks_permissions" "ml_serving_usage" {
 				serving_endpoint_id = databricks_model_serving.endpoint.serving_endpoint_id
-			  
+
 				access_control {
 				  group_name       = "users"
 				  permission_level = "CAN_VIEW"

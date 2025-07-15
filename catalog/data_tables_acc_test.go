@@ -35,7 +35,7 @@ func TestUcAccDataSourceTables(t *testing.T) {
 				purpose = "testing"
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.RANDOM}"
@@ -44,7 +44,7 @@ func TestUcAccDataSourceTables(t *testing.T) {
 				kind = "various"
 			}
 		}
-		
+
 		resource "databricks_sql_table" "mytable" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
@@ -52,7 +52,7 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			
+
 			column {
 				name = "id"
 				type = "int"
@@ -66,16 +66,16 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			
+
 			column {
 				name = "id"
 				type = "int"
 			}
-		}			
+		}
 
 		data "databricks_tables" "this" {
 			catalog_name = databricks_catalog.sandbox.id
-			schema_name = databricks_schema.things.name			
+			schema_name = databricks_schema.things.name
 			depends_on = [
 				databricks_sql_table.mytable,
 				databricks_sql_table.mytable_2

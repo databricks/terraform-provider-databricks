@@ -67,7 +67,7 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 	template := `
 	resource "databricks_service_principal" "a" {
 		application_id = "` + uuid + `"
-		force_delete_home_dir = false 
+		force_delete_home_dir = false
 	}`
 	var appId string
 	acceptance.WorkspaceLevel(t, acceptance.Step{

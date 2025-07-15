@@ -69,6 +69,10 @@ Exactly one of the following attributes will be provided:
   * `securable_type` - the type of UC securable, i.e. `VOLUME`.
   * `securable_full_name` - the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.
   * `permission` - Permissions to grant on UC securable, i.e. `READ_VOLUME`, `WRITE_VOLUME`.
+* `database` attribute
+  * `database_name` - The name of database.
+  * `instance_name` - The name of database instance.
+  * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
 
 ## Related Resources
 

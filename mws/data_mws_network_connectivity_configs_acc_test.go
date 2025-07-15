@@ -25,7 +25,7 @@ func TestAccDataSourceMwsNetworkConnectivityConfigsTest(t *testing.T) {
 			resource "databricks_mws_network_connectivity_configs" "this" {
 				name = "tf-{var.RANDOM}"
 				region = "%s"
-			}	
+			}
 
 			data "databricks_mws_network_connectivity_configs" "this" {
 			  depends_on = [databricks_mws_network_connectivity_config.this]

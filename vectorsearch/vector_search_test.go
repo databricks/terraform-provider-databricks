@@ -22,10 +22,10 @@ func TestUcAccVectorSearchEndpoint(t *testing.T) {
 				name          = "%s"
 				endpoint_type = "STANDARD"
 			}
-			
+
 			resource "databricks_permissions" "this" {
 				vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
-				
+
 				access_control {
 					group_name = "users"
 					permission_level = "CAN_USE"

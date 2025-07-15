@@ -30,7 +30,7 @@ func TestUcAccDataSourceSchemas(t *testing.T) {
 				purpose = "testing"
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things"

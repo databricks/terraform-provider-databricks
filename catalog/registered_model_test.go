@@ -15,10 +15,10 @@ func TestUcAccRegisteredModel(t *testing.T) {
 				catalog_name = "main"
 				schema_name = "default"
 			}
-			
+
 			resource "databricks_grants" "model_grants" {
 				model = databricks_registered_model.model.id
-			  
+
 				grant {
 				  principal = "account users"
 				  privileges = ["EXECUTE"]

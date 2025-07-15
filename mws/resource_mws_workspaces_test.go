@@ -1324,7 +1324,7 @@ func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 	},
 		`
 	network_id = "beta"
-	token { 
+	token {
 		comment = "I am Batman!"
 	}`)
 }
@@ -1358,7 +1358,7 @@ func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
 		"token.0.lifetime_seconds": "2592000",
 		"token.0.token_id":         "abcdef",
 		"token.0.token_value":      "sensitive",
-	}, `token { 
+	}, `token {
 		comment = "I am Batman!"
 	}`)
 }

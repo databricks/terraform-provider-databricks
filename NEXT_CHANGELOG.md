@@ -10,7 +10,7 @@
 
 ### Documentation
 
-* Document additional custom configuration properties for resource `workspace_conf`
+* Document additional custom configuration properties for resource `workspace_conf` ([#4859](https://github.com/databricks/terraform-provider-databricks/pull/4859))
 
 ### Exporter
 

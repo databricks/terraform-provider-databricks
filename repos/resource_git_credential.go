@@ -92,6 +92,12 @@ func ResourceGitCredential() common.Resource {
 			if err != nil {
 				return err
 			}
+			if d.HasChange("is_default_for_provider") {
+				req.ForceSendFields = append(req.ForceSendFields, "IsDefaultForProvider")
+			}
+			if d.HasChange("name") {
+				req.ForceSendFields = append(req.ForceSendFields, "Name")
+			}
 			return w.GitCredentials.Update(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

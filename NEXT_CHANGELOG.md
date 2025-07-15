@@ -13,9 +13,10 @@
 * Document new fields in `databricks_model_serving` and deprecate `invalid_keywords` and `valid_topics` in AI Gateway configuration ([#4851](https://github.com/databricks/terraform-provider-databricks/pull/4851)).
 * Added support for Alert V2 in `databricks_permissions` ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).
 * Replace instead of dropping Delta `databricks_sql_table` ([#2424](https://github.com/databricks/terraform-provider-databricks/pull/2424)).
-* Added `clean_rooms_clean_room` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
-* Added `external_metadata` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
-* Added `materialized_features_feature_tag` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Added `databricks_clean_rooms_clean_room` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Added `databricks_external_metadata` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Added `databricks_materialized_features_feature_tag` resource and data sources ([#4844](https://github.com/databricks/terraform-provider-databricks/pull/4844)).
+* Improve `databricks_git_credential` resource by correctly handle new fields ([#4854](https://github.com/databricks/terraform-provider-databricks/pull/4854)).
 
 ### Bug Fixes
 

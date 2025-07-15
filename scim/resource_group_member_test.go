@@ -2,7 +2,6 @@ package scim
 
 import (
 	"testing"
-	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestResourceGroupMemberCreate(t *testing.T) {
-	globalGroupsCache = NewGroupsCache(time.Second * 300)
+	globalGroupsCache = NewGroupsCache()
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -82,7 +81,7 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead(t *testing.T) {
-	globalGroupsCache = NewGroupsCache(time.Second * 300)
+	globalGroupsCache = NewGroupsCache()
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -180,7 +179,7 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberDelete(t *testing.T) {
-	globalGroupsCache = NewGroupsCache(time.Second * 300)
+	globalGroupsCache = NewGroupsCache()
 
 	groupInfo := globalGroupsCache.getOrCreateGroupInfo("abc")
 	groupInfo.initialized = true

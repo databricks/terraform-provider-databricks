@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -19,38 +18,20 @@ type GroupMembersInfo struct {
 }
 
 type GroupCache struct {
-	cache      map[string]*GroupMembersInfo
-	created    time.Time
-	expiration time.Duration
-	lock       sync.Mutex
+	cache map[string]*GroupMembersInfo
+	lock  sync.Mutex
 }
 
-func NewGroupsCache(expiration time.Duration) *GroupCache {
+func NewGroupsCache() *GroupCache {
 	return &GroupCache{
-		cache:      make(map[string]*GroupMembersInfo),
-		created:    time.Now(),
-		expiration: expiration,
-		lock:       sync.Mutex{},
+		cache: make(map[string]*GroupMembersInfo),
+		lock:  sync.Mutex{},
 	}
-}
-
-func (c *GroupCache) isExpired() bool {
-	return time.Since(c.created) > c.expiration
-}
-
-func (c *GroupCache) clearCache() {
-	c.cache = make(map[string]*GroupMembersInfo)
-	c.created = time.Now()
 }
 
 func (c *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-
-	// Check if cache is expired
-	if c.isExpired() {
-		c.clearCache()
-	}
 
 	groupInfo, exists := c.cache[groupID]
 	if !exists {
@@ -127,7 +108,7 @@ func hasMember(members map[string]struct{}, memberID string) bool {
 	return ok
 }
 
-var globalGroupsCache = NewGroupsCache(time.Second * 300)
+var globalGroupsCache = NewGroupsCache()
 
 // ResourceGroupMember bind group with member
 func ResourceGroupMember() common.Resource {

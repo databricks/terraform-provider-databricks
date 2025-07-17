@@ -2,6 +2,8 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Resource
+Release Stage: PUBLIC_BETA
+
 Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
 
 

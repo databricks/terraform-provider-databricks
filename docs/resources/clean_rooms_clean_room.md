@@ -2,6 +2,8 @@
 subcategory: "Clean Rooms"
 ---
 # databricks_clean_rooms_clean_room Resource
+Release Stage: GA
+
 # Clean Room Resource
 
 A Clean Room is a secure environment for data collaboration that enables multiple organizations to analyze their data together while maintaining privacy and security. Clean Rooms provide a controlled environment where data can be shared and analyzed without exposing the underlying raw data.

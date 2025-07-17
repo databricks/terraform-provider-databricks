@@ -21,6 +21,12 @@ Allows specification of custom configuration properties for expert usage:
 - `enableTokensConfig` - (boolean) Enable or disable personal access tokens for this workspace.
 - `enableDeprecatedClusterNamedInitScripts` - (boolean) Enable or disable [legacy cluster-named init scripts](https://docs.databricks.com/clusters/init-scripts.html#disable-legacy-cluster-named-init-scripts-for-a-workspace) for this workspace.
 - `enableDeprecatedGlobalInitScripts` - (boolean) Enable or disable [legacy global init scripts](https://docs.databricks.com/clusters/init-scripts.html#migrate-legacy-scripts) for this workspace.
+- `enableExportNotebook` - (boolean) Enable or disable users from exporting notebooks and files for this workspace.
+- `enableFileStoreEndpoint` - (boolean) Enable or disable users from exporting notebooks and files for this workspace.
+- `enableNotebookTableClipboard` - (boolean) Controls the ability for users to copy tabular data to the clipboard via the UI.
+- `enableResultsDownloading` - (boolean) Enable or disable users from downloading notebook results.
+- `enableVerboseAuditLogs` - (boolean) Enable or disable verbose audit logs.
+- `storeInteractiveNotebookResultsInCustomerAccount` - (boolean) When enabled, all interactive notebook results are stored in the customer account.
 
 ```hcl
 resource "databricks_workspace_conf" "this" {

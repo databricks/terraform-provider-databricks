@@ -12,6 +12,8 @@
 
 ### Documentation
 
+* Refreshed `databricks_job` documentation ([#4861](https://github.com/databricks/terraform-provider-databricks/pull/4861)).
+
 ### Exporter
 
 ### Internal Changes

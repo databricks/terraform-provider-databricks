@@ -89,7 +89,7 @@ The resource supports the following arguments:
 * `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block).
 * `queue` - (Optional) The queue status for the job. See [queue Configuration Block](#queue-configuration-block) below.
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
-* `run_as` - (Optional) The user or the service prinicipal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
+* `run_as` - (Optional) The user or the service principal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.
 
   When migrating from `always_running` to `control_run_state`, set `continuous` as follows:
@@ -99,8 +99,8 @@ The resource supports the following arguments:
   ```
 
 * `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. See [library Configuration Block](#library-configuration-block) below.
-* `git_source` - (Optional) Specifices the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
-* `parameter` - (Optional) Specifices job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)
+* `git_source` - (Optional) Specifies the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
+* `parameter` - (Optional) Specifies job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
@@ -333,7 +333,7 @@ resource "databricks_job" "sql_aggregation_job" {
 
 #### library Configuration Block
 
-This block descripes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+This block describes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -358,13 +358,13 @@ This block describes upstream dependencies of a given task. For multiple upstrea
 
 -> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
-### environment Confaguration Block
+### environment Configuration Block
 
 This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
 
 * `environment_key` - an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task.
 * `spec` - block describing the Environment. Consists of following attributes:
-  * `client` - (Required, string) client version used by the environment.
+  * `environment_version` - (Required, string) client version used by the environment. Each version comes with a specific Python version and a set of Python packages.
   * `dependencies` - (list of strings) List of pip dependencies, as supported by the version of pip in this environment. Each dependency is a pip requirement file line.  See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies) for more information.
 
 ```hcl

@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Added output attribute `endpoint_url` in `databricks_model_serving`([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+* Added `databricks_groups` data source to retrieve multiple groups matching a filter criteria ([#4864](https://github.com/databricks/terraform-provider-databricks/pull/4864)).
 
 ### Bug Fixes
 

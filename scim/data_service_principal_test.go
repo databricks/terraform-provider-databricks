@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"gotest.tools/assert"
 )
 
 func TestDataServicePrincipalReadByAppId(t *testing.T) {
@@ -207,10 +208,7 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-
-	if err == nil {
-		t.Fatalf("expected error, got nil")
-	}
+	assert.Error(t, err)
 }
 
 func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {

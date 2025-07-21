@@ -205,7 +205,7 @@ Installing artifacts from Maven repository. You can also optionally specify a `r
 library {
   maven {
     coordinates = "com.amazon.deequ:deequ:1.0.4"
-    // exlusions block is optional
+    // exclusions block is optional
     exclusions = ["org.apache.avro:avro"]
   }
 }

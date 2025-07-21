@@ -40,7 +40,7 @@ resource "databricks_clean_rooms_clean_room" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `comment` (string, optional) - 
+* `comment` (string, optional)
 * `name` (string, optional) - The name of the clean room.
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
 * `owner` (string, optional) - This is Databricks username of the owner of the local clean room securable for permission management
@@ -84,28 +84,28 @@ The following arguments are supported:
 * `internet_access` (EgressNetworkPolicyInternetAccessPolicy, optional) - The access policy enforced for egress traffic to the internet
 
 ### EgressNetworkPolicyInternetAccessPolicy
-* `allowed_internet_destinations` (list of EgressNetworkPolicyInternetAccessPolicyInternetDestination, optional) - 
-* `allowed_storage_destinations` (list of EgressNetworkPolicyInternetAccessPolicyStorageDestination, optional) - 
+* `allowed_internet_destinations` (list of EgressNetworkPolicyInternetAccessPolicyInternetDestination, optional)
+* `allowed_storage_destinations` (list of EgressNetworkPolicyInternetAccessPolicyStorageDestination, optional)
 * `log_only_mode` (EgressNetworkPolicyInternetAccessPolicyLogOnlyMode, optional) - Optional. If not specified, assume the policy is enforced for all workloads
 * `restriction_mode` (string, optional) - . Possible values are: `FULL_ACCESS`, `PRIVATE_ACCESS_ONLY`, `RESTRICTED_ACCESS`
 
 ### EgressNetworkPolicyInternetAccessPolicyInternetDestination
-* `destination` (string, optional) - 
+* `destination` (string, optional)
 * `protocol` (string, optional) - . Possible values are: `TCP`
 * `type` (string, optional) - . Possible values are: `FQDN`
 
 ### EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
 * `log_only_mode_type` (string, optional) - . Possible values are: `ALL_SERVICES`, `SELECTED_SERVICES`
-* `workloads` (list of , optional) - 
+* `workloads` (list of , optional)
 
 ### EgressNetworkPolicyInternetAccessPolicyStorageDestination
-* `allowed_paths` (list of string, optional) - 
-* `azure_container` (string, optional) - 
-* `azure_dns_zone` (string, optional) - 
-* `azure_storage_account` (string, optional) - 
-* `azure_storage_service` (string, optional) - 
-* `bucket_name` (string, optional) - 
-* `region` (string, optional) - 
+* `allowed_paths` (list of string, optional)
+* `azure_container` (string, optional)
+* `azure_dns_zone` (string, optional)
+* `azure_storage_account` (string, optional)
+* `azure_storage_service` (string, optional)
+* `bucket_name` (string, optional)
+* `region` (string, optional)
 * `type` (string, optional) - . Possible values are: `AWS_S3`, `AZURE_STORAGE`, `CLOUDFLARE_R2`, `GOOGLE_CLOUD_STORAGE`
 
 ## Attributes
@@ -130,7 +130,7 @@ In addition to the above arguments, the following attributes are exported:
 
 ### CleanRoomRemoteDetail
 * `central_clean_room_id` (string) - Central clean room ID
-* `compliance_security_profile` (ComplianceSecurityProfile) - 
+* `compliance_security_profile` (ComplianceSecurityProfile)
 * `creator` (CleanRoomCollaborator) - Collaborator who creates the clean room
 
 ## Import

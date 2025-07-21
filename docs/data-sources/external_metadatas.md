@@ -16,7 +16,7 @@ data "databricks_external_metadatas" "all"
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - 
+* `page_size` (integer, optional)
 
 
 

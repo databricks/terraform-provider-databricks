@@ -13,6 +13,7 @@ func DataSourceServicePrincipal() common.Resource {
 	type spnData struct {
 		ApplicationID  string `json:"application_id,omitempty" tf:"computed"`
 		DisplayName    string `json:"display_name,omitempty" tf:"computed"`
+		SpID           string `json:"sp_id,omitempty" tf:"computed"`
 		ScimID         string `json:"scim_id,omitempty" tf:"computed"`
 		ID             string `json:"id,omitempty" tf:"computed"`
 		Home           string `json:"home,omitempty" tf:"computed"`
@@ -74,6 +75,7 @@ func DataSourceServicePrincipal() common.Resource {
 			response.ExternalID = sp.ExternalID
 			response.Active = sp.Active
 			response.ScimID = sp.ID
+			response.SpID = sp.ID
 
 			err = common.StructToData(response, s, d)
 			d.SetId(sp.ID)

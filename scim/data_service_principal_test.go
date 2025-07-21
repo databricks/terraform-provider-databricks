@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDataServicePrincipalReadByAppId(t *testing.T) {

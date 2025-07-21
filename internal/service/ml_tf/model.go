@@ -5682,6 +5682,150 @@ func (o *GetLoggedModelResponse) SetModel(ctx context.Context, v LoggedModel) {
 	o.Model = vs
 }
 
+type GetLoggedModelsRequest struct {
+	// The IDs of the logged models to retrieve. Max threshold is 100.
+	ModelIds types.List `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_ids": o.ModelIds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetModelIds returns the value of the ModelIds field in GetLoggedModelsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLoggedModelsRequest) GetModelIds(ctx context.Context) ([]types.String, bool) {
+	if o.ModelIds.IsNull() || o.ModelIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ModelIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelIds sets the value of the ModelIds field in GetLoggedModelsRequest.
+func (o *GetLoggedModelsRequest) SetModelIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ModelIds = types.ListValueMust(t, vs)
+}
+
+type GetLoggedModelsRequestResponse struct {
+	// The retrieved logged models.
+	Models types.List `tfsdk:"models"`
+}
+
+func (newState *GetLoggedModelsRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLoggedModelsRequestResponse) {
+}
+
+func (newState *GetLoggedModelsRequestResponse) SyncEffectiveFieldsDuringRead(existingState GetLoggedModelsRequestResponse) {
+}
+
+func (c GetLoggedModelsRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["models"] = attrs["models"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelsRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelsRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"models": reflect.TypeOf(LoggedModel{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelsRequestResponse
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelsRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"models": o.Models,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelsRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"models": basetypes.ListType{
+				ElemType: LoggedModel{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetModels returns the value of the Models field in GetLoggedModelsRequestResponse as
+// a slice of LoggedModel values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLoggedModelsRequestResponse) GetModels(ctx context.Context) ([]LoggedModel, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModel
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in GetLoggedModelsRequestResponse.
+func (o *GetLoggedModelsRequestResponse) SetModels(ctx context.Context, v []LoggedModel) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
+}
+
 type GetMetricHistoryResponse struct {
 	// All logged values for this metric if `max_results` is not specified in
 	// the request or if the total count of metrics returned is less than the

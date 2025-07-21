@@ -1571,6 +1571,9 @@ type Continuous_SdkV2 struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
+	// Indicate whether the continuous job is applying task level retries or
+	// not. Defaults to NEVER.
+	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
 func (newState *Continuous_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous_SdkV2) {
@@ -1581,6 +1584,7 @@ func (newState *Continuous_SdkV2) SyncEffectiveFieldsDuringRead(existingState Co
 
 func (c Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1603,7 +1607,8 @@ func (o Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status": o.PauseStatus,
+			"pause_status":    o.PauseStatus,
+			"task_retry_mode": o.TaskRetryMode,
 		})
 }
 
@@ -1611,7 +1616,8 @@ func (o Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o Continuous_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status": types.StringType,
+			"pause_status":    types.StringType,
+			"task_retry_mode": types.StringType,
 		},
 	}
 }
@@ -7792,6 +7798,112 @@ func (o *ListRunsResponse_SdkV2) SetRuns(ctx context.Context, v []BaseRun_SdkV2)
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Runs = types.ListValueMust(t, vs)
+}
+
+type ModelTriggerConfiguration_SdkV2 struct {
+	// Aliases of the model versions to monitor. Can only be used in conjunction
+	// with condition MODEL_ALIAS_SET.
+	Aliases types.List `tfsdk:"aliases"`
+	// The condition based on which to trigger a job run.
+	Condition types.String `tfsdk:"condition"`
+	// If set, the trigger starts a run only after the specified amount of time
+	// has passed since the last time the trigger fired. The minimum allowed
+	// value is 60 seconds.
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
+	// Name of the securable to monitor ("mycatalog.myschema.mymodel" in the
+	// case of model-level triggers, "mycatalog.myschema" in the case of
+	// schema-level triggers) or empty in the case of metastore-level triggers.
+	SecurableName types.String `tfsdk:"securable_name"`
+	// If set, the trigger starts a run only after no model updates have
+	// occurred for the specified time and can be used to wait for a series of
+	// model updates before triggering a run. The minimum allowed value is 60
+	// seconds.
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
+}
+
+func (newState *ModelTriggerConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelTriggerConfiguration_SdkV2) {
+}
+
+func (newState *ModelTriggerConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelTriggerConfiguration_SdkV2) {
+}
+
+func (c ModelTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aliases"] = attrs["aliases"].SetOptional()
+	attrs["condition"] = attrs["condition"].SetRequired()
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["securable_name"] = attrs["securable_name"].SetOptional()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aliases": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelTriggerConfiguration_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ModelTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aliases":                           o.Aliases,
+			"condition":                         o.Condition,
+			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
+			"securable_name":                    o.SecurableName,
+			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"securable_name":                    types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
+		},
+	}
+}
+
+// GetAliases returns the value of the Aliases field in ModelTriggerConfiguration_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelTriggerConfiguration_SdkV2) GetAliases(ctx context.Context) ([]types.String, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in ModelTriggerConfiguration_SdkV2.
+func (o *ModelTriggerConfiguration_SdkV2) SetAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Aliases = types.ListValueMust(t, vs)
 }
 
 type NotebookOutput_SdkV2 struct {
@@ -19182,6 +19294,8 @@ func (o TriggerInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type TriggerSettings_SdkV2 struct {
 	// File arrival trigger settings.
 	FileArrival types.List `tfsdk:"file_arrival"`
+
+	Model types.List `tfsdk:"model"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
@@ -19201,6 +19315,8 @@ func (newState *TriggerSettings_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["model"] = attrs["model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -19222,6 +19338,7 @@ func (c TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 func (a TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
+		"model":        reflect.TypeOf(ModelTriggerConfiguration_SdkV2{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
 		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
@@ -19236,6 +19353,7 @@ func (o TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival": o.FileArrival,
+			"model":        o.Model,
 			"pause_status": o.PauseStatus,
 			"periodic":     o.Periodic,
 			"table":        o.Table,
@@ -19249,6 +19367,9 @@ func (o TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": basetypes.ListType{
 				ElemType: FileArrivalTriggerConfiguration_SdkV2{}.Type(ctx),
+			},
+			"model": basetypes.ListType{
+				ElemType: ModelTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
@@ -19288,6 +19409,32 @@ func (o *TriggerSettings_SdkV2) SetFileArrival(ctx context.Context, v FileArriva
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
 	o.FileArrival = types.ListValueMust(t, vs)
+}
+
+// GetModel returns the value of the Model field in TriggerSettings_SdkV2 as
+// a ModelTriggerConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings_SdkV2) GetModel(ctx context.Context) (ModelTriggerConfiguration_SdkV2, bool) {
+	var e ModelTriggerConfiguration_SdkV2
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []ModelTriggerConfiguration_SdkV2
+	d := o.Model.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in TriggerSettings_SdkV2.
+func (o *TriggerSettings_SdkV2) SetModel(ctx context.Context, v ModelTriggerConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model"]
+	o.Model = types.ListValueMust(t, vs)
 }
 
 // GetPeriodic returns the value of the Periodic field in TriggerSettings_SdkV2 as

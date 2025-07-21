@@ -22,6 +22,126 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type AccessRequestDestinations struct {
+	// Indicates whether any destinations are hidden from the caller due to a
+	// lack of permissions. This value is true if the caller does not have
+	// permission to see all destinations.
+	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
+	// The access request destinations for the securable.
+	Destinations types.List `tfsdk:"destinations"`
+	// The securable for which the access request destinations are being
+	// retrieved.
+	Securable types.Object `tfsdk:"securable"`
+}
+
+func (newState *AccessRequestDestinations) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessRequestDestinations) {
+}
+
+func (newState *AccessRequestDestinations) SyncEffectiveFieldsDuringRead(existingState AccessRequestDestinations) {
+}
+
+func (c AccessRequestDestinations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
+	attrs["destinations"] = attrs["destinations"].SetRequired()
+	attrs["securable"] = attrs["securable"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AccessRequestDestinations.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AccessRequestDestinations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"destinations": reflect.TypeOf(NotificationDestination{}),
+		"securable":    reflect.TypeOf(Securable{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinations
+// only implements ToObjectValue() and Type().
+func (o AccessRequestDestinations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"are_any_destinations_hidden": o.AreAnyDestinationsHidden,
+			"destinations":                o.Destinations,
+			"securable":                   o.Securable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AccessRequestDestinations) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"are_any_destinations_hidden": types.BoolType,
+			"destinations": basetypes.ListType{
+				ElemType: NotificationDestination{}.Type(ctx),
+			},
+			"securable": Securable{}.Type(ctx),
+		},
+	}
+}
+
+// GetDestinations returns the value of the Destinations field in AccessRequestDestinations as
+// a slice of NotificationDestination values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccessRequestDestinations) GetDestinations(ctx context.Context) ([]NotificationDestination, bool) {
+	if o.Destinations.IsNull() || o.Destinations.IsUnknown() {
+		return nil, false
+	}
+	var v []NotificationDestination
+	d := o.Destinations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinations sets the value of the Destinations field in AccessRequestDestinations.
+func (o *AccessRequestDestinations) SetDestinations(ctx context.Context, v []NotificationDestination) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["destinations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Destinations = types.ListValueMust(t, vs)
+}
+
+// GetSecurable returns the value of the Securable field in AccessRequestDestinations as
+// a Securable value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccessRequestDestinations) GetSecurable(ctx context.Context) (Securable, bool) {
+	var e Securable
+	if o.Securable.IsNull() || o.Securable.IsUnknown() {
+		return e, false
+	}
+	var v []Securable
+	d := o.Securable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecurable sets the value of the Securable field in AccessRequestDestinations.
+func (o *AccessRequestDestinations) SetSecurable(ctx context.Context, v Securable) {
+	vs := v.ToObjectValue(ctx)
+	o.Securable = vs
+}
+
 type AccountsCreateMetastore struct {
 	MetastoreInfo types.Object `tfsdk:"metastore_info"`
 }
@@ -1586,6 +1706,153 @@ func (o AzureUserDelegationSas) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type BatchCreateAccessRequestsRequest struct {
+	// A list of individual access requests, where each request corresponds to a
+	// set of permissions being requested on a list of securables for a
+	// specified principal.
+	Requests types.List `tfsdk:"requests"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateAccessRequestsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BatchCreateAccessRequestsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"requests": reflect.TypeOf(CreateAccessRequest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateAccessRequestsRequest
+// only implements ToObjectValue() and Type().
+func (o BatchCreateAccessRequestsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"requests": o.Requests,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o BatchCreateAccessRequestsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"requests": basetypes.ListType{
+				ElemType: CreateAccessRequest{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRequests returns the value of the Requests field in BatchCreateAccessRequestsRequest as
+// a slice of CreateAccessRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchCreateAccessRequestsRequest) GetRequests(ctx context.Context) ([]CreateAccessRequest, bool) {
+	if o.Requests.IsNull() || o.Requests.IsUnknown() {
+		return nil, false
+	}
+	var v []CreateAccessRequest
+	d := o.Requests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRequests sets the value of the Requests field in BatchCreateAccessRequestsRequest.
+func (o *BatchCreateAccessRequestsRequest) SetRequests(ctx context.Context, v []CreateAccessRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Requests = types.ListValueMust(t, vs)
+}
+
+type BatchCreateAccessRequestsResponse struct {
+	// The access request destinations for each securable object the principal
+	// requested.
+	Responses types.List `tfsdk:"responses"`
+}
+
+func (newState *BatchCreateAccessRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchCreateAccessRequestsResponse) {
+}
+
+func (newState *BatchCreateAccessRequestsResponse) SyncEffectiveFieldsDuringRead(existingState BatchCreateAccessRequestsResponse) {
+}
+
+func (c BatchCreateAccessRequestsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["responses"] = attrs["responses"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateAccessRequestsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BatchCreateAccessRequestsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"responses": reflect.TypeOf(CreateAccessRequestResponse{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateAccessRequestsResponse
+// only implements ToObjectValue() and Type().
+func (o BatchCreateAccessRequestsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"responses": o.Responses,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o BatchCreateAccessRequestsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"responses": basetypes.ListType{
+				ElemType: CreateAccessRequestResponse{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetResponses returns the value of the Responses field in BatchCreateAccessRequestsResponse as
+// a slice of CreateAccessRequestResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchCreateAccessRequestsResponse) GetResponses(ctx context.Context) ([]CreateAccessRequestResponse, bool) {
+	if o.Responses.IsNull() || o.Responses.IsUnknown() {
+		return nil, false
+	}
+	var v []CreateAccessRequestResponse
+	d := o.Responses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResponses sets the value of the Responses field in BatchCreateAccessRequestsResponse.
+func (o *BatchCreateAccessRequestsResponse) SetResponses(ctx context.Context, v []CreateAccessRequestResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["responses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Responses = types.ListValueMust(t, vs)
+}
+
 type CancelRefreshRequest struct {
 	// ID of the refresh.
 	RefreshId types.String `tfsdk:"-"`
@@ -2319,6 +2586,7 @@ func (o ConnectionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Next ID: 23
 type ConnectionInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -2332,6 +2600,9 @@ type ConnectionInfo struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// The type of credential.
 	CredentialType types.String `tfsdk:"credential_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name"`
 	// Unique identifier of parent metastore.
@@ -2371,6 +2642,7 @@ func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["created_by"] = attrs["created_by"].SetOptional()
 	attrs["credential_type"] = attrs["credential_type"].SetOptional()
+	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -2396,9 +2668,10 @@ func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (a ConnectionInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":           reflect.TypeOf(types.String{}),
-		"properties":        reflect.TypeOf(types.String{}),
-		"provisioning_info": reflect.TypeOf(ProvisioningInfo{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
+		"provisioning_info":    reflect.TypeOf(ProvisioningInfo{}),
 	}
 }
 
@@ -2409,24 +2682,25 @@ func (o ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":           o.Comment,
-			"connection_id":     o.ConnectionId,
-			"connection_type":   o.ConnectionType,
-			"created_at":        o.CreatedAt,
-			"created_by":        o.CreatedBy,
-			"credential_type":   o.CredentialType,
-			"full_name":         o.FullName,
-			"metastore_id":      o.MetastoreId,
-			"name":              o.Name,
-			"options":           o.Options,
-			"owner":             o.Owner,
-			"properties":        o.Properties,
-			"provisioning_info": o.ProvisioningInfo,
-			"read_only":         o.ReadOnly,
-			"securable_type":    o.SecurableType,
-			"updated_at":        o.UpdatedAt,
-			"updated_by":        o.UpdatedBy,
-			"url":               o.Url,
+			"comment":              o.Comment,
+			"connection_id":        o.ConnectionId,
+			"connection_type":      o.ConnectionType,
+			"created_at":           o.CreatedAt,
+			"created_by":           o.CreatedBy,
+			"credential_type":      o.CredentialType,
+			"environment_settings": o.EnvironmentSettings,
+			"full_name":            o.FullName,
+			"metastore_id":         o.MetastoreId,
+			"name":                 o.Name,
+			"options":              o.Options,
+			"owner":                o.Owner,
+			"properties":           o.Properties,
+			"provisioning_info":    o.ProvisioningInfo,
+			"read_only":            o.ReadOnly,
+			"securable_type":       o.SecurableType,
+			"updated_at":           o.UpdatedAt,
+			"updated_by":           o.UpdatedBy,
+			"url":                  o.Url,
 		})
 }
 
@@ -2434,15 +2708,16 @@ func (o ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_id":   types.StringType,
-			"connection_type": types.StringType,
-			"created_at":      types.Int64Type,
-			"created_by":      types.StringType,
-			"credential_type": types.StringType,
-			"full_name":       types.StringType,
-			"metastore_id":    types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_id":        types.StringType,
+			"connection_type":      types.StringType,
+			"created_at":           types.Int64Type,
+			"created_by":           types.StringType,
+			"credential_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"full_name":            types.StringType,
+			"metastore_id":         types.StringType,
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -2458,6 +2733,34 @@ func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 			"url":               types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in ConnectionInfo as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ConnectionInfo) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in ConnectionInfo.
+func (o *ConnectionInfo) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in ConnectionInfo as
@@ -2633,6 +2936,244 @@ func (o *ContinuousUpdateStatus) SetInitialPipelineSyncProgress(ctx context.Cont
 	o.InitialPipelineSyncProgress = vs
 }
 
+type CreateAccessRequest struct {
+	// Optional. The principal this request is for. Empty `behalf_of` defaults
+	// to the requester's identity.
+	BehalfOf types.Object `tfsdk:"behalf_of"`
+	// Optional. Comment associated with the request.
+	Comment types.String `tfsdk:"comment"`
+	// List of securables and their corresponding requested UC privileges.
+	SecurablePermissions types.List `tfsdk:"securable_permissions"`
+}
+
+func (newState *CreateAccessRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAccessRequest) {
+}
+
+func (newState *CreateAccessRequest) SyncEffectiveFieldsDuringRead(existingState CreateAccessRequest) {
+}
+
+func (c CreateAccessRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["behalf_of"] = attrs["behalf_of"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["securable_permissions"] = attrs["securable_permissions"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccessRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateAccessRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"behalf_of":             reflect.TypeOf(Principal{}),
+		"securable_permissions": reflect.TypeOf(SecurablePermissions{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccessRequest
+// only implements ToObjectValue() and Type().
+func (o CreateAccessRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"behalf_of":             o.BehalfOf,
+			"comment":               o.Comment,
+			"securable_permissions": o.SecurablePermissions,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateAccessRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"behalf_of": Principal{}.Type(ctx),
+			"comment":   types.StringType,
+			"securable_permissions": basetypes.ListType{
+				ElemType: SecurablePermissions{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetBehalfOf returns the value of the BehalfOf field in CreateAccessRequest as
+// a Principal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAccessRequest) GetBehalfOf(ctx context.Context) (Principal, bool) {
+	var e Principal
+	if o.BehalfOf.IsNull() || o.BehalfOf.IsUnknown() {
+		return e, false
+	}
+	var v []Principal
+	d := o.BehalfOf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBehalfOf sets the value of the BehalfOf field in CreateAccessRequest.
+func (o *CreateAccessRequest) SetBehalfOf(ctx context.Context, v Principal) {
+	vs := v.ToObjectValue(ctx)
+	o.BehalfOf = vs
+}
+
+// GetSecurablePermissions returns the value of the SecurablePermissions field in CreateAccessRequest as
+// a slice of SecurablePermissions values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAccessRequest) GetSecurablePermissions(ctx context.Context) ([]SecurablePermissions, bool) {
+	if o.SecurablePermissions.IsNull() || o.SecurablePermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []SecurablePermissions
+	d := o.SecurablePermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecurablePermissions sets the value of the SecurablePermissions field in CreateAccessRequest.
+func (o *CreateAccessRequest) SetSecurablePermissions(ctx context.Context, v []SecurablePermissions) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["securable_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.SecurablePermissions = types.ListValueMust(t, vs)
+}
+
+type CreateAccessRequestResponse struct {
+	// Indicates whether any destinations are hidden from the caller due to a
+	// lack of permissions. This value is true if the caller does not have
+	// permission to see all destinations.
+	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
+	// The principal the request was made on behalf of.
+	BehalfOf types.Object `tfsdk:"behalf_of"`
+	// The access request destinations for all the securables the principal
+	// requested.
+	Destinations types.List `tfsdk:"destinations"`
+}
+
+func (newState *CreateAccessRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAccessRequestResponse) {
+}
+
+func (newState *CreateAccessRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreateAccessRequestResponse) {
+}
+
+func (c CreateAccessRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetOptional()
+	attrs["behalf_of"] = attrs["behalf_of"].SetOptional()
+	attrs["destinations"] = attrs["destinations"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccessRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateAccessRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"behalf_of":    reflect.TypeOf(Principal{}),
+		"destinations": reflect.TypeOf(SecurableNotificationDestinations{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccessRequestResponse
+// only implements ToObjectValue() and Type().
+func (o CreateAccessRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"are_any_destinations_hidden": o.AreAnyDestinationsHidden,
+			"behalf_of":                   o.BehalfOf,
+			"destinations":                o.Destinations,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateAccessRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"are_any_destinations_hidden": types.BoolType,
+			"behalf_of":                   Principal{}.Type(ctx),
+			"destinations": basetypes.ListType{
+				ElemType: SecurableNotificationDestinations{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetBehalfOf returns the value of the BehalfOf field in CreateAccessRequestResponse as
+// a Principal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAccessRequestResponse) GetBehalfOf(ctx context.Context) (Principal, bool) {
+	var e Principal
+	if o.BehalfOf.IsNull() || o.BehalfOf.IsUnknown() {
+		return e, false
+	}
+	var v []Principal
+	d := o.BehalfOf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBehalfOf sets the value of the BehalfOf field in CreateAccessRequestResponse.
+func (o *CreateAccessRequestResponse) SetBehalfOf(ctx context.Context, v Principal) {
+	vs := v.ToObjectValue(ctx)
+	o.BehalfOf = vs
+}
+
+// GetDestinations returns the value of the Destinations field in CreateAccessRequestResponse as
+// a slice of SecurableNotificationDestinations values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAccessRequestResponse) GetDestinations(ctx context.Context) ([]SecurableNotificationDestinations, bool) {
+	if o.Destinations.IsNull() || o.Destinations.IsUnknown() {
+		return nil, false
+	}
+	var v []SecurableNotificationDestinations
+	d := o.Destinations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinations sets the value of the Destinations field in CreateAccessRequestResponse.
+func (o *CreateAccessRequestResponse) SetDestinations(ctx context.Context, v []SecurableNotificationDestinations) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["destinations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Destinations = types.ListValueMust(t, vs)
+}
+
 type CreateCatalog struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -2764,6 +3305,9 @@ type CreateConnection struct {
 	Comment types.String `tfsdk:"comment"`
 	// The type of connection.
 	ConnectionType types.String `tfsdk:"connection_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
@@ -2783,8 +3327,9 @@ type CreateConnection struct {
 // SDK values.
 func (a CreateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.String{}),
-		"properties": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2795,12 +3340,13 @@ func (o CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":         o.Comment,
-			"connection_type": o.ConnectionType,
-			"name":            o.Name,
-			"options":         o.Options,
-			"properties":      o.Properties,
-			"read_only":       o.ReadOnly,
+			"comment":              o.Comment,
+			"connection_type":      o.ConnectionType,
+			"environment_settings": o.EnvironmentSettings,
+			"name":                 o.Name,
+			"options":              o.Options,
+			"properties":           o.Properties,
+			"read_only":            o.ReadOnly,
 		})
 }
 
@@ -2808,9 +3354,10 @@ func (o CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o CreateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_type": types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -2820,6 +3367,34 @@ func (o CreateConnection) Type(ctx context.Context) attr.Type {
 			"read_only": types.BoolType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in CreateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in CreateConnection.
+func (o *CreateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in CreateConnection as
@@ -7405,6 +7980,88 @@ func (o *EncryptionDetails) SetSseEncryptionDetails(ctx context.Context, v SseEn
 	o.SseEncryptionDetails = vs
 }
 
+type EnvironmentSettings struct {
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+
+	JavaDependencies types.List `tfsdk:"java_dependencies"`
+}
+
+func (newState *EnvironmentSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnvironmentSettings) {
+}
+
+func (newState *EnvironmentSettings) SyncEffectiveFieldsDuringRead(existingState EnvironmentSettings) {
+}
+
+func (c EnvironmentSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnvironmentSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnvironmentSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"java_dependencies": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnvironmentSettings
+// only implements ToObjectValue() and Type().
+func (o EnvironmentSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"environment_version": o.EnvironmentVersion,
+			"java_dependencies":   o.JavaDependencies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EnvironmentSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"environment_version": types.StringType,
+			"java_dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetJavaDependencies returns the value of the JavaDependencies field in EnvironmentSettings as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnvironmentSettings) GetJavaDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.JavaDependencies.IsNull() || o.JavaDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JavaDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJavaDependencies sets the value of the JavaDependencies field in EnvironmentSettings.
+func (o *EnvironmentSettings) SetJavaDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["java_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.JavaDependencies = types.ListValueMust(t, vs)
+}
+
 type ExistsRequest struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
@@ -10613,6 +11270,45 @@ func (o *GenerateTemporaryTableCredentialResponse) SetR2TempCredentials(ctx cont
 	o.R2TempCredentials = vs
 }
 
+type GetAccessRequestDestinationsRequest struct {
+	FullName types.String `tfsdk:"-"`
+
+	SecurableType types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccessRequestDestinationsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetAccessRequestDestinationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAccessRequestDestinationsRequest
+// only implements ToObjectValue() and Type().
+func (o GetAccessRequestDestinationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":      o.FullName,
+			"securable_type": o.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetAccessRequestDestinationsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":      types.StringType,
+			"securable_type": types.StringType,
+		},
+	}
+}
+
 type GetAccountMetastoreAssignmentRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -11236,6 +11932,9 @@ func (o GetFunctionRequest) Type(ctx context.Context) attr.Type {
 type GetGrantRequest struct {
 	// Full name of securable.
 	FullName types.String `tfsdk:"-"`
+	// Optional. If true, also return privilege assignments whose principals
+	// have been deleted.
+	IncludeDeletedPrincipals types.Bool `tfsdk:"-"`
 	// Specifies the maximum number of privileges to return (page length). Every
 	// PrivilegeAssignment present in a single page response is guaranteed to
 	// contain all the privileges granted on the requested Securable for the
@@ -11276,11 +11975,12 @@ func (o GetGrantRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name":      o.FullName,
-			"max_results":    o.MaxResults,
-			"page_token":     o.PageToken,
-			"principal":      o.Principal,
-			"securable_type": o.SecurableType,
+			"full_name":                  o.FullName,
+			"include_deleted_principals": o.IncludeDeletedPrincipals,
+			"max_results":                o.MaxResults,
+			"page_token":                 o.PageToken,
+			"principal":                  o.Principal,
+			"securable_type":             o.SecurableType,
 		})
 }
 
@@ -11288,11 +11988,12 @@ func (o GetGrantRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetGrantRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name":      types.StringType,
-			"max_results":    types.Int64Type,
-			"page_token":     types.StringType,
-			"principal":      types.StringType,
-			"securable_type": types.StringType,
+			"full_name":                  types.StringType,
+			"include_deleted_principals": types.BoolType,
+			"max_results":                types.Int64Type,
+			"page_token":                 types.StringType,
+			"principal":                  types.StringType,
+			"securable_type":             types.StringType,
 		},
 	}
 }
@@ -12800,11 +13501,15 @@ func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 type ListExternalLineageRelationshipsRequest struct {
 	// The lineage direction to filter on.
 	LineageDirection types.String `tfsdk:"-"`
-	// The object to query external lineage relationship on.
+	// The object to query external lineage relationships for. Since this field
+	// is a query parameter, please flatten the nested fields. For example, if
+	// the object is a table, the query parameter should look like:
+	// `object_info.table.name=main.sales.customers`
 	ObjectInfo types.Object `tfsdk:"-"`
-
+	// Specifies the maximum number of external lineage relationships to return
+	// in a single response. The value must be less than or equal to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -13093,8 +13798,10 @@ func (o *ListExternalLocationsResponse) SetExternalLocations(ctx context.Context
 }
 
 type ListExternalMetadataRequest struct {
+	// Specifies the maximum number of external metadata objects to return in a
+	// single response. The value must be less than or equal to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -16466,6 +17173,65 @@ func (o NamedTableConstraint) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type NotificationDestination struct {
+	// The unique identifier for the destination.
+	DestinationId types.String `tfsdk:"destination_id"`
+	// The type of the destination.
+	DestinationType types.String `tfsdk:"destination_type"`
+	// This field is used to denote whether the destination is the email of the
+	// owner of the securable object.
+	SpecialDestination types.String `tfsdk:"special_destination"`
+}
+
+func (newState *NotificationDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotificationDestination) {
+}
+
+func (newState *NotificationDestination) SyncEffectiveFieldsDuringRead(existingState NotificationDestination) {
+}
+
+func (c NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetOptional()
+	attrs["destination_type"] = attrs["destination_type"].SetOptional()
+	attrs["special_destination"] = attrs["special_destination"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NotificationDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NotificationDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NotificationDestination
+// only implements ToObjectValue() and Type().
+func (o NotificationDestination) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination_id":      o.DestinationId,
+			"destination_type":    o.DestinationType,
+			"special_destination": o.SpecialDestination,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NotificationDestination) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination_id":      types.StringType,
+			"destination_type":    types.StringType,
+			"special_destination": types.StringType,
+		},
+	}
+}
+
 // Online Table information.
 type OnlineTable struct {
 	// Full three-part (catalog, schema, table) name of the table.
@@ -17207,6 +17973,16 @@ type PermissionsChange struct {
 	// The principal whose privileges we are changing. Only one of principal or
 	// principal_id should be specified, never both at the same time.
 	Principal types.String `tfsdk:"principal"`
+	// An opaque internal ID that identifies the principal whose privileges
+	// should be removed.
+	//
+	// This field is intended for removing privileges associated with a deleted
+	// user. When set, only the entries specified in the remove field are
+	// processed; any entries in the add field will be rejected.
+	//
+	// Only one of principal or principal_id should be specified, never both at
+	// the same time.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
 }
@@ -17220,6 +17996,7 @@ func (newState *PermissionsChange) SyncEffectiveFieldsDuringRead(existingState P
 func (c PermissionsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["add"] = attrs["add"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["remove"] = attrs["remove"].SetOptional()
 
 	return attrs
@@ -17246,9 +18023,10 @@ func (o PermissionsChange) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"add":       o.Add,
-			"principal": o.Principal,
-			"remove":    o.Remove,
+			"add":          o.Add,
+			"principal":    o.Principal,
+			"principal_id": o.PrincipalId,
+			"remove":       o.Remove,
 		})
 }
 
@@ -17259,7 +18037,8 @@ func (o PermissionsChange) Type(ctx context.Context) attr.Type {
 			"add": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"principal": types.StringType,
+			"principal":    types.StringType,
+			"principal_id": types.Int64Type,
 			"remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -17512,10 +18291,66 @@ func (o *PrimaryKeyConstraint) SetTimeseriesColumns(ctx context.Context, v []typ
 	o.TimeseriesColumns = types.ListValueMust(t, vs)
 }
 
+type Principal struct {
+	// Databricks user, group or service principal ID.
+	Id types.String `tfsdk:"id"`
+
+	PrincipalType types.String `tfsdk:"principal_type"`
+}
+
+func (newState *Principal) SyncEffectiveFieldsDuringCreateOrUpdate(plan Principal) {
+}
+
+func (newState *Principal) SyncEffectiveFieldsDuringRead(existingState Principal) {
+}
+
+func (c Principal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["principal_type"] = attrs["principal_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Principal.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Principal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Principal
+// only implements ToObjectValue() and Type().
+func (o Principal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id":             o.Id,
+			"principal_type": o.PrincipalType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Principal) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id":             types.StringType,
+			"principal_type": types.StringType,
+		},
+	}
+}
+
 type PrivilegeAssignment struct {
 	// The principal (user email address or group name). For deleted principals,
 	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
+	// Unique identifier of the principal. For active principals, both
+	// `principal` and `principal_id` are present.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
 }
@@ -17528,6 +18363,7 @@ func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState
 
 func (c PrivilegeAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["privileges"] = attrs["privileges"].SetOptional()
 
 	return attrs
@@ -17553,8 +18389,9 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal":  o.Principal,
-			"privileges": o.Privileges,
+			"principal":    o.Principal,
+			"principal_id": o.PrincipalId,
+			"privileges":   o.Privileges,
 		})
 }
 
@@ -17562,7 +18399,8 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal": types.StringType,
+			"principal":    types.StringType,
+			"principal_id": types.Int64Type,
 			"privileges": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -18429,6 +19267,69 @@ func (o *SchemaInfo) SetProperties(ctx context.Context, v map[string]types.Strin
 	o.Properties = types.MapValueMust(t, vs)
 }
 
+// Generic definition of a securable, which is uniquely defined in a metastore
+// by its type and full name.
+type Securable struct {
+	// Required. The full name of the catalog/schema/table. Optional if
+	// resource_name is present.
+	FullName types.String `tfsdk:"full_name"`
+	// Optional. The name of the Share object that contains the securable when
+	// the securable is getting shared in D2D Delta Sharing.s
+	ProviderShare types.String `tfsdk:"provider_share"`
+	// Required. The type of securable (catalog/schema/table). Optional if
+	// resource_name is present.
+	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *Securable) SyncEffectiveFieldsDuringCreateOrUpdate(plan Securable) {
+}
+
+func (newState *Securable) SyncEffectiveFieldsDuringRead(existingState Securable) {
+}
+
+func (c Securable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_name"] = attrs["full_name"].SetOptional()
+	attrs["provider_share"] = attrs["provider_share"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Securable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Securable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Securable
+// only implements ToObjectValue() and Type().
+func (o Securable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":      o.FullName,
+			"provider_share": o.ProviderShare,
+			"type":           o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Securable) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":      types.StringType,
+			"provider_share": types.StringType,
+			"type":           types.StringType,
+		},
+	}
+}
+
 // Manifest of a specific securable kind.
 type SecurableKindManifest struct {
 	// Privileges that can be assigned to the securable.
@@ -18584,6 +19485,232 @@ func (o *SecurableKindManifest) SetOptions(ctx context.Context, v []OptionSpec) 
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.ListValueMust(t, vs)
+}
+
+type SecurableNotificationDestinations struct {
+	// The access request destinations for the securable.
+	NotificationDestinations types.Object `tfsdk:"notification_destinations"`
+	// The securable for which the access request destinations are being
+	// retrieved.
+	Securable types.Object `tfsdk:"securable"`
+}
+
+func (newState *SecurableNotificationDestinations) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurableNotificationDestinations) {
+}
+
+func (newState *SecurableNotificationDestinations) SyncEffectiveFieldsDuringRead(existingState SecurableNotificationDestinations) {
+}
+
+func (c SecurableNotificationDestinations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["notification_destinations"] = attrs["notification_destinations"].SetOptional()
+	attrs["securable"] = attrs["securable"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SecurableNotificationDestinations.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SecurableNotificationDestinations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notification_destinations": reflect.TypeOf(NotificationDestination{}),
+		"securable":                 reflect.TypeOf(Securable{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurableNotificationDestinations
+// only implements ToObjectValue() and Type().
+func (o SecurableNotificationDestinations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"notification_destinations": o.NotificationDestinations,
+			"securable":                 o.Securable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SecurableNotificationDestinations) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"notification_destinations": NotificationDestination{}.Type(ctx),
+			"securable":                 Securable{}.Type(ctx),
+		},
+	}
+}
+
+// GetNotificationDestinations returns the value of the NotificationDestinations field in SecurableNotificationDestinations as
+// a NotificationDestination value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurableNotificationDestinations) GetNotificationDestinations(ctx context.Context) (NotificationDestination, bool) {
+	var e NotificationDestination
+	if o.NotificationDestinations.IsNull() || o.NotificationDestinations.IsUnknown() {
+		return e, false
+	}
+	var v []NotificationDestination
+	d := o.NotificationDestinations.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationDestinations sets the value of the NotificationDestinations field in SecurableNotificationDestinations.
+func (o *SecurableNotificationDestinations) SetNotificationDestinations(ctx context.Context, v NotificationDestination) {
+	vs := v.ToObjectValue(ctx)
+	o.NotificationDestinations = vs
+}
+
+// GetSecurable returns the value of the Securable field in SecurableNotificationDestinations as
+// a Securable value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurableNotificationDestinations) GetSecurable(ctx context.Context) (Securable, bool) {
+	var e Securable
+	if o.Securable.IsNull() || o.Securable.IsUnknown() {
+		return e, false
+	}
+	var v []Securable
+	d := o.Securable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecurable sets the value of the Securable field in SecurableNotificationDestinations.
+func (o *SecurableNotificationDestinations) SetSecurable(ctx context.Context, v Securable) {
+	vs := v.ToObjectValue(ctx)
+	o.Securable = vs
+}
+
+type SecurablePermissions struct {
+	// List of requested Unity Catalog permissions.
+	Permission types.List `tfsdk:"permission"`
+	// The securable for which the access request destinations are being
+	// requested.
+	Securable types.Object `tfsdk:"securable"`
+}
+
+func (newState *SecurablePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurablePermissions) {
+}
+
+func (newState *SecurablePermissions) SyncEffectiveFieldsDuringRead(existingState SecurablePermissions) {
+}
+
+func (c SecurablePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetOptional()
+	attrs["securable"] = attrs["securable"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SecurablePermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SecurablePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"permission": reflect.TypeOf(types.String{}),
+		"securable":  reflect.TypeOf(Securable{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurablePermissions
+// only implements ToObjectValue() and Type().
+func (o SecurablePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": o.Permission,
+			"securable":  o.Securable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SecurablePermissions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"securable": Securable{}.Type(ctx),
+		},
+	}
+}
+
+// GetPermission returns the value of the Permission field in SecurablePermissions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurablePermissions) GetPermission(ctx context.Context) ([]types.String, bool) {
+	if o.Permission.IsNull() || o.Permission.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Permission.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermission sets the value of the Permission field in SecurablePermissions.
+func (o *SecurablePermissions) SetPermission(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Permission = types.ListValueMust(t, vs)
+}
+
+// GetSecurable returns the value of the Securable field in SecurablePermissions as
+// a Securable value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurablePermissions) GetSecurable(ctx context.Context) (Securable, bool) {
+	var e Securable
+	if o.Securable.IsNull() || o.Securable.IsUnknown() {
+		return e, false
+	}
+	var v []Securable
+	d := o.Securable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecurable sets the value of the Securable field in SecurablePermissions.
+func (o *SecurablePermissions) SetSecurable(ctx context.Context, v Securable) {
+	vs := v.ToObjectValue(ctx)
+	o.Securable = vs
 }
 
 type SetArtifactAllowlist struct {
@@ -20417,6 +21544,89 @@ func (o UnassignResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type UpdateAccessRequestDestinationsRequest struct {
+	// For each destination, if **special_destination** is defined, then a
+	// **destination_id** is not required. Futhermore, the **destination_type**
+	// of a **special_destination** is always **EMAIL**. Otherwise, a
+	// **destination_id** and **destination_type** must be defined.
+	AccessRequestDestinations types.Object `tfsdk:"access_request_destinations"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccessRequestDestinationsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateAccessRequestDestinationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_request_destinations": reflect.TypeOf(AccessRequestDestinations{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAccessRequestDestinationsRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateAccessRequestDestinationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_request_destinations": o.AccessRequestDestinations,
+			"update_mask":                 o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateAccessRequestDestinationsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_request_destinations": AccessRequestDestinations{}.Type(ctx),
+			"update_mask":                 types.StringType,
+		},
+	}
+}
+
+// GetAccessRequestDestinations returns the value of the AccessRequestDestinations field in UpdateAccessRequestDestinationsRequest as
+// a AccessRequestDestinations value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAccessRequestDestinationsRequest) GetAccessRequestDestinations(ctx context.Context) (AccessRequestDestinations, bool) {
+	var e AccessRequestDestinations
+	if o.AccessRequestDestinations.IsNull() || o.AccessRequestDestinations.IsUnknown() {
+		return e, false
+	}
+	var v []AccessRequestDestinations
+	d := o.AccessRequestDestinations.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAccessRequestDestinations sets the value of the AccessRequestDestinations field in UpdateAccessRequestDestinationsRequest.
+func (o *UpdateAccessRequestDestinationsRequest) SetAccessRequestDestinations(ctx context.Context, v AccessRequestDestinations) {
+	vs := v.ToObjectValue(ctx)
+	o.AccessRequestDestinations = vs
+}
+
 type UpdateAssignmentResponse struct {
 }
 
@@ -20662,6 +21872,9 @@ func (o *UpdateCatalogWorkspaceBindingsResponse) SetWorkspaces(ctx context.Conte
 }
 
 type UpdateConnection struct {
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
 	// New name for the connection.
@@ -20681,7 +21894,8 @@ type UpdateConnection struct {
 // SDK values.
 func (a UpdateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -20692,10 +21906,11 @@ func (o UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     o.Name,
-			"new_name": o.NewName,
-			"options":  o.Options,
-			"owner":    o.Owner,
+			"environment_settings": o.EnvironmentSettings,
+			"name":                 o.Name,
+			"new_name":             o.NewName,
+			"options":              o.Options,
+			"owner":                o.Owner,
 		})
 }
 
@@ -20703,14 +21918,43 @@ func (o UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o UpdateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"new_name": types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
+			"new_name":             types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"owner": types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in UpdateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in UpdateConnection.
+func (o *UpdateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in UpdateConnection as

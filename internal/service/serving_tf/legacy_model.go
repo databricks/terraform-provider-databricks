@@ -706,6 +706,9 @@ type AiGatewayRateLimit_SdkV2 struct {
 	// Renewal period field for a rate limit. Currently, only 'minute' is
 	// supported.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
+	// Used to specify how many tokens are allowed for a key within the
+	// renewal_period.
+	Tokens types.Int64 `tfsdk:"tokens"`
 }
 
 func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit_SdkV2) {
@@ -719,6 +722,7 @@ func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["key"] = attrs["key"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["tokens"] = attrs["tokens"].SetOptional()
 
 	return attrs
 }
@@ -745,6 +749,7 @@ func (o AiGatewayRateLimit_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"key":            o.Key,
 			"principal":      o.Principal,
 			"renewal_period": o.RenewalPeriod,
+			"tokens":         o.Tokens,
 		})
 }
 
@@ -756,6 +761,7 @@ func (o AiGatewayRateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 			"key":            types.StringType,
 			"principal":      types.StringType,
 			"renewal_period": types.StringType,
+			"tokens":         types.Int64Type,
 		},
 	}
 }

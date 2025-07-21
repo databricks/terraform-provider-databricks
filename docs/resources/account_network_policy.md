@@ -44,8 +44,8 @@ resource "databricks_account_network_policy" "example_network_policy" {
 
 ## Arguments
 The following arguments are supported:
+* `egress` (NetworkPolicyEgress, required) - The network policies applying for egress traffic
 * `account_id` (string, optional) - The associated account ID for this Network Policy object
-* `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic
 * `network_policy_id` (string, optional) - The unique identifier for the network policy
 
 ### EgressNetworkPolicyNetworkAccessPolicy
@@ -73,7 +73,7 @@ The following arguments are supported:
 * `storage_destination_type` (string, optional) - The type of storage destination. Possible values are: `AWS_S3`, `AZURE_STORAGE`, `GOOGLE_CLOUD_STORAGE`
 
 ### NetworkPolicyEgress
-* `network_access` (EgressNetworkPolicyNetworkAccessPolicy, optional) - The access policy enforced for egress traffic to the internet
+* `network_access` (EgressNetworkPolicyNetworkAccessPolicy, required) - The access policy enforced for egress traffic to the internet
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

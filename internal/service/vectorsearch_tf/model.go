@@ -681,6 +681,8 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
+	// The budget policy id applied to the vector search index
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
@@ -708,6 +710,7 @@ func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(e
 
 func (c DeltaSyncVectorIndexSpecRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["columns_to_sync"] = attrs["columns_to_sync"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
 	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
@@ -739,12 +742,13 @@ func (o DeltaSyncVectorIndexSpecRequest) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"columns_to_sync":           o.ColumnsToSync,
-			"embedding_source_columns":  o.EmbeddingSourceColumns,
-			"embedding_vector_columns":  o.EmbeddingVectorColumns,
-			"embedding_writeback_table": o.EmbeddingWritebackTable,
-			"pipeline_type":             o.PipelineType,
-			"source_table":              o.SourceTable,
+			"columns_to_sync":            o.ColumnsToSync,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"embedding_source_columns":   o.EmbeddingSourceColumns,
+			"embedding_vector_columns":   o.EmbeddingVectorColumns,
+			"embedding_writeback_table":  o.EmbeddingWritebackTable,
+			"pipeline_type":              o.PipelineType,
+			"source_table":               o.SourceTable,
 		})
 }
 
@@ -755,6 +759,7 @@ func (o DeltaSyncVectorIndexSpecRequest) Type(ctx context.Context) attr.Type {
 			"columns_to_sync": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"effective_budget_policy_id": types.StringType,
 			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.Type(ctx),
 			},
@@ -847,6 +852,8 @@ func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingVectorColumns(ctx context.
 }
 
 type DeltaSyncVectorIndexSpecResponse struct {
+	// The budget policy id applied to the vector search index
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
@@ -875,6 +882,7 @@ func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(
 }
 
 func (c DeltaSyncVectorIndexSpecResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
 	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
@@ -906,12 +914,13 @@ func (o DeltaSyncVectorIndexSpecResponse) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"embedding_source_columns":  o.EmbeddingSourceColumns,
-			"embedding_vector_columns":  o.EmbeddingVectorColumns,
-			"embedding_writeback_table": o.EmbeddingWritebackTable,
-			"pipeline_id":               o.PipelineId,
-			"pipeline_type":             o.PipelineType,
-			"source_table":              o.SourceTable,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"embedding_source_columns":   o.EmbeddingSourceColumns,
+			"embedding_vector_columns":   o.EmbeddingVectorColumns,
+			"embedding_writeback_table":  o.EmbeddingWritebackTable,
+			"pipeline_id":                o.PipelineId,
+			"pipeline_type":              o.PipelineType,
+			"source_table":               o.SourceTable,
 		})
 }
 
@@ -919,6 +928,7 @@ func (o DeltaSyncVectorIndexSpecResponse) ToObjectValue(ctx context.Context) bas
 func (o DeltaSyncVectorIndexSpecResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"effective_budget_policy_id": types.StringType,
 			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.Type(ctx),
 			},
@@ -1460,6 +1470,12 @@ func (o GetEndpointRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetIndexRequest struct {
+	// If true, the URL returned for the index is guaranteed to be compatible
+	// with the reranker. Currently this means we return the CP URL regardless
+	// of how the index is being accessed. If not set or set to false, the URL
+	// may still be compatible with the reranker depending on what URL we
+	// return.
+	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
 }
@@ -1482,7 +1498,8 @@ func (o GetIndexRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index_name": o.IndexName,
+			"ensure_reranker_compatible": o.EnsureRerankerCompatible,
+			"index_name":                 o.IndexName,
 		})
 }
 
@@ -1490,7 +1507,8 @@ func (o GetIndexRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetIndexRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"index_name": types.StringType,
+			"ensure_reranker_compatible": types.BoolType,
+			"index_name":                 types.StringType,
 		},
 	}
 }
@@ -2128,6 +2146,8 @@ type QueryVectorIndexRequest struct {
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
+
+	Reranker types.Object `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 }
@@ -2144,6 +2164,7 @@ func (a QueryVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[s
 		"columns":           reflect.TypeOf(types.String{}),
 		"columns_to_rerank": reflect.TypeOf(types.String{}),
 		"query_vector":      reflect.TypeOf(types.Float64{}),
+		"reranker":          reflect.TypeOf(RerankerConfig{}),
 	}
 }
 
@@ -2162,6 +2183,7 @@ func (o QueryVectorIndexRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 			"query_text":        o.QueryText,
 			"query_type":        o.QueryType,
 			"query_vector":      o.QueryVector,
+			"reranker":          o.Reranker,
 			"score_threshold":   o.ScoreThreshold,
 		})
 }
@@ -2184,6 +2206,7 @@ func (o QueryVectorIndexRequest) Type(ctx context.Context) attr.Type {
 			"query_vector": basetypes.ListType{
 				ElemType: types.Float64Type,
 			},
+			"reranker":        RerankerConfig{}.Type(ctx),
 			"score_threshold": types.Float64Type,
 		},
 	}
@@ -2265,6 +2288,34 @@ func (o *QueryVectorIndexRequest) SetQueryVector(ctx context.Context, v []types.
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_vector"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.QueryVector = types.ListValueMust(t, vs)
+}
+
+// GetReranker returns the value of the Reranker field in QueryVectorIndexRequest as
+// a RerankerConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest) GetReranker(ctx context.Context) (RerankerConfig, bool) {
+	var e RerankerConfig
+	if o.Reranker.IsNull() || o.Reranker.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfig
+	d := o.Reranker.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReranker sets the value of the Reranker field in QueryVectorIndexRequest.
+func (o *QueryVectorIndexRequest) SetReranker(ctx context.Context, v RerankerConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Reranker = vs
 }
 
 type QueryVectorIndexResponse struct {
@@ -2385,6 +2436,165 @@ func (o *QueryVectorIndexResponse) GetResult(ctx context.Context) (ResultData, b
 func (o *QueryVectorIndexResponse) SetResult(ctx context.Context, v ResultData) {
 	vs := v.ToObjectValue(ctx)
 	o.Result = vs
+}
+
+type RerankerConfig struct {
+	Model types.String `tfsdk:"model"`
+
+	Parameters types.Object `tfsdk:"parameters"`
+}
+
+func (newState *RerankerConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan RerankerConfig) {
+}
+
+func (newState *RerankerConfig) SyncEffectiveFieldsDuringRead(existingState RerankerConfig) {
+}
+
+func (c RerankerConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(RerankerConfigRerankerParameters{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfig
+// only implements ToObjectValue() and Type().
+func (o RerankerConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model":      o.Model,
+			"parameters": o.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model":      types.StringType,
+			"parameters": RerankerConfigRerankerParameters{}.Type(ctx),
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in RerankerConfig as
+// a RerankerConfigRerankerParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfig) GetParameters(ctx context.Context) (RerankerConfigRerankerParameters, bool) {
+	var e RerankerConfigRerankerParameters
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfigRerankerParameters
+	d := o.Parameters.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetParameters sets the value of the Parameters field in RerankerConfig.
+func (o *RerankerConfig) SetParameters(ctx context.Context, v RerankerConfigRerankerParameters) {
+	vs := v.ToObjectValue(ctx)
+	o.Parameters = vs
+}
+
+type RerankerConfigRerankerParameters struct {
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
+}
+
+func (newState *RerankerConfigRerankerParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RerankerConfigRerankerParameters) {
+}
+
+func (newState *RerankerConfigRerankerParameters) SyncEffectiveFieldsDuringRead(existingState RerankerConfigRerankerParameters) {
+}
+
+func (c RerankerConfigRerankerParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfigRerankerParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfigRerankerParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfigRerankerParameters
+// only implements ToObjectValue() and Type().
+func (o RerankerConfigRerankerParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns_to_rerank": o.ColumnsToRerank,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfigRerankerParameters) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns_to_rerank": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in RerankerConfigRerankerParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfigRerankerParameters) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in RerankerConfigRerankerParameters.
+func (o *RerankerConfigRerankerParameters) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
 }
 
 // Data returned in the query result.

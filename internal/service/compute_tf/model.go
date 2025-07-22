@@ -5556,6 +5556,76 @@ func (o CreateContext) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateDefaultBaseEnvironmentRequest struct {
+	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
+	// A unique identifier for this request. A random UUID is recommended. This
+	// request is only idempotent if a `request_id` is provided.
+	RequestId types.String `tfsdk:"request_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o CreateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"request_id":               o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
+			"request_id":               types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest as
+// a DefaultBaseEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
+	var e DefaultBaseEnvironment
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest.
+func (o *CreateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.DefaultBaseEnvironment = vs
+}
+
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
@@ -5572,6 +5642,10 @@ type CreateInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -5598,6 +5672,11 @@ type CreateInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -5633,6 +5712,7 @@ func (a CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -5649,12 +5729,14 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"azure_attributes":                      o.AzureAttributes,
 			"custom_tags":                           o.CustomTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -5673,12 +5755,14 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -5828,6 +5912,34 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool.
+func (o *CreateInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
@@ -6348,6 +6460,289 @@ func (o DbfsStorageInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DefaultBaseEnvironment struct {
+	BaseEnvironmentCache types.List `tfsdk:"base_environment_cache"`
+
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+
+	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
+	// Note: we made `environment` non-internal because we need to expose its
+	// `client` field. All other fields should be treated as internal.
+	Environment types.Object `tfsdk:"environment"`
+
+	Filepath types.String `tfsdk:"filepath"`
+
+	Id types.String `tfsdk:"id"`
+
+	IsDefault types.Bool `tfsdk:"is_default"`
+
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+
+	LastUpdatedUserId types.Int64 `tfsdk:"last_updated_user_id"`
+
+	Message types.String `tfsdk:"message"`
+
+	Name types.String `tfsdk:"name"`
+
+	PrincipalIds types.List `tfsdk:"principal_ids"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironment) {
+}
+
+func (newState *DefaultBaseEnvironment) SyncEffectiveFieldsDuringRead(existingState DefaultBaseEnvironment) {
+}
+
+func (c DefaultBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_environment_cache"] = attrs["base_environment_cache"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["creator_user_id"] = attrs["creator_user_id"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["filepath"] = attrs["filepath"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_default"] = attrs["is_default"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["principal_ids"] = attrs["principal_ids"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"base_environment_cache": reflect.TypeOf(DefaultBaseEnvironmentCache{}),
+		"environment":            reflect.TypeOf(Environment{}),
+		"principal_ids":          reflect.TypeOf(types.Int64{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironment
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"base_environment_cache": o.BaseEnvironmentCache,
+			"created_timestamp":      o.CreatedTimestamp,
+			"creator_user_id":        o.CreatorUserId,
+			"environment":            o.Environment,
+			"filepath":               o.Filepath,
+			"id":                     o.Id,
+			"is_default":             o.IsDefault,
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+			"last_updated_user_id":   o.LastUpdatedUserId,
+			"message":                o.Message,
+			"name":                   o.Name,
+			"principal_ids":          o.PrincipalIds,
+			"status":                 o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"base_environment_cache": basetypes.ListType{
+				ElemType: DefaultBaseEnvironmentCache{}.Type(ctx),
+			},
+			"created_timestamp":      types.Int64Type,
+			"creator_user_id":        types.Int64Type,
+			"environment":            Environment{}.Type(ctx),
+			"filepath":               types.StringType,
+			"id":                     types.StringType,
+			"is_default":             types.BoolType,
+			"last_updated_timestamp": types.Int64Type,
+			"last_updated_user_id":   types.Int64Type,
+			"message":                types.StringType,
+			"name":                   types.StringType,
+			"principal_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+			"status": types.StringType,
+		},
+	}
+}
+
+// GetBaseEnvironmentCache returns the value of the BaseEnvironmentCache field in DefaultBaseEnvironment as
+// a slice of DefaultBaseEnvironmentCache values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetBaseEnvironmentCache(ctx context.Context) ([]DefaultBaseEnvironmentCache, bool) {
+	if o.BaseEnvironmentCache.IsNull() || o.BaseEnvironmentCache.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironmentCache
+	d := o.BaseEnvironmentCache.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseEnvironmentCache sets the value of the BaseEnvironmentCache field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetBaseEnvironmentCache(ctx context.Context, v []DefaultBaseEnvironmentCache) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_environment_cache"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.BaseEnvironmentCache = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in DefaultBaseEnvironment as
+// a Environment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetEnvironment(ctx context.Context) (Environment, bool) {
+	var e Environment
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []Environment
+	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetEnvironment(ctx context.Context, v Environment) {
+	vs := v.ToObjectValue(ctx)
+	o.Environment = vs
+}
+
+// GetPrincipalIds returns the value of the PrincipalIds field in DefaultBaseEnvironment as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetPrincipalIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.PrincipalIds.IsNull() || o.PrincipalIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.PrincipalIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrincipalIds sets the value of the PrincipalIds field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetPrincipalIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principal_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.PrincipalIds = types.ListValueMust(t, vs)
+}
+
+type DefaultBaseEnvironmentCache struct {
+	MaterializedEnvironment types.Object `tfsdk:"materialized_environment"`
+
+	Message types.String `tfsdk:"message"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironmentCache) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironmentCache) {
+}
+
+func (newState *DefaultBaseEnvironmentCache) SyncEffectiveFieldsDuringRead(existingState DefaultBaseEnvironmentCache) {
+}
+
+func (c DefaultBaseEnvironmentCache) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["materialized_environment"] = attrs["materialized_environment"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironmentCache.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironmentCache) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"materialized_environment": reflect.TypeOf(MaterializedEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironmentCache
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironmentCache) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"materialized_environment": o.MaterializedEnvironment,
+			"message":                  o.Message,
+			"status":                   o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironmentCache) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"materialized_environment": MaterializedEnvironment{}.Type(ctx),
+			"message":                  types.StringType,
+			"status":                   types.StringType,
+		},
+	}
+}
+
+// GetMaterializedEnvironment returns the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache as
+// a MaterializedEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironmentCache) GetMaterializedEnvironment(ctx context.Context) (MaterializedEnvironment, bool) {
+	var e MaterializedEnvironment
+	if o.MaterializedEnvironment.IsNull() || o.MaterializedEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializedEnvironment
+	d := o.MaterializedEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaterializedEnvironment sets the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache.
+func (o *DefaultBaseEnvironmentCache) SetMaterializedEnvironment(ctx context.Context, v MaterializedEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.MaterializedEnvironment = vs
+}
+
 type DeleteCluster struct {
 	// The cluster to be terminated.
 	ClusterId types.String `tfsdk:"cluster_id"`
@@ -6422,6 +6817,41 @@ func (o DeleteClusterResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o DeleteClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteDefaultBaseEnvironmentRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
 	}
 }
 
@@ -7701,6 +8131,10 @@ type EditInstancePool struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -7720,6 +8154,11 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -7743,7 +8182,8 @@ type EditInstancePool struct {
 // SDK values.
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
 	}
 }
 
@@ -7755,11 +8195,13 @@ func (o EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"custom_tags":                           o.CustomTags,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_id":                      o.InstancePoolId,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
@@ -7773,11 +8215,13 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"remote_disk_throughput":                types.Int64Type,
 			"total_initial_remote_disk_size":        types.Int64Type,
@@ -7809,6 +8253,34 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
+func (o *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 type EditInstancePoolResponse struct {
@@ -9604,6 +10076,10 @@ type GetInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -9632,6 +10108,11 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -9671,6 +10152,7 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -9678,6 +10160,7 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -9705,6 +10188,7 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -9724,6 +10208,7 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -9731,6 +10216,7 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -9755,6 +10241,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -9762,6 +10249,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -9940,6 +10428,34 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
+func (o *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -11676,6 +12192,10 @@ type InstancePoolAndStats struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -11704,6 +12224,11 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -11743,6 +12268,7 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -11750,6 +12276,7 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -11777,6 +12304,7 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -11796,6 +12324,7 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -11803,6 +12332,7 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -11827,6 +12357,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -11834,6 +12365,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -12012,6 +12544,34 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -13904,6 +14464,127 @@ func (o ListClustersSortBy) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListDefaultBaseEnvironmentsRequest struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsRequest
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListDefaultBaseEnvironmentsResponse struct {
+	DefaultBaseEnvironments types.List `tfsdk:"default_base_environments"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDefaultBaseEnvironmentsResponse) {
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse) SyncEffectiveFieldsDuringRead(existingState ListDefaultBaseEnvironmentsResponse) {
+}
+
+func (c ListDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_base_environments"] = attrs["default_base_environments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environments": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsResponse
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environments": o.DefaultBaseEnvironments,
+			"next_page_token":           o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environments": basetypes.ListType{
+				ElemType: DefaultBaseEnvironment{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironments returns the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse as
+// a slice of DefaultBaseEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDefaultBaseEnvironmentsResponse) GetDefaultBaseEnvironments(ctx context.Context) ([]DefaultBaseEnvironment, bool) {
+	if o.DefaultBaseEnvironments.IsNull() || o.DefaultBaseEnvironments.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultBaseEnvironments sets the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse.
+func (o *ListDefaultBaseEnvironmentsResponse) SetDefaultBaseEnvironments(ctx context.Context, v []DefaultBaseEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DefaultBaseEnvironments = types.ListValueMust(t, vs)
+}
+
 type ListGlobalInitScriptsRequest struct {
 }
 
@@ -14722,6 +15403,69 @@ func (o LogSyncStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Materialized Environment information enables environment sharing and reuse
+// via Environment Caching during library installations. Currently this feature
+// is only supported for Python libraries.
+//
+// - If the env cache entry in LMv2 DB doesn't exist or invalid, library
+// installations and environment materialization will occur. A new Materialized
+// Environment metadata will be sent from DP upon successful library
+// installations and env materialization, and is persisted into database by
+// LMv2. - If the env cache entry in LMv2 DB is valid, the Materialized
+// Environment will be sent to DP by LMv2, and DP will restore the cached
+// environment from a store instead of reinstalling libraries from scratch.
+//
+// If changed, also update
+// estore/namespaces/defaultbaseenvironments/latest.proto with new version
+type MaterializedEnvironment struct {
+	// The timestamp (in epoch milliseconds) when the materialized env is
+	// updated.
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+}
+
+func (newState *MaterializedEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan MaterializedEnvironment) {
+}
+
+func (newState *MaterializedEnvironment) SyncEffectiveFieldsDuringRead(existingState MaterializedEnvironment) {
+}
+
+func (c MaterializedEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializedEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MaterializedEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializedEnvironment
+// only implements ToObjectValue() and Type().
+func (o MaterializedEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MaterializedEnvironment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"last_updated_timestamp": types.Int64Type,
+		},
+	}
+}
+
 type MavenLibrary struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates"`
@@ -15099,6 +15843,50 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) {
 	vs := v.ToObjectValue(ctx)
 	o.NodeInstanceType = vs
+}
+
+// For Fleet-V2 using classic clusters, this object contains the information
+// about the alternate node type ids to use when attempting to launch a cluster.
+// It can be used with both the driver and worker node types.
+type NodeTypeFlexibility struct {
+}
+
+func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility) {
+}
+
+func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringRead(existingState NodeTypeFlexibility) {
+}
+
+func (c NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
+// only implements ToObjectValue() and Type().
+func (o NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Error message of a failed pending instances
@@ -15632,6 +16420,112 @@ func (o RCranLibrary) Type(ctx context.Context) attr.Type {
 			"package": types.StringType,
 			"repo":    types.StringType,
 		},
+	}
+}
+
+type RefreshDefaultBaseEnvironmentsRequest struct {
+	Ids types.List `tfsdk:"ids"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsRequest
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ids": o.Ids,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetIds returns the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RefreshDefaultBaseEnvironmentsRequest) GetIds(ctx context.Context) ([]types.String, bool) {
+	if o.Ids.IsNull() || o.Ids.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Ids.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIds sets the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest.
+func (o *RefreshDefaultBaseEnvironmentsRequest) SetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Ids = types.ListValueMust(t, vs)
+}
+
+type RefreshDefaultBaseEnvironmentsResponse struct {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RefreshDefaultBaseEnvironmentsResponse) {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncEffectiveFieldsDuringRead(existingState RefreshDefaultBaseEnvironmentsResponse) {
+}
+
+func (c RefreshDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsResponse
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -17533,6 +18427,75 @@ func (o UpdateClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
+}
+
+type UpdateDefaultBaseEnvironmentRequest struct {
+	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
+
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"id":                       o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
+			"id":                       types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest as
+// a DefaultBaseEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
+	var e DefaultBaseEnvironment
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest.
+func (o *UpdateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.DefaultBaseEnvironment = vs
 }
 
 type UpdateResponse struct {

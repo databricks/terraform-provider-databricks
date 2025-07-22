@@ -5697,6 +5697,150 @@ func (o *GetLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v LoggedMod
 	o.Model = types.ListValueMust(t, vs)
 }
 
+type GetLoggedModelsRequest_SdkV2 struct {
+	// The IDs of the logged models to retrieve. Max threshold is 100.
+	ModelIds types.List `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_ids": o.ModelIds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetModelIds returns the value of the ModelIds field in GetLoggedModelsRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLoggedModelsRequest_SdkV2) GetModelIds(ctx context.Context) ([]types.String, bool) {
+	if o.ModelIds.IsNull() || o.ModelIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ModelIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelIds sets the value of the ModelIds field in GetLoggedModelsRequest_SdkV2.
+func (o *GetLoggedModelsRequest_SdkV2) SetModelIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ModelIds = types.ListValueMust(t, vs)
+}
+
+type GetLoggedModelsRequestResponse_SdkV2 struct {
+	// The retrieved logged models.
+	Models types.List `tfsdk:"models"`
+}
+
+func (newState *GetLoggedModelsRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLoggedModelsRequestResponse_SdkV2) {
+}
+
+func (newState *GetLoggedModelsRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLoggedModelsRequestResponse_SdkV2) {
+}
+
+func (c GetLoggedModelsRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["models"] = attrs["models"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLoggedModelsRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLoggedModelsRequestResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"models": reflect.TypeOf(LoggedModel_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLoggedModelsRequestResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLoggedModelsRequestResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"models": o.Models,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLoggedModelsRequestResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"models": basetypes.ListType{
+				ElemType: LoggedModel_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetModels returns the value of the Models field in GetLoggedModelsRequestResponse_SdkV2 as
+// a slice of LoggedModel_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLoggedModelsRequestResponse_SdkV2) GetModels(ctx context.Context) ([]LoggedModel_SdkV2, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []LoggedModel_SdkV2
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in GetLoggedModelsRequestResponse_SdkV2.
+func (o *GetLoggedModelsRequestResponse_SdkV2) SetModels(ctx context.Context, v []LoggedModel_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
+}
+
 type GetMetricHistoryResponse_SdkV2 struct {
 	// All logged values for this metric if `max_results` is not specified in
 	// the request or if the total count of metrics returned is less than the

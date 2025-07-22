@@ -70,7 +70,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan database_tf.
 	updateRequest := database.UpdateDatabaseInstanceRequest{
 		DatabaseInstance: database_instance,
 		Name:             plan.Name.ValueString(),
-		UpdateMask:       "capacity,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
+		UpdateMask:       "budget_policy_id,capacity,enable_pg_native_login,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
 	}
 
 	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)

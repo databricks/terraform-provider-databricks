@@ -10,7 +10,7 @@ This data source can be used to fetch the list of network policies.
 Getting a list of all network policies:
 
 ```hcl
-data "databricks_account_network_policies" "all" {
+data "databricks_network_policies" "all" {
 }
 ```
 
@@ -44,8 +44,8 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### EgressNetworkPolicyNetworkAccessPolicyStorageDestination
 * `azure_storage_account` (string) - The Azure storage account name
 * `azure_storage_service` (string) - The Azure storage service type (blob, dfs, etc.)
-* `bucket_name` (string) - 
-* `region` (string) - 
+* `bucket_name` (string)
+* `region` (string)
 * `storage_destination_type` (string) - The type of storage destination. Possible values are: `AWS_S3`, `AZURE_STORAGE`, `GOOGLE_CLOUD_STORAGE`
 
 ### NetworkPolicyEgress

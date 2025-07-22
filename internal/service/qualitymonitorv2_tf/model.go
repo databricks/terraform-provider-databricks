@@ -23,6 +23,8 @@ import (
 )
 
 type AnomalyDetectionConfig struct {
+	// The type of the last run of the workflow.
+	JobType types.String `tfsdk:"job_type"`
 	// Run id of the last run of the workflow
 	LastRunId types.String `tfsdk:"last_run_id"`
 	// The status of the last run of the workflow.
@@ -36,6 +38,7 @@ func (newState *AnomalyDetectionConfig) SyncEffectiveFieldsDuringRead(existingSt
 }
 
 func (c AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_type"] = attrs["job_type"].SetComputed()
 	attrs["last_run_id"] = attrs["last_run_id"].SetComputed()
 	attrs["latest_run_status"] = attrs["latest_run_status"].SetComputed()
 
@@ -60,6 +63,7 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"job_type":          o.JobType,
 			"last_run_id":       o.LastRunId,
 			"latest_run_status": o.LatestRunStatus,
 		})
@@ -69,6 +73,7 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"job_type":          types.StringType,
 			"last_run_id":       types.StringType,
 			"latest_run_status": types.StringType,
 		},

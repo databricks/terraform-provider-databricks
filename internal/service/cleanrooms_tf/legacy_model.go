@@ -250,7 +250,7 @@ func (newState *CleanRoomAsset_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c CleanRoomAsset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
@@ -1895,7 +1895,8 @@ func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Con
 
 type CreateCleanRoomAssetRequest_SdkV2 struct {
 	Asset types.List `tfsdk:"asset"`
-	// Name of the clean room.
+	// The name of the clean room this asset belongs to. This is an output-only
+	// field to ensure proper resource identification.
 	CleanRoomName types.String `tfsdk:"-"`
 }
 

@@ -138,7 +138,7 @@ func (newState *AccountNetworkPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existi
 
 func (c AccountNetworkPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["egress"] = attrs["egress"].SetOptional()
+	attrs["egress"] = attrs["egress"].SetRequired()
 	attrs["egress"] = attrs["egress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
 
@@ -10914,7 +10914,7 @@ func (newState *NetworkPolicyEgress_SdkV2) SyncEffectiveFieldsDuringRead(existin
 }
 
 func (c NetworkPolicyEgress_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["network_access"] = attrs["network_access"].SetOptional()
+	attrs["network_access"] = attrs["network_access"].SetRequired()
 	attrs["network_access"] = attrs["network_access"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs

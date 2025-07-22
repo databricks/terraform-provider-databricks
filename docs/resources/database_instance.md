@@ -71,7 +71,11 @@ resource "databricks_database_instance" "child" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
+* `budget_policy_id` (string, optional) - The desired budget policy to associate with the instance. This field is only returned on create/update responses,
+  and represents the customer provided budget policy. See effective_budget_policy_id for the policy that is actually
+  applied to the instance
 * `capacity` (string, optional) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
+* `enable_pg_native_login` (boolean, optional) - Whether the instance has PG native password login enabled. Defaults to true
 * `enable_readable_secondaries` (boolean, optional) - Whether to enable secondaries to serve read-only traffic. Defaults to false
 * `node_count` (integer, optional) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
   1 primary and 0 secondaries
@@ -104,6 +108,10 @@ In addition to the above arguments, the following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
+* `effective_budget_policy_id` (string) - The policy that is applied to the instance
+* `effective_enable_pg_native_login` (boolean) - xref AIP-129. `enable_pg_native_login` is owned by the client, while `effective_enable_pg_native_login` is owned by the server.
+  `enable_pg_native_login` will only be set in Create/Update response messages if and only if the user provides the field via the request.
+  `effective_enable_pg_native_login` on the other hand will always bet set in all response messages (Create/Update/Get/List)
 * `effective_enable_readable_secondaries` (boolean) - xref AIP-129. `enable_readable_secondaries` is owned by the client, while `effective_enable_readable_secondaries` is owned by the server.
   `enable_readable_secondaries` will only be set in Create/Update response messages if and only if the user provides the field via the request.
   `effective_enable_readable_secondaries` on the other hand will always bet set in all response messages (Create/Update/Get/List)

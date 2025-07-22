@@ -9,9 +9,9 @@ subcategory: "Machine Learning"
 
 ## Arguments
 The following arguments are supported:
-* `key` (string, required) - 
+* `key` (string, required)
 
 ## Attributes
 The following attributes are exported:
-* `key` (string) - 
-* `value` (string) - 
+* `key` (string)
+* `value` (string)

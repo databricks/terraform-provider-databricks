@@ -136,7 +136,7 @@ func (newState *AccountNetworkPolicy) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["egress"] = attrs["egress"].SetOptional()
+	attrs["egress"] = attrs["egress"].SetRequired()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
 
 	return attrs
@@ -10869,7 +10869,7 @@ func (newState *NetworkPolicyEgress) SyncEffectiveFieldsDuringRead(existingState
 }
 
 func (c NetworkPolicyEgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["network_access"] = attrs["network_access"].SetOptional()
+	attrs["network_access"] = attrs["network_access"].SetRequired()
 
 	return attrs
 }

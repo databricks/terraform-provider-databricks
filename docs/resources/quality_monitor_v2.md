@@ -28,9 +28,10 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `anomaly_detection_config` (AnomalyDetectionConfig) - 
+* `anomaly_detection_config` (AnomalyDetectionConfig)
 
 ### AnomalyDetectionConfig
+* `job_type` (string) - The type of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN`, `ANOMALY_DETECTION_JOB_TYPE_NORMAL`
 * `last_run_id` (string) - Run id of the last run of the workflow
 * `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_RUN_STATUS_CANCELED`, `ANOMALY_DETECTION_RUN_STATUS_FAILED`, `ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED`, `ANOMALY_DETECTION_RUN_STATUS_PENDING`, `ANOMALY_DETECTION_RUN_STATUS_RUNNING`, `ANOMALY_DETECTION_RUN_STATUS_SUCCESS`, `ANOMALY_DETECTION_RUN_STATUS_UNKNOWN`, `ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR`
 

@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Added `databricks_groups` data source to retrieve multiple groups matching a filter criteria ([#4864](https://github.com/databricks/terraform-provider-databricks/pull/4864)).
+
 ### Bug Fixes
 
 * Corrected accidentally removed `SpID` field from `databricks_service_principal` ([#4868](https://github.com/databricks/terraform-provider-databricks/pull/4868)).

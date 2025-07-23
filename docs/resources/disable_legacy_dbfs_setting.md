@@ -6,6 +6,8 @@ subcategory: "Settings"
 
 The `databricks_disable_legacy_dbfs_setting` resource allows you to disable legacy DBFS.
 
+-> This resource can only be used with a workspace-level provider!
+
 Disabling legacy DBFS has the following implications:
 
 1. Access to DBFS root and DBFS mounts is disallowed (as well as the creation of new mounts). 
@@ -13,13 +15,11 @@ Disabling legacy DBFS has the following implications:
 
 When the setting is off, all DBFS functionality is enabled and no restrictions are imposed on Databricks Runtime versions. This setting can take up to 20 minutes to take effect and requires a manual restart of all-purpose compute clusters and SQL warehouses.
 
-Official docs:
+Refer to official docs for more details:
 
-[Azure](https://learn.microsoft.com/azure/databricks/dbfs/disable-dbfs-root-mounts)
-[AWS](https://docs.databricks.com/aws/dbfs/disable-dbfs-root-mounts)
-[GCP](https://docs.gcp.databricks.com/dbfs/disable-dbfs-root-mounts)
-
--> This resource can only be used with a workspace-level provider!
+- [Azure](https://learn.microsoft.com/azure/databricks/dbfs/disable-dbfs-root-mounts)
+- [AWS](https://docs.databricks.com/aws/dbfs/disable-dbfs-root-mounts)
+- [GCP](https://docs.gcp.databricks.com/dbfs/disable-dbfs-root-mounts)
 
 ## Example Usage
 

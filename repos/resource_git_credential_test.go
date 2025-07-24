@@ -185,7 +185,7 @@ func TestResourceGitCredentialCreate(t *testing.T) {
 	})
 }
 
-func TestResourceGitCredentialCreate_Error(t *testing.T) {
+func TestResourceGitCredentialCreate_Error_OnlyOneGitCredential(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
@@ -210,7 +210,7 @@ func TestResourceGitCredentialCreate_Error(t *testing.T) {
 	}.ExpectError(t, "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.")
 }
 
-func TestResourceGitCredentialCreateWithForce(t *testing.T) {
+func TestResourceGitCredentialCreateWithForceOld(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
@@ -266,6 +266,61 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 	})
 }
 
+func TestResourceGitCredentialCreateWithForceNew(t *testing.T) {
+	provider := "gitHub"
+	user := "test"
+	token := "12345"
+	credID := int64(121232342)
+	resp := workspace.GetCredentialsResponse{
+		CredentialId: credID,
+		GitProvider:  provider,
+		GitUsername:  user,
+	}
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			gmock := w.GetMockGitCredentialsAPI().EXPECT()
+			gmock.Create(mock.Anything, workspace.CreateCredentialsRequest{
+				GitProvider:         provider,
+				GitUsername:         user,
+				PersonalAccessToken: token,
+			}).
+				Return(&workspace.CreateCredentialsResponse{
+					CredentialId: credID,
+					GitProvider:  provider,
+					GitUsername:  user,
+				}, errors.New("A Git credential already exists for provider azureDevOpsServices. Only one credential per provider is allowed for service principals."))
+			gmock.ListAll(mock.Anything).
+				Return([]workspace.CredentialInfo{{
+					CredentialId: credID,
+					GitProvider:  provider,
+					GitUsername:  user,
+				}}, nil)
+			gmock.Update(mock.Anything, workspace.UpdateCredentialsRequest{
+				CredentialId:        credID,
+				GitProvider:         provider,
+				GitUsername:         user,
+				PersonalAccessToken: token,
+			}).
+				Return(nil)
+			// After Create, Terraform calls Read to populate state
+			gmock.Get(mock.Anything, workspace.GetCredentialsRequest{CredentialId: credID}).
+				Return(&resp, nil)
+		},
+		Resource: ResourceGitCredential(),
+		State: map[string]any{
+			"git_provider":          provider,
+			"git_username":          user,
+			"personal_access_token": token,
+			"force":                 true,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           fmt.Sprintf("%d", resp.CredentialId),
+		"git_provider": provider,
+		"git_username": user,
+	})
+}
 func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 	provider := "gitHub"
 	user := "test"

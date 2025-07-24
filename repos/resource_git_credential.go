@@ -11,6 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func isOnlyOneGitCredentialError(err error) bool {
+	errStr := err.Error()
+	return (strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time")) ||
+		strings.Contains(errStr, "Only one credential per provider is allowed")
+}
+
 func ResourceGitCredential() common.Resource {
 	s := common.StructToSchema(workspace.CreateCredentialsRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
@@ -39,7 +45,7 @@ func ResourceGitCredential() common.Resource {
 			resp, err := w.GitCredentials.Create(ctx, req)
 
 			if err != nil {
-				if !d.Get("force").(bool) || !(strings.Contains(err.Error(), "Only one Git credential is supported ") && strings.Contains(err.Error(), " at this time")) {
+				if !d.Get("force").(bool) || !isOnlyOneGitCredentialError(err) {
 					return err
 				}
 				creds, err := w.GitCredentials.ListAll(ctx)

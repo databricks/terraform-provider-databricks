@@ -2,10 +2,12 @@ package repos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,8 +15,8 @@ import (
 
 func isOnlyOneGitCredentialError(err error) bool {
 	errStr := err.Error()
-	return (strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time")) ||
-		strings.Contains(errStr, "Only one credential per provider is allowed")
+	return errors.Is(err, apierr.ErrResourceConflict) ||
+		(strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time"))
 }
 
 func ResourceGitCredential() common.Resource {

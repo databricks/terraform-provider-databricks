@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -289,7 +290,7 @@ func TestResourceGitCredentialCreateWithForceNew(t *testing.T) {
 					CredentialId: credID,
 					GitProvider:  provider,
 					GitUsername:  user,
-				}, errors.New("A Git credential already exists for provider azureDevOpsServices. Only one credential per provider is allowed for service principals."))
+				}, apierr.ErrResourceConflict)
 			gmock.ListAll(mock.Anything).
 				Return([]workspace.CredentialInfo{{
 					CredentialId: credID,

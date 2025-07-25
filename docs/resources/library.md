@@ -35,7 +35,7 @@ resource "databricks_library" "cli" {
 ```hcl
 resource "databricks_file" "app" {
   source = "${path.module}/app-0.0.1.jar"
-  path   = "/Volume/catalog/schema/volume/app-0.0.1.jar"
+  path   = "/Volumes/catalog/schema/volume/app-0.0.1.jar"
 }
 
 resource "databricks_library" "app" {
@@ -64,7 +64,7 @@ resource "databricks_library" "deequ" {
 ```hcl
 resource "databricks_file" "app" {
   source = "${path.module}/baz.whl"
-  path   = "/Volume/catalog/schema/volume/baz.whl"
+  path   = "/Volumes/catalog/schema/volume/baz.whl"
 }
 
 resource "databricks_library" "app" {

@@ -160,7 +160,7 @@ Installing JAR artifacts on a cluster. Location can be a workspace file, Unity C
 
 ```hcl
 library {
-  jar = "/Volume/catalog/schema/volume/app-0.0.1.jar"
+  jar = "/Volumes/catalog/schema/volume/app-0.0.1.jar"
 }
 ```
 
@@ -176,7 +176,7 @@ Installing Python Wheel artifacts. Location can be a workspace file, Unity Catal
 
 ```hcl
 library {
-  whl = "/Volume/catalog/schema/volume/baz.whl"
+  whl = "/Volumes/catalog/schema/volume/baz.whl"
 }
 ```
 

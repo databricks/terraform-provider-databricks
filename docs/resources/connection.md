@@ -72,6 +72,7 @@ resource "databricks_connection" "hms" {
     builtin = "true"
   }
 }
+```
 
 Create a HTTP connection with bearer token
 

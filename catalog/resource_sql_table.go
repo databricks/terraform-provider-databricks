@@ -284,7 +284,8 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	createType := ti.getTableTypeString()
 
-	if !isView && ti.DataSourceFormat == "DELTA" {
+	// Use CREATE OR REPLACE for managed Delta tables
+	if ti.DataSourceFormat == "DELTA" && ti.TableType == "MANAGED" {
 		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s %s", createType, ti.SQLFullName()))
 	} else {
 		statements = append(statements, fmt.Sprintf("CREATE %s %s", createType, ti.SQLFullName()))

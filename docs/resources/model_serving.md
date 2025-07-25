@@ -265,6 +265,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 * `id` - Equal to the `name` argument and used to identify the serving endpoint.
 * `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
+* `endpoint_url` - Invocation url of the endpoint.
 
 ## Access Control
 
@@ -296,7 +297,6 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
-
 
 ## Related Resources
 

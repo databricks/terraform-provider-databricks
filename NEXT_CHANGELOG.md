@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Added output attribute `endpoint_url` in `databricks_model_serving`([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+
 ### Bug Fixes
 
 * Corrected accidentally removed `SpID` field from `databricks_service_principal` ([#4868](https://github.com/databricks/terraform-provider-databricks/pull/4868)).

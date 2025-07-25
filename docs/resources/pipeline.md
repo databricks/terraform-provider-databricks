@@ -79,7 +79,7 @@ resource "databricks_pipeline" "this" {
 The following arguments are supported:
 
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
-* `storage` - A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
+* `storage` - A location on cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
 * `configuration` - An optional list of values to apply to the entire pipeline. Elements must be formatted as key:value pairs.
 * `library` blocks - Specifies pipeline code.
 * `root_path` - An optional string specifying the root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to `sys.path` when executing Python sources during pipeline execution.

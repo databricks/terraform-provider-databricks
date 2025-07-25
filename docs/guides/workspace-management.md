@@ -201,10 +201,8 @@ resource "databricks_permissions" "pool" {
 
 Depending on your preferences and needs, you can
 
-* Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](../resources/dbfs_file.md).
-* List entries on DBFS with [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data source.
-* Get contents of small files with [databricks_dbfs_file](../data-sources/dbfs_file.md) data source.
-* Mount your storage using [databricks_mount](../resources/mount.md) resource.
+* Create UC volumes using [databricks_volume](../resources/volume.md) resource.
+* Manage JAR, Wheel & Egg libraries through [databricks_workspace_file](../resources/workspace_file.md) or [databricks_file](../resources/file.md)
 
 ## Part 4: Advanced configuration
 

@@ -105,9 +105,9 @@ resource "databricks_metastore" "this" {
 }
 
 resource "databricks_metastore_assignment" "this" {
-  provider             = databricks.accounts
-  workspace_id         = local.databricks_workspace_id
-  metastore_id         = databricks_metastore.this.id
+  provider     = databricks.accounts
+  workspace_id = local.databricks_workspace_id
+  metastore_id = databricks_metastore.this.id
 }
 ```
 

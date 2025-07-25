@@ -77,15 +77,15 @@ resource "databricks_model_serving" "gpt_4o" {
       enabled = true
     }
     rate_limits {
-      calls = 10
-      key = "endpoint"
+      calls          = 10
+      key            = "endpoint"
       renewal_period = "minute"
     }
     inference_table_config {
-      enabled = true
+      enabled           = true
       table_name_prefix = "gpt-4o-mini"
-      catalog_name = "ml"
-      schema_name = "ai_gateway"
+      catalog_name      = "ml"
+      schema_name       = "ai_gateway"
     }
     guardrails {
       input {

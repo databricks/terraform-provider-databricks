@@ -31,10 +31,10 @@ resource "google_compute_network" "dbx_private_vpc" {
 }
 
 resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" {
-  name          = "test-dbx-${random_string.suffix.result}"
-  ip_cidr_range = "10.0.0.0/16"
-  region        = "us-central1"
-  network       = google_compute_network.dbx_private_vpc.id
+  name                     = "test-dbx-${random_string.suffix.result}"
+  ip_cidr_range            = "10.0.0.0/16"
+  region                   = "us-central1"
+  network                  = google_compute_network.dbx_private_vpc.id
   private_ip_google_access = true
 }
 
@@ -77,10 +77,10 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.databricks_account_id
   network_name = "test-demo-${random_string.suffix.result}"
   gcp_network_info {
-    network_project_id    = var.google_project
-    vpc_id                = google_compute_network.dbx_private_vpc.name
-    subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
-    subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
+    network_project_id = var.google_project
+    vpc_id             = google_compute_network.dbx_private_vpc.name
+    subnet_id          = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
+    subnet_region      = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
   }
   vpc_endpoints {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay_vpce.vpc_endpoint_id]

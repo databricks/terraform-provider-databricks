@@ -618,6 +618,7 @@ func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
 			"config.0.served_models.#":      "1",
 			"config.0.served_models.0.name": "prod_model",
 			"serving_endpoint_id":           "id",
+			"endpoint_url":                  "https://example.com/endpoint",
 		},
 		HCL: `
 			name = "test-endpoint"

@@ -52,7 +52,7 @@ type SharesDataSource struct {
 }
 
 func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceNameShares)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceNameShares)
 }
 
 func (d *SharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

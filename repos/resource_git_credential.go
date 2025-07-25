@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func isOnlyOneGitCredentialError(err error) bool {
+func isOnlyOneGitCredentialForProviderError(err error) bool {
 	errStr := err.Error()
 	return errors.Is(err, apierr.ErrResourceConflict) ||
 		(strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time"))

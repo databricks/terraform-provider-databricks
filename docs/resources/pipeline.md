@@ -20,7 +20,9 @@ resource "databricks_repo" "ldp_demo" {
 
 resource "databricks_pipeline" "this" {
   name    = "Pipeline Name"
-  storage = "/test/first-pipeline"
+  catalog = "main"
+  schema  = "ldp_demo"
+
   configuration = {
     key1 = "value1"
     key2 = "value2"
@@ -79,7 +81,10 @@ resource "databricks_pipeline" "this" {
 The following arguments are supported:
 
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
+* `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
+* `schema` - (Optional, String, Conflicts with `target`) The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.
 * `storage` - A location on cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
+* `target` - (Optional, String, Conflicts with `schema`) The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
 * `configuration` - An optional list of values to apply to the entire pipeline. Elements must be formatted as key:value pairs.
 * `library` blocks - Specifies pipeline code.
 * `root_path` - An optional string specifying the root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to `sys.path` when executing Python sources during pipeline execution.
@@ -88,9 +93,6 @@ The following arguments are supported:
 * `development` - A flag indicating whether to run the pipeline in development mode. The default value is `false`.
 * `photon` - A flag indicating whether to use Photon engine. The default value is `false`.
 * `serverless` - An optional flag indicating if serverless compute should be used for this Lakeflow Declarative Pipeline.  Requires `catalog` to be set, as it could be used only with Unity Catalog.
-* `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
-* `target` - (Optional, String, Conflicts with `schema`) The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
-* `schema` - (Optional, String, Conflicts with `target`) The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.
 * `edition` - optional name of the [product edition](https://docs.databricks.com/aws/en/dlt/configure-pipeline#choose-a-product-edition). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`.
 * `channel` - optional name of the release channel for Spark version used by Lakeflow Declarative Pipeline.  Supported values are: `CURRENT` (default) and `PREVIEW`.
 * `budget_policy_id` - optional string specifying ID of the budget policy for this Lakeflow Declarative Pipeline.
@@ -119,6 +121,33 @@ Contains one of the blocks:
 * `notebook` - specifies path to a Databricks Notebook to include as source. Actual path is specified as `path` attribute inside the block.
 * `file` - specifies path to a file in Databricks Workspace to include as source. Actual path is specified as `path` attribute inside the block.
 * `glob` - The unified field to include source code. Each entry should have the `include` attribute that can specify a notebook path, a file path, or a folder path that ends `/**` (to include everything from that folder). This field cannot be used together with `notebook` or `file`.
+
+### environment block
+
+Environment specification for the current pipeline used to install dependencies when running on serverless compute.  Consists of the following attributes:
+
+* `dependencies` - (Required) a list of pip dependencies, as supported by the version of pip in this environment. Each dependency is a [pip requirement file line](https://pip.pypa.io/en/stable/reference/requirements-file-format/).  See [API docs](https://docs.databricks.com/api/azure/workspace/pipelines/create#environment-dependencies) for more information.
+
+Example:
+
+```hcl
+resource "databricks_pipeline" "this" {
+  name       = "Serverless demo"
+  serverless = true
+  catalog    = "main"
+  schema     = "ldp_demo"
+
+  # ...
+
+  environment {
+    dependencies = [
+      "foo==0.0.1",
+      "-r /Workspace/Users/user.name/my-pipeline/requirements.txt",
+      "/Volumes/main/default/libs/my_lib.whl"
+    ]
+  }
+}
+```
 
 ### notification block
 

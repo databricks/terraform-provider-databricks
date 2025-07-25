@@ -164,11 +164,11 @@ library {
 }
 ```
 
-Installing Python EGG artifacts. Location can be a workspace file, Unity Catalog volume or cloud object storage location (s3, ADLS, ...)
+Installing Python EGG artifacts (Deprecated)
 
 ```hcl
 library {
-  egg = "/Volume/catalog/schema/volume/foo.egg"
+  egg = "dbfs:/FileStore/foo.egg"
 }
 ```
 

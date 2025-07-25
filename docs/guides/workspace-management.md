@@ -202,7 +202,7 @@ resource "databricks_permissions" "pool" {
 Depending on your preferences and needs, you can
 
 * Create UC volumes using [databricks_volume](../resources/volume.md) resource.
-* Manage JAR, Wheel & Egg libraries through [databricks_workspace_file](../resources/workspace_file.md) or [databricks_file](../resources/file.md)
+* Manage JAR & Wheel libraries through [databricks_workspace_file](../resources/workspace_file.md) or [databricks_file](../resources/file.md)
 
 ## Part 4: Advanced configuration
 

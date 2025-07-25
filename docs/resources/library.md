@@ -100,17 +100,17 @@ resource "databricks_library" "libraries" {
 }
 ```
 
-## Python EGG
+## Python EGG (Deprecated)
 
 ```hcl
-resource "databricks_file" "app" {
+resource "databricks_dbfs_file" "app" {
   source = "${path.module}/foo.egg"
-  path   = "/Volume/catalog/schema/volume/foo.egg"
+  path   = "/FileStore/foo.egg"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  egg        = databricks_file.app.path
+  egg        = databricks_dbfs_file.app.dbfs_path
 }
 ```
 

@@ -1859,10 +1859,16 @@ func (o *ListDatabaseInstancesResponse) SetDatabaseInstances(ctx context.Context
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec struct {
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC catalog for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be a standard catalog where the user has
 	// permissions to create Delta tables.
 	StorageCatalog types.String `tfsdk:"storage_catalog"`
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC schema for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be in the standard catalog where the user
 	// has permissions to create Delta tables.
@@ -2602,15 +2608,24 @@ type SyncedTableSpec struct {
 	// If true, the synced table's logical database and schema resources in PG
 	// will be created if they do not already exist.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
-	// User-specified ID of a pre-existing pipeline to bin pack. This field is
-	// optional, and should be empty if new_pipeline_spec is set. This field
-	// will only be set by the server in response messages if it is specified in
-	// the request. The SyncedTableStatus message will always contain the
-	// effective pipeline ID (either client provided or server generated),
-	// however.
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If existing_pipeline_id is defined, the synced table will be bin packed
+	// into the existing pipeline referenced. This avoids creating a new
+	// pipeline and allows sharing existing compute. In this case, the
+	// scheduling_policy of this synced table must match the scheduling policy
+	// of the existing pipeline.
 	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
-	// Spec of new pipeline. Should be empty if pipeline_id /
-	// existing_pipeline_id is set
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If new_pipeline_spec is defined, a new pipeline is created for this
+	// synced table. The location pointed to is used to store intermediate files
+	// (checkpoints, event logs etc). The caller must have write permissions to
+	// create Delta tables in the specified catalog and schema. Again, note this
+	// requires write permissions, whereas the source table only requires read
+	// permissions.
 	NewPipelineSpec types.Object `tfsdk:"new_pipeline_spec"`
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`

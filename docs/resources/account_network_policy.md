@@ -2,6 +2,8 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policy Resource
+Release Stage: GA
+
 Network policies control which network destinations can be accessed from the Databricks environment. 
 
 Each Databricks account includes a default policy named `default-policy`. This policy is:

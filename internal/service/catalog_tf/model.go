@@ -2319,6 +2319,7 @@ func (o ConnectionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Next ID: 23
 type ConnectionInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -2332,6 +2333,9 @@ type ConnectionInfo struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// The type of credential.
 	CredentialType types.String `tfsdk:"credential_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name"`
 	// Unique identifier of parent metastore.
@@ -2371,6 +2375,7 @@ func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["created_by"] = attrs["created_by"].SetOptional()
 	attrs["credential_type"] = attrs["credential_type"].SetOptional()
+	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -2396,9 +2401,10 @@ func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (a ConnectionInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":           reflect.TypeOf(types.String{}),
-		"properties":        reflect.TypeOf(types.String{}),
-		"provisioning_info": reflect.TypeOf(ProvisioningInfo{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
+		"provisioning_info":    reflect.TypeOf(ProvisioningInfo{}),
 	}
 }
 
@@ -2409,24 +2415,25 @@ func (o ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":           o.Comment,
-			"connection_id":     o.ConnectionId,
-			"connection_type":   o.ConnectionType,
-			"created_at":        o.CreatedAt,
-			"created_by":        o.CreatedBy,
-			"credential_type":   o.CredentialType,
-			"full_name":         o.FullName,
-			"metastore_id":      o.MetastoreId,
-			"name":              o.Name,
-			"options":           o.Options,
-			"owner":             o.Owner,
-			"properties":        o.Properties,
-			"provisioning_info": o.ProvisioningInfo,
-			"read_only":         o.ReadOnly,
-			"securable_type":    o.SecurableType,
-			"updated_at":        o.UpdatedAt,
-			"updated_by":        o.UpdatedBy,
-			"url":               o.Url,
+			"comment":              o.Comment,
+			"connection_id":        o.ConnectionId,
+			"connection_type":      o.ConnectionType,
+			"created_at":           o.CreatedAt,
+			"created_by":           o.CreatedBy,
+			"credential_type":      o.CredentialType,
+			"environment_settings": o.EnvironmentSettings,
+			"full_name":            o.FullName,
+			"metastore_id":         o.MetastoreId,
+			"name":                 o.Name,
+			"options":              o.Options,
+			"owner":                o.Owner,
+			"properties":           o.Properties,
+			"provisioning_info":    o.ProvisioningInfo,
+			"read_only":            o.ReadOnly,
+			"securable_type":       o.SecurableType,
+			"updated_at":           o.UpdatedAt,
+			"updated_by":           o.UpdatedBy,
+			"url":                  o.Url,
 		})
 }
 
@@ -2434,15 +2441,16 @@ func (o ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_id":   types.StringType,
-			"connection_type": types.StringType,
-			"created_at":      types.Int64Type,
-			"created_by":      types.StringType,
-			"credential_type": types.StringType,
-			"full_name":       types.StringType,
-			"metastore_id":    types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_id":        types.StringType,
+			"connection_type":      types.StringType,
+			"created_at":           types.Int64Type,
+			"created_by":           types.StringType,
+			"credential_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"full_name":            types.StringType,
+			"metastore_id":         types.StringType,
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -2458,6 +2466,34 @@ func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 			"url":               types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in ConnectionInfo as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ConnectionInfo) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in ConnectionInfo.
+func (o *ConnectionInfo) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in ConnectionInfo as
@@ -2764,6 +2800,9 @@ type CreateConnection struct {
 	Comment types.String `tfsdk:"comment"`
 	// The type of connection.
 	ConnectionType types.String `tfsdk:"connection_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
@@ -2783,8 +2822,9 @@ type CreateConnection struct {
 // SDK values.
 func (a CreateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.String{}),
-		"properties": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2795,12 +2835,13 @@ func (o CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":         o.Comment,
-			"connection_type": o.ConnectionType,
-			"name":            o.Name,
-			"options":         o.Options,
-			"properties":      o.Properties,
-			"read_only":       o.ReadOnly,
+			"comment":              o.Comment,
+			"connection_type":      o.ConnectionType,
+			"environment_settings": o.EnvironmentSettings,
+			"name":                 o.Name,
+			"options":              o.Options,
+			"properties":           o.Properties,
+			"read_only":            o.ReadOnly,
 		})
 }
 
@@ -2808,9 +2849,10 @@ func (o CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o CreateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_type": types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -2820,6 +2862,34 @@ func (o CreateConnection) Type(ctx context.Context) attr.Type {
 			"read_only": types.BoolType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in CreateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in CreateConnection.
+func (o *CreateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in CreateConnection as
@@ -7403,6 +7473,88 @@ func (o *EncryptionDetails) GetSseEncryptionDetails(ctx context.Context) (SseEnc
 func (o *EncryptionDetails) SetSseEncryptionDetails(ctx context.Context, v SseEncryptionDetails) {
 	vs := v.ToObjectValue(ctx)
 	o.SseEncryptionDetails = vs
+}
+
+type EnvironmentSettings struct {
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+
+	JavaDependencies types.List `tfsdk:"java_dependencies"`
+}
+
+func (newState *EnvironmentSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnvironmentSettings) {
+}
+
+func (newState *EnvironmentSettings) SyncEffectiveFieldsDuringRead(existingState EnvironmentSettings) {
+}
+
+func (c EnvironmentSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnvironmentSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnvironmentSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"java_dependencies": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnvironmentSettings
+// only implements ToObjectValue() and Type().
+func (o EnvironmentSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"environment_version": o.EnvironmentVersion,
+			"java_dependencies":   o.JavaDependencies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EnvironmentSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"environment_version": types.StringType,
+			"java_dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetJavaDependencies returns the value of the JavaDependencies field in EnvironmentSettings as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnvironmentSettings) GetJavaDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.JavaDependencies.IsNull() || o.JavaDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JavaDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJavaDependencies sets the value of the JavaDependencies field in EnvironmentSettings.
+func (o *EnvironmentSettings) SetJavaDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["java_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.JavaDependencies = types.ListValueMust(t, vs)
 }
 
 type ExistsRequest struct {
@@ -12800,11 +12952,15 @@ func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 type ListExternalLineageRelationshipsRequest struct {
 	// The lineage direction to filter on.
 	LineageDirection types.String `tfsdk:"-"`
-	// The object to query external lineage relationship on.
+	// The object to query external lineage relationships for. Since this field
+	// is a query parameter, please flatten the nested fields. For example, if
+	// the object is a table, the query parameter should look like:
+	// `object_info.table.name=main.sales.customers`
 	ObjectInfo types.Object `tfsdk:"-"`
-
+	// Specifies the maximum number of external lineage relationships to return
+	// in a single response. The value must be less than or equal to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -13093,8 +13249,10 @@ func (o *ListExternalLocationsResponse) SetExternalLocations(ctx context.Context
 }
 
 type ListExternalMetadataRequest struct {
+	// Specifies the maximum number of external metadata objects to return in a
+	// single response. The value must be less than or equal to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -20662,6 +20820,9 @@ func (o *UpdateCatalogWorkspaceBindingsResponse) SetWorkspaces(ctx context.Conte
 }
 
 type UpdateConnection struct {
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
 	// New name for the connection.
@@ -20681,7 +20842,8 @@ type UpdateConnection struct {
 // SDK values.
 func (a UpdateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -20692,10 +20854,11 @@ func (o UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     o.Name,
-			"new_name": o.NewName,
-			"options":  o.Options,
-			"owner":    o.Owner,
+			"environment_settings": o.EnvironmentSettings,
+			"name":                 o.Name,
+			"new_name":             o.NewName,
+			"options":              o.Options,
+			"owner":                o.Owner,
 		})
 }
 
@@ -20703,14 +20866,43 @@ func (o UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o UpdateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"new_name": types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
+			"new_name":             types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"owner": types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in UpdateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v []EnvironmentSettings
+	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in UpdateConnection.
+func (o *UpdateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	o.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in UpdateConnection as

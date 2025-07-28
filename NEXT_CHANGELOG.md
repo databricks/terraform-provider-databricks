@@ -13,6 +13,7 @@
 * Corrected accidentally removed `SpID` field from `databricks_service_principal` ([#4868](https://github.com/databricks/terraform-provider-databricks/pull/4868)).
 * Corrected optional fields in `databricks_mws_ncc_private_endpoint_rule`([#4856](https://github.com/databricks/terraform-provider-databricks/pull/4856)).
 * Restricted create or replace statement to managed tables in `databricks_sql_table`([#4874](https://github.com/databricks/terraform-provider-databricks/pull/4874)).
+* Mitigate issue due to internal caching in `databricks_secret_acl` by retrying until ACL are applied with the right permission ([]())
 
 ### Documentation
 

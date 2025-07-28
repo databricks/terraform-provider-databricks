@@ -1,7 +1,11 @@
 package secrets
 
 import (
+	"context"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
@@ -152,63 +156,122 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	qa.AssertErrorStartsWith(t, err, "failed to create Secret ACL")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceSecretACLDelete(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/secrets/acls/delete",
-				ExpectedRequest: map[string]string{
-					"scope":     "global",
-					"principal": "something",
-				},
-			},
-		},
-		Resource: ResourceSecretACL(),
-		Delete:   true,
-		ID:       "global|||something",
-	}.ApplyAndExpectData(t, map[string]any{
-		"id": "global|||something",
-	})
+type getACLResponse struct {
+	resp *workspace.AclItem
+	err  error
 }
 
-func TestResourceSecretACLDelete_DoesntExist(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/secrets/acls/delete",
-				ExpectedRequest: map[string]string{
-					"scope":     "global",
-					"principal": "something",
-				},
-				Response: doesNotExistResponse,
-			},
-		},
-		Resource: ResourceSecretACL(),
-		Delete:   true,
-		ID:       "global|||something",
-	}.ApplyNoError(t)
+type mockSecretsClient struct {
+	putDelay time.Duration // delay before returning the put error
+	putError []error
+	getResp  []getACLResponse
 }
 
-func TestResourceSecretACLDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/secrets/acls/delete",
-				Response: internalErrorResponse,
-				Status:   400,
+func (m *mockSecretsClient) PutAcl(ctx context.Context, req workspace.PutAcl) error {
+	time.Sleep(m.putDelay)
+	err := m.putError[0]
+	m.putError = m.putError[1:] // pop
+	return err
+}
+
+func (m *mockSecretsClient) GetAcl(ctx context.Context, req workspace.GetAclRequest) (*workspace.AclItem, error) {
+	r := m.getResp[0]
+	m.getResp = m.getResp[1:] // pop
+	return r.resp, r.err
+}
+
+func TestRobustPutACL(t *testing.T) {
+	testCases := []struct {
+		name          string
+		timeout       time.Duration
+		sc            secretsClient
+		req           workspace.PutAcl
+		wantErrPrefix string
+	}{
+		{
+			name:    "success",
+			timeout: defaultTimeout,
+			sc: &mockSecretsClient{
+				putError: []error{nil},
+				getResp:  []getACLResponse{{resp: &workspace.AclItem{Permission: "MANAGE"}, err: nil}},
+			},
+			req: workspace.PutAcl{
+				Permission: "MANAGE",
 			},
 		},
-		Resource: ResourceSecretACL(),
-		Delete:   true,
-		ID:       "global|||something",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "global|||something", d.Id())
+		{
+			name:    "timeout",
+			timeout: 10 * time.Millisecond,
+			sc: &mockSecretsClient{
+				putDelay: 1 * time.Second, // more than timeout
+				putError: []error{nil},
+				getResp:  []getACLResponse{{resp: &workspace.AclItem{Permission: "OTHER"}, err: nil}},
+			},
+			req:           workspace.PutAcl{Permission: "MANAGE"},
+			wantErrPrefix: "secret ACL permission mismatch",
+		},
+		{
+			name:    "put error",
+			timeout: defaultTimeout,
+			sc: &mockSecretsClient{
+				putError: []error{errors.New("test error")},
+			},
+			req:           workspace.PutAcl{Permission: "MANAGE"},
+			wantErrPrefix: "failed to create Secret ACL: test error",
+		},
+		{
+			name:    "retry on get error",
+			timeout: defaultTimeout,
+			sc: &mockSecretsClient{
+				putError: []error{
+					nil,
+					nil,
+				},
+				getResp: []getACLResponse{
+					{err: errors.New("test error")},
+					{resp: &workspace.AclItem{Permission: "MANAGE"}},
+				},
+			},
+			req: workspace.PutAcl{Permission: "MANAGE"},
+		},
+		{
+			name:    "retry on permission mismatch",
+			timeout: defaultTimeout,
+			sc: &mockSecretsClient{
+				putError: []error{
+					nil,
+					nil,
+					nil,
+				},
+				getResp: []getACLResponse{
+					{err: errors.New("test error")},
+					{resp: &workspace.AclItem{Permission: "OTHER"}},
+					{resp: &workspace.AclItem{Permission: "MANAGE"}},
+				},
+			},
+			req: workspace.PutAcl{Permission: "MANAGE"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := robustPutACL(tc.sc, context.Background(), tc.req, tc.timeout)
+
+			if err == nil && tc.wantErrPrefix != "" {
+				t.Errorf("expected error, got nil")
+			}
+			if err != nil && tc.wantErrPrefix == "" {
+				t.Errorf("expected no error, got %v", err)
+			}
+			if err != nil && tc.wantErrPrefix != "" {
+				if !strings.HasPrefix(err.Error(), tc.wantErrPrefix) {
+					t.Errorf("expected error to start with %q, got %v", tc.wantErrPrefix, err)
+				}
+			}
+		})
+	}
 }

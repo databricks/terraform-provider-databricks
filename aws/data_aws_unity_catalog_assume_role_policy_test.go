@@ -206,7 +206,7 @@ func TestDataAwsUnityCatalogAssumeRolePolicyGovDoDWithoutUcArn(t *testing.T) {
                 },
                 "StringEquals": {
                   "sts:ExternalId": "12345"
-                }                
+                }
               }
             }
           ]

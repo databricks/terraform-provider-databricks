@@ -57,7 +57,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 				that      = "this"
 				something = "else2"
 			}
-			
+
 			column {
 				name      = "id"
 				type      = "int"
@@ -119,7 +119,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 				that      = "this"
 				something = "else2"
 			}
-			
+
 			column {
 				name      = "id"
 				type      = "bigint"
@@ -144,7 +144,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			}
 			comment = "Managed by TF"
 		}
-		
+
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
@@ -152,7 +152,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			comment         = "Managed by TF"
 			force_destroy   = true
 		}
-				
+
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
@@ -213,14 +213,14 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 				type      = "string"
 			}
 		}
-		
+
 		resource "databricks_sql_table" "view" {
 			name               = "bar_view"
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "VIEW"
 			comment 		   = "this view is managed by terraform..."
-			view_definition    = format("SELECT id, name FROM %s", databricks_sql_table.this.id)
+			view_definition    = format("SELECT \n\n\n\tid, \tname FROM %s", databricks_sql_table.this.id)
 			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 			column {
@@ -230,7 +230,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			column {
 				name      = "name"
 				comment   = "view column comment"
-			}			
+			}
 		}`,
 	})
 }
@@ -256,7 +256,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 			options         = {
 				this      = "blue"
 				that      = "green"
-			}			
+			}
 			column {
 				name      = "id"
 				type      = "int"
@@ -291,7 +291,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			options         = {
 				this      = "blue"
 				that      = "green"
-			}			
+			}
 			column {
 				name      = "id"
 				type      = "int"
@@ -332,7 +332,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 				name      = "name"
 				type      = "varchar(64)"
 			}
-			cluster_keys = ["id", "name"]			
+			cluster_keys = ["id", "name"]
 			comment = "this table is managed by terraform..."
 		}`,
 	}, acceptance.Step{
@@ -364,7 +364,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 				name      = "name"
 				type      = "varchar(64)"
 			}
-			cluster_keys = ["auto"]			
+			cluster_keys = ["auto"]
 			comment = "this table is managed by terraform..."
 		}`,
 	})

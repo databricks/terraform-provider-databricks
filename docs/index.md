@@ -35,7 +35,7 @@ Security
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
-* Manage data object access control lists with [databricks_sql_permissions](resources/sql_permissions.md)
+* Manage Unity Catalog permissions with [databricks_grant](resources/databricks_grant.md)
 * Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
 
 [Databricks workspace on AWS](../docs/guides/aws-workspace.md)
@@ -180,21 +180,21 @@ These can be declared in the provider block or set in the environment variables 
 Workspace level provider:
 ```hcl
 provider "databricks" {
-  alias       = "workspace"
-  auth_type   = "github-oidc" 
-  host        = var.workspace_host
-  client_id   = var.client_id
+  alias     = "workspace"
+  auth_type = "github-oidc"
+  host      = var.workspace_host
+  client_id = var.client_id
 }
 ```
 
 Configure the account-level provider as follows. Make sure to configure the account host [as described above](#host-argument).
 ```hcl
 provider "databricks" {
-  alias       = "account"
-  auth_type   = "github-oidc" 
-  host        = var.account_host
-  client_id   = var.client_id
-  account_id  = var.account_id
+  alias      = "account"
+  auth_type  = "github-oidc"
+  host       = var.account_host
+  client_id  = var.client_id
+  account_id = var.account_id
 }
 ```
 
@@ -282,21 +282,21 @@ To create resources at both the account and workspace levels, you can create two
 Workspace level provider:
 ```hcl
 provider "databricks" {
-  alias       = "workspace"
-  auth_type   = "env-oidc"
-  host        = var.workspace_host
-  client_id   = var.client_id
+  alias     = "workspace"
+  auth_type = "env-oidc"
+  host      = var.workspace_host
+  client_id = var.client_id
 }
 ```
 
 Account level provider:
 ```hcl
 provider "databricks" {
-  alias       = "account"
-  auth_type   = "env-oidc"
-  host        = var.account_host
-  client_id   = var.client_id
-  account_id  = var.account_id
+  alias      = "account"
+  auth_type  = "env-oidc"
+  host       = var.account_host
+  client_id  = var.client_id
+  account_id = var.account_id
 }
 ```
 

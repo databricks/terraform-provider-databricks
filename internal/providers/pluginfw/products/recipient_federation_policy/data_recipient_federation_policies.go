@@ -20,10 +20,10 @@ import (
 
 const dataSourcesName = "recipient_federation_policies"
 
-var _ datasource.DataSourceWithConfigure = &RecipientFederationPoliciesDataSource{}
+var _ datasource.DataSourceWithConfigure = &FederationPoliciesDataSource{}
 
-func DataSourceRecipientFederationPolicies() datasource.DataSource {
-	return &RecipientFederationPoliciesDataSource{}
+func DataSourceFederationPolicies() datasource.DataSource {
+	return &FederationPoliciesDataSource{}
 }
 
 type FederationPoliciesList struct {
@@ -42,15 +42,15 @@ func (FederationPoliciesList) GetComplexFieldTypes(context.Context) map[string]r
 	}
 }
 
-type RecipientFederationPoliciesDataSource struct {
+type FederationPoliciesDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *RecipientFederationPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourcesName)
 }
 
-func (r *RecipientFederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesList{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
@@ -59,11 +59,11 @@ func (r *RecipientFederationPoliciesDataSource) Schema(ctx context.Context, req 
 	}
 }
 
-func (r *RecipientFederationPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *FederationPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *RecipientFederationPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -90,17 +90,17 @@ func (r *RecipientFederationPoliciesDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	var policies = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var federation_policy sharing_tf.FederationPolicy
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &federation_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		policies = append(policies, federation_policy.ToObjectValue(ctx))
+		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
 	var newState FederationPoliciesList
-	newState.RecipientFederationPolicies = types.ListValueMust(sharing_tf.FederationPolicy{}.Type(ctx), policies)
+	newState.RecipientFederationPolicies = types.ListValueMust(sharing_tf.FederationPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

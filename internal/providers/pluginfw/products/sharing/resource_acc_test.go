@@ -31,7 +31,7 @@ const preTestTemplate = `
 		name = "bar"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
-		
+
 		column {
 			name      = "id"
 			position  = 0
@@ -47,7 +47,7 @@ const preTestTemplate = `
 		name = "bar_2"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
-		
+
 		column {
 			name      = "id"
 			position  = 0
@@ -63,7 +63,7 @@ const preTestTemplate = `
 		name = "bar_3"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
-		
+
 		column {
 			name      = "id"
 			position  = 0
@@ -90,7 +90,7 @@ const preTestTemplateUpdate = `
 
 func TestUcAccCreateShare(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplate + `		
+		Template: preTestTemplate + `
 		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
@@ -104,7 +104,7 @@ func TestUcAccCreateShare(t *testing.T) {
 				cdf_enabled = false
 				comment = "c"
 				data_object_type = "TABLE"
-			}					
+			}
 		}
 
 		resource "databricks_recipient" "db2open" {
@@ -124,7 +124,7 @@ func TestUcAccCreateShare(t *testing.T) {
 				principal  = databricks_recipient.db2open.name
 				privileges = ["SELECT"]
 			}
-		}			
+		}
 		`,
 	})
 }

@@ -223,15 +223,15 @@ resource "databricks_permissions" "job_usage" {
 }
 ```
 
-## Delta Live Tables usage
+## Lakeflow Declarative Pipelines usage
 
-There are four assignable [permission levels](https://docs.databricks.com/security/access-control/dlt-acl.html#delta-live-tables-permissions) for [databricks_pipeline](pipeline.md): `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE`, and `IS_OWNER`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
+There are four assignable [permission levels](https://docs.databricks.com/aws/en/security/auth/access-control#lakeflow-declarative-pipelines-acls) for [databricks_pipeline](pipeline.md): `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE`, and `IS_OWNER`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
 
-- The creator of a DLT Pipeline has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a pipeline would revert ownership to the creator.
-- A DLT pipeline must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the pipeline. Nothing would change, per se, if the pipeline was created through Terraform.
-- A DLT pipeline cannot have a group as an owner.
-- DLT Pipelines triggered through _Start_ assume the permissions of the pipeline owner and not the user, and service principal who issued Run Now.
-- Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
+- The creator of a Lakeflow Declarative Pipeline has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a pipeline would revert ownership to the creator.
+- A Lakeflow Declarative Pipeline must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the pipeline. Nothing would change, per se, if the pipeline was created through Terraform.
+- A Lakeflow Declarative Pipeline cannot have a group as an owner.
+- Lakeflow Declarative Pipelines triggered through _Start_ assume the permissions of the pipeline owner and not the user, and service principal who issued Run Now.
+- Read [main documentation](https://docs.databricks.com/aws/en/security/auth/access-control#lakeflow-declarative-pipelines-acls) for additional detail.
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -240,7 +240,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_notebook" "dlt_demo" {
+resource "databricks_notebook" "ldp_demo" {
   content_base64 = base64encode(<<-EOT
     import dlt
     json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json"
@@ -252,11 +252,11 @@ resource "databricks_notebook" "dlt_demo" {
     EOT
   )
   language = "PYTHON"
-  path     = "${data.databricks_current_user.me.home}/DLT_Demo"
+  path     = "${data.databricks_current_user.me.home}/ldp_demo"
 }
 
 resource "databricks_pipeline" "this" {
-  name    = "DLT Demo Pipeline (${data.databricks_current_user.me.alphanumeric})"
+  name    = "LDP Demo Pipeline (${data.databricks_current_user.me.alphanumeric})"
   storage = "/test/tf-pipeline"
   configuration = {
     key1 = "value1"
@@ -265,7 +265,7 @@ resource "databricks_pipeline" "this" {
 
   library {
     notebook {
-      path = databricks_notebook.dlt_demo.id
+      path = databricks_notebook.ldp_demo.id
     }
   }
 
@@ -276,7 +276,7 @@ resource "databricks_pipeline" "this" {
   }
 }
 
-resource "databricks_permissions" "dlt_usage" {
+resource "databricks_permissions" "ldp_usage" {
   pipeline_id = databricks_pipeline.this.id
 
   access_control {
@@ -525,7 +525,7 @@ data "databricks_current_user" "me" {}
 
 resource "databricks_mlflow_experiment" "this" {
   name              = "${data.databricks_current_user.me.home}/Sample"
-  artifact_location = "dbfs:/tmp/my-experiment"
+  artifact_location = "s3://bucket/my-experiment"
   description       = "My MLflow experiment description"
 }
 
@@ -863,7 +863,7 @@ resource "databricks_permissions" "query_usage" {
 
 ## SQL Alert (AlertV2) usage
 
-[Alert V2](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) which is the new version of SQL Alert have 4 possible permission levels: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. 
+[Alert V2](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) which is the new version of SQL Alert have 4 possible permission levels: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -889,7 +889,7 @@ resource "databricks_permissions" "app_usage" {
 }
 ```
 
-## SQL Alert (legacy) usage 
+## SQL Alert (legacy) usage
 
 [SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 

@@ -171,6 +171,275 @@ func (o AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CancelPublishedQueryExecutionRequest struct {
+	DashboardName types.String `tfsdk:"-"`
+
+	DashboardRevisionId types.String `tfsdk:"-"`
+	// Example:
+	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
+	Tokens types.List `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelPublishedQueryExecutionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelPublishedQueryExecutionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tokens": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelPublishedQueryExecutionRequest
+// only implements ToObjectValue() and Type().
+func (o CancelPublishedQueryExecutionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_name":        o.DashboardName,
+			"dashboard_revision_id": o.DashboardRevisionId,
+			"tokens":                o.Tokens,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CancelPublishedQueryExecutionRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_name":        types.StringType,
+			"dashboard_revision_id": types.StringType,
+			"tokens": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetTokens returns the value of the Tokens field in CancelPublishedQueryExecutionRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CancelPublishedQueryExecutionRequest) GetTokens(ctx context.Context) ([]types.String, bool) {
+	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tokens.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokens sets the value of the Tokens field in CancelPublishedQueryExecutionRequest.
+func (o *CancelPublishedQueryExecutionRequest) SetTokens(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tokens = types.ListValueMust(t, vs)
+}
+
+type CancelQueryExecutionResponse struct {
+	Status types.List `tfsdk:"status"`
+}
+
+func (newState *CancelQueryExecutionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelQueryExecutionResponse) {
+}
+
+func (newState *CancelQueryExecutionResponse) SyncEffectiveFieldsDuringRead(existingState CancelQueryExecutionResponse) {
+}
+
+func (c CancelQueryExecutionResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelQueryExecutionResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelQueryExecutionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"status": reflect.TypeOf(CancelQueryExecutionResponseStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelQueryExecutionResponse
+// only implements ToObjectValue() and Type().
+func (o CancelQueryExecutionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"status": o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CancelQueryExecutionResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"status": basetypes.ListType{
+				ElemType: CancelQueryExecutionResponseStatus{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetStatus returns the value of the Status field in CancelQueryExecutionResponse as
+// a slice of CancelQueryExecutionResponseStatus values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CancelQueryExecutionResponse) GetStatus(ctx context.Context) ([]CancelQueryExecutionResponseStatus, bool) {
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return nil, false
+	}
+	var v []CancelQueryExecutionResponseStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in CancelQueryExecutionResponse.
+func (o *CancelQueryExecutionResponse) SetStatus(ctx context.Context, v []CancelQueryExecutionResponseStatus) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Status = types.ListValueMust(t, vs)
+}
+
+type CancelQueryExecutionResponseStatus struct {
+	// The token to poll for result asynchronously Example:
+	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
+	DataToken types.String `tfsdk:"data_token"`
+
+	Pending types.Object `tfsdk:"pending"`
+
+	Success types.Object `tfsdk:"success"`
+}
+
+func (newState *CancelQueryExecutionResponseStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelQueryExecutionResponseStatus) {
+}
+
+func (newState *CancelQueryExecutionResponseStatus) SyncEffectiveFieldsDuringRead(existingState CancelQueryExecutionResponseStatus) {
+}
+
+func (c CancelQueryExecutionResponseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_token"] = attrs["data_token"].SetRequired()
+	attrs["pending"] = attrs["pending"].SetOptional()
+	attrs["success"] = attrs["success"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelQueryExecutionResponseStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelQueryExecutionResponseStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"pending": reflect.TypeOf(Empty{}),
+		"success": reflect.TypeOf(Empty{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelQueryExecutionResponseStatus
+// only implements ToObjectValue() and Type().
+func (o CancelQueryExecutionResponseStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_token": o.DataToken,
+			"pending":    o.Pending,
+			"success":    o.Success,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CancelQueryExecutionResponseStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_token": types.StringType,
+			"pending":    Empty{}.Type(ctx),
+			"success":    Empty{}.Type(ctx),
+		},
+	}
+}
+
+// GetPending returns the value of the Pending field in CancelQueryExecutionResponseStatus as
+// a Empty value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CancelQueryExecutionResponseStatus) GetPending(ctx context.Context) (Empty, bool) {
+	var e Empty
+	if o.Pending.IsNull() || o.Pending.IsUnknown() {
+		return e, false
+	}
+	var v []Empty
+	d := o.Pending.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPending sets the value of the Pending field in CancelQueryExecutionResponseStatus.
+func (o *CancelQueryExecutionResponseStatus) SetPending(ctx context.Context, v Empty) {
+	vs := v.ToObjectValue(ctx)
+	o.Pending = vs
+}
+
+// GetSuccess returns the value of the Success field in CancelQueryExecutionResponseStatus as
+// a Empty value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CancelQueryExecutionResponseStatus) GetSuccess(ctx context.Context) (Empty, bool) {
+	var e Empty
+	if o.Success.IsNull() || o.Success.IsUnknown() {
+		return e, false
+	}
+	var v []Empty
+	d := o.Success.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSuccess sets the value of the Success field in CancelQueryExecutionResponseStatus.
+func (o *CancelQueryExecutionResponseStatus) SetSuccess(ctx context.Context, v Empty) {
+	vs := v.ToObjectValue(ctx)
+	o.Success = vs
+}
+
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 }
@@ -640,6 +909,141 @@ func (o DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Represents an empty message, similar to google.protobuf.Empty, which is not
+// available in the firm right now.
+type Empty struct {
+}
+
+func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
+}
+
+func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
+}
+
+func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Empty.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Empty) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Empty
+// only implements ToObjectValue() and Type().
+func (o Empty) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Empty) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Execute query request for published Dashboards. Since published dashboards
+// have the option of running as the publisher, the datasets, warehouse_id are
+// excluded from the request and instead read from the source (lakeview-config)
+// via the additional parameters (dashboardName and dashboardRevisionId)
+type ExecutePublishedDashboardQueryRequest struct {
+	// Dashboard name and revision_id is required to retrieve
+	// PublishedDatasetDataModel which contains the list of datasets,
+	// warehouse_id, and embedded_credentials
+	DashboardName types.String `tfsdk:"dashboard_name"`
+
+	DashboardRevisionId types.String `tfsdk:"dashboard_revision_id"`
+	// A dashboard schedule can override the warehouse used as compute for
+	// processing the published dashboard queries
+	OverrideWarehouseId types.String `tfsdk:"override_warehouse_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecutePublishedDashboardQueryRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExecutePublishedDashboardQueryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExecutePublishedDashboardQueryRequest
+// only implements ToObjectValue() and Type().
+func (o ExecutePublishedDashboardQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_name":        o.DashboardName,
+			"dashboard_revision_id": o.DashboardRevisionId,
+			"override_warehouse_id": o.OverrideWarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExecutePublishedDashboardQueryRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_name":        types.StringType,
+			"dashboard_revision_id": types.StringType,
+			"override_warehouse_id": types.StringType,
+		},
+	}
+}
+
+type ExecuteQueryResponse struct {
+}
+
+func (newState *ExecuteQueryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExecuteQueryResponse) {
+}
+
+func (newState *ExecuteQueryResponse) SyncEffectiveFieldsDuringRead(existingState ExecuteQueryResponse) {
+}
+
+func (c ExecuteQueryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecuteQueryResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExecuteQueryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExecuteQueryResponse
+// only implements ToObjectValue() and Type().
+func (o ExecuteQueryResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExecuteQueryResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Genie AI Response
 type GenieAttachment struct {
 	// Attachment ID
@@ -1069,6 +1473,103 @@ func (o GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieGenerateDownloadFullQueryResultRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGenerateDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultRequest
+// only implements ToObjectValue() and Type().
+func (o GenieGenerateDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":   o.AttachmentId,
+			"conversation_id": o.ConversationId,
+			"message_id":      o.MessageId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGenerateDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":   types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieGenerateDownloadFullQueryResultResponse struct {
+	// Download ID. Use this ID to track the download request in subsequent
+	// polling calls
+	DownloadId types.String `tfsdk:"download_id"`
+}
+
+func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGenerateDownloadFullQueryResultResponse) {
+}
+
+func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGenerateDownloadFullQueryResultResponse) {
+}
+
+func (c GenieGenerateDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["download_id"] = attrs["download_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGenerateDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultResponse
+// only implements ToObjectValue() and Type().
+func (o GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"download_id": o.DownloadId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"download_id": types.StringType,
+		},
+	}
+}
+
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1113,6 +1614,138 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 			"space_id":        types.StringType,
 		},
 	}
+}
+
+type GenieGetDownloadFullQueryResultRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Download ID. This ID is provided by the [Generate Download
+	// endpoint](:method:genie/generateDownloadFullQueryResult)
+	DownloadId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultRequest
+// only implements ToObjectValue() and Type().
+func (o GenieGetDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":   o.AttachmentId,
+			"conversation_id": o.ConversationId,
+			"download_id":     o.DownloadId,
+			"message_id":      o.MessageId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":   types.StringType,
+			"conversation_id": types.StringType,
+			"download_id":     types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieGetDownloadFullQueryResultResponse struct {
+	// SQL Statement Execution response. See [Get status, manifest, and result
+	// first chunk](:method:statementexecution/getstatement) for more details.
+	StatementResponse types.Object `tfsdk:"statement_response"`
+}
+
+func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetDownloadFullQueryResultResponse) {
+}
+
+func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetDownloadFullQueryResultResponse) {
+}
+
+func (c GenieGetDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_response"] = attrs["statement_response"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultResponse
+// only implements ToObjectValue() and Type().
+func (o GenieGetDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"statement_response": o.StatementResponse,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
+		},
+	}
+}
+
+// GetStatementResponse returns the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse as
+// a sql_tf.StatementResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieGetDownloadFullQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
+	var e sql_tf.StatementResponse
+	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
+		return e, false
+	}
+	var v []sql_tf.StatementResponse
+	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatementResponse sets the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse.
+func (o *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
+	vs := v.ToObjectValue(ctx)
+	o.StatementResponse = vs
 }
 
 type GenieGetMessageAttachmentQueryResultRequest struct {
@@ -2268,6 +2901,83 @@ func (o GetDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetPublishedDashboardEmbeddedRequest struct {
+	// UUID identifying the published dashboard.
+	DashboardId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardEmbeddedRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPublishedDashboardEmbeddedRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardEmbeddedRequest
+// only implements ToObjectValue() and Type().
+func (o GetPublishedDashboardEmbeddedRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_id": o.DashboardId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPublishedDashboardEmbeddedRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_id": types.StringType,
+		},
+	}
+}
+
+type GetPublishedDashboardEmbeddedResponse struct {
+}
+
+func (newState *GetPublishedDashboardEmbeddedResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardEmbeddedResponse) {
+}
+
+func (newState *GetPublishedDashboardEmbeddedResponse) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardEmbeddedResponse) {
+}
+
+func (c GetPublishedDashboardEmbeddedResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardEmbeddedResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPublishedDashboardEmbeddedResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardEmbeddedResponse
+// only implements ToObjectValue() and Type().
+func (o GetPublishedDashboardEmbeddedResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPublishedDashboardEmbeddedResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -3024,6 +3734,283 @@ func (o MigrateDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type PendingStatus struct {
+	// The token to poll for result asynchronously Example:
+	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
+	DataToken types.String `tfsdk:"data_token"`
+}
+
+func (newState *PendingStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan PendingStatus) {
+}
+
+func (newState *PendingStatus) SyncEffectiveFieldsDuringRead(existingState PendingStatus) {
+}
+
+func (c PendingStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_token"] = attrs["data_token"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PendingStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PendingStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PendingStatus
+// only implements ToObjectValue() and Type().
+func (o PendingStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_token": o.DataToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PendingStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_token": types.StringType,
+		},
+	}
+}
+
+type PollPublishedQueryStatusRequest struct {
+	DashboardName types.String `tfsdk:"-"`
+
+	DashboardRevisionId types.String `tfsdk:"-"`
+	// Example:
+	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
+	Tokens types.List `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollPublishedQueryStatusRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PollPublishedQueryStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tokens": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PollPublishedQueryStatusRequest
+// only implements ToObjectValue() and Type().
+func (o PollPublishedQueryStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_name":        o.DashboardName,
+			"dashboard_revision_id": o.DashboardRevisionId,
+			"tokens":                o.Tokens,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PollPublishedQueryStatusRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_name":        types.StringType,
+			"dashboard_revision_id": types.StringType,
+			"tokens": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetTokens returns the value of the Tokens field in PollPublishedQueryStatusRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PollPublishedQueryStatusRequest) GetTokens(ctx context.Context) ([]types.String, bool) {
+	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tokens.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokens sets the value of the Tokens field in PollPublishedQueryStatusRequest.
+func (o *PollPublishedQueryStatusRequest) SetTokens(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tokens = types.ListValueMust(t, vs)
+}
+
+type PollQueryStatusResponse struct {
+	Data types.List `tfsdk:"data"`
+}
+
+func (newState *PollQueryStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PollQueryStatusResponse) {
+}
+
+func (newState *PollQueryStatusResponse) SyncEffectiveFieldsDuringRead(existingState PollQueryStatusResponse) {
+}
+
+func (c PollQueryStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollQueryStatusResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PollQueryStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data": reflect.TypeOf(PollQueryStatusResponseData{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PollQueryStatusResponse
+// only implements ToObjectValue() and Type().
+func (o PollQueryStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data": o.Data,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PollQueryStatusResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data": basetypes.ListType{
+				ElemType: PollQueryStatusResponseData{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetData returns the value of the Data field in PollQueryStatusResponse as
+// a slice of PollQueryStatusResponseData values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PollQueryStatusResponse) GetData(ctx context.Context) ([]PollQueryStatusResponseData, bool) {
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return nil, false
+	}
+	var v []PollQueryStatusResponseData
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetData sets the value of the Data field in PollQueryStatusResponse.
+func (o *PollQueryStatusResponse) SetData(ctx context.Context, v []PollQueryStatusResponseData) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Data = types.ListValueMust(t, vs)
+}
+
+type PollQueryStatusResponseData struct {
+	Status types.Object `tfsdk:"status"`
+}
+
+func (newState *PollQueryStatusResponseData) SyncEffectiveFieldsDuringCreateOrUpdate(plan PollQueryStatusResponseData) {
+}
+
+func (newState *PollQueryStatusResponseData) SyncEffectiveFieldsDuringRead(existingState PollQueryStatusResponseData) {
+}
+
+func (c PollQueryStatusResponseData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["status"] = attrs["status"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollQueryStatusResponseData.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PollQueryStatusResponseData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"status": reflect.TypeOf(QueryResponseStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PollQueryStatusResponseData
+// only implements ToObjectValue() and Type().
+func (o PollQueryStatusResponseData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"status": o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PollQueryStatusResponseData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"status": QueryResponseStatus{}.Type(ctx),
+		},
+	}
+}
+
+// GetStatus returns the value of the Status field in PollQueryStatusResponseData as
+// a QueryResponseStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PollQueryStatusResponseData) GetStatus(ctx context.Context) (QueryResponseStatus, bool) {
+	var e QueryResponseStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []QueryResponseStatus
+	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in PollQueryStatusResponseData.
+func (o *PollQueryStatusResponseData) SetStatus(ctx context.Context, v QueryResponseStatus) {
+	vs := v.ToObjectValue(ctx)
+	o.Status = vs
+}
+
 type PublishRequest struct {
 	// UUID identifying the dashboard to be published.
 	DashboardId types.String `tfsdk:"-"`
@@ -3132,6 +4119,193 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 			"warehouse_id":         types.StringType,
 		},
 	}
+}
+
+type QueryResponseStatus struct {
+	Canceled types.Object `tfsdk:"canceled"`
+
+	Closed types.Object `tfsdk:"closed"`
+
+	Pending types.Object `tfsdk:"pending"`
+	// The statement id in format(01eef5da-c56e-1f36-bafa-21906587d6ba) The
+	// statement_id should be identical to data_token in SuccessStatus and
+	// PendingStatus. This field is created for audit logging purpose to record
+	// the statement_id of all QueryResponseStatus.
+	StatementId types.String `tfsdk:"statement_id"`
+
+	Success types.Object `tfsdk:"success"`
+}
+
+func (newState *QueryResponseStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryResponseStatus) {
+}
+
+func (newState *QueryResponseStatus) SyncEffectiveFieldsDuringRead(existingState QueryResponseStatus) {
+}
+
+func (c QueryResponseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["canceled"] = attrs["canceled"].SetOptional()
+	attrs["closed"] = attrs["closed"].SetOptional()
+	attrs["pending"] = attrs["pending"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["success"] = attrs["success"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryResponseStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QueryResponseStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"canceled": reflect.TypeOf(Empty{}),
+		"closed":   reflect.TypeOf(Empty{}),
+		"pending":  reflect.TypeOf(PendingStatus{}),
+		"success":  reflect.TypeOf(SuccessStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QueryResponseStatus
+// only implements ToObjectValue() and Type().
+func (o QueryResponseStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"canceled":     o.Canceled,
+			"closed":       o.Closed,
+			"pending":      o.Pending,
+			"statement_id": o.StatementId,
+			"success":      o.Success,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o QueryResponseStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"canceled":     Empty{}.Type(ctx),
+			"closed":       Empty{}.Type(ctx),
+			"pending":      PendingStatus{}.Type(ctx),
+			"statement_id": types.StringType,
+			"success":      SuccessStatus{}.Type(ctx),
+		},
+	}
+}
+
+// GetCanceled returns the value of the Canceled field in QueryResponseStatus as
+// a Empty value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryResponseStatus) GetCanceled(ctx context.Context) (Empty, bool) {
+	var e Empty
+	if o.Canceled.IsNull() || o.Canceled.IsUnknown() {
+		return e, false
+	}
+	var v []Empty
+	d := o.Canceled.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCanceled sets the value of the Canceled field in QueryResponseStatus.
+func (o *QueryResponseStatus) SetCanceled(ctx context.Context, v Empty) {
+	vs := v.ToObjectValue(ctx)
+	o.Canceled = vs
+}
+
+// GetClosed returns the value of the Closed field in QueryResponseStatus as
+// a Empty value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryResponseStatus) GetClosed(ctx context.Context) (Empty, bool) {
+	var e Empty
+	if o.Closed.IsNull() || o.Closed.IsUnknown() {
+		return e, false
+	}
+	var v []Empty
+	d := o.Closed.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClosed sets the value of the Closed field in QueryResponseStatus.
+func (o *QueryResponseStatus) SetClosed(ctx context.Context, v Empty) {
+	vs := v.ToObjectValue(ctx)
+	o.Closed = vs
+}
+
+// GetPending returns the value of the Pending field in QueryResponseStatus as
+// a PendingStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryResponseStatus) GetPending(ctx context.Context) (PendingStatus, bool) {
+	var e PendingStatus
+	if o.Pending.IsNull() || o.Pending.IsUnknown() {
+		return e, false
+	}
+	var v []PendingStatus
+	d := o.Pending.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPending sets the value of the Pending field in QueryResponseStatus.
+func (o *QueryResponseStatus) SetPending(ctx context.Context, v PendingStatus) {
+	vs := v.ToObjectValue(ctx)
+	o.Pending = vs
+}
+
+// GetSuccess returns the value of the Success field in QueryResponseStatus as
+// a SuccessStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryResponseStatus) GetSuccess(ctx context.Context) (SuccessStatus, bool) {
+	var e SuccessStatus
+	if o.Success.IsNull() || o.Success.IsUnknown() {
+		return e, false
+	}
+	var v []SuccessStatus
+	d := o.Success.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSuccess sets the value of the Success field in QueryResponseStatus.
+func (o *QueryResponseStatus) SetSuccess(ctx context.Context, v SuccessStatus) {
+	vs := v.ToObjectValue(ctx)
+	o.Success = vs
 }
 
 type Result struct {
@@ -3639,6 +4813,60 @@ func (o SubscriptionSubscriberUser) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"user_id": types.Int64Type,
+		},
+	}
+}
+
+type SuccessStatus struct {
+	// The token to poll for result asynchronously Example:
+	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
+	DataToken types.String `tfsdk:"data_token"`
+	// Whether the query result is truncated (either by byte limit or row limit)
+	Truncated types.Bool `tfsdk:"truncated"`
+}
+
+func (newState *SuccessStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan SuccessStatus) {
+}
+
+func (newState *SuccessStatus) SyncEffectiveFieldsDuringRead(existingState SuccessStatus) {
+}
+
+func (c SuccessStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_token"] = attrs["data_token"].SetRequired()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SuccessStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SuccessStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SuccessStatus
+// only implements ToObjectValue() and Type().
+func (o SuccessStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_token": o.DataToken,
+			"truncated":  o.Truncated,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SuccessStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_token": types.StringType,
+			"truncated":  types.BoolType,
 		},
 	}
 }

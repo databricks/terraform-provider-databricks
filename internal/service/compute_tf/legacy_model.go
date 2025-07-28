@@ -5589,6 +5589,76 @@ func (o CreateContext_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateDefaultBaseEnvironmentRequest_SdkV2 struct {
+	DefaultBaseEnvironment types.List `tfsdk:"default_base_environment"`
+	// A unique identifier for this request. A random UUID is recommended. This
+	// request is only idempotent if a `request_id` is provided.
+	RequestId types.String `tfsdk:"request_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateDefaultBaseEnvironmentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDefaultBaseEnvironmentRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateDefaultBaseEnvironmentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"request_id":               o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateDefaultBaseEnvironmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": basetypes.ListType{
+				ElemType: DefaultBaseEnvironment_SdkV2{}.Type(ctx),
+			},
+			"request_id": types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest_SdkV2 as
+// a DefaultBaseEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateDefaultBaseEnvironmentRequest_SdkV2) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment_SdkV2, bool) {
+	var e DefaultBaseEnvironment_SdkV2
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment_SdkV2
+	d := o.DefaultBaseEnvironment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest_SdkV2.
+func (o *CreateDefaultBaseEnvironmentRequest_SdkV2) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environment"]
+	o.DefaultBaseEnvironment = types.ListValueMust(t, vs)
+}
+
 type CreateInstancePool_SdkV2 struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
@@ -5605,6 +5675,10 @@ type CreateInstancePool_SdkV2 struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.List `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -5631,6 +5705,11 @@ type CreateInstancePool_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -5666,6 +5745,7 @@ func (a CreateInstancePool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec_SdkV2{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes_SdkV2{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage_SdkV2{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -5682,12 +5762,14 @@ func (o CreateInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"azure_attributes":                      o.AzureAttributes,
 			"custom_tags":                           o.CustomTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -5712,7 +5794,8 @@ func (o CreateInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"disk_spec": basetypes.ListType{
 				ElemType: DiskSpec_SdkV2{}.Type(ctx),
 			},
-			"enable_elastic_disk": types.BoolType,
+			"enable_auto_alternate_node_types": types.BoolType,
+			"enable_elastic_disk":              types.BoolType,
 			"gcp_attributes": basetypes.ListType{
 				ElemType: InstancePoolGcpAttributes_SdkV2{}.Type(ctx),
 			},
@@ -5720,7 +5803,10 @@ func (o CreateInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage_SdkV2{}.Type(ctx),
 			},
@@ -5861,6 +5947,32 @@ func (o *CreateInstancePool_SdkV2) SetGcpAttributes(ctx context.Context, v Insta
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
 	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool_SdkV2.
+func (o *CreateInstancePool_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool_SdkV2 as
@@ -6381,6 +6493,291 @@ func (o DbfsStorageInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DefaultBaseEnvironment_SdkV2 struct {
+	BaseEnvironmentCache types.List `tfsdk:"base_environment_cache"`
+
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+
+	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
+	// Note: we made `environment` non-internal because we need to expose its
+	// `client` field. All other fields should be treated as internal.
+	Environment types.List `tfsdk:"environment"`
+
+	Filepath types.String `tfsdk:"filepath"`
+
+	Id types.String `tfsdk:"id"`
+
+	IsDefault types.Bool `tfsdk:"is_default"`
+
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+
+	LastUpdatedUserId types.Int64 `tfsdk:"last_updated_user_id"`
+
+	Message types.String `tfsdk:"message"`
+
+	Name types.String `tfsdk:"name"`
+
+	PrincipalIds types.List `tfsdk:"principal_ids"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironment_SdkV2) {
+}
+
+func (newState *DefaultBaseEnvironment_SdkV2) SyncEffectiveFieldsDuringRead(existingState DefaultBaseEnvironment_SdkV2) {
+}
+
+func (c DefaultBaseEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_environment_cache"] = attrs["base_environment_cache"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["creator_user_id"] = attrs["creator_user_id"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["filepath"] = attrs["filepath"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_default"] = attrs["is_default"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["principal_ids"] = attrs["principal_ids"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"base_environment_cache": reflect.TypeOf(DefaultBaseEnvironmentCache_SdkV2{}),
+		"environment":            reflect.TypeOf(Environment_SdkV2{}),
+		"principal_ids":          reflect.TypeOf(types.Int64{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironment_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"base_environment_cache": o.BaseEnvironmentCache,
+			"created_timestamp":      o.CreatedTimestamp,
+			"creator_user_id":        o.CreatorUserId,
+			"environment":            o.Environment,
+			"filepath":               o.Filepath,
+			"id":                     o.Id,
+			"is_default":             o.IsDefault,
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+			"last_updated_user_id":   o.LastUpdatedUserId,
+			"message":                o.Message,
+			"name":                   o.Name,
+			"principal_ids":          o.PrincipalIds,
+			"status":                 o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"base_environment_cache": basetypes.ListType{
+				ElemType: DefaultBaseEnvironmentCache_SdkV2{}.Type(ctx),
+			},
+			"created_timestamp": types.Int64Type,
+			"creator_user_id":   types.Int64Type,
+			"environment": basetypes.ListType{
+				ElemType: Environment_SdkV2{}.Type(ctx),
+			},
+			"filepath":               types.StringType,
+			"id":                     types.StringType,
+			"is_default":             types.BoolType,
+			"last_updated_timestamp": types.Int64Type,
+			"last_updated_user_id":   types.Int64Type,
+			"message":                types.StringType,
+			"name":                   types.StringType,
+			"principal_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+			"status": types.StringType,
+		},
+	}
+}
+
+// GetBaseEnvironmentCache returns the value of the BaseEnvironmentCache field in DefaultBaseEnvironment_SdkV2 as
+// a slice of DefaultBaseEnvironmentCache_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment_SdkV2) GetBaseEnvironmentCache(ctx context.Context) ([]DefaultBaseEnvironmentCache_SdkV2, bool) {
+	if o.BaseEnvironmentCache.IsNull() || o.BaseEnvironmentCache.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironmentCache_SdkV2
+	d := o.BaseEnvironmentCache.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseEnvironmentCache sets the value of the BaseEnvironmentCache field in DefaultBaseEnvironment_SdkV2.
+func (o *DefaultBaseEnvironment_SdkV2) SetBaseEnvironmentCache(ctx context.Context, v []DefaultBaseEnvironmentCache_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_environment_cache"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.BaseEnvironmentCache = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in DefaultBaseEnvironment_SdkV2 as
+// a Environment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment_SdkV2) GetEnvironment(ctx context.Context) (Environment_SdkV2, bool) {
+	var e Environment_SdkV2
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []Environment_SdkV2
+	d := o.Environment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in DefaultBaseEnvironment_SdkV2.
+func (o *DefaultBaseEnvironment_SdkV2) SetEnvironment(ctx context.Context, v Environment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environment = types.ListValueMust(t, vs)
+}
+
+// GetPrincipalIds returns the value of the PrincipalIds field in DefaultBaseEnvironment_SdkV2 as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment_SdkV2) GetPrincipalIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.PrincipalIds.IsNull() || o.PrincipalIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.PrincipalIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrincipalIds sets the value of the PrincipalIds field in DefaultBaseEnvironment_SdkV2.
+func (o *DefaultBaseEnvironment_SdkV2) SetPrincipalIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principal_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.PrincipalIds = types.ListValueMust(t, vs)
+}
+
+type DefaultBaseEnvironmentCache_SdkV2 struct {
+	MaterializedEnvironment types.List `tfsdk:"materialized_environment"`
+
+	Message types.String `tfsdk:"message"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironmentCache_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironmentCache_SdkV2) {
+}
+
+func (newState *DefaultBaseEnvironmentCache_SdkV2) SyncEffectiveFieldsDuringRead(existingState DefaultBaseEnvironmentCache_SdkV2) {
+}
+
+func (c DefaultBaseEnvironmentCache_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["materialized_environment"] = attrs["materialized_environment"].SetOptional()
+	attrs["materialized_environment"] = attrs["materialized_environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironmentCache.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironmentCache_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"materialized_environment": reflect.TypeOf(MaterializedEnvironment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironmentCache_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironmentCache_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"materialized_environment": o.MaterializedEnvironment,
+			"message":                  o.Message,
+			"status":                   o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironmentCache_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"materialized_environment": basetypes.ListType{
+				ElemType: MaterializedEnvironment_SdkV2{}.Type(ctx),
+			},
+			"message": types.StringType,
+			"status":  types.StringType,
+		},
+	}
+}
+
+// GetMaterializedEnvironment returns the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache_SdkV2 as
+// a MaterializedEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironmentCache_SdkV2) GetMaterializedEnvironment(ctx context.Context) (MaterializedEnvironment_SdkV2, bool) {
+	var e MaterializedEnvironment_SdkV2
+	if o.MaterializedEnvironment.IsNull() || o.MaterializedEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializedEnvironment_SdkV2
+	d := o.MaterializedEnvironment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaterializedEnvironment sets the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache_SdkV2.
+func (o *DefaultBaseEnvironmentCache_SdkV2) SetMaterializedEnvironment(ctx context.Context, v MaterializedEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["materialized_environment"]
+	o.MaterializedEnvironment = types.ListValueMust(t, vs)
+}
+
 type DeleteCluster_SdkV2 struct {
 	// The cluster to be terminated.
 	ClusterId types.String `tfsdk:"cluster_id"`
@@ -6455,6 +6852,41 @@ func (o DeleteClusterResponse_SdkV2) ToObjectValue(ctx context.Context) basetype
 func (o DeleteClusterResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteDefaultBaseEnvironmentRequest_SdkV2 struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDefaultBaseEnvironmentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultBaseEnvironmentRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteDefaultBaseEnvironmentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDefaultBaseEnvironmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
 	}
 }
 
@@ -7736,6 +8168,10 @@ type EditInstancePool_SdkV2 struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -7755,6 +8191,11 @@ type EditInstancePool_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -7778,7 +8219,8 @@ type EditInstancePool_SdkV2 struct {
 // SDK values.
 func (a EditInstancePool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 	}
 }
 
@@ -7790,11 +8232,13 @@ func (o EditInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"custom_tags":                           o.CustomTags,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_id":                      o.InstancePoolId,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
@@ -7808,14 +8252,18 @@ func (o EditInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
-			"remote_disk_throughput":                types.Int64Type,
-			"total_initial_remote_disk_size":        types.Int64Type,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id":                   types.StringType,
+			"remote_disk_throughput":         types.Int64Type,
+			"total_initial_remote_disk_size": types.Int64Type,
 		},
 	}
 }
@@ -7844,6 +8292,32 @@ func (o *EditInstancePool_SdkV2) SetCustomTags(ctx context.Context, v map[string
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool_SdkV2.
+func (o *EditInstancePool_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 type EditInstancePoolResponse_SdkV2 struct {
@@ -9646,6 +10120,10 @@ type GetInstancePool_SdkV2 struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.List `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -9674,6 +10152,11 @@ type GetInstancePool_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -9716,6 +10199,7 @@ func (c GetInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -9724,6 +10208,8 @@ func (c GetInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -9753,6 +10239,7 @@ func (a GetInstancePool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec_SdkV2{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes_SdkV2{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage_SdkV2{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats_SdkV2{}),
@@ -9772,6 +10259,7 @@ func (o GetInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -9779,6 +10267,7 @@ func (o GetInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -9809,7 +10298,8 @@ func (o GetInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"disk_spec": basetypes.ListType{
 				ElemType: DiskSpec_SdkV2{}.Type(ctx),
 			},
-			"enable_elastic_disk": types.BoolType,
+			"enable_auto_alternate_node_types": types.BoolType,
+			"enable_elastic_disk":              types.BoolType,
 			"gcp_attributes": basetypes.ListType{
 				ElemType: InstancePoolGcpAttributes_SdkV2{}.Type(ctx),
 			},
@@ -9818,7 +10308,10 @@ func (o GetInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage_SdkV2{}.Type(ctx),
 			},
@@ -9992,6 +10485,32 @@ func (o *GetInstancePool_SdkV2) SetGcpAttributes(ctx context.Context, v Instance
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
 	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool_SdkV2.
+func (o *GetInstancePool_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool_SdkV2 as
@@ -11738,6 +12257,10 @@ type InstancePoolAndStats_SdkV2 struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.List `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -11766,6 +12289,11 @@ type InstancePoolAndStats_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -11808,6 +12336,7 @@ func (c InstancePoolAndStats_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -11816,6 +12345,8 @@ func (c InstancePoolAndStats_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -11845,6 +12376,7 @@ func (a InstancePoolAndStats_SdkV2) GetComplexFieldTypes(ctx context.Context) ma
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec_SdkV2{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes_SdkV2{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage_SdkV2{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats_SdkV2{}),
@@ -11864,6 +12396,7 @@ func (o InstancePoolAndStats_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -11871,6 +12404,7 @@ func (o InstancePoolAndStats_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -11901,7 +12435,8 @@ func (o InstancePoolAndStats_SdkV2) Type(ctx context.Context) attr.Type {
 			"disk_spec": basetypes.ListType{
 				ElemType: DiskSpec_SdkV2{}.Type(ctx),
 			},
-			"enable_elastic_disk": types.BoolType,
+			"enable_auto_alternate_node_types": types.BoolType,
+			"enable_elastic_disk":              types.BoolType,
 			"gcp_attributes": basetypes.ListType{
 				ElemType: InstancePoolGcpAttributes_SdkV2{}.Type(ctx),
 			},
@@ -11910,7 +12445,10 @@ func (o InstancePoolAndStats_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage_SdkV2{}.Type(ctx),
 			},
@@ -12084,6 +12622,32 @@ func (o *InstancePoolAndStats_SdkV2) SetGcpAttributes(ctx context.Context, v Ins
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
 	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats_SdkV2.
+func (o *InstancePoolAndStats_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats_SdkV2 as
@@ -13976,6 +14540,127 @@ func (o ListClustersSortBy_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListDefaultBaseEnvironmentsRequest_SdkV2 struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListDefaultBaseEnvironmentsResponse_SdkV2 struct {
+	DefaultBaseEnvironments types.List `tfsdk:"default_base_environments"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDefaultBaseEnvironmentsResponse_SdkV2) {
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDefaultBaseEnvironmentsResponse_SdkV2) {
+}
+
+func (c ListDefaultBaseEnvironmentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_base_environments"] = attrs["default_base_environments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environments": reflect.TypeOf(DefaultBaseEnvironment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environments": o.DefaultBaseEnvironments,
+			"next_page_token":           o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environments": basetypes.ListType{
+				ElemType: DefaultBaseEnvironment_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironments returns the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse_SdkV2 as
+// a slice of DefaultBaseEnvironment_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDefaultBaseEnvironmentsResponse_SdkV2) GetDefaultBaseEnvironments(ctx context.Context) ([]DefaultBaseEnvironment_SdkV2, bool) {
+	if o.DefaultBaseEnvironments.IsNull() || o.DefaultBaseEnvironments.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironment_SdkV2
+	d := o.DefaultBaseEnvironments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultBaseEnvironments sets the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse_SdkV2.
+func (o *ListDefaultBaseEnvironmentsResponse_SdkV2) SetDefaultBaseEnvironments(ctx context.Context, v []DefaultBaseEnvironment_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DefaultBaseEnvironments = types.ListValueMust(t, vs)
+}
+
 type ListGlobalInitScriptsRequest_SdkV2 struct {
 }
 
@@ -14794,6 +15479,69 @@ func (o LogSyncStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Materialized Environment information enables environment sharing and reuse
+// via Environment Caching during library installations. Currently this feature
+// is only supported for Python libraries.
+//
+// - If the env cache entry in LMv2 DB doesn't exist or invalid, library
+// installations and environment materialization will occur. A new Materialized
+// Environment metadata will be sent from DP upon successful library
+// installations and env materialization, and is persisted into database by
+// LMv2. - If the env cache entry in LMv2 DB is valid, the Materialized
+// Environment will be sent to DP by LMv2, and DP will restore the cached
+// environment from a store instead of reinstalling libraries from scratch.
+//
+// If changed, also update
+// estore/namespaces/defaultbaseenvironments/latest.proto with new version
+type MaterializedEnvironment_SdkV2 struct {
+	// The timestamp (in epoch milliseconds) when the materialized env is
+	// updated.
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+}
+
+func (newState *MaterializedEnvironment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MaterializedEnvironment_SdkV2) {
+}
+
+func (newState *MaterializedEnvironment_SdkV2) SyncEffectiveFieldsDuringRead(existingState MaterializedEnvironment_SdkV2) {
+}
+
+func (c MaterializedEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializedEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MaterializedEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializedEnvironment_SdkV2
+// only implements ToObjectValue() and Type().
+func (o MaterializedEnvironment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MaterializedEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"last_updated_timestamp": types.Int64Type,
+		},
+	}
+}
+
 type MavenLibrary_SdkV2 struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates"`
@@ -15173,6 +15921,50 @@ func (o *NodeType_SdkV2) SetNodeInstanceType(ctx context.Context, v NodeInstance
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_instance_type"]
 	o.NodeInstanceType = types.ListValueMust(t, vs)
+}
+
+// For Fleet-V2 using classic clusters, this object contains the information
+// about the alternate node type ids to use when attempting to launch a cluster.
+// It can be used with both the driver and worker node types.
+type NodeTypeFlexibility_SdkV2 struct {
+}
+
+func (newState *NodeTypeFlexibility_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility_SdkV2) {
+}
+
+func (newState *NodeTypeFlexibility_SdkV2) SyncEffectiveFieldsDuringRead(existingState NodeTypeFlexibility_SdkV2) {
+}
+
+func (c NodeTypeFlexibility_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NodeTypeFlexibility_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility_SdkV2
+// only implements ToObjectValue() and Type().
+func (o NodeTypeFlexibility_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NodeTypeFlexibility_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Error message of a failed pending instances
@@ -15706,6 +16498,112 @@ func (o RCranLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 			"package": types.StringType,
 			"repo":    types.StringType,
 		},
+	}
+}
+
+type RefreshDefaultBaseEnvironmentsRequest_SdkV2 struct {
+	Ids types.List `tfsdk:"ids"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ids": o.Ids,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetIds returns the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RefreshDefaultBaseEnvironmentsRequest_SdkV2) GetIds(ctx context.Context) ([]types.String, bool) {
+	if o.Ids.IsNull() || o.Ids.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Ids.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIds sets the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest_SdkV2.
+func (o *RefreshDefaultBaseEnvironmentsRequest_SdkV2) SetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Ids = types.ListValueMust(t, vs)
+}
+
+type RefreshDefaultBaseEnvironmentsResponse_SdkV2 struct {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RefreshDefaultBaseEnvironmentsResponse_SdkV2) {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RefreshDefaultBaseEnvironmentsResponse_SdkV2) {
+}
+
+func (c RefreshDefaultBaseEnvironmentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -17615,6 +18513,75 @@ func (o UpdateClusterResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
+}
+
+type UpdateDefaultBaseEnvironmentRequest_SdkV2 struct {
+	DefaultBaseEnvironment types.List `tfsdk:"default_base_environment"`
+
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDefaultBaseEnvironmentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultBaseEnvironmentRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateDefaultBaseEnvironmentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"id":                       o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDefaultBaseEnvironmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": basetypes.ListType{
+				ElemType: DefaultBaseEnvironment_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest_SdkV2 as
+// a DefaultBaseEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDefaultBaseEnvironmentRequest_SdkV2) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment_SdkV2, bool) {
+	var e DefaultBaseEnvironment_SdkV2
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment_SdkV2
+	d := o.DefaultBaseEnvironment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest_SdkV2.
+func (o *UpdateDefaultBaseEnvironmentRequest_SdkV2) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environment"]
+	o.DefaultBaseEnvironment = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse_SdkV2 struct {

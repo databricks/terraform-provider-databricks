@@ -475,6 +475,11 @@ func (o DatabaseCredential_SdkV2) Type(ctx context.Context) attr.Type {
 // A DatabaseInstance represents a logical Postgres instance, comprised of both
 // compute and storage.
 type DatabaseInstance_SdkV2 struct {
+	// The desired budget policy to associate with the instance. This field is
+	// only returned on create/update responses, and represents the customer
+	// provided budget policy. See effective_budget_policy_id for the policy
+	// that is actually applied to the instance.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
 	Capacity types.String `tfsdk:"capacity"`
 	// The refs of the child instances. This is only available if the instance
@@ -484,6 +489,15 @@ type DatabaseInstance_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
+	// The policy that is applied to the instance.
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// xref AIP-129. `enable_pg_native_login` is owned by the client, while
+	// `effective_enable_pg_native_login` is owned by the server.
+	// `enable_pg_native_login` will only be set in Create/Update response
+	// messages if and only if the user provides the field via the request.
+	// `effective_enable_pg_native_login` on the other hand will always bet set
+	// in all response messages (Create/Update/Get/List).
+	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// xref AIP-129. `enable_readable_secondaries` is owned by the client, while
 	// `effective_enable_readable_secondaries` is owned by the server.
 	// `enable_readable_secondaries` will only be set in Create/Update response
@@ -510,6 +524,9 @@ type DatabaseInstance_SdkV2 struct {
 	// request. `effective_stopped` on the other hand will always bet set in all
 	// response messages (Create/Update/Get/List).
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
+	// Whether the instance has PG native password login enabled. Defaults to
+	// true.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// Whether to enable secondaries to serve read-only traffic. Defaults to
 	// false.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
@@ -549,14 +566,18 @@ func (newState *DatabaseInstance_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 }
 
 func (c DatabaseInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["capacity"] = attrs["capacity"].SetOptional()
 	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
 	attrs["effective_enable_readable_secondaries"] = attrs["effective_enable_readable_secondaries"].SetComputed()
 	attrs["effective_node_count"] = attrs["effective_node_count"].SetComputed()
 	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
 	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
 	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["node_count"] = attrs["node_count"].SetOptional()
@@ -594,14 +615,18 @@ func (o DatabaseInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"budget_policy_id":                      o.BudgetPolicyId,
 			"capacity":                              o.Capacity,
 			"child_instance_refs":                   o.ChildInstanceRefs,
 			"creation_time":                         o.CreationTime,
 			"creator":                               o.Creator,
+			"effective_budget_policy_id":            o.EffectiveBudgetPolicyId,
+			"effective_enable_pg_native_login":      o.EffectiveEnablePgNativeLogin,
 			"effective_enable_readable_secondaries": o.EffectiveEnableReadableSecondaries,
 			"effective_node_count":                  o.EffectiveNodeCount,
 			"effective_retention_window_in_days":    o.EffectiveRetentionWindowInDays,
 			"effective_stopped":                     o.EffectiveStopped,
+			"enable_pg_native_login":                o.EnablePgNativeLogin,
 			"enable_readable_secondaries":           o.EnableReadableSecondaries,
 			"name":                                  o.Name,
 			"node_count":                            o.NodeCount,
@@ -620,16 +645,20 @@ func (o DatabaseInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o DatabaseInstance_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"capacity": types.StringType,
+			"budget_policy_id": types.StringType,
+			"capacity":         types.StringType,
 			"child_instance_refs": basetypes.ListType{
 				ElemType: DatabaseInstanceRef_SdkV2{}.Type(ctx),
 			},
 			"creation_time":                         types.StringType,
 			"creator":                               types.StringType,
+			"effective_budget_policy_id":            types.StringType,
+			"effective_enable_pg_native_login":      types.BoolType,
 			"effective_enable_readable_secondaries": types.BoolType,
 			"effective_node_count":                  types.Int64Type,
 			"effective_retention_window_in_days":    types.Int64Type,
 			"effective_stopped":                     types.BoolType,
+			"enable_pg_native_login":                types.BoolType,
 			"enable_readable_secondaries":           types.BoolType,
 			"name":                                  types.StringType,
 			"node_count":                            types.Int64Type,
@@ -972,6 +1001,8 @@ type DatabaseTable_SdkV2 struct {
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`
+	// Data serving REST API URL for this table
+	TableServingUrl types.String `tfsdk:"table_serving_url"`
 }
 
 func (newState *DatabaseTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseTable_SdkV2) {
@@ -984,6 +1015,7 @@ func (c DatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 
 	return attrs
 }
@@ -1009,6 +1041,7 @@ func (o DatabaseTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"database_instance_name": o.DatabaseInstanceName,
 			"logical_database_name":  o.LogicalDatabaseName,
 			"name":                   o.Name,
+			"table_serving_url":      o.TableServingUrl,
 		})
 }
 
@@ -1019,6 +1052,7 @@ func (o DatabaseTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"database_instance_name": types.StringType,
 			"logical_database_name":  types.StringType,
 			"name":                   types.StringType,
+			"table_serving_url":      types.StringType,
 		},
 	}
 }
@@ -1281,6 +1315,45 @@ func (o DeltaTableSyncInfo_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"delta_commit_timestamp": types.StringType,
 			"delta_commit_version":   types.Int64Type,
+		},
+	}
+}
+
+type FailoverDatabaseInstanceRequest_SdkV2 struct {
+	FailoverTargetDatabaseInstanceName types.String `tfsdk:"failover_target_database_instance_name"`
+	// Name of the instance to failover.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FailoverDatabaseInstanceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FailoverDatabaseInstanceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FailoverDatabaseInstanceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o FailoverDatabaseInstanceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"failover_target_database_instance_name": o.FailoverTargetDatabaseInstanceName,
+			"name":                                   o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FailoverDatabaseInstanceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"failover_target_database_instance_name": types.StringType,
+			"name":                                   types.StringType,
 		},
 	}
 }
@@ -1607,6 +1680,133 @@ func (o GetSyncedDatabaseTableRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
+type ListDatabaseCatalogsRequest_SdkV2 struct {
+	// Name of the instance to get database catalogs for.
+	InstanceName types.String `tfsdk:"-"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of synced database tables.
+	// Requests first page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseCatalogsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDatabaseCatalogsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabaseCatalogsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListDatabaseCatalogsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"instance_name": o.InstanceName,
+			"page_size":     o.PageSize,
+			"page_token":    o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDatabaseCatalogsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"instance_name": types.StringType,
+			"page_size":     types.Int64Type,
+			"page_token":    types.StringType,
+		},
+	}
+}
+
+type ListDatabaseCatalogsResponse_SdkV2 struct {
+	DatabaseCatalogs types.List `tfsdk:"database_catalogs"`
+	// Pagination token to request the next page of database catalogs.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListDatabaseCatalogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDatabaseCatalogsResponse_SdkV2) {
+}
+
+func (newState *ListDatabaseCatalogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDatabaseCatalogsResponse_SdkV2) {
+}
+
+func (c ListDatabaseCatalogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_catalogs"] = attrs["database_catalogs"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseCatalogsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDatabaseCatalogsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database_catalogs": reflect.TypeOf(DatabaseCatalog_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabaseCatalogsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListDatabaseCatalogsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database_catalogs": o.DatabaseCatalogs,
+			"next_page_token":   o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDatabaseCatalogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database_catalogs": basetypes.ListType{
+				ElemType: DatabaseCatalog_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDatabaseCatalogs returns the value of the DatabaseCatalogs field in ListDatabaseCatalogsResponse_SdkV2 as
+// a slice of DatabaseCatalog_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDatabaseCatalogsResponse_SdkV2) GetDatabaseCatalogs(ctx context.Context) ([]DatabaseCatalog_SdkV2, bool) {
+	if o.DatabaseCatalogs.IsNull() || o.DatabaseCatalogs.IsUnknown() {
+		return nil, false
+	}
+	var v []DatabaseCatalog_SdkV2
+	d := o.DatabaseCatalogs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabaseCatalogs sets the value of the DatabaseCatalogs field in ListDatabaseCatalogsResponse_SdkV2.
+func (o *ListDatabaseCatalogsResponse_SdkV2) SetDatabaseCatalogs(ctx context.Context, v []DatabaseCatalog_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_catalogs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DatabaseCatalogs = types.ListValueMust(t, vs)
+}
+
 type ListDatabaseInstanceRolesRequest_SdkV2 struct {
 	InstanceName types.String `tfsdk:"-"`
 	// Upper bound for items returned.
@@ -1858,14 +2058,150 @@ func (o *ListDatabaseInstancesResponse_SdkV2) SetDatabaseInstances(ctx context.C
 	o.DatabaseInstances = types.ListValueMust(t, vs)
 }
 
+type ListSyncedDatabaseTablesRequest_SdkV2 struct {
+	// Name of the instance to get synced tables for.
+	InstanceName types.String `tfsdk:"-"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of synced database tables.
+	// Requests first page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSyncedDatabaseTablesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListSyncedDatabaseTablesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSyncedDatabaseTablesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListSyncedDatabaseTablesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"instance_name": o.InstanceName,
+			"page_size":     o.PageSize,
+			"page_token":    o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListSyncedDatabaseTablesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"instance_name": types.StringType,
+			"page_size":     types.Int64Type,
+			"page_token":    types.StringType,
+		},
+	}
+}
+
+type ListSyncedDatabaseTablesResponse_SdkV2 struct {
+	// Pagination token to request the next page of synced tables.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	SyncedTables types.List `tfsdk:"synced_tables"`
+}
+
+func (newState *ListSyncedDatabaseTablesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSyncedDatabaseTablesResponse_SdkV2) {
+}
+
+func (newState *ListSyncedDatabaseTablesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSyncedDatabaseTablesResponse_SdkV2) {
+}
+
+func (c ListSyncedDatabaseTablesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["synced_tables"] = attrs["synced_tables"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSyncedDatabaseTablesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListSyncedDatabaseTablesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"synced_tables": reflect.TypeOf(SyncedDatabaseTable_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSyncedDatabaseTablesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListSyncedDatabaseTablesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"synced_tables":   o.SyncedTables,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListSyncedDatabaseTablesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"synced_tables": basetypes.ListType{
+				ElemType: SyncedDatabaseTable_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSyncedTables returns the value of the SyncedTables field in ListSyncedDatabaseTablesResponse_SdkV2 as
+// a slice of SyncedDatabaseTable_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSyncedDatabaseTablesResponse_SdkV2) GetSyncedTables(ctx context.Context) ([]SyncedDatabaseTable_SdkV2, bool) {
+	if o.SyncedTables.IsNull() || o.SyncedTables.IsUnknown() {
+		return nil, false
+	}
+	var v []SyncedDatabaseTable_SdkV2
+	d := o.SyncedTables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSyncedTables sets the value of the SyncedTables field in ListSyncedDatabaseTablesResponse_SdkV2.
+func (o *ListSyncedDatabaseTablesResponse_SdkV2) SetSyncedTables(ctx context.Context, v []SyncedDatabaseTable_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["synced_tables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.SyncedTables = types.ListValueMust(t, vs)
+}
+
 // Custom fields that user can set for pipeline while creating
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec_SdkV2 struct {
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC catalog for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be a standard catalog where the user has
 	// permissions to create Delta tables.
 	StorageCatalog types.String `tfsdk:"storage_catalog"`
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC schema for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be in the standard catalog where the user
 	// has permissions to create Delta tables.
@@ -1879,6 +2215,7 @@ func (newState *NewPipelineSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c NewPipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -1903,8 +2240,9 @@ func (o NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"storage_catalog": o.StorageCatalog,
-			"storage_schema":  o.StorageSchema,
+			"budget_policy_id": o.BudgetPolicyId,
+			"storage_catalog":  o.StorageCatalog,
+			"storage_schema":   o.StorageSchema,
 		})
 }
 
@@ -1912,8 +2250,9 @@ func (o NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o NewPipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"storage_catalog": types.StringType,
-			"storage_schema":  types.StringType,
+			"budget_policy_id": types.StringType,
+			"storage_catalog":  types.StringType,
+			"storage_schema":   types.StringType,
 		},
 	}
 }
@@ -2080,6 +2419,8 @@ type SyncedDatabaseTable_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 
 	Spec types.List `tfsdk:"spec"`
+	// Data serving REST API URL for this table
+	TableServingUrl types.String `tfsdk:"table_serving_url"`
 	// The provisioning state of the synced table entity in Unity Catalog. This
 	// is distinct from the state of the data synchronization pipeline (i.e. the
 	// table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it
@@ -2101,6 +2442,7 @@ func (c SyncedDatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
 	return attrs
@@ -2132,6 +2474,7 @@ func (o SyncedDatabaseTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"logical_database_name":            o.LogicalDatabaseName,
 			"name":                             o.Name,
 			"spec":                             o.Spec,
+			"table_serving_url":                o.TableServingUrl,
 			"unity_catalog_provisioning_state": o.UnityCatalogProvisioningState,
 		})
 }
@@ -2149,6 +2492,7 @@ func (o SyncedDatabaseTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"spec": basetypes.ListType{
 				ElemType: SyncedTableSpec_SdkV2{}.Type(ctx),
 			},
+			"table_serving_url":                types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},
 	}
@@ -2367,6 +2711,8 @@ type SyncedTablePipelineProgress_SdkV2 struct {
 	// The source table Delta version that was last processed by the pipeline.
 	// The pipeline may not have completely processed this version yet.
 	LatestVersionCurrentlyProcessing types.Int64 `tfsdk:"latest_version_currently_processing"`
+	// The current phase of the data synchronization pipeline.
+	ProvisioningPhase types.String `tfsdk:"provisioning_phase"`
 	// The completion ratio of this update. This is a number between 0 and 1.
 	SyncProgressCompletion types.Float64 `tfsdk:"sync_progress_completion"`
 	// The number of rows that have been synced in this update.
@@ -2385,6 +2731,7 @@ func (newState *SyncedTablePipelineProgress_SdkV2) SyncEffectiveFieldsDuringRead
 func (c SyncedTablePipelineProgress_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetOptional()
 	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetOptional()
+	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetOptional()
 	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetOptional()
 	attrs["synced_row_count"] = attrs["synced_row_count"].SetOptional()
 	attrs["total_row_count"] = attrs["total_row_count"].SetOptional()
@@ -2412,6 +2759,7 @@ func (o SyncedTablePipelineProgress_SdkV2) ToObjectValue(ctx context.Context) ba
 		map[string]attr.Value{
 			"estimated_completion_time_seconds":   o.EstimatedCompletionTimeSeconds,
 			"latest_version_currently_processing": o.LatestVersionCurrentlyProcessing,
+			"provisioning_phase":                  o.ProvisioningPhase,
 			"sync_progress_completion":            o.SyncProgressCompletion,
 			"synced_row_count":                    o.SyncedRowCount,
 			"total_row_count":                     o.TotalRowCount,
@@ -2424,6 +2772,7 @@ func (o SyncedTablePipelineProgress_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"estimated_completion_time_seconds":   types.Float64Type,
 			"latest_version_currently_processing": types.Int64Type,
+			"provisioning_phase":                  types.StringType,
 			"sync_progress_completion":            types.Float64Type,
 			"synced_row_count":                    types.Int64Type,
 			"total_row_count":                     types.Int64Type,
@@ -2610,15 +2959,24 @@ type SyncedTableSpec_SdkV2 struct {
 	// If true, the synced table's logical database and schema resources in PG
 	// will be created if they do not already exist.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
-	// User-specified ID of a pre-existing pipeline to bin pack. This field is
-	// optional, and should be empty if new_pipeline_spec is set. This field
-	// will only be set by the server in response messages if it is specified in
-	// the request. The SyncedTableStatus message will always contain the
-	// effective pipeline ID (either client provided or server generated),
-	// however.
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If existing_pipeline_id is defined, the synced table will be bin packed
+	// into the existing pipeline referenced. This avoids creating a new
+	// pipeline and allows sharing existing compute. In this case, the
+	// scheduling_policy of this synced table must match the scheduling policy
+	// of the existing pipeline.
 	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
-	// Spec of new pipeline. Should be empty if pipeline_id /
-	// existing_pipeline_id is set
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If new_pipeline_spec is defined, a new pipeline is created for this
+	// synced table. The location pointed to is used to store intermediate files
+	// (checkpoints, event logs etc). The caller must have write permissions to
+	// create Delta tables in the specified catalog and schema. Again, note this
+	// requires write permissions, whereas the source table only requires read
+	// permissions.
 	NewPipelineSpec types.List `tfsdk:"new_pipeline_spec"`
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
@@ -3094,11 +3452,86 @@ func (o *SyncedTableTriggeredUpdateStatus_SdkV2) SetTriggeredUpdateProgress(ctx 
 	o.TriggeredUpdateProgress = types.ListValueMust(t, vs)
 }
 
+type UpdateDatabaseCatalogRequest_SdkV2 struct {
+	// Note that updating a database catalog is not yet supported.
+	DatabaseCatalog types.List `tfsdk:"database_catalog"`
+	// The name of the catalog in UC.
+	Name types.String `tfsdk:"-"`
+	// The list of fields to update. Setting this field is not yet supported.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDatabaseCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDatabaseCatalogRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database_catalog": reflect.TypeOf(DatabaseCatalog_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDatabaseCatalogRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateDatabaseCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database_catalog": o.DatabaseCatalog,
+			"name":             o.Name,
+			"update_mask":      o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDatabaseCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database_catalog": basetypes.ListType{
+				ElemType: DatabaseCatalog_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetDatabaseCatalog returns the value of the DatabaseCatalog field in UpdateDatabaseCatalogRequest_SdkV2 as
+// a DatabaseCatalog_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDatabaseCatalogRequest_SdkV2) GetDatabaseCatalog(ctx context.Context) (DatabaseCatalog_SdkV2, bool) {
+	var e DatabaseCatalog_SdkV2
+	if o.DatabaseCatalog.IsNull() || o.DatabaseCatalog.IsUnknown() {
+		return e, false
+	}
+	var v []DatabaseCatalog_SdkV2
+	d := o.DatabaseCatalog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabaseCatalog sets the value of the DatabaseCatalog field in UpdateDatabaseCatalogRequest_SdkV2.
+func (o *UpdateDatabaseCatalogRequest_SdkV2) SetDatabaseCatalog(ctx context.Context, v DatabaseCatalog_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_catalog"]
+	o.DatabaseCatalog = types.ListValueMust(t, vs)
+}
+
 type UpdateDatabaseInstanceRequest_SdkV2 struct {
 	DatabaseInstance types.List `tfsdk:"database_instance"`
 	// The name of the instance. This is the unique identifier for the instance.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// The list of fields to update. This field is not yet supported, and is
+	// ignored by the server.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -3165,4 +3598,78 @@ func (o *UpdateDatabaseInstanceRequest_SdkV2) SetDatabaseInstance(ctx context.Co
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_instance"]
 	o.DatabaseInstance = types.ListValueMust(t, vs)
+}
+
+type UpdateSyncedDatabaseTableRequest_SdkV2 struct {
+	// Full three-part (catalog, schema, table) name of the table.
+	Name types.String `tfsdk:"-"`
+	// Note that updating a synced database table is not yet supported.
+	SyncedTable types.List `tfsdk:"synced_table"`
+	// The list of fields to update. Setting this field is not yet supported.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSyncedDatabaseTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateSyncedDatabaseTableRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"synced_table": reflect.TypeOf(SyncedDatabaseTable_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSyncedDatabaseTableRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateSyncedDatabaseTableRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":         o.Name,
+			"synced_table": o.SyncedTable,
+			"update_mask":  o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateSyncedDatabaseTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"synced_table": basetypes.ListType{
+				ElemType: SyncedDatabaseTable_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetSyncedTable returns the value of the SyncedTable field in UpdateSyncedDatabaseTableRequest_SdkV2 as
+// a SyncedDatabaseTable_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateSyncedDatabaseTableRequest_SdkV2) GetSyncedTable(ctx context.Context) (SyncedDatabaseTable_SdkV2, bool) {
+	var e SyncedDatabaseTable_SdkV2
+	if o.SyncedTable.IsNull() || o.SyncedTable.IsUnknown() {
+		return e, false
+	}
+	var v []SyncedDatabaseTable_SdkV2
+	d := o.SyncedTable.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSyncedTable sets the value of the SyncedTable field in UpdateSyncedDatabaseTableRequest_SdkV2.
+func (o *UpdateSyncedDatabaseTableRequest_SdkV2) SetSyncedTable(ctx context.Context, v SyncedDatabaseTable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["synced_table"]
+	o.SyncedTable = types.ListValueMust(t, vs)
 }

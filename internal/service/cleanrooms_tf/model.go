@@ -198,8 +198,8 @@ type CleanRoomAsset struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
-	// The name of the clean room this asset belongs to. This is an output-only
-	// field to ensure proper resource identification.
+	// The name of the clean room this asset belongs to. This field is required
+	// for create operations and populated by the server for responses.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
@@ -247,11 +247,11 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState Clea
 
 func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
-	attrs["asset_type"] = attrs["asset_type"].SetOptional()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["notebook"] = attrs["notebook"].SetOptional()
 	attrs["owner_collaborator_alias"] = attrs["owner_collaborator_alias"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -645,7 +645,7 @@ func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDurin
 }
 
 func (c CleanRoomAssetForeignTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -703,7 +703,7 @@ func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingSt
 
 func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetComputed()
-	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
+	attrs["notebook_content"] = attrs["notebook_content"].SetRequired()
 	attrs["review_state"] = attrs["review_state"].SetComputed()
 	attrs["reviews"] = attrs["reviews"].SetComputed()
 	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
@@ -902,7 +902,7 @@ func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(e
 }
 
 func (c CleanRoomAssetTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 	attrs["partitions"] = attrs["partitions"].SetOptional()
 
 	return attrs
@@ -1062,7 +1062,7 @@ func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(ex
 }
 
 func (c CleanRoomAssetViewLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -1111,7 +1111,7 @@ func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(
 }
 
 func (c CleanRoomAssetVolumeLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -1880,7 +1880,8 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 
 type CreateCleanRoomAssetRequest struct {
 	Asset types.Object `tfsdk:"asset"`
-	// Name of the clean room.
+	// The name of the clean room this asset belongs to. This field is required
+	// for create operations and populated by the server for responses.
 	CleanRoomName types.String `tfsdk:"-"`
 }
 

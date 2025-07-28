@@ -23,6 +23,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type ConnectionParameters struct {
+	// Source catalog for initial connection. This is necessary for schema
+	// exploration in some database systems like Oracle, and optional but
+	// nice-to-have in some other database systems like Postgres. For Oracle
+	// databases, this maps to a service name.
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (newState *ConnectionParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConnectionParameters) {
+}
+
+func (newState *ConnectionParameters) SyncEffectiveFieldsDuringRead(existingState ConnectionParameters) {
+}
+
+func (c ConnectionParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConnectionParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ConnectionParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConnectionParameters
+// only implements ToObjectValue() and Type().
+func (o ConnectionParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"source_catalog": o.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ConnectionParameters) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
 type CreatePipeline struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
@@ -2439,6 +2490,9 @@ type IngestionGatewayPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection that this gateway pipeline uses
 	// to communicate with the source.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Optional, Internal. Parameters required to establish an initial
+	// connection with the source.
+	ConnectionParameters types.Object `tfsdk:"connection_parameters"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog"`
@@ -2461,6 +2515,7 @@ func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRea
 func (c IngestionGatewayPipelineDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_id"] = attrs["connection_id"].SetOptional()
 	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["connection_parameters"] = attrs["connection_parameters"].SetOptional()
 	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetRequired()
 	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
 	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetRequired()
@@ -2476,7 +2531,9 @@ func (c IngestionGatewayPipelineDefinition) ApplySchemaCustomizations(attrs map[
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"connection_parameters": reflect.TypeOf(ConnectionParameters{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2488,6 +2545,7 @@ func (o IngestionGatewayPipelineDefinition) ToObjectValue(ctx context.Context) b
 		map[string]attr.Value{
 			"connection_id":           o.ConnectionId,
 			"connection_name":         o.ConnectionName,
+			"connection_parameters":   o.ConnectionParameters,
 			"gateway_storage_catalog": o.GatewayStorageCatalog,
 			"gateway_storage_name":    o.GatewayStorageName,
 			"gateway_storage_schema":  o.GatewayStorageSchema,
@@ -2500,6 +2558,7 @@ func (o IngestionGatewayPipelineDefinition) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"connection_id":           types.StringType,
 			"connection_name":         types.StringType,
+			"connection_parameters":   ConnectionParameters{}.Type(ctx),
 			"gateway_storage_catalog": types.StringType,
 			"gateway_storage_name":    types.StringType,
 			"gateway_storage_schema":  types.StringType,
@@ -2507,11 +2566,45 @@ func (o IngestionGatewayPipelineDefinition) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GetConnectionParameters returns the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition as
+// a ConnectionParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionGatewayPipelineDefinition) GetConnectionParameters(ctx context.Context) (ConnectionParameters, bool) {
+	var e ConnectionParameters
+	if o.ConnectionParameters.IsNull() || o.ConnectionParameters.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectionParameters
+	d := o.ConnectionParameters.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectionParameters sets the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition.
+func (o *IngestionGatewayPipelineDefinition) SetConnectionParameters(ctx context.Context, v ConnectionParameters) {
+	vs := v.ToObjectValue(ctx)
+	o.ConnectionParameters = vs
+}
+
 type IngestionPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
 	// to communicate with the source. This is used with connectors for
 	// applications like Salesforce, Workday, and so on.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Immutable. If set to true, the pipeline will ingest tables from the UC
+	// foreign catalogs directly without the need to specify a UC connection or
+	// ingestion gateway. The `source_catalog` fields in objects of
+	// IngestionConfig are interpreted as the UC foreign catalogs to ingest
+	// from.
+	IngestFromUcForeignCatalog types.Bool `tfsdk:"ingest_from_uc_foreign_catalog"`
 	// Immutable. Identifier for the gateway that is used by this ingestion
 	// pipeline to communicate with the source database. This is used with
 	// connectors to databases like SQL Server.
@@ -2519,6 +2612,8 @@ type IngestionPipelineDefinition struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// Top-level source configurations
+	SourceConfigurations types.List `tfsdk:"source_configurations"`
 	// The type of the foreign source. The source type will be inferred from the
 	// source connection or ingestion gateway. This field is output only and
 	// will be ignored if provided.
@@ -2536,8 +2631,10 @@ func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(exist
 
 func (c IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["ingest_from_uc_foreign_catalog"] = attrs["ingest_from_uc_foreign_catalog"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_configurations"] = attrs["source_configurations"].SetOptional()
 	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 
@@ -2553,8 +2650,9 @@ func (c IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]
 // SDK values.
 func (a IngestionPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"objects":             reflect.TypeOf(IngestionConfig{}),
-		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
+		"objects":               reflect.TypeOf(IngestionConfig{}),
+		"source_configurations": reflect.TypeOf(SourceConfig{}),
+		"table_configuration":   reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
@@ -2565,11 +2663,13 @@ func (o IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_name":      o.ConnectionName,
-			"ingestion_gateway_id": o.IngestionGatewayId,
-			"objects":              o.Objects,
-			"source_type":          o.SourceType,
-			"table_configuration":  o.TableConfiguration,
+			"connection_name":                o.ConnectionName,
+			"ingest_from_uc_foreign_catalog": o.IngestFromUcForeignCatalog,
+			"ingestion_gateway_id":           o.IngestionGatewayId,
+			"objects":                        o.Objects,
+			"source_configurations":          o.SourceConfigurations,
+			"source_type":                    o.SourceType,
+			"table_configuration":            o.TableConfiguration,
 		})
 }
 
@@ -2577,10 +2677,14 @@ func (o IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 func (o IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection_name":      types.StringType,
-			"ingestion_gateway_id": types.StringType,
+			"connection_name":                types.StringType,
+			"ingest_from_uc_foreign_catalog": types.BoolType,
+			"ingestion_gateway_id":           types.StringType,
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig{}.Type(ctx),
+			},
+			"source_configurations": basetypes.ListType{
+				ElemType: SourceConfig{}.Type(ctx),
 			},
 			"source_type":         types.StringType,
 			"table_configuration": TableSpecificConfig{}.Type(ctx),
@@ -2614,6 +2718,32 @@ func (o *IngestionPipelineDefinition) SetObjects(ctx context.Context, v []Ingest
 	o.Objects = types.ListValueMust(t, vs)
 }
 
+// GetSourceConfigurations returns the value of the SourceConfigurations field in IngestionPipelineDefinition as
+// a slice of SourceConfig values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinition) GetSourceConfigurations(ctx context.Context) ([]SourceConfig, bool) {
+	if o.SourceConfigurations.IsNull() || o.SourceConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []SourceConfig
+	d := o.SourceConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSourceConfigurations sets the value of the SourceConfigurations field in IngestionPipelineDefinition.
+func (o *IngestionPipelineDefinition) SetSourceConfigurations(ctx context.Context, v []SourceConfig) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.SourceConfigurations = types.ListValueMust(t, vs)
+}
+
 // GetTableConfiguration returns the value of the TableConfiguration field in IngestionPipelineDefinition as
 // a TableSpecificConfig value.
 // If the field is unknown or null, the boolean return value is false.
@@ -2640,6 +2770,114 @@ func (o *IngestionPipelineDefinition) GetTableConfiguration(ctx context.Context)
 func (o *IngestionPipelineDefinition) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
 	vs := v.ToObjectValue(ctx)
 	o.TableConfiguration = vs
+}
+
+// Configurations that are only applicable for query-based ingestion connectors.
+type IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig struct {
+	// The names of the monotonically increasing columns in the source table
+	// that are used to enable the table to be read and ingested incrementally
+	// through structured streaming. The columns are allowed to have repeated
+	// values but have to be non-decreasing. If the source data is merged into
+	// the destination (e.g., using SCD Type 1 or Type 2), these columns will
+	// implicitly define the `sequence_by` behavior. You can still explicitly
+	// set `sequence_by` to override this default.
+	CursorColumns types.List `tfsdk:"cursor_columns"`
+	// Specifies a SQL WHERE condition that specifies that the source row has
+	// been deleted. This is sometimes referred to as "soft-deletes". For
+	// example: "Operation = 'DELETE'" or "is_deleted = true". This field is
+	// orthogonal to `hard_deletion_sync_interval_in_seconds`, one for
+	// soft-deletes and the other for hard-deletes. See also the
+	// hard_deletion_sync_min_interval_in_seconds field for handling of "hard
+	// deletes" where the source rows are physically removed from the table.
+	DeletionCondition types.String `tfsdk:"deletion_condition"`
+	// Specifies the minimum interval (in seconds) between snapshots on primary
+	// keys for detecting and synchronizing hard deletions—i.e., rows that
+	// have been physically removed from the source table. This interval acts as
+	// a lower bound. If ingestion runs less frequently than this value, hard
+	// deletion synchronization will align with the actual ingestion frequency
+	// instead of happening more often. If not set, hard deletion
+	// synchronization via snapshots is disabled. This field is mutable and can
+	// be updated without triggering a full snapshot.
+	HardDeletionSyncMinIntervalInSeconds types.Int64 `tfsdk:"hard_deletion_sync_min_interval_in_seconds"`
+}
+
+func (newState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+}
+
+func (newState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+}
+
+func (c IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cursor_columns"] = attrs["cursor_columns"].SetOptional()
+	attrs["deletion_condition"] = attrs["deletion_condition"].SetOptional()
+	attrs["hard_deletion_sync_min_interval_in_seconds"] = attrs["hard_deletion_sync_min_interval_in_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cursor_columns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+// only implements ToObjectValue() and Type().
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cursor_columns":                             o.CursorColumns,
+			"deletion_condition":                         o.DeletionCondition,
+			"hard_deletion_sync_min_interval_in_seconds": o.HardDeletionSyncMinIntervalInSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cursor_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"deletion_condition":                         types.StringType,
+			"hard_deletion_sync_min_interval_in_seconds": types.Int64Type,
+		},
+	}
+}
+
+// GetCursorColumns returns the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) GetCursorColumns(ctx context.Context) ([]types.String, bool) {
+	if o.CursorColumns.IsNull() || o.CursorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.CursorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCursorColumns sets the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SetCursorColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cursor_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CursorColumns = types.ListValueMust(t, vs)
 }
 
 type ListPipelineEventsRequest struct {
@@ -5830,6 +6068,140 @@ func (o *PipelinesEnvironment) SetDependencies(ctx context.Context, v []types.St
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
+// PG-specific catalog-level configuration parameters
+type PostgresCatalogConfig struct {
+	// Optional. The Postgres slot configuration to use for logical replication
+	SlotConfig types.Object `tfsdk:"slot_config"`
+}
+
+func (newState *PostgresCatalogConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PostgresCatalogConfig) {
+}
+
+func (newState *PostgresCatalogConfig) SyncEffectiveFieldsDuringRead(existingState PostgresCatalogConfig) {
+}
+
+func (c PostgresCatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["slot_config"] = attrs["slot_config"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresCatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"slot_config": reflect.TypeOf(PostgresSlotConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresCatalogConfig
+// only implements ToObjectValue() and Type().
+func (o PostgresCatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"slot_config": o.SlotConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresCatalogConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"slot_config": PostgresSlotConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetSlotConfig returns the value of the SlotConfig field in PostgresCatalogConfig as
+// a PostgresSlotConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PostgresCatalogConfig) GetSlotConfig(ctx context.Context) (PostgresSlotConfig, bool) {
+	var e PostgresSlotConfig
+	if o.SlotConfig.IsNull() || o.SlotConfig.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresSlotConfig
+	d := o.SlotConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSlotConfig sets the value of the SlotConfig field in PostgresCatalogConfig.
+func (o *PostgresCatalogConfig) SetSlotConfig(ctx context.Context, v PostgresSlotConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.SlotConfig = vs
+}
+
+// PostgresSlotConfig contains the configuration for a Postgres logical
+// replication slot
+type PostgresSlotConfig struct {
+	// The name of the publication to use for the Postgres source
+	PublicationName types.String `tfsdk:"publication_name"`
+	// The name of the logical replication slot to use for the Postgres source
+	SlotName types.String `tfsdk:"slot_name"`
+}
+
+func (newState *PostgresSlotConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PostgresSlotConfig) {
+}
+
+func (newState *PostgresSlotConfig) SyncEffectiveFieldsDuringRead(existingState PostgresSlotConfig) {
+}
+
+func (c PostgresSlotConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["publication_name"] = attrs["publication_name"].SetOptional()
+	attrs["slot_name"] = attrs["slot_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresSlotConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresSlotConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresSlotConfig
+// only implements ToObjectValue() and Type().
+func (o PostgresSlotConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"publication_name": o.PublicationName,
+			"slot_name":        o.SlotName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresSlotConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"publication_name": types.StringType,
+			"slot_name":        types.StringType,
+		},
+	}
+}
+
 type ReportSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
@@ -6023,6 +6395,83 @@ func (o *RestartWindow) SetDaysOfWeek(ctx context.Context, v []types.String) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["days_of_week"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DaysOfWeek = types.ListValueMust(t, vs)
+}
+
+type RestorePipelineRequest struct {
+	// The ID of the pipeline to restore
+	PipelineId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RestorePipelineRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RestorePipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RestorePipelineRequest
+// only implements ToObjectValue() and Type().
+func (o RestorePipelineRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"pipeline_id": o.PipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RestorePipelineRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"pipeline_id": types.StringType,
+		},
+	}
+}
+
+type RestorePipelineRequestResponse struct {
+}
+
+func (newState *RestorePipelineRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestorePipelineRequestResponse) {
+}
+
+func (newState *RestorePipelineRequestResponse) SyncEffectiveFieldsDuringRead(existingState RestorePipelineRequestResponse) {
+}
+
+func (c RestorePipelineRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RestorePipelineRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RestorePipelineRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RestorePipelineRequestResponse
+// only implements ToObjectValue() and Type().
+func (o RestorePipelineRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RestorePipelineRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Write-only setting, available only in Create/Update calls. Specifies the user
@@ -6358,6 +6807,169 @@ func (o *SerializedException) SetStack(ctx context.Context, v []StackFrame) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stack"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stack = types.ListValueMust(t, vs)
+}
+
+// SourceCatalogConfig contains catalog-level custom configuration parameters
+// for each source
+type SourceCatalogConfig struct {
+	// Postgres-specific catalog-level configuration parameters
+	Postgres types.Object `tfsdk:"postgres"`
+	// Source catalog name
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (newState *SourceCatalogConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan SourceCatalogConfig) {
+}
+
+func (newState *SourceCatalogConfig) SyncEffectiveFieldsDuringRead(existingState SourceCatalogConfig) {
+}
+
+func (c SourceCatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["postgres"] = attrs["postgres"].SetOptional()
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceCatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"postgres": reflect.TypeOf(PostgresCatalogConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceCatalogConfig
+// only implements ToObjectValue() and Type().
+func (o SourceCatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"postgres":       o.Postgres,
+			"source_catalog": o.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceCatalogConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"postgres":       PostgresCatalogConfig{}.Type(ctx),
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
+// GetPostgres returns the value of the Postgres field in SourceCatalogConfig as
+// a PostgresCatalogConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceCatalogConfig) GetPostgres(ctx context.Context) (PostgresCatalogConfig, bool) {
+	var e PostgresCatalogConfig
+	if o.Postgres.IsNull() || o.Postgres.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresCatalogConfig
+	d := o.Postgres.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPostgres sets the value of the Postgres field in SourceCatalogConfig.
+func (o *SourceCatalogConfig) SetPostgres(ctx context.Context, v PostgresCatalogConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Postgres = vs
+}
+
+type SourceConfig struct {
+	// Catalog-level source configuration parameters
+	Catalog types.Object `tfsdk:"catalog"`
+}
+
+func (newState *SourceConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan SourceConfig) {
+}
+
+func (newState *SourceConfig) SyncEffectiveFieldsDuringRead(existingState SourceConfig) {
+}
+
+func (c SourceConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"catalog": reflect.TypeOf(SourceCatalogConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceConfig
+// only implements ToObjectValue() and Type().
+func (o SourceConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": o.Catalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": SourceCatalogConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetCatalog returns the value of the Catalog field in SourceConfig as
+// a SourceCatalogConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceConfig) GetCatalog(ctx context.Context) (SourceCatalogConfig, bool) {
+	var e SourceCatalogConfig
+	if o.Catalog.IsNull() || o.Catalog.IsUnknown() {
+		return e, false
+	}
+	var v []SourceCatalogConfig
+	d := o.Catalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCatalog sets the value of the Catalog field in SourceConfig.
+func (o *SourceConfig) SetCatalog(ctx context.Context, v SourceCatalogConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Catalog = vs
 }
 
 type StackFrame struct {
@@ -6794,6 +7406,12 @@ type TableSpecificConfig struct {
 	IncludeColumns types.List `tfsdk:"include_columns"`
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
+
+	QueryBasedConnectorConfig types.Object `tfsdk:"query_based_connector_config"`
+	// (Optional, Immutable) The row filter condition to be applied to the
+	// table. It must not contain the WHERE keyword, only the actual filter
+	// condition. It must be in DBSQL format.
+	RowFilter types.String `tfsdk:"row_filter"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -6815,6 +7433,8 @@ func (c TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
 	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
+	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].SetOptional()
+	attrs["row_filter"] = attrs["row_filter"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
@@ -6831,10 +7451,11 @@ func (c TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (a TableSpecificConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"exclude_columns": reflect.TypeOf(types.String{}),
-		"include_columns": reflect.TypeOf(types.String{}),
-		"primary_keys":    reflect.TypeOf(types.String{}),
-		"sequence_by":     reflect.TypeOf(types.String{}),
+		"exclude_columns":              reflect.TypeOf(types.String{}),
+		"include_columns":              reflect.TypeOf(types.String{}),
+		"primary_keys":                 reflect.TypeOf(types.String{}),
+		"query_based_connector_config": reflect.TypeOf(IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}),
+		"sequence_by":                  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6848,6 +7469,8 @@ func (o TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"exclude_columns":                   o.ExcludeColumns,
 			"include_columns":                   o.IncludeColumns,
 			"primary_keys":                      o.PrimaryKeys,
+			"query_based_connector_config":      o.QueryBasedConnectorConfig,
+			"row_filter":                        o.RowFilter,
 			"salesforce_include_formula_fields": o.SalesforceIncludeFormulaFields,
 			"scd_type":                          o.ScdType,
 			"sequence_by":                       o.SequenceBy,
@@ -6867,6 +7490,8 @@ func (o TableSpecificConfig) Type(ctx context.Context) attr.Type {
 			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"query_based_connector_config":      IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}.Type(ctx),
+			"row_filter":                        types.StringType,
 			"salesforce_include_formula_fields": types.BoolType,
 			"scd_type":                          types.StringType,
 			"sequence_by": basetypes.ListType{
@@ -6952,6 +7577,34 @@ func (o *TableSpecificConfig) SetPrimaryKeys(ctx context.Context, v []types.Stri
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_keys"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrimaryKeys = types.ListValueMust(t, vs)
+}
+
+// GetQueryBasedConnectorConfig returns the value of the QueryBasedConnectorConfig field in TableSpecificConfig as
+// a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig) GetQueryBasedConnectorConfig(ctx context.Context) (IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig, bool) {
+	var e IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+	if o.QueryBasedConnectorConfig.IsNull() || o.QueryBasedConnectorConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+	d := o.QueryBasedConnectorConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryBasedConnectorConfig sets the value of the QueryBasedConnectorConfig field in TableSpecificConfig.
+func (o *TableSpecificConfig) SetQueryBasedConnectorConfig(ctx context.Context, v IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.QueryBasedConnectorConfig = vs
 }
 
 // GetSequenceBy returns the value of the SequenceBy field in TableSpecificConfig as

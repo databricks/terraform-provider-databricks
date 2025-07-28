@@ -2543,8 +2543,13 @@ func (o SecretInfo) Type(ctx context.Context) attr.Type {
 }
 
 type TokenAccessPolicy struct {
+	// absolute OAuth session TTL in minutes when single-use refresh tokens are
+	// enabled
+	AbsoluteSessionLifetimeInMinutes types.Int64 `tfsdk:"absolute_session_lifetime_in_minutes"`
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes"`
+	// whether to enable single-use refresh tokens
+	EnableSingleUseRefreshTokens types.Bool `tfsdk:"enable_single_use_refresh_tokens"`
 	// refresh token time to live in minutes
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes"`
 }
@@ -2556,7 +2561,9 @@ func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringRead(existingState T
 }
 
 func (c TokenAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["absolute_session_lifetime_in_minutes"] = attrs["absolute_session_lifetime_in_minutes"].SetOptional()
 	attrs["access_token_ttl_in_minutes"] = attrs["access_token_ttl_in_minutes"].SetOptional()
+	attrs["enable_single_use_refresh_tokens"] = attrs["enable_single_use_refresh_tokens"].SetOptional()
 	attrs["refresh_token_ttl_in_minutes"] = attrs["refresh_token_ttl_in_minutes"].SetOptional()
 
 	return attrs
@@ -2580,8 +2587,10 @@ func (o TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_token_ttl_in_minutes":  o.AccessTokenTtlInMinutes,
-			"refresh_token_ttl_in_minutes": o.RefreshTokenTtlInMinutes,
+			"absolute_session_lifetime_in_minutes": o.AbsoluteSessionLifetimeInMinutes,
+			"access_token_ttl_in_minutes":          o.AccessTokenTtlInMinutes,
+			"enable_single_use_refresh_tokens":     o.EnableSingleUseRefreshTokens,
+			"refresh_token_ttl_in_minutes":         o.RefreshTokenTtlInMinutes,
 		})
 }
 
@@ -2589,8 +2598,10 @@ func (o TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o TokenAccessPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_token_ttl_in_minutes":  types.Int64Type,
-			"refresh_token_ttl_in_minutes": types.Int64Type,
+			"absolute_session_lifetime_in_minutes": types.Int64Type,
+			"access_token_ttl_in_minutes":          types.Int64Type,
+			"enable_single_use_refresh_tokens":     types.BoolType,
+			"refresh_token_ttl_in_minutes":         types.Int64Type,
 		},
 	}
 }

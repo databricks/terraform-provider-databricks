@@ -3043,6 +3043,16 @@ type PermissionsChange_SdkV2 struct {
 	// The principal whose privileges we are changing. Only one of principal or
 	// principal_id should be specified, never both at the same time.
 	Principal types.String `tfsdk:"principal"`
+	// An opaque internal ID that identifies the principal whose privileges
+	// should be removed.
+	//
+	// This field is intended for removing privileges associated with a deleted
+	// user. When set, only the entries specified in the remove field are
+	// processed; any entries in the add field will be rejected.
+	//
+	// Only one of principal or principal_id should be specified, never both at
+	// the same time.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
 }
@@ -3056,6 +3066,7 @@ func (newState *PermissionsChange_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 func (c PermissionsChange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["add"] = attrs["add"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["remove"] = attrs["remove"].SetOptional()
 
 	return attrs
@@ -3082,9 +3093,10 @@ func (o PermissionsChange_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"add":       o.Add,
-			"principal": o.Principal,
-			"remove":    o.Remove,
+			"add":          o.Add,
+			"principal":    o.Principal,
+			"principal_id": o.PrincipalId,
+			"remove":       o.Remove,
 		})
 }
 
@@ -3095,7 +3107,8 @@ func (o PermissionsChange_SdkV2) Type(ctx context.Context) attr.Type {
 			"add": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"principal": types.StringType,
+			"principal":    types.StringType,
+			"principal_id": types.Int64Type,
 			"remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -3159,6 +3172,9 @@ type PrivilegeAssignment_SdkV2 struct {
 	// The principal (user email address or group name). For deleted principals,
 	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
+	// Unique identifier of the principal. For active principals, both
+	// `principal` and `principal_id` are present.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
 }
@@ -3171,6 +3187,7 @@ func (newState *PrivilegeAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existin
 
 func (c PrivilegeAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["privileges"] = attrs["privileges"].SetOptional()
 
 	return attrs
@@ -3196,8 +3213,9 @@ func (o PrivilegeAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal":  o.Principal,
-			"privileges": o.Privileges,
+			"principal":    o.Principal,
+			"principal_id": o.PrincipalId,
+			"privileges":   o.Privileges,
 		})
 }
 
@@ -3205,7 +3223,8 @@ func (o PrivilegeAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (o PrivilegeAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal": types.StringType,
+			"principal":    types.StringType,
+			"principal_id": types.Int64Type,
 			"privileges": basetypes.ListType{
 				ElemType: types.StringType,
 			},

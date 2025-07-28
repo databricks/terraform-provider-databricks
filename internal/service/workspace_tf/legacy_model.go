@@ -1115,6 +1115,12 @@ type ExportRequest_SdkV2 struct {
 	// on the objects type. Directory exports will include notebooks and
 	// workspace files.
 	Format types.String `tfsdk:"-"`
+	// This specifies which cell outputs should be included in the export (if
+	// the export format allows it). If not specified, the behavior is
+	// determined by the format. For JUPYTER format, the default is to include
+	// all outputs. This is a public endpoint, but only ALL or NONE is
+	// documented publically, DATABRICKS is internal only
+	Outputs types.String `tfsdk:"-"`
 	// The absolute path of the object or directory. Exporting a directory is
 	// only supported for the `DBC`, `SOURCE`, and `AUTO` format.
 	Path types.String `tfsdk:"-"`
@@ -1138,8 +1144,9 @@ func (o ExportRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"format": o.Format,
-			"path":   o.Path,
+			"format":  o.Format,
+			"outputs": o.Outputs,
+			"path":    o.Path,
 		})
 }
 
@@ -1147,8 +1154,9 @@ func (o ExportRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (o ExportRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"format": types.StringType,
-			"path":   types.StringType,
+			"format":  types.StringType,
+			"outputs": types.StringType,
+			"path":    types.StringType,
 		},
 	}
 }

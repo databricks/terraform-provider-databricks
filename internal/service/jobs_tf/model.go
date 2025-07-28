@@ -1556,6 +1556,9 @@ type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
+	// Indicate whether the continuous job is applying task level retries or
+	// not. Defaults to NEVER.
+	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
 func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous) {
@@ -1566,6 +1569,7 @@ func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuo
 
 func (c Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1588,7 +1592,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status": o.PauseStatus,
+			"pause_status":    o.PauseStatus,
+			"task_retry_mode": o.TaskRetryMode,
 		})
 }
 
@@ -1596,7 +1601,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Continuous) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status": types.StringType,
+			"pause_status":    types.StringType,
+			"task_retry_mode": types.StringType,
 		},
 	}
 }
@@ -7755,6 +7761,112 @@ func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Runs = types.ListValueMust(t, vs)
+}
+
+type ModelTriggerConfiguration struct {
+	// Aliases of the model versions to monitor. Can only be used in conjunction
+	// with condition MODEL_ALIAS_SET.
+	Aliases types.List `tfsdk:"aliases"`
+	// The condition based on which to trigger a job run.
+	Condition types.String `tfsdk:"condition"`
+	// If set, the trigger starts a run only after the specified amount of time
+	// has passed since the last time the trigger fired. The minimum allowed
+	// value is 60 seconds.
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
+	// Name of the securable to monitor ("mycatalog.myschema.mymodel" in the
+	// case of model-level triggers, "mycatalog.myschema" in the case of
+	// schema-level triggers) or empty in the case of metastore-level triggers.
+	SecurableName types.String `tfsdk:"securable_name"`
+	// If set, the trigger starts a run only after no model updates have
+	// occurred for the specified time and can be used to wait for a series of
+	// model updates before triggering a run. The minimum allowed value is 60
+	// seconds.
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
+}
+
+func (newState *ModelTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelTriggerConfiguration) {
+}
+
+func (newState *ModelTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState ModelTriggerConfiguration) {
+}
+
+func (c ModelTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aliases"] = attrs["aliases"].SetOptional()
+	attrs["condition"] = attrs["condition"].SetRequired()
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["securable_name"] = attrs["securable_name"].SetOptional()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aliases": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (o ModelTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aliases":                           o.Aliases,
+			"condition":                         o.Condition,
+			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
+			"securable_name":                    o.SecurableName,
+			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelTriggerConfiguration) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"securable_name":                    types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
+		},
+	}
+}
+
+// GetAliases returns the value of the Aliases field in ModelTriggerConfiguration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelTriggerConfiguration) GetAliases(ctx context.Context) ([]types.String, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in ModelTriggerConfiguration.
+func (o *ModelTriggerConfiguration) SetAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Aliases = types.ListValueMust(t, vs)
 }
 
 type NotebookOutput struct {
@@ -19031,6 +19143,8 @@ func (o TriggerInfo) Type(ctx context.Context) attr.Type {
 type TriggerSettings struct {
 	// File arrival trigger settings.
 	FileArrival types.Object `tfsdk:"file_arrival"`
+
+	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
@@ -19049,6 +19163,7 @@ func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState Tri
 
 func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -19067,6 +19182,7 @@ func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"model":        reflect.TypeOf(ModelTriggerConfiguration{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
 		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
@@ -19081,6 +19197,7 @@ func (o TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival": o.FileArrival,
+			"model":        o.Model,
 			"pause_status": o.PauseStatus,
 			"periodic":     o.Periodic,
 			"table":        o.Table,
@@ -19093,6 +19210,7 @@ func (o TriggerSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": FileArrivalTriggerConfiguration{}.Type(ctx),
+			"model":        ModelTriggerConfiguration{}.Type(ctx),
 			"pause_status": types.StringType,
 			"periodic":     PeriodicTriggerConfiguration{}.Type(ctx),
 			"table":        TableUpdateTriggerConfiguration{}.Type(ctx),
@@ -19127,6 +19245,34 @@ func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 func (o *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	o.FileArrival = vs
+}
+
+// GetModel returns the value of the Model field in TriggerSettings as
+// a ModelTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetModel(ctx context.Context) (ModelTriggerConfiguration, bool) {
+	var e ModelTriggerConfiguration
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []ModelTriggerConfiguration
+	d := o.Model.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in TriggerSettings.
+func (o *TriggerSettings) SetModel(ctx context.Context, v ModelTriggerConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	o.Model = vs
 }
 
 // GetPeriodic returns the value of the Periodic field in TriggerSettings as

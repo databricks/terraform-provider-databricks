@@ -95,22 +95,24 @@ type secretsClient interface {
 	GetAcl(context.Context, workspace.GetAclRequest) (*workspace.AclItem, error)
 }
 
-// robustPutACL creates an ACL and verifies it was created on the right resource.
-// It retries on errors that are expected to be eventually consistent.
+// robustPutACL creates or overwrites the ACL associated with the given
+// principal.
 //
-// This is a workaround for the fact that the ACL creation might not be
-// associated with the right resources due to internal caching issues.
+// The function is retried until the ACL is applied with the right
+// permission. This is necessary to workaround current limitations due to
+// an internal caching mechanism.
+//
+// See [issue-4195] for reference.
+//
+// [issue-4195]: https://github.com/databricks/terraform-provider-databricks/issues/4195
 func robustPutACL(sc secretsClient, ctx context.Context, req workspace.PutAcl, timeout time.Duration) error {
 	return retry.RetryContext(ctx, timeout, func() *retry.RetryError {
-		//
 		if err := sc.PutAcl(ctx, req); err != nil {
 			return retry.NonRetryableError(fmt.Errorf("failed to create Secret ACL: %w", err))
 		}
 
-		// Verify the ACL was created by reading it back.
-		//
-		// This is a workaround for the fact that the ACL creation might not be
-		// associated with the right resources due to internal caching issues.
+		// Verify that the ACL was properly applied with the right permissions.
+		// If not, retry the operation until the ACL is applied correctly.
 		secretACL, err := sc.GetAcl(ctx, workspace.GetAclRequest{
 			Scope:     req.Scope,
 			Principal: req.Principal,
@@ -118,9 +120,6 @@ func robustPutACL(sc secretsClient, ctx context.Context, req workspace.PutAcl, t
 		if err != nil {
 			return retry.RetryableError(fmt.Errorf("secret ACL creation could not be verified: %w", err))
 		}
-
-		// Verify the permission matches what was requested. We retry this
-		// because the ACL creation is eventually consistent.
 		if secretACL.Permission.String() != req.Permission.String() {
 			return retry.RetryableError(fmt.Errorf("secret ACL permission mismatch: expected %s, got %s", req.Permission.String(), secretACL.Permission.String()))
 		}

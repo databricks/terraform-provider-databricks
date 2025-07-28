@@ -42,6 +42,8 @@ The following arguments are supported:
 * `properties` (object, optional) - A map of key-value properties attached to the external metadata object
 * `url` (string, optional) - URL associated with the external metadata object
 
+
+
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - Time at which this external metadata object was created

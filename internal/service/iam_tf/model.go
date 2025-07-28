@@ -33,10 +33,10 @@ type AccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlRequest) {
+func (newState *AccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan AccessControlRequest) {
 }
 
-func (newState *AccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AccessControlRequest) {
+func (newState *AccessControlRequest) SyncFieldsDuringRead(existingState AccessControlRequest) {
 }
 
 func (c AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -98,10 +98,10 @@ type AccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlResponse) {
+func (newState *AccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan AccessControlResponse) {
 }
 
-func (newState *AccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AccessControlResponse) {
+func (newState *AccessControlResponse) SyncFieldsDuringRead(existingState AccessControlResponse) {
 }
 
 func (c AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -190,10 +190,10 @@ type Actor struct {
 	ActorId types.Int64 `tfsdk:"actor_id"`
 }
 
-func (newState *Actor) SyncEffectiveFieldsDuringCreateOrUpdate(plan Actor) {
+func (newState *Actor) SyncFieldsDuringCreateOrUpdate(plan Actor) {
 }
 
-func (newState *Actor) SyncEffectiveFieldsDuringRead(existingState Actor) {
+func (newState *Actor) SyncFieldsDuringRead(existingState Actor) {
 }
 
 func (c Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -239,10 +239,10 @@ type CheckPolicyResponse struct {
 	IsPermitted types.Bool `tfsdk:"is_permitted"`
 }
 
-func (newState *CheckPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CheckPolicyResponse) {
+func (newState *CheckPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan CheckPolicyResponse) {
 }
 
-func (newState *CheckPolicyResponse) SyncEffectiveFieldsDuringRead(existingState CheckPolicyResponse) {
+func (newState *CheckPolicyResponse) SyncFieldsDuringRead(existingState CheckPolicyResponse) {
 }
 
 func (c CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -327,10 +327,10 @@ type ComplexValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *ComplexValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplexValue) {
+func (newState *ComplexValue) SyncFieldsDuringCreateOrUpdate(plan ComplexValue) {
 }
 
-func (newState *ComplexValue) SyncEffectiveFieldsDuringRead(existingState ComplexValue) {
+func (newState *ComplexValue) SyncFieldsDuringRead(existingState ComplexValue) {
 }
 
 func (c ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -386,10 +386,10 @@ type ConsistencyToken struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *ConsistencyToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsistencyToken) {
+func (newState *ConsistencyToken) SyncFieldsDuringCreateOrUpdate(plan ConsistencyToken) {
 }
 
-func (newState *ConsistencyToken) SyncEffectiveFieldsDuringRead(existingState ConsistencyToken) {
+func (newState *ConsistencyToken) SyncFieldsDuringRead(existingState ConsistencyToken) {
 }
 
 func (c ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -718,10 +718,10 @@ func (o DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 type DeleteWorkspacePermissionAssignmentResponse struct {
 }
 
-func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspacePermissionAssignmentResponse) {
+func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteWorkspacePermissionAssignmentResponse) {
 }
 
-func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspacePermissionAssignmentResponse) {
+func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringRead(existingState DeleteWorkspacePermissionAssignmentResponse) {
 }
 
 func (c DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -945,10 +945,10 @@ type GetAssignableRolesForResourceResponse struct {
 	Roles types.List `tfsdk:"roles"`
 }
 
-func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceResponse) {
+func (newState *GetAssignableRolesForResourceResponse) SyncFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceResponse) {
 }
 
-func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceResponse) {
+func (newState *GetAssignableRolesForResourceResponse) SyncFieldsDuringRead(existingState GetAssignableRolesForResourceResponse) {
 }
 
 func (c GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1089,10 +1089,10 @@ type GetPasswordPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPasswordPermissionLevelsResponse) {
+func (newState *GetPasswordPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetPasswordPermissionLevelsResponse) {
 }
 
-func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPasswordPermissionLevelsResponse) {
+func (newState *GetPasswordPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetPasswordPermissionLevelsResponse) {
 }
 
 func (c GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1240,10 +1240,10 @@ type GetPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionLevelsResponse) {
+func (newState *GetPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetPermissionLevelsResponse) {
 }
 
-func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsResponse) {
+func (newState *GetPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetPermissionLevelsResponse) {
 }
 
 func (c GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1571,10 +1571,10 @@ type GrantRule struct {
 	Role types.String `tfsdk:"role"`
 }
 
-func (newState *GrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan GrantRule) {
+func (newState *GrantRule) SyncFieldsDuringCreateOrUpdate(plan GrantRule) {
 }
 
-func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule) {
+func (newState *GrantRule) SyncFieldsDuringRead(existingState GrantRule) {
 }
 
 func (c GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1671,10 +1671,10 @@ type Group struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *Group) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group) {
+func (newState *Group) SyncFieldsDuringCreateOrUpdate(plan Group) {
 }
 
-func (newState *Group) SyncEffectiveFieldsDuringRead(existingState Group) {
+func (newState *Group) SyncFieldsDuringRead(existingState Group) {
 }
 
 func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2192,10 +2192,10 @@ type ListGroupsResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGroupsResponse) {
+func (newState *ListGroupsResponse) SyncFieldsDuringCreateOrUpdate(plan ListGroupsResponse) {
 }
 
-func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState ListGroupsResponse) {
+func (newState *ListGroupsResponse) SyncFieldsDuringRead(existingState ListGroupsResponse) {
 }
 
 func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2320,10 +2320,10 @@ type ListServicePrincipalResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalResponse) {
+func (newState *ListServicePrincipalResponse) SyncFieldsDuringCreateOrUpdate(plan ListServicePrincipalResponse) {
 }
 
-func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalResponse) {
+func (newState *ListServicePrincipalResponse) SyncFieldsDuringRead(existingState ListServicePrincipalResponse) {
 }
 
 func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2581,10 +2581,10 @@ type ListUsersResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListUsersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUsersResponse) {
+func (newState *ListUsersResponse) SyncFieldsDuringCreateOrUpdate(plan ListUsersResponse) {
 }
 
-func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState ListUsersResponse) {
+func (newState *ListUsersResponse) SyncFieldsDuringRead(existingState ListUsersResponse) {
 }
 
 func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2815,10 +2815,10 @@ type MigratePermissionsResponse struct {
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated"`
 }
 
-func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsResponse) {
+func (newState *MigratePermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan MigratePermissionsResponse) {
 }
 
-func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsResponse) {
+func (newState *MigratePermissionsResponse) SyncFieldsDuringRead(existingState MigratePermissionsResponse) {
 }
 
 func (c MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2865,10 +2865,10 @@ type Name struct {
 	GivenName types.String `tfsdk:"givenName"`
 }
 
-func (newState *Name) SyncEffectiveFieldsDuringCreateOrUpdate(plan Name) {
+func (newState *Name) SyncFieldsDuringCreateOrUpdate(plan Name) {
 }
 
-func (newState *Name) SyncEffectiveFieldsDuringRead(existingState Name) {
+func (newState *Name) SyncFieldsDuringRead(existingState Name) {
 }
 
 func (c Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2919,10 +2919,10 @@ type ObjectPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectPermissions) {
+func (newState *ObjectPermissions) SyncFieldsDuringCreateOrUpdate(plan ObjectPermissions) {
 }
 
-func (newState *ObjectPermissions) SyncEffectiveFieldsDuringRead(existingState ObjectPermissions) {
+func (newState *ObjectPermissions) SyncFieldsDuringRead(existingState ObjectPermissions) {
 }
 
 func (c ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3113,10 +3113,10 @@ type PasswordAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlRequest) {
+func (newState *PasswordAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan PasswordAccessControlRequest) {
 }
 
-func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlRequest) {
+func (newState *PasswordAccessControlRequest) SyncFieldsDuringRead(existingState PasswordAccessControlRequest) {
 }
 
 func (c PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3178,10 +3178,10 @@ type PasswordAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlResponse) {
+func (newState *PasswordAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan PasswordAccessControlResponse) {
 }
 
-func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlResponse) {
+func (newState *PasswordAccessControlResponse) SyncFieldsDuringRead(existingState PasswordAccessControlResponse) {
 }
 
 func (c PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3271,10 +3271,10 @@ type PasswordPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PasswordPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermission) {
+func (newState *PasswordPermission) SyncFieldsDuringCreateOrUpdate(plan PasswordPermission) {
 }
 
-func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState PasswordPermission) {
+func (newState *PasswordPermission) SyncFieldsDuringRead(existingState PasswordPermission) {
 }
 
 func (c PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3358,10 +3358,10 @@ type PasswordPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *PasswordPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissions) {
+func (newState *PasswordPermissions) SyncFieldsDuringCreateOrUpdate(plan PasswordPermissions) {
 }
 
-func (newState *PasswordPermissions) SyncEffectiveFieldsDuringRead(existingState PasswordPermissions) {
+func (newState *PasswordPermissions) SyncFieldsDuringRead(existingState PasswordPermissions) {
 }
 
 func (c PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3443,10 +3443,10 @@ type PasswordPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsDescription) {
+func (newState *PasswordPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan PasswordPermissionsDescription) {
 }
 
-func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsDescription) {
+func (newState *PasswordPermissionsDescription) SyncFieldsDuringRead(existingState PasswordPermissionsDescription) {
 }
 
 func (c PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3563,10 +3563,10 @@ type Patch struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *Patch) SyncEffectiveFieldsDuringCreateOrUpdate(plan Patch) {
+func (newState *Patch) SyncFieldsDuringCreateOrUpdate(plan Patch) {
 }
 
-func (newState *Patch) SyncEffectiveFieldsDuringRead(existingState Patch) {
+func (newState *Patch) SyncFieldsDuringRead(existingState Patch) {
 }
 
 func (c Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3650,10 +3650,10 @@ type Permission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *Permission) SyncEffectiveFieldsDuringCreateOrUpdate(plan Permission) {
+func (newState *Permission) SyncFieldsDuringCreateOrUpdate(plan Permission) {
 }
 
-func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permission) {
+func (newState *Permission) SyncFieldsDuringRead(existingState Permission) {
 }
 
 func (c Permission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3740,10 +3740,10 @@ type PermissionAssignment struct {
 	Principal types.Object `tfsdk:"principal"`
 }
 
-func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
+func (newState *PermissionAssignment) SyncFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
 }
 
-func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingState PermissionAssignment) {
+func (newState *PermissionAssignment) SyncFieldsDuringRead(existingState PermissionAssignment) {
 }
 
 func (c PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3853,10 +3853,10 @@ type PermissionAssignments struct {
 	PermissionAssignments types.List `tfsdk:"permission_assignments"`
 }
 
-func (newState *PermissionAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignments) {
+func (newState *PermissionAssignments) SyncFieldsDuringCreateOrUpdate(plan PermissionAssignments) {
 }
 
-func (newState *PermissionAssignments) SyncEffectiveFieldsDuringRead(existingState PermissionAssignments) {
+func (newState *PermissionAssignments) SyncFieldsDuringRead(existingState PermissionAssignments) {
 }
 
 func (c PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3933,10 +3933,10 @@ type PermissionOutput struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PermissionOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionOutput) {
+func (newState *PermissionOutput) SyncFieldsDuringCreateOrUpdate(plan PermissionOutput) {
 }
 
-func (newState *PermissionOutput) SyncEffectiveFieldsDuringRead(existingState PermissionOutput) {
+func (newState *PermissionOutput) SyncFieldsDuringRead(existingState PermissionOutput) {
 }
 
 func (c PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3985,10 +3985,10 @@ type PermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsDescription) {
+func (newState *PermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan PermissionsDescription) {
 }
 
-func (newState *PermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PermissionsDescription) {
+func (newState *PermissionsDescription) SyncFieldsDuringRead(existingState PermissionsDescription) {
 }
 
 func (c PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4046,10 +4046,10 @@ type PrincipalOutput struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PrincipalOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrincipalOutput) {
+func (newState *PrincipalOutput) SyncFieldsDuringCreateOrUpdate(plan PrincipalOutput) {
 }
 
-func (newState *PrincipalOutput) SyncEffectiveFieldsDuringRead(existingState PrincipalOutput) {
+func (newState *PrincipalOutput) SyncFieldsDuringRead(existingState PrincipalOutput) {
 }
 
 func (c PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4107,10 +4107,10 @@ type ResourceMeta struct {
 	ResourceType types.String `tfsdk:"resourceType"`
 }
 
-func (newState *ResourceMeta) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResourceMeta) {
+func (newState *ResourceMeta) SyncFieldsDuringCreateOrUpdate(plan ResourceMeta) {
 }
 
-func (newState *ResourceMeta) SyncEffectiveFieldsDuringRead(existingState ResourceMeta) {
+func (newState *ResourceMeta) SyncFieldsDuringRead(existingState ResourceMeta) {
 }
 
 func (c ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4155,10 +4155,10 @@ type Role struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *Role) SyncEffectiveFieldsDuringCreateOrUpdate(plan Role) {
+func (newState *Role) SyncFieldsDuringCreateOrUpdate(plan Role) {
 }
 
-func (newState *Role) SyncEffectiveFieldsDuringRead(existingState Role) {
+func (newState *Role) SyncFieldsDuringRead(existingState Role) {
 }
 
 func (c Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4215,10 +4215,10 @@ type RuleSetResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *RuleSetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetResponse) {
+func (newState *RuleSetResponse) SyncFieldsDuringCreateOrUpdate(plan RuleSetResponse) {
 }
 
-func (newState *RuleSetResponse) SyncEffectiveFieldsDuringRead(existingState RuleSetResponse) {
+func (newState *RuleSetResponse) SyncFieldsDuringRead(existingState RuleSetResponse) {
 }
 
 func (c RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4311,10 +4311,10 @@ type RuleSetUpdateRequest struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetUpdateRequest) {
+func (newState *RuleSetUpdateRequest) SyncFieldsDuringCreateOrUpdate(plan RuleSetUpdateRequest) {
 }
 
-func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState RuleSetUpdateRequest) {
+func (newState *RuleSetUpdateRequest) SyncFieldsDuringRead(existingState RuleSetUpdateRequest) {
 }
 
 func (c RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4414,10 +4414,10 @@ type ServicePrincipal struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *ServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
+func (newState *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
 }
 
-func (newState *ServicePrincipal) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal) {
+func (newState *ServicePrincipal) SyncFieldsDuringRead(existingState ServicePrincipal) {
 }
 
 func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4964,10 +4964,10 @@ type User struct {
 	UserName types.String `tfsdk:"userName"`
 }
 
-func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
+func (newState *User) SyncFieldsDuringCreateOrUpdate(plan User) {
 }
 
-func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
+func (newState *User) SyncFieldsDuringRead(existingState User) {
 }
 
 func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5217,10 +5217,10 @@ type WorkspacePermissions struct {
 	Permissions types.List `tfsdk:"permissions"`
 }
 
-func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspacePermissions) {
+func (newState *WorkspacePermissions) SyncFieldsDuringCreateOrUpdate(plan WorkspacePermissions) {
 }
 
-func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringRead(existingState WorkspacePermissions) {
+func (newState *WorkspacePermissions) SyncFieldsDuringRead(existingState WorkspacePermissions) {
 }
 
 func (c WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

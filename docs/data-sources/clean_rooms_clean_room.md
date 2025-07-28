@@ -23,7 +23,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `access_restricted` (string) - Whether clean room access is restricted due to [CSP](https://docs.databricks.com/en/security/privacy/security-profile.html). Possible values are: `CSP_MISMATCH`, `NO_RESTRICTION`
-* `comment` (string) - 
+* `comment` (string)
 * `created_at` (integer) - When the clean room was created, in epoch milliseconds
 * `local_collaborator_alias` (string) - The alias of the collaborator tied to the local clean room
 * `name` (string) - The name of the clean room.
@@ -69,7 +69,7 @@ The following attributes are exported:
   1. It has the creator's global_metastore_id (determined by caller of CreateCleanRoom).
   
   2. Its invite_recipient_email is empty
-* `compliance_security_profile` (ComplianceSecurityProfile) - 
+* `compliance_security_profile` (ComplianceSecurityProfile)
 * `creator` (CleanRoomCollaborator) - Collaborator who creates the clean room
 * `egress_network_policy` (EgressNetworkPolicy) - Egress network policy to apply to the central clean room workspace
 * `region` (string) - Region of the central clean room
@@ -82,26 +82,26 @@ The following attributes are exported:
 * `internet_access` (EgressNetworkPolicyInternetAccessPolicy) - The access policy enforced for egress traffic to the internet
 
 ### EgressNetworkPolicyInternetAccessPolicy
-* `allowed_internet_destinations` (list of EgressNetworkPolicyInternetAccessPolicyInternetDestination) - 
-* `allowed_storage_destinations` (list of EgressNetworkPolicyInternetAccessPolicyStorageDestination) - 
+* `allowed_internet_destinations` (list of EgressNetworkPolicyInternetAccessPolicyInternetDestination)
+* `allowed_storage_destinations` (list of EgressNetworkPolicyInternetAccessPolicyStorageDestination)
 * `log_only_mode` (EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) - Optional. If not specified, assume the policy is enforced for all workloads
 * `restriction_mode` (string) - . Possible values are: `FULL_ACCESS`, `PRIVATE_ACCESS_ONLY`, `RESTRICTED_ACCESS`
 
 ### EgressNetworkPolicyInternetAccessPolicyInternetDestination
-* `destination` (string) - 
+* `destination` (string)
 * `protocol` (string) - . Possible values are: `TCP`
 * `type` (string) - . Possible values are: `FQDN`
 
 ### EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
 * `log_only_mode_type` (string) - . Possible values are: `ALL_SERVICES`, `SELECTED_SERVICES`
-* `workloads` (list of ) - 
+* `workloads` (list of string)
 
 ### EgressNetworkPolicyInternetAccessPolicyStorageDestination
-* `allowed_paths` (list of string) - 
-* `azure_container` (string) - 
-* `azure_dns_zone` (string) - 
-* `azure_storage_account` (string) - 
-* `azure_storage_service` (string) - 
-* `bucket_name` (string) - 
-* `region` (string) - 
+* `allowed_paths` (list of string)
+* `azure_container` (string)
+* `azure_dns_zone` (string)
+* `azure_storage_account` (string)
+* `azure_storage_service` (string)
+* `bucket_name` (string)
+* `region` (string)
 * `type` (string) - . Possible values are: `AWS_S3`, `AZURE_STORAGE`, `CLOUDFLARE_R2`, `GOOGLE_CLOUD_STORAGE`

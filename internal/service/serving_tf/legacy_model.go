@@ -36,10 +36,10 @@ type Ai21LabsConfig_SdkV2 struct {
 	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext"`
 }
 
-func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai21LabsConfig_SdkV2) {
+func (newState *Ai21LabsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan Ai21LabsConfig_SdkV2) {
 }
 
-func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState Ai21LabsConfig_SdkV2) {
+func (newState *Ai21LabsConfig_SdkV2) SyncFieldsDuringRead(existingState Ai21LabsConfig_SdkV2) {
 }
 
 func (c Ai21LabsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -102,10 +102,10 @@ type AiGatewayConfig_SdkV2 struct {
 	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
-func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayConfig_SdkV2) {
+func (newState *AiGatewayConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayConfig_SdkV2) {
 }
 
-func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayConfig_SdkV2) {
+func (newState *AiGatewayConfig_SdkV2) SyncFieldsDuringRead(existingState AiGatewayConfig_SdkV2) {
 }
 
 func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -320,10 +320,10 @@ type AiGatewayGuardrailParameters_SdkV2 struct {
 	ValidTopics types.List `tfsdk:"valid_topics"`
 }
 
-func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailParameters_SdkV2) {
+func (newState *AiGatewayGuardrailParameters_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailParameters_SdkV2) {
 }
 
-func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailParameters_SdkV2) {
+func (newState *AiGatewayGuardrailParameters_SdkV2) SyncFieldsDuringRead(existingState AiGatewayGuardrailParameters_SdkV2) {
 }
 
 func (c AiGatewayGuardrailParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -466,10 +466,10 @@ type AiGatewayGuardrailPiiBehavior_SdkV2 struct {
 	Behavior types.String `tfsdk:"behavior"`
 }
 
-func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailPiiBehavior_SdkV2) {
+func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailPiiBehavior_SdkV2) {
 }
 
-func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior_SdkV2) {
+func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior_SdkV2) {
 }
 
 func (c AiGatewayGuardrailPiiBehavior_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -516,10 +516,10 @@ type AiGatewayGuardrails_SdkV2 struct {
 	Output types.List `tfsdk:"output"`
 }
 
-func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrails_SdkV2) {
+func (newState *AiGatewayGuardrails_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayGuardrails_SdkV2) {
 }
 
-func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrails_SdkV2) {
+func (newState *AiGatewayGuardrails_SdkV2) SyncFieldsDuringRead(existingState AiGatewayGuardrails_SdkV2) {
 }
 
 func (c AiGatewayGuardrails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -639,10 +639,10 @@ type AiGatewayInferenceTableConfig_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayInferenceTableConfig_SdkV2) {
+func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayInferenceTableConfig_SdkV2) {
 }
 
-func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayInferenceTableConfig_SdkV2) {
+func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncFieldsDuringRead(existingState AiGatewayInferenceTableConfig_SdkV2) {
 }
 
 func (c AiGatewayInferenceTableConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -706,12 +706,15 @@ type AiGatewayRateLimit_SdkV2 struct {
 	// Renewal period field for a rate limit. Currently, only 'minute' is
 	// supported.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
+	// Used to specify how many tokens are allowed for a key within the
+	// renewal_period.
+	Tokens types.Int64 `tfsdk:"tokens"`
 }
 
-func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit_SdkV2) {
+func (newState *AiGatewayRateLimit_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit_SdkV2) {
 }
 
-func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayRateLimit_SdkV2) {
+func (newState *AiGatewayRateLimit_SdkV2) SyncFieldsDuringRead(existingState AiGatewayRateLimit_SdkV2) {
 }
 
 func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -719,6 +722,7 @@ func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["key"] = attrs["key"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["tokens"] = attrs["tokens"].SetOptional()
 
 	return attrs
 }
@@ -745,6 +749,7 @@ func (o AiGatewayRateLimit_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"key":            o.Key,
 			"principal":      o.Principal,
 			"renewal_period": o.RenewalPeriod,
+			"tokens":         o.Tokens,
 		})
 }
 
@@ -756,6 +761,7 @@ func (o AiGatewayRateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 			"key":            types.StringType,
 			"principal":      types.StringType,
 			"renewal_period": types.StringType,
+			"tokens":         types.Int64Type,
 		},
 	}
 }
@@ -765,10 +771,10 @@ type AiGatewayUsageTrackingConfig_SdkV2 struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayUsageTrackingConfig_SdkV2) {
+func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AiGatewayUsageTrackingConfig_SdkV2) {
 }
 
-func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayUsageTrackingConfig_SdkV2) {
+func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncFieldsDuringRead(existingState AiGatewayUsageTrackingConfig_SdkV2) {
 }
 
 func (c AiGatewayUsageTrackingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -848,10 +854,10 @@ type AmazonBedrockConfig_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
-func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig_SdkV2) {
+func (newState *AmazonBedrockConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig_SdkV2) {
 }
 
-func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AmazonBedrockConfig_SdkV2) {
+func (newState *AmazonBedrockConfig_SdkV2) SyncFieldsDuringRead(existingState AmazonBedrockConfig_SdkV2) {
 }
 
 func (c AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -922,10 +928,10 @@ type AnthropicConfig_SdkV2 struct {
 	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext"`
 }
 
-func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AnthropicConfig_SdkV2) {
+func (newState *AnthropicConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AnthropicConfig_SdkV2) {
 }
 
-func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AnthropicConfig_SdkV2) {
+func (newState *AnthropicConfig_SdkV2) SyncFieldsDuringRead(existingState AnthropicConfig_SdkV2) {
 }
 
 func (c AnthropicConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -979,10 +985,10 @@ type ApiKeyAuth_SdkV2 struct {
 	ValuePlaintext types.String `tfsdk:"value_plaintext"`
 }
 
-func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApiKeyAuth_SdkV2) {
+func (newState *ApiKeyAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ApiKeyAuth_SdkV2) {
 }
 
-func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApiKeyAuth_SdkV2) {
+func (newState *ApiKeyAuth_SdkV2) SyncFieldsDuringRead(existingState ApiKeyAuth_SdkV2) {
 }
 
 func (c ApiKeyAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1042,10 +1048,10 @@ type AutoCaptureConfigInput_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigInput_SdkV2) {
+func (newState *AutoCaptureConfigInput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AutoCaptureConfigInput_SdkV2) {
 }
 
-func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigInput_SdkV2) {
+func (newState *AutoCaptureConfigInput_SdkV2) SyncFieldsDuringRead(existingState AutoCaptureConfigInput_SdkV2) {
 }
 
 func (c AutoCaptureConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1110,10 +1116,10 @@ type AutoCaptureConfigOutput_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigOutput_SdkV2) {
+func (newState *AutoCaptureConfigOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AutoCaptureConfigOutput_SdkV2) {
 }
 
-func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigOutput_SdkV2) {
+func (newState *AutoCaptureConfigOutput_SdkV2) SyncFieldsDuringRead(existingState AutoCaptureConfigOutput_SdkV2) {
 }
 
 func (c AutoCaptureConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1200,10 +1206,10 @@ type AutoCaptureState_SdkV2 struct {
 	PayloadTable types.List `tfsdk:"payload_table"`
 }
 
-func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureState_SdkV2) {
+func (newState *AutoCaptureState_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AutoCaptureState_SdkV2) {
 }
 
-func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureState_SdkV2) {
+func (newState *AutoCaptureState_SdkV2) SyncFieldsDuringRead(existingState AutoCaptureState_SdkV2) {
 }
 
 func (c AutoCaptureState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1283,10 +1289,10 @@ type BearerTokenAuth_SdkV2 struct {
 	TokenPlaintext types.String `tfsdk:"token_plaintext"`
 }
 
-func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BearerTokenAuth_SdkV2) {
+func (newState *BearerTokenAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(plan BearerTokenAuth_SdkV2) {
 }
 
-func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState BearerTokenAuth_SdkV2) {
+func (newState *BearerTokenAuth_SdkV2) SyncFieldsDuringRead(existingState BearerTokenAuth_SdkV2) {
 }
 
 func (c BearerTokenAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1376,10 +1382,10 @@ type BuildLogsResponse_SdkV2 struct {
 	Logs types.String `tfsdk:"logs"`
 }
 
-func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsResponse_SdkV2) {
+func (newState *BuildLogsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan BuildLogsResponse_SdkV2) {
 }
 
-func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState BuildLogsResponse_SdkV2) {
+func (newState *BuildLogsResponse_SdkV2) SyncFieldsDuringRead(existingState BuildLogsResponse_SdkV2) {
 }
 
 func (c BuildLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1426,10 +1432,10 @@ type ChatMessage_SdkV2 struct {
 	Role types.String `tfsdk:"role"`
 }
 
-func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChatMessage_SdkV2) {
+func (newState *ChatMessage_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ChatMessage_SdkV2) {
 }
 
-func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState ChatMessage_SdkV2) {
+func (newState *ChatMessage_SdkV2) SyncFieldsDuringRead(existingState ChatMessage_SdkV2) {
 }
 
 func (c ChatMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1488,10 +1494,10 @@ type CohereConfig_SdkV2 struct {
 	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext"`
 }
 
-func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CohereConfig_SdkV2) {
+func (newState *CohereConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CohereConfig_SdkV2) {
 }
 
-func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CohereConfig_SdkV2) {
+func (newState *CohereConfig_SdkV2) SyncFieldsDuringRead(existingState CohereConfig_SdkV2) {
 }
 
 func (c CohereConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1879,10 +1885,10 @@ type CustomProviderConfig_SdkV2 struct {
 	CustomProviderUrl types.String `tfsdk:"custom_provider_url"`
 }
 
-func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomProviderConfig_SdkV2) {
+func (newState *CustomProviderConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CustomProviderConfig_SdkV2) {
 }
 
-func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomProviderConfig_SdkV2) {
+func (newState *CustomProviderConfig_SdkV2) SyncFieldsDuringRead(existingState CustomProviderConfig_SdkV2) {
 }
 
 func (c CustomProviderConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1997,10 +2003,10 @@ type DataPlaneInfo_SdkV2 struct {
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 }
 
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneInfo_SdkV2) {
+func (newState *DataPlaneInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DataPlaneInfo_SdkV2) {
 }
 
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo_SdkV2) {
+func (newState *DataPlaneInfo_SdkV2) SyncFieldsDuringRead(existingState DataPlaneInfo_SdkV2) {
 }
 
 func (c DataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2063,10 +2069,10 @@ type DatabricksModelServingConfig_SdkV2 struct {
 	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url"`
 }
 
-func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksModelServingConfig_SdkV2) {
+func (newState *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabricksModelServingConfig_SdkV2) {
 }
 
-func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabricksModelServingConfig_SdkV2) {
+func (newState *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringRead(existingState DatabricksModelServingConfig_SdkV2) {
 }
 
 func (c DatabricksModelServingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2120,10 +2126,10 @@ type DataframeSplitInput_SdkV2 struct {
 	Index types.List `tfsdk:"index"`
 }
 
-func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataframeSplitInput_SdkV2) {
+func (newState *DataframeSplitInput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DataframeSplitInput_SdkV2) {
 }
 
-func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataframeSplitInput_SdkV2) {
+func (newState *DataframeSplitInput_SdkV2) SyncFieldsDuringRead(existingState DataframeSplitInput_SdkV2) {
 }
 
 func (c DataframeSplitInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2330,10 +2336,10 @@ type EmbeddingsV1ResponseEmbeddingElement_SdkV2 struct {
 	Object types.String `tfsdk:"object"`
 }
 
-func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
+func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
 }
 
-func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
+func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
 }
 
 func (c EmbeddingsV1ResponseEmbeddingElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2427,10 +2433,10 @@ type EndpointCoreConfigInput_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput_SdkV2) {
+func (newState *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput_SdkV2) {
 }
 
-func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput_SdkV2) {
+func (newState *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringRead(existingState EndpointCoreConfigInput_SdkV2) {
 }
 
 func (c EndpointCoreConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2619,10 +2625,10 @@ type EndpointCoreConfigOutput_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigOutput_SdkV2) {
+func (newState *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointCoreConfigOutput_SdkV2) {
 }
 
-func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigOutput_SdkV2) {
+func (newState *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringRead(existingState EndpointCoreConfigOutput_SdkV2) {
 }
 
 func (c EndpointCoreConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2801,10 +2807,10 @@ type EndpointCoreConfigSummary_SdkV2 struct {
 	ServedModels types.List `tfsdk:"served_models"`
 }
 
-func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigSummary_SdkV2) {
+func (newState *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointCoreConfigSummary_SdkV2) {
 }
 
-func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigSummary_SdkV2) {
+func (newState *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringRead(existingState EndpointCoreConfigSummary_SdkV2) {
 }
 
 func (c EndpointCoreConfigSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2928,10 +2934,10 @@ type EndpointPendingConfig_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointPendingConfig_SdkV2) {
+func (newState *EndpointPendingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointPendingConfig_SdkV2) {
 }
 
-func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointPendingConfig_SdkV2) {
+func (newState *EndpointPendingConfig_SdkV2) SyncFieldsDuringRead(existingState EndpointPendingConfig_SdkV2) {
 }
 
 func (c EndpointPendingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3119,10 +3125,10 @@ type EndpointState_SdkV2 struct {
 	Ready types.String `tfsdk:"ready"`
 }
 
-func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointState_SdkV2) {
+func (newState *EndpointState_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointState_SdkV2) {
 }
 
-func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointState_SdkV2) {
+func (newState *EndpointState_SdkV2) SyncFieldsDuringRead(existingState EndpointState_SdkV2) {
 }
 
 func (c EndpointState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3172,10 +3178,10 @@ type EndpointTag_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTag_SdkV2) {
+func (newState *EndpointTag_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointTag_SdkV2) {
 }
 
-func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTag_SdkV2) {
+func (newState *EndpointTag_SdkV2) SyncFieldsDuringRead(existingState EndpointTag_SdkV2) {
 }
 
 func (c EndpointTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3222,10 +3228,10 @@ type EndpointTags_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags_SdkV2) {
+func (newState *EndpointTags_SdkV2) SyncFieldsDuringCreateOrUpdate(plan EndpointTags_SdkV2) {
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTags_SdkV2) {
+func (newState *EndpointTags_SdkV2) SyncFieldsDuringRead(existingState EndpointTags_SdkV2) {
 }
 
 func (c EndpointTags_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3458,10 +3464,10 @@ type ExternalModel_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModel_SdkV2) {
+func (newState *ExternalModel_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ExternalModel_SdkV2) {
 }
 
-func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModel_SdkV2) {
+func (newState *ExternalModel_SdkV2) SyncFieldsDuringRead(existingState ExternalModel_SdkV2) {
 }
 
 func (c ExternalModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3814,10 +3820,10 @@ type ExternalModelUsageElement_SdkV2 struct {
 	TotalTokens types.Int64 `tfsdk:"total_tokens"`
 }
 
-func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModelUsageElement_SdkV2) {
+func (newState *ExternalModelUsageElement_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ExternalModelUsageElement_SdkV2) {
 }
 
-func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModelUsageElement_SdkV2) {
+func (newState *ExternalModelUsageElement_SdkV2) SyncFieldsDuringRead(existingState ExternalModelUsageElement_SdkV2) {
 }
 
 func (c ExternalModelUsageElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3873,10 +3879,10 @@ type FallbackConfig_SdkV2 struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FallbackConfig_SdkV2) {
+func (newState *FallbackConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan FallbackConfig_SdkV2) {
 }
 
-func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState FallbackConfig_SdkV2) {
+func (newState *FallbackConfig_SdkV2) SyncFieldsDuringRead(existingState FallbackConfig_SdkV2) {
 }
 
 func (c FallbackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3928,10 +3934,10 @@ type FoundationModel_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FoundationModel_SdkV2) {
+func (newState *FoundationModel_SdkV2) SyncFieldsDuringCreateOrUpdate(plan FoundationModel_SdkV2) {
 }
 
-func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState FoundationModel_SdkV2) {
+func (newState *FoundationModel_SdkV2) SyncFieldsDuringRead(existingState FoundationModel_SdkV2) {
 }
 
 func (c FoundationModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4093,10 +4099,10 @@ type GetServingEndpointPermissionLevelsResponse_SdkV2 struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsResponse_SdkV2) {
+func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsResponse_SdkV2) {
 }
 
-func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse_SdkV2) {
+func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse_SdkV2) {
 }
 
 func (c GetServingEndpointPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4271,10 +4277,10 @@ type GoogleCloudVertexAiConfig_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GoogleCloudVertexAiConfig_SdkV2) {
+func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GoogleCloudVertexAiConfig_SdkV2) {
 }
 
-func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GoogleCloudVertexAiConfig_SdkV2) {
+func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringRead(existingState GoogleCloudVertexAiConfig_SdkV2) {
 }
 
 func (c GoogleCloudVertexAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4363,10 +4369,10 @@ type ListEndpointsResponse_SdkV2 struct {
 	Endpoints types.List `tfsdk:"endpoints"`
 }
 
-func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsResponse_SdkV2) {
+func (newState *ListEndpointsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListEndpointsResponse_SdkV2) {
 }
 
-func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointsResponse_SdkV2) {
+func (newState *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(existingState ListEndpointsResponse_SdkV2) {
 }
 
 func (c ListEndpointsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4515,10 +4521,10 @@ type ModelDataPlaneInfo_SdkV2 struct {
 	QueryInfo types.List `tfsdk:"query_info"`
 }
 
-func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDataPlaneInfo_SdkV2) {
+func (newState *ModelDataPlaneInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ModelDataPlaneInfo_SdkV2) {
 }
 
-func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelDataPlaneInfo_SdkV2) {
+func (newState *ModelDataPlaneInfo_SdkV2) SyncFieldsDuringRead(existingState ModelDataPlaneInfo_SdkV2) {
 }
 
 func (c ModelDataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4644,10 +4650,10 @@ type OpenAiConfig_SdkV2 struct {
 	OpenaiOrganization types.String `tfsdk:"openai_organization"`
 }
 
-func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OpenAiConfig_SdkV2) {
+func (newState *OpenAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan OpenAiConfig_SdkV2) {
 }
 
-func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState OpenAiConfig_SdkV2) {
+func (newState *OpenAiConfig_SdkV2) SyncFieldsDuringRead(existingState OpenAiConfig_SdkV2) {
 }
 
 func (c OpenAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4730,10 +4736,10 @@ type PaLmConfig_SdkV2 struct {
 	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext"`
 }
 
-func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PaLmConfig_SdkV2) {
+func (newState *PaLmConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PaLmConfig_SdkV2) {
 }
 
-func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PaLmConfig_SdkV2) {
+func (newState *PaLmConfig_SdkV2) SyncFieldsDuringRead(existingState PaLmConfig_SdkV2) {
 }
 
 func (c PaLmConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4888,10 +4894,10 @@ type PayloadTable_SdkV2 struct {
 	StatusMessage types.String `tfsdk:"status_message"`
 }
 
-func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PayloadTable_SdkV2) {
+func (newState *PayloadTable_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PayloadTable_SdkV2) {
 }
 
-func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState PayloadTable_SdkV2) {
+func (newState *PayloadTable_SdkV2) SyncFieldsDuringRead(existingState PayloadTable_SdkV2) {
 }
 
 func (c PayloadTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4944,10 +4950,10 @@ type PtEndpointCoreConfig_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
+func (newState *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
 }
 
-func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
+func (newState *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
 }
 
 func (c PtEndpointCoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5069,10 +5075,10 @@ type PtServedModel_SdkV2 struct {
 	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 }
 
-func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
+func (newState *PtServedModel_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
 }
 
-func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtServedModel_SdkV2) {
+func (newState *PtServedModel_SdkV2) SyncFieldsDuringRead(existingState PtServedModel_SdkV2) {
 }
 
 func (c PtServedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5351,10 +5357,10 @@ type PutAiGatewayResponse_SdkV2 struct {
 	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
-func (newState *PutAiGatewayResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayResponse_SdkV2) {
+func (newState *PutAiGatewayResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PutAiGatewayResponse_SdkV2) {
 }
 
-func (newState *PutAiGatewayResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayResponse_SdkV2) {
+func (newState *PutAiGatewayResponse_SdkV2) SyncFieldsDuringRead(existingState PutAiGatewayResponse_SdkV2) {
 }
 
 func (c PutAiGatewayResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5632,10 +5638,10 @@ type PutResponse_SdkV2 struct {
 	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse_SdkV2) {
+func (newState *PutResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PutResponse_SdkV2) {
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutResponse_SdkV2) {
+func (newState *PutResponse_SdkV2) SyncFieldsDuringRead(existingState PutResponse_SdkV2) {
 }
 
 func (c PutResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6020,10 +6026,10 @@ type QueryEndpointResponse_SdkV2 struct {
 	Usage types.List `tfsdk:"usage"`
 }
 
-func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointResponse_SdkV2) {
+func (newState *QueryEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan QueryEndpointResponse_SdkV2) {
 }
 
-func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryEndpointResponse_SdkV2) {
+func (newState *QueryEndpointResponse_SdkV2) SyncFieldsDuringRead(existingState QueryEndpointResponse_SdkV2) {
 }
 
 func (c QueryEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6218,10 +6224,10 @@ type RateLimit_SdkV2 struct {
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
 }
 
-func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RateLimit_SdkV2) {
+func (newState *RateLimit_SdkV2) SyncFieldsDuringCreateOrUpdate(plan RateLimit_SdkV2) {
 }
 
-func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState RateLimit_SdkV2) {
+func (newState *RateLimit_SdkV2) SyncFieldsDuringRead(existingState RateLimit_SdkV2) {
 }
 
 func (c RateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6276,10 +6282,10 @@ type Route_SdkV2 struct {
 	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage"`
 }
 
-func (newState *Route_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route_SdkV2) {
+func (newState *Route_SdkV2) SyncFieldsDuringCreateOrUpdate(plan Route_SdkV2) {
 }
 
-func (newState *Route_SdkV2) SyncEffectiveFieldsDuringRead(existingState Route_SdkV2) {
+func (newState *Route_SdkV2) SyncFieldsDuringRead(existingState Route_SdkV2) {
 }
 
 func (c Route_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6395,10 +6401,10 @@ type ServedEntityInput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityInput_SdkV2) {
+func (newState *ServedEntityInput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedEntityInput_SdkV2) {
 }
 
-func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityInput_SdkV2) {
+func (newState *ServedEntityInput_SdkV2) SyncFieldsDuringRead(existingState ServedEntityInput_SdkV2) {
 }
 
 func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6614,10 +6620,10 @@ type ServedEntityOutput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityOutput_SdkV2) {
+func (newState *ServedEntityOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedEntityOutput_SdkV2) {
 }
 
-func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityOutput_SdkV2) {
+func (newState *ServedEntityOutput_SdkV2) SyncFieldsDuringRead(existingState ServedEntityOutput_SdkV2) {
 }
 
 func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6840,10 +6846,10 @@ type ServedEntitySpec_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntitySpec_SdkV2) {
+func (newState *ServedEntitySpec_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedEntitySpec_SdkV2) {
 }
 
-func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntitySpec_SdkV2) {
+func (newState *ServedEntitySpec_SdkV2) SyncFieldsDuringRead(existingState ServedEntitySpec_SdkV2) {
 }
 
 func (c ServedEntitySpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7013,10 +7019,10 @@ type ServedModelInput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelInput_SdkV2) {
+func (newState *ServedModelInput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedModelInput_SdkV2) {
 }
 
-func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelInput_SdkV2) {
+func (newState *ServedModelInput_SdkV2) SyncFieldsDuringRead(existingState ServedModelInput_SdkV2) {
 }
 
 func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7180,10 +7186,10 @@ type ServedModelOutput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelOutput_SdkV2) {
+func (newState *ServedModelOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedModelOutput_SdkV2) {
 }
 
-func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelOutput_SdkV2) {
+func (newState *ServedModelOutput_SdkV2) SyncFieldsDuringRead(existingState ServedModelOutput_SdkV2) {
 }
 
 func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7331,10 +7337,10 @@ type ServedModelSpec_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelSpec_SdkV2) {
+func (newState *ServedModelSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedModelSpec_SdkV2) {
 }
 
-func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelSpec_SdkV2) {
+func (newState *ServedModelSpec_SdkV2) SyncFieldsDuringRead(existingState ServedModelSpec_SdkV2) {
 }
 
 func (c ServedModelSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7386,10 +7392,10 @@ type ServedModelState_SdkV2 struct {
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
 }
 
-func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelState_SdkV2) {
+func (newState *ServedModelState_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServedModelState_SdkV2) {
 }
 
-func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelState_SdkV2) {
+func (newState *ServedModelState_SdkV2) SyncFieldsDuringRead(existingState ServedModelState_SdkV2) {
 }
 
 func (c ServedModelState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7438,10 +7444,10 @@ type ServerLogsResponse_SdkV2 struct {
 	Logs types.String `tfsdk:"logs"`
 }
 
-func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServerLogsResponse_SdkV2) {
+func (newState *ServerLogsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServerLogsResponse_SdkV2) {
 }
 
-func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServerLogsResponse_SdkV2) {
+func (newState *ServerLogsResponse_SdkV2) SyncFieldsDuringRead(existingState ServerLogsResponse_SdkV2) {
 }
 
 func (c ServerLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7511,10 +7517,10 @@ type ServingEndpoint_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpoint_SdkV2) {
+func (newState *ServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpoint_SdkV2) {
 }
 
-func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpoint_SdkV2) {
+func (newState *ServingEndpoint_SdkV2) SyncFieldsDuringRead(existingState ServingEndpoint_SdkV2) {
 }
 
 func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7718,10 +7724,10 @@ type ServingEndpointAccessControlRequest_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlRequest_SdkV2) {
+func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlRequest_SdkV2) {
 }
 
-func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlRequest_SdkV2) {
+func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointAccessControlRequest_SdkV2) {
 }
 
 func (c ServingEndpointAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7783,10 +7789,10 @@ type ServingEndpointAccessControlResponse_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlResponse_SdkV2) {
+func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlResponse_SdkV2) {
 }
 
-func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlResponse_SdkV2) {
+func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointAccessControlResponse_SdkV2) {
 }
 
 func (c ServingEndpointAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7909,10 +7915,10 @@ type ServingEndpointDetailed_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointDetailed_SdkV2) {
+func (newState *ServingEndpointDetailed_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointDetailed_SdkV2) {
 }
 
-func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointDetailed_SdkV2) {
+func (newState *ServingEndpointDetailed_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointDetailed_SdkV2) {
 }
 
 func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8188,10 +8194,10 @@ type ServingEndpointPermission_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermission_SdkV2) {
+func (newState *ServingEndpointPermission_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointPermission_SdkV2) {
 }
 
-func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermission_SdkV2) {
+func (newState *ServingEndpointPermission_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointPermission_SdkV2) {
 }
 
 func (c ServingEndpointPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8275,10 +8281,10 @@ type ServingEndpointPermissions_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissions_SdkV2) {
+func (newState *ServingEndpointPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointPermissions_SdkV2) {
 }
 
-func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissions_SdkV2) {
+func (newState *ServingEndpointPermissions_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointPermissions_SdkV2) {
 }
 
 func (c ServingEndpointPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8360,10 +8366,10 @@ type ServingEndpointPermissionsDescription_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsDescription_SdkV2) {
+func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsDescription_SdkV2) {
 }
 
-func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsDescription_SdkV2) {
+func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncFieldsDuringRead(existingState ServingEndpointPermissionsDescription_SdkV2) {
 }
 
 func (c ServingEndpointPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8480,10 +8486,10 @@ type TrafficConfig_SdkV2 struct {
 	Routes types.List `tfsdk:"routes"`
 }
 
-func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrafficConfig_SdkV2) {
+func (newState *TrafficConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan TrafficConfig_SdkV2) {
 }
 
-func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrafficConfig_SdkV2) {
+func (newState *TrafficConfig_SdkV2) SyncFieldsDuringRead(existingState TrafficConfig_SdkV2) {
 }
 
 func (c TrafficConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8635,10 +8641,10 @@ type V1ResponseChoiceElement_SdkV2 struct {
 	Text types.String `tfsdk:"text"`
 }
 
-func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan V1ResponseChoiceElement_SdkV2) {
+func (newState *V1ResponseChoiceElement_SdkV2) SyncFieldsDuringCreateOrUpdate(plan V1ResponseChoiceElement_SdkV2) {
 }
 
-func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState V1ResponseChoiceElement_SdkV2) {
+func (newState *V1ResponseChoiceElement_SdkV2) SyncFieldsDuringRead(existingState V1ResponseChoiceElement_SdkV2) {
 }
 
 func (c V1ResponseChoiceElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

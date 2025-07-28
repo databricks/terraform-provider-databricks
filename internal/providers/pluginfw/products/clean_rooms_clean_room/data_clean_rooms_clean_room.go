@@ -83,7 +83,7 @@ func (r *CleanRoomDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

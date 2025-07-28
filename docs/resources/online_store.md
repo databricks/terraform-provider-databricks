@@ -13,6 +13,8 @@ The following arguments are supported:
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
 * `read_replica_count` (integer, optional) - The number of read replicas for the online store. Defaults to 0
 
+
+
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `creation_time` (string) - The timestamp when the online store was created

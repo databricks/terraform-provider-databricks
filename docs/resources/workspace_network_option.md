@@ -30,6 +30,8 @@ The following arguments are supported:
   the workspace will use 'default-policy'
 * `workspace_id` (integer, optional) - The workspace ID
 
+
+
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 

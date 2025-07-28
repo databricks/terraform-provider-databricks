@@ -26,10 +26,10 @@ type AwsCredentials struct {
 	StsRole types.Object `tfsdk:"sts_role"`
 }
 
-func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsCredentials) {
+func (newState *AwsCredentials) SyncFieldsDuringCreateOrUpdate(plan AwsCredentials) {
 }
 
-func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
+func (newState *AwsCredentials) SyncFieldsDuringRead(existingState AwsCredentials) {
 }
 
 func (c AwsCredentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -113,10 +113,10 @@ type AwsKeyInfo struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsKeyInfo) {
+func (newState *AwsKeyInfo) SyncFieldsDuringCreateOrUpdate(plan AwsKeyInfo) {
 }
 
-func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState AwsKeyInfo) {
+func (newState *AwsKeyInfo) SyncFieldsDuringRead(existingState AwsKeyInfo) {
 }
 
 func (c AwsKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -172,10 +172,10 @@ type AzureWorkspaceInfo struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureWorkspaceInfo) {
+func (newState *AzureWorkspaceInfo) SyncFieldsDuringCreateOrUpdate(plan AzureWorkspaceInfo) {
 }
 
-func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringRead(existingState AzureWorkspaceInfo) {
+func (newState *AzureWorkspaceInfo) SyncFieldsDuringRead(existingState AzureWorkspaceInfo) {
 }
 
 func (c AzureWorkspaceInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -223,10 +223,10 @@ type CloudResourceContainer struct {
 	Gcp types.Object `tfsdk:"gcp"`
 }
 
-func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudResourceContainer) {
+func (newState *CloudResourceContainer) SyncFieldsDuringCreateOrUpdate(plan CloudResourceContainer) {
 }
 
-func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CloudResourceContainer) {
+func (newState *CloudResourceContainer) SyncFieldsDuringRead(existingState CloudResourceContainer) {
 }
 
 func (c CloudResourceContainer) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -309,10 +309,10 @@ type CreateAwsKeyInfo struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAwsKeyInfo) {
+func (newState *CreateAwsKeyInfo) SyncFieldsDuringCreateOrUpdate(plan CreateAwsKeyInfo) {
 }
 
-func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateAwsKeyInfo) {
+func (newState *CreateAwsKeyInfo) SyncFieldsDuringRead(existingState CreateAwsKeyInfo) {
 }
 
 func (c CreateAwsKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -362,10 +362,10 @@ type CreateCredentialAwsCredentials struct {
 	StsRole types.Object `tfsdk:"sts_role"`
 }
 
-func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialAwsCredentials) {
+func (newState *CreateCredentialAwsCredentials) SyncFieldsDuringCreateOrUpdate(plan CreateCredentialAwsCredentials) {
 }
 
-func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringRead(existingState CreateCredentialAwsCredentials) {
+func (newState *CreateCredentialAwsCredentials) SyncFieldsDuringRead(existingState CreateCredentialAwsCredentials) {
 }
 
 func (c CreateCredentialAwsCredentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -509,10 +509,10 @@ type CreateCredentialStsRole struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialStsRole) {
+func (newState *CreateCredentialStsRole) SyncFieldsDuringCreateOrUpdate(plan CreateCredentialStsRole) {
 }
 
-func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringRead(existingState CreateCredentialStsRole) {
+func (newState *CreateCredentialStsRole) SyncFieldsDuringRead(existingState CreateCredentialStsRole) {
 }
 
 func (c CreateCredentialStsRole) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -688,10 +688,10 @@ type CreateGcpKeyInfo struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateGcpKeyInfo) {
+func (newState *CreateGcpKeyInfo) SyncFieldsDuringCreateOrUpdate(plan CreateGcpKeyInfo) {
 }
 
-func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateGcpKeyInfo) {
+func (newState *CreateGcpKeyInfo) SyncFieldsDuringRead(existingState CreateGcpKeyInfo) {
 }
 
 func (c CreateGcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1333,10 +1333,10 @@ type Credential struct {
 	CredentialsName types.String `tfsdk:"credentials_name"`
 }
 
-func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credential) {
+func (newState *Credential) SyncFieldsDuringCreateOrUpdate(plan Credential) {
 }
 
-func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
+func (newState *Credential) SyncFieldsDuringRead(existingState Credential) {
 }
 
 func (c Credential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1425,10 +1425,10 @@ type CustomerFacingGcpCloudResourceContainer struct {
 	ProjectId types.String `tfsdk:"project_id"`
 }
 
-func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingGcpCloudResourceContainer) {
+func (newState *CustomerFacingGcpCloudResourceContainer) SyncFieldsDuringCreateOrUpdate(plan CustomerFacingGcpCloudResourceContainer) {
 }
 
-func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer) {
+func (newState *CustomerFacingGcpCloudResourceContainer) SyncFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer) {
 }
 
 func (c CustomerFacingGcpCloudResourceContainer) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1483,10 +1483,10 @@ type CustomerManagedKey struct {
 	UseCases types.List `tfsdk:"use_cases"`
 }
 
-func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerManagedKey) {
+func (newState *CustomerManagedKey) SyncFieldsDuringCreateOrUpdate(plan CustomerManagedKey) {
 }
 
-func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
+func (newState *CustomerManagedKey) SyncFieldsDuringRead(existingState CustomerManagedKey) {
 }
 
 func (c CustomerManagedKey) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1920,10 +1920,10 @@ type ExternalCustomerInfo struct {
 	CustomerName types.String `tfsdk:"customer_name"`
 }
 
-func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo) {
+func (newState *ExternalCustomerInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo) {
 }
 
-func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
+func (newState *ExternalCustomerInfo) SyncFieldsDuringRead(existingState ExternalCustomerInfo) {
 }
 
 func (c ExternalCustomerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1974,10 +1974,10 @@ type GcpKeyInfo struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpKeyInfo) {
+func (newState *GcpKeyInfo) SyncFieldsDuringCreateOrUpdate(plan GcpKeyInfo) {
 }
 
-func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState GcpKeyInfo) {
+func (newState *GcpKeyInfo) SyncFieldsDuringRead(existingState GcpKeyInfo) {
 }
 
 func (c GcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2052,10 +2052,10 @@ type GcpManagedNetworkConfig struct {
 	SubnetCidr types.String `tfsdk:"subnet_cidr"`
 }
 
-func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpManagedNetworkConfig) {
+func (newState *GcpManagedNetworkConfig) SyncFieldsDuringCreateOrUpdate(plan GcpManagedNetworkConfig) {
 }
 
-func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringRead(existingState GcpManagedNetworkConfig) {
+func (newState *GcpManagedNetworkConfig) SyncFieldsDuringRead(existingState GcpManagedNetworkConfig) {
 }
 
 func (c GcpManagedNetworkConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2124,10 +2124,10 @@ type GcpNetworkInfo struct {
 	VpcId types.String `tfsdk:"vpc_id"`
 }
 
-func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpNetworkInfo) {
+func (newState *GcpNetworkInfo) SyncFieldsDuringCreateOrUpdate(plan GcpNetworkInfo) {
 }
 
-func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringRead(existingState GcpNetworkInfo) {
+func (newState *GcpNetworkInfo) SyncFieldsDuringRead(existingState GcpNetworkInfo) {
 }
 
 func (c GcpNetworkInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2198,10 +2198,10 @@ type GcpVpcEndpointInfo struct {
 	ServiceAttachmentId types.String `tfsdk:"service_attachment_id"`
 }
 
-func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpVpcEndpointInfo) {
+func (newState *GcpVpcEndpointInfo) SyncFieldsDuringCreateOrUpdate(plan GcpVpcEndpointInfo) {
 }
 
-func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringRead(existingState GcpVpcEndpointInfo) {
+func (newState *GcpVpcEndpointInfo) SyncFieldsDuringRead(existingState GcpVpcEndpointInfo) {
 }
 
 func (c GcpVpcEndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2523,10 +2523,10 @@ type GkeConfig struct {
 	MasterIpRange types.String `tfsdk:"master_ip_range"`
 }
 
-func (newState *GkeConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GkeConfig) {
+func (newState *GkeConfig) SyncFieldsDuringCreateOrUpdate(plan GkeConfig) {
 }
 
-func (newState *GkeConfig) SyncEffectiveFieldsDuringRead(existingState GkeConfig) {
+func (newState *GkeConfig) SyncFieldsDuringRead(existingState GkeConfig) {
 }
 
 func (c GkeConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2809,10 +2809,10 @@ type Network struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
+func (newState *Network) SyncFieldsDuringCreateOrUpdate(plan Network) {
 }
 
-func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
+func (newState *Network) SyncFieldsDuringRead(existingState Network) {
 }
 
 func (c Network) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3070,10 +3070,10 @@ type NetworkHealth struct {
 	ErrorType types.String `tfsdk:"error_type"`
 }
 
-func (newState *NetworkHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkHealth) {
+func (newState *NetworkHealth) SyncFieldsDuringCreateOrUpdate(plan NetworkHealth) {
 }
 
-func (newState *NetworkHealth) SyncEffectiveFieldsDuringRead(existingState NetworkHealth) {
+func (newState *NetworkHealth) SyncFieldsDuringRead(existingState NetworkHealth) {
 }
 
 func (c NetworkHealth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3129,10 +3129,10 @@ type NetworkVpcEndpoints struct {
 	RestApi types.List `tfsdk:"rest_api"`
 }
 
-func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkVpcEndpoints) {
+func (newState *NetworkVpcEndpoints) SyncFieldsDuringCreateOrUpdate(plan NetworkVpcEndpoints) {
 }
 
-func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringRead(existingState NetworkVpcEndpoints) {
+func (newState *NetworkVpcEndpoints) SyncFieldsDuringRead(existingState NetworkVpcEndpoints) {
 }
 
 func (c NetworkVpcEndpoints) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3241,10 +3241,10 @@ type NetworkWarning struct {
 	WarningType types.String `tfsdk:"warning_type"`
 }
 
-func (newState *NetworkWarning) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkWarning) {
+func (newState *NetworkWarning) SyncFieldsDuringCreateOrUpdate(plan NetworkWarning) {
 }
 
-func (newState *NetworkWarning) SyncEffectiveFieldsDuringRead(existingState NetworkWarning) {
+func (newState *NetworkWarning) SyncFieldsDuringRead(existingState NetworkWarning) {
 }
 
 func (c NetworkWarning) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3309,10 +3309,10 @@ type PrivateAccessSettings struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivateAccessSettings) {
+func (newState *PrivateAccessSettings) SyncFieldsDuringCreateOrUpdate(plan PrivateAccessSettings) {
 }
 
-func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringRead(existingState PrivateAccessSettings) {
+func (newState *PrivateAccessSettings) SyncFieldsDuringRead(existingState PrivateAccessSettings) {
 }
 
 func (c PrivateAccessSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3436,10 +3436,10 @@ type RootBucketInfo struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 }
 
-func (newState *RootBucketInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RootBucketInfo) {
+func (newState *RootBucketInfo) SyncFieldsDuringCreateOrUpdate(plan RootBucketInfo) {
 }
 
-func (newState *RootBucketInfo) SyncEffectiveFieldsDuringRead(existingState RootBucketInfo) {
+func (newState *RootBucketInfo) SyncFieldsDuringRead(existingState RootBucketInfo) {
 }
 
 func (c RootBucketInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3492,10 +3492,10 @@ type StorageConfiguration struct {
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name"`
 }
 
-func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan StorageConfiguration) {
+func (newState *StorageConfiguration) SyncFieldsDuringCreateOrUpdate(plan StorageConfiguration) {
 }
 
-func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
+func (newState *StorageConfiguration) SyncFieldsDuringRead(existingState StorageConfiguration) {
 }
 
 func (c StorageConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3585,10 +3585,10 @@ type StsRole struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (newState *StsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan StsRole) {
+func (newState *StsRole) SyncFieldsDuringCreateOrUpdate(plan StsRole) {
 }
 
-func (newState *StsRole) SyncEffectiveFieldsDuringRead(existingState StsRole) {
+func (newState *StsRole) SyncFieldsDuringRead(existingState StsRole) {
 }
 
 func (c StsRole) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3913,10 +3913,10 @@ type VpcEndpoint struct {
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name"`
 }
 
-func (newState *VpcEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan VpcEndpoint) {
+func (newState *VpcEndpoint) SyncFieldsDuringCreateOrUpdate(plan VpcEndpoint) {
 }
 
-func (newState *VpcEndpoint) SyncEffectiveFieldsDuringRead(existingState VpcEndpoint) {
+func (newState *VpcEndpoint) SyncFieldsDuringRead(existingState VpcEndpoint) {
 }
 
 func (c VpcEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4085,10 +4085,10 @@ type Workspace struct {
 	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message"`
 }
 
-func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspace) {
+func (newState *Workspace) SyncFieldsDuringCreateOrUpdate(plan Workspace) {
 }
 
-func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
+func (newState *Workspace) SyncFieldsDuringRead(existingState Workspace) {
 }
 
 func (c Workspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

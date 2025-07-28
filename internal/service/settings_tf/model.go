@@ -40,10 +40,10 @@ type AccountIpAccessEnable struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AccountIpAccessEnable) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountIpAccessEnable) {
+func (newState *AccountIpAccessEnable) SyncFieldsDuringCreateOrUpdate(plan AccountIpAccessEnable) {
 }
 
-func (newState *AccountIpAccessEnable) SyncEffectiveFieldsDuringRead(existingState AccountIpAccessEnable) {
+func (newState *AccountIpAccessEnable) SyncFieldsDuringRead(existingState AccountIpAccessEnable) {
 }
 
 func (c AccountIpAccessEnable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -128,10 +128,10 @@ type AccountNetworkPolicy struct {
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
 }
 
-func (newState *AccountNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountNetworkPolicy) {
+func (newState *AccountNetworkPolicy) SyncFieldsDuringCreateOrUpdate(plan AccountNetworkPolicy) {
 }
 
-func (newState *AccountNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState AccountNetworkPolicy) {
+func (newState *AccountNetworkPolicy) SyncFieldsDuringRead(existingState AccountNetworkPolicy) {
 }
 
 func (c AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -211,10 +211,10 @@ type AibiDashboardEmbeddingAccessPolicy struct {
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicy) {
+func (newState *AibiDashboardEmbeddingAccessPolicy) SyncFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicy) {
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicy) {
+func (newState *AibiDashboardEmbeddingAccessPolicy) SyncFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicy) {
 }
 
 func (c AibiDashboardEmbeddingAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -272,10 +272,10 @@ type AibiDashboardEmbeddingAccessPolicySetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicySetting) {
+func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicySetting) {
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicySetting) {
+func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicySetting) {
 }
 
 func (c AibiDashboardEmbeddingAccessPolicySetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -355,10 +355,10 @@ type AibiDashboardEmbeddingApprovedDomains struct {
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomains) {
+func (newState *AibiDashboardEmbeddingApprovedDomains) SyncFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomains) {
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomains) {
+func (newState *AibiDashboardEmbeddingApprovedDomains) SyncFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomains) {
 }
 
 func (c AibiDashboardEmbeddingApprovedDomains) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -446,10 +446,10 @@ type AibiDashboardEmbeddingApprovedDomainsSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomainsSetting) {
+func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomainsSetting) {
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomainsSetting) {
+func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomainsSetting) {
 }
 
 func (c AibiDashboardEmbeddingApprovedDomainsSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -543,10 +543,10 @@ type AutomaticClusterUpdateSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AutomaticClusterUpdateSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutomaticClusterUpdateSetting) {
+func (newState *AutomaticClusterUpdateSetting) SyncFieldsDuringCreateOrUpdate(plan AutomaticClusterUpdateSetting) {
 }
 
-func (newState *AutomaticClusterUpdateSetting) SyncEffectiveFieldsDuringRead(existingState AutomaticClusterUpdateSetting) {
+func (newState *AutomaticClusterUpdateSetting) SyncFieldsDuringRead(existingState AutomaticClusterUpdateSetting) {
 }
 
 func (c AutomaticClusterUpdateSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -626,10 +626,10 @@ type BooleanMessage struct {
 	Value types.Bool `tfsdk:"value"`
 }
 
-func (newState *BooleanMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan BooleanMessage) {
+func (newState *BooleanMessage) SyncFieldsDuringCreateOrUpdate(plan BooleanMessage) {
 }
 
-func (newState *BooleanMessage) SyncEffectiveFieldsDuringRead(existingState BooleanMessage) {
+func (newState *BooleanMessage) SyncFieldsDuringRead(existingState BooleanMessage) {
 }
 
 func (c BooleanMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -681,10 +681,10 @@ type ClusterAutoRestartMessage struct {
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
-func (newState *ClusterAutoRestartMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessage) {
+func (newState *ClusterAutoRestartMessage) SyncFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessage) {
 }
 
-func (newState *ClusterAutoRestartMessage) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessage) {
+func (newState *ClusterAutoRestartMessage) SyncFieldsDuringRead(existingState ClusterAutoRestartMessage) {
 }
 
 func (c ClusterAutoRestartMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -811,10 +811,10 @@ type ClusterAutoRestartMessageEnablementDetails struct {
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
 }
 
-func (newState *ClusterAutoRestartMessageEnablementDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageEnablementDetails) {
+func (newState *ClusterAutoRestartMessageEnablementDetails) SyncFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageEnablementDetails) {
 }
 
-func (newState *ClusterAutoRestartMessageEnablementDetails) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageEnablementDetails) {
+func (newState *ClusterAutoRestartMessageEnablementDetails) SyncFieldsDuringRead(existingState ClusterAutoRestartMessageEnablementDetails) {
 }
 
 func (c ClusterAutoRestartMessageEnablementDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -864,10 +864,10 @@ type ClusterAutoRestartMessageMaintenanceWindow struct {
 	WeekDayBasedSchedule types.Object `tfsdk:"week_day_based_schedule"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindow) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindow) {
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindow) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindow) {
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -945,10 +945,10 @@ type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
 	WindowStartTime types.Object `tfsdk:"window_start_time"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1030,10 +1030,10 @@ type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
+func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1084,10 +1084,10 @@ type ComplianceSecurityProfile struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile) SyncFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile) SyncFieldsDuringRead(existingState ComplianceSecurityProfile) {
 }
 
 func (c ComplianceSecurityProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1178,10 +1178,10 @@ type ComplianceSecurityProfileSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *ComplianceSecurityProfileSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfileSetting) {
+func (newState *ComplianceSecurityProfileSetting) SyncFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfileSetting) {
 }
 
-func (newState *ComplianceSecurityProfileSetting) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfileSetting) {
+func (newState *ComplianceSecurityProfileSetting) SyncFieldsDuringRead(existingState ComplianceSecurityProfileSetting) {
 }
 
 func (c ComplianceSecurityProfileSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1269,10 +1269,10 @@ type Config struct {
 	Slack types.Object `tfsdk:"slack"`
 }
 
-func (newState *Config) SyncEffectiveFieldsDuringCreateOrUpdate(plan Config) {
+func (newState *Config) SyncFieldsDuringCreateOrUpdate(plan Config) {
 }
 
-func (newState *Config) SyncEffectiveFieldsDuringRead(existingState Config) {
+func (newState *Config) SyncFieldsDuringRead(existingState Config) {
 }
 
 func (c Config) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1549,10 +1549,10 @@ type CreateIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessListResponse) {
+func (newState *CreateIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(plan CreateIpAccessListResponse) {
 }
 
-func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState CreateIpAccessListResponse) {
+func (newState *CreateIpAccessListResponse) SyncFieldsDuringRead(existingState CreateIpAccessListResponse) {
 }
 
 func (c CreateIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1700,10 +1700,10 @@ type CreateNetworkConnectivityConfiguration struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *CreateNetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNetworkConnectivityConfiguration) {
+func (newState *CreateNetworkConnectivityConfiguration) SyncFieldsDuringCreateOrUpdate(plan CreateNetworkConnectivityConfiguration) {
 }
 
-func (newState *CreateNetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState CreateNetworkConnectivityConfiguration) {
+func (newState *CreateNetworkConnectivityConfiguration) SyncFieldsDuringRead(existingState CreateNetworkConnectivityConfiguration) {
 }
 
 func (c CreateNetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1935,10 +1935,10 @@ type CreateOboTokenResponse struct {
 	TokenValue types.String `tfsdk:"token_value"`
 }
 
-func (newState *CreateOboTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOboTokenResponse) {
+func (newState *CreateOboTokenResponse) SyncFieldsDuringCreateOrUpdate(plan CreateOboTokenResponse) {
 }
 
-func (newState *CreateOboTokenResponse) SyncEffectiveFieldsDuringRead(existingState CreateOboTokenResponse) {
+func (newState *CreateOboTokenResponse) SyncFieldsDuringRead(existingState CreateOboTokenResponse) {
 }
 
 func (c CreateOboTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2040,10 +2040,10 @@ type CreatePrivateEndpointRule struct {
 	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
-func (newState *CreatePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePrivateEndpointRule) {
+func (newState *CreatePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(plan CreatePrivateEndpointRule) {
 }
 
-func (newState *CreatePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState CreatePrivateEndpointRule) {
+func (newState *CreatePrivateEndpointRule) SyncFieldsDuringRead(existingState CreatePrivateEndpointRule) {
 }
 
 func (c CreatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2273,10 +2273,10 @@ type CreateTokenResponse struct {
 	TokenValue types.String `tfsdk:"token_value"`
 }
 
-func (newState *CreateTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTokenResponse) {
+func (newState *CreateTokenResponse) SyncFieldsDuringCreateOrUpdate(plan CreateTokenResponse) {
 }
 
-func (newState *CreateTokenResponse) SyncEffectiveFieldsDuringRead(existingState CreateTokenResponse) {
+func (newState *CreateTokenResponse) SyncFieldsDuringRead(existingState CreateTokenResponse) {
 }
 
 func (c CreateTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2358,10 +2358,10 @@ type CspEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
-func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccount) {
+func (newState *CspEnablementAccount) SyncFieldsDuringCreateOrUpdate(plan CspEnablementAccount) {
 }
 
-func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccount) {
+func (newState *CspEnablementAccount) SyncFieldsDuringRead(existingState CspEnablementAccount) {
 }
 
 func (c CspEnablementAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2452,10 +2452,10 @@ type CspEnablementAccountSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *CspEnablementAccountSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccountSetting) {
+func (newState *CspEnablementAccountSetting) SyncFieldsDuringCreateOrUpdate(plan CspEnablementAccountSetting) {
 }
 
-func (newState *CspEnablementAccountSetting) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccountSetting) {
+func (newState *CspEnablementAccountSetting) SyncFieldsDuringRead(existingState CspEnablementAccountSetting) {
 }
 
 func (c CspEnablementAccountSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2590,10 +2590,10 @@ type CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule struct {
 	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
 }
 
-func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
+func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(plan CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
 }
 
-func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
+func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncFieldsDuringRead(existingState CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
 }
 
 func (c CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2746,10 +2746,10 @@ type DashboardEmailSubscriptions struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DashboardEmailSubscriptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardEmailSubscriptions) {
+func (newState *DashboardEmailSubscriptions) SyncFieldsDuringCreateOrUpdate(plan DashboardEmailSubscriptions) {
 }
 
-func (newState *DashboardEmailSubscriptions) SyncEffectiveFieldsDuringRead(existingState DashboardEmailSubscriptions) {
+func (newState *DashboardEmailSubscriptions) SyncFieldsDuringRead(existingState DashboardEmailSubscriptions) {
 }
 
 func (c DashboardEmailSubscriptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2853,10 +2853,10 @@ type DefaultNamespaceSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DefaultNamespaceSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultNamespaceSetting) {
+func (newState *DefaultNamespaceSetting) SyncFieldsDuringCreateOrUpdate(plan DefaultNamespaceSetting) {
 }
 
-func (newState *DefaultNamespaceSetting) SyncEffectiveFieldsDuringRead(existingState DefaultNamespaceSetting) {
+func (newState *DefaultNamespaceSetting) SyncFieldsDuringRead(existingState DefaultNamespaceSetting) {
 }
 
 func (c DefaultNamespaceSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2951,10 +2951,10 @@ type DefaultWarehouseId struct {
 	StringVal types.Object `tfsdk:"string_val"`
 }
 
-func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultWarehouseId) {
+func (newState *DefaultWarehouseId) SyncFieldsDuringCreateOrUpdate(plan DefaultWarehouseId) {
 }
 
-func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringRead(existingState DefaultWarehouseId) {
+func (newState *DefaultWarehouseId) SyncFieldsDuringRead(existingState DefaultWarehouseId) {
 }
 
 func (c DefaultWarehouseId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3084,10 +3084,10 @@ type DeleteAccountIpAccessEnableResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAccountIpAccessEnableResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountIpAccessEnableResponse) {
+func (newState *DeleteAccountIpAccessEnableResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteAccountIpAccessEnableResponse) {
 }
 
-func (newState *DeleteAccountIpAccessEnableResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAccountIpAccessEnableResponse) {
+func (newState *DeleteAccountIpAccessEnableResponse) SyncFieldsDuringRead(existingState DeleteAccountIpAccessEnableResponse) {
 }
 
 func (c DeleteAccountIpAccessEnableResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3217,10 +3217,10 @@ type DeleteAibiDashboardEmbeddingAccessPolicySettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
 }
 
-func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
 }
 
 func (c DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3314,10 +3314,10 @@ type DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
 }
 
-func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
 }
 
 func (c DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3411,10 +3411,10 @@ type DeleteDashboardEmailSubscriptionsResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDashboardEmailSubscriptionsResponse) {
+func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDashboardEmailSubscriptionsResponse) {
 }
 
-func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardEmailSubscriptionsResponse) {
+func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncFieldsDuringRead(existingState DeleteDashboardEmailSubscriptionsResponse) {
 }
 
 func (c DeleteDashboardEmailSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3508,10 +3508,10 @@ type DeleteDefaultNamespaceSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDefaultNamespaceSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultNamespaceSettingResponse) {
+func (newState *DeleteDefaultNamespaceSettingResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDefaultNamespaceSettingResponse) {
 }
 
-func (newState *DeleteDefaultNamespaceSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultNamespaceSettingResponse) {
+func (newState *DeleteDefaultNamespaceSettingResponse) SyncFieldsDuringRead(existingState DeleteDefaultNamespaceSettingResponse) {
 }
 
 func (c DeleteDefaultNamespaceSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3605,10 +3605,10 @@ type DeleteDefaultWarehouseIdResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultWarehouseIdResponse) {
+func (newState *DeleteDefaultWarehouseIdResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDefaultWarehouseIdResponse) {
 }
 
-func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultWarehouseIdResponse) {
+func (newState *DeleteDefaultWarehouseIdResponse) SyncFieldsDuringRead(existingState DeleteDefaultWarehouseIdResponse) {
 }
 
 func (c DeleteDefaultWarehouseIdResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3702,10 +3702,10 @@ type DeleteDisableLegacyAccessResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyAccessResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyAccessResponse) {
+func (newState *DeleteDisableLegacyAccessResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyAccessResponse) {
 }
 
-func (newState *DeleteDisableLegacyAccessResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyAccessResponse) {
+func (newState *DeleteDisableLegacyAccessResponse) SyncFieldsDuringRead(existingState DeleteDisableLegacyAccessResponse) {
 }
 
 func (c DeleteDisableLegacyAccessResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3799,10 +3799,10 @@ type DeleteDisableLegacyDbfsResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyDbfsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyDbfsResponse) {
+func (newState *DeleteDisableLegacyDbfsResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyDbfsResponse) {
 }
 
-func (newState *DeleteDisableLegacyDbfsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyDbfsResponse) {
+func (newState *DeleteDisableLegacyDbfsResponse) SyncFieldsDuringRead(existingState DeleteDisableLegacyDbfsResponse) {
 }
 
 func (c DeleteDisableLegacyDbfsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3896,10 +3896,10 @@ type DeleteDisableLegacyFeaturesResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyFeaturesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyFeaturesResponse) {
+func (newState *DeleteDisableLegacyFeaturesResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyFeaturesResponse) {
 }
 
-func (newState *DeleteDisableLegacyFeaturesResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyFeaturesResponse) {
+func (newState *DeleteDisableLegacyFeaturesResponse) SyncFieldsDuringRead(existingState DeleteDisableLegacyFeaturesResponse) {
 }
 
 func (c DeleteDisableLegacyFeaturesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4029,10 +4029,10 @@ type DeleteLlmProxyPartnerPoweredWorkspaceResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
+func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
 }
 
-func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncEffectiveFieldsDuringRead(existingState DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
+func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncFieldsDuringRead(existingState DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
 }
 
 func (c DeleteLlmProxyPartnerPoweredWorkspaceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4233,10 +4233,10 @@ type DeletePersonalComputeSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeletePersonalComputeSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePersonalComputeSettingResponse) {
+func (newState *DeletePersonalComputeSettingResponse) SyncFieldsDuringCreateOrUpdate(plan DeletePersonalComputeSettingResponse) {
 }
 
-func (newState *DeletePersonalComputeSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeletePersonalComputeSettingResponse) {
+func (newState *DeletePersonalComputeSettingResponse) SyncFieldsDuringRead(existingState DeletePersonalComputeSettingResponse) {
 }
 
 func (c DeletePersonalComputeSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4400,10 +4400,10 @@ type DeleteRestrictWorkspaceAdminsSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRestrictWorkspaceAdminsSettingResponse) {
+func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteRestrictWorkspaceAdminsSettingResponse) {
 }
 
-func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRestrictWorkspaceAdminsSettingResponse) {
+func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncFieldsDuringRead(existingState DeleteRestrictWorkspaceAdminsSettingResponse) {
 }
 
 func (c DeleteRestrictWorkspaceAdminsSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4497,10 +4497,10 @@ type DeleteSqlResultsDownloadResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteSqlResultsDownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSqlResultsDownloadResponse) {
+func (newState *DeleteSqlResultsDownloadResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteSqlResultsDownloadResponse) {
 }
 
-func (newState *DeleteSqlResultsDownloadResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSqlResultsDownloadResponse) {
+func (newState *DeleteSqlResultsDownloadResponse) SyncFieldsDuringRead(existingState DeleteSqlResultsDownloadResponse) {
 }
 
 func (c DeleteSqlResultsDownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4594,10 +4594,10 @@ type DisableLegacyAccess struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyAccess) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyAccess) {
+func (newState *DisableLegacyAccess) SyncFieldsDuringCreateOrUpdate(plan DisableLegacyAccess) {
 }
 
-func (newState *DisableLegacyAccess) SyncEffectiveFieldsDuringRead(existingState DisableLegacyAccess) {
+func (newState *DisableLegacyAccess) SyncFieldsDuringRead(existingState DisableLegacyAccess) {
 }
 
 func (c DisableLegacyAccess) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4691,10 +4691,10 @@ type DisableLegacyDbfs struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyDbfs) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyDbfs) {
+func (newState *DisableLegacyDbfs) SyncFieldsDuringCreateOrUpdate(plan DisableLegacyDbfs) {
 }
 
-func (newState *DisableLegacyDbfs) SyncEffectiveFieldsDuringRead(existingState DisableLegacyDbfs) {
+func (newState *DisableLegacyDbfs) SyncFieldsDuringRead(existingState DisableLegacyDbfs) {
 }
 
 func (c DisableLegacyDbfs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4788,10 +4788,10 @@ type DisableLegacyFeatures struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyFeatures) {
+func (newState *DisableLegacyFeatures) SyncFieldsDuringCreateOrUpdate(plan DisableLegacyFeatures) {
 }
 
-func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringRead(existingState DisableLegacyFeatures) {
+func (newState *DisableLegacyFeatures) SyncFieldsDuringRead(existingState DisableLegacyFeatures) {
 }
 
 func (c DisableLegacyFeatures) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4876,10 +4876,10 @@ type EgressNetworkPolicy struct {
 	InternetAccess types.Object `tfsdk:"internet_access"`
 }
 
-func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy) {
+func (newState *EgressNetworkPolicy) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy) {
 }
 
-func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicy) {
+func (newState *EgressNetworkPolicy) SyncFieldsDuringRead(existingState EgressNetworkPolicy) {
 }
 
 func (c EgressNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4960,10 +4960,10 @@ type EgressNetworkPolicyInternetAccessPolicy struct {
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy) {
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy) {
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5111,10 +5111,10 @@ type EgressNetworkPolicyInternetAccessPolicyInternetDestination struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyInternetDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5166,10 +5166,10 @@ type EgressNetworkPolicyInternetAccessPolicyLogOnlyMode struct {
 	Workloads types.List `tfsdk:"workloads"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5261,10 +5261,10 @@ type EgressNetworkPolicyInternetAccessPolicyStorageDestination struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyStorageDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5370,10 +5370,10 @@ type EgressNetworkPolicyNetworkAccessPolicy struct {
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicy) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicy) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicy) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicy) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5521,10 +5521,10 @@ type EgressNetworkPolicyNetworkAccessPolicyInternetDestination struct {
 	InternetDestinationType types.String `tfsdk:"internet_destination_type"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyInternetDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5578,10 +5578,10 @@ type EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement struct {
 	EnforcementMode types.String `tfsdk:"enforcement_mode"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5668,10 +5668,10 @@ type EgressNetworkPolicyNetworkAccessPolicyStorageDestination struct {
 	StorageDestinationType types.String `tfsdk:"storage_destination_type"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
+func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyStorageDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5728,10 +5728,10 @@ type EmailConfig struct {
 	Addresses types.List `tfsdk:"addresses"`
 }
 
-func (newState *EmailConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmailConfig) {
+func (newState *EmailConfig) SyncFieldsDuringCreateOrUpdate(plan EmailConfig) {
 }
 
-func (newState *EmailConfig) SyncEffectiveFieldsDuringRead(existingState EmailConfig) {
+func (newState *EmailConfig) SyncFieldsDuringRead(existingState EmailConfig) {
 }
 
 func (c EmailConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5804,10 +5804,10 @@ func (o *EmailConfig) SetAddresses(ctx context.Context, v []types.String) {
 type Empty struct {
 }
 
-func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
+func (newState *Empty) SyncFieldsDuringCreateOrUpdate(plan Empty) {
 }
 
-func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
+func (newState *Empty) SyncFieldsDuringRead(existingState Empty) {
 }
 
 func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5852,10 +5852,10 @@ type EnableExportNotebook struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableExportNotebook) {
+func (newState *EnableExportNotebook) SyncFieldsDuringCreateOrUpdate(plan EnableExportNotebook) {
 }
 
-func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringRead(existingState EnableExportNotebook) {
+func (newState *EnableExportNotebook) SyncFieldsDuringRead(existingState EnableExportNotebook) {
 }
 
 func (c EnableExportNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5938,10 +5938,10 @@ type EnableNotebookTableClipboard struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableNotebookTableClipboard) {
+func (newState *EnableNotebookTableClipboard) SyncFieldsDuringCreateOrUpdate(plan EnableNotebookTableClipboard) {
 }
 
-func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringRead(existingState EnableNotebookTableClipboard) {
+func (newState *EnableNotebookTableClipboard) SyncFieldsDuringRead(existingState EnableNotebookTableClipboard) {
 }
 
 func (c EnableNotebookTableClipboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6024,10 +6024,10 @@ type EnableResultsDownloading struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableResultsDownloading) {
+func (newState *EnableResultsDownloading) SyncFieldsDuringCreateOrUpdate(plan EnableResultsDownloading) {
 }
 
-func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringRead(existingState EnableResultsDownloading) {
+func (newState *EnableResultsDownloading) SyncFieldsDuringRead(existingState EnableResultsDownloading) {
 }
 
 func (c EnableResultsDownloading) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6105,10 +6105,10 @@ type EnhancedSecurityMonitoring struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *EnhancedSecurityMonitoring) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoring) {
+func (newState *EnhancedSecurityMonitoring) SyncFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoring) {
 }
 
-func (newState *EnhancedSecurityMonitoring) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoring) {
+func (newState *EnhancedSecurityMonitoring) SyncFieldsDuringRead(existingState EnhancedSecurityMonitoring) {
 }
 
 func (c EnhancedSecurityMonitoring) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6166,10 +6166,10 @@ type EnhancedSecurityMonitoringSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnhancedSecurityMonitoringSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoringSetting) {
+func (newState *EnhancedSecurityMonitoringSetting) SyncFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoringSetting) {
 }
 
-func (newState *EnhancedSecurityMonitoringSetting) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoringSetting) {
+func (newState *EnhancedSecurityMonitoringSetting) SyncFieldsDuringRead(existingState EnhancedSecurityMonitoringSetting) {
 }
 
 func (c EnhancedSecurityMonitoringSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6250,10 +6250,10 @@ type EsmEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
-func (newState *EsmEnablementAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccount) {
+func (newState *EsmEnablementAccount) SyncFieldsDuringCreateOrUpdate(plan EsmEnablementAccount) {
 }
 
-func (newState *EsmEnablementAccount) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccount) {
+func (newState *EsmEnablementAccount) SyncFieldsDuringRead(existingState EsmEnablementAccount) {
 }
 
 func (c EsmEnablementAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6311,10 +6311,10 @@ type EsmEnablementAccountSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EsmEnablementAccountSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccountSetting) {
+func (newState *EsmEnablementAccountSetting) SyncFieldsDuringCreateOrUpdate(plan EsmEnablementAccountSetting) {
 }
 
-func (newState *EsmEnablementAccountSetting) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccountSetting) {
+func (newState *EsmEnablementAccountSetting) SyncFieldsDuringRead(existingState EsmEnablementAccountSetting) {
 }
 
 func (c EsmEnablementAccountSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6405,10 +6405,10 @@ type ExchangeToken struct {
 	TokenType types.String `tfsdk:"tokenType"`
 }
 
-func (newState *ExchangeToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeToken) {
+func (newState *ExchangeToken) SyncFieldsDuringCreateOrUpdate(plan ExchangeToken) {
 }
 
-func (newState *ExchangeToken) SyncEffectiveFieldsDuringRead(existingState ExchangeToken) {
+func (newState *ExchangeToken) SyncFieldsDuringRead(existingState ExchangeToken) {
 }
 
 func (c ExchangeToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6628,10 +6628,10 @@ type ExchangeTokenResponse struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *ExchangeTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeTokenResponse) {
+func (newState *ExchangeTokenResponse) SyncFieldsDuringCreateOrUpdate(plan ExchangeTokenResponse) {
 }
 
-func (newState *ExchangeTokenResponse) SyncEffectiveFieldsDuringRead(existingState ExchangeTokenResponse) {
+func (newState *ExchangeTokenResponse) SyncFieldsDuringRead(existingState ExchangeTokenResponse) {
 }
 
 func (c ExchangeTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6706,10 +6706,10 @@ type FetchIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan FetchIpAccessListResponse) {
+func (newState *FetchIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(plan FetchIpAccessListResponse) {
 }
 
-func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState FetchIpAccessListResponse) {
+func (newState *FetchIpAccessListResponse) SyncFieldsDuringRead(existingState FetchIpAccessListResponse) {
 }
 
 func (c FetchIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6794,10 +6794,10 @@ type GenericWebhookConfig struct {
 	UsernameSet types.Bool `tfsdk:"username_set"`
 }
 
-func (newState *GenericWebhookConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenericWebhookConfig) {
+func (newState *GenericWebhookConfig) SyncFieldsDuringCreateOrUpdate(plan GenericWebhookConfig) {
 }
 
-func (newState *GenericWebhookConfig) SyncEffectiveFieldsDuringRead(existingState GenericWebhookConfig) {
+func (newState *GenericWebhookConfig) SyncFieldsDuringRead(existingState GenericWebhookConfig) {
 }
 
 func (c GenericWebhookConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7606,10 +7606,10 @@ type GetIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListResponse) {
+func (newState *GetIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(plan GetIpAccessListResponse) {
 }
 
-func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListResponse) {
+func (newState *GetIpAccessListResponse) SyncFieldsDuringRead(existingState GetIpAccessListResponse) {
 }
 
 func (c GetIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7684,10 +7684,10 @@ type GetIpAccessListsResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
-func (newState *GetIpAccessListsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListsResponse) {
+func (newState *GetIpAccessListsResponse) SyncFieldsDuringCreateOrUpdate(plan GetIpAccessListsResponse) {
 }
 
-func (newState *GetIpAccessListsResponse) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListsResponse) {
+func (newState *GetIpAccessListsResponse) SyncFieldsDuringRead(existingState GetIpAccessListsResponse) {
 }
 
 func (c GetIpAccessListsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8262,10 +8262,10 @@ type GetTokenPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetTokenPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenPermissionLevelsResponse) {
+func (newState *GetTokenPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetTokenPermissionLevelsResponse) {
 }
 
-func (newState *GetTokenPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetTokenPermissionLevelsResponse) {
+func (newState *GetTokenPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetTokenPermissionLevelsResponse) {
 }
 
 func (c GetTokenPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8370,10 +8370,10 @@ type GetTokenResponse struct {
 	TokenInfo types.Object `tfsdk:"token_info"`
 }
 
-func (newState *GetTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenResponse) {
+func (newState *GetTokenResponse) SyncFieldsDuringCreateOrUpdate(plan GetTokenResponse) {
 }
 
-func (newState *GetTokenResponse) SyncEffectiveFieldsDuringRead(existingState GetTokenResponse) {
+func (newState *GetTokenResponse) SyncFieldsDuringRead(existingState GetTokenResponse) {
 }
 
 func (c GetTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8503,10 +8503,10 @@ type IpAccessListInfo struct {
 	UpdatedBy types.Int64 `tfsdk:"updated_by"`
 }
 
-func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessListInfo) {
+func (newState *IpAccessListInfo) SyncFieldsDuringCreateOrUpdate(plan IpAccessListInfo) {
 }
 
-func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringRead(existingState IpAccessListInfo) {
+func (newState *IpAccessListInfo) SyncFieldsDuringRead(existingState IpAccessListInfo) {
 }
 
 func (c IpAccessListInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8608,10 +8608,10 @@ type ListIpAccessListResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
-func (newState *ListIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIpAccessListResponse) {
+func (newState *ListIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(plan ListIpAccessListResponse) {
 }
 
-func (newState *ListIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState ListIpAccessListResponse) {
+func (newState *ListIpAccessListResponse) SyncFieldsDuringRead(existingState ListIpAccessListResponse) {
 }
 
 func (c ListIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8755,10 +8755,10 @@ type ListNetworkConnectivityConfigurationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListNetworkConnectivityConfigurationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNetworkConnectivityConfigurationsResponse) {
+func (newState *ListNetworkConnectivityConfigurationsResponse) SyncFieldsDuringCreateOrUpdate(plan ListNetworkConnectivityConfigurationsResponse) {
 }
 
-func (newState *ListNetworkConnectivityConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListNetworkConnectivityConfigurationsResponse) {
+func (newState *ListNetworkConnectivityConfigurationsResponse) SyncFieldsDuringRead(existingState ListNetworkConnectivityConfigurationsResponse) {
 }
 
 func (c ListNetworkConnectivityConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8875,10 +8875,10 @@ type ListNetworkPoliciesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListNetworkPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNetworkPoliciesResponse) {
+func (newState *ListNetworkPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListNetworkPoliciesResponse) {
 }
 
-func (newState *ListNetworkPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListNetworkPoliciesResponse) {
+func (newState *ListNetworkPoliciesResponse) SyncFieldsDuringRead(existingState ListNetworkPoliciesResponse) {
 }
 
 func (c ListNetworkPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8997,10 +8997,10 @@ type ListNotificationDestinationsResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListNotificationDestinationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResponse) {
+func (newState *ListNotificationDestinationsResponse) SyncFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResponse) {
 }
 
-func (newState *ListNotificationDestinationsResponse) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResponse) {
+func (newState *ListNotificationDestinationsResponse) SyncFieldsDuringRead(existingState ListNotificationDestinationsResponse) {
 }
 
 func (c ListNotificationDestinationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9083,10 +9083,10 @@ type ListNotificationDestinationsResult struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *ListNotificationDestinationsResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResult) {
+func (newState *ListNotificationDestinationsResult) SyncFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResult) {
 }
 
-func (newState *ListNotificationDestinationsResult) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResult) {
+func (newState *ListNotificationDestinationsResult) SyncFieldsDuringRead(existingState ListNotificationDestinationsResult) {
 }
 
 func (c ListNotificationDestinationsResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9180,10 +9180,10 @@ type ListPrivateEndpointRulesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListPrivateEndpointRulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPrivateEndpointRulesResponse) {
+func (newState *ListPrivateEndpointRulesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPrivateEndpointRulesResponse) {
 }
 
-func (newState *ListPrivateEndpointRulesResponse) SyncEffectiveFieldsDuringRead(existingState ListPrivateEndpointRulesResponse) {
+func (newState *ListPrivateEndpointRulesResponse) SyncFieldsDuringRead(existingState ListPrivateEndpointRulesResponse) {
 }
 
 func (c ListPrivateEndpointRulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9261,10 +9261,10 @@ type ListPublicTokensResponse struct {
 	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
-func (newState *ListPublicTokensResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPublicTokensResponse) {
+func (newState *ListPublicTokensResponse) SyncFieldsDuringCreateOrUpdate(plan ListPublicTokensResponse) {
 }
 
-func (newState *ListPublicTokensResponse) SyncEffectiveFieldsDuringRead(existingState ListPublicTokensResponse) {
+func (newState *ListPublicTokensResponse) SyncFieldsDuringRead(existingState ListPublicTokensResponse) {
 }
 
 func (c ListPublicTokensResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9410,10 +9410,10 @@ type ListTokensResponse struct {
 	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
-func (newState *ListTokensResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTokensResponse) {
+func (newState *ListTokensResponse) SyncFieldsDuringCreateOrUpdate(plan ListTokensResponse) {
 }
 
-func (newState *ListTokensResponse) SyncEffectiveFieldsDuringRead(existingState ListTokensResponse) {
+func (newState *ListTokensResponse) SyncFieldsDuringRead(existingState ListTokensResponse) {
 }
 
 func (c ListTokensResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9501,10 +9501,10 @@ type LlmProxyPartnerPoweredAccount struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredAccount) {
+func (newState *LlmProxyPartnerPoweredAccount) SyncFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredAccount) {
 }
 
-func (newState *LlmProxyPartnerPoweredAccount) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredAccount) {
+func (newState *LlmProxyPartnerPoweredAccount) SyncFieldsDuringRead(existingState LlmProxyPartnerPoweredAccount) {
 }
 
 func (c LlmProxyPartnerPoweredAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9598,10 +9598,10 @@ type LlmProxyPartnerPoweredEnforce struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredEnforce) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredEnforce) {
+func (newState *LlmProxyPartnerPoweredEnforce) SyncFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredEnforce) {
 }
 
-func (newState *LlmProxyPartnerPoweredEnforce) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredEnforce) {
+func (newState *LlmProxyPartnerPoweredEnforce) SyncFieldsDuringRead(existingState LlmProxyPartnerPoweredEnforce) {
 }
 
 func (c LlmProxyPartnerPoweredEnforce) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9695,10 +9695,10 @@ type LlmProxyPartnerPoweredWorkspace struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredWorkspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredWorkspace) {
+func (newState *LlmProxyPartnerPoweredWorkspace) SyncFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredWorkspace) {
 }
 
-func (newState *LlmProxyPartnerPoweredWorkspace) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredWorkspace) {
+func (newState *LlmProxyPartnerPoweredWorkspace) SyncFieldsDuringRead(existingState LlmProxyPartnerPoweredWorkspace) {
 }
 
 func (c LlmProxyPartnerPoweredWorkspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9781,10 +9781,10 @@ type MicrosoftTeamsConfig struct {
 	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
-func (newState *MicrosoftTeamsConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan MicrosoftTeamsConfig) {
+func (newState *MicrosoftTeamsConfig) SyncFieldsDuringCreateOrUpdate(plan MicrosoftTeamsConfig) {
 }
 
-func (newState *MicrosoftTeamsConfig) SyncEffectiveFieldsDuringRead(existingState MicrosoftTeamsConfig) {
+func (newState *MicrosoftTeamsConfig) SyncFieldsDuringRead(existingState MicrosoftTeamsConfig) {
 }
 
 func (c MicrosoftTeamsConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9835,10 +9835,10 @@ type NccAwsStableIpRule struct {
 	CidrBlocks types.List `tfsdk:"cidr_blocks"`
 }
 
-func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAwsStableIpRule) {
+func (newState *NccAwsStableIpRule) SyncFieldsDuringCreateOrUpdate(plan NccAwsStableIpRule) {
 }
 
-func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringRead(existingState NccAwsStableIpRule) {
+func (newState *NccAwsStableIpRule) SyncFieldsDuringRead(existingState NccAwsStableIpRule) {
 }
 
 func (c NccAwsStableIpRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9954,10 +9954,10 @@ type NccAzurePrivateEndpointRule struct {
 	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
-func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule) {
+func (newState *NccAzurePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule) {
 }
 
-func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
+func (newState *NccAzurePrivateEndpointRule) SyncFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
 }
 
 func (c NccAzurePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10070,10 +10070,10 @@ type NccAzureServiceEndpointRule struct {
 	TargetServices types.List `tfsdk:"target_services"`
 }
 
-func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzureServiceEndpointRule) {
+func (newState *NccAzureServiceEndpointRule) SyncFieldsDuringCreateOrUpdate(plan NccAzureServiceEndpointRule) {
 }
 
-func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzureServiceEndpointRule) {
+func (newState *NccAzureServiceEndpointRule) SyncFieldsDuringRead(existingState NccAzureServiceEndpointRule) {
 }
 
 func (c NccAzureServiceEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10188,10 +10188,10 @@ type NccEgressConfig struct {
 	TargetRules types.Object `tfsdk:"target_rules"`
 }
 
-func (newState *NccEgressConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressConfig) {
+func (newState *NccEgressConfig) SyncFieldsDuringCreateOrUpdate(plan NccEgressConfig) {
 }
 
-func (newState *NccEgressConfig) SyncEffectiveFieldsDuringRead(existingState NccEgressConfig) {
+func (newState *NccEgressConfig) SyncFieldsDuringRead(existingState NccEgressConfig) {
 }
 
 func (c NccEgressConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10300,10 +10300,10 @@ type NccEgressDefaultRules struct {
 	AzureServiceEndpointRule types.Object `tfsdk:"azure_service_endpoint_rule"`
 }
 
-func (newState *NccEgressDefaultRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressDefaultRules) {
+func (newState *NccEgressDefaultRules) SyncFieldsDuringCreateOrUpdate(plan NccEgressDefaultRules) {
 }
 
-func (newState *NccEgressDefaultRules) SyncEffectiveFieldsDuringRead(existingState NccEgressDefaultRules) {
+func (newState *NccEgressDefaultRules) SyncFieldsDuringRead(existingState NccEgressDefaultRules) {
 }
 
 func (c NccEgressDefaultRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10415,10 +10415,10 @@ type NccEgressTargetRules struct {
 	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
-func (newState *NccEgressTargetRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressTargetRules) {
+func (newState *NccEgressTargetRules) SyncFieldsDuringCreateOrUpdate(plan NccEgressTargetRules) {
 }
 
-func (newState *NccEgressTargetRules) SyncEffectiveFieldsDuringRead(existingState NccEgressTargetRules) {
+func (newState *NccEgressTargetRules) SyncFieldsDuringRead(existingState NccEgressTargetRules) {
 }
 
 func (c NccEgressTargetRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10587,10 +10587,10 @@ type NccPrivateEndpointRule struct {
 	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
 }
 
-func (newState *NccPrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccPrivateEndpointRule) {
+func (newState *NccPrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(plan NccPrivateEndpointRule) {
 }
 
-func (newState *NccPrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccPrivateEndpointRule) {
+func (newState *NccPrivateEndpointRule) SyncFieldsDuringRead(existingState NccPrivateEndpointRule) {
 }
 
 func (c NccPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10759,10 +10759,10 @@ type NetworkConnectivityConfiguration struct {
 	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
-func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkConnectivityConfiguration) {
+func (newState *NetworkConnectivityConfiguration) SyncFieldsDuringCreateOrUpdate(plan NetworkConnectivityConfiguration) {
 }
 
-func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
+func (newState *NetworkConnectivityConfiguration) SyncFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
 }
 
 func (c NetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10862,10 +10862,10 @@ type NetworkPolicyEgress struct {
 	NetworkAccess types.Object `tfsdk:"network_access"`
 }
 
-func (newState *NetworkPolicyEgress) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkPolicyEgress) {
+func (newState *NetworkPolicyEgress) SyncFieldsDuringCreateOrUpdate(plan NetworkPolicyEgress) {
 }
 
-func (newState *NetworkPolicyEgress) SyncEffectiveFieldsDuringRead(existingState NetworkPolicyEgress) {
+func (newState *NetworkPolicyEgress) SyncFieldsDuringRead(existingState NetworkPolicyEgress) {
 }
 
 func (c NetworkPolicyEgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10949,10 +10949,10 @@ type NotificationDestination struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *NotificationDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotificationDestination) {
+func (newState *NotificationDestination) SyncFieldsDuringCreateOrUpdate(plan NotificationDestination) {
 }
 
-func (newState *NotificationDestination) SyncEffectiveFieldsDuringRead(existingState NotificationDestination) {
+func (newState *NotificationDestination) SyncFieldsDuringRead(existingState NotificationDestination) {
 }
 
 func (c NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11038,10 +11038,10 @@ type PagerdutyConfig struct {
 	IntegrationKeySet types.Bool `tfsdk:"integration_key_set"`
 }
 
-func (newState *PagerdutyConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PagerdutyConfig) {
+func (newState *PagerdutyConfig) SyncFieldsDuringCreateOrUpdate(plan PagerdutyConfig) {
 }
 
-func (newState *PagerdutyConfig) SyncEffectiveFieldsDuringRead(existingState PagerdutyConfig) {
+func (newState *PagerdutyConfig) SyncFieldsDuringRead(existingState PagerdutyConfig) {
 }
 
 func (c PagerdutyConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11090,10 +11090,10 @@ type PartitionId struct {
 	WorkspaceId types.Int64 `tfsdk:"workspaceId"`
 }
 
-func (newState *PartitionId) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionId) {
+func (newState *PartitionId) SyncFieldsDuringCreateOrUpdate(plan PartitionId) {
 }
 
-func (newState *PartitionId) SyncEffectiveFieldsDuringRead(existingState PartitionId) {
+func (newState *PartitionId) SyncFieldsDuringRead(existingState PartitionId) {
 }
 
 func (c PartitionId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11137,10 +11137,10 @@ type PersonalComputeMessage struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *PersonalComputeMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeMessage) {
+func (newState *PersonalComputeMessage) SyncFieldsDuringCreateOrUpdate(plan PersonalComputeMessage) {
 }
 
-func (newState *PersonalComputeMessage) SyncEffectiveFieldsDuringRead(existingState PersonalComputeMessage) {
+func (newState *PersonalComputeMessage) SyncFieldsDuringRead(existingState PersonalComputeMessage) {
 }
 
 func (c PersonalComputeMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11199,10 +11199,10 @@ type PersonalComputeSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *PersonalComputeSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeSetting) {
+func (newState *PersonalComputeSetting) SyncFieldsDuringCreateOrUpdate(plan PersonalComputeSetting) {
 }
 
-func (newState *PersonalComputeSetting) SyncEffectiveFieldsDuringRead(existingState PersonalComputeSetting) {
+func (newState *PersonalComputeSetting) SyncFieldsDuringRead(existingState PersonalComputeSetting) {
 }
 
 func (c PersonalComputeSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11290,10 +11290,10 @@ type PublicTokenInfo struct {
 	TokenId types.String `tfsdk:"token_id"`
 }
 
-func (newState *PublicTokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublicTokenInfo) {
+func (newState *PublicTokenInfo) SyncFieldsDuringCreateOrUpdate(plan PublicTokenInfo) {
 }
 
-func (newState *PublicTokenInfo) SyncEffectiveFieldsDuringRead(existingState PublicTokenInfo) {
+func (newState *PublicTokenInfo) SyncFieldsDuringRead(existingState PublicTokenInfo) {
 }
 
 func (c PublicTokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11459,10 +11459,10 @@ type RestrictWorkspaceAdminsMessage struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *RestrictWorkspaceAdminsMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsMessage) {
+func (newState *RestrictWorkspaceAdminsMessage) SyncFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsMessage) {
 }
 
-func (newState *RestrictWorkspaceAdminsMessage) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsMessage) {
+func (newState *RestrictWorkspaceAdminsMessage) SyncFieldsDuringRead(existingState RestrictWorkspaceAdminsMessage) {
 }
 
 func (c RestrictWorkspaceAdminsMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11521,10 +11521,10 @@ type RestrictWorkspaceAdminsSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *RestrictWorkspaceAdminsSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsSetting) {
+func (newState *RestrictWorkspaceAdminsSetting) SyncFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsSetting) {
 }
 
-func (newState *RestrictWorkspaceAdminsSetting) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsSetting) {
+func (newState *RestrictWorkspaceAdminsSetting) SyncFieldsDuringRead(existingState RestrictWorkspaceAdminsSetting) {
 }
 
 func (c RestrictWorkspaceAdminsSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11639,10 +11639,10 @@ func (o RevokeTokenRequest) Type(ctx context.Context) attr.Type {
 type RevokeTokenResponse struct {
 }
 
-func (newState *RevokeTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RevokeTokenResponse) {
+func (newState *RevokeTokenResponse) SyncFieldsDuringCreateOrUpdate(plan RevokeTokenResponse) {
 }
 
-func (newState *RevokeTokenResponse) SyncEffectiveFieldsDuringRead(existingState RevokeTokenResponse) {
+func (newState *RevokeTokenResponse) SyncFieldsDuringRead(existingState RevokeTokenResponse) {
 }
 
 func (c RevokeTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11714,10 +11714,10 @@ type SlackConfig struct {
 	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
-func (newState *SlackConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan SlackConfig) {
+func (newState *SlackConfig) SyncFieldsDuringCreateOrUpdate(plan SlackConfig) {
 }
 
-func (newState *SlackConfig) SyncEffectiveFieldsDuringRead(existingState SlackConfig) {
+func (newState *SlackConfig) SyncFieldsDuringRead(existingState SlackConfig) {
 }
 
 func (c SlackConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11778,10 +11778,10 @@ type SqlResultsDownload struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *SqlResultsDownload) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlResultsDownload) {
+func (newState *SqlResultsDownload) SyncFieldsDuringCreateOrUpdate(plan SqlResultsDownload) {
 }
 
-func (newState *SqlResultsDownload) SyncEffectiveFieldsDuringRead(existingState SqlResultsDownload) {
+func (newState *SqlResultsDownload) SyncFieldsDuringRead(existingState SqlResultsDownload) {
 }
 
 func (c SqlResultsDownload) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11862,10 +11862,10 @@ type StringMessage struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *StringMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan StringMessage) {
+func (newState *StringMessage) SyncFieldsDuringCreateOrUpdate(plan StringMessage) {
 }
 
-func (newState *StringMessage) SyncEffectiveFieldsDuringRead(existingState StringMessage) {
+func (newState *StringMessage) SyncFieldsDuringRead(existingState StringMessage) {
 }
 
 func (c StringMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11916,10 +11916,10 @@ type TokenAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *TokenAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlRequest) {
+func (newState *TokenAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan TokenAccessControlRequest) {
 }
 
-func (newState *TokenAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlRequest) {
+func (newState *TokenAccessControlRequest) SyncFieldsDuringRead(existingState TokenAccessControlRequest) {
 }
 
 func (c TokenAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11981,10 +11981,10 @@ type TokenAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *TokenAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlResponse) {
+func (newState *TokenAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan TokenAccessControlResponse) {
 }
 
-func (newState *TokenAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlResponse) {
+func (newState *TokenAccessControlResponse) SyncFieldsDuringRead(existingState TokenAccessControlResponse) {
 }
 
 func (c TokenAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12089,10 +12089,10 @@ type TokenInfo struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *TokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo) {
+func (newState *TokenInfo) SyncFieldsDuringCreateOrUpdate(plan TokenInfo) {
 }
 
-func (newState *TokenInfo) SyncEffectiveFieldsDuringRead(existingState TokenInfo) {
+func (newState *TokenInfo) SyncFieldsDuringRead(existingState TokenInfo) {
 }
 
 func (c TokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12164,10 +12164,10 @@ type TokenPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *TokenPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermission) {
+func (newState *TokenPermission) SyncFieldsDuringCreateOrUpdate(plan TokenPermission) {
 }
 
-func (newState *TokenPermission) SyncEffectiveFieldsDuringRead(existingState TokenPermission) {
+func (newState *TokenPermission) SyncFieldsDuringRead(existingState TokenPermission) {
 }
 
 func (c TokenPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12251,10 +12251,10 @@ type TokenPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *TokenPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissions) {
+func (newState *TokenPermissions) SyncFieldsDuringCreateOrUpdate(plan TokenPermissions) {
 }
 
-func (newState *TokenPermissions) SyncEffectiveFieldsDuringRead(existingState TokenPermissions) {
+func (newState *TokenPermissions) SyncFieldsDuringRead(existingState TokenPermissions) {
 }
 
 func (c TokenPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12336,10 +12336,10 @@ type TokenPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *TokenPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissionsDescription) {
+func (newState *TokenPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan TokenPermissionsDescription) {
 }
 
-func (newState *TokenPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsDescription) {
+func (newState *TokenPermissionsDescription) SyncFieldsDuringRead(existingState TokenPermissionsDescription) {
 }
 
 func (c TokenPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14588,10 +14588,10 @@ type UpdatePrivateEndpointRule struct {
 	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
-func (newState *UpdatePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePrivateEndpointRule) {
+func (newState *UpdatePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(plan UpdatePrivateEndpointRule) {
 }
 
-func (newState *UpdatePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState UpdatePrivateEndpointRule) {
+func (newState *UpdatePrivateEndpointRule) SyncFieldsDuringRead(existingState UpdatePrivateEndpointRule) {
 }
 
 func (c UpdatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14979,10 +14979,10 @@ type WorkspaceNetworkOption struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *WorkspaceNetworkOption) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceNetworkOption) {
+func (newState *WorkspaceNetworkOption) SyncFieldsDuringCreateOrUpdate(plan WorkspaceNetworkOption) {
 }
 
-func (newState *WorkspaceNetworkOption) SyncEffectiveFieldsDuringRead(existingState WorkspaceNetworkOption) {
+func (newState *WorkspaceNetworkOption) SyncFieldsDuringRead(existingState WorkspaceNetworkOption) {
 }
 
 func (c WorkspaceNetworkOption) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

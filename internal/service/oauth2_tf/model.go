@@ -282,10 +282,10 @@ type CreateCustomAppIntegrationOutput struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput) {
+func (newState *CreateCustomAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput) {
 }
 
-func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput) {
+func (newState *CreateCustomAppIntegrationOutput) SyncFieldsDuringRead(existingState CreateCustomAppIntegrationOutput) {
 }
 
 func (c CreateCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -407,10 +407,10 @@ type CreatePublishedAppIntegrationOutput struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput) {
+func (newState *CreatePublishedAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput) {
 }
 
-func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput) {
+func (newState *CreatePublishedAppIntegrationOutput) SyncFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput) {
 }
 
 func (c CreatePublishedAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -584,10 +584,10 @@ type CreateServicePrincipalSecretResponse struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse) {
+func (newState *CreateServicePrincipalSecretResponse) SyncFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse) {
 }
 
-func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse) {
+func (newState *CreateServicePrincipalSecretResponse) SyncFieldsDuringRead(existingState CreateServicePrincipalSecretResponse) {
 }
 
 func (c CreateServicePrincipalSecretResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -684,10 +684,10 @@ func (o DeleteAccountFederationPolicyRequest) Type(ctx context.Context) attr.Typ
 type DeleteCustomAppIntegrationOutput struct {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput) {
+func (newState *DeleteCustomAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput) {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput) {
+func (newState *DeleteCustomAppIntegrationOutput) SyncFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput) {
 }
 
 func (c DeleteCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -760,10 +760,10 @@ func (o DeleteCustomAppIntegrationRequest) Type(ctx context.Context) attr.Type {
 type DeletePublishedAppIntegrationOutput struct {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput) {
+func (newState *DeletePublishedAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput) {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput) {
+func (newState *DeletePublishedAppIntegrationOutput) SyncFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput) {
 }
 
 func (c DeletePublishedAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -969,10 +969,10 @@ type FederationPolicy struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *FederationPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan FederationPolicy) {
+func (newState *FederationPolicy) SyncFieldsDuringCreateOrUpdate(plan FederationPolicy) {
 }
 
-func (newState *FederationPolicy) SyncEffectiveFieldsDuringRead(existingState FederationPolicy) {
+func (newState *FederationPolicy) SyncFieldsDuringRead(existingState FederationPolicy) {
 }
 
 func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1131,10 +1131,10 @@ type GetCustomAppIntegrationOutput struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
+func (newState *GetCustomAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
 }
 
-func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput) {
+func (newState *GetCustomAppIntegrationOutput) SyncFieldsDuringRead(existingState GetCustomAppIntegrationOutput) {
 }
 
 func (c GetCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1364,10 +1364,10 @@ type GetCustomAppIntegrationsOutput struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput) {
+func (newState *GetCustomAppIntegrationsOutput) SyncFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput) {
 }
 
-func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput) {
+func (newState *GetCustomAppIntegrationsOutput) SyncFieldsDuringRead(existingState GetCustomAppIntegrationsOutput) {
 }
 
 func (c GetCustomAppIntegrationsOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1455,10 +1455,10 @@ type GetPublishedAppIntegrationOutput struct {
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
-func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput) {
+func (newState *GetPublishedAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput) {
 }
 
-func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput) {
+func (newState *GetPublishedAppIntegrationOutput) SyncFieldsDuringRead(existingState GetPublishedAppIntegrationOutput) {
 }
 
 func (c GetPublishedAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1585,10 +1585,10 @@ type GetPublishedAppIntegrationsOutput struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput) {
+func (newState *GetPublishedAppIntegrationsOutput) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput) {
 }
 
-func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput) {
+func (newState *GetPublishedAppIntegrationsOutput) SyncFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput) {
 }
 
 func (c GetPublishedAppIntegrationsOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1669,10 +1669,10 @@ type GetPublishedAppsOutput struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput) {
+func (newState *GetPublishedAppsOutput) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput) {
 }
 
-func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput) {
+func (newState *GetPublishedAppsOutput) SyncFieldsDuringRead(existingState GetPublishedAppsOutput) {
 }
 
 func (c GetPublishedAppsOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1873,10 +1873,10 @@ type ListFederationPoliciesResponse struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListFederationPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse) {
+func (newState *ListFederationPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse) {
 }
 
-func (newState *ListFederationPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListFederationPoliciesResponse) {
+func (newState *ListFederationPoliciesResponse) SyncFieldsDuringRead(existingState ListFederationPoliciesResponse) {
 }
 
 func (c ListFederationPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2129,10 +2129,10 @@ type ListServicePrincipalSecretsResponse struct {
 	Secrets types.List `tfsdk:"secrets"`
 }
 
-func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse) {
+func (newState *ListServicePrincipalSecretsResponse) SyncFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse) {
 }
 
-func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse) {
+func (newState *ListServicePrincipalSecretsResponse) SyncFieldsDuringRead(existingState ListServicePrincipalSecretsResponse) {
 }
 
 func (c ListServicePrincipalSecretsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2241,10 +2241,10 @@ type OidcFederationPolicy struct {
 	SubjectClaim types.String `tfsdk:"subject_claim"`
 }
 
-func (newState *OidcFederationPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan OidcFederationPolicy) {
+func (newState *OidcFederationPolicy) SyncFieldsDuringCreateOrUpdate(plan OidcFederationPolicy) {
 }
 
-func (newState *OidcFederationPolicy) SyncEffectiveFieldsDuringRead(existingState OidcFederationPolicy) {
+func (newState *OidcFederationPolicy) SyncFieldsDuringRead(existingState OidcFederationPolicy) {
 }
 
 func (c OidcFederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2348,10 +2348,10 @@ type PublishedAppOutput struct {
 	Scopes types.List `tfsdk:"scopes"`
 }
 
-func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedAppOutput) {
+func (newState *PublishedAppOutput) SyncFieldsDuringCreateOrUpdate(plan PublishedAppOutput) {
 }
 
-func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput) {
+func (newState *PublishedAppOutput) SyncFieldsDuringRead(existingState PublishedAppOutput) {
 }
 
 func (c PublishedAppOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2484,10 +2484,10 @@ type SecretInfo struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *SecretInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretInfo) {
+func (newState *SecretInfo) SyncFieldsDuringCreateOrUpdate(plan SecretInfo) {
 }
 
-func (newState *SecretInfo) SyncEffectiveFieldsDuringRead(existingState SecretInfo) {
+func (newState *SecretInfo) SyncFieldsDuringRead(existingState SecretInfo) {
 }
 
 func (c SecretInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2543,20 +2543,27 @@ func (o SecretInfo) Type(ctx context.Context) attr.Type {
 }
 
 type TokenAccessPolicy struct {
+	// absolute OAuth session TTL in minutes when single-use refresh tokens are
+	// enabled
+	AbsoluteSessionLifetimeInMinutes types.Int64 `tfsdk:"absolute_session_lifetime_in_minutes"`
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes"`
+	// whether to enable single-use refresh tokens
+	EnableSingleUseRefreshTokens types.Bool `tfsdk:"enable_single_use_refresh_tokens"`
 	// refresh token time to live in minutes
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes"`
 }
 
-func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessPolicy) {
+func (newState *TokenAccessPolicy) SyncFieldsDuringCreateOrUpdate(plan TokenAccessPolicy) {
 }
 
-func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy) {
+func (newState *TokenAccessPolicy) SyncFieldsDuringRead(existingState TokenAccessPolicy) {
 }
 
 func (c TokenAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["absolute_session_lifetime_in_minutes"] = attrs["absolute_session_lifetime_in_minutes"].SetOptional()
 	attrs["access_token_ttl_in_minutes"] = attrs["access_token_ttl_in_minutes"].SetOptional()
+	attrs["enable_single_use_refresh_tokens"] = attrs["enable_single_use_refresh_tokens"].SetOptional()
 	attrs["refresh_token_ttl_in_minutes"] = attrs["refresh_token_ttl_in_minutes"].SetOptional()
 
 	return attrs
@@ -2580,8 +2587,10 @@ func (o TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_token_ttl_in_minutes":  o.AccessTokenTtlInMinutes,
-			"refresh_token_ttl_in_minutes": o.RefreshTokenTtlInMinutes,
+			"absolute_session_lifetime_in_minutes": o.AbsoluteSessionLifetimeInMinutes,
+			"access_token_ttl_in_minutes":          o.AccessTokenTtlInMinutes,
+			"enable_single_use_refresh_tokens":     o.EnableSingleUseRefreshTokens,
+			"refresh_token_ttl_in_minutes":         o.RefreshTokenTtlInMinutes,
 		})
 }
 
@@ -2589,8 +2598,10 @@ func (o TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o TokenAccessPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_token_ttl_in_minutes":  types.Int64Type,
-			"refresh_token_ttl_in_minutes": types.Int64Type,
+			"absolute_session_lifetime_in_minutes": types.Int64Type,
+			"access_token_ttl_in_minutes":          types.Int64Type,
+			"enable_single_use_refresh_tokens":     types.BoolType,
+			"refresh_token_ttl_in_minutes":         types.Int64Type,
 		},
 	}
 }
@@ -2849,10 +2860,10 @@ func (o *UpdateCustomAppIntegration) SetUserAuthorizedScopes(ctx context.Context
 type UpdateCustomAppIntegrationOutput struct {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput) {
+func (newState *UpdateCustomAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput) {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput) {
+func (newState *UpdateCustomAppIntegrationOutput) SyncFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput) {
 }
 
 func (c UpdateCustomAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2959,10 +2970,10 @@ func (o *UpdatePublishedAppIntegration) SetTokenAccessPolicy(ctx context.Context
 type UpdatePublishedAppIntegrationOutput struct {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput) {
+func (newState *UpdatePublishedAppIntegrationOutput) SyncFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput) {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput) {
+func (newState *UpdatePublishedAppIntegrationOutput) SyncFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput) {
 }
 
 func (c UpdatePublishedAppIntegrationOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

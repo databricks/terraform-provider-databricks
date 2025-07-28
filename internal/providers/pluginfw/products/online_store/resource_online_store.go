@@ -62,6 +62,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore
 	}
 
 	var online_store ml.OnlineStore
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
 	if diags.HasError() {
 		return
@@ -85,7 +86,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -97,14 +98,13 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan ml_tf.OnlineStore
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var online_store ml.OnlineStore
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,8 +128,7 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
-
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,12 +168,13 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var newState ml_tf.OnlineStore
+
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

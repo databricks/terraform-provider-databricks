@@ -62,6 +62,7 @@ func (r *FeatureTagResource) update(ctx context.Context, plan ml_tf.FeatureTag, 
 	}
 
 	var feature_tag ml.FeatureTag
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature_tag)...)
 	if diags.HasError() {
 		return
@@ -85,7 +86,7 @@ func (r *FeatureTagResource) update(ctx context.Context, plan ml_tf.FeatureTag, 
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -97,14 +98,13 @@ func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan ml_tf.FeatureTag
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var feature_tag ml.FeatureTag
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature_tag)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,8 +128,7 @@ func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
-
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,12 +168,13 @@ func (r *FeatureTagResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	var newState ml_tf.FeatureTag
+
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

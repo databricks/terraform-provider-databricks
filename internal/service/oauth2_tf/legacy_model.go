@@ -283,10 +283,10 @@ type CreateCustomAppIntegrationOutput_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput_SdkV2) {
+func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput_SdkV2) {
+func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState CreateCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c CreateCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -408,10 +408,10 @@ type CreatePublishedAppIntegrationOutput_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput_SdkV2) {
+func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput_SdkV2) {
+func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c CreatePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -585,10 +585,10 @@ type CreateServicePrincipalSecretResponse_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse_SdkV2) {
+func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse_SdkV2) {
 }
 
-func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse_SdkV2) {
+func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncFieldsDuringRead(existingState CreateServicePrincipalSecretResponse_SdkV2) {
 }
 
 func (c CreateServicePrincipalSecretResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -685,10 +685,10 @@ func (o DeleteAccountFederationPolicyRequest_SdkV2) Type(ctx context.Context) at
 type DeleteCustomAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput_SdkV2) {
+func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput_SdkV2) {
+func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c DeleteCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -761,10 +761,10 @@ func (o DeleteCustomAppIntegrationRequest_SdkV2) Type(ctx context.Context) attr.
 type DeletePublishedAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput_SdkV2) {
+func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput_SdkV2) {
+func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c DeletePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -970,10 +970,10 @@ type FederationPolicy_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FederationPolicy_SdkV2) {
+func (newState *FederationPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(plan FederationPolicy_SdkV2) {
 }
 
-func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState FederationPolicy_SdkV2) {
+func (newState *FederationPolicy_SdkV2) SyncFieldsDuringRead(existingState FederationPolicy_SdkV2) {
 }
 
 func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1133,10 +1133,10 @@ type GetCustomAppIntegrationOutput_SdkV2 struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput_SdkV2) {
+func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput_SdkV2) {
+func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState GetCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c GetCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1367,10 +1367,10 @@ type GetCustomAppIntegrationsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput_SdkV2) {
+func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput_SdkV2) {
 }
 
-func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput_SdkV2) {
+func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(existingState GetCustomAppIntegrationsOutput_SdkV2) {
 }
 
 func (c GetCustomAppIntegrationsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1458,10 +1458,10 @@ type GetPublishedAppIntegrationOutput_SdkV2 struct {
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
 }
 
-func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput_SdkV2) {
+func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput_SdkV2) {
+func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState GetPublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c GetPublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1589,10 +1589,10 @@ type GetPublishedAppIntegrationsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput_SdkV2) {
+func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput_SdkV2) {
 }
 
-func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput_SdkV2) {
+func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput_SdkV2) {
 }
 
 func (c GetPublishedAppIntegrationsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1673,10 +1673,10 @@ type GetPublishedAppsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput_SdkV2) {
+func (newState *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput_SdkV2) {
 }
 
-func (newState *GetPublishedAppsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput_SdkV2) {
+func (newState *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringRead(existingState GetPublishedAppsOutput_SdkV2) {
 }
 
 func (c GetPublishedAppsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1877,10 +1877,10 @@ type ListFederationPoliciesResponse_SdkV2 struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse_SdkV2) {
+func (newState *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse_SdkV2) {
 }
 
-func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFederationPoliciesResponse_SdkV2) {
+func (newState *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringRead(existingState ListFederationPoliciesResponse_SdkV2) {
 }
 
 func (c ListFederationPoliciesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2133,10 +2133,10 @@ type ListServicePrincipalSecretsResponse_SdkV2 struct {
 	Secrets types.List `tfsdk:"secrets"`
 }
 
-func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse_SdkV2) {
+func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse_SdkV2) {
 }
 
-func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse_SdkV2) {
+func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringRead(existingState ListServicePrincipalSecretsResponse_SdkV2) {
 }
 
 func (c ListServicePrincipalSecretsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2245,10 +2245,10 @@ type OidcFederationPolicy_SdkV2 struct {
 	SubjectClaim types.String `tfsdk:"subject_claim"`
 }
 
-func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OidcFederationPolicy_SdkV2) {
+func (newState *OidcFederationPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(plan OidcFederationPolicy_SdkV2) {
 }
 
-func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState OidcFederationPolicy_SdkV2) {
+func (newState *OidcFederationPolicy_SdkV2) SyncFieldsDuringRead(existingState OidcFederationPolicy_SdkV2) {
 }
 
 func (c OidcFederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2352,10 +2352,10 @@ type PublishedAppOutput_SdkV2 struct {
 	Scopes types.List `tfsdk:"scopes"`
 }
 
-func (newState *PublishedAppOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedAppOutput_SdkV2) {
+func (newState *PublishedAppOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan PublishedAppOutput_SdkV2) {
 }
 
-func (newState *PublishedAppOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput_SdkV2) {
+func (newState *PublishedAppOutput_SdkV2) SyncFieldsDuringRead(existingState PublishedAppOutput_SdkV2) {
 }
 
 func (c PublishedAppOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2488,10 +2488,10 @@ type SecretInfo_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *SecretInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretInfo_SdkV2) {
+func (newState *SecretInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SecretInfo_SdkV2) {
 }
 
-func (newState *SecretInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecretInfo_SdkV2) {
+func (newState *SecretInfo_SdkV2) SyncFieldsDuringRead(existingState SecretInfo_SdkV2) {
 }
 
 func (c SecretInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2547,20 +2547,27 @@ func (o SecretInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TokenAccessPolicy_SdkV2 struct {
+	// absolute OAuth session TTL in minutes when single-use refresh tokens are
+	// enabled
+	AbsoluteSessionLifetimeInMinutes types.Int64 `tfsdk:"absolute_session_lifetime_in_minutes"`
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes"`
+	// whether to enable single-use refresh tokens
+	EnableSingleUseRefreshTokens types.Bool `tfsdk:"enable_single_use_refresh_tokens"`
 	// refresh token time to live in minutes
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes"`
 }
 
-func (newState *TokenAccessPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessPolicy_SdkV2) {
+func (newState *TokenAccessPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(plan TokenAccessPolicy_SdkV2) {
 }
 
-func (newState *TokenAccessPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy_SdkV2) {
+func (newState *TokenAccessPolicy_SdkV2) SyncFieldsDuringRead(existingState TokenAccessPolicy_SdkV2) {
 }
 
 func (c TokenAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["absolute_session_lifetime_in_minutes"] = attrs["absolute_session_lifetime_in_minutes"].SetOptional()
 	attrs["access_token_ttl_in_minutes"] = attrs["access_token_ttl_in_minutes"].SetOptional()
+	attrs["enable_single_use_refresh_tokens"] = attrs["enable_single_use_refresh_tokens"].SetOptional()
 	attrs["refresh_token_ttl_in_minutes"] = attrs["refresh_token_ttl_in_minutes"].SetOptional()
 
 	return attrs
@@ -2584,8 +2591,10 @@ func (o TokenAccessPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_token_ttl_in_minutes":  o.AccessTokenTtlInMinutes,
-			"refresh_token_ttl_in_minutes": o.RefreshTokenTtlInMinutes,
+			"absolute_session_lifetime_in_minutes": o.AbsoluteSessionLifetimeInMinutes,
+			"access_token_ttl_in_minutes":          o.AccessTokenTtlInMinutes,
+			"enable_single_use_refresh_tokens":     o.EnableSingleUseRefreshTokens,
+			"refresh_token_ttl_in_minutes":         o.RefreshTokenTtlInMinutes,
 		})
 }
 
@@ -2593,8 +2602,10 @@ func (o TokenAccessPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o TokenAccessPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_token_ttl_in_minutes":  types.Int64Type,
-			"refresh_token_ttl_in_minutes": types.Int64Type,
+			"absolute_session_lifetime_in_minutes": types.Int64Type,
+			"access_token_ttl_in_minutes":          types.Int64Type,
+			"enable_single_use_refresh_tokens":     types.BoolType,
+			"refresh_token_ttl_in_minutes":         types.Int64Type,
 		},
 	}
 }
@@ -2853,10 +2864,10 @@ func (o *UpdateCustomAppIntegration_SdkV2) SetUserAuthorizedScopes(ctx context.C
 type UpdateCustomAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput_SdkV2) {
+func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput_SdkV2) {
+func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c UpdateCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2963,10 +2974,10 @@ func (o *UpdatePublishedAppIntegration_SdkV2) SetTokenAccessPolicy(ctx context.C
 type UpdatePublishedAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput_SdkV2) {
+func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput_SdkV2) {
+func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c UpdatePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

@@ -23,19 +23,22 @@ import (
 )
 
 type AnomalyDetectionConfig struct {
+	// The type of the last run of the workflow.
+	JobType types.String `tfsdk:"job_type"`
 	// Run id of the last run of the workflow
 	LastRunId types.String `tfsdk:"last_run_id"`
 	// The status of the last run of the workflow.
 	LatestRunStatus types.String `tfsdk:"latest_run_status"`
 }
 
-func (newState *AnomalyDetectionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AnomalyDetectionConfig) {
+func (newState *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(plan AnomalyDetectionConfig) {
 }
 
-func (newState *AnomalyDetectionConfig) SyncEffectiveFieldsDuringRead(existingState AnomalyDetectionConfig) {
+func (newState *AnomalyDetectionConfig) SyncFieldsDuringRead(existingState AnomalyDetectionConfig) {
 }
 
 func (c AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_type"] = attrs["job_type"].SetComputed()
 	attrs["last_run_id"] = attrs["last_run_id"].SetComputed()
 	attrs["latest_run_status"] = attrs["latest_run_status"].SetComputed()
 
@@ -60,6 +63,7 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"job_type":          o.JobType,
 			"last_run_id":       o.LastRunId,
 			"latest_run_status": o.LatestRunStatus,
 		})
@@ -69,6 +73,7 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"job_type":          types.StringType,
 			"last_run_id":       types.StringType,
 			"latest_run_status": types.StringType,
 		},
@@ -265,10 +270,10 @@ type ListQualityMonitorResponse struct {
 	QualityMonitors types.List `tfsdk:"quality_monitors"`
 }
 
-func (newState *ListQualityMonitorResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQualityMonitorResponse) {
+func (newState *ListQualityMonitorResponse) SyncFieldsDuringCreateOrUpdate(plan ListQualityMonitorResponse) {
 }
 
-func (newState *ListQualityMonitorResponse) SyncEffectiveFieldsDuringRead(existingState ListQualityMonitorResponse) {
+func (newState *ListQualityMonitorResponse) SyncFieldsDuringRead(existingState ListQualityMonitorResponse) {
 }
 
 func (c ListQualityMonitorResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -349,10 +354,10 @@ type QualityMonitor struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *QualityMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan QualityMonitor) {
+func (newState *QualityMonitor) SyncFieldsDuringCreateOrUpdate(plan QualityMonitor) {
 }
 
-func (newState *QualityMonitor) SyncEffectiveFieldsDuringRead(existingState QualityMonitor) {
+func (newState *QualityMonitor) SyncFieldsDuringRead(existingState QualityMonitor) {
 }
 
 func (c QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

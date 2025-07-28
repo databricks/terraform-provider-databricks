@@ -76,10 +76,10 @@ type App struct {
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
-func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
+func (newState *App) SyncFieldsDuringCreateOrUpdate(plan App) {
 }
 
-func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
+func (newState *App) SyncFieldsDuringRead(existingState App) {
 }
 
 func (c App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -400,10 +400,10 @@ type AppAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlRequest) {
+func (newState *AppAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan AppAccessControlRequest) {
 }
 
-func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AppAccessControlRequest) {
+func (newState *AppAccessControlRequest) SyncFieldsDuringRead(existingState AppAccessControlRequest) {
 }
 
 func (c AppAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -465,10 +465,10 @@ type AppAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlResponse) {
+func (newState *AppAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan AppAccessControlResponse) {
 }
 
-func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AppAccessControlResponse) {
+func (newState *AppAccessControlResponse) SyncFieldsDuringRead(existingState AppAccessControlResponse) {
 }
 
 func (c AppAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -575,10 +575,10 @@ type AppDeployment struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment) {
+func (newState *AppDeployment) SyncFieldsDuringCreateOrUpdate(plan AppDeployment) {
 }
 
-func (newState *AppDeployment) SyncEffectiveFieldsDuringRead(existingState AppDeployment) {
+func (newState *AppDeployment) SyncFieldsDuringRead(existingState AppDeployment) {
 }
 
 func (c AppDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -704,10 +704,10 @@ type AppDeploymentArtifacts struct {
 	SourceCodePath types.String `tfsdk:"source_code_path"`
 }
 
-func (newState *AppDeploymentArtifacts) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentArtifacts) {
+func (newState *AppDeploymentArtifacts) SyncFieldsDuringCreateOrUpdate(plan AppDeploymentArtifacts) {
 }
 
-func (newState *AppDeploymentArtifacts) SyncEffectiveFieldsDuringRead(existingState AppDeploymentArtifacts) {
+func (newState *AppDeploymentArtifacts) SyncFieldsDuringRead(existingState AppDeploymentArtifacts) {
 }
 
 func (c AppDeploymentArtifacts) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -754,10 +754,10 @@ type AppDeploymentStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus) {
+func (newState *AppDeploymentStatus) SyncFieldsDuringCreateOrUpdate(plan AppDeploymentStatus) {
 }
 
-func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus) {
+func (newState *AppDeploymentStatus) SyncFieldsDuringRead(existingState AppDeploymentStatus) {
 }
 
 func (c AppDeploymentStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -808,10 +808,10 @@ type AppPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermission) {
+func (newState *AppPermission) SyncFieldsDuringCreateOrUpdate(plan AppPermission) {
 }
 
-func (newState *AppPermission) SyncEffectiveFieldsDuringRead(existingState AppPermission) {
+func (newState *AppPermission) SyncFieldsDuringRead(existingState AppPermission) {
 }
 
 func (c AppPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -895,10 +895,10 @@ type AppPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *AppPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissions) {
+func (newState *AppPermissions) SyncFieldsDuringCreateOrUpdate(plan AppPermissions) {
 }
 
-func (newState *AppPermissions) SyncEffectiveFieldsDuringRead(existingState AppPermissions) {
+func (newState *AppPermissions) SyncFieldsDuringRead(existingState AppPermissions) {
 }
 
 func (c AppPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -980,10 +980,10 @@ type AppPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsDescription) {
+func (newState *AppPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan AppPermissionsDescription) {
 }
 
-func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState AppPermissionsDescription) {
+func (newState *AppPermissionsDescription) SyncFieldsDuringRead(existingState AppPermissionsDescription) {
 }
 
 func (c AppPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1113,10 +1113,10 @@ type AppResource struct {
 	UcSecurable types.Object `tfsdk:"uc_securable"`
 }
 
-func (newState *AppResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource) {
+func (newState *AppResource) SyncFieldsDuringCreateOrUpdate(plan AppResource) {
 }
 
-func (newState *AppResource) SyncEffectiveFieldsDuringRead(existingState AppResource) {
+func (newState *AppResource) SyncFieldsDuringRead(existingState AppResource) {
 }
 
 func (c AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1360,10 +1360,10 @@ type AppResourceDatabase struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceDatabase) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceDatabase) {
+func (newState *AppResourceDatabase) SyncFieldsDuringCreateOrUpdate(plan AppResourceDatabase) {
 }
 
-func (newState *AppResourceDatabase) SyncEffectiveFieldsDuringRead(existingState AppResourceDatabase) {
+func (newState *AppResourceDatabase) SyncFieldsDuringRead(existingState AppResourceDatabase) {
 }
 
 func (c AppResourceDatabase) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1417,10 +1417,10 @@ type AppResourceJob struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceJob) {
+func (newState *AppResourceJob) SyncFieldsDuringCreateOrUpdate(plan AppResourceJob) {
 }
 
-func (newState *AppResourceJob) SyncEffectiveFieldsDuringRead(existingState AppResourceJob) {
+func (newState *AppResourceJob) SyncFieldsDuringRead(existingState AppResourceJob) {
 }
 
 func (c AppResourceJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1473,10 +1473,10 @@ type AppResourceSecret struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *AppResourceSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSecret) {
+func (newState *AppResourceSecret) SyncFieldsDuringCreateOrUpdate(plan AppResourceSecret) {
 }
 
-func (newState *AppResourceSecret) SyncEffectiveFieldsDuringRead(existingState AppResourceSecret) {
+func (newState *AppResourceSecret) SyncFieldsDuringRead(existingState AppResourceSecret) {
 }
 
 func (c AppResourceSecret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1530,10 +1530,10 @@ type AppResourceServingEndpoint struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceServingEndpoint) {
+func (newState *AppResourceServingEndpoint) SyncFieldsDuringCreateOrUpdate(plan AppResourceServingEndpoint) {
 }
 
-func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringRead(existingState AppResourceServingEndpoint) {
+func (newState *AppResourceServingEndpoint) SyncFieldsDuringRead(existingState AppResourceServingEndpoint) {
 }
 
 func (c AppResourceServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1584,10 +1584,10 @@ type AppResourceSqlWarehouse struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSqlWarehouse) {
+func (newState *AppResourceSqlWarehouse) SyncFieldsDuringCreateOrUpdate(plan AppResourceSqlWarehouse) {
 }
 
-func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringRead(existingState AppResourceSqlWarehouse) {
+func (newState *AppResourceSqlWarehouse) SyncFieldsDuringRead(existingState AppResourceSqlWarehouse) {
 }
 
 func (c AppResourceSqlWarehouse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1638,10 +1638,10 @@ type AppResourceUcSecurable struct {
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
-func (newState *AppResourceUcSecurable) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable) {
+func (newState *AppResourceUcSecurable) SyncFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable) {
 }
 
-func (newState *AppResourceUcSecurable) SyncEffectiveFieldsDuringRead(existingState AppResourceUcSecurable) {
+func (newState *AppResourceUcSecurable) SyncFieldsDuringRead(existingState AppResourceUcSecurable) {
 }
 
 func (c AppResourceUcSecurable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1694,10 +1694,10 @@ type ApplicationStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus) {
+func (newState *ApplicationStatus) SyncFieldsDuringCreateOrUpdate(plan ApplicationStatus) {
 }
 
-func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus) {
+func (newState *ApplicationStatus) SyncFieldsDuringRead(existingState ApplicationStatus) {
 }
 
 func (c ApplicationStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1747,10 +1747,10 @@ type ComputeStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus) {
+func (newState *ComputeStatus) SyncFieldsDuringCreateOrUpdate(plan ComputeStatus) {
 }
 
-func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState ComputeStatus) {
+func (newState *ComputeStatus) SyncFieldsDuringRead(existingState ComputeStatus) {
 }
 
 func (c ComputeStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2049,10 +2049,10 @@ type GetAppPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetAppPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsResponse) {
+func (newState *GetAppPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsResponse) {
 }
 
-func (newState *GetAppPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsResponse) {
+func (newState *GetAppPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetAppPermissionLevelsResponse) {
 }
 
 func (c GetAppPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2246,10 +2246,10 @@ type ListAppDeploymentsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppDeploymentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsResponse) {
+func (newState *ListAppDeploymentsResponse) SyncFieldsDuringCreateOrUpdate(plan ListAppDeploymentsResponse) {
 }
 
-func (newState *ListAppDeploymentsResponse) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsResponse) {
+func (newState *ListAppDeploymentsResponse) SyncFieldsDuringRead(existingState ListAppDeploymentsResponse) {
 }
 
 func (c ListAppDeploymentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2369,10 +2369,10 @@ type ListAppsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsResponse) {
+func (newState *ListAppsResponse) SyncFieldsDuringCreateOrUpdate(plan ListAppsResponse) {
 }
 
-func (newState *ListAppsResponse) SyncEffectiveFieldsDuringRead(existingState ListAppsResponse) {
+func (newState *ListAppsResponse) SyncFieldsDuringRead(existingState ListAppsResponse) {
 }
 
 func (c ListAppsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

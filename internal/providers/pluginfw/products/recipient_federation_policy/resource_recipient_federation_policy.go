@@ -62,6 +62,7 @@ func (r *FederationPolicyResource) update(ctx context.Context, plan sharing_tf.F
 	}
 
 	var federation_policy sharing.FederationPolicy
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
 	if diags.HasError() {
 		return
@@ -85,7 +86,7 @@ func (r *FederationPolicyResource) update(ctx context.Context, plan sharing_tf.F
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -97,14 +98,13 @@ func (r *FederationPolicyResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan sharing_tf.FederationPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var federation_policy sharing.FederationPolicy
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,8 +128,7 @@ func (r *FederationPolicyResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
-
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,12 +168,13 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	var newState sharing_tf.FederationPolicy
+
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

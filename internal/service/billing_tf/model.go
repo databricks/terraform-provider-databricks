@@ -32,10 +32,10 @@ type ActionConfiguration struct {
 	Target types.String `tfsdk:"target"`
 }
 
-func (newState *ActionConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan ActionConfiguration) {
+func (newState *ActionConfiguration) SyncFieldsDuringCreateOrUpdate(plan ActionConfiguration) {
 }
 
-func (newState *ActionConfiguration) SyncEffectiveFieldsDuringRead(existingState ActionConfiguration) {
+func (newState *ActionConfiguration) SyncFieldsDuringRead(existingState ActionConfiguration) {
 }
 
 func (c ActionConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -100,10 +100,10 @@ type AlertConfiguration struct {
 	TriggerType types.String `tfsdk:"trigger_type"`
 }
 
-func (newState *AlertConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConfiguration) {
+func (newState *AlertConfiguration) SyncFieldsDuringCreateOrUpdate(plan AlertConfiguration) {
 }
 
-func (newState *AlertConfiguration) SyncEffectiveFieldsDuringRead(existingState AlertConfiguration) {
+func (newState *AlertConfiguration) SyncFieldsDuringRead(existingState AlertConfiguration) {
 }
 
 func (c AlertConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -209,10 +209,10 @@ type BudgetConfiguration struct {
 	UpdateTime types.Int64 `tfsdk:"update_time"`
 }
 
-func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfiguration) {
+func (newState *BudgetConfiguration) SyncFieldsDuringCreateOrUpdate(plan BudgetConfiguration) {
 }
 
-func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringRead(existingState BudgetConfiguration) {
+func (newState *BudgetConfiguration) SyncFieldsDuringRead(existingState BudgetConfiguration) {
 }
 
 func (c BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -338,10 +338,10 @@ type BudgetConfigurationFilter struct {
 	WorkspaceId types.Object `tfsdk:"workspace_id"`
 }
 
-func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilter) {
+func (newState *BudgetConfigurationFilter) SyncFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilter) {
 }
 
-func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilter) {
+func (newState *BudgetConfigurationFilter) SyncFieldsDuringRead(existingState BudgetConfigurationFilter) {
 }
 
 func (c BudgetConfigurationFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -449,10 +449,10 @@ type BudgetConfigurationFilterClause struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterClause) {
+func (newState *BudgetConfigurationFilterClause) SyncFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterClause) {
 }
 
-func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterClause) {
+func (newState *BudgetConfigurationFilterClause) SyncFieldsDuringRead(existingState BudgetConfigurationFilterClause) {
 }
 
 func (c BudgetConfigurationFilterClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -531,10 +531,10 @@ type BudgetConfigurationFilterTagClause struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterTagClause) {
+func (newState *BudgetConfigurationFilterTagClause) SyncFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterTagClause) {
 }
 
-func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterTagClause) {
+func (newState *BudgetConfigurationFilterTagClause) SyncFieldsDuringRead(existingState BudgetConfigurationFilterTagClause) {
 }
 
 func (c BudgetConfigurationFilterTagClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -613,10 +613,10 @@ type BudgetConfigurationFilterWorkspaceIdClause struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterWorkspaceIdClause) {
+func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
-func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause) {
+func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
 func (c BudgetConfigurationFilterWorkspaceIdClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -707,10 +707,10 @@ type BudgetPolicy struct {
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
-func (newState *BudgetPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetPolicy) {
+func (newState *BudgetPolicy) SyncFieldsDuringCreateOrUpdate(plan BudgetPolicy) {
 }
 
-func (newState *BudgetPolicy) SyncEffectiveFieldsDuringRead(existingState BudgetPolicy) {
+func (newState *BudgetPolicy) SyncFieldsDuringRead(existingState BudgetPolicy) {
 }
 
 func (c BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -866,10 +866,10 @@ type CreateBillingUsageDashboardResponse struct {
 	DashboardId types.String `tfsdk:"dashboard_id"`
 }
 
-func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardResponse) {
+func (newState *CreateBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardResponse) {
 }
 
-func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardResponse) {
+func (newState *CreateBillingUsageDashboardResponse) SyncFieldsDuringRead(existingState CreateBillingUsageDashboardResponse) {
 }
 
 func (c CreateBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -924,10 +924,10 @@ type CreateBudgetConfigurationBudget struct {
 	Filter types.Object `tfsdk:"filter"`
 }
 
-func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudget) {
+func (newState *CreateBudgetConfigurationBudget) SyncFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudget) {
 }
 
-func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudget) {
+func (newState *CreateBudgetConfigurationBudget) SyncFieldsDuringRead(existingState CreateBudgetConfigurationBudget) {
 }
 
 func (c CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1042,10 +1042,10 @@ type CreateBudgetConfigurationBudgetActionConfigurations struct {
 	Target types.String `tfsdk:"target"`
 }
 
-func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetActionConfigurations) {
+func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
-func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations) {
+func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
 func (c CreateBudgetConfigurationBudgetActionConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1105,10 +1105,10 @@ type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 	TriggerType types.String `tfsdk:"trigger_type"`
 }
 
-func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetAlertConfigurations) {
+func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetAlertConfigurations) {
 }
 
-func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations) {
+func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations) {
 }
 
 func (c CreateBudgetConfigurationBudgetAlertConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1261,10 +1261,10 @@ type CreateBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationResponse) {
+func (newState *CreateBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationResponse) {
 }
 
-func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationResponse) {
+func (newState *CreateBudgetConfigurationResponse) SyncFieldsDuringRead(existingState CreateBudgetConfigurationResponse) {
 }
 
 func (c CreateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1478,10 +1478,10 @@ type CreateLogDeliveryConfigurationParams struct {
 	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
-func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLogDeliveryConfigurationParams) {
+func (newState *CreateLogDeliveryConfigurationParams) SyncFieldsDuringCreateOrUpdate(plan CreateLogDeliveryConfigurationParams) {
 }
 
-func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams) {
+func (newState *CreateLogDeliveryConfigurationParams) SyncFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams) {
 }
 
 func (c CreateLogDeliveryConfigurationParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1614,10 +1614,10 @@ func (o DeleteBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 type DeleteBudgetConfigurationResponse struct {
 }
 
-func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationResponse) {
+func (newState *DeleteBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationResponse) {
 }
 
-func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationResponse) {
+func (newState *DeleteBudgetConfigurationResponse) SyncFieldsDuringRead(existingState DeleteBudgetConfigurationResponse) {
 }
 
 func (c DeleteBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1787,10 +1787,10 @@ type Filter struct {
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
-func (newState *Filter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filter) {
+func (newState *Filter) SyncFieldsDuringCreateOrUpdate(plan Filter) {
 }
 
-func (newState *Filter) SyncEffectiveFieldsDuringRead(existingState Filter) {
+func (newState *Filter) SyncFieldsDuringRead(existingState Filter) {
 }
 
 func (c Filter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1886,10 +1886,10 @@ type GetBillingUsageDashboardResponse struct {
 	DashboardUrl types.String `tfsdk:"dashboard_url"`
 }
 
-func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardResponse) {
+func (newState *GetBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardResponse) {
 }
 
-func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardResponse) {
+func (newState *GetBillingUsageDashboardResponse) SyncFieldsDuringRead(existingState GetBillingUsageDashboardResponse) {
 }
 
 func (c GetBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1972,10 +1972,10 @@ type GetBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationResponse) {
+func (newState *GetBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationResponse) {
 }
 
-func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationResponse) {
+func (newState *GetBudgetConfigurationResponse) SyncFieldsDuringRead(existingState GetBudgetConfigurationResponse) {
 }
 
 func (c GetBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2086,10 +2086,10 @@ type GetLogDeliveryConfigurationResponse struct {
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
 }
 
-func (newState *GetLogDeliveryConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLogDeliveryConfigurationResponse) {
+func (newState *GetLogDeliveryConfigurationResponse) SyncFieldsDuringCreateOrUpdate(plan GetLogDeliveryConfigurationResponse) {
 }
 
-func (newState *GetLogDeliveryConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryConfigurationResponse) {
+func (newState *GetLogDeliveryConfigurationResponse) SyncFieldsDuringRead(existingState GetLogDeliveryConfigurationResponse) {
 }
 
 func (c GetLogDeliveryConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2200,10 +2200,10 @@ func (o GetLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 type LimitConfig struct {
 }
 
-func (newState *LimitConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan LimitConfig) {
+func (newState *LimitConfig) SyncFieldsDuringCreateOrUpdate(plan LimitConfig) {
 }
 
-func (newState *LimitConfig) SyncEffectiveFieldsDuringRead(existingState LimitConfig) {
+func (newState *LimitConfig) SyncFieldsDuringRead(existingState LimitConfig) {
 }
 
 func (c LimitConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2283,10 +2283,10 @@ type ListBudgetConfigurationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsResponse) {
+func (newState *ListBudgetConfigurationsResponse) SyncFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsResponse) {
 }
 
-func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsResponse) {
+func (newState *ListBudgetConfigurationsResponse) SyncFieldsDuringRead(existingState ListBudgetConfigurationsResponse) {
 }
 
 func (c ListBudgetConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2486,10 +2486,10 @@ type ListBudgetPoliciesResponse struct {
 	PreviousPageToken types.String `tfsdk:"previous_page_token"`
 }
 
-func (newState *ListBudgetPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetPoliciesResponse) {
+func (newState *ListBudgetPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListBudgetPoliciesResponse) {
 }
 
-func (newState *ListBudgetPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetPoliciesResponse) {
+func (newState *ListBudgetPoliciesResponse) SyncFieldsDuringRead(existingState ListBudgetPoliciesResponse) {
 }
 
 func (c ListBudgetPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2696,10 +2696,10 @@ type LogDeliveryConfiguration struct {
 	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
-func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryConfiguration) {
+func (newState *LogDeliveryConfiguration) SyncFieldsDuringCreateOrUpdate(plan LogDeliveryConfiguration) {
 }
 
-func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState LogDeliveryConfiguration) {
+func (newState *LogDeliveryConfiguration) SyncFieldsDuringRead(existingState LogDeliveryConfiguration) {
 }
 
 func (c LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2859,10 +2859,10 @@ type LogDeliveryStatus struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryStatus) {
+func (newState *LogDeliveryStatus) SyncFieldsDuringCreateOrUpdate(plan LogDeliveryStatus) {
 }
 
-func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringRead(existingState LogDeliveryStatus) {
+func (newState *LogDeliveryStatus) SyncFieldsDuringRead(existingState LogDeliveryStatus) {
 }
 
 func (c LogDeliveryStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2914,10 +2914,10 @@ func (o LogDeliveryStatus) Type(ctx context.Context) attr.Type {
 type PatchStatusResponse struct {
 }
 
-func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchStatusResponse) {
+func (newState *PatchStatusResponse) SyncFieldsDuringCreateOrUpdate(plan PatchStatusResponse) {
 }
 
-func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse) {
+func (newState *PatchStatusResponse) SyncFieldsDuringRead(existingState PatchStatusResponse) {
 }
 
 func (c PatchStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2959,10 +2959,10 @@ type SortSpec struct {
 	Field types.String `tfsdk:"field"`
 }
 
-func (newState *SortSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SortSpec) {
+func (newState *SortSpec) SyncFieldsDuringCreateOrUpdate(plan SortSpec) {
 }
 
-func (newState *SortSpec) SyncEffectiveFieldsDuringRead(existingState SortSpec) {
+func (newState *SortSpec) SyncFieldsDuringRead(existingState SortSpec) {
 }
 
 func (c SortSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3022,10 +3022,10 @@ type UpdateBudgetConfigurationBudget struct {
 	Filter types.Object `tfsdk:"filter"`
 }
 
-func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationBudget) {
+func (newState *UpdateBudgetConfigurationBudget) SyncFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationBudget) {
 }
 
-func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationBudget) {
+func (newState *UpdateBudgetConfigurationBudget) SyncFieldsDuringRead(existingState UpdateBudgetConfigurationBudget) {
 }
 
 func (c UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3212,10 +3212,10 @@ type UpdateBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationResponse) {
+func (newState *UpdateBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationResponse) {
 }
 
-func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationResponse) {
+func (newState *UpdateBudgetConfigurationResponse) SyncFieldsDuringRead(existingState UpdateBudgetConfigurationResponse) {
 }
 
 func (c UpdateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3508,10 +3508,10 @@ type WrappedLogDeliveryConfiguration struct {
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
 }
 
-func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfiguration) {
+func (newState *WrappedLogDeliveryConfiguration) SyncFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfiguration) {
 }
 
-func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfiguration) {
+func (newState *WrappedLogDeliveryConfiguration) SyncFieldsDuringRead(existingState WrappedLogDeliveryConfiguration) {
 }
 
 func (c WrappedLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3589,10 +3589,10 @@ type WrappedLogDeliveryConfigurations struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfigurations) {
+func (newState *WrappedLogDeliveryConfigurations) SyncFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfigurations) {
 }
 
-func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfigurations) {
+func (newState *WrappedLogDeliveryConfigurations) SyncFieldsDuringRead(existingState WrappedLogDeliveryConfigurations) {
 }
 
 func (c WrappedLogDeliveryConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

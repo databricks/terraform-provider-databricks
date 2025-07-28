@@ -223,7 +223,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
 
 	for _, field := range []string{"id", "state", "latest_updates", "last_modified",
-		"health", "cause", "cluster_id", "creator_user_name", "run_as", "url", "run_as_user_name"} {
+		"health", "cause", "cluster_id", "creator_user_name", "url", "run_as_user_name"} {
 		s.SchemaPath(field).SetComputed()
 	}
 

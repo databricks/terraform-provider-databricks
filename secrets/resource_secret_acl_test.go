@@ -94,6 +94,13 @@ func TestResourceSecretACLCreate(t *testing.T) {
 					Scope:      "global",
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+				Response: workspace.AclItem{
+					Permission: "MANAGE",
+				},
+			},
 		},
 		Resource: ResourceSecretACL(),
 		State: map[string]any{
@@ -120,6 +127,13 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 					Principal:  "something",
 					Permission: workspace.AclPermissionManage,
 					Scope:      "myapplication/branch",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=myapplication%2Fbranch",
+				Response: workspace.AclItem{
+					Permission: workspace.AclPermissionManage,
 				},
 			},
 		},

@@ -167,7 +167,7 @@ type Pipeline struct {
 	Health               pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
 	LastModified         int64                               `json:"last_modified,omitempty"`
 	LatestUpdates        []pipelines.UpdateStateInfo         `json:"latest_updates,omitempty"`
-	RunAs                pipelines.RunAs                     `json:"run_as,omitempty"`
+	RunAs                *pipelines.RunAs                    `json:"run_as,omitempty"`
 	RunAsUserName        string                              `json:"run_as_user_name,omitempty"`
 	ExpectedLastModified int64                               `json:"expected_last_modified,omitempty"`
 	State                pipelines.PipelineState             `json:"state,omitempty"`
@@ -313,17 +313,6 @@ func ResourcePipeline() common.Resource {
 				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
-			}
-			if readPipeline.RunAsUserName != "" {
-				if common.StringIsUUID(readPipeline.RunAsUserName) {
-					p.RunAs = pipelines.RunAs{
-						ServicePrincipalName: readPipeline.RunAsUserName,
-					}
-				} else {
-					p.RunAs = pipelines.RunAs{
-						UserName: readPipeline.RunAsUserName,
-					}
-				}
 			}
 			return common.StructToData(p, pipelineSchema, d)
 		},

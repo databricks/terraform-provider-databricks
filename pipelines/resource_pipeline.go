@@ -71,13 +71,6 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
-	// Workspaces not enrolled in the private preview must not send run_as in the update request.
-	// If run_as was persisted in state because of a `terraform refresh`, there will not be a planned change
-	// as long as the user hasn't specified a value.
-	if !d.HasChange("run_as") {
-		updatePipelineRequest.RunAs = nil
-	}
-
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err

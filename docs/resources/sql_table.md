@@ -34,11 +34,11 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "quickstart_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
+  provider     = databricks.workspace
+  name         = "quickstart_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
 
   column {
     name = "id"
@@ -76,12 +76,12 @@ resource "databricks_sql_endpoint" "this" {
 }
 
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "quickstart_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
-  warehouse_id       = databricks_sql_endpoint.this.id
+  provider     = databricks.workspace
+  name         = "quickstart_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
+  warehouse_id = databricks_sql_endpoint.this.id
 
   column {
     name = "id"
@@ -128,11 +128,11 @@ resource "databricks_schema" "things" {
   }
 }
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "identity_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
+  provider     = databricks.workspace
+  name         = "identity_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
   column {
     name     = "id"
     type     = "bigint"
@@ -151,13 +151,13 @@ resource "databricks_sql_table" "thing" {
 
 ```hcl
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "auto_cluster_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
-  cluster_keys       = ["AUTO"]
-  
+  provider     = databricks.workspace
+  name         = "auto_cluster_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
+  cluster_keys = ["AUTO"]
+
   column {
     name    = "name"
     type    = "string"
@@ -257,7 +257,9 @@ The migration would look like this:
 
 ```hcl
 # Leave this resource definition as-is.
-resource "databricks_table" "this" { ... }
+resource "databricks_table" "this" {
+  # ... 
+}
 
 # Remove the old resource without destroying the existing table.
 removed {
@@ -275,17 +277,17 @@ import {
 
 # Define the new databricks_sql_table resource.
 resource "databricks_sql_table" "this" {
-  catalog_name = "catalog"
-  schema_name = "schema"
-  name = "table"
-  table_type = "MANAGED"
+  catalog_name       = "catalog"
+  schema_name        = "schema"
+  name               = "table"
+  table_type         = "MANAGED"
   data_source_format = "DELTA"
   column {
-    name = "col1"
-    type = "STRING"   # <-- changed from type_name
+    name      = "col1"
+    type      = "STRING" # <-- changed from type_name
     type_json = "{\"type\":\"STRING\"}"
-    comment = "comment"
-    nullable = true
+    comment   = "comment"
+    nullable  = true
   }
   comment = "comment"
   properties = {

@@ -10,6 +10,7 @@ Installs a [library](https://docs.databricks.com/libraries/index.html) on [datab
 -> `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
 
 ## Plugin Framework Migration
+
 The library resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
 
 ## Installing library on all clusters
@@ -32,14 +33,14 @@ resource "databricks_library" "cli" {
 ## Java/Scala JAR
 
 ```hcl
-resource "databricks_dbfs_file" "app" {
+resource "databricks_file" "app" {
   source = "${path.module}/app-0.0.1.jar"
-  path   = "/FileStore/app-0.0.1.jar"
+  path   = "/Volumes/catalog/schema/volume/app-0.0.1.jar"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  jar        = databricks_dbfs_file.app.dbfs_path
+  jar        = databricks_file.app.path
 }
 ```
 
@@ -61,14 +62,14 @@ resource "databricks_library" "deequ" {
 ## Python Wheel
 
 ```hcl
-resource "databricks_dbfs_file" "app" {
+resource "databricks_file" "app" {
   source = "${path.module}/baz.whl"
-  path   = "/FileStore/baz.whl"
+  path   = "/Volumes/catalog/schema/volume/baz.whl"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  whl        = databricks_dbfs_file.app.dbfs_path
+  whl        = databricks_file.app.path
 }
 ```
 
@@ -92,7 +93,6 @@ resource "databricks_library" "fbprophet" {
 
 Installing Python libraries listed in the `requirements.txt` file.  Only Workspace paths and Unity Catalog Volumes paths are supported.  Requires a cluster with DBR 15.0+.
 
-
 ```hcl
 resource "databricks_library" "libraries" {
   cluster_id   = databricks_cluster.this.id
@@ -100,8 +100,7 @@ resource "databricks_library" "libraries" {
 }
 ```
 
-
-## Python EGG
+## Python EGG (Deprecated)
 
 ```hcl
 resource "databricks_dbfs_file" "app" {
@@ -128,7 +127,6 @@ resource "databricks_library" "rkeops" {
 }
 ```
 
-
 ## Import
 
 !> Importing this resource is not currently supported.
@@ -141,11 +139,7 @@ The following resources are often used in the same context:
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_cluster_policy](cluster_policy.md) to create a [databricks_cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules.
-* [databricks_dbfs_file](../data-sources/dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
-* [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
-* [databricks_dbfs_file](dbfs_file.md) to manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
-* [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
 * [databricks_pipeline](pipeline.md) to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

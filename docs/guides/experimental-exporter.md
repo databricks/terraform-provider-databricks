@@ -7,11 +7,21 @@ page_title: "Experimental resource exporter"
 
 -> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise it could cause changes in the jobs ownership.
 
-Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
+Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
+
+## Installion
+The Resource Exporter is available in your Terraform plugin cache (`.terraform/providers/registry.terraform.io/databricks/databricks/1.85.0/darwin_arm64/terraform-provider-databricks_v1.85.0`) once you have initialised a Terraform workspace that use the Databricks Terraform Provider.
+
+If not you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
 
 ## Example Usage
+Once running, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
 
-After downloading the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it and place it in the same folder. In fact, you may have already downloaded this binary - check the `.terraform` folder of any state directory, where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databricks/databricks/*/*/terraform-provider-databricks`. Here's the tool in action:
+```bash
+./terraform-provider-databricks_v1.85.0 exporter
+```
+
+Here's the tool in action:
 
 [![asciicast](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy.svg)](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy)
 

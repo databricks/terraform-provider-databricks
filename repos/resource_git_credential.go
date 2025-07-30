@@ -47,7 +47,7 @@ func ResourceGitCredential() common.Resource {
 			resp, err := w.GitCredentials.Create(ctx, req)
 
 			if err != nil {
-				if !d.Get("force").(bool) || !isOnlyOneGitCredentialError(err) {
+				if !d.Get("force").(bool) || !isOnlyOneGitCredentialForProviderError(err) {
 					return err
 				}
 				creds, err := w.GitCredentials.ListAll(ctx)

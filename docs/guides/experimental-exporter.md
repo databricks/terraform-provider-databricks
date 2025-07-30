@@ -10,7 +10,7 @@ page_title: "Experimental resource exporter"
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
 
 ## Installion
-The Resource Exporter is available in your Terraform plugin cache (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`) once you have initialised a Terraform workspace that use the Databricks Terraform Provider.
+The Resource Exporter is available in your Terraform plugin cache once you have initialised a Terraform workspace that use the Databricks Terraform Provider (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`).
 
 If not you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
 
@@ -30,7 +30,7 @@ Here's the tool in action:
 
 -> Please note that in the interactive mode, the selected services are passed as the `-listing` option, not as `-services` option (see below).
 
-The non-interactive mode allows a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
+The non-interactive mode allows for a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
 
 ```bash
 export DATABRICKS_HOST=...

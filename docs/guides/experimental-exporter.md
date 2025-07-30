@@ -10,7 +10,7 @@ page_title: "Experimental resource exporter"
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
 
 ## Installion
-The Resource Exporter is available in your Terraform plugin cache (`.terraform/providers/registry.terraform.io/databricks/databricks/1.85.0/darwin_arm64/terraform-provider-databricks_v1.85.0`) once you have initialised a Terraform workspace that use the Databricks Terraform Provider.
+The Resource Exporter is available in your Terraform plugin cache (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`) once you have initialised a Terraform workspace that use the Databricks Terraform Provider.
 
 If not you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
 
@@ -19,7 +19,7 @@ If not you can also download the [latest released binary](https://github.com/dat
 Once running, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
 
 ```bash
-./terraform-provider-databricks_v1.85.0 exporter
+./terraform-provider-databricks_v<provider_version> exporter
 ```
 
 Here's the tool in action:

@@ -3,15 +3,26 @@ page_title: "Experimental resource exporter"
 ---
 # Experimental resource exporter
 
--> This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future provider versions.
+-> This tooling is experimental and provided as is. Its interface is evolving and may change or be removed in future provider versions.
 
 -> Use the same user who did the exporting to import the exported templates.  Otherwise, it could cause changes in the ownership of the objects.
 
-Generates `*.tf` files for Databricks resources together with `import.sh` that is used to import objects into the Terraform state. Available as part of provider binary. The only way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used when you need to export Terraform configuration for an existing Databricks workspace quickly. After generating the configuration, we strongly recommend manually reviewing all created files.
+Generates `*.tf` files for Databricks resources and `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating the configuration, we strongly recommend manually reviewing all created files.
+
+## Installion
+The Resource Exporter is available in your Terraform plugin cache once you have initialised a Terraform workspace that uses the Databricks Terraform Provider (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`).
+
+If not, you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
 
 ## Example Usage
 
-After downloading the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it and place it in the same folder. You may have already downloaded this binary - check the `.terraform` folder of any state directory where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databricks/databricks/*/*/terraform-provider-databricks`.
+Resource Exporter can run in interactive or non-interactive mode. 
+
+When running in interactive mode, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
+
+```bash
+./terraform-provider-databricks_v<provider_version> exporter
+```
 
 Here's the tool in action:
 
@@ -19,7 +30,7 @@ Here's the tool in action:
 
 -> Please note that in the interactive mode, the selected services are passed as the `-listing` option, not as `-services` option (see below).
 
-Exporter can also be used in a non-interactive mode that allows a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
+The non-interactive mode allows for a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
 
 ```bash
 export DATABRICKS_HOST=...
@@ -56,22 +67,22 @@ All arguments are optional, and they tune what code is being generated.
 * `-directory` - Path to a directory, where `*.tf` and `import.sh` files would be written. By default, it's set to the current working directory.
 * `-module` - Name of module in Terraform state that would affect reference resolution and prefixes for generated commands in `import.sh`.
 * `-last-active-days` - Items older than `-last-active-days` won't be imported. By default, the value is set to 3650 (10 years). Has an effect on listing [databricks_cluster](../resources/cluster.md) and [databricks_job](../resources/job.md) resources.
-* `-listing` - Comma-separated list of services to be listed and further passed on for importing. For each service specified, the exporter performs a listing of available resources using the `List` function and emits them for importing together with their dependencies. The `-services` parameter could be used to control which transitive dependencies will be also imported.
+* `-listing` - Comma-separated list of services to be listed and further passed on for importing. For each service specified, the exporter performs a listing of available resources using the `List` function and emits them for importing together with their dependencies. The `-services` parameter could be used to control which transitive dependencies will also be imported.
 * `-services` - Comma-separated list of services to import. By default, all services are imported.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default, it is empty, which matches everything.
 * `-matchRegex` - Match resource names against a given regex during listing operation. Applicable to all resources selected for listing.
-* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc. 
-* `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify condition for `/Users` as well, so regex will be `^(/Users|/Users/[a-c].*)$`*.
+* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.
+* `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify a condition for `/Users` as well, so the regex will be `^(/Users|/Users/[a-c].*)$`*.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources from multiple workspaces for merging into a single one.
 * `-skip-interactive` - optionally run in a non-interactive mode.
-* `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
-* `-importAllUsers` - optionally include all users and service principals even if they are only part of the `users` group.
+* `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
+* `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
 * `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.
-* `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only a limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about the last modified date - all other resources will be re-exported again! Also, it's impossible to detect the deletion of many resource types (i.e. clusters, jobs, ...), so you must do periodic full export if resources are deleted! For Workspace objects (notebooks, workspace files, and directories) exporter tries to detect deleted objects and remove them from generated code (requires the presence of `ws_objects.json` file that is written on each export that pulls all workspace objects).  For workspace objects renames are handled as deletion of existing/creation of new resource!*  **Requires** `-updated-since` option if no `exporter-run-stats.json` file exists in the output directory.
+* `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only a limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provide information about the last modified date - all other resources will be re-exported again! Also, it's impossible to detect the deletion of many resource types (i.e., clusters, jobs, ...), so you must perform the full export periodically if resources are deleted! For Workspace objects (notebooks, workspace files, and directories) exporter tries to detect deleted objects and remove them from the generated code (requires the presence of `ws_objects.json` file that is written on each export that pulls all workspace objects).  For workspace objects, renames are handled as deletion of existing/creation of new resource!*  **Requires** `-updated-since` option if no `exporter-run-stats.json` file exists in the output directory.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
-* `-notebooksFormat` - optional format for exporting of notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
+* `-notebooksFormat` - optional format for exported notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
 * `-debug` - turn on debug output.
 * `-trace` - turn on trace output (includes debug level as well).
@@ -80,7 +91,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ### Use of `-listing` and `-services` for granular resources selection
 
-The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option. 
+The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.
 
 For example, if we have a job comprising two notebooks and one SQL dashboard, and tasks have Python libraries on DBFS attached. If we just specify the `-listing jobs`, then it will export the following resources:
 
@@ -88,33 +99,33 @@ For example, if we have a job comprising two notebooks and one SQL dashboard, an
 * two notebooks
 * directory where notebooks reside
 * libraries from DBFS
-* SQL dashboard, SQL queries that are used in it, and SQL warehouse that is used to run dashboard/queries
+* SQL dashboard, SQL queries that are used in it, and SQL warehouse that is used to run the dashboard/queries
 * directory where SQL objects reside
 * permissions for all objects above
 * user/group information based on permissions, and directories
 
 During code generation, references/dependencies between these objects will be created, and the code will be portable between workspaces.
 
-but if we also specify `-services notebooks,storage` then it will export only:
+But if we also specify `-services notebooks,storage`, then it will export only:
 
 * job itself
 * two notebooks
 * directory where notebooks reside
 * libraries from DBFS
 
-The rest of the values, like SQL object IDs, etc. will be hard-coded and not portable between workspaces.
+The rest of the values, like SQL object IDs, etc., will be hard-coded and not portable between workspaces.
 
 You can also use predefined aliases (`all` and `uc`) to specify multiple services at once.  For example, if `-listing` has value `all,-uc`, then we will discover all services except of Unity Catalog + vector search.
 
-We can also exclude specific services  For example, we can specify `-services` as `-all,-uc-tables` and then we won't generate code for `databricks_sql_table`.
+We can also exclude specific services. For example, we can specify `-services` as `-all,-uc-tables`, and then we won't generate code for `databricks_sql_table`.
 
 ### Migration between workspaces with identity federation enabled
 
-When Unity Catalog metastore is attached to a workspace, the Identity Federation is enabled on it.  With Identity Federation users, service principals, and groups are coming from the account level via assignment to a workspace.  But there is still an ability to create workspace-level groups via API and `databricks_group` resource uses it and always creates workspace-level.  As a result, we shouldn't generate resources for account-level groups, because they will be turned into workspace-level groups.  Due to the limitations of APIs we can't use `databricks_permission_assignment` on workspace-level to emulate the assignment.
+When Unity Catalog metastore is attached to a workspace, the Identity Federation is enabled on it.  With Identity Federation, users, service principals, and groups are coming from the account level via assignment to a workspace.  But there is still an ability to create workspace-level groups via API, and `databricks_group` resource uses it and always creates workspace-level.  As a result, we shouldn't generate resources for account-level groups, because they will be turned into workspace-level groups.  Due to the limitations of APIs, we can't use `databricks_permission_assignment` on the workspace level to emulate the assignment.
 
 So migration of resources between two workspaces with Identity Federation enabled should be done in a few steps:
 
-1. On the account level export `databricks_mws_permission_assignment` resources for your source workspace:
+1. On the account level, export `databricks_mws_permission_assignment` resources for your source workspace:
 
   ```sh
   DATABRICKS_CONFIG_PROFILE=<cli-profile> DATABRICKS_ACCOUNT_ID=<account-id> ./terraform-provider-databricks exporter \
@@ -122,7 +133,7 @@ So migration of resources between two workspaces with Identity Federation enable
     -directory output -skip-interactive -noformat
   ```
 
-2. Replace source workspace ID with destination workspace ID in the generated `idfed.tf` file, i.e. with `sed`:
+2. Replace source workspace ID with destination workspace ID in the generated `idfed.tf` file, i.e., with `sed`:
 
   ```sh
   sed -ibak -e 's|workspace_id = <source-workspace-id>|workspace_id = <destination-workspace-id>|' idfed.tf
@@ -138,7 +149,7 @@ So migration of resources between two workspaces with Identity Federation enable
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
 
-Services could be specified in combination with predefined aliases (`all` - for all services and listings, `uc` - for all UC services, including the vector search).  The service could be specified as the service name, or it could have `-` prepended to the service, to exclude it from the list (including `-uc` to exclude all UC-related services).
+Services could be specified in combination with predefined aliases (`all` - for all services and listings, `uc` - for all UC services, including the Vector Search).  The service could be specified as the service name, or it could have `-` prepended to the service, to exclude it from the list (including `-uc` to exclude all UC-related services).
 
 -> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
@@ -164,13 +175,13 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
-* `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
+* `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into the Terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
-* `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
+* `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because the API doesn't return sensitive fields, such as passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-credentials` - **listing** exports [databricks_credential](../resources/credential.md) resources on workspace or account level.  *Please note that it will skip storage credentials! Use the `uc-storage-credentials` service for them*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
-* `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity.*.
+* `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export, the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
 * `uc-models` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_registered_model](../resources/registered_model.md)
 * `uc-online-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_online_table](../resources/online_table.md)
@@ -180,7 +191,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
-* `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If Identity Federation is enabled on the workspace (when UC Metastore is attached), then users and service principals are exposed as data sources because they are defined on an account level.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
+* `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own files, simply because of their number. If Identity Federation is enabled on the workspace (when UC Metastore is attached), then users and service principals are exposed as data sources because they are defined on an account level.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `vector-search` - **listing** exports [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) and [databricks_vector_search_index](../resources/vector_search_index.md)
 * `wsconf` - **listing** exports Workspace-level configuration: [databricks_workspace_conf](../resources/workspace_conf.md), [databricks_sql_global_config](../resources/sql_global_config.md) and [databricks_global_init_script](../resources/global_init_script.md).
 * `wsfiles` - **listing** [databricks_workspace_file](../resources/workspace_file.md).
@@ -194,8 +205,8 @@ For security reasons, [databricks_secret](../resources/secret.md) cannot contain
 To speed up export, Terraform Exporter performs many operations, such as listing & actual data exporting, in parallel using Goroutines.  Built-in defaults control the parallelism, but it's also possible to tune some parameters using environment variables specific to the exporter:
 
 * `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
-* `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `300000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; default value should be ok for most cases); otherwise, there is a chance of deadlock.
-* `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources as this environment variable.
+* `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `300000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; the default value should be ok for most cases); otherwise, there is a chance of deadlock.
+* `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources in this environment variable.
 * `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase its size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
 * `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` is the size of the shared channel (default: `200000`). You may need to increase it if you have a huge workspace.
 

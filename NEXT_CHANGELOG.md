@@ -6,7 +6,8 @@
 
 ### New Features and Improvements
 
-* Added output attribute `endpoint_url` in `databricks_model_serving`([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+* Added output attribute `endpoint_url` in `databricks_model_serving` ([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+* Deprecate `egg` library type in `databricks_cluster`, `databricks_job`, and `databricks_library` ([#4881](https://github.com/databricks/terraform-provider-databricks/pull/4881)).
 * Added `databricks_groups` data source to retrieve multiple groups matching a filter criteria ([#4864](https://github.com/databricks/terraform-provider-databricks/pull/4864)).
 
 ### Bug Fixes
@@ -21,6 +22,9 @@
 * Document `environment` block in `databricks_pipeline` ([#4878](https://github.com/databricks/terraform-provider-databricks/pull/4878)).
 * Updated documentation for `databricks_disable_legacy_dbfs_setting` resource ([#4870](https://github.com/databricks/terraform-provider-databricks/pull/4870)).
 * Add deprecation notice to `databricks_dbfs_file` and `databricks_mount` ([#4876](https://github.com/databricks/terraform-provider-databricks/pull/4876))
+* Updated documentation for `databricks_disable_legacy_features_setting` resource ([#4884](https://github.com/databricks/terraform-provider-databricks/pull/4884)).
+* Improve docs for `databricks_compliance_security_profile_setting` ([#4880](https://github.com/databricks/terraform-provider-databricks/pull/4880)).
+* Clarify instructions for the Resource Exporter [#4892](https://github.com/databricks/terraform-provider-databricks/pull/4892)
 
 ### Exporter
 

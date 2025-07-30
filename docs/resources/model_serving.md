@@ -77,15 +77,15 @@ resource "databricks_model_serving" "gpt_4o" {
       enabled = true
     }
     rate_limits {
-      calls = 10
-      key = "endpoint"
+      calls          = 10
+      key            = "endpoint"
       renewal_period = "minute"
     }
     inference_table_config {
-      enabled = true
+      enabled           = true
       table_name_prefix = "gpt-4o-mini"
-      catalog_name = "ml"
-      schema_name = "ai_gateway"
+      catalog_name      = "ml"
+      schema_name       = "ai_gateway"
     }
     guardrails {
       input {
@@ -265,6 +265,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 * `id` - Equal to the `name` argument and used to identify the serving endpoint.
 * `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
+* `endpoint_url` - Invocation url of the endpoint.
 
 ## Access Control
 
@@ -296,7 +297,6 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
-
 
 ## Related Resources
 

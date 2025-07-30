@@ -525,7 +525,7 @@ data "databricks_current_user" "me" {}
 
 resource "databricks_mlflow_experiment" "this" {
   name              = "${data.databricks_current_user.me.home}/Sample"
-  artifact_location = "dbfs:/tmp/my-experiment"
+  artifact_location = "s3://bucket/my-experiment"
   description       = "My MLflow experiment description"
 }
 
@@ -863,7 +863,7 @@ resource "databricks_permissions" "query_usage" {
 
 ## SQL Alert (AlertV2) usage
 
-[Alert V2](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) which is the new version of SQL Alert have 4 possible permission levels: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. 
+[Alert V2](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) which is the new version of SQL Alert have 4 possible permission levels: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -889,7 +889,7 @@ resource "databricks_permissions" "app_usage" {
 }
 ```
 
-## SQL Alert (legacy) usage 
+## SQL Alert (legacy) usage
 
 [SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 

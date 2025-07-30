@@ -16,7 +16,9 @@ If not you can also download the [latest released binary](https://github.com/dat
 
 ## Example Usage
 
-Once running, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
+Resource Exporter can in both interactive and none-interactive mode. 
+
+When running in interactive mode, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
 
 ```bash
 ./terraform-provider-databricks_v<provider_version> exporter
@@ -28,7 +30,7 @@ Here's the tool in action:
 
 -> Please note that in the interactive mode, the selected services are passed as the `-listing` option, not as `-services` option (see below).
 
-Exporter can also be used in a non-interactive mode that allows a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
+The non-interactive mode allows a more granular selection of services and dependencies. For example, the following command will list all resources related to `jobs` and `compute` services and import them with their dependencies from `groups,secrets,access,compute,users,jobs,storage` services.
 
 ```bash
 export DATABRICKS_HOST=...

@@ -7,11 +7,20 @@ page_title: "Experimental resource exporter"
 
 -> Use the same user who did the exporting to import the exported templates.  Otherwise, it could cause changes in the ownership of the objects.
 
-Generates `*.tf` files for Databricks resources together with `import.sh` that is used to import objects into the Terraform state. Available as part of provider binary. The only way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used when you need to export Terraform configuration for an existing Databricks workspace quickly. After generating the configuration, we strongly recommend manually reviewing all created files.
+Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
+
+## Installion
+The Resource Exporter is available in your Terraform plugin cache (`.terraform/providers/registry.terraform.io/databricks/databricks/1.85.0/darwin_arm64/terraform-provider-databricks_v1.85.0`) once you have initialised a Terraform workspace that use the Databricks Terraform Provider.
+
+If not you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
 
 ## Example Usage
 
-After downloading the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it and place it in the same folder. You may have already downloaded this binary - check the `.terraform` folder of any state directory where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databricks/databricks/*/*/terraform-provider-databricks`.
+Once running, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
+
+```bash
+./terraform-provider-databricks_v1.85.0 exporter
+```
 
 Here's the tool in action:
 
@@ -60,7 +69,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-services` - Comma-separated list of services to import. By default, all services are imported.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default, it is empty, which matches everything.
 * `-matchRegex` - Match resource names against a given regex during listing operation. Applicable to all resources selected for listing.
-* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc. 
+* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.
 * `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify condition for `/Users` as well, so regex will be `^(/Users|/Users/[a-c].*)$`*.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
@@ -80,7 +89,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ### Use of `-listing` and `-services` for granular resources selection
 
-The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option. 
+The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.
 
 For example, if we have a job comprising two notebooks and one SQL dashboard, and tasks have Python libraries on DBFS attached. If we just specify the `-listing jobs`, then it will export the following resources:
 

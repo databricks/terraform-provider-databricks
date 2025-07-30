@@ -31,10 +31,10 @@ type AclItem struct {
 	Principal types.String `tfsdk:"principal"`
 }
 
-func (newState *AclItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan AclItem) {
+func (newState *AclItem) SyncFieldsDuringCreateOrUpdate(plan AclItem) {
 }
 
-func (newState *AclItem) SyncEffectiveFieldsDuringRead(existingState AclItem) {
+func (newState *AclItem) SyncFieldsDuringRead(existingState AclItem) {
 }
 
 func (c AclItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -87,10 +87,10 @@ type AzureKeyVaultSecretScopeMetadata struct {
 	ResourceId types.String `tfsdk:"resource_id"`
 }
 
-func (newState *AzureKeyVaultSecretScopeMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureKeyVaultSecretScopeMetadata) {
+func (newState *AzureKeyVaultSecretScopeMetadata) SyncFieldsDuringCreateOrUpdate(plan AzureKeyVaultSecretScopeMetadata) {
 }
 
-func (newState *AzureKeyVaultSecretScopeMetadata) SyncEffectiveFieldsDuringRead(existingState AzureKeyVaultSecretScopeMetadata) {
+func (newState *AzureKeyVaultSecretScopeMetadata) SyncFieldsDuringRead(existingState AzureKeyVaultSecretScopeMetadata) {
 }
 
 func (c AzureKeyVaultSecretScopeMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -214,10 +214,10 @@ type CreateCredentialsResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *CreateCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialsResponse) {
+func (newState *CreateCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan CreateCredentialsResponse) {
 }
 
-func (newState *CreateCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState CreateCredentialsResponse) {
+func (newState *CreateCredentialsResponse) SyncFieldsDuringRead(existingState CreateCredentialsResponse) {
 }
 
 func (c CreateCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -371,10 +371,10 @@ type CreateRepoResponse struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *CreateRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRepoResponse) {
+func (newState *CreateRepoResponse) SyncFieldsDuringCreateOrUpdate(plan CreateRepoResponse) {
 }
 
-func (newState *CreateRepoResponse) SyncEffectiveFieldsDuringRead(existingState CreateRepoResponse) {
+func (newState *CreateRepoResponse) SyncFieldsDuringRead(existingState CreateRepoResponse) {
 }
 
 func (c CreateRepoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -587,10 +587,10 @@ type CredentialInfo struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *CredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialInfo) {
+func (newState *CredentialInfo) SyncFieldsDuringCreateOrUpdate(plan CredentialInfo) {
 }
 
-func (newState *CredentialInfo) SyncEffectiveFieldsDuringRead(existingState CredentialInfo) {
+func (newState *CredentialInfo) SyncFieldsDuringRead(existingState CredentialInfo) {
 }
 
 func (c CredentialInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -794,10 +794,10 @@ func (o DeleteCredentialsRequest) Type(ctx context.Context) attr.Type {
 type DeleteCredentialsResponse struct {
 }
 
-func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialsResponse) {
+func (newState *DeleteCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteCredentialsResponse) {
 }
 
-func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialsResponse) {
+func (newState *DeleteCredentialsResponse) SyncFieldsDuringRead(existingState DeleteCredentialsResponse) {
 }
 
 func (c DeleteCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -871,10 +871,10 @@ func (o DeleteRepoRequest) Type(ctx context.Context) attr.Type {
 type DeleteRepoResponse struct {
 }
 
-func (newState *DeleteRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRepoResponse) {
+func (newState *DeleteRepoResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteRepoResponse) {
 }
 
-func (newState *DeleteRepoResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRepoResponse) {
+func (newState *DeleteRepoResponse) SyncFieldsDuringRead(existingState DeleteRepoResponse) {
 }
 
 func (c DeleteRepoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -912,10 +912,10 @@ func (o DeleteRepoResponse) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (newState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteResponse) {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+func (newState *DeleteResponse) SyncFieldsDuringRead(existingState DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1059,10 +1059,10 @@ func (o DeleteSecret) Type(ctx context.Context) attr.Type {
 type DeleteSecretResponse struct {
 }
 
-func (newState *DeleteSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSecretResponse) {
+func (newState *DeleteSecretResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteSecretResponse) {
 }
 
-func (newState *DeleteSecretResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSecretResponse) {
+func (newState *DeleteSecretResponse) SyncFieldsDuringRead(existingState DeleteSecretResponse) {
 }
 
 func (c DeleteSecretResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1113,6 +1113,12 @@ type ExportRequest struct {
 	// on the objects type. Directory exports will include notebooks and
 	// workspace files.
 	Format types.String `tfsdk:"-"`
+	// This specifies which cell outputs should be included in the export (if
+	// the export format allows it). If not specified, the behavior is
+	// determined by the format. For JUPYTER format, the default is to include
+	// all outputs. This is a public endpoint, but only ALL or NONE is
+	// documented publically, DATABRICKS is internal only
+	Outputs types.String `tfsdk:"-"`
 	// The absolute path of the object or directory. Exporting a directory is
 	// only supported for the `DBC`, `SOURCE`, and `AUTO` format.
 	Path types.String `tfsdk:"-"`
@@ -1136,8 +1142,9 @@ func (o ExportRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"format": o.Format,
-			"path":   o.Path,
+			"format":  o.Format,
+			"outputs": o.Outputs,
+			"path":    o.Path,
 		})
 }
 
@@ -1145,8 +1152,9 @@ func (o ExportRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o ExportRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"format": types.StringType,
-			"path":   types.StringType,
+			"format":  types.StringType,
+			"outputs": types.StringType,
+			"path":    types.StringType,
 		},
 	}
 }
@@ -1161,10 +1169,10 @@ type ExportResponse struct {
 	FileType types.String `tfsdk:"file_type"`
 }
 
-func (newState *ExportResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportResponse) {
+func (newState *ExportResponse) SyncFieldsDuringCreateOrUpdate(plan ExportResponse) {
 }
 
-func (newState *ExportResponse) SyncEffectiveFieldsDuringRead(existingState ExportResponse) {
+func (newState *ExportResponse) SyncFieldsDuringRead(existingState ExportResponse) {
 }
 
 func (c ExportResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1298,10 +1306,10 @@ type GetCredentialsResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *GetCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsResponse) {
+func (newState *GetCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan GetCredentialsResponse) {
 }
 
-func (newState *GetCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState GetCredentialsResponse) {
+func (newState *GetCredentialsResponse) SyncFieldsDuringRead(existingState GetCredentialsResponse) {
 }
 
 func (c GetCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1394,10 +1402,10 @@ type GetRepoPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetRepoPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoPermissionLevelsResponse) {
+func (newState *GetRepoPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetRepoPermissionLevelsResponse) {
 }
 
-func (newState *GetRepoPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetRepoPermissionLevelsResponse) {
+func (newState *GetRepoPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetRepoPermissionLevelsResponse) {
 }
 
 func (c GetRepoPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1556,10 +1564,10 @@ type GetRepoResponse struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *GetRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoResponse) {
+func (newState *GetRepoResponse) SyncFieldsDuringCreateOrUpdate(plan GetRepoResponse) {
 }
 
-func (newState *GetRepoResponse) SyncEffectiveFieldsDuringRead(existingState GetRepoResponse) {
+func (newState *GetRepoResponse) SyncFieldsDuringRead(existingState GetRepoResponse) {
 }
 
 func (c GetRepoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1694,10 +1702,10 @@ type GetSecretResponse struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *GetSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSecretResponse) {
+func (newState *GetSecretResponse) SyncFieldsDuringCreateOrUpdate(plan GetSecretResponse) {
 }
 
-func (newState *GetSecretResponse) SyncEffectiveFieldsDuringRead(existingState GetSecretResponse) {
+func (newState *GetSecretResponse) SyncFieldsDuringRead(existingState GetSecretResponse) {
 }
 
 func (c GetSecretResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1821,10 +1829,10 @@ type GetWorkspaceObjectPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionLevelsResponse) {
+func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionLevelsResponse) {
 }
 
-func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceObjectPermissionLevelsResponse) {
+func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetWorkspaceObjectPermissionLevelsResponse) {
 }
 
 func (c GetWorkspaceObjectPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2009,10 +2017,10 @@ func (o Import) Type(ctx context.Context) attr.Type {
 type ImportResponse struct {
 }
 
-func (newState *ImportResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ImportResponse) {
+func (newState *ImportResponse) SyncFieldsDuringCreateOrUpdate(plan ImportResponse) {
 }
 
-func (newState *ImportResponse) SyncEffectiveFieldsDuringRead(existingState ImportResponse) {
+func (newState *ImportResponse) SyncFieldsDuringRead(existingState ImportResponse) {
 }
 
 func (c ImportResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2088,10 +2096,10 @@ type ListAclsResponse struct {
 	Items types.List `tfsdk:"items"`
 }
 
-func (newState *ListAclsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAclsResponse) {
+func (newState *ListAclsResponse) SyncFieldsDuringCreateOrUpdate(plan ListAclsResponse) {
 }
 
-func (newState *ListAclsResponse) SyncEffectiveFieldsDuringRead(existingState ListAclsResponse) {
+func (newState *ListAclsResponse) SyncFieldsDuringRead(existingState ListAclsResponse) {
 }
 
 func (c ListAclsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2196,10 +2204,10 @@ type ListCredentialsResponse struct {
 	Credentials types.List `tfsdk:"credentials"`
 }
 
-func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCredentialsResponse) {
+func (newState *ListCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCredentialsResponse) {
 }
 
-func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState ListCredentialsResponse) {
+func (newState *ListCredentialsResponse) SyncFieldsDuringRead(existingState ListCredentialsResponse) {
 }
 
 func (c ListCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2321,10 +2329,10 @@ type ListReposResponse struct {
 	Repos types.List `tfsdk:"repos"`
 }
 
-func (newState *ListReposResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListReposResponse) {
+func (newState *ListReposResponse) SyncFieldsDuringCreateOrUpdate(plan ListReposResponse) {
 }
 
-func (newState *ListReposResponse) SyncEffectiveFieldsDuringRead(existingState ListReposResponse) {
+func (newState *ListReposResponse) SyncFieldsDuringRead(existingState ListReposResponse) {
 }
 
 func (c ListReposResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2402,10 +2410,10 @@ type ListResponse struct {
 	Objects types.List `tfsdk:"objects"`
 }
 
-func (newState *ListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse) {
+func (newState *ListResponse) SyncFieldsDuringCreateOrUpdate(plan ListResponse) {
 }
 
-func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListResponse) {
+func (newState *ListResponse) SyncFieldsDuringRead(existingState ListResponse) {
 }
 
 func (c ListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2510,10 +2518,10 @@ type ListScopesResponse struct {
 	Scopes types.List `tfsdk:"scopes"`
 }
 
-func (newState *ListScopesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListScopesResponse) {
+func (newState *ListScopesResponse) SyncFieldsDuringCreateOrUpdate(plan ListScopesResponse) {
 }
 
-func (newState *ListScopesResponse) SyncEffectiveFieldsDuringRead(existingState ListScopesResponse) {
+func (newState *ListScopesResponse) SyncFieldsDuringRead(existingState ListScopesResponse) {
 }
 
 func (c ListScopesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2624,10 +2632,10 @@ type ListSecretsResponse struct {
 	Secrets types.List `tfsdk:"secrets"`
 }
 
-func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSecretsResponse) {
+func (newState *ListSecretsResponse) SyncFieldsDuringCreateOrUpdate(plan ListSecretsResponse) {
 }
 
-func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListSecretsResponse) {
+func (newState *ListSecretsResponse) SyncFieldsDuringRead(existingState ListSecretsResponse) {
 }
 
 func (c ListSecretsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2778,10 +2786,10 @@ func (o Mkdirs) Type(ctx context.Context) attr.Type {
 type MkdirsResponse struct {
 }
 
-func (newState *MkdirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkdirsResponse) {
+func (newState *MkdirsResponse) SyncFieldsDuringCreateOrUpdate(plan MkdirsResponse) {
 }
 
-func (newState *MkdirsResponse) SyncEffectiveFieldsDuringRead(existingState MkdirsResponse) {
+func (newState *MkdirsResponse) SyncFieldsDuringRead(existingState MkdirsResponse) {
 }
 
 func (c MkdirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2843,10 +2851,10 @@ type ObjectInfo struct {
 	Size types.Int64 `tfsdk:"size"`
 }
 
-func (newState *ObjectInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectInfo) {
+func (newState *ObjectInfo) SyncFieldsDuringCreateOrUpdate(plan ObjectInfo) {
 }
 
-func (newState *ObjectInfo) SyncEffectiveFieldsDuringRead(existingState ObjectInfo) {
+func (newState *ObjectInfo) SyncFieldsDuringRead(existingState ObjectInfo) {
 }
 
 func (c ObjectInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3070,10 +3078,10 @@ type RepoAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlRequest) {
+func (newState *RepoAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan RepoAccessControlRequest) {
 }
 
-func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlRequest) {
+func (newState *RepoAccessControlRequest) SyncFieldsDuringRead(existingState RepoAccessControlRequest) {
 }
 
 func (c RepoAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3135,10 +3143,10 @@ type RepoAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *RepoAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlResponse) {
+func (newState *RepoAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan RepoAccessControlResponse) {
 }
 
-func (newState *RepoAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlResponse) {
+func (newState *RepoAccessControlResponse) SyncFieldsDuringRead(existingState RepoAccessControlResponse) {
 }
 
 func (c RepoAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3238,10 +3246,10 @@ type RepoInfo struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *RepoInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo) {
+func (newState *RepoInfo) SyncFieldsDuringCreateOrUpdate(plan RepoInfo) {
 }
 
-func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) {
+func (newState *RepoInfo) SyncFieldsDuringRead(existingState RepoInfo) {
 }
 
 func (c RepoInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3337,10 +3345,10 @@ type RepoPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *RepoPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermission) {
+func (newState *RepoPermission) SyncFieldsDuringCreateOrUpdate(plan RepoPermission) {
 }
 
-func (newState *RepoPermission) SyncEffectiveFieldsDuringRead(existingState RepoPermission) {
+func (newState *RepoPermission) SyncFieldsDuringRead(existingState RepoPermission) {
 }
 
 func (c RepoPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3424,10 +3432,10 @@ type RepoPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *RepoPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissions) {
+func (newState *RepoPermissions) SyncFieldsDuringCreateOrUpdate(plan RepoPermissions) {
 }
 
-func (newState *RepoPermissions) SyncEffectiveFieldsDuringRead(existingState RepoPermissions) {
+func (newState *RepoPermissions) SyncFieldsDuringRead(existingState RepoPermissions) {
 }
 
 func (c RepoPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3509,10 +3517,10 @@ type RepoPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissionsDescription) {
+func (newState *RepoPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan RepoPermissionsDescription) {
 }
 
-func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState RepoPermissionsDescription) {
+func (newState *RepoPermissionsDescription) SyncFieldsDuringRead(existingState RepoPermissionsDescription) {
 }
 
 func (c RepoPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3633,10 +3641,10 @@ type SecretMetadata struct {
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 }
 
-func (newState *SecretMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretMetadata) {
+func (newState *SecretMetadata) SyncFieldsDuringCreateOrUpdate(plan SecretMetadata) {
 }
 
-func (newState *SecretMetadata) SyncEffectiveFieldsDuringRead(existingState SecretMetadata) {
+func (newState *SecretMetadata) SyncFieldsDuringRead(existingState SecretMetadata) {
 }
 
 func (c SecretMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3691,10 +3699,10 @@ type SecretScope struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *SecretScope) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretScope) {
+func (newState *SecretScope) SyncFieldsDuringCreateOrUpdate(plan SecretScope) {
 }
 
-func (newState *SecretScope) SyncEffectiveFieldsDuringRead(existingState SecretScope) {
+func (newState *SecretScope) SyncFieldsDuringRead(existingState SecretScope) {
 }
 
 func (c SecretScope) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3779,10 +3787,10 @@ type SparseCheckout struct {
 	Patterns types.List `tfsdk:"patterns"`
 }
 
-func (newState *SparseCheckout) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckout) {
+func (newState *SparseCheckout) SyncFieldsDuringCreateOrUpdate(plan SparseCheckout) {
 }
 
-func (newState *SparseCheckout) SyncEffectiveFieldsDuringRead(existingState SparseCheckout) {
+func (newState *SparseCheckout) SyncFieldsDuringRead(existingState SparseCheckout) {
 }
 
 func (c SparseCheckout) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3861,10 +3869,10 @@ type SparseCheckoutUpdate struct {
 	Patterns types.List `tfsdk:"patterns"`
 }
 
-func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckoutUpdate) {
+func (newState *SparseCheckoutUpdate) SyncFieldsDuringCreateOrUpdate(plan SparseCheckoutUpdate) {
 }
 
-func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringRead(existingState SparseCheckoutUpdate) {
+func (newState *SparseCheckoutUpdate) SyncFieldsDuringRead(existingState SparseCheckoutUpdate) {
 }
 
 func (c SparseCheckoutUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4007,10 +4015,10 @@ func (o UpdateCredentialsRequest) Type(ctx context.Context) attr.Type {
 type UpdateCredentialsResponse struct {
 }
 
-func (newState *UpdateCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialsResponse) {
+func (newState *UpdateCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateCredentialsResponse) {
 }
 
-func (newState *UpdateCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialsResponse) {
+func (newState *UpdateCredentialsResponse) SyncFieldsDuringRead(existingState UpdateCredentialsResponse) {
 }
 
 func (c UpdateCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4130,10 +4138,10 @@ func (o *UpdateRepoRequest) SetSparseCheckout(ctx context.Context, v SparseCheck
 type UpdateRepoResponse struct {
 }
 
-func (newState *UpdateRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRepoResponse) {
+func (newState *UpdateRepoResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateRepoResponse) {
 }
 
-func (newState *UpdateRepoResponse) SyncEffectiveFieldsDuringRead(existingState UpdateRepoResponse) {
+func (newState *UpdateRepoResponse) SyncFieldsDuringRead(existingState UpdateRepoResponse) {
 }
 
 func (c UpdateRepoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4179,10 +4187,10 @@ type WorkspaceObjectAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlRequest) {
+func (newState *WorkspaceObjectAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlRequest) {
 }
 
-func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlRequest) {
+func (newState *WorkspaceObjectAccessControlRequest) SyncFieldsDuringRead(existingState WorkspaceObjectAccessControlRequest) {
 }
 
 func (c WorkspaceObjectAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4244,10 +4252,10 @@ type WorkspaceObjectAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *WorkspaceObjectAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlResponse) {
+func (newState *WorkspaceObjectAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlResponse) {
 }
 
-func (newState *WorkspaceObjectAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlResponse) {
+func (newState *WorkspaceObjectAccessControlResponse) SyncFieldsDuringRead(existingState WorkspaceObjectAccessControlResponse) {
 }
 
 func (c WorkspaceObjectAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4337,10 +4345,10 @@ type WorkspaceObjectPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermission) {
+func (newState *WorkspaceObjectPermission) SyncFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermission) {
 }
 
-func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermission) {
+func (newState *WorkspaceObjectPermission) SyncFieldsDuringRead(existingState WorkspaceObjectPermission) {
 }
 
 func (c WorkspaceObjectPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4424,10 +4432,10 @@ type WorkspaceObjectPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *WorkspaceObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissions) {
+func (newState *WorkspaceObjectPermissions) SyncFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissions) {
 }
 
-func (newState *WorkspaceObjectPermissions) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissions) {
+func (newState *WorkspaceObjectPermissions) SyncFieldsDuringRead(existingState WorkspaceObjectPermissions) {
 }
 
 func (c WorkspaceObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4509,10 +4517,10 @@ type WorkspaceObjectPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissionsDescription) {
+func (newState *WorkspaceObjectPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissionsDescription) {
 }
 
-func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissionsDescription) {
+func (newState *WorkspaceObjectPermissionsDescription) SyncFieldsDuringRead(existingState WorkspaceObjectPermissionsDescription) {
 }
 
 func (c WorkspaceObjectPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

@@ -27,10 +27,10 @@ type ColumnInfo struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+func (newState *ColumnInfo) SyncFieldsDuringCreateOrUpdate(plan ColumnInfo) {
 }
 
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+func (newState *ColumnInfo) SyncFieldsDuringRead(existingState ColumnInfo) {
 }
 
 func (c ColumnInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -238,10 +238,10 @@ type CustomTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *CustomTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomTag) {
+func (newState *CustomTag) SyncFieldsDuringCreateOrUpdate(plan CustomTag) {
 }
 
-func (newState *CustomTag) SyncEffectiveFieldsDuringRead(existingState CustomTag) {
+func (newState *CustomTag) SyncFieldsDuringRead(existingState CustomTag) {
 }
 
 func (c CustomTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -291,10 +291,10 @@ type DeleteDataResult struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (newState *DeleteDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataResult) {
+func (newState *DeleteDataResult) SyncFieldsDuringCreateOrUpdate(plan DeleteDataResult) {
 }
 
-func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult) {
+func (newState *DeleteDataResult) SyncFieldsDuringRead(existingState DeleteDataResult) {
 }
 
 func (c DeleteDataResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -445,10 +445,10 @@ type DeleteDataVectorIndexResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexResponse) {
+func (newState *DeleteDataVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexResponse) {
 }
 
-func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
+func (newState *DeleteDataVectorIndexResponse) SyncFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
 }
 
 func (c DeleteDataVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -560,10 +560,10 @@ func (o DeleteEndpointRequest) Type(ctx context.Context) attr.Type {
 type DeleteEndpointResponse struct {
 }
 
-func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse) {
+func (newState *DeleteEndpointResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse) {
 }
 
-func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse) {
+func (newState *DeleteEndpointResponse) SyncFieldsDuringRead(existingState DeleteEndpointResponse) {
 }
 
 func (c DeleteEndpointResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -637,10 +637,10 @@ func (o DeleteIndexRequest) Type(ctx context.Context) attr.Type {
 type DeleteIndexResponse struct {
 }
 
-func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexResponse) {
+func (newState *DeleteIndexResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteIndexResponse) {
 }
 
-func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse) {
+func (newState *DeleteIndexResponse) SyncFieldsDuringRead(existingState DeleteIndexResponse) {
 }
 
 func (c DeleteIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -681,6 +681,8 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
+	// The budget policy id applied to the vector search index
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
@@ -700,14 +702,15 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecRequest) {
+func (newState *DeltaSyncVectorIndexSpecRequest) SyncFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecRequest) {
 }
 
-func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
+func (newState *DeltaSyncVectorIndexSpecRequest) SyncFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
 }
 
 func (c DeltaSyncVectorIndexSpecRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["columns_to_sync"] = attrs["columns_to_sync"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
 	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
@@ -739,12 +742,13 @@ func (o DeltaSyncVectorIndexSpecRequest) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"columns_to_sync":           o.ColumnsToSync,
-			"embedding_source_columns":  o.EmbeddingSourceColumns,
-			"embedding_vector_columns":  o.EmbeddingVectorColumns,
-			"embedding_writeback_table": o.EmbeddingWritebackTable,
-			"pipeline_type":             o.PipelineType,
-			"source_table":              o.SourceTable,
+			"columns_to_sync":            o.ColumnsToSync,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"embedding_source_columns":   o.EmbeddingSourceColumns,
+			"embedding_vector_columns":   o.EmbeddingVectorColumns,
+			"embedding_writeback_table":  o.EmbeddingWritebackTable,
+			"pipeline_type":              o.PipelineType,
+			"source_table":               o.SourceTable,
 		})
 }
 
@@ -755,6 +759,7 @@ func (o DeltaSyncVectorIndexSpecRequest) Type(ctx context.Context) attr.Type {
 			"columns_to_sync": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"effective_budget_policy_id": types.StringType,
 			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.Type(ctx),
 			},
@@ -847,6 +852,8 @@ func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingVectorColumns(ctx context.
 }
 
 type DeltaSyncVectorIndexSpecResponse struct {
+	// The budget policy id applied to the vector search index
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
@@ -868,13 +875,14 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecResponse) {
+func (newState *DeltaSyncVectorIndexSpecResponse) SyncFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecResponse) {
 }
 
-func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
+func (newState *DeltaSyncVectorIndexSpecResponse) SyncFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
 }
 
 func (c DeltaSyncVectorIndexSpecResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
 	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
@@ -906,12 +914,13 @@ func (o DeltaSyncVectorIndexSpecResponse) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"embedding_source_columns":  o.EmbeddingSourceColumns,
-			"embedding_vector_columns":  o.EmbeddingVectorColumns,
-			"embedding_writeback_table": o.EmbeddingWritebackTable,
-			"pipeline_id":               o.PipelineId,
-			"pipeline_type":             o.PipelineType,
-			"source_table":              o.SourceTable,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"embedding_source_columns":   o.EmbeddingSourceColumns,
+			"embedding_vector_columns":   o.EmbeddingVectorColumns,
+			"embedding_writeback_table":  o.EmbeddingWritebackTable,
+			"pipeline_id":                o.PipelineId,
+			"pipeline_type":              o.PipelineType,
+			"source_table":               o.SourceTable,
 		})
 }
 
@@ -919,6 +928,7 @@ func (o DeltaSyncVectorIndexSpecResponse) ToObjectValue(ctx context.Context) bas
 func (o DeltaSyncVectorIndexSpecResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"effective_budget_policy_id": types.StringType,
 			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.Type(ctx),
 			},
@@ -998,10 +1008,10 @@ type DirectAccessVectorIndexSpec struct {
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
-func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectAccessVectorIndexSpec) {
+func (newState *DirectAccessVectorIndexSpec) SyncFieldsDuringCreateOrUpdate(plan DirectAccessVectorIndexSpec) {
 }
 
-func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
+func (newState *DirectAccessVectorIndexSpec) SyncFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
 }
 
 func (c DirectAccessVectorIndexSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1113,10 +1123,10 @@ type EmbeddingSourceColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingSourceColumn) {
+func (newState *EmbeddingSourceColumn) SyncFieldsDuringCreateOrUpdate(plan EmbeddingSourceColumn) {
 }
 
-func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn) {
+func (newState *EmbeddingSourceColumn) SyncFieldsDuringRead(existingState EmbeddingSourceColumn) {
 }
 
 func (c EmbeddingSourceColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1166,10 +1176,10 @@ type EmbeddingVectorColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingVectorColumn) {
+func (newState *EmbeddingVectorColumn) SyncFieldsDuringCreateOrUpdate(plan EmbeddingVectorColumn) {
 }
 
-func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn) {
+func (newState *EmbeddingVectorColumn) SyncFieldsDuringRead(existingState EmbeddingVectorColumn) {
 }
 
 func (c EmbeddingVectorColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1237,10 +1247,10 @@ type EndpointInfo struct {
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
 }
 
-func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo) {
+func (newState *EndpointInfo) SyncFieldsDuringCreateOrUpdate(plan EndpointInfo) {
 }
 
-func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
+func (newState *EndpointInfo) SyncFieldsDuringRead(existingState EndpointInfo) {
 }
 
 func (c EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1377,10 +1387,10 @@ type EndpointStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *EndpointStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointStatus) {
+func (newState *EndpointStatus) SyncFieldsDuringCreateOrUpdate(plan EndpointStatus) {
 }
 
-func (newState *EndpointStatus) SyncEffectiveFieldsDuringRead(existingState EndpointStatus) {
+func (newState *EndpointStatus) SyncFieldsDuringRead(existingState EndpointStatus) {
 }
 
 func (c EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1460,6 +1470,12 @@ func (o GetEndpointRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetIndexRequest struct {
+	// If true, the URL returned for the index is guaranteed to be compatible
+	// with the reranker. Currently this means we return the CP URL regardless
+	// of how the index is being accessed. If not set or set to false, the URL
+	// may still be compatible with the reranker depending on what URL we
+	// return.
+	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
 }
@@ -1482,7 +1498,8 @@ func (o GetIndexRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index_name": o.IndexName,
+			"ensure_reranker_compatible": o.EnsureRerankerCompatible,
+			"index_name":                 o.IndexName,
 		})
 }
 
@@ -1490,7 +1507,8 @@ func (o GetIndexRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetIndexRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"index_name": types.StringType,
+			"ensure_reranker_compatible": types.BoolType,
+			"index_name":                 types.StringType,
 		},
 	}
 }
@@ -1503,10 +1521,10 @@ type ListEndpointResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointResponse) {
+func (newState *ListEndpointResponse) SyncFieldsDuringCreateOrUpdate(plan ListEndpointResponse) {
 }
 
-func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse) {
+func (newState *ListEndpointResponse) SyncFieldsDuringRead(existingState ListEndpointResponse) {
 }
 
 func (c ListEndpointResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1660,10 +1678,10 @@ type ListValue struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValue) {
+func (newState *ListValue) SyncFieldsDuringCreateOrUpdate(plan ListValue) {
 }
 
-func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue) {
+func (newState *ListValue) SyncFieldsDuringRead(existingState ListValue) {
 }
 
 func (c ListValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1741,10 +1759,10 @@ type ListVectorIndexesResponse struct {
 	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
-func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse) {
+func (newState *ListVectorIndexesResponse) SyncFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse) {
 }
 
-func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse) {
+func (newState *ListVectorIndexesResponse) SyncFieldsDuringRead(existingState ListVectorIndexesResponse) {
 }
 
 func (c ListVectorIndexesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1825,10 +1843,10 @@ type MapStringValueEntry struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan MapStringValueEntry) {
+func (newState *MapStringValueEntry) SyncFieldsDuringCreateOrUpdate(plan MapStringValueEntry) {
 }
 
-func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry) {
+func (newState *MapStringValueEntry) SyncFieldsDuringRead(existingState MapStringValueEntry) {
 }
 
 func (c MapStringValueEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1914,10 +1932,10 @@ type MiniVectorIndex struct {
 	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
-func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan MiniVectorIndex) {
+func (newState *MiniVectorIndex) SyncFieldsDuringCreateOrUpdate(plan MiniVectorIndex) {
 }
 
-func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex) {
+func (newState *MiniVectorIndex) SyncFieldsDuringRead(existingState MiniVectorIndex) {
 }
 
 func (c MiniVectorIndex) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2014,10 +2032,10 @@ type PatchEndpointBudgetPolicyResponse struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 }
 
-func (newState *PatchEndpointBudgetPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyResponse) {
+func (newState *PatchEndpointBudgetPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyResponse) {
 }
 
-func (newState *PatchEndpointBudgetPolicyResponse) SyncEffectiveFieldsDuringRead(existingState PatchEndpointBudgetPolicyResponse) {
+func (newState *PatchEndpointBudgetPolicyResponse) SyncFieldsDuringRead(existingState PatchEndpointBudgetPolicyResponse) {
 }
 
 func (c PatchEndpointBudgetPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2128,6 +2146,8 @@ type QueryVectorIndexRequest struct {
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
+
+	Reranker types.Object `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 }
@@ -2144,6 +2164,7 @@ func (a QueryVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[s
 		"columns":           reflect.TypeOf(types.String{}),
 		"columns_to_rerank": reflect.TypeOf(types.String{}),
 		"query_vector":      reflect.TypeOf(types.Float64{}),
+		"reranker":          reflect.TypeOf(RerankerConfig{}),
 	}
 }
 
@@ -2162,6 +2183,7 @@ func (o QueryVectorIndexRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 			"query_text":        o.QueryText,
 			"query_type":        o.QueryType,
 			"query_vector":      o.QueryVector,
+			"reranker":          o.Reranker,
 			"score_threshold":   o.ScoreThreshold,
 		})
 }
@@ -2184,6 +2206,7 @@ func (o QueryVectorIndexRequest) Type(ctx context.Context) attr.Type {
 			"query_vector": basetypes.ListType{
 				ElemType: types.Float64Type,
 			},
+			"reranker":        RerankerConfig{}.Type(ctx),
 			"score_threshold": types.Float64Type,
 		},
 	}
@@ -2267,6 +2290,34 @@ func (o *QueryVectorIndexRequest) SetQueryVector(ctx context.Context, v []types.
 	o.QueryVector = types.ListValueMust(t, vs)
 }
 
+// GetReranker returns the value of the Reranker field in QueryVectorIndexRequest as
+// a RerankerConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest) GetReranker(ctx context.Context) (RerankerConfig, bool) {
+	var e RerankerConfig
+	if o.Reranker.IsNull() || o.Reranker.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfig
+	d := o.Reranker.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReranker sets the value of the Reranker field in QueryVectorIndexRequest.
+func (o *QueryVectorIndexRequest) SetReranker(ctx context.Context, v RerankerConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Reranker = vs
+}
+
 type QueryVectorIndexResponse struct {
 	// Metadata about the result set.
 	Manifest types.Object `tfsdk:"manifest"`
@@ -2279,10 +2330,10 @@ type QueryVectorIndexResponse struct {
 	Result types.Object `tfsdk:"result"`
 }
 
-func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse) {
+func (newState *QueryVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse) {
 }
 
-func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse) {
+func (newState *QueryVectorIndexResponse) SyncFieldsDuringRead(existingState QueryVectorIndexResponse) {
 }
 
 func (c QueryVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2387,6 +2438,165 @@ func (o *QueryVectorIndexResponse) SetResult(ctx context.Context, v ResultData) 
 	o.Result = vs
 }
 
+type RerankerConfig struct {
+	Model types.String `tfsdk:"model"`
+
+	Parameters types.Object `tfsdk:"parameters"`
+}
+
+func (newState *RerankerConfig) SyncFieldsDuringCreateOrUpdate(plan RerankerConfig) {
+}
+
+func (newState *RerankerConfig) SyncFieldsDuringRead(existingState RerankerConfig) {
+}
+
+func (c RerankerConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(RerankerConfigRerankerParameters{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfig
+// only implements ToObjectValue() and Type().
+func (o RerankerConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model":      o.Model,
+			"parameters": o.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model":      types.StringType,
+			"parameters": RerankerConfigRerankerParameters{}.Type(ctx),
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in RerankerConfig as
+// a RerankerConfigRerankerParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfig) GetParameters(ctx context.Context) (RerankerConfigRerankerParameters, bool) {
+	var e RerankerConfigRerankerParameters
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfigRerankerParameters
+	d := o.Parameters.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetParameters sets the value of the Parameters field in RerankerConfig.
+func (o *RerankerConfig) SetParameters(ctx context.Context, v RerankerConfigRerankerParameters) {
+	vs := v.ToObjectValue(ctx)
+	o.Parameters = vs
+}
+
+type RerankerConfigRerankerParameters struct {
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
+}
+
+func (newState *RerankerConfigRerankerParameters) SyncFieldsDuringCreateOrUpdate(plan RerankerConfigRerankerParameters) {
+}
+
+func (newState *RerankerConfigRerankerParameters) SyncFieldsDuringRead(existingState RerankerConfigRerankerParameters) {
+}
+
+func (c RerankerConfigRerankerParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfigRerankerParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfigRerankerParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfigRerankerParameters
+// only implements ToObjectValue() and Type().
+func (o RerankerConfigRerankerParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns_to_rerank": o.ColumnsToRerank,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfigRerankerParameters) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns_to_rerank": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in RerankerConfigRerankerParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfigRerankerParameters) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in RerankerConfigRerankerParameters.
+func (o *RerankerConfigRerankerParameters) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
+}
+
 // Data returned in the query result.
 type ResultData struct {
 	// Data rows returned in the query.
@@ -2395,10 +2605,10 @@ type ResultData struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData) {
+func (newState *ResultData) SyncFieldsDuringCreateOrUpdate(plan ResultData) {
 }
 
-func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
+func (newState *ResultData) SyncFieldsDuringRead(existingState ResultData) {
 }
 
 func (c ResultData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2481,10 +2691,10 @@ type ResultManifest struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest) {
+func (newState *ResultManifest) SyncFieldsDuringCreateOrUpdate(plan ResultManifest) {
 }
 
-func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
+func (newState *ResultManifest) SyncFieldsDuringRead(existingState ResultManifest) {
 }
 
 func (c ResultManifest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2609,10 +2819,10 @@ type ScanVectorIndexResponse struct {
 	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 }
 
-func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexResponse) {
+func (newState *ScanVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(plan ScanVectorIndexResponse) {
 }
 
-func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse) {
+func (newState *ScanVectorIndexResponse) SyncFieldsDuringRead(existingState ScanVectorIndexResponse) {
 }
 
 func (c ScanVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2690,10 +2900,10 @@ type Struct struct {
 	Fields types.List `tfsdk:"fields"`
 }
 
-func (newState *Struct) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct) {
+func (newState *Struct) SyncFieldsDuringCreateOrUpdate(plan Struct) {
 }
 
-func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
+func (newState *Struct) SyncFieldsDuringRead(existingState Struct) {
 }
 
 func (c Struct) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2802,10 +3012,10 @@ func (o SyncIndexRequest) Type(ctx context.Context) attr.Type {
 type SyncIndexResponse struct {
 }
 
-func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexResponse) {
+func (newState *SyncIndexResponse) SyncFieldsDuringCreateOrUpdate(plan SyncIndexResponse) {
 }
 
-func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse) {
+func (newState *SyncIndexResponse) SyncFieldsDuringRead(existingState SyncIndexResponse) {
 }
 
 func (c SyncIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2917,10 +3127,10 @@ type UpdateEndpointCustomTagsResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *UpdateEndpointCustomTagsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsResponse) {
+func (newState *UpdateEndpointCustomTagsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsResponse) {
 }
 
-func (newState *UpdateEndpointCustomTagsResponse) SyncEffectiveFieldsDuringRead(existingState UpdateEndpointCustomTagsResponse) {
+func (newState *UpdateEndpointCustomTagsResponse) SyncFieldsDuringRead(existingState UpdateEndpointCustomTagsResponse) {
 }
 
 func (c UpdateEndpointCustomTagsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3000,10 +3210,10 @@ type UpsertDataResult struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (newState *UpsertDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataResult) {
+func (newState *UpsertDataResult) SyncFieldsDuringCreateOrUpdate(plan UpsertDataResult) {
 }
 
-func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult) {
+func (newState *UpsertDataResult) SyncFieldsDuringRead(existingState UpsertDataResult) {
 }
 
 func (c UpsertDataResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3124,10 +3334,10 @@ type UpsertDataVectorIndexResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexResponse) {
+func (newState *UpsertDataVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexResponse) {
 }
 
-func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
+func (newState *UpsertDataVectorIndexResponse) SyncFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
 }
 
 func (c UpsertDataVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3212,10 +3422,10 @@ type Value struct {
 	StructValue types.Object `tfsdk:"struct_value"`
 }
 
-func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
+func (newState *Value) SyncFieldsDuringCreateOrUpdate(plan Value) {
 }
 
-func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
+func (newState *Value) SyncFieldsDuringRead(existingState Value) {
 }
 
 func (c Value) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3345,10 +3555,10 @@ type VectorIndex struct {
 	Status types.Object `tfsdk:"status"`
 }
 
-func (newState *VectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndex) {
+func (newState *VectorIndex) SyncFieldsDuringCreateOrUpdate(plan VectorIndex) {
 }
 
-func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorIndex) {
+func (newState *VectorIndex) SyncFieldsDuringRead(existingState VectorIndex) {
 }
 
 func (c VectorIndex) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3508,10 +3718,10 @@ type VectorIndexStatus struct {
 	Ready types.Bool `tfsdk:"ready"`
 }
 
-func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndexStatus) {
+func (newState *VectorIndexStatus) SyncFieldsDuringCreateOrUpdate(plan VectorIndexStatus) {
 }
 
-func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus) {
+func (newState *VectorIndexStatus) SyncFieldsDuringRead(existingState VectorIndexStatus) {
 }
 
 func (c VectorIndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

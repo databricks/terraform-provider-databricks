@@ -62,6 +62,7 @@ func (r *CleanRoomResource) update(ctx context.Context, plan cleanrooms_tf.Clean
 	}
 
 	var clean_room cleanrooms.CleanRoom
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &clean_room)...)
 	if diags.HasError() {
 		return
@@ -84,7 +85,7 @@ func (r *CleanRoomResource) update(ctx context.Context, plan cleanrooms_tf.Clean
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -96,14 +97,13 @@ func (r *CleanRoomResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan cleanrooms_tf.CleanRoom
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var clean_room cleanrooms.CleanRoom
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &clean_room)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,14 +121,29 @@ func (r *CleanRoomResource) Create(ctx context.Context, req resource.CreateReque
 
 	var newState cleanrooms_tf.CleanRoom
 
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response.Response, &newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	waitResponse, err := response.Get()
+	if err != nil {
+		resp.Diagnostics.AddError("error waiting for clean_rooms_clean_room to be ready", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
-
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,12 +183,13 @@ func (r *CleanRoomResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var newState cleanrooms_tf.CleanRoom
+
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -62,10 +63,10 @@ type CleanRoom struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
-func (newState *CleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoom) {
+func (newState *CleanRoom) SyncFieldsDuringCreateOrUpdate(plan CleanRoom) {
 }
 
-func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom) {
+func (newState *CleanRoom) SyncFieldsDuringRead(existingState CleanRoom) {
 }
 
 func (c CleanRoom) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -198,8 +199,8 @@ type CleanRoomAsset struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type"`
-	// The name of the clean room this asset belongs to. This is an output-only
-	// field to ensure proper resource identification.
+	// The name of the clean room this asset belongs to. This field is required
+	// for create operations and populated by the server for responses.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
@@ -239,19 +240,19 @@ type CleanRoomAsset struct {
 	VolumeLocalDetails types.Object `tfsdk:"volume_local_details"`
 }
 
-func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAsset) {
+func (newState *CleanRoomAsset) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAsset) {
 }
 
-func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState CleanRoomAsset) {
+func (newState *CleanRoomAsset) SyncFieldsDuringRead(existingState CleanRoomAsset) {
 }
 
 func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
-	attrs["asset_type"] = attrs["asset_type"].SetOptional()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetComputed()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["notebook"] = attrs["notebook"].SetOptional()
 	attrs["owner_collaborator_alias"] = attrs["owner_collaborator_alias"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -559,10 +560,10 @@ type CleanRoomAssetForeignTable struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable) {
+func (newState *CleanRoomAssetForeignTable) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable) {
 }
 
-func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTable) {
+func (newState *CleanRoomAssetForeignTable) SyncFieldsDuringRead(existingState CleanRoomAssetForeignTable) {
 }
 
 func (c CleanRoomAssetForeignTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -638,14 +639,14 @@ type CleanRoomAssetForeignTableLocalDetails struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails) {
+func (newState *CleanRoomAssetForeignTableLocalDetails) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails) {
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails) {
+func (newState *CleanRoomAssetForeignTableLocalDetails) SyncFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails) {
 }
 
 func (c CleanRoomAssetForeignTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -695,15 +696,15 @@ type CleanRoomAssetNotebook struct {
 	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
-func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook) {
+func (newState *CleanRoomAssetNotebook) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook) {
 }
 
-func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetNotebook) {
+func (newState *CleanRoomAssetNotebook) SyncFieldsDuringRead(existingState CleanRoomAssetNotebook) {
 }
 
 func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetComputed()
-	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
+	attrs["notebook_content"] = attrs["notebook_content"].SetRequired()
 	attrs["review_state"] = attrs["review_state"].SetComputed()
 	attrs["reviews"] = attrs["reviews"].SetComputed()
 	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
@@ -814,10 +815,10 @@ type CleanRoomAssetTable struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable) {
+func (newState *CleanRoomAssetTable) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable) {
 }
 
-func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTable) {
+func (newState *CleanRoomAssetTable) SyncFieldsDuringRead(existingState CleanRoomAssetTable) {
 }
 
 func (c CleanRoomAssetTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -895,14 +896,14 @@ type CleanRoomAssetTableLocalDetails struct {
 	Partitions types.List `tfsdk:"partitions"`
 }
 
-func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails) {
+func (newState *CleanRoomAssetTableLocalDetails) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails) {
 }
 
-func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails) {
+func (newState *CleanRoomAssetTableLocalDetails) SyncFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails) {
 }
 
 func (c CleanRoomAssetTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 	attrs["partitions"] = attrs["partitions"].SetOptional()
 
 	return attrs
@@ -976,10 +977,10 @@ type CleanRoomAssetView struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetView) {
+func (newState *CleanRoomAssetView) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetView) {
 }
 
-func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetView) {
+func (newState *CleanRoomAssetView) SyncFieldsDuringRead(existingState CleanRoomAssetView) {
 }
 
 func (c CleanRoomAssetView) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1055,14 +1056,14 @@ type CleanRoomAssetViewLocalDetails struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails) {
+func (newState *CleanRoomAssetViewLocalDetails) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails) {
 }
 
-func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails) {
+func (newState *CleanRoomAssetViewLocalDetails) SyncFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails) {
 }
 
 func (c CleanRoomAssetViewLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -1104,14 +1105,14 @@ type CleanRoomAssetVolumeLocalDetails struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails) {
+func (newState *CleanRoomAssetVolumeLocalDetails) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails) {
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails) {
+func (newState *CleanRoomAssetVolumeLocalDetails) SyncFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails) {
 }
 
 func (c CleanRoomAssetVolumeLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["local_name"] = attrs["local_name"].SetRequired()
 
 	return attrs
 }
@@ -1143,6 +1144,83 @@ func (o CleanRoomAssetVolumeLocalDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
+		},
+	}
+}
+
+type CleanRoomAutoApprovalRule struct {
+	AuthorCollaboratorAlias types.String `tfsdk:"author_collaborator_alias"`
+
+	AuthorScope types.String `tfsdk:"author_scope"`
+	// The name of the clean room this auto-approval rule belongs to.
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
+	// Timestamp of when the rule was created, in epoch milliseconds.
+	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// A generated UUID identifying the rule.
+	RuleId types.String `tfsdk:"rule_id"`
+	// The owner of the rule to whom the rule applies.
+	RuleOwnerCollaboratorAlias types.String `tfsdk:"rule_owner_collaborator_alias"`
+
+	RunnerCollaboratorAlias types.String `tfsdk:"runner_collaborator_alias"`
+}
+
+func (newState *CleanRoomAutoApprovalRule) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAutoApprovalRule) {
+}
+
+func (newState *CleanRoomAutoApprovalRule) SyncFieldsDuringRead(existingState CleanRoomAutoApprovalRule) {
+}
+
+func (c CleanRoomAutoApprovalRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["author_collaborator_alias"] = attrs["author_collaborator_alias"].SetOptional()
+	attrs["author_scope"] = attrs["author_scope"].SetOptional()
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["rule_id"] = attrs["rule_id"].SetComputed()
+	attrs["rule_owner_collaborator_alias"] = attrs["rule_owner_collaborator_alias"].SetComputed()
+	attrs["runner_collaborator_alias"] = attrs["runner_collaborator_alias"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAutoApprovalRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomAutoApprovalRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAutoApprovalRule
+// only implements ToObjectValue() and Type().
+func (o CleanRoomAutoApprovalRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"author_collaborator_alias":     o.AuthorCollaboratorAlias,
+			"author_scope":                  o.AuthorScope,
+			"clean_room_name":               o.CleanRoomName,
+			"created_at":                    o.CreatedAt,
+			"rule_id":                       o.RuleId,
+			"rule_owner_collaborator_alias": o.RuleOwnerCollaboratorAlias,
+			"runner_collaborator_alias":     o.RunnerCollaboratorAlias,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomAutoApprovalRule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"author_collaborator_alias":     types.StringType,
+			"author_scope":                  types.StringType,
+			"clean_room_name":               types.StringType,
+			"created_at":                    types.Int64Type,
+			"rule_id":                       types.StringType,
+			"rule_owner_collaborator_alias": types.StringType,
+			"runner_collaborator_alias":     types.StringType,
 		},
 	}
 }
@@ -1180,10 +1258,18 @@ type CleanRoomCollaborator struct {
 	OrganizationName types.String `tfsdk:"organization_name"`
 }
 
-func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator) {
+func (newState *CleanRoomCollaborator) SyncFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator) {
+	if !plan.InviteRecipientWorkspaceId.IsUnknown() && !plan.InviteRecipientWorkspaceId.IsNull() {
+		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the plan.
+		newState.InviteRecipientWorkspaceId = plan.InviteRecipientWorkspaceId
+	}
 }
 
-func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaborator) {
+func (newState *CleanRoomCollaborator) SyncFieldsDuringRead(existingState CleanRoomCollaborator) {
+	if !existingState.InviteRecipientWorkspaceId.IsUnknown() && !existingState.InviteRecipientWorkspaceId.IsNull() {
+		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the existing state.
+		newState.InviteRecipientWorkspaceId = existingState.InviteRecipientWorkspaceId
+	}
 }
 
 func (c CleanRoomCollaborator) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1194,6 +1280,8 @@ func (c CleanRoomCollaborator) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetOptional()
+	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetComputed()
+	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["organization_name"] = attrs["organization_name"].SetComputed()
 
 	return attrs
@@ -1253,10 +1341,10 @@ type CleanRoomNotebookReview struct {
 	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
 }
 
-func (newState *CleanRoomNotebookReview) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookReview) {
+func (newState *CleanRoomNotebookReview) SyncFieldsDuringCreateOrUpdate(plan CleanRoomNotebookReview) {
 }
 
-func (newState *CleanRoomNotebookReview) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookReview) {
+func (newState *CleanRoomNotebookReview) SyncFieldsDuringRead(existingState CleanRoomNotebookReview) {
 }
 
 func (c CleanRoomNotebookReview) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1336,10 +1424,10 @@ type CleanRoomNotebookTaskRun struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun) {
+func (newState *CleanRoomNotebookTaskRun) SyncFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun) {
 }
 
-func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookTaskRun) {
+func (newState *CleanRoomNotebookTaskRun) SyncFieldsDuringRead(existingState CleanRoomNotebookTaskRun) {
 }
 
 func (c CleanRoomNotebookTaskRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1472,10 +1560,10 @@ type CleanRoomOutputCatalog struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog) {
+func (newState *CleanRoomOutputCatalog) SyncFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog) {
 }
 
-func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomOutputCatalog) {
+func (newState *CleanRoomOutputCatalog) SyncFieldsDuringRead(existingState CleanRoomOutputCatalog) {
 }
 
 func (c CleanRoomOutputCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1542,10 +1630,10 @@ type CleanRoomRemoteDetail struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail) {
+func (newState *CleanRoomRemoteDetail) SyncFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail) {
 }
 
-func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingState CleanRoomRemoteDetail) {
+func (newState *CleanRoomRemoteDetail) SyncFieldsDuringRead(existingState CleanRoomRemoteDetail) {
 }
 
 func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1737,10 +1825,10 @@ type CollaboratorJobRunInfo struct {
 	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id"`
 }
 
-func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo) {
+func (newState *CollaboratorJobRunInfo) SyncFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo) {
 }
 
-func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringRead(existingState CollaboratorJobRunInfo) {
+func (newState *CollaboratorJobRunInfo) SyncFieldsDuringRead(existingState CollaboratorJobRunInfo) {
 }
 
 func (c CollaboratorJobRunInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1802,10 +1890,10 @@ type ComplianceSecurityProfile struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile) SyncFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile) SyncFieldsDuringRead(existingState ComplianceSecurityProfile) {
 }
 
 func (c ComplianceSecurityProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1880,7 +1968,8 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 
 type CreateCleanRoomAssetRequest struct {
 	Asset types.Object `tfsdk:"asset"`
-	// Name of the clean room.
+	// The name of the clean room this asset belongs to. This field is required
+	// for create operations and populated by the server for responses.
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
@@ -1945,6 +2034,236 @@ func (o *CreateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 func (o *CreateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
 	vs := v.ToObjectValue(ctx)
 	o.Asset = vs
+}
+
+type CreateCleanRoomAssetReviewRequest struct {
+	// can only be NOTEBOOK_FILE for now
+	AssetType types.String `tfsdk:"-"`
+	// Name of the clean room
+	CleanRoomName types.String `tfsdk:"-"`
+	// Name of the asset
+	Name types.String `tfsdk:"-"`
+
+	NotebookReview types.Object `tfsdk:"notebook_review"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetReviewRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateCleanRoomAssetReviewRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notebook_review": reflect.TypeOf(NotebookVersionReview{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomAssetReviewRequest
+// only implements ToObjectValue() and Type().
+func (o CreateCleanRoomAssetReviewRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"asset_type":      o.AssetType,
+			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
+			"notebook_review": o.NotebookReview,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateCleanRoomAssetReviewRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"asset_type":      types.StringType,
+			"clean_room_name": types.StringType,
+			"name":            types.StringType,
+			"notebook_review": NotebookVersionReview{}.Type(ctx),
+		},
+	}
+}
+
+// GetNotebookReview returns the value of the NotebookReview field in CreateCleanRoomAssetReviewRequest as
+// a NotebookVersionReview value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCleanRoomAssetReviewRequest) GetNotebookReview(ctx context.Context) (NotebookVersionReview, bool) {
+	var e NotebookVersionReview
+	if o.NotebookReview.IsNull() || o.NotebookReview.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookVersionReview
+	d := o.NotebookReview.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookReview sets the value of the NotebookReview field in CreateCleanRoomAssetReviewRequest.
+func (o *CreateCleanRoomAssetReviewRequest) SetNotebookReview(ctx context.Context, v NotebookVersionReview) {
+	vs := v.ToObjectValue(ctx)
+	o.NotebookReview = vs
+}
+
+type CreateCleanRoomAssetReviewResponse struct {
+	// top-level status derived from all reviews
+	NotebookReviewState types.String `tfsdk:"notebook_review_state"`
+	// All existing notebook approvals or rejections
+	NotebookReviews types.List `tfsdk:"notebook_reviews"`
+}
+
+func (newState *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetReviewResponse) {
+}
+
+func (newState *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringRead(existingState CreateCleanRoomAssetReviewResponse) {
+}
+
+func (c CreateCleanRoomAssetReviewResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["notebook_review_state"] = attrs["notebook_review_state"].SetOptional()
+	attrs["notebook_reviews"] = attrs["notebook_reviews"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetReviewResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateCleanRoomAssetReviewResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notebook_reviews": reflect.TypeOf(CleanRoomNotebookReview{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomAssetReviewResponse
+// only implements ToObjectValue() and Type().
+func (o CreateCleanRoomAssetReviewResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"notebook_review_state": o.NotebookReviewState,
+			"notebook_reviews":      o.NotebookReviews,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateCleanRoomAssetReviewResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"notebook_review_state": types.StringType,
+			"notebook_reviews": basetypes.ListType{
+				ElemType: CleanRoomNotebookReview{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetNotebookReviews returns the value of the NotebookReviews field in CreateCleanRoomAssetReviewResponse as
+// a slice of CleanRoomNotebookReview values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCleanRoomAssetReviewResponse) GetNotebookReviews(ctx context.Context) ([]CleanRoomNotebookReview, bool) {
+	if o.NotebookReviews.IsNull() || o.NotebookReviews.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomNotebookReview
+	d := o.NotebookReviews.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookReviews sets the value of the NotebookReviews field in CreateCleanRoomAssetReviewResponse.
+func (o *CreateCleanRoomAssetReviewResponse) SetNotebookReviews(ctx context.Context, v []CleanRoomNotebookReview) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_reviews"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.NotebookReviews = types.ListValueMust(t, vs)
+}
+
+type CreateCleanRoomAutoApprovalRuleRequest struct {
+	AutoApprovalRule types.Object `tfsdk:"auto_approval_rule"`
+	// The name of the clean room this auto-approval rule belongs to.
+	CleanRoomName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAutoApprovalRuleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateCleanRoomAutoApprovalRuleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"auto_approval_rule": reflect.TypeOf(CleanRoomAutoApprovalRule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomAutoApprovalRuleRequest
+// only implements ToObjectValue() and Type().
+func (o CreateCleanRoomAutoApprovalRuleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"auto_approval_rule": o.AutoApprovalRule,
+			"clean_room_name":    o.CleanRoomName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateCleanRoomAutoApprovalRuleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auto_approval_rule": CleanRoomAutoApprovalRule{}.Type(ctx),
+			"clean_room_name":    types.StringType,
+		},
+	}
+}
+
+// GetAutoApprovalRule returns the value of the AutoApprovalRule field in CreateCleanRoomAutoApprovalRuleRequest as
+// a CleanRoomAutoApprovalRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCleanRoomAutoApprovalRuleRequest) GetAutoApprovalRule(ctx context.Context) (CleanRoomAutoApprovalRule, bool) {
+	var e CleanRoomAutoApprovalRule
+	if o.AutoApprovalRule.IsNull() || o.AutoApprovalRule.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomAutoApprovalRule
+	d := o.AutoApprovalRule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoApprovalRule sets the value of the AutoApprovalRule field in CreateCleanRoomAutoApprovalRuleRequest.
+func (o *CreateCleanRoomAutoApprovalRuleRequest) SetAutoApprovalRule(ctx context.Context, v CleanRoomAutoApprovalRule) {
+	vs := v.ToObjectValue(ctx)
+	o.AutoApprovalRule = vs
 }
 
 type CreateCleanRoomOutputCatalogRequest struct {
@@ -2021,10 +2340,10 @@ type CreateCleanRoomOutputCatalogResponse struct {
 	OutputCatalog types.Object `tfsdk:"output_catalog"`
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse) {
+func (newState *CreateCleanRoomOutputCatalogResponse) SyncFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse) {
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse) {
+func (newState *CreateCleanRoomOutputCatalogResponse) SyncFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse) {
 }
 
 func (c CreateCleanRoomOutputCatalogResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2209,10 +2528,10 @@ func (o DeleteCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 type DeleteCleanRoomAssetResponse struct {
 }
 
-func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetResponse) {
+func (newState *DeleteCleanRoomAssetResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetResponse) {
 }
 
-func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetResponse) {
+func (newState *DeleteCleanRoomAssetResponse) SyncFieldsDuringRead(existingState DeleteCleanRoomAssetResponse) {
 }
 
 func (c DeleteCleanRoomAssetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2244,6 +2563,45 @@ func (o DeleteCleanRoomAssetResponse) ToObjectValue(ctx context.Context) basetyp
 func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteCleanRoomAutoApprovalRuleRequest struct {
+	CleanRoomName types.String `tfsdk:"-"`
+
+	RuleId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAutoApprovalRuleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteCleanRoomAutoApprovalRuleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomAutoApprovalRuleRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteCleanRoomAutoApprovalRuleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_name": o.CleanRoomName,
+			"rule_id":         o.RuleId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteCleanRoomAutoApprovalRuleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_name": types.StringType,
+			"rule_id":         types.StringType,
+		},
 	}
 }
 
@@ -2328,6 +2686,94 @@ func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetCleanRoomAssetRevisionRequest struct {
+	// Asset type. Only NOTEBOOK_FILE is supported.
+	AssetType types.String `tfsdk:"-"`
+	// Name of the clean room.
+	CleanRoomName types.String `tfsdk:"-"`
+	// Revision etag to fetch. If not provided, the latest revision will be
+	// returned.
+	Etag types.String `tfsdk:"-"`
+	// Name of the asset.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRevisionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCleanRoomAssetRevisionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomAssetRevisionRequest
+// only implements ToObjectValue() and Type().
+func (o GetCleanRoomAssetRevisionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"asset_type":      o.AssetType,
+			"clean_room_name": o.CleanRoomName,
+			"etag":            o.Etag,
+			"name":            o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCleanRoomAssetRevisionRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"asset_type":      types.StringType,
+			"clean_room_name": types.StringType,
+			"etag":            types.StringType,
+			"name":            types.StringType,
+		},
+	}
+}
+
+type GetCleanRoomAutoApprovalRuleRequest struct {
+	CleanRoomName types.String `tfsdk:"-"`
+
+	RuleId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAutoApprovalRuleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCleanRoomAutoApprovalRuleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomAutoApprovalRuleRequest
+// only implements ToObjectValue() and Type().
+func (o GetCleanRoomAutoApprovalRuleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_name": o.CleanRoomName,
+			"rule_id":         o.RuleId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCleanRoomAutoApprovalRuleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_name": types.StringType,
+			"rule_id":         types.StringType,
+		},
+	}
+}
+
 type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2361,6 +2807,140 @@ func (o GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+type ListCleanRoomAssetRevisionsRequest struct {
+	// Asset type. Only NOTEBOOK_FILE is supported.
+	AssetType types.String `tfsdk:"-"`
+	// Name of the clean room.
+	CleanRoomName types.String `tfsdk:"-"`
+	// Name of the asset.
+	Name types.String `tfsdk:"-"`
+	// Maximum number of asset revisions to return. Defaults to 10.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on the previous query.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetRevisionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCleanRoomAssetRevisionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetRevisionsRequest
+// only implements ToObjectValue() and Type().
+func (o ListCleanRoomAssetRevisionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"asset_type":      o.AssetType,
+			"clean_room_name": o.CleanRoomName,
+			"name":            o.Name,
+			"page_size":       o.PageSize,
+			"page_token":      o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCleanRoomAssetRevisionsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"asset_type":      types.StringType,
+			"clean_room_name": types.StringType,
+			"name":            types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+		},
+	}
+}
+
+type ListCleanRoomAssetRevisionsResponse struct {
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Revisions types.List `tfsdk:"revisions"`
+}
+
+func (newState *ListCleanRoomAssetRevisionsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetRevisionsResponse) {
+}
+
+func (newState *ListCleanRoomAssetRevisionsResponse) SyncFieldsDuringRead(existingState ListCleanRoomAssetRevisionsResponse) {
+}
+
+func (c ListCleanRoomAssetRevisionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["revisions"] = attrs["revisions"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetRevisionsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCleanRoomAssetRevisionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"revisions": reflect.TypeOf(CleanRoomAsset{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetRevisionsResponse
+// only implements ToObjectValue() and Type().
+func (o ListCleanRoomAssetRevisionsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"revisions":       o.Revisions,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCleanRoomAssetRevisionsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"revisions": basetypes.ListType{
+				ElemType: CleanRoomAsset{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRevisions returns the value of the Revisions field in ListCleanRoomAssetRevisionsResponse as
+// a slice of CleanRoomAsset values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCleanRoomAssetRevisionsResponse) GetRevisions(ctx context.Context) ([]CleanRoomAsset, bool) {
+	if o.Revisions.IsNull() || o.Revisions.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomAsset
+	d := o.Revisions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRevisions sets the value of the Revisions field in ListCleanRoomAssetRevisionsResponse.
+func (o *ListCleanRoomAssetRevisionsResponse) SetRevisions(ctx context.Context, v []CleanRoomAsset) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["revisions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Revisions = types.ListValueMust(t, vs)
 }
 
 type ListCleanRoomAssetsRequest struct {
@@ -2412,10 +2992,10 @@ type ListCleanRoomAssetsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse) {
+func (newState *ListCleanRoomAssetsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse) {
 }
 
-func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsResponse) {
+func (newState *ListCleanRoomAssetsResponse) SyncFieldsDuringRead(existingState ListCleanRoomAssetsResponse) {
 }
 
 func (c ListCleanRoomAssetsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2488,6 +3068,134 @@ func (o *ListCleanRoomAssetsResponse) SetAssets(ctx context.Context, v []CleanRo
 	o.Assets = types.ListValueMust(t, vs)
 }
 
+type ListCleanRoomAutoApprovalRulesRequest struct {
+	CleanRoomName types.String `tfsdk:"-"`
+	// Maximum number of auto-approval rules to return. Defaults to 100.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAutoApprovalRulesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCleanRoomAutoApprovalRulesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAutoApprovalRulesRequest
+// only implements ToObjectValue() and Type().
+func (o ListCleanRoomAutoApprovalRulesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_name": o.CleanRoomName,
+			"page_size":       o.PageSize,
+			"page_token":      o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCleanRoomAutoApprovalRulesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_name": types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+		},
+	}
+}
+
+type ListCleanRoomAutoApprovalRulesResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. page_token should be set to this value for the next request
+	// (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Rules types.List `tfsdk:"rules"`
+}
+
+func (newState *ListCleanRoomAutoApprovalRulesResponse) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAutoApprovalRulesResponse) {
+}
+
+func (newState *ListCleanRoomAutoApprovalRulesResponse) SyncFieldsDuringRead(existingState ListCleanRoomAutoApprovalRulesResponse) {
+}
+
+func (c ListCleanRoomAutoApprovalRulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["rules"] = attrs["rules"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAutoApprovalRulesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCleanRoomAutoApprovalRulesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"rules": reflect.TypeOf(CleanRoomAutoApprovalRule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAutoApprovalRulesResponse
+// only implements ToObjectValue() and Type().
+func (o ListCleanRoomAutoApprovalRulesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"rules":           o.Rules,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCleanRoomAutoApprovalRulesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"rules": basetypes.ListType{
+				ElemType: CleanRoomAutoApprovalRule{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRules returns the value of the Rules field in ListCleanRoomAutoApprovalRulesResponse as
+// a slice of CleanRoomAutoApprovalRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCleanRoomAutoApprovalRulesResponse) GetRules(ctx context.Context) ([]CleanRoomAutoApprovalRule, bool) {
+	if o.Rules.IsNull() || o.Rules.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomAutoApprovalRule
+	d := o.Rules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRules sets the value of the Rules field in ListCleanRoomAutoApprovalRulesResponse.
+func (o *ListCleanRoomAutoApprovalRulesResponse) SetRules(ctx context.Context, v []CleanRoomAutoApprovalRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Rules = types.ListValueMust(t, vs)
+}
+
 type ListCleanRoomNotebookTaskRunsRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2546,10 +3254,10 @@ type ListCleanRoomNotebookTaskRunsResponse struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse) {
+func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse) {
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse) {
+func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse) {
 }
 
 func (c ListCleanRoomNotebookTaskRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2671,10 +3379,10 @@ type ListCleanRoomsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
+func (newState *ListCleanRoomsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
 }
 
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
+func (newState *ListCleanRoomsResponse) SyncFieldsDuringRead(existingState ListCleanRoomsResponse) {
 }
 
 func (c ListCleanRoomsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2745,6 +3453,64 @@ func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoo
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CleanRooms = types.ListValueMust(t, vs)
+}
+
+type NotebookVersionReview struct {
+	// review comment
+	Comment types.String `tfsdk:"comment"`
+	// etag that identifies the notebook version
+	Etag types.String `tfsdk:"etag"`
+	// review outcome
+	ReviewState types.String `tfsdk:"review_state"`
+}
+
+func (newState *NotebookVersionReview) SyncFieldsDuringCreateOrUpdate(plan NotebookVersionReview) {
+}
+
+func (newState *NotebookVersionReview) SyncFieldsDuringRead(existingState NotebookVersionReview) {
+}
+
+func (c NotebookVersionReview) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetRequired()
+	attrs["review_state"] = attrs["review_state"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookVersionReview.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NotebookVersionReview) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NotebookVersionReview
+// only implements ToObjectValue() and Type().
+func (o NotebookVersionReview) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":      o.Comment,
+			"etag":         o.Etag,
+			"review_state": o.ReviewState,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NotebookVersionReview) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":      types.StringType,
+			"etag":         types.StringType,
+			"review_state": types.StringType,
+		},
+	}
 }
 
 type UpdateCleanRoomAssetRequest struct {
@@ -2830,6 +3596,81 @@ func (o *UpdateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 func (o *UpdateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
 	vs := v.ToObjectValue(ctx)
 	o.Asset = vs
+}
+
+type UpdateCleanRoomAutoApprovalRuleRequest struct {
+	// The auto-approval rule to update. The rule_id field is used to identify
+	// the rule to update.
+	AutoApprovalRule types.Object `tfsdk:"auto_approval_rule"`
+	// The name of the clean room this auto-approval rule belongs to.
+	CleanRoomName types.String `tfsdk:"-"`
+	// A generated UUID identifying the rule.
+	RuleId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAutoApprovalRuleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateCleanRoomAutoApprovalRuleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"auto_approval_rule": reflect.TypeOf(CleanRoomAutoApprovalRule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCleanRoomAutoApprovalRuleRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateCleanRoomAutoApprovalRuleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"auto_approval_rule": o.AutoApprovalRule,
+			"clean_room_name":    o.CleanRoomName,
+			"rule_id":            o.RuleId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateCleanRoomAutoApprovalRuleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auto_approval_rule": CleanRoomAutoApprovalRule{}.Type(ctx),
+			"clean_room_name":    types.StringType,
+			"rule_id":            types.StringType,
+		},
+	}
+}
+
+// GetAutoApprovalRule returns the value of the AutoApprovalRule field in UpdateCleanRoomAutoApprovalRuleRequest as
+// a CleanRoomAutoApprovalRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCleanRoomAutoApprovalRuleRequest) GetAutoApprovalRule(ctx context.Context) (CleanRoomAutoApprovalRule, bool) {
+	var e CleanRoomAutoApprovalRule
+	if o.AutoApprovalRule.IsNull() || o.AutoApprovalRule.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomAutoApprovalRule
+	d := o.AutoApprovalRule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoApprovalRule sets the value of the AutoApprovalRule field in UpdateCleanRoomAutoApprovalRuleRequest.
+func (o *UpdateCleanRoomAutoApprovalRuleRequest) SetAutoApprovalRule(ctx context.Context, v CleanRoomAutoApprovalRule) {
+	vs := v.ToObjectValue(ctx)
+	o.AutoApprovalRule = vs
 }
 
 type UpdateCleanRoomRequest struct {

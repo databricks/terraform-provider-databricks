@@ -91,10 +91,10 @@ func (o AddInstanceProfile) Type(ctx context.Context) attr.Type {
 type AddResponse struct {
 }
 
-func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse) {
+func (newState *AddResponse) SyncFieldsDuringCreateOrUpdate(plan AddResponse) {
 }
 
-func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
+func (newState *AddResponse) SyncFieldsDuringRead(existingState AddResponse) {
 }
 
 func (c AddResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -136,10 +136,10 @@ type Adlsgen2Info struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringCreateOrUpdate(plan Adlsgen2Info) {
+func (newState *Adlsgen2Info) SyncFieldsDuringCreateOrUpdate(plan Adlsgen2Info) {
 }
 
-func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringRead(existingState Adlsgen2Info) {
+func (newState *Adlsgen2Info) SyncFieldsDuringRead(existingState Adlsgen2Info) {
 }
 
 func (c Adlsgen2Info) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -190,10 +190,10 @@ type AutoScale struct {
 	MinWorkers types.Int64 `tfsdk:"min_workers"`
 }
 
-func (newState *AutoScale) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoScale) {
+func (newState *AutoScale) SyncFieldsDuringCreateOrUpdate(plan AutoScale) {
 }
 
-func (newState *AutoScale) SyncEffectiveFieldsDuringRead(existingState AutoScale) {
+func (newState *AutoScale) SyncFieldsDuringRead(existingState AutoScale) {
 }
 
 func (c AutoScale) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -314,10 +314,10 @@ type AwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *AwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsAttributes) {
+func (newState *AwsAttributes) SyncFieldsDuringCreateOrUpdate(plan AwsAttributes) {
 }
 
-func (newState *AwsAttributes) SyncEffectiveFieldsDuringRead(existingState AwsAttributes) {
+func (newState *AwsAttributes) SyncFieldsDuringRead(existingState AwsAttributes) {
 }
 
 func (c AwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -410,10 +410,10 @@ type AzureAttributes struct {
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
-func (newState *AzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureAttributes) {
+func (newState *AzureAttributes) SyncFieldsDuringCreateOrUpdate(plan AzureAttributes) {
 }
 
-func (newState *AzureAttributes) SyncEffectiveFieldsDuringRead(existingState AzureAttributes) {
+func (newState *AzureAttributes) SyncFieldsDuringRead(existingState AzureAttributes) {
 }
 
 func (c AzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -538,10 +538,10 @@ func (o CancelCommand) Type(ctx context.Context) attr.Type {
 type CancelResponse struct {
 }
 
-func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse) {
+func (newState *CancelResponse) SyncFieldsDuringCreateOrUpdate(plan CancelResponse) {
 }
 
-func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
+func (newState *CancelResponse) SyncFieldsDuringRead(existingState CancelResponse) {
 }
 
 func (c CancelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -618,10 +618,10 @@ func (o ChangeClusterOwner) Type(ctx context.Context) attr.Type {
 type ChangeClusterOwnerResponse struct {
 }
 
-func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwnerResponse) {
+func (newState *ChangeClusterOwnerResponse) SyncFieldsDuringCreateOrUpdate(plan ChangeClusterOwnerResponse) {
 }
 
-func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
+func (newState *ChangeClusterOwnerResponse) SyncFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
 }
 
 func (c ChangeClusterOwnerResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -663,10 +663,10 @@ type ClientsTypes struct {
 	Notebooks types.Bool `tfsdk:"notebooks"`
 }
 
-func (newState *ClientsTypes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClientsTypes) {
+func (newState *ClientsTypes) SyncFieldsDuringCreateOrUpdate(plan ClientsTypes) {
 }
 
-func (newState *ClientsTypes) SyncEffectiveFieldsDuringRead(existingState ClientsTypes) {
+func (newState *ClientsTypes) SyncFieldsDuringRead(existingState ClientsTypes) {
 }
 
 func (c ClientsTypes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -714,10 +714,10 @@ type CloneCluster struct {
 	SourceClusterId types.String `tfsdk:"source_cluster_id"`
 }
 
-func (newState *CloneCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloneCluster) {
+func (newState *CloneCluster) SyncFieldsDuringCreateOrUpdate(plan CloneCluster) {
 }
 
-func (newState *CloneCluster) SyncEffectiveFieldsDuringRead(existingState CloneCluster) {
+func (newState *CloneCluster) SyncFieldsDuringRead(existingState CloneCluster) {
 }
 
 func (c CloneCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -762,10 +762,10 @@ type CloudProviderNodeInfo struct {
 	Status types.List `tfsdk:"status"`
 }
 
-func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
+func (newState *CloudProviderNodeInfo) SyncFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
 }
 
-func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingState CloudProviderNodeInfo) {
+func (newState *CloudProviderNodeInfo) SyncFieldsDuringRead(existingState CloudProviderNodeInfo) {
 }
 
 func (c CloudProviderNodeInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -846,10 +846,10 @@ type ClusterAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlRequest) {
+func (newState *ClusterAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan ClusterAccessControlRequest) {
 }
 
-func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlRequest) {
+func (newState *ClusterAccessControlRequest) SyncFieldsDuringRead(existingState ClusterAccessControlRequest) {
 }
 
 func (c ClusterAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -911,10 +911,10 @@ type ClusterAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlResponse) {
+func (newState *ClusterAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan ClusterAccessControlResponse) {
 }
 
-func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlResponse) {
+func (newState *ClusterAccessControlResponse) SyncFieldsDuringRead(existingState ClusterAccessControlResponse) {
 }
 
 func (c ClusterAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1137,10 +1137,10 @@ type ClusterAttributes struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
+func (newState *ClusterAttributes) SyncFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
 }
 
-func (newState *ClusterAttributes) SyncEffectiveFieldsDuringRead(existingState ClusterAttributes) {
+func (newState *ClusterAttributes) SyncFieldsDuringRead(existingState ClusterAttributes) {
 }
 
 func (c ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1597,10 +1597,10 @@ type ClusterCompliance struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *ClusterCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
+func (newState *ClusterCompliance) SyncFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
 }
 
-func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState ClusterCompliance) {
+func (newState *ClusterCompliance) SyncFieldsDuringRead(existingState ClusterCompliance) {
 }
 
 func (c ClusterCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1897,10 +1897,10 @@ type ClusterDetails struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterDetails) {
+func (newState *ClusterDetails) SyncFieldsDuringCreateOrUpdate(plan ClusterDetails) {
 }
 
-func (newState *ClusterDetails) SyncEffectiveFieldsDuringRead(existingState ClusterDetails) {
+func (newState *ClusterDetails) SyncFieldsDuringRead(existingState ClusterDetails) {
 }
 
 func (c ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2624,10 +2624,10 @@ type ClusterEvent struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *ClusterEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterEvent) {
+func (newState *ClusterEvent) SyncFieldsDuringCreateOrUpdate(plan ClusterEvent) {
 }
 
-func (newState *ClusterEvent) SyncEffectiveFieldsDuringRead(existingState ClusterEvent) {
+func (newState *ClusterEvent) SyncFieldsDuringRead(existingState ClusterEvent) {
 }
 
 func (c ClusterEvent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2745,10 +2745,10 @@ type ClusterLibraryStatuses struct {
 	LibraryStatuses types.List `tfsdk:"library_statuses"`
 }
 
-func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
+func (newState *ClusterLibraryStatuses) SyncFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
 }
 
-func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringRead(existingState ClusterLibraryStatuses) {
+func (newState *ClusterLibraryStatuses) SyncFieldsDuringRead(existingState ClusterLibraryStatuses) {
 }
 
 func (c ClusterLibraryStatuses) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2837,10 +2837,10 @@ type ClusterLogConf struct {
 	Volumes types.Object `tfsdk:"volumes"`
 }
 
-func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
+func (newState *ClusterLogConf) SyncFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
 }
 
-func (newState *ClusterLogConf) SyncEffectiveFieldsDuringRead(existingState ClusterLogConf) {
+func (newState *ClusterLogConf) SyncFieldsDuringRead(existingState ClusterLogConf) {
 }
 
 func (c ClusterLogConf) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2982,10 +2982,10 @@ type ClusterPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermission) {
+func (newState *ClusterPermission) SyncFieldsDuringCreateOrUpdate(plan ClusterPermission) {
 }
 
-func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPermission) {
+func (newState *ClusterPermission) SyncFieldsDuringRead(existingState ClusterPermission) {
 }
 
 func (c ClusterPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3069,10 +3069,10 @@ type ClusterPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ClusterPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissions) {
+func (newState *ClusterPermissions) SyncFieldsDuringCreateOrUpdate(plan ClusterPermissions) {
 }
 
-func (newState *ClusterPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPermissions) {
+func (newState *ClusterPermissions) SyncFieldsDuringRead(existingState ClusterPermissions) {
 }
 
 func (c ClusterPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3154,10 +3154,10 @@ type ClusterPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsDescription) {
+func (newState *ClusterPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan ClusterPermissionsDescription) {
 }
 
-func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsDescription) {
+func (newState *ClusterPermissionsDescription) SyncFieldsDuringRead(existingState ClusterPermissionsDescription) {
 }
 
 func (c ClusterPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3280,10 +3280,10 @@ type ClusterPolicyAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlRequest) {
+func (newState *ClusterPolicyAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlRequest) {
 }
 
-func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
+func (newState *ClusterPolicyAccessControlRequest) SyncFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
 }
 
 func (c ClusterPolicyAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3345,10 +3345,10 @@ type ClusterPolicyAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlResponse) {
+func (newState *ClusterPolicyAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlResponse) {
 }
 
-func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
+func (newState *ClusterPolicyAccessControlResponse) SyncFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
 }
 
 func (c ClusterPolicyAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3438,10 +3438,10 @@ type ClusterPolicyPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermission) {
+func (newState *ClusterPolicyPermission) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermission) {
 }
 
-func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermission) {
+func (newState *ClusterPolicyPermission) SyncFieldsDuringRead(existingState ClusterPolicyPermission) {
 }
 
 func (c ClusterPolicyPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3525,10 +3525,10 @@ type ClusterPolicyPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissions) {
+func (newState *ClusterPolicyPermissions) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissions) {
 }
 
-func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissions) {
+func (newState *ClusterPolicyPermissions) SyncFieldsDuringRead(existingState ClusterPolicyPermissions) {
 }
 
 func (c ClusterPolicyPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3610,10 +3610,10 @@ type ClusterPolicyPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsDescription) {
+func (newState *ClusterPolicyPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsDescription) {
 }
 
-func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
+func (newState *ClusterPolicyPermissionsDescription) SyncFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
 }
 
 func (c ClusterPolicyPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3742,10 +3742,10 @@ type ClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
-func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSettingsChange) {
+func (newState *ClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(plan ClusterSettingsChange) {
 }
 
-func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState ClusterSettingsChange) {
+func (newState *ClusterSettingsChange) SyncFieldsDuringRead(existingState ClusterSettingsChange) {
 }
 
 func (c ClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3809,10 +3809,10 @@ type ClusterSize struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 }
 
-func (newState *ClusterSize) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSize) {
+func (newState *ClusterSize) SyncFieldsDuringCreateOrUpdate(plan ClusterSize) {
 }
 
-func (newState *ClusterSize) SyncEffectiveFieldsDuringRead(existingState ClusterSize) {
+func (newState *ClusterSize) SyncFieldsDuringRead(existingState ClusterSize) {
 }
 
 func (c ClusterSize) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4045,10 +4045,10 @@ type ClusterSpec struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+func (newState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(plan ClusterSpec) {
 }
 
-func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
+func (newState *ClusterSpec) SyncFieldsDuringRead(existingState ClusterSpec) {
 }
 
 func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4665,10 +4665,10 @@ type CommandStatusResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusResponse) {
+func (newState *CommandStatusResponse) SyncFieldsDuringCreateOrUpdate(plan CommandStatusResponse) {
 }
 
-func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringRead(existingState CommandStatusResponse) {
+func (newState *CommandStatusResponse) SyncFieldsDuringRead(existingState CommandStatusResponse) {
 }
 
 func (c CommandStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4789,10 +4789,10 @@ type ContextStatusResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusResponse) {
+func (newState *ContextStatusResponse) SyncFieldsDuringCreateOrUpdate(plan ContextStatusResponse) {
 }
 
-func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringRead(existingState ContextStatusResponse) {
+func (newState *ContextStatusResponse) SyncFieldsDuringRead(existingState ContextStatusResponse) {
 }
 
 func (c ContextStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5473,10 +5473,10 @@ type CreateClusterResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateClusterResponse) {
+func (newState *CreateClusterResponse) SyncFieldsDuringCreateOrUpdate(plan CreateClusterResponse) {
 }
 
-func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringRead(existingState CreateClusterResponse) {
+func (newState *CreateClusterResponse) SyncFieldsDuringRead(existingState CreateClusterResponse) {
 }
 
 func (c CreateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5556,6 +5556,76 @@ func (o CreateContext) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateDefaultBaseEnvironmentRequest struct {
+	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
+	// A unique identifier for this request. A random UUID is recommended. This
+	// request is only idempotent if a `request_id` is provided.
+	RequestId types.String `tfsdk:"request_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o CreateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"request_id":               o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
+			"request_id":               types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest as
+// a DefaultBaseEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
+	var e DefaultBaseEnvironment
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest.
+func (o *CreateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.DefaultBaseEnvironment = vs
+}
+
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
@@ -5572,6 +5642,10 @@ type CreateInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -5598,6 +5672,11 @@ type CreateInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -5633,6 +5712,7 @@ func (a CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -5649,12 +5729,14 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"azure_attributes":                      o.AzureAttributes,
 			"custom_tags":                           o.CustomTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -5673,12 +5755,14 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -5830,6 +5914,34 @@ func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoo
 	o.GcpAttributes = vs
 }
 
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool.
+func (o *CreateInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
+}
+
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
 // a slice of DockerImage values.
 // If the field is unknown or null, the boolean return value is false.
@@ -5887,10 +5999,10 @@ type CreateInstancePoolResponse struct {
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
-func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePoolResponse) {
+func (newState *CreateInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan CreateInstancePoolResponse) {
 }
 
-func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState CreateInstancePoolResponse) {
+func (newState *CreateInstancePoolResponse) SyncFieldsDuringRead(existingState CreateInstancePoolResponse) {
 }
 
 func (c CreateInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6044,10 +6156,10 @@ type CreatePolicyResponse struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicyResponse) {
+func (newState *CreatePolicyResponse) SyncFieldsDuringCreateOrUpdate(plan CreatePolicyResponse) {
 }
 
-func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringRead(existingState CreatePolicyResponse) {
+func (newState *CreatePolicyResponse) SyncFieldsDuringRead(existingState CreatePolicyResponse) {
 }
 
 func (c CreatePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6092,10 +6204,10 @@ type CreateResponse struct {
 	ScriptId types.String `tfsdk:"script_id"`
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+func (newState *CreateResponse) SyncFieldsDuringCreateOrUpdate(plan CreateResponse) {
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+func (newState *CreateResponse) SyncFieldsDuringRead(existingState CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6139,10 +6251,10 @@ type Created struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *Created) SyncEffectiveFieldsDuringCreateOrUpdate(plan Created) {
+func (newState *Created) SyncFieldsDuringCreateOrUpdate(plan Created) {
 }
 
-func (newState *Created) SyncEffectiveFieldsDuringRead(existingState Created) {
+func (newState *Created) SyncFieldsDuringRead(existingState Created) {
 }
 
 func (c Created) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6191,10 +6303,10 @@ type CustomPolicyTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *CustomPolicyTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomPolicyTag) {
+func (newState *CustomPolicyTag) SyncFieldsDuringCreateOrUpdate(plan CustomPolicyTag) {
 }
 
-func (newState *CustomPolicyTag) SyncEffectiveFieldsDuringRead(existingState CustomPolicyTag) {
+func (newState *CustomPolicyTag) SyncFieldsDuringRead(existingState CustomPolicyTag) {
 }
 
 func (c CustomPolicyTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6247,10 +6359,10 @@ type DataPlaneEventDetails struct {
 	Timestamp types.Int64 `tfsdk:"timestamp"`
 }
 
-func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneEventDetails) {
+func (newState *DataPlaneEventDetails) SyncFieldsDuringCreateOrUpdate(plan DataPlaneEventDetails) {
 }
 
-func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringRead(existingState DataPlaneEventDetails) {
+func (newState *DataPlaneEventDetails) SyncFieldsDuringRead(existingState DataPlaneEventDetails) {
 }
 
 func (c DataPlaneEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6305,10 +6417,10 @@ type DbfsStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbfsStorageInfo) {
+func (newState *DbfsStorageInfo) SyncFieldsDuringCreateOrUpdate(plan DbfsStorageInfo) {
 }
 
-func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringRead(existingState DbfsStorageInfo) {
+func (newState *DbfsStorageInfo) SyncFieldsDuringRead(existingState DbfsStorageInfo) {
 }
 
 func (c DbfsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6346,6 +6458,289 @@ func (o DbfsStorageInfo) Type(ctx context.Context) attr.Type {
 			"destination": types.StringType,
 		},
 	}
+}
+
+type DefaultBaseEnvironment struct {
+	BaseEnvironmentCache types.List `tfsdk:"base_environment_cache"`
+
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+
+	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
+	// Note: we made `environment` non-internal because we need to expose its
+	// `client` field. All other fields should be treated as internal.
+	Environment types.Object `tfsdk:"environment"`
+
+	Filepath types.String `tfsdk:"filepath"`
+
+	Id types.String `tfsdk:"id"`
+
+	IsDefault types.Bool `tfsdk:"is_default"`
+
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+
+	LastUpdatedUserId types.Int64 `tfsdk:"last_updated_user_id"`
+
+	Message types.String `tfsdk:"message"`
+
+	Name types.String `tfsdk:"name"`
+
+	PrincipalIds types.List `tfsdk:"principal_ids"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironment) SyncFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironment) {
+}
+
+func (newState *DefaultBaseEnvironment) SyncFieldsDuringRead(existingState DefaultBaseEnvironment) {
+}
+
+func (c DefaultBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_environment_cache"] = attrs["base_environment_cache"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["creator_user_id"] = attrs["creator_user_id"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["filepath"] = attrs["filepath"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_default"] = attrs["is_default"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["principal_ids"] = attrs["principal_ids"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"base_environment_cache": reflect.TypeOf(DefaultBaseEnvironmentCache{}),
+		"environment":            reflect.TypeOf(Environment{}),
+		"principal_ids":          reflect.TypeOf(types.Int64{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironment
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"base_environment_cache": o.BaseEnvironmentCache,
+			"created_timestamp":      o.CreatedTimestamp,
+			"creator_user_id":        o.CreatorUserId,
+			"environment":            o.Environment,
+			"filepath":               o.Filepath,
+			"id":                     o.Id,
+			"is_default":             o.IsDefault,
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+			"last_updated_user_id":   o.LastUpdatedUserId,
+			"message":                o.Message,
+			"name":                   o.Name,
+			"principal_ids":          o.PrincipalIds,
+			"status":                 o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"base_environment_cache": basetypes.ListType{
+				ElemType: DefaultBaseEnvironmentCache{}.Type(ctx),
+			},
+			"created_timestamp":      types.Int64Type,
+			"creator_user_id":        types.Int64Type,
+			"environment":            Environment{}.Type(ctx),
+			"filepath":               types.StringType,
+			"id":                     types.StringType,
+			"is_default":             types.BoolType,
+			"last_updated_timestamp": types.Int64Type,
+			"last_updated_user_id":   types.Int64Type,
+			"message":                types.StringType,
+			"name":                   types.StringType,
+			"principal_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+			"status": types.StringType,
+		},
+	}
+}
+
+// GetBaseEnvironmentCache returns the value of the BaseEnvironmentCache field in DefaultBaseEnvironment as
+// a slice of DefaultBaseEnvironmentCache values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetBaseEnvironmentCache(ctx context.Context) ([]DefaultBaseEnvironmentCache, bool) {
+	if o.BaseEnvironmentCache.IsNull() || o.BaseEnvironmentCache.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironmentCache
+	d := o.BaseEnvironmentCache.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseEnvironmentCache sets the value of the BaseEnvironmentCache field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetBaseEnvironmentCache(ctx context.Context, v []DefaultBaseEnvironmentCache) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_environment_cache"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.BaseEnvironmentCache = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in DefaultBaseEnvironment as
+// a Environment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetEnvironment(ctx context.Context) (Environment, bool) {
+	var e Environment
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []Environment
+	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetEnvironment(ctx context.Context, v Environment) {
+	vs := v.ToObjectValue(ctx)
+	o.Environment = vs
+}
+
+// GetPrincipalIds returns the value of the PrincipalIds field in DefaultBaseEnvironment as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironment) GetPrincipalIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.PrincipalIds.IsNull() || o.PrincipalIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.PrincipalIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrincipalIds sets the value of the PrincipalIds field in DefaultBaseEnvironment.
+func (o *DefaultBaseEnvironment) SetPrincipalIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principal_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.PrincipalIds = types.ListValueMust(t, vs)
+}
+
+type DefaultBaseEnvironmentCache struct {
+	MaterializedEnvironment types.Object `tfsdk:"materialized_environment"`
+
+	Message types.String `tfsdk:"message"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (newState *DefaultBaseEnvironmentCache) SyncFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironmentCache) {
+}
+
+func (newState *DefaultBaseEnvironmentCache) SyncFieldsDuringRead(existingState DefaultBaseEnvironmentCache) {
+}
+
+func (c DefaultBaseEnvironmentCache) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["materialized_environment"] = attrs["materialized_environment"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironmentCache.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DefaultBaseEnvironmentCache) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"materialized_environment": reflect.TypeOf(MaterializedEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironmentCache
+// only implements ToObjectValue() and Type().
+func (o DefaultBaseEnvironmentCache) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"materialized_environment": o.MaterializedEnvironment,
+			"message":                  o.Message,
+			"status":                   o.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DefaultBaseEnvironmentCache) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"materialized_environment": MaterializedEnvironment{}.Type(ctx),
+			"message":                  types.StringType,
+			"status":                   types.StringType,
+		},
+	}
+}
+
+// GetMaterializedEnvironment returns the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache as
+// a MaterializedEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultBaseEnvironmentCache) GetMaterializedEnvironment(ctx context.Context) (MaterializedEnvironment, bool) {
+	var e MaterializedEnvironment
+	if o.MaterializedEnvironment.IsNull() || o.MaterializedEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializedEnvironment
+	d := o.MaterializedEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaterializedEnvironment sets the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache.
+func (o *DefaultBaseEnvironmentCache) SetMaterializedEnvironment(ctx context.Context, v MaterializedEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.MaterializedEnvironment = vs
 }
 
 type DeleteCluster struct {
@@ -6387,10 +6782,10 @@ func (o DeleteCluster) Type(ctx context.Context) attr.Type {
 type DeleteClusterResponse struct {
 }
 
-func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteClusterResponse) {
+func (newState *DeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteClusterResponse) {
 }
 
-func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteClusterResponse) {
+func (newState *DeleteClusterResponse) SyncFieldsDuringRead(existingState DeleteClusterResponse) {
 }
 
 func (c DeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6422,6 +6817,41 @@ func (o DeleteClusterResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o DeleteClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteDefaultBaseEnvironmentRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
 	}
 }
 
@@ -6500,10 +6930,10 @@ func (o DeleteInstancePool) Type(ctx context.Context) attr.Type {
 type DeleteInstancePoolResponse struct {
 }
 
-func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePoolResponse) {
+func (newState *DeleteInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteInstancePoolResponse) {
 }
 
-func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePoolResponse) {
+func (newState *DeleteInstancePoolResponse) SyncFieldsDuringRead(existingState DeleteInstancePoolResponse) {
 }
 
 func (c DeleteInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6577,10 +7007,10 @@ func (o DeletePolicy) Type(ctx context.Context) attr.Type {
 type DeletePolicyResponse struct {
 }
 
-func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicyResponse) {
+func (newState *DeletePolicyResponse) SyncFieldsDuringCreateOrUpdate(plan DeletePolicyResponse) {
 }
 
-func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringRead(existingState DeletePolicyResponse) {
+func (newState *DeletePolicyResponse) SyncFieldsDuringRead(existingState DeletePolicyResponse) {
 }
 
 func (c DeletePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6618,10 +7048,10 @@ func (o DeletePolicyResponse) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (newState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteResponse) {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+func (newState *DeleteResponse) SyncFieldsDuringRead(existingState DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6698,10 +7128,10 @@ func (o DestroyContext) Type(ctx context.Context) attr.Type {
 type DestroyResponse struct {
 }
 
-func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse) {
+func (newState *DestroyResponse) SyncFieldsDuringCreateOrUpdate(plan DestroyResponse) {
 }
 
-func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
+func (newState *DestroyResponse) SyncFieldsDuringRead(existingState DestroyResponse) {
 }
 
 func (c DestroyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6775,10 +7205,10 @@ type DiskSpec struct {
 	DiskType types.Object `tfsdk:"disk_type"`
 }
 
-func (newState *DiskSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskSpec) {
+func (newState *DiskSpec) SyncFieldsDuringCreateOrUpdate(plan DiskSpec) {
 }
 
-func (newState *DiskSpec) SyncEffectiveFieldsDuringRead(existingState DiskSpec) {
+func (newState *DiskSpec) SyncFieldsDuringRead(existingState DiskSpec) {
 }
 
 func (c DiskSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6867,10 +7297,10 @@ type DiskType struct {
 	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 }
 
-func (newState *DiskType) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskType) {
+func (newState *DiskType) SyncFieldsDuringCreateOrUpdate(plan DiskType) {
 }
 
-func (newState *DiskType) SyncEffectiveFieldsDuringRead(existingState DiskType) {
+func (newState *DiskType) SyncFieldsDuringRead(existingState DiskType) {
 }
 
 func (c DiskType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6920,10 +7350,10 @@ type DockerBasicAuth struct {
 	Username types.String `tfsdk:"username"`
 }
 
-func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerBasicAuth) {
+func (newState *DockerBasicAuth) SyncFieldsDuringCreateOrUpdate(plan DockerBasicAuth) {
 }
 
-func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringRead(existingState DockerBasicAuth) {
+func (newState *DockerBasicAuth) SyncFieldsDuringRead(existingState DockerBasicAuth) {
 }
 
 func (c DockerBasicAuth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6973,10 +7403,10 @@ type DockerImage struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *DockerImage) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerImage) {
+func (newState *DockerImage) SyncFieldsDuringCreateOrUpdate(plan DockerImage) {
 }
 
-func (newState *DockerImage) SyncEffectiveFieldsDuringRead(existingState DockerImage) {
+func (newState *DockerImage) SyncFieldsDuringRead(existingState DockerImage) {
 }
 
 func (c DockerImage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7656,10 +8086,10 @@ func (o *EditCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
 type EditClusterResponse struct {
 }
 
-func (newState *EditClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditClusterResponse) {
+func (newState *EditClusterResponse) SyncFieldsDuringCreateOrUpdate(plan EditClusterResponse) {
 }
 
-func (newState *EditClusterResponse) SyncEffectiveFieldsDuringRead(existingState EditClusterResponse) {
+func (newState *EditClusterResponse) SyncFieldsDuringRead(existingState EditClusterResponse) {
 }
 
 func (c EditClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7701,6 +8131,10 @@ type EditInstancePool struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -7720,6 +8154,11 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -7743,7 +8182,8 @@ type EditInstancePool struct {
 // SDK values.
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
 	}
 }
 
@@ -7755,11 +8195,13 @@ func (o EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"custom_tags":                           o.CustomTags,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_id":                      o.InstancePoolId,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
@@ -7773,11 +8215,13 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"remote_disk_throughput":                types.Int64Type,
 			"total_initial_remote_disk_size":        types.Int64Type,
@@ -7811,13 +8255,41 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
+func (o *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
+}
+
 type EditInstancePoolResponse struct {
 }
 
-func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePoolResponse) {
+func (newState *EditInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan EditInstancePoolResponse) {
 }
 
-func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState EditInstancePoolResponse) {
+func (newState *EditInstancePoolResponse) SyncFieldsDuringRead(existingState EditInstancePoolResponse) {
 }
 
 func (c EditInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7968,10 +8440,10 @@ func (o *EditPolicy) SetLibraries(ctx context.Context, v []Library) {
 type EditPolicyResponse struct {
 }
 
-func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicyResponse) {
+func (newState *EditPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan EditPolicyResponse) {
 }
 
-func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringRead(existingState EditPolicyResponse) {
+func (newState *EditPolicyResponse) SyncFieldsDuringRead(existingState EditPolicyResponse) {
 }
 
 func (c EditPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8009,10 +8481,10 @@ func (o EditPolicyResponse) Type(ctx context.Context) attr.Type {
 type EditResponse struct {
 }
 
-func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse) {
+func (newState *EditResponse) SyncFieldsDuringCreateOrUpdate(plan EditResponse) {
 }
 
-func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
+func (newState *EditResponse) SyncFieldsDuringRead(existingState EditResponse) {
 }
 
 func (c EditResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8097,10 +8569,10 @@ type EnforceClusterComplianceResponse struct {
 	HasChanges types.Bool `tfsdk:"has_changes"`
 }
 
-func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceResponse) {
+func (newState *EnforceClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceResponse) {
 }
 
-func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
+func (newState *EnforceClusterComplianceResponse) SyncFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
 }
 
 func (c EnforceClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8196,10 +8668,10 @@ type Environment struct {
 	JarDependencies types.List `tfsdk:"jar_dependencies"`
 }
 
-func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
+func (newState *Environment) SyncFieldsDuringCreateOrUpdate(plan Environment) {
 }
 
-func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environment) {
+func (newState *Environment) SyncFieldsDuringRead(existingState Environment) {
 }
 
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8358,10 +8830,10 @@ type EventDetails struct {
 	User types.String `tfsdk:"user"`
 }
 
-func (newState *EventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventDetails) {
+func (newState *EventDetails) SyncFieldsDuringCreateOrUpdate(plan EventDetails) {
 }
 
-func (newState *EventDetails) SyncEffectiveFieldsDuringRead(existingState EventDetails) {
+func (newState *EventDetails) SyncFieldsDuringRead(existingState EventDetails) {
 }
 
 func (c EventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8668,10 +9140,10 @@ type GcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *GcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpAttributes) {
+func (newState *GcpAttributes) SyncFieldsDuringCreateOrUpdate(plan GcpAttributes) {
 }
 
-func (newState *GcpAttributes) SyncEffectiveFieldsDuringRead(existingState GcpAttributes) {
+func (newState *GcpAttributes) SyncFieldsDuringRead(existingState GcpAttributes) {
 }
 
 func (c GcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8732,10 +9204,10 @@ type GcsStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcsStorageInfo) {
+func (newState *GcsStorageInfo) SyncFieldsDuringCreateOrUpdate(plan GcsStorageInfo) {
 }
 
-func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringRead(existingState GcsStorageInfo) {
+func (newState *GcsStorageInfo) SyncFieldsDuringRead(existingState GcsStorageInfo) {
 }
 
 func (c GcsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8823,10 +9295,10 @@ type GetClusterComplianceResponse struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
+func (newState *GetClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
 }
 
-func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceResponse) {
+func (newState *GetClusterComplianceResponse) SyncFieldsDuringRead(existingState GetClusterComplianceResponse) {
 }
 
 func (c GetClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8940,10 +9412,10 @@ type GetClusterPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
+func (newState *GetClusterPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
 }
 
-func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
+func (newState *GetClusterPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
 }
 
 func (c GetClusterPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9090,10 +9562,10 @@ type GetClusterPolicyPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
+func (newState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
 }
 
-func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
+func (newState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
 }
 
 func (c GetClusterPolicyPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9308,10 +9780,10 @@ type GetEvents struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvents) {
+func (newState *GetEvents) SyncFieldsDuringCreateOrUpdate(plan GetEvents) {
 }
 
-func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
+func (newState *GetEvents) SyncFieldsDuringRead(existingState GetEvents) {
 }
 
 func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9427,10 +9899,10 @@ type GetEventsResponse struct {
 	TotalCount types.Int64 `tfsdk:"total_count"`
 }
 
-func (newState *GetEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEventsResponse) {
+func (newState *GetEventsResponse) SyncFieldsDuringCreateOrUpdate(plan GetEventsResponse) {
 }
 
-func (newState *GetEventsResponse) SyncEffectiveFieldsDuringRead(existingState GetEventsResponse) {
+func (newState *GetEventsResponse) SyncFieldsDuringRead(existingState GetEventsResponse) {
 }
 
 func (c GetEventsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9604,6 +10076,10 @@ type GetInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -9632,6 +10108,11 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -9659,10 +10140,10 @@ type GetInstancePool struct {
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
-func (newState *GetInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool) {
+func (newState *GetInstancePool) SyncFieldsDuringCreateOrUpdate(plan GetInstancePool) {
 }
 
-func (newState *GetInstancePool) SyncEffectiveFieldsDuringRead(existingState GetInstancePool) {
+func (newState *GetInstancePool) SyncFieldsDuringRead(existingState GetInstancePool) {
 }
 
 func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9671,6 +10152,7 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -9678,6 +10160,7 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -9705,6 +10188,7 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -9724,6 +10208,7 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -9731,6 +10216,7 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -9755,6 +10241,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -9762,6 +10249,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -9942,6 +10430,34 @@ func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGc
 	o.GcpAttributes = vs
 }
 
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
+func (o *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
+}
+
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
 // a slice of DockerImage values.
 // If the field is unknown or null, the boolean return value is false.
@@ -10091,10 +10607,10 @@ type GetInstancePoolPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
+func (newState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
 }
 
-func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
+func (newState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
 }
 
 func (c GetInstancePoolPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10282,10 +10798,10 @@ type GetSparkVersionsResponse struct {
 	Versions types.List `tfsdk:"versions"`
 }
 
-func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
+func (newState *GetSparkVersionsResponse) SyncFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
 }
 
-func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetSparkVersionsResponse) {
+func (newState *GetSparkVersionsResponse) SyncFieldsDuringRead(existingState GetSparkVersionsResponse) {
 }
 
 func (c GetSparkVersionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10435,10 +10951,10 @@ type GlobalInitScriptDetails struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetails) {
+func (newState *GlobalInitScriptDetails) SyncFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetails) {
 }
 
-func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetails) {
+func (newState *GlobalInitScriptDetails) SyncFieldsDuringRead(existingState GlobalInitScriptDetails) {
 }
 
 func (c GlobalInitScriptDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10523,10 +11039,10 @@ type GlobalInitScriptDetailsWithContent struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetailsWithContent) {
+func (newState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetailsWithContent) {
 }
 
-func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
+func (newState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
 }
 
 func (c GlobalInitScriptDetailsWithContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10667,10 +11183,10 @@ type InitScriptEventDetails struct {
 	ReportedForNode types.String `tfsdk:"reported_for_node"`
 }
 
-func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptEventDetails) {
+func (newState *InitScriptEventDetails) SyncFieldsDuringCreateOrUpdate(plan InitScriptEventDetails) {
 }
 
-func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptEventDetails) {
+func (newState *InitScriptEventDetails) SyncFieldsDuringRead(existingState InitScriptEventDetails) {
 }
 
 func (c InitScriptEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10803,10 +11319,10 @@ type InitScriptInfo struct {
 	Workspace types.Object `tfsdk:"workspace"`
 }
 
-func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
+func (newState *InitScriptInfo) SyncFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
 }
 
-func (newState *InitScriptInfo) SyncEffectiveFieldsDuringRead(existingState InitScriptInfo) {
+func (newState *InitScriptInfo) SyncFieldsDuringRead(existingState InitScriptInfo) {
 }
 
 func (c InitScriptInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11103,10 +11619,10 @@ type InitScriptInfoAndExecutionDetails struct {
 	Workspace types.Object `tfsdk:"workspace"`
 }
 
-func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
+func (newState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
 }
 
-func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
+func (newState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
 }
 
 func (c InitScriptInfoAndExecutionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11450,10 +11966,10 @@ func (o *InstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 type InstallLibrariesResponse struct {
 }
 
-func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibrariesResponse) {
+func (newState *InstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(plan InstallLibrariesResponse) {
 }
 
-func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState InstallLibrariesResponse) {
+func (newState *InstallLibrariesResponse) SyncFieldsDuringRead(existingState InstallLibrariesResponse) {
 }
 
 func (c InstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11499,10 +12015,10 @@ type InstancePoolAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlRequest) {
+func (newState *InstancePoolAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlRequest) {
 }
 
-func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
+func (newState *InstancePoolAccessControlRequest) SyncFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
 }
 
 func (c InstancePoolAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11564,10 +12080,10 @@ type InstancePoolAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlResponse) {
+func (newState *InstancePoolAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlResponse) {
 }
 
-func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
+func (newState *InstancePoolAccessControlResponse) SyncFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
 }
 
 func (c InstancePoolAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11676,6 +12192,10 @@ type InstancePoolAndStats struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
+	// For pools with node type flexibility (Fleet-V2), whether auto generated
+	// alternate node type ids are enabled. This field should not be true if
+	// node_type_flexibility is set.
+	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -11704,6 +12224,11 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For pools with node type flexibility (Fleet-V2), this object contains the
+	// information about the alternate node type ids to use when attempting to
+	// launch a cluster if the node type id is not available. This field should
+	// not be set if enable_auto_alternate_node_types is true.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -11731,10 +12256,10 @@ type InstancePoolAndStats struct {
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
-func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
+func (newState *InstancePoolAndStats) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
 }
 
-func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolAndStats) {
+func (newState *InstancePoolAndStats) SyncFieldsDuringRead(existingState InstancePoolAndStats) {
 }
 
 func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11743,6 +12268,7 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -11750,6 +12276,7 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -11777,6 +12304,7 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -11796,6 +12324,7 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
+			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -11803,6 +12332,7 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -11827,6 +12357,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -11834,6 +12365,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -12014,6 +12546,34 @@ func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstanceP
 	o.GcpAttributes = vs
 }
 
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
+}
+
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
 // a slice of DockerImage values.
 // If the field is unknown or null, the boolean return value is false.
@@ -12149,10 +12709,10 @@ type InstancePoolAwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAwsAttributes) {
+func (newState *InstancePoolAwsAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAwsAttributes) {
 }
 
-func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAwsAttributes) {
+func (newState *InstancePoolAwsAttributes) SyncFieldsDuringRead(existingState InstancePoolAwsAttributes) {
 }
 
 func (c InstancePoolAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12211,10 +12771,10 @@ type InstancePoolAzureAttributes struct {
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
-func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAzureAttributes) {
+func (newState *InstancePoolAzureAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAzureAttributes) {
 }
 
-func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAzureAttributes) {
+func (newState *InstancePoolAzureAttributes) SyncFieldsDuringRead(existingState InstancePoolAzureAttributes) {
 }
 
 func (c InstancePoolAzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12286,10 +12846,10 @@ type InstancePoolGcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolGcpAttributes) {
+func (newState *InstancePoolGcpAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolGcpAttributes) {
 }
 
-func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolGcpAttributes) {
+func (newState *InstancePoolGcpAttributes) SyncFieldsDuringRead(existingState InstancePoolGcpAttributes) {
 }
 
 func (c InstancePoolGcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12343,10 +12903,10 @@ type InstancePoolPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermission) {
+func (newState *InstancePoolPermission) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermission) {
 }
 
-func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermission) {
+func (newState *InstancePoolPermission) SyncFieldsDuringRead(existingState InstancePoolPermission) {
 }
 
 func (c InstancePoolPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12430,10 +12990,10 @@ type InstancePoolPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissions) {
+func (newState *InstancePoolPermissions) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermissions) {
 }
 
-func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissions) {
+func (newState *InstancePoolPermissions) SyncFieldsDuringRead(existingState InstancePoolPermissions) {
 }
 
 func (c InstancePoolPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12515,10 +13075,10 @@ type InstancePoolPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsDescription) {
+func (newState *InstancePoolPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsDescription) {
 }
 
-func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
+func (newState *InstancePoolPermissionsDescription) SyncFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
 }
 
 func (c InstancePoolPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12641,10 +13201,10 @@ type InstancePoolStats struct {
 	UsedCount types.Int64 `tfsdk:"used_count"`
 }
 
-func (newState *InstancePoolStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStats) {
+func (newState *InstancePoolStats) SyncFieldsDuringCreateOrUpdate(plan InstancePoolStats) {
 }
 
-func (newState *InstancePoolStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolStats) {
+func (newState *InstancePoolStats) SyncFieldsDuringRead(existingState InstancePoolStats) {
 }
 
 func (c InstancePoolStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12701,10 +13261,10 @@ type InstancePoolStatus struct {
 	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors"`
 }
 
-func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
+func (newState *InstancePoolStatus) SyncFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
 }
 
-func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringRead(existingState InstancePoolStatus) {
+func (newState *InstancePoolStatus) SyncFieldsDuringRead(existingState InstancePoolStatus) {
 }
 
 func (c InstancePoolStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12795,10 +13355,10 @@ type InstanceProfile struct {
 	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
 }
 
-func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstanceProfile) {
+func (newState *InstanceProfile) SyncFieldsDuringCreateOrUpdate(plan InstanceProfile) {
 }
 
-func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
+func (newState *InstanceProfile) SyncFieldsDuringRead(existingState InstanceProfile) {
 }
 
 func (c InstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12880,10 +13440,10 @@ type Library struct {
 	Whl types.String `tfsdk:"whl"`
 }
 
-func (newState *Library) SyncEffectiveFieldsDuringCreateOrUpdate(plan Library) {
+func (newState *Library) SyncFieldsDuringCreateOrUpdate(plan Library) {
 }
 
-func (newState *Library) SyncEffectiveFieldsDuringRead(existingState Library) {
+func (newState *Library) SyncFieldsDuringRead(existingState Library) {
 }
 
 func (c Library) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13043,10 +13603,10 @@ type LibraryFullStatus struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LibraryFullStatus) {
+func (newState *LibraryFullStatus) SyncFieldsDuringCreateOrUpdate(plan LibraryFullStatus) {
 }
 
-func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState LibraryFullStatus) {
+func (newState *LibraryFullStatus) SyncFieldsDuringRead(existingState LibraryFullStatus) {
 }
 
 func (c LibraryFullStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13189,10 +13749,10 @@ type ListAllClusterLibraryStatusesResponse struct {
 	Statuses types.List `tfsdk:"statuses"`
 }
 
-func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
+func (newState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
 }
 
-func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
+func (newState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
 }
 
 func (c ListAllClusterLibraryStatusesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13270,10 +13830,10 @@ type ListAvailableZonesResponse struct {
 	Zones types.List `tfsdk:"zones"`
 }
 
-func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
+func (newState *ListAvailableZonesResponse) SyncFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
 }
 
-func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existingState ListAvailableZonesResponse) {
+func (newState *ListAvailableZonesResponse) SyncFieldsDuringRead(existingState ListAvailableZonesResponse) {
 }
 
 func (c ListAvailableZonesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13405,10 +13965,10 @@ type ListClusterCompliancesResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesResponse) {
+func (newState *ListClusterCompliancesResponse) SyncFieldsDuringCreateOrUpdate(plan ListClusterCompliancesResponse) {
 }
 
-func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesResponse) {
+func (newState *ListClusterCompliancesResponse) SyncFieldsDuringRead(existingState ListClusterCompliancesResponse) {
 }
 
 func (c ListClusterCompliancesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13538,10 +14098,10 @@ type ListClustersFilterBy struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersFilterBy) {
+func (newState *ListClustersFilterBy) SyncFieldsDuringCreateOrUpdate(plan ListClustersFilterBy) {
 }
 
-func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingState ListClustersFilterBy) {
+func (newState *ListClustersFilterBy) SyncFieldsDuringRead(existingState ListClustersFilterBy) {
 }
 
 func (c ListClustersFilterBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13770,10 +14330,10 @@ type ListClustersResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListClustersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersResponse) {
+func (newState *ListClustersResponse) SyncFieldsDuringCreateOrUpdate(plan ListClustersResponse) {
 }
 
-func (newState *ListClustersResponse) SyncEffectiveFieldsDuringRead(existingState ListClustersResponse) {
+func (newState *ListClustersResponse) SyncFieldsDuringRead(existingState ListClustersResponse) {
 }
 
 func (c ListClustersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13858,10 +14418,10 @@ type ListClustersSortBy struct {
 	Field types.String `tfsdk:"field"`
 }
 
-func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersSortBy) {
+func (newState *ListClustersSortBy) SyncFieldsDuringCreateOrUpdate(plan ListClustersSortBy) {
 }
 
-func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringRead(existingState ListClustersSortBy) {
+func (newState *ListClustersSortBy) SyncFieldsDuringRead(existingState ListClustersSortBy) {
 }
 
 func (c ListClustersSortBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13904,6 +14464,127 @@ func (o ListClustersSortBy) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListDefaultBaseEnvironmentsRequest struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsRequest
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListDefaultBaseEnvironmentsResponse struct {
+	DefaultBaseEnvironments types.List `tfsdk:"default_base_environments"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse) SyncFieldsDuringCreateOrUpdate(plan ListDefaultBaseEnvironmentsResponse) {
+}
+
+func (newState *ListDefaultBaseEnvironmentsResponse) SyncFieldsDuringRead(existingState ListDefaultBaseEnvironmentsResponse) {
+}
+
+func (c ListDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_base_environments"] = attrs["default_base_environments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environments": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsResponse
+// only implements ToObjectValue() and Type().
+func (o ListDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environments": o.DefaultBaseEnvironments,
+			"next_page_token":           o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environments": basetypes.ListType{
+				ElemType: DefaultBaseEnvironment{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironments returns the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse as
+// a slice of DefaultBaseEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDefaultBaseEnvironmentsResponse) GetDefaultBaseEnvironments(ctx context.Context) ([]DefaultBaseEnvironment, bool) {
+	if o.DefaultBaseEnvironments.IsNull() || o.DefaultBaseEnvironments.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultBaseEnvironments sets the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse.
+func (o *ListDefaultBaseEnvironmentsResponse) SetDefaultBaseEnvironments(ctx context.Context, v []DefaultBaseEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DefaultBaseEnvironments = types.ListValueMust(t, vs)
+}
+
 type ListGlobalInitScriptsRequest struct {
 }
 
@@ -13938,10 +14619,10 @@ type ListGlobalInitScriptsResponse struct {
 	Scripts types.List `tfsdk:"scripts"`
 }
 
-func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
+func (newState *ListGlobalInitScriptsResponse) SyncFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
 }
 
-func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
+func (newState *ListGlobalInitScriptsResponse) SyncFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
 }
 
 func (c ListGlobalInitScriptsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14015,10 +14696,10 @@ type ListInstancePools struct {
 	InstancePools types.List `tfsdk:"instance_pools"`
 }
 
-func (newState *ListInstancePools) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstancePools) {
+func (newState *ListInstancePools) SyncFieldsDuringCreateOrUpdate(plan ListInstancePools) {
 }
 
-func (newState *ListInstancePools) SyncEffectiveFieldsDuringRead(existingState ListInstancePools) {
+func (newState *ListInstancePools) SyncFieldsDuringRead(existingState ListInstancePools) {
 }
 
 func (c ListInstancePools) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14153,10 +14834,10 @@ type ListInstanceProfilesResponse struct {
 	InstanceProfiles types.List `tfsdk:"instance_profiles"`
 }
 
-func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
+func (newState *ListInstanceProfilesResponse) SyncFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
 }
 
-func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringRead(existingState ListInstanceProfilesResponse) {
+func (newState *ListInstanceProfilesResponse) SyncFieldsDuringRead(existingState ListInstanceProfilesResponse) {
 }
 
 func (c ListInstanceProfilesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14261,10 +14942,10 @@ type ListNodeTypesResponse struct {
 	NodeTypes types.List `tfsdk:"node_types"`
 }
 
-func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
+func (newState *ListNodeTypesResponse) SyncFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
 }
 
-func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringRead(existingState ListNodeTypesResponse) {
+func (newState *ListNodeTypesResponse) SyncFieldsDuringRead(existingState ListNodeTypesResponse) {
 }
 
 func (c ListNodeTypesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14339,10 +15020,10 @@ type ListPoliciesResponse struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
+func (newState *ListPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
 }
 
-func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListPoliciesResponse) {
+func (newState *ListPoliciesResponse) SyncFieldsDuringRead(existingState ListPoliciesResponse) {
 }
 
 func (c ListPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14460,10 +15141,10 @@ type ListPolicyFamiliesResponse struct {
 	PolicyFamilies types.List `tfsdk:"policy_families"`
 }
 
-func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
+func (newState *ListPolicyFamiliesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
 }
 
-func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
+func (newState *ListPolicyFamiliesResponse) SyncFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
 }
 
 func (c ListPolicyFamiliesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14571,10 +15252,10 @@ type LocalFileInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *LocalFileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LocalFileInfo) {
+func (newState *LocalFileInfo) SyncFieldsDuringCreateOrUpdate(plan LocalFileInfo) {
 }
 
-func (newState *LocalFileInfo) SyncEffectiveFieldsDuringRead(existingState LocalFileInfo) {
+func (newState *LocalFileInfo) SyncFieldsDuringRead(existingState LocalFileInfo) {
 }
 
 func (c LocalFileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14620,10 +15301,10 @@ type LogAnalyticsInfo struct {
 	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id"`
 }
 
-func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogAnalyticsInfo) {
+func (newState *LogAnalyticsInfo) SyncFieldsDuringCreateOrUpdate(plan LogAnalyticsInfo) {
 }
 
-func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringRead(existingState LogAnalyticsInfo) {
+func (newState *LogAnalyticsInfo) SyncFieldsDuringRead(existingState LogAnalyticsInfo) {
 }
 
 func (c LogAnalyticsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14676,10 +15357,10 @@ type LogSyncStatus struct {
 	LastException types.String `tfsdk:"last_exception"`
 }
 
-func (newState *LogSyncStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogSyncStatus) {
+func (newState *LogSyncStatus) SyncFieldsDuringCreateOrUpdate(plan LogSyncStatus) {
 }
 
-func (newState *LogSyncStatus) SyncEffectiveFieldsDuringRead(existingState LogSyncStatus) {
+func (newState *LogSyncStatus) SyncFieldsDuringRead(existingState LogSyncStatus) {
 }
 
 func (c LogSyncStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14722,6 +15403,69 @@ func (o LogSyncStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Materialized Environment information enables environment sharing and reuse
+// via Environment Caching during library installations. Currently this feature
+// is only supported for Python libraries.
+//
+// - If the env cache entry in LMv2 DB doesn't exist or invalid, library
+// installations and environment materialization will occur. A new Materialized
+// Environment metadata will be sent from DP upon successful library
+// installations and env materialization, and is persisted into database by
+// LMv2. - If the env cache entry in LMv2 DB is valid, the Materialized
+// Environment will be sent to DP by LMv2, and DP will restore the cached
+// environment from a store instead of reinstalling libraries from scratch.
+//
+// If changed, also update
+// estore/namespaces/defaultbaseenvironments/latest.proto with new version
+type MaterializedEnvironment struct {
+	// The timestamp (in epoch milliseconds) when the materialized env is
+	// updated.
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+}
+
+func (newState *MaterializedEnvironment) SyncFieldsDuringCreateOrUpdate(plan MaterializedEnvironment) {
+}
+
+func (newState *MaterializedEnvironment) SyncFieldsDuringRead(existingState MaterializedEnvironment) {
+}
+
+func (c MaterializedEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializedEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MaterializedEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializedEnvironment
+// only implements ToObjectValue() and Type().
+func (o MaterializedEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MaterializedEnvironment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"last_updated_timestamp": types.Int64Type,
+		},
+	}
+}
+
 type MavenLibrary struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates"`
@@ -14736,10 +15480,10 @@ type MavenLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *MavenLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan MavenLibrary) {
+func (newState *MavenLibrary) SyncFieldsDuringCreateOrUpdate(plan MavenLibrary) {
 }
 
-func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenLibrary) {
+func (newState *MavenLibrary) SyncFieldsDuringRead(existingState MavenLibrary) {
 }
 
 func (c MavenLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14833,10 +15577,10 @@ type NodeInstanceType struct {
 	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks"`
 }
 
-func (newState *NodeInstanceType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeInstanceType) {
+func (newState *NodeInstanceType) SyncFieldsDuringCreateOrUpdate(plan NodeInstanceType) {
 }
 
-func (newState *NodeInstanceType) SyncEffectiveFieldsDuringRead(existingState NodeInstanceType) {
+func (newState *NodeInstanceType) SyncFieldsDuringRead(existingState NodeInstanceType) {
 }
 
 func (c NodeInstanceType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14942,10 +15686,10 @@ type NodeType struct {
 	SupportPortForwarding types.Bool `tfsdk:"support_port_forwarding"`
 }
 
-func (newState *NodeType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeType) {
+func (newState *NodeType) SyncFieldsDuringCreateOrUpdate(plan NodeType) {
 }
 
-func (newState *NodeType) SyncEffectiveFieldsDuringRead(existingState NodeType) {
+func (newState *NodeType) SyncFieldsDuringRead(existingState NodeType) {
 }
 
 func (c NodeType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15101,6 +15845,50 @@ func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) 
 	o.NodeInstanceType = vs
 }
 
+// For Fleet-V2 using classic clusters, this object contains the information
+// about the alternate node type ids to use when attempting to launch a cluster.
+// It can be used with both the driver and worker node types.
+type NodeTypeFlexibility struct {
+}
+
+func (newState *NodeTypeFlexibility) SyncFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility) {
+}
+
+func (newState *NodeTypeFlexibility) SyncFieldsDuringRead(existingState NodeTypeFlexibility) {
+}
+
+func (c NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
+// only implements ToObjectValue() and Type().
+func (o NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Error message of a failed pending instances
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id"`
@@ -15108,10 +15896,10 @@ type PendingInstanceError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *PendingInstanceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan PendingInstanceError) {
+func (newState *PendingInstanceError) SyncFieldsDuringCreateOrUpdate(plan PendingInstanceError) {
 }
 
-func (newState *PendingInstanceError) SyncEffectiveFieldsDuringRead(existingState PendingInstanceError) {
+func (newState *PendingInstanceError) SyncFieldsDuringRead(existingState PendingInstanceError) {
 }
 
 func (c PendingInstanceError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15193,10 +15981,10 @@ func (o PermanentDeleteCluster) Type(ctx context.Context) attr.Type {
 type PermanentDeleteClusterResponse struct {
 }
 
-func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteClusterResponse) {
+func (newState *PermanentDeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(plan PermanentDeleteClusterResponse) {
 }
 
-func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
+func (newState *PermanentDeleteClusterResponse) SyncFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
 }
 
 func (c PermanentDeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15269,10 +16057,10 @@ func (o PinCluster) Type(ctx context.Context) attr.Type {
 type PinClusterResponse struct {
 }
 
-func (newState *PinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinClusterResponse) {
+func (newState *PinClusterResponse) SyncFieldsDuringCreateOrUpdate(plan PinClusterResponse) {
 }
 
-func (newState *PinClusterResponse) SyncEffectiveFieldsDuringRead(existingState PinClusterResponse) {
+func (newState *PinClusterResponse) SyncFieldsDuringRead(existingState PinClusterResponse) {
 }
 
 func (c PinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15356,10 +16144,10 @@ type Policy struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *Policy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Policy) {
+func (newState *Policy) SyncFieldsDuringCreateOrUpdate(plan Policy) {
 }
 
-func (newState *Policy) SyncEffectiveFieldsDuringRead(existingState Policy) {
+func (newState *Policy) SyncFieldsDuringRead(existingState Policy) {
 }
 
 func (c Policy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15473,10 +16261,10 @@ type PolicyFamily struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 }
 
-func (newState *PolicyFamily) SyncEffectiveFieldsDuringCreateOrUpdate(plan PolicyFamily) {
+func (newState *PolicyFamily) SyncFieldsDuringCreateOrUpdate(plan PolicyFamily) {
 }
 
-func (newState *PolicyFamily) SyncEffectiveFieldsDuringRead(existingState PolicyFamily) {
+func (newState *PolicyFamily) SyncFieldsDuringRead(existingState PolicyFamily) {
 }
 
 func (c PolicyFamily) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15535,10 +16323,10 @@ type PythonPyPiLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonPyPiLibrary) {
+func (newState *PythonPyPiLibrary) SyncFieldsDuringCreateOrUpdate(plan PythonPyPiLibrary) {
 }
 
-func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringRead(existingState PythonPyPiLibrary) {
+func (newState *PythonPyPiLibrary) SyncFieldsDuringRead(existingState PythonPyPiLibrary) {
 }
 
 func (c PythonPyPiLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15589,10 +16377,10 @@ type RCranLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *RCranLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan RCranLibrary) {
+func (newState *RCranLibrary) SyncFieldsDuringCreateOrUpdate(plan RCranLibrary) {
 }
 
-func (newState *RCranLibrary) SyncEffectiveFieldsDuringRead(existingState RCranLibrary) {
+func (newState *RCranLibrary) SyncFieldsDuringRead(existingState RCranLibrary) {
 }
 
 func (c RCranLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15635,6 +16423,112 @@ func (o RCranLibrary) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type RefreshDefaultBaseEnvironmentsRequest struct {
+	Ids types.List `tfsdk:"ids"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsRequest
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ids": o.Ids,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetIds returns the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RefreshDefaultBaseEnvironmentsRequest) GetIds(ctx context.Context) ([]types.String, bool) {
+	if o.Ids.IsNull() || o.Ids.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Ids.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIds sets the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest.
+func (o *RefreshDefaultBaseEnvironmentsRequest) SetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Ids = types.ListValueMust(t, vs)
+}
+
+type RefreshDefaultBaseEnvironmentsResponse struct {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncFieldsDuringCreateOrUpdate(plan RefreshDefaultBaseEnvironmentsResponse) {
+}
+
+func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncFieldsDuringRead(existingState RefreshDefaultBaseEnvironmentsResponse) {
+}
+
+func (c RefreshDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RefreshDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsResponse
+// only implements ToObjectValue() and Type().
+func (o RefreshDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RefreshDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
@@ -15674,10 +16568,10 @@ func (o RemoveInstanceProfile) Type(ctx context.Context) attr.Type {
 type RemoveResponse struct {
 }
 
-func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse) {
+func (newState *RemoveResponse) SyncFieldsDuringCreateOrUpdate(plan RemoveResponse) {
 }
 
-func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
+func (newState *RemoveResponse) SyncFieldsDuringRead(existingState RemoveResponse) {
 }
 
 func (c RemoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15800,10 +16694,10 @@ func (o *ResizeCluster) SetAutoscale(ctx context.Context, v AutoScale) {
 type ResizeClusterResponse struct {
 }
 
-func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeClusterResponse) {
+func (newState *ResizeClusterResponse) SyncFieldsDuringCreateOrUpdate(plan ResizeClusterResponse) {
 }
 
-func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringRead(existingState ResizeClusterResponse) {
+func (newState *ResizeClusterResponse) SyncFieldsDuringRead(existingState ResizeClusterResponse) {
 }
 
 func (c ResizeClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15881,10 +16775,10 @@ func (o RestartCluster) Type(ctx context.Context) attr.Type {
 type RestartClusterResponse struct {
 }
 
-func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartClusterResponse) {
+func (newState *RestartClusterResponse) SyncFieldsDuringCreateOrUpdate(plan RestartClusterResponse) {
 }
 
-func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringRead(existingState RestartClusterResponse) {
+func (newState *RestartClusterResponse) SyncFieldsDuringRead(existingState RestartClusterResponse) {
 }
 
 func (c RestartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15943,10 +16837,10 @@ type Results struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (newState *Results) SyncEffectiveFieldsDuringCreateOrUpdate(plan Results) {
+func (newState *Results) SyncFieldsDuringCreateOrUpdate(plan Results) {
 }
 
-func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
+func (newState *Results) SyncFieldsDuringRead(existingState Results) {
 }
 
 func (c Results) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16108,10 +17002,10 @@ type S3StorageInfo struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *S3StorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan S3StorageInfo) {
+func (newState *S3StorageInfo) SyncFieldsDuringCreateOrUpdate(plan S3StorageInfo) {
 }
 
-func (newState *S3StorageInfo) SyncEffectiveFieldsDuringRead(existingState S3StorageInfo) {
+func (newState *S3StorageInfo) SyncFieldsDuringRead(existingState S3StorageInfo) {
 }
 
 func (c S3StorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16191,10 +17085,10 @@ type SparkNode struct {
 	StartTimestamp types.Int64 `tfsdk:"start_timestamp"`
 }
 
-func (newState *SparkNode) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNode) {
+func (newState *SparkNode) SyncFieldsDuringCreateOrUpdate(plan SparkNode) {
 }
 
-func (newState *SparkNode) SyncEffectiveFieldsDuringRead(existingState SparkNode) {
+func (newState *SparkNode) SyncFieldsDuringRead(existingState SparkNode) {
 }
 
 func (c SparkNode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16288,10 +17182,10 @@ type SparkNodeAwsAttributes struct {
 	IsSpot types.Bool `tfsdk:"is_spot"`
 }
 
-func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNodeAwsAttributes) {
+func (newState *SparkNodeAwsAttributes) SyncFieldsDuringCreateOrUpdate(plan SparkNodeAwsAttributes) {
 }
 
-func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringRead(existingState SparkNodeAwsAttributes) {
+func (newState *SparkNodeAwsAttributes) SyncFieldsDuringRead(existingState SparkNodeAwsAttributes) {
 }
 
 func (c SparkNodeAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16342,10 +17236,10 @@ type SparkVersion struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *SparkVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkVersion) {
+func (newState *SparkVersion) SyncFieldsDuringCreateOrUpdate(plan SparkVersion) {
 }
 
-func (newState *SparkVersion) SyncEffectiveFieldsDuringRead(existingState SparkVersion) {
+func (newState *SparkVersion) SyncFieldsDuringRead(existingState SparkVersion) {
 }
 
 func (c SparkVersion) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16457,10 +17351,10 @@ func (o StartCluster) Type(ctx context.Context) attr.Type {
 type StartClusterResponse struct {
 }
 
-func (newState *StartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartClusterResponse) {
+func (newState *StartClusterResponse) SyncFieldsDuringCreateOrUpdate(plan StartClusterResponse) {
 }
 
-func (newState *StartClusterResponse) SyncEffectiveFieldsDuringRead(existingState StartClusterResponse) {
+func (newState *StartClusterResponse) SyncFieldsDuringRead(existingState StartClusterResponse) {
 }
 
 func (c StartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16505,10 +17399,10 @@ type TerminationReason struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationReason) {
+func (newState *TerminationReason) SyncFieldsDuringCreateOrUpdate(plan TerminationReason) {
 }
 
-func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
+func (newState *TerminationReason) SyncFieldsDuringRead(existingState TerminationReason) {
 }
 
 func (c TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16657,10 +17551,10 @@ func (o *UninstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 type UninstallLibrariesResponse struct {
 }
 
-func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibrariesResponse) {
+func (newState *UninstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(plan UninstallLibrariesResponse) {
 }
 
-func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState UninstallLibrariesResponse) {
+func (newState *UninstallLibrariesResponse) SyncFieldsDuringRead(existingState UninstallLibrariesResponse) {
 }
 
 func (c UninstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16733,10 +17627,10 @@ func (o UnpinCluster) Type(ctx context.Context) attr.Type {
 type UnpinClusterResponse struct {
 }
 
-func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinClusterResponse) {
+func (newState *UnpinClusterResponse) SyncFieldsDuringCreateOrUpdate(plan UnpinClusterResponse) {
 }
 
-func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringRead(existingState UnpinClusterResponse) {
+func (newState *UnpinClusterResponse) SyncFieldsDuringRead(existingState UnpinClusterResponse) {
 }
 
 func (c UnpinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17012,10 +17906,10 @@ type UpdateClusterResource struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
+func (newState *UpdateClusterResource) SyncFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
 }
 
-func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResource) {
+func (newState *UpdateClusterResource) SyncFieldsDuringRead(existingState UpdateClusterResource) {
 }
 
 func (c UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17497,10 +18391,10 @@ func (o *UpdateClusterResource) SetWorkloadType(ctx context.Context, v WorkloadT
 type UpdateClusterResponse struct {
 }
 
-func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResponse) {
+func (newState *UpdateClusterResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateClusterResponse) {
 }
 
-func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResponse) {
+func (newState *UpdateClusterResponse) SyncFieldsDuringRead(existingState UpdateClusterResponse) {
 }
 
 func (c UpdateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17535,13 +18429,117 @@ func (o UpdateClusterResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type UpdateDefaultBaseEnvironmentRequest struct {
+	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
+
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_base_environment": o.DefaultBaseEnvironment,
+			"id":                       o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
+			"id":                       types.StringType,
+		},
+	}
+}
+
+// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest as
+// a DefaultBaseEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
+	var e DefaultBaseEnvironment
+	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultBaseEnvironment
+	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest.
+func (o *UpdateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	o.DefaultBaseEnvironment = vs
+}
+
+type UpdateDefaultDefaultBaseEnvironmentRequest struct {
+	Id types.String `tfsdk:"id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultDefaultBaseEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateDefaultDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultDefaultBaseEnvironmentRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateDefaultDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateDefaultDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
 type UpdateResponse struct {
 }
 
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+func (newState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateResponse) {
 }
 
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
+func (newState *UpdateResponse) SyncFieldsDuringRead(existingState UpdateResponse) {
 }
 
 func (c UpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17584,10 +18582,10 @@ type VolumesStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan VolumesStorageInfo) {
+func (newState *VolumesStorageInfo) SyncFieldsDuringCreateOrUpdate(plan VolumesStorageInfo) {
 }
 
-func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringRead(existingState VolumesStorageInfo) {
+func (newState *VolumesStorageInfo) SyncFieldsDuringRead(existingState VolumesStorageInfo) {
 }
 
 func (c VolumesStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17633,10 +18631,10 @@ type WorkloadType struct {
 	Clients types.Object `tfsdk:"clients"`
 }
 
-func (newState *WorkloadType) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkloadType) {
+func (newState *WorkloadType) SyncFieldsDuringCreateOrUpdate(plan WorkloadType) {
 }
 
-func (newState *WorkloadType) SyncEffectiveFieldsDuringRead(existingState WorkloadType) {
+func (newState *WorkloadType) SyncFieldsDuringRead(existingState WorkloadType) {
 }
 
 func (c WorkloadType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17712,10 +18710,10 @@ type WorkspaceStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceStorageInfo) {
+func (newState *WorkspaceStorageInfo) SyncFieldsDuringCreateOrUpdate(plan WorkspaceStorageInfo) {
 }
 
-func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringRead(existingState WorkspaceStorageInfo) {
+func (newState *WorkspaceStorageInfo) SyncFieldsDuringRead(existingState WorkspaceStorageInfo) {
 }
 
 func (c WorkspaceStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

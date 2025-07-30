@@ -23,6 +23,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type ConnectionParameters struct {
+	// Source catalog for initial connection. This is necessary for schema
+	// exploration in some database systems like Oracle, and optional but
+	// nice-to-have in some other database systems like Postgres. For Oracle
+	// databases, this maps to a service name.
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (newState *ConnectionParameters) SyncFieldsDuringCreateOrUpdate(plan ConnectionParameters) {
+}
+
+func (newState *ConnectionParameters) SyncFieldsDuringRead(existingState ConnectionParameters) {
+}
+
+func (c ConnectionParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConnectionParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ConnectionParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConnectionParameters
+// only implements ToObjectValue() and Type().
+func (o ConnectionParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"source_catalog": o.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ConnectionParameters) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
 type CreatePipeline struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
@@ -603,10 +654,10 @@ type CreatePipelineResponse struct {
 	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
-func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipelineResponse) {
+func (newState *CreatePipelineResponse) SyncFieldsDuringCreateOrUpdate(plan CreatePipelineResponse) {
 }
 
-func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse) {
+func (newState *CreatePipelineResponse) SyncFieldsDuringRead(existingState CreatePipelineResponse) {
 }
 
 func (c CreatePipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -685,10 +736,10 @@ type CronTrigger struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTrigger) {
+func (newState *CronTrigger) SyncFieldsDuringCreateOrUpdate(plan CronTrigger) {
 }
 
-func (newState *CronTrigger) SyncEffectiveFieldsDuringRead(existingState CronTrigger) {
+func (newState *CronTrigger) SyncFieldsDuringRead(existingState CronTrigger) {
 }
 
 func (c CronTrigger) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -738,10 +789,10 @@ type DataPlaneId struct {
 	SeqNo types.Int64 `tfsdk:"seq_no"`
 }
 
-func (newState *DataPlaneId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneId) {
+func (newState *DataPlaneId) SyncFieldsDuringCreateOrUpdate(plan DataPlaneId) {
 }
 
-func (newState *DataPlaneId) SyncEffectiveFieldsDuringRead(existingState DataPlaneId) {
+func (newState *DataPlaneId) SyncFieldsDuringRead(existingState DataPlaneId) {
 }
 
 func (c DataPlaneId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -822,10 +873,10 @@ func (o DeletePipelineRequest) Type(ctx context.Context) attr.Type {
 type DeletePipelineResponse struct {
 }
 
-func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineResponse) {
+func (newState *DeletePipelineResponse) SyncFieldsDuringCreateOrUpdate(plan DeletePipelineResponse) {
 }
 
-func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse) {
+func (newState *DeletePipelineResponse) SyncFieldsDuringRead(existingState DeletePipelineResponse) {
 }
 
 func (c DeletePipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1441,10 +1492,10 @@ func (o *EditPipeline) SetTrigger(ctx context.Context, v PipelineTrigger) {
 type EditPipelineResponse struct {
 }
 
-func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipelineResponse) {
+func (newState *EditPipelineResponse) SyncFieldsDuringCreateOrUpdate(plan EditPipelineResponse) {
 }
 
-func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse) {
+func (newState *EditPipelineResponse) SyncFieldsDuringRead(existingState EditPipelineResponse) {
 }
 
 func (c EditPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1486,10 +1537,10 @@ type ErrorDetail struct {
 	Fatal types.Bool `tfsdk:"fatal"`
 }
 
-func (newState *ErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorDetail) {
+func (newState *ErrorDetail) SyncFieldsDuringCreateOrUpdate(plan ErrorDetail) {
 }
 
-func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDetail) {
+func (newState *ErrorDetail) SyncFieldsDuringRead(existingState ErrorDetail) {
 }
 
 func (c ErrorDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1572,10 +1623,10 @@ type EventLogSpec struct {
 	Schema types.String `tfsdk:"schema"`
 }
 
-func (newState *EventLogSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventLogSpec) {
+func (newState *EventLogSpec) SyncFieldsDuringCreateOrUpdate(plan EventLogSpec) {
 }
 
-func (newState *EventLogSpec) SyncEffectiveFieldsDuringRead(existingState EventLogSpec) {
+func (newState *EventLogSpec) SyncFieldsDuringRead(existingState EventLogSpec) {
 }
 
 func (c EventLogSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1626,10 +1677,10 @@ type FileLibrary struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *FileLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLibrary) {
+func (newState *FileLibrary) SyncFieldsDuringCreateOrUpdate(plan FileLibrary) {
 }
 
-func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLibrary) {
+func (newState *FileLibrary) SyncFieldsDuringRead(existingState FileLibrary) {
 }
 
 func (c FileLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1676,10 +1727,10 @@ type Filters struct {
 	Include types.List `tfsdk:"include"`
 }
 
-func (newState *Filters) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters) {
+func (newState *Filters) SyncFieldsDuringCreateOrUpdate(plan Filters) {
 }
 
-func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
+func (newState *Filters) SyncFieldsDuringRead(existingState Filters) {
 }
 
 func (c Filters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1822,10 +1873,10 @@ type GetPipelinePermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse) {
+func (newState *GetPipelinePermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse) {
 }
 
-func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
+func (newState *GetPipelinePermissionLevelsResponse) SyncFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
 }
 
 func (c GetPipelinePermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2000,10 +2051,10 @@ type GetPipelineResponse struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineResponse) {
+func (newState *GetPipelineResponse) SyncFieldsDuringCreateOrUpdate(plan GetPipelineResponse) {
 }
 
-func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse) {
+func (newState *GetPipelineResponse) SyncFieldsDuringRead(existingState GetPipelineResponse) {
 }
 
 func (c GetPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2212,10 +2263,10 @@ type GetUpdateResponse struct {
 	Update types.Object `tfsdk:"update"`
 }
 
-func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse) {
+func (newState *GetUpdateResponse) SyncFieldsDuringCreateOrUpdate(plan GetUpdateResponse) {
 }
 
-func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse) {
+func (newState *GetUpdateResponse) SyncFieldsDuringRead(existingState GetUpdateResponse) {
 }
 
 func (c GetUpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2294,10 +2345,10 @@ type IngestionConfig struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig) {
+func (newState *IngestionConfig) SyncFieldsDuringCreateOrUpdate(plan IngestionConfig) {
 }
 
-func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState IngestionConfig) {
+func (newState *IngestionConfig) SyncFieldsDuringRead(existingState IngestionConfig) {
 }
 
 func (c IngestionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2439,6 +2490,9 @@ type IngestionGatewayPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection that this gateway pipeline uses
 	// to communicate with the source.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Optional, Internal. Parameters required to establish an initial
+	// connection with the source.
+	ConnectionParameters types.Object `tfsdk:"connection_parameters"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog"`
@@ -2452,15 +2506,16 @@ type IngestionGatewayPipelineDefinition struct {
 	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema"`
 }
 
-func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition) {
+func (newState *IngestionGatewayPipelineDefinition) SyncFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition) {
 }
 
-func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
+func (newState *IngestionGatewayPipelineDefinition) SyncFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
 }
 
 func (c IngestionGatewayPipelineDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_id"] = attrs["connection_id"].SetOptional()
 	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["connection_parameters"] = attrs["connection_parameters"].SetOptional()
 	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetRequired()
 	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
 	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetRequired()
@@ -2476,7 +2531,9 @@ func (c IngestionGatewayPipelineDefinition) ApplySchemaCustomizations(attrs map[
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"connection_parameters": reflect.TypeOf(ConnectionParameters{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2488,6 +2545,7 @@ func (o IngestionGatewayPipelineDefinition) ToObjectValue(ctx context.Context) b
 		map[string]attr.Value{
 			"connection_id":           o.ConnectionId,
 			"connection_name":         o.ConnectionName,
+			"connection_parameters":   o.ConnectionParameters,
 			"gateway_storage_catalog": o.GatewayStorageCatalog,
 			"gateway_storage_name":    o.GatewayStorageName,
 			"gateway_storage_schema":  o.GatewayStorageSchema,
@@ -2500,6 +2558,7 @@ func (o IngestionGatewayPipelineDefinition) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"connection_id":           types.StringType,
 			"connection_name":         types.StringType,
+			"connection_parameters":   ConnectionParameters{}.Type(ctx),
 			"gateway_storage_catalog": types.StringType,
 			"gateway_storage_name":    types.StringType,
 			"gateway_storage_schema":  types.StringType,
@@ -2507,11 +2566,45 @@ func (o IngestionGatewayPipelineDefinition) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GetConnectionParameters returns the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition as
+// a ConnectionParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionGatewayPipelineDefinition) GetConnectionParameters(ctx context.Context) (ConnectionParameters, bool) {
+	var e ConnectionParameters
+	if o.ConnectionParameters.IsNull() || o.ConnectionParameters.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectionParameters
+	d := o.ConnectionParameters.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectionParameters sets the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition.
+func (o *IngestionGatewayPipelineDefinition) SetConnectionParameters(ctx context.Context, v ConnectionParameters) {
+	vs := v.ToObjectValue(ctx)
+	o.ConnectionParameters = vs
+}
+
 type IngestionPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
 	// to communicate with the source. This is used with connectors for
 	// applications like Salesforce, Workday, and so on.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Immutable. If set to true, the pipeline will ingest tables from the UC
+	// foreign catalogs directly without the need to specify a UC connection or
+	// ingestion gateway. The `source_catalog` fields in objects of
+	// IngestionConfig are interpreted as the UC foreign catalogs to ingest
+	// from.
+	IngestFromUcForeignCatalog types.Bool `tfsdk:"ingest_from_uc_foreign_catalog"`
 	// Immutable. Identifier for the gateway that is used by this ingestion
 	// pipeline to communicate with the source database. This is used with
 	// connectors to databases like SQL Server.
@@ -2519,6 +2612,8 @@ type IngestionPipelineDefinition struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// Top-level source configurations
+	SourceConfigurations types.List `tfsdk:"source_configurations"`
 	// The type of the foreign source. The source type will be inferred from the
 	// source connection or ingestion gateway. This field is output only and
 	// will be ignored if provided.
@@ -2528,16 +2623,18 @@ type IngestionPipelineDefinition struct {
 	TableConfiguration types.Object `tfsdk:"table_configuration"`
 }
 
-func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition) {
+func (newState *IngestionPipelineDefinition) SyncFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition) {
 }
 
-func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition) {
+func (newState *IngestionPipelineDefinition) SyncFieldsDuringRead(existingState IngestionPipelineDefinition) {
 }
 
 func (c IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["ingest_from_uc_foreign_catalog"] = attrs["ingest_from_uc_foreign_catalog"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_configurations"] = attrs["source_configurations"].SetOptional()
 	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 
@@ -2553,8 +2650,9 @@ func (c IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]
 // SDK values.
 func (a IngestionPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"objects":             reflect.TypeOf(IngestionConfig{}),
-		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
+		"objects":               reflect.TypeOf(IngestionConfig{}),
+		"source_configurations": reflect.TypeOf(SourceConfig{}),
+		"table_configuration":   reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
@@ -2565,11 +2663,13 @@ func (o IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_name":      o.ConnectionName,
-			"ingestion_gateway_id": o.IngestionGatewayId,
-			"objects":              o.Objects,
-			"source_type":          o.SourceType,
-			"table_configuration":  o.TableConfiguration,
+			"connection_name":                o.ConnectionName,
+			"ingest_from_uc_foreign_catalog": o.IngestFromUcForeignCatalog,
+			"ingestion_gateway_id":           o.IngestionGatewayId,
+			"objects":                        o.Objects,
+			"source_configurations":          o.SourceConfigurations,
+			"source_type":                    o.SourceType,
+			"table_configuration":            o.TableConfiguration,
 		})
 }
 
@@ -2577,10 +2677,14 @@ func (o IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 func (o IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection_name":      types.StringType,
-			"ingestion_gateway_id": types.StringType,
+			"connection_name":                types.StringType,
+			"ingest_from_uc_foreign_catalog": types.BoolType,
+			"ingestion_gateway_id":           types.StringType,
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig{}.Type(ctx),
+			},
+			"source_configurations": basetypes.ListType{
+				ElemType: SourceConfig{}.Type(ctx),
 			},
 			"source_type":         types.StringType,
 			"table_configuration": TableSpecificConfig{}.Type(ctx),
@@ -2614,6 +2718,32 @@ func (o *IngestionPipelineDefinition) SetObjects(ctx context.Context, v []Ingest
 	o.Objects = types.ListValueMust(t, vs)
 }
 
+// GetSourceConfigurations returns the value of the SourceConfigurations field in IngestionPipelineDefinition as
+// a slice of SourceConfig values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinition) GetSourceConfigurations(ctx context.Context) ([]SourceConfig, bool) {
+	if o.SourceConfigurations.IsNull() || o.SourceConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []SourceConfig
+	d := o.SourceConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSourceConfigurations sets the value of the SourceConfigurations field in IngestionPipelineDefinition.
+func (o *IngestionPipelineDefinition) SetSourceConfigurations(ctx context.Context, v []SourceConfig) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.SourceConfigurations = types.ListValueMust(t, vs)
+}
+
 // GetTableConfiguration returns the value of the TableConfiguration field in IngestionPipelineDefinition as
 // a TableSpecificConfig value.
 // If the field is unknown or null, the boolean return value is false.
@@ -2640,6 +2770,114 @@ func (o *IngestionPipelineDefinition) GetTableConfiguration(ctx context.Context)
 func (o *IngestionPipelineDefinition) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
 	vs := v.ToObjectValue(ctx)
 	o.TableConfiguration = vs
+}
+
+// Configurations that are only applicable for query-based ingestion connectors.
+type IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig struct {
+	// The names of the monotonically increasing columns in the source table
+	// that are used to enable the table to be read and ingested incrementally
+	// through structured streaming. The columns are allowed to have repeated
+	// values but have to be non-decreasing. If the source data is merged into
+	// the destination (e.g., using SCD Type 1 or Type 2), these columns will
+	// implicitly define the `sequence_by` behavior. You can still explicitly
+	// set `sequence_by` to override this default.
+	CursorColumns types.List `tfsdk:"cursor_columns"`
+	// Specifies a SQL WHERE condition that specifies that the source row has
+	// been deleted. This is sometimes referred to as "soft-deletes". For
+	// example: "Operation = 'DELETE'" or "is_deleted = true". This field is
+	// orthogonal to `hard_deletion_sync_interval_in_seconds`, one for
+	// soft-deletes and the other for hard-deletes. See also the
+	// hard_deletion_sync_min_interval_in_seconds field for handling of "hard
+	// deletes" where the source rows are physically removed from the table.
+	DeletionCondition types.String `tfsdk:"deletion_condition"`
+	// Specifies the minimum interval (in seconds) between snapshots on primary
+	// keys for detecting and synchronizing hard deletions—i.e., rows that
+	// have been physically removed from the source table. This interval acts as
+	// a lower bound. If ingestion runs less frequently than this value, hard
+	// deletion synchronization will align with the actual ingestion frequency
+	// instead of happening more often. If not set, hard deletion
+	// synchronization via snapshots is disabled. This field is mutable and can
+	// be updated without triggering a full snapshot.
+	HardDeletionSyncMinIntervalInSeconds types.Int64 `tfsdk:"hard_deletion_sync_min_interval_in_seconds"`
+}
+
+func (newState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SyncFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+}
+
+func (newState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SyncFieldsDuringRead(existingState IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+}
+
+func (c IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cursor_columns"] = attrs["cursor_columns"].SetOptional()
+	attrs["deletion_condition"] = attrs["deletion_condition"].SetOptional()
+	attrs["hard_deletion_sync_min_interval_in_seconds"] = attrs["hard_deletion_sync_min_interval_in_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cursor_columns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+// only implements ToObjectValue() and Type().
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cursor_columns":                             o.CursorColumns,
+			"deletion_condition":                         o.DeletionCondition,
+			"hard_deletion_sync_min_interval_in_seconds": o.HardDeletionSyncMinIntervalInSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cursor_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"deletion_condition":                         types.StringType,
+			"hard_deletion_sync_min_interval_in_seconds": types.Int64Type,
+		},
+	}
+}
+
+// GetCursorColumns returns the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) GetCursorColumns(ctx context.Context) ([]types.String, bool) {
+	if o.CursorColumns.IsNull() || o.CursorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.CursorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCursorColumns sets the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) SetCursorColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cursor_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CursorColumns = types.ListValueMust(t, vs)
 }
 
 type ListPipelineEventsRequest struct {
@@ -2746,10 +2984,10 @@ type ListPipelineEventsResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse) {
+func (newState *ListPipelineEventsResponse) SyncFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse) {
 }
 
-func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse) {
+func (newState *ListPipelineEventsResponse) SyncFieldsDuringRead(existingState ListPipelineEventsResponse) {
 }
 
 func (c ListPipelineEventsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2923,10 +3161,10 @@ type ListPipelinesResponse struct {
 	Statuses types.List `tfsdk:"statuses"`
 }
 
-func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesResponse) {
+func (newState *ListPipelinesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPipelinesResponse) {
 }
 
-func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse) {
+func (newState *ListPipelinesResponse) SyncFieldsDuringRead(existingState ListPipelinesResponse) {
 }
 
 func (c ListPipelinesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3058,10 +3296,10 @@ type ListUpdatesResponse struct {
 	Updates types.List `tfsdk:"updates"`
 }
 
-func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesResponse) {
+func (newState *ListUpdatesResponse) SyncFieldsDuringCreateOrUpdate(plan ListUpdatesResponse) {
 }
 
-func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse) {
+func (newState *ListUpdatesResponse) SyncFieldsDuringRead(existingState ListUpdatesResponse) {
 }
 
 func (c ListUpdatesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3140,10 +3378,10 @@ func (o *ListUpdatesResponse) SetUpdates(ctx context.Context, v []UpdateInfo) {
 type ManualTrigger struct {
 }
 
-func (newState *ManualTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan ManualTrigger) {
+func (newState *ManualTrigger) SyncFieldsDuringCreateOrUpdate(plan ManualTrigger) {
 }
 
-func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState ManualTrigger) {
+func (newState *ManualTrigger) SyncFieldsDuringRead(existingState ManualTrigger) {
 }
 
 func (c ManualTrigger) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3183,10 +3421,10 @@ type NotebookLibrary struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *NotebookLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookLibrary) {
+func (newState *NotebookLibrary) SyncFieldsDuringCreateOrUpdate(plan NotebookLibrary) {
 }
 
-func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary) {
+func (newState *NotebookLibrary) SyncFieldsDuringRead(existingState NotebookLibrary) {
 }
 
 func (c NotebookLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3239,10 +3477,10 @@ type Notifications struct {
 	EmailRecipients types.List `tfsdk:"email_recipients"`
 }
 
-func (newState *Notifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan Notifications) {
+func (newState *Notifications) SyncFieldsDuringCreateOrUpdate(plan Notifications) {
 }
 
-func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notifications) {
+func (newState *Notifications) SyncFieldsDuringRead(existingState Notifications) {
 }
 
 func (c Notifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3382,10 +3620,10 @@ type Origin struct {
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *Origin) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin) {
+func (newState *Origin) SyncFieldsDuringCreateOrUpdate(plan Origin) {
 }
 
-func (newState *Origin) SyncEffectiveFieldsDuringRead(existingState Origin) {
+func (newState *Origin) SyncFieldsDuringRead(existingState Origin) {
 }
 
 func (c Origin) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3478,10 +3716,10 @@ type PathPattern struct {
 	Include types.String `tfsdk:"include"`
 }
 
-func (newState *PathPattern) SyncEffectiveFieldsDuringCreateOrUpdate(plan PathPattern) {
+func (newState *PathPattern) SyncFieldsDuringCreateOrUpdate(plan PathPattern) {
 }
 
-func (newState *PathPattern) SyncEffectiveFieldsDuringRead(existingState PathPattern) {
+func (newState *PathPattern) SyncFieldsDuringRead(existingState PathPattern) {
 }
 
 func (c PathPattern) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3532,10 +3770,10 @@ type PipelineAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest) {
+func (newState *PipelineAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest) {
 }
 
-func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest) {
+func (newState *PipelineAccessControlRequest) SyncFieldsDuringRead(existingState PipelineAccessControlRequest) {
 }
 
 func (c PipelineAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3597,10 +3835,10 @@ type PipelineAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse) {
+func (newState *PipelineAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse) {
 }
 
-func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse) {
+func (newState *PipelineAccessControlResponse) SyncFieldsDuringRead(existingState PipelineAccessControlResponse) {
 }
 
 func (c PipelineAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3779,10 +4017,10 @@ type PipelineCluster struct {
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 }
 
-func (newState *PipelineCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineCluster) {
+func (newState *PipelineCluster) SyncFieldsDuringCreateOrUpdate(plan PipelineCluster) {
 }
 
-func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState PipelineCluster) {
+func (newState *PipelineCluster) SyncFieldsDuringRead(existingState PipelineCluster) {
 }
 
 func (c PipelineCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4183,10 +4421,10 @@ type PipelineClusterAutoscale struct {
 	Mode types.String `tfsdk:"mode"`
 }
 
-func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale) {
+func (newState *PipelineClusterAutoscale) SyncFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale) {
 }
 
-func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale) {
+func (newState *PipelineClusterAutoscale) SyncFieldsDuringRead(existingState PipelineClusterAutoscale) {
 }
 
 func (c PipelineClusterAutoscale) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4239,10 +4477,10 @@ type PipelineDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
-func (newState *PipelineDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineDeployment) {
+func (newState *PipelineDeployment) SyncFieldsDuringCreateOrUpdate(plan PipelineDeployment) {
 }
 
-func (newState *PipelineDeployment) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment) {
+func (newState *PipelineDeployment) SyncFieldsDuringRead(existingState PipelineDeployment) {
 }
 
 func (c PipelineDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4306,10 +4544,10 @@ type PipelineEvent struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *PipelineEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineEvent) {
+func (newState *PipelineEvent) SyncFieldsDuringCreateOrUpdate(plan PipelineEvent) {
 }
 
-func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState PipelineEvent) {
+func (newState *PipelineEvent) SyncFieldsDuringRead(existingState PipelineEvent) {
 }
 
 func (c PipelineEvent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4480,10 +4718,10 @@ type PipelineLibrary struct {
 	Whl types.String `tfsdk:"whl"`
 }
 
-func (newState *PipelineLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineLibrary) {
+func (newState *PipelineLibrary) SyncFieldsDuringCreateOrUpdate(plan PipelineLibrary) {
 }
 
-func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary) {
+func (newState *PipelineLibrary) SyncFieldsDuringRead(existingState PipelineLibrary) {
 }
 
 func (c PipelineLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4663,10 +4901,10 @@ type PipelinePermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PipelinePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermission) {
+func (newState *PipelinePermission) SyncFieldsDuringCreateOrUpdate(plan PipelinePermission) {
 }
 
-func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState PipelinePermission) {
+func (newState *PipelinePermission) SyncFieldsDuringRead(existingState PipelinePermission) {
 }
 
 func (c PipelinePermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4750,10 +4988,10 @@ type PipelinePermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *PipelinePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissions) {
+func (newState *PipelinePermissions) SyncFieldsDuringCreateOrUpdate(plan PipelinePermissions) {
 }
 
-func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions) {
+func (newState *PipelinePermissions) SyncFieldsDuringRead(existingState PipelinePermissions) {
 }
 
 func (c PipelinePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4835,10 +5073,10 @@ type PipelinePermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription) {
+func (newState *PipelinePermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription) {
 }
 
-func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription) {
+func (newState *PipelinePermissionsDescription) SyncFieldsDuringRead(existingState PipelinePermissionsDescription) {
 }
 
 func (c PipelinePermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5019,10 +5257,10 @@ type PipelineSpec struct {
 	Trigger types.Object `tfsdk:"trigger"`
 }
 
-func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec) {
+func (newState *PipelineSpec) SyncFieldsDuringCreateOrUpdate(plan PipelineSpec) {
 }
 
-func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState PipelineSpec) {
+func (newState *PipelineSpec) SyncFieldsDuringRead(existingState PipelineSpec) {
 }
 
 func (c PipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5539,10 +5777,10 @@ type PipelineStateInfo struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineStateInfo) {
+func (newState *PipelineStateInfo) SyncFieldsDuringCreateOrUpdate(plan PipelineStateInfo) {
 }
 
-func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo) {
+func (newState *PipelineStateInfo) SyncFieldsDuringRead(existingState PipelineStateInfo) {
 }
 
 func (c PipelineStateInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5639,10 +5877,10 @@ type PipelineTrigger struct {
 	Manual types.Object `tfsdk:"manual"`
 }
 
-func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger) {
+func (newState *PipelineTrigger) SyncFieldsDuringCreateOrUpdate(plan PipelineTrigger) {
 }
 
-func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger) {
+func (newState *PipelineTrigger) SyncFieldsDuringRead(existingState PipelineTrigger) {
 }
 
 func (c PipelineTrigger) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5757,10 +5995,10 @@ type PipelinesEnvironment struct {
 	Dependencies types.List `tfsdk:"dependencies"`
 }
 
-func (newState *PipelinesEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinesEnvironment) {
+func (newState *PipelinesEnvironment) SyncFieldsDuringCreateOrUpdate(plan PipelinesEnvironment) {
 }
 
-func (newState *PipelinesEnvironment) SyncEffectiveFieldsDuringRead(existingState PipelinesEnvironment) {
+func (newState *PipelinesEnvironment) SyncFieldsDuringRead(existingState PipelinesEnvironment) {
 }
 
 func (c PipelinesEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5830,6 +6068,140 @@ func (o *PipelinesEnvironment) SetDependencies(ctx context.Context, v []types.St
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
+// PG-specific catalog-level configuration parameters
+type PostgresCatalogConfig struct {
+	// Optional. The Postgres slot configuration to use for logical replication
+	SlotConfig types.Object `tfsdk:"slot_config"`
+}
+
+func (newState *PostgresCatalogConfig) SyncFieldsDuringCreateOrUpdate(plan PostgresCatalogConfig) {
+}
+
+func (newState *PostgresCatalogConfig) SyncFieldsDuringRead(existingState PostgresCatalogConfig) {
+}
+
+func (c PostgresCatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["slot_config"] = attrs["slot_config"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresCatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"slot_config": reflect.TypeOf(PostgresSlotConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresCatalogConfig
+// only implements ToObjectValue() and Type().
+func (o PostgresCatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"slot_config": o.SlotConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresCatalogConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"slot_config": PostgresSlotConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetSlotConfig returns the value of the SlotConfig field in PostgresCatalogConfig as
+// a PostgresSlotConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PostgresCatalogConfig) GetSlotConfig(ctx context.Context) (PostgresSlotConfig, bool) {
+	var e PostgresSlotConfig
+	if o.SlotConfig.IsNull() || o.SlotConfig.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresSlotConfig
+	d := o.SlotConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSlotConfig sets the value of the SlotConfig field in PostgresCatalogConfig.
+func (o *PostgresCatalogConfig) SetSlotConfig(ctx context.Context, v PostgresSlotConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.SlotConfig = vs
+}
+
+// PostgresSlotConfig contains the configuration for a Postgres logical
+// replication slot
+type PostgresSlotConfig struct {
+	// The name of the publication to use for the Postgres source
+	PublicationName types.String `tfsdk:"publication_name"`
+	// The name of the logical replication slot to use for the Postgres source
+	SlotName types.String `tfsdk:"slot_name"`
+}
+
+func (newState *PostgresSlotConfig) SyncFieldsDuringCreateOrUpdate(plan PostgresSlotConfig) {
+}
+
+func (newState *PostgresSlotConfig) SyncFieldsDuringRead(existingState PostgresSlotConfig) {
+}
+
+func (c PostgresSlotConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["publication_name"] = attrs["publication_name"].SetOptional()
+	attrs["slot_name"] = attrs["slot_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresSlotConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresSlotConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresSlotConfig
+// only implements ToObjectValue() and Type().
+func (o PostgresSlotConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"publication_name": o.PublicationName,
+			"slot_name":        o.SlotName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresSlotConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"publication_name": types.StringType,
+			"slot_name":        types.StringType,
+		},
+	}
+}
+
 type ReportSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
@@ -5846,10 +6218,10 @@ type ReportSpec struct {
 	TableConfiguration types.Object `tfsdk:"table_configuration"`
 }
 
-func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec) {
+func (newState *ReportSpec) SyncFieldsDuringCreateOrUpdate(plan ReportSpec) {
 }
 
-func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
+func (newState *ReportSpec) SyncFieldsDuringRead(existingState ReportSpec) {
 }
 
 func (c ReportSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5946,10 +6318,10 @@ type RestartWindow struct {
 	TimeZoneId types.String `tfsdk:"time_zone_id"`
 }
 
-func (newState *RestartWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartWindow) {
+func (newState *RestartWindow) SyncFieldsDuringCreateOrUpdate(plan RestartWindow) {
 }
 
-func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState RestartWindow) {
+func (newState *RestartWindow) SyncFieldsDuringRead(existingState RestartWindow) {
 }
 
 func (c RestartWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6025,6 +6397,83 @@ func (o *RestartWindow) SetDaysOfWeek(ctx context.Context, v []types.String) {
 	o.DaysOfWeek = types.ListValueMust(t, vs)
 }
 
+type RestorePipelineRequest struct {
+	// The ID of the pipeline to restore
+	PipelineId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RestorePipelineRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RestorePipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RestorePipelineRequest
+// only implements ToObjectValue() and Type().
+func (o RestorePipelineRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"pipeline_id": o.PipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RestorePipelineRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"pipeline_id": types.StringType,
+		},
+	}
+}
+
+type RestorePipelineRequestResponse struct {
+}
+
+func (newState *RestorePipelineRequestResponse) SyncFieldsDuringCreateOrUpdate(plan RestorePipelineRequestResponse) {
+}
+
+func (newState *RestorePipelineRequestResponse) SyncFieldsDuringRead(existingState RestorePipelineRequestResponse) {
+}
+
+func (c RestorePipelineRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RestorePipelineRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RestorePipelineRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RestorePipelineRequestResponse
+// only implements ToObjectValue() and Type().
+func (o RestorePipelineRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RestorePipelineRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Write-only setting, available only in Create/Update calls. Specifies the user
 // or service principal that the pipeline runs as. If not specified, the
 // pipeline runs as the user who created the pipeline.
@@ -6040,10 +6489,10 @@ type RunAs struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *RunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunAs) {
+func (newState *RunAs) SyncFieldsDuringCreateOrUpdate(plan RunAs) {
 }
 
-func (newState *RunAs) SyncEffectiveFieldsDuringRead(existingState RunAs) {
+func (newState *RunAs) SyncFieldsDuringRead(existingState RunAs) {
 }
 
 func (c RunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6104,10 +6553,10 @@ type SchemaSpec struct {
 	TableConfiguration types.Object `tfsdk:"table_configuration"`
 }
 
-func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec) {
+func (newState *SchemaSpec) SyncFieldsDuringCreateOrUpdate(plan SchemaSpec) {
 }
 
-func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSpec) {
+func (newState *SchemaSpec) SyncFieldsDuringRead(existingState SchemaSpec) {
 }
 
 func (c SchemaSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6196,10 +6645,10 @@ type Sequencing struct {
 	DataPlaneId types.Object `tfsdk:"data_plane_id"`
 }
 
-func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing) {
+func (newState *Sequencing) SyncFieldsDuringCreateOrUpdate(plan Sequencing) {
 }
 
-func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequencing) {
+func (newState *Sequencing) SyncFieldsDuringRead(existingState Sequencing) {
 }
 
 func (c Sequencing) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6281,10 +6730,10 @@ type SerializedException struct {
 	Stack types.List `tfsdk:"stack"`
 }
 
-func (newState *SerializedException) SyncEffectiveFieldsDuringCreateOrUpdate(plan SerializedException) {
+func (newState *SerializedException) SyncFieldsDuringCreateOrUpdate(plan SerializedException) {
 }
 
-func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState SerializedException) {
+func (newState *SerializedException) SyncFieldsDuringRead(existingState SerializedException) {
 }
 
 func (c SerializedException) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6360,6 +6809,169 @@ func (o *SerializedException) SetStack(ctx context.Context, v []StackFrame) {
 	o.Stack = types.ListValueMust(t, vs)
 }
 
+// SourceCatalogConfig contains catalog-level custom configuration parameters
+// for each source
+type SourceCatalogConfig struct {
+	// Postgres-specific catalog-level configuration parameters
+	Postgres types.Object `tfsdk:"postgres"`
+	// Source catalog name
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (newState *SourceCatalogConfig) SyncFieldsDuringCreateOrUpdate(plan SourceCatalogConfig) {
+}
+
+func (newState *SourceCatalogConfig) SyncFieldsDuringRead(existingState SourceCatalogConfig) {
+}
+
+func (c SourceCatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["postgres"] = attrs["postgres"].SetOptional()
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceCatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"postgres": reflect.TypeOf(PostgresCatalogConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceCatalogConfig
+// only implements ToObjectValue() and Type().
+func (o SourceCatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"postgres":       o.Postgres,
+			"source_catalog": o.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceCatalogConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"postgres":       PostgresCatalogConfig{}.Type(ctx),
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
+// GetPostgres returns the value of the Postgres field in SourceCatalogConfig as
+// a PostgresCatalogConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceCatalogConfig) GetPostgres(ctx context.Context) (PostgresCatalogConfig, bool) {
+	var e PostgresCatalogConfig
+	if o.Postgres.IsNull() || o.Postgres.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresCatalogConfig
+	d := o.Postgres.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPostgres sets the value of the Postgres field in SourceCatalogConfig.
+func (o *SourceCatalogConfig) SetPostgres(ctx context.Context, v PostgresCatalogConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Postgres = vs
+}
+
+type SourceConfig struct {
+	// Catalog-level source configuration parameters
+	Catalog types.Object `tfsdk:"catalog"`
+}
+
+func (newState *SourceConfig) SyncFieldsDuringCreateOrUpdate(plan SourceConfig) {
+}
+
+func (newState *SourceConfig) SyncFieldsDuringRead(existingState SourceConfig) {
+}
+
+func (c SourceConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"catalog": reflect.TypeOf(SourceCatalogConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceConfig
+// only implements ToObjectValue() and Type().
+func (o SourceConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": o.Catalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": SourceCatalogConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetCatalog returns the value of the Catalog field in SourceConfig as
+// a SourceCatalogConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceConfig) GetCatalog(ctx context.Context) (SourceCatalogConfig, bool) {
+	var e SourceCatalogConfig
+	if o.Catalog.IsNull() || o.Catalog.IsUnknown() {
+		return e, false
+	}
+	var v []SourceCatalogConfig
+	d := o.Catalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCatalog sets the value of the Catalog field in SourceConfig.
+func (o *SourceConfig) SetCatalog(ctx context.Context, v SourceCatalogConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.Catalog = vs
+}
+
 type StackFrame struct {
 	// Class from which the method call originated
 	DeclaringClass types.String `tfsdk:"declaring_class"`
@@ -6371,10 +6983,10 @@ type StackFrame struct {
 	MethodName types.String `tfsdk:"method_name"`
 }
 
-func (newState *StackFrame) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFrame) {
+func (newState *StackFrame) SyncFieldsDuringCreateOrUpdate(plan StackFrame) {
 }
 
-func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFrame) {
+func (newState *StackFrame) SyncFieldsDuringRead(existingState StackFrame) {
 }
 
 func (c StackFrame) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6548,10 +7160,10 @@ type StartUpdateResponse struct {
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdateResponse) {
+func (newState *StartUpdateResponse) SyncFieldsDuringCreateOrUpdate(plan StartUpdateResponse) {
 }
 
-func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse) {
+func (newState *StartUpdateResponse) SyncFieldsDuringRead(existingState StartUpdateResponse) {
 }
 
 func (c StartUpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6594,10 +7206,10 @@ func (o StartUpdateResponse) Type(ctx context.Context) attr.Type {
 type StopPipelineResponse struct {
 }
 
-func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopPipelineResponse) {
+func (newState *StopPipelineResponse) SyncFieldsDuringCreateOrUpdate(plan StopPipelineResponse) {
 }
 
-func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse) {
+func (newState *StopPipelineResponse) SyncFieldsDuringRead(existingState StopPipelineResponse) {
 }
 
 func (c StopPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6688,10 +7300,10 @@ type TableSpec struct {
 	TableConfiguration types.Object `tfsdk:"table_configuration"`
 }
 
-func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec) {
+func (newState *TableSpec) SyncFieldsDuringCreateOrUpdate(plan TableSpec) {
 }
 
-func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec) {
+func (newState *TableSpec) SyncFieldsDuringRead(existingState TableSpec) {
 }
 
 func (c TableSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6794,6 +7406,12 @@ type TableSpecificConfig struct {
 	IncludeColumns types.List `tfsdk:"include_columns"`
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
+
+	QueryBasedConnectorConfig types.Object `tfsdk:"query_based_connector_config"`
+	// (Optional, Immutable) The row filter condition to be applied to the
+	// table. It must not contain the WHERE keyword, only the actual filter
+	// condition. It must be in DBSQL format.
+	RowFilter types.String `tfsdk:"row_filter"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -6805,16 +7423,18 @@ type TableSpecificConfig struct {
 	SequenceBy types.List `tfsdk:"sequence_by"`
 }
 
-func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpecificConfig) {
+func (newState *TableSpecificConfig) SyncFieldsDuringCreateOrUpdate(plan TableSpecificConfig) {
 }
 
-func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig) {
+func (newState *TableSpecificConfig) SyncFieldsDuringRead(existingState TableSpecificConfig) {
 }
 
 func (c TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
 	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
+	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].SetOptional()
+	attrs["row_filter"] = attrs["row_filter"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
@@ -6831,10 +7451,11 @@ func (c TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (a TableSpecificConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"exclude_columns": reflect.TypeOf(types.String{}),
-		"include_columns": reflect.TypeOf(types.String{}),
-		"primary_keys":    reflect.TypeOf(types.String{}),
-		"sequence_by":     reflect.TypeOf(types.String{}),
+		"exclude_columns":              reflect.TypeOf(types.String{}),
+		"include_columns":              reflect.TypeOf(types.String{}),
+		"primary_keys":                 reflect.TypeOf(types.String{}),
+		"query_based_connector_config": reflect.TypeOf(IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}),
+		"sequence_by":                  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6848,6 +7469,8 @@ func (o TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"exclude_columns":                   o.ExcludeColumns,
 			"include_columns":                   o.IncludeColumns,
 			"primary_keys":                      o.PrimaryKeys,
+			"query_based_connector_config":      o.QueryBasedConnectorConfig,
+			"row_filter":                        o.RowFilter,
 			"salesforce_include_formula_fields": o.SalesforceIncludeFormulaFields,
 			"scd_type":                          o.ScdType,
 			"sequence_by":                       o.SequenceBy,
@@ -6867,6 +7490,8 @@ func (o TableSpecificConfig) Type(ctx context.Context) attr.Type {
 			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"query_based_connector_config":      IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}.Type(ctx),
+			"row_filter":                        types.StringType,
 			"salesforce_include_formula_fields": types.BoolType,
 			"scd_type":                          types.StringType,
 			"sequence_by": basetypes.ListType{
@@ -6954,6 +7579,34 @@ func (o *TableSpecificConfig) SetPrimaryKeys(ctx context.Context, v []types.Stri
 	o.PrimaryKeys = types.ListValueMust(t, vs)
 }
 
+// GetQueryBasedConnectorConfig returns the value of the QueryBasedConnectorConfig field in TableSpecificConfig as
+// a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig) GetQueryBasedConnectorConfig(ctx context.Context) (IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig, bool) {
+	var e IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+	if o.QueryBasedConnectorConfig.IsNull() || o.QueryBasedConnectorConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig
+	d := o.QueryBasedConnectorConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryBasedConnectorConfig sets the value of the QueryBasedConnectorConfig field in TableSpecificConfig.
+func (o *TableSpecificConfig) SetQueryBasedConnectorConfig(ctx context.Context, v IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig) {
+	vs := v.ToObjectValue(ctx)
+	o.QueryBasedConnectorConfig = vs
+}
+
 // GetSequenceBy returns the value of the SequenceBy field in TableSpecificConfig as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
@@ -7013,10 +7666,10 @@ type UpdateInfo struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
-func (newState *UpdateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInfo) {
+func (newState *UpdateInfo) SyncFieldsDuringCreateOrUpdate(plan UpdateInfo) {
 }
 
-func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateInfo) {
+func (newState *UpdateInfo) SyncFieldsDuringRead(existingState UpdateInfo) {
 }
 
 func (c UpdateInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7182,10 +7835,10 @@ type UpdateStateInfo struct {
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStateInfo) {
+func (newState *UpdateStateInfo) SyncFieldsDuringCreateOrUpdate(plan UpdateStateInfo) {
 }
 
-func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo) {
+func (newState *UpdateStateInfo) SyncFieldsDuringRead(existingState UpdateStateInfo) {
 }
 
 func (c UpdateStateInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

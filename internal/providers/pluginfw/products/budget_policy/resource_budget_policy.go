@@ -62,6 +62,7 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan billing_tf.Budge
 	}
 
 	var budget_policy billing.BudgetPolicy
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
 	if diags.HasError() {
 		return
@@ -84,7 +85,7 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan billing_tf.Budge
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -96,14 +97,13 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan billing_tf.BudgetPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var budget_policy billing.BudgetPolicy
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,8 +127,7 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
-
+	newState.SyncFieldsDuringCreateOrUpdate(plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,12 +167,13 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	var newState billing_tf.BudgetPolicy
+
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

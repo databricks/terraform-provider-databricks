@@ -51,10 +51,10 @@ type BaseJob struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
+func (newState *BaseJob) SyncFieldsDuringCreateOrUpdate(plan BaseJob) {
 }
 
-func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
+func (newState *BaseJob) SyncFieldsDuringRead(existingState BaseJob) {
 }
 
 func (c BaseJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -306,10 +306,10 @@ type BaseRun struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
+func (newState *BaseRun) SyncFieldsDuringCreateOrUpdate(plan BaseRun) {
 }
 
-func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
+func (newState *BaseRun) SyncFieldsDuringRead(existingState BaseRun) {
 }
 
 func (c BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -943,10 +943,10 @@ type CleanRoomTaskRunState struct {
 	ResultState types.String `tfsdk:"result_state"`
 }
 
-func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
+func (newState *CleanRoomTaskRunState) SyncFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
 }
 
-func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringRead(existingState CleanRoomTaskRunState) {
+func (newState *CleanRoomTaskRunState) SyncFieldsDuringRead(existingState CleanRoomTaskRunState) {
 }
 
 func (c CleanRoomTaskRunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1002,10 +1002,10 @@ type CleanRoomsNotebookTask struct {
 	NotebookName types.String `tfsdk:"notebook_name"`
 }
 
-func (newState *CleanRoomsNotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTask) {
+func (newState *CleanRoomsNotebookTask) SyncFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTask) {
 }
 
-func (newState *CleanRoomsNotebookTask) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTask) {
+func (newState *CleanRoomsNotebookTask) SyncFieldsDuringRead(existingState CleanRoomsNotebookTask) {
 }
 
 func (c CleanRoomsNotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1093,10 +1093,10 @@ type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput struct {
 	OutputSchemaInfo types.Object `tfsdk:"output_schema_info"`
 }
 
-func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
 }
 
-func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringRead(existingState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
 }
 
 func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1251,10 +1251,10 @@ type ClusterInstance struct {
 	SparkContextId types.String `tfsdk:"spark_context_id"`
 }
 
-func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterInstance) {
+func (newState *ClusterInstance) SyncFieldsDuringCreateOrUpdate(plan ClusterInstance) {
 }
 
-func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
+func (newState *ClusterInstance) SyncFieldsDuringRead(existingState ClusterInstance) {
 }
 
 func (c ClusterInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1314,10 +1314,10 @@ type ClusterSpec struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+func (newState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(plan ClusterSpec) {
 }
 
-func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
+func (newState *ClusterSpec) SyncFieldsDuringRead(existingState ClusterSpec) {
 }
 
 func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1434,10 +1434,10 @@ type ComputeConfig struct {
 	NumGpus types.Int64 `tfsdk:"num_gpus"`
 }
 
-func (newState *ComputeConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeConfig) {
+func (newState *ComputeConfig) SyncFieldsDuringCreateOrUpdate(plan ComputeConfig) {
 }
 
-func (newState *ComputeConfig) SyncEffectiveFieldsDuringRead(existingState ComputeConfig) {
+func (newState *ComputeConfig) SyncFieldsDuringRead(existingState ComputeConfig) {
 }
 
 func (c ComputeConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1503,10 +1503,10 @@ type ConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConditionTask) {
+func (newState *ConditionTask) SyncFieldsDuringCreateOrUpdate(plan ConditionTask) {
 }
 
-func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
+func (newState *ConditionTask) SyncFieldsDuringRead(existingState ConditionTask) {
 }
 
 func (c ConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1556,16 +1556,20 @@ type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
+	// Indicate whether the continuous job is applying task level retries or
+	// not. Defaults to NEVER.
+	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
-func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous) {
+func (newState *Continuous) SyncFieldsDuringCreateOrUpdate(plan Continuous) {
 }
 
-func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
+func (newState *Continuous) SyncFieldsDuringRead(existingState Continuous) {
 }
 
 func (c Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1588,7 +1592,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status": o.PauseStatus,
+			"pause_status":    o.PauseStatus,
+			"task_retry_mode": o.TaskRetryMode,
 		})
 }
 
@@ -1596,7 +1601,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Continuous) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status": types.StringType,
+			"pause_status":    types.StringType,
+			"task_retry_mode": types.StringType,
 		},
 	}
 }
@@ -2297,10 +2303,10 @@ type CreateResponse struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+func (newState *CreateResponse) SyncFieldsDuringCreateOrUpdate(plan CreateResponse) {
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+func (newState *CreateResponse) SyncFieldsDuringRead(existingState CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2355,10 +2361,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+func (newState *CronSchedule) SyncFieldsDuringCreateOrUpdate(plan CronSchedule) {
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+func (newState *CronSchedule) SyncFieldsDuringRead(existingState CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2410,10 +2416,10 @@ type DashboardPageSnapshot struct {
 	WidgetErrorDetails types.List `tfsdk:"widget_error_details"`
 }
 
-func (newState *DashboardPageSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardPageSnapshot) {
+func (newState *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(plan DashboardPageSnapshot) {
 }
 
-func (newState *DashboardPageSnapshot) SyncEffectiveFieldsDuringRead(existingState DashboardPageSnapshot) {
+func (newState *DashboardPageSnapshot) SyncFieldsDuringRead(existingState DashboardPageSnapshot) {
 }
 
 func (c DashboardPageSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2498,10 +2504,10 @@ type DashboardTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *DashboardTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardTask) {
+func (newState *DashboardTask) SyncFieldsDuringCreateOrUpdate(plan DashboardTask) {
 }
 
-func (newState *DashboardTask) SyncEffectiveFieldsDuringRead(existingState DashboardTask) {
+func (newState *DashboardTask) SyncFieldsDuringRead(existingState DashboardTask) {
 }
 
 func (c DashboardTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2582,10 +2588,10 @@ type DashboardTaskOutput struct {
 	PageSnapshots types.List `tfsdk:"page_snapshots"`
 }
 
-func (newState *DashboardTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardTaskOutput) {
+func (newState *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DashboardTaskOutput) {
 }
 
-func (newState *DashboardTaskOutput) SyncEffectiveFieldsDuringRead(existingState DashboardTaskOutput) {
+func (newState *DashboardTaskOutput) SyncFieldsDuringRead(existingState DashboardTaskOutput) {
 }
 
 func (c DashboardTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2668,10 +2674,10 @@ type DbtCloudJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DbtCloudJobRunStep) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtCloudJobRunStep) {
+func (newState *DbtCloudJobRunStep) SyncFieldsDuringCreateOrUpdate(plan DbtCloudJobRunStep) {
 }
 
-func (newState *DbtCloudJobRunStep) SyncEffectiveFieldsDuringRead(existingState DbtCloudJobRunStep) {
+func (newState *DbtCloudJobRunStep) SyncFieldsDuringRead(existingState DbtCloudJobRunStep) {
 }
 
 func (c DbtCloudJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2729,10 +2735,10 @@ type DbtCloudTask struct {
 	DbtCloudJobId types.Int64 `tfsdk:"dbt_cloud_job_id"`
 }
 
-func (newState *DbtCloudTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtCloudTask) {
+func (newState *DbtCloudTask) SyncFieldsDuringCreateOrUpdate(plan DbtCloudTask) {
 }
 
-func (newState *DbtCloudTask) SyncEffectiveFieldsDuringRead(existingState DbtCloudTask) {
+func (newState *DbtCloudTask) SyncFieldsDuringRead(existingState DbtCloudTask) {
 }
 
 func (c DbtCloudTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2785,10 +2791,10 @@ type DbtCloudTaskOutput struct {
 	DbtCloudJobRunUrl types.String `tfsdk:"dbt_cloud_job_run_url"`
 }
 
-func (newState *DbtCloudTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtCloudTaskOutput) {
+func (newState *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DbtCloudTaskOutput) {
 }
 
-func (newState *DbtCloudTaskOutput) SyncEffectiveFieldsDuringRead(existingState DbtCloudTaskOutput) {
+func (newState *DbtCloudTaskOutput) SyncFieldsDuringRead(existingState DbtCloudTaskOutput) {
 }
 
 func (c DbtCloudTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2874,10 +2880,10 @@ type DbtOutput struct {
 	ArtifactsLink types.String `tfsdk:"artifacts_link"`
 }
 
-func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutput) {
+func (newState *DbtOutput) SyncFieldsDuringCreateOrUpdate(plan DbtOutput) {
 }
 
-func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
+func (newState *DbtOutput) SyncFieldsDuringRead(existingState DbtOutput) {
 }
 
 func (c DbtOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2968,10 +2974,10 @@ type DbtPlatformJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DbtPlatformJobRunStep) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformJobRunStep) {
+func (newState *DbtPlatformJobRunStep) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformJobRunStep) {
 }
 
-func (newState *DbtPlatformJobRunStep) SyncEffectiveFieldsDuringRead(existingState DbtPlatformJobRunStep) {
+func (newState *DbtPlatformJobRunStep) SyncFieldsDuringRead(existingState DbtPlatformJobRunStep) {
 }
 
 func (c DbtPlatformJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3035,10 +3041,10 @@ type DbtPlatformTask struct {
 	DbtPlatformJobId types.String `tfsdk:"dbt_platform_job_id"`
 }
 
-func (newState *DbtPlatformTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformTask) {
+func (newState *DbtPlatformTask) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformTask) {
 }
 
-func (newState *DbtPlatformTask) SyncEffectiveFieldsDuringRead(existingState DbtPlatformTask) {
+func (newState *DbtPlatformTask) SyncFieldsDuringRead(existingState DbtPlatformTask) {
 }
 
 func (c DbtPlatformTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3094,10 +3100,10 @@ type DbtPlatformTaskOutput struct {
 	StepsTruncated types.Bool `tfsdk:"steps_truncated"`
 }
 
-func (newState *DbtPlatformTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtPlatformTaskOutput) {
+func (newState *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformTaskOutput) {
 }
 
-func (newState *DbtPlatformTaskOutput) SyncEffectiveFieldsDuringRead(existingState DbtPlatformTaskOutput) {
+func (newState *DbtPlatformTaskOutput) SyncFieldsDuringRead(existingState DbtPlatformTaskOutput) {
 }
 
 func (c DbtPlatformTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3213,10 +3219,10 @@ type DbtTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
+func (newState *DbtTask) SyncFieldsDuringCreateOrUpdate(plan DbtTask) {
 }
 
-func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
+func (newState *DbtTask) SyncFieldsDuringRead(existingState DbtTask) {
 }
 
 func (c DbtTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3454,10 +3460,10 @@ type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
-func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
 func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3561,10 +3567,10 @@ type EnforcePolicyComplianceResponse struct {
 	Settings types.Object `tfsdk:"settings"`
 }
 
-func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
+func (newState *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
 }
 
-func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
+func (newState *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
 }
 
 func (c EnforcePolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3679,10 +3685,10 @@ type ExportRunOutput struct {
 	Views types.List `tfsdk:"views"`
 }
 
-func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
+func (newState *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
 }
 
-func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
+func (newState *ExportRunOutput) SyncFieldsDuringRead(existingState ExportRunOutput) {
 }
 
 func (c ExportRunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3807,10 +3813,10 @@ type FileArrivalTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
+func (newState *FileArrivalTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
 }
 
-func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
+func (newState *FileArrivalTriggerConfiguration) SyncFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
 }
 
 func (c FileArrivalTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3862,10 +3868,10 @@ type FileArrivalTriggerState struct {
 	UsingFileEvents types.Bool `tfsdk:"using_file_events"`
 }
 
-func (newState *FileArrivalTriggerState) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileArrivalTriggerState) {
+func (newState *FileArrivalTriggerState) SyncFieldsDuringCreateOrUpdate(plan FileArrivalTriggerState) {
 }
 
-func (newState *FileArrivalTriggerState) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerState) {
+func (newState *FileArrivalTriggerState) SyncFieldsDuringRead(existingState FileArrivalTriggerState) {
 }
 
 func (c FileArrivalTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3912,10 +3918,10 @@ type ForEachStats struct {
 	TaskRunStats types.Object `tfsdk:"task_run_stats"`
 }
 
-func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachStats) {
+func (newState *ForEachStats) SyncFieldsDuringCreateOrUpdate(plan ForEachStats) {
 }
 
-func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
+func (newState *ForEachStats) SyncFieldsDuringRead(existingState ForEachStats) {
 }
 
 func (c ForEachStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4029,10 +4035,10 @@ type ForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTask) {
+func (newState *ForEachTask) SyncFieldsDuringCreateOrUpdate(plan ForEachTask) {
 }
 
-func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
+func (newState *ForEachTask) SyncFieldsDuringRead(existingState ForEachTask) {
 }
 
 func (c ForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4118,10 +4124,10 @@ type ForEachTaskErrorMessageStats struct {
 	TerminationCategory types.String `tfsdk:"termination_category"`
 }
 
-func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
+func (newState *ForEachTaskErrorMessageStats) SyncFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
 }
 
-func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
+func (newState *ForEachTaskErrorMessageStats) SyncFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
 func (c ForEachTaskErrorMessageStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4183,10 +4189,10 @@ type ForEachTaskTaskRunStats struct {
 	TotalIterations types.Int64 `tfsdk:"total_iterations"`
 }
 
-func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
+func (newState *ForEachTaskTaskRunStats) SyncFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
 }
 
-func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
+func (newState *ForEachTaskTaskRunStats) SyncFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
 }
 
 func (c ForEachTaskTaskRunStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4275,10 +4281,10 @@ type GenAiComputeTask struct {
 	YamlParametersFilePath types.String `tfsdk:"yaml_parameters_file_path"`
 }
 
-func (newState *GenAiComputeTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenAiComputeTask) {
+func (newState *GenAiComputeTask) SyncFieldsDuringCreateOrUpdate(plan GenAiComputeTask) {
 }
 
-func (newState *GenAiComputeTask) SyncEffectiveFieldsDuringRead(existingState GenAiComputeTask) {
+func (newState *GenAiComputeTask) SyncFieldsDuringRead(existingState GenAiComputeTask) {
 }
 
 func (c GenAiComputeTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4410,10 +4416,10 @@ type GetJobPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
+func (newState *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
 }
 
-func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
+func (newState *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
 }
 
 func (c GetJobPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4611,10 +4617,10 @@ type GetPolicyComplianceResponse struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
+func (newState *GetPolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
 }
 
-func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
+func (newState *GetPolicyComplianceResponse) SyncFieldsDuringRead(existingState GetPolicyComplianceResponse) {
 }
 
 func (c GetPolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4782,10 +4788,10 @@ type GitSnapshot struct {
 	UsedCommit types.String `tfsdk:"used_commit"`
 }
 
-func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSnapshot) {
+func (newState *GitSnapshot) SyncFieldsDuringCreateOrUpdate(plan GitSnapshot) {
 }
 
-func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
+func (newState *GitSnapshot) SyncFieldsDuringRead(existingState GitSnapshot) {
 }
 
 func (c GitSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4857,10 +4863,10 @@ type GitSource struct {
 	JobSource types.Object `tfsdk:"job_source"`
 }
 
-func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSource) {
+func (newState *GitSource) SyncFieldsDuringCreateOrUpdate(plan GitSource) {
 }
 
-func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
+func (newState *GitSource) SyncFieldsDuringRead(existingState GitSource) {
 }
 
 func (c GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5016,10 +5022,10 @@ type Job struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
+func (newState *Job) SyncFieldsDuringCreateOrUpdate(plan Job) {
 }
 
-func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
+func (newState *Job) SyncFieldsDuringRead(existingState Job) {
 }
 
 func (c Job) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5153,10 +5159,10 @@ type JobAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
+func (newState *JobAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
 }
 
-func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
+func (newState *JobAccessControlRequest) SyncFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
 func (c JobAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5218,10 +5224,10 @@ type JobAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
+func (newState *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
 }
 
-func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
+func (newState *JobAccessControlResponse) SyncFieldsDuringRead(existingState JobAccessControlResponse) {
 }
 
 func (c JobAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5312,10 +5318,10 @@ type JobCluster struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCluster) {
+func (newState *JobCluster) SyncFieldsDuringCreateOrUpdate(plan JobCluster) {
 }
 
-func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
+func (newState *JobCluster) SyncFieldsDuringRead(existingState JobCluster) {
 }
 
 func (c JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5401,10 +5407,10 @@ type JobCompliance struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCompliance) {
+func (newState *JobCompliance) SyncFieldsDuringCreateOrUpdate(plan JobCompliance) {
 }
 
-func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
+func (newState *JobCompliance) SyncFieldsDuringRead(existingState JobCompliance) {
 }
 
 func (c JobCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5489,10 +5495,10 @@ type JobDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
-func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobDeployment) {
+func (newState *JobDeployment) SyncFieldsDuringCreateOrUpdate(plan JobDeployment) {
 }
 
-func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
+func (newState *JobDeployment) SyncFieldsDuringRead(existingState JobDeployment) {
 }
 
 func (c JobDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5571,10 +5577,10 @@ type JobEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
+func (newState *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
 }
 
-func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
+func (newState *JobEmailNotifications) SyncFieldsDuringRead(existingState JobEmailNotifications) {
 }
 
 func (c JobEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5782,10 +5788,10 @@ type JobEnvironment struct {
 	Spec types.Object `tfsdk:"spec"`
 }
 
-func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEnvironment) {
+func (newState *JobEnvironment) SyncFieldsDuringCreateOrUpdate(plan JobEnvironment) {
 }
 
-func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
+func (newState *JobEnvironment) SyncFieldsDuringRead(existingState JobEnvironment) {
 }
 
 func (c JobEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5867,10 +5873,10 @@ type JobNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
+func (newState *JobNotificationSettings) SyncFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
 }
 
-func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
+func (newState *JobNotificationSettings) SyncFieldsDuringRead(existingState JobNotificationSettings) {
 }
 
 func (c JobNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5922,10 +5928,10 @@ type JobParameter struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameter) {
+func (newState *JobParameter) SyncFieldsDuringCreateOrUpdate(plan JobParameter) {
 }
 
-func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
+func (newState *JobParameter) SyncFieldsDuringRead(existingState JobParameter) {
 }
 
 func (c JobParameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5979,10 +5985,10 @@ type JobParameterDefinition struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
+func (newState *JobParameterDefinition) SyncFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
 }
 
-func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
+func (newState *JobParameterDefinition) SyncFieldsDuringRead(existingState JobParameterDefinition) {
 }
 
 func (c JobParameterDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6033,10 +6039,10 @@ type JobPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermission) {
+func (newState *JobPermission) SyncFieldsDuringCreateOrUpdate(plan JobPermission) {
 }
 
-func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
+func (newState *JobPermission) SyncFieldsDuringRead(existingState JobPermission) {
 }
 
 func (c JobPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6120,10 +6126,10 @@ type JobPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissions) {
+func (newState *JobPermissions) SyncFieldsDuringCreateOrUpdate(plan JobPermissions) {
 }
 
-func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
+func (newState *JobPermissions) SyncFieldsDuringRead(existingState JobPermissions) {
 }
 
 func (c JobPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6205,10 +6211,10 @@ type JobPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
+func (newState *JobPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
 }
 
-func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
+func (newState *JobPermissionsDescription) SyncFieldsDuringRead(existingState JobPermissionsDescription) {
 }
 
 func (c JobPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6334,10 +6340,10 @@ type JobRunAs struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs) {
+func (newState *JobRunAs) SyncFieldsDuringCreateOrUpdate(plan JobRunAs) {
 }
 
-func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
+func (newState *JobRunAs) SyncFieldsDuringRead(existingState JobRunAs) {
 }
 
 func (c JobRunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6495,10 +6501,10 @@ type JobSettings struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSettings) {
+func (newState *JobSettings) SyncFieldsDuringCreateOrUpdate(plan JobSettings) {
 }
 
-func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
+func (newState *JobSettings) SyncFieldsDuringRead(existingState JobSettings) {
 }
 
 func (c JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7091,10 +7097,10 @@ type JobSource struct {
 	JobConfigPath types.String `tfsdk:"job_config_path"`
 }
 
-func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSource) {
+func (newState *JobSource) SyncFieldsDuringCreateOrUpdate(plan JobSource) {
 }
 
-func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
+func (newState *JobSource) SyncFieldsDuringRead(existingState JobSource) {
 }
 
 func (c JobSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7149,10 +7155,10 @@ type JobsHealthRule struct {
 	Value types.Int64 `tfsdk:"value"`
 }
 
-func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
+func (newState *JobsHealthRule) SyncFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
 }
 
-func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
+func (newState *JobsHealthRule) SyncFieldsDuringRead(existingState JobsHealthRule) {
 }
 
 func (c JobsHealthRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7203,10 +7209,10 @@ type JobsHealthRules struct {
 	Rules types.List `tfsdk:"rules"`
 }
 
-func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
+func (newState *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
 }
 
-func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
+func (newState *JobsHealthRules) SyncFieldsDuringRead(existingState JobsHealthRules) {
 }
 
 func (c JobsHealthRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7289,10 +7295,10 @@ type ListJobComplianceForPolicyResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
+func (newState *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
 }
 
-func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
+func (newState *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
 }
 
 func (c ListJobComplianceForPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7488,10 +7494,10 @@ type ListJobsResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
+func (newState *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
 }
 
-func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
+func (newState *ListJobsResponse) SyncFieldsDuringRead(existingState ListJobsResponse) {
 }
 
 func (c ListJobsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7675,10 +7681,10 @@ type ListRunsResponse struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
+func (newState *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
 }
 
-func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
+func (newState *ListRunsResponse) SyncFieldsDuringRead(existingState ListRunsResponse) {
 }
 
 func (c ListRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7757,6 +7763,112 @@ func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
 	o.Runs = types.ListValueMust(t, vs)
 }
 
+type ModelTriggerConfiguration struct {
+	// Aliases of the model versions to monitor. Can only be used in conjunction
+	// with condition MODEL_ALIAS_SET.
+	Aliases types.List `tfsdk:"aliases"`
+	// The condition based on which to trigger a job run.
+	Condition types.String `tfsdk:"condition"`
+	// If set, the trigger starts a run only after the specified amount of time
+	// has passed since the last time the trigger fired. The minimum allowed
+	// value is 60 seconds.
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
+	// Name of the securable to monitor ("mycatalog.myschema.mymodel" in the
+	// case of model-level triggers, "mycatalog.myschema" in the case of
+	// schema-level triggers) or empty in the case of metastore-level triggers.
+	SecurableName types.String `tfsdk:"securable_name"`
+	// If set, the trigger starts a run only after no model updates have
+	// occurred for the specified time and can be used to wait for a series of
+	// model updates before triggering a run. The minimum allowed value is 60
+	// seconds.
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
+}
+
+func (newState *ModelTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan ModelTriggerConfiguration) {
+}
+
+func (newState *ModelTriggerConfiguration) SyncFieldsDuringRead(existingState ModelTriggerConfiguration) {
+}
+
+func (c ModelTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aliases"] = attrs["aliases"].SetOptional()
+	attrs["condition"] = attrs["condition"].SetRequired()
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["securable_name"] = attrs["securable_name"].SetOptional()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aliases": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (o ModelTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aliases":                           o.Aliases,
+			"condition":                         o.Condition,
+			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
+			"securable_name":                    o.SecurableName,
+			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelTriggerConfiguration) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"securable_name":                    types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
+		},
+	}
+}
+
+// GetAliases returns the value of the Aliases field in ModelTriggerConfiguration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelTriggerConfiguration) GetAliases(ctx context.Context) ([]types.String, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in ModelTriggerConfiguration.
+func (o *ModelTriggerConfiguration) SetAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Aliases = types.ListValueMust(t, vs)
+}
+
 type NotebookOutput struct {
 	// The value passed to
 	// [dbutils.notebook.exit()](/notebooks/notebook-workflows.html#notebook-workflows-exit).
@@ -7769,10 +7881,10 @@ type NotebookOutput struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookOutput) {
+func (newState *NotebookOutput) SyncFieldsDuringCreateOrUpdate(plan NotebookOutput) {
 }
 
-func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
+func (newState *NotebookOutput) SyncFieldsDuringRead(existingState NotebookOutput) {
 }
 
 func (c NotebookOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7856,10 +7968,10 @@ type NotebookTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookTask) {
+func (newState *NotebookTask) SyncFieldsDuringCreateOrUpdate(plan NotebookTask) {
 }
 
-func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
+func (newState *NotebookTask) SyncFieldsDuringRead(existingState NotebookTask) {
 }
 
 func (c NotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7949,10 +8061,10 @@ type OutputSchemaInfo struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 }
 
-func (newState *OutputSchemaInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan OutputSchemaInfo) {
+func (newState *OutputSchemaInfo) SyncFieldsDuringCreateOrUpdate(plan OutputSchemaInfo) {
 }
 
-func (newState *OutputSchemaInfo) SyncEffectiveFieldsDuringRead(existingState OutputSchemaInfo) {
+func (newState *OutputSchemaInfo) SyncFieldsDuringRead(existingState OutputSchemaInfo) {
 }
 
 func (c OutputSchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8005,10 +8117,10 @@ type PeriodicTriggerConfiguration struct {
 	Unit types.String `tfsdk:"unit"`
 }
 
-func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
+func (newState *PeriodicTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
 }
 
-func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
+func (newState *PeriodicTriggerConfiguration) SyncFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
 }
 
 func (c PeriodicTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8056,10 +8168,10 @@ type PipelineParams struct {
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 }
 
-func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineParams) {
+func (newState *PipelineParams) SyncFieldsDuringCreateOrUpdate(plan PipelineParams) {
 }
 
-func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
+func (newState *PipelineParams) SyncFieldsDuringRead(existingState PipelineParams) {
 }
 
 func (c PipelineParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8106,10 +8218,10 @@ type PipelineTask struct {
 	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
-func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTask) {
+func (newState *PipelineTask) SyncFieldsDuringCreateOrUpdate(plan PipelineTask) {
 }
 
-func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
+func (newState *PipelineTask) SyncFieldsDuringRead(existingState PipelineTask) {
 }
 
 func (c PipelineTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8165,10 +8277,10 @@ type PowerBiModel struct {
 	WorkspaceName types.String `tfsdk:"workspace_name"`
 }
 
-func (newState *PowerBiModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiModel) {
+func (newState *PowerBiModel) SyncFieldsDuringCreateOrUpdate(plan PowerBiModel) {
 }
 
-func (newState *PowerBiModel) SyncEffectiveFieldsDuringRead(existingState PowerBiModel) {
+func (newState *PowerBiModel) SyncFieldsDuringRead(existingState PowerBiModel) {
 }
 
 func (c PowerBiModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8231,10 +8343,10 @@ type PowerBiTable struct {
 	StorageMode types.String `tfsdk:"storage_mode"`
 }
 
-func (newState *PowerBiTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiTable) {
+func (newState *PowerBiTable) SyncFieldsDuringCreateOrUpdate(plan PowerBiTable) {
 }
 
-func (newState *PowerBiTable) SyncEffectiveFieldsDuringRead(existingState PowerBiTable) {
+func (newState *PowerBiTable) SyncFieldsDuringRead(existingState PowerBiTable) {
 }
 
 func (c PowerBiTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8297,10 +8409,10 @@ type PowerBiTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *PowerBiTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiTask) {
+func (newState *PowerBiTask) SyncFieldsDuringCreateOrUpdate(plan PowerBiTask) {
 }
 
-func (newState *PowerBiTask) SyncEffectiveFieldsDuringRead(existingState PowerBiTask) {
+func (newState *PowerBiTask) SyncFieldsDuringRead(existingState PowerBiTask) {
 }
 
 func (c PowerBiTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8427,10 +8539,10 @@ type PythonWheelTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
+func (newState *PythonWheelTask) SyncFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
 }
 
-func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
+func (newState *PythonWheelTask) SyncFieldsDuringRead(existingState PythonWheelTask) {
 }
 
 func (c PythonWheelTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8545,10 +8657,10 @@ type QueueDetails struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueDetails) {
+func (newState *QueueDetails) SyncFieldsDuringCreateOrUpdate(plan QueueDetails) {
 }
 
-func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
+func (newState *QueueDetails) SyncFieldsDuringRead(existingState QueueDetails) {
 }
 
 func (c QueueDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8596,10 +8708,10 @@ type QueueSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueSettings) {
+func (newState *QueueSettings) SyncFieldsDuringCreateOrUpdate(plan QueueSettings) {
 }
 
-func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
+func (newState *QueueSettings) SyncFieldsDuringRead(existingState QueueSettings) {
 }
 
 func (c QueueSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8668,10 +8780,10 @@ type RepairHistoryItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
+func (newState *RepairHistoryItem) SyncFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
 }
 
-func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
+func (newState *RepairHistoryItem) SyncFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
 func (c RepairHistoryItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9289,10 +9401,10 @@ type RepairRunResponse struct {
 	RepairId types.Int64 `tfsdk:"repair_id"`
 }
 
-func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
+func (newState *RepairRunResponse) SyncFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
 }
 
-func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
+func (newState *RepairRunResponse) SyncFieldsDuringRead(existingState RepairRunResponse) {
 }
 
 func (c RepairRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9442,10 +9554,10 @@ type ResolvedConditionTaskValues struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
+func (newState *ResolvedConditionTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
 }
 
-func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
+func (newState *ResolvedConditionTaskValues) SyncFieldsDuringRead(existingState ResolvedConditionTaskValues) {
 }
 
 func (c ResolvedConditionTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9492,10 +9604,10 @@ type ResolvedDbtTaskValues struct {
 	Commands types.List `tfsdk:"commands"`
 }
 
-func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
+func (newState *ResolvedDbtTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
 }
 
-func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
+func (newState *ResolvedDbtTaskValues) SyncFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
 func (c ResolvedDbtTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9569,10 +9681,10 @@ type ResolvedNotebookTaskValues struct {
 	BaseParameters types.Map `tfsdk:"base_parameters"`
 }
 
-func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
+func (newState *ResolvedNotebookTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
 }
 
-func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
+func (newState *ResolvedNotebookTaskValues) SyncFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
 }
 
 func (c ResolvedNotebookTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9646,10 +9758,10 @@ type ResolvedParamPairValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
+func (newState *ResolvedParamPairValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
 }
 
-func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
+func (newState *ResolvedParamPairValues) SyncFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
 func (c ResolvedParamPairValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9725,10 +9837,10 @@ type ResolvedPythonWheelTaskValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
+func (newState *ResolvedPythonWheelTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
 }
 
-func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
+func (newState *ResolvedPythonWheelTaskValues) SyncFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
 }
 
 func (c ResolvedPythonWheelTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9836,10 +9948,10 @@ type ResolvedRunJobTaskValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
+func (newState *ResolvedRunJobTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
 }
 
-func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
+func (newState *ResolvedRunJobTaskValues) SyncFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
 }
 
 func (c ResolvedRunJobTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9945,10 +10057,10 @@ type ResolvedStringParamsValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
+func (newState *ResolvedStringParamsValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
 }
 
-func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
+func (newState *ResolvedStringParamsValues) SyncFieldsDuringRead(existingState ResolvedStringParamsValues) {
 }
 
 func (c ResolvedStringParamsValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10040,10 +10152,10 @@ type ResolvedValues struct {
 	SqlTask types.Object `tfsdk:"sql_task"`
 }
 
-func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedValues) {
+func (newState *ResolvedValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedValues) {
 }
 
-func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
+func (newState *ResolvedValues) SyncFieldsDuringRead(existingState ResolvedValues) {
 }
 
 func (c ResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10542,10 +10654,10 @@ type Run struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
+func (newState *Run) SyncFieldsDuringCreateOrUpdate(plan Run) {
 }
 
-func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
+func (newState *Run) SyncFieldsDuringRead(existingState Run) {
 }
 
 func (c Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11088,10 +11200,10 @@ type RunConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunConditionTask) {
+func (newState *RunConditionTask) SyncFieldsDuringCreateOrUpdate(plan RunConditionTask) {
 }
 
-func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
+func (newState *RunConditionTask) SyncFieldsDuringRead(existingState RunConditionTask) {
 }
 
 func (c RunConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11155,10 +11267,10 @@ type RunForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunForEachTask) {
+func (newState *RunForEachTask) SyncFieldsDuringCreateOrUpdate(plan RunForEachTask) {
 }
 
-func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
+func (newState *RunForEachTask) SyncFieldsDuringRead(existingState RunForEachTask) {
 }
 
 func (c RunForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11271,10 +11383,10 @@ type RunJobOutput struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobOutput) {
+func (newState *RunJobOutput) SyncFieldsDuringCreateOrUpdate(plan RunJobOutput) {
 }
 
-func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
+func (newState *RunJobOutput) SyncFieldsDuringRead(existingState RunJobOutput) {
 }
 
 func (c RunJobOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11403,10 +11515,10 @@ type RunJobTask struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobTask) {
+func (newState *RunJobTask) SyncFieldsDuringCreateOrUpdate(plan RunJobTask) {
 }
 
-func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
+func (newState *RunJobTask) SyncFieldsDuringRead(existingState RunJobTask) {
 }
 
 func (c RunJobTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12240,10 +12352,10 @@ type RunNowResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNowResponse) {
+func (newState *RunNowResponse) SyncFieldsDuringCreateOrUpdate(plan RunNowResponse) {
 }
 
-func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
+func (newState *RunNowResponse) SyncFieldsDuringRead(existingState RunNowResponse) {
 }
 
 func (c RunNowResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12334,10 +12446,10 @@ type RunOutput struct {
 	SqlOutput types.Object `tfsdk:"sql_output"`
 }
 
-func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutput) {
+func (newState *RunOutput) SyncFieldsDuringCreateOrUpdate(plan RunOutput) {
 }
 
-func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
+func (newState *RunOutput) SyncFieldsDuringRead(existingState RunOutput) {
 }
 
 func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12763,10 +12875,10 @@ type RunParameters struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunParameters) {
+func (newState *RunParameters) SyncFieldsDuringCreateOrUpdate(plan RunParameters) {
 }
 
-func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
+func (newState *RunParameters) SyncFieldsDuringRead(existingState RunParameters) {
 }
 
 func (c RunParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13080,10 +13192,10 @@ type RunState struct {
 	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout"`
 }
 
-func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState) {
+func (newState *RunState) SyncFieldsDuringCreateOrUpdate(plan RunState) {
 }
 
-func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
+func (newState *RunState) SyncFieldsDuringRead(existingState RunState) {
 }
 
 func (c RunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13146,10 +13258,10 @@ type RunStatus struct {
 	TerminationDetails types.Object `tfsdk:"termination_details"`
 }
 
-func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatus) {
+func (newState *RunStatus) SyncFieldsDuringCreateOrUpdate(plan RunStatus) {
 }
 
-func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
+func (newState *RunStatus) SyncFieldsDuringRead(existingState RunStatus) {
 }
 
 func (c RunStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13450,10 +13562,10 @@ type RunTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
+func (newState *RunTask) SyncFieldsDuringCreateOrUpdate(plan RunTask) {
 }
 
-func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
+func (newState *RunTask) SyncFieldsDuringRead(existingState RunTask) {
 }
 
 func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14465,10 +14577,10 @@ type SparkJarTask struct {
 	RunAsRepl types.Bool `tfsdk:"run_as_repl"`
 }
 
-func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask) {
+func (newState *SparkJarTask) SyncFieldsDuringCreateOrUpdate(plan SparkJarTask) {
 }
 
-func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
+func (newState *SparkJarTask) SyncFieldsDuringRead(existingState SparkJarTask) {
 }
 
 func (c SparkJarTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14573,10 +14685,10 @@ type SparkPythonTask struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
+func (newState *SparkPythonTask) SyncFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
 }
 
-func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
+func (newState *SparkPythonTask) SyncFieldsDuringRead(existingState SparkPythonTask) {
 }
 
 func (c SparkPythonTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14662,10 +14774,10 @@ type SparkSubmitTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
+func (newState *SparkSubmitTask) SyncFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
 }
 
-func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
+func (newState *SparkSubmitTask) SyncFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
 func (c SparkSubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14748,10 +14860,10 @@ type SqlAlertOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
+func (newState *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
 }
 
-func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
+func (newState *SqlAlertOutput) SyncFieldsDuringRead(existingState SqlAlertOutput) {
 }
 
 func (c SqlAlertOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14840,10 +14952,10 @@ type SqlDashboardOutput struct {
 	Widgets types.List `tfsdk:"widgets"`
 }
 
-func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
+func (newState *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
 }
 
-func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
+func (newState *SqlDashboardOutput) SyncFieldsDuringRead(existingState SqlDashboardOutput) {
 }
 
 func (c SqlDashboardOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14933,10 +15045,10 @@ type SqlDashboardWidgetOutput struct {
 	WidgetTitle types.String `tfsdk:"widget_title"`
 }
 
-func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
+func (newState *SqlDashboardWidgetOutput) SyncFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
 }
 
-func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
+func (newState *SqlDashboardWidgetOutput) SyncFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
 }
 
 func (c SqlDashboardWidgetOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15033,10 +15145,10 @@ type SqlOutput struct {
 	QueryOutput types.Object `tfsdk:"query_output"`
 }
 
-func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutput) {
+func (newState *SqlOutput) SyncFieldsDuringCreateOrUpdate(plan SqlOutput) {
 }
 
-func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
+func (newState *SqlOutput) SyncFieldsDuringRead(existingState SqlOutput) {
 }
 
 func (c SqlOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15175,10 +15287,10 @@ type SqlOutputError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutputError) {
+func (newState *SqlOutputError) SyncFieldsDuringCreateOrUpdate(plan SqlOutputError) {
 }
 
-func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
+func (newState *SqlOutputError) SyncFieldsDuringRead(existingState SqlOutputError) {
 }
 
 func (c SqlOutputError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15231,10 +15343,10 @@ type SqlQueryOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
+func (newState *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
 }
 
-func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
+func (newState *SqlQueryOutput) SyncFieldsDuringRead(existingState SqlQueryOutput) {
 }
 
 func (c SqlQueryOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15321,10 +15433,10 @@ type SqlStatementOutput struct {
 	LookupKey types.String `tfsdk:"lookup_key"`
 }
 
-func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
+func (newState *SqlStatementOutput) SyncFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
 }
 
-func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
+func (newState *SqlStatementOutput) SyncFieldsDuringRead(existingState SqlStatementOutput) {
 }
 
 func (c SqlStatementOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15384,10 +15496,10 @@ type SqlTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
+func (newState *SqlTask) SyncFieldsDuringCreateOrUpdate(plan SqlTask) {
 }
 
-func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
+func (newState *SqlTask) SyncFieldsDuringRead(existingState SqlTask) {
 }
 
 func (c SqlTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15597,10 +15709,10 @@ type SqlTaskAlert struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
+func (newState *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
 }
 
-func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
+func (newState *SqlTaskAlert) SyncFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
 func (c SqlTaskAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15688,10 +15800,10 @@ type SqlTaskDashboard struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
+func (newState *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
 }
 
-func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
+func (newState *SqlTaskDashboard) SyncFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
 func (c SqlTaskDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15785,10 +15897,10 @@ type SqlTaskFile struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
+func (newState *SqlTaskFile) SyncFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
 }
 
-func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
+func (newState *SqlTaskFile) SyncFieldsDuringRead(existingState SqlTaskFile) {
 }
 
 func (c SqlTaskFile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15836,10 +15948,10 @@ type SqlTaskQuery struct {
 	QueryId types.String `tfsdk:"query_id"`
 }
 
-func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
+func (newState *SqlTaskQuery) SyncFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
 }
 
-func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
+func (newState *SqlTaskQuery) SyncFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
 func (c SqlTaskQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15891,10 +16003,10 @@ type SqlTaskSubscription struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
+func (newState *SqlTaskSubscription) SyncFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
 }
 
-func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
+func (newState *SqlTaskSubscription) SyncFieldsDuringRead(existingState SqlTaskSubscription) {
 }
 
 func (c SqlTaskSubscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16353,10 +16465,10 @@ type SubmitRunResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
+func (newState *SubmitRunResponse) SyncFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
 }
 
-func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
+func (newState *SubmitRunResponse) SyncFieldsDuringRead(existingState SubmitRunResponse) {
 }
 
 func (c SubmitRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16513,10 +16625,10 @@ type SubmitTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitTask) {
+func (newState *SubmitTask) SyncFieldsDuringCreateOrUpdate(plan SubmitTask) {
 }
 
-func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
+func (newState *SubmitTask) SyncFieldsDuringRead(existingState SubmitTask) {
 }
 
 func (c SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17350,10 +17462,10 @@ type Subscription struct {
 	Subscribers types.List `tfsdk:"subscribers"`
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
+func (newState *Subscription) SyncFieldsDuringCreateOrUpdate(plan Subscription) {
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+func (newState *Subscription) SyncFieldsDuringRead(existingState Subscription) {
 }
 
 func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17438,10 +17550,10 @@ type SubscriptionSubscriber struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *SubscriptionSubscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriber) {
+func (newState *SubscriptionSubscriber) SyncFieldsDuringCreateOrUpdate(plan SubscriptionSubscriber) {
 }
 
-func (newState *SubscriptionSubscriber) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriber) {
+func (newState *SubscriptionSubscriber) SyncFieldsDuringRead(existingState SubscriptionSubscriber) {
 }
 
 func (c SubscriptionSubscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17501,10 +17613,10 @@ type TableUpdateTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
+func (newState *TableUpdateTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
 }
 
-func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
+func (newState *TableUpdateTriggerConfiguration) SyncFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
 }
 
 func (c TableUpdateTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17614,6 +17726,9 @@ type Task struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
@@ -17723,10 +17838,10 @@ type Task struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
+func (newState *Task) SyncFieldsDuringCreateOrUpdate(plan Task) {
 }
 
-func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
+func (newState *Task) SyncFieldsDuringRead(existingState Task) {
 }
 
 func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17739,6 +17854,7 @@ func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
@@ -17821,6 +17937,7 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
 			"disable_auto_optimization": o.DisableAutoOptimization,
+			"disabled":                  o.Disabled,
 			"email_notifications":       o.EmailNotifications,
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
@@ -17865,6 +17982,7 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
+			"disabled":                  types.BoolType,
 			"email_notifications":       TaskEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
 			"existing_cluster_id":       types.StringType,
@@ -18573,10 +18691,10 @@ type TaskDependency struct {
 	TaskKey types.String `tfsdk:"task_key"`
 }
 
-func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskDependency) {
+func (newState *TaskDependency) SyncFieldsDuringCreateOrUpdate(plan TaskDependency) {
 }
 
-func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
+func (newState *TaskDependency) SyncFieldsDuringRead(existingState TaskDependency) {
 }
 
 func (c TaskDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18655,10 +18773,10 @@ type TaskEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
+func (newState *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
 }
 
-func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
+func (newState *TaskEmailNotifications) SyncFieldsDuringRead(existingState TaskEmailNotifications) {
 }
 
 func (c TaskEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18872,10 +18990,10 @@ type TaskNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
+func (newState *TaskNotificationSettings) SyncFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
 }
 
-func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
+func (newState *TaskNotificationSettings) SyncFieldsDuringRead(existingState TaskNotificationSettings) {
 }
 
 func (c TaskNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18930,10 +19048,10 @@ type TerminationDetails struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationDetails) {
+func (newState *TerminationDetails) SyncFieldsDuringCreateOrUpdate(plan TerminationDetails) {
 }
 
-func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
+func (newState *TerminationDetails) SyncFieldsDuringRead(existingState TerminationDetails) {
 }
 
 func (c TerminationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18985,10 +19103,10 @@ type TriggerInfo struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerInfo) {
+func (newState *TriggerInfo) SyncFieldsDuringCreateOrUpdate(plan TriggerInfo) {
 }
 
-func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
+func (newState *TriggerInfo) SyncFieldsDuringRead(existingState TriggerInfo) {
 }
 
 func (c TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19031,6 +19149,8 @@ func (o TriggerInfo) Type(ctx context.Context) attr.Type {
 type TriggerSettings struct {
 	// File arrival trigger settings.
 	FileArrival types.Object `tfsdk:"file_arrival"`
+
+	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
@@ -19041,14 +19161,15 @@ type TriggerSettings struct {
 	TableUpdate types.Object `tfsdk:"table_update"`
 }
 
-func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerSettings) {
+func (newState *TriggerSettings) SyncFieldsDuringCreateOrUpdate(plan TriggerSettings) {
 }
 
-func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
+func (newState *TriggerSettings) SyncFieldsDuringRead(existingState TriggerSettings) {
 }
 
 func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -19067,6 +19188,7 @@ func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"model":        reflect.TypeOf(ModelTriggerConfiguration{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
 		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
@@ -19081,6 +19203,7 @@ func (o TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival": o.FileArrival,
+			"model":        o.Model,
 			"pause_status": o.PauseStatus,
 			"periodic":     o.Periodic,
 			"table":        o.Table,
@@ -19093,6 +19216,7 @@ func (o TriggerSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": FileArrivalTriggerConfiguration{}.Type(ctx),
+			"model":        ModelTriggerConfiguration{}.Type(ctx),
 			"pause_status": types.StringType,
 			"periodic":     PeriodicTriggerConfiguration{}.Type(ctx),
 			"table":        TableUpdateTriggerConfiguration{}.Type(ctx),
@@ -19127,6 +19251,34 @@ func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 func (o *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	o.FileArrival = vs
+}
+
+// GetModel returns the value of the Model field in TriggerSettings as
+// a ModelTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetModel(ctx context.Context) (ModelTriggerConfiguration, bool) {
+	var e ModelTriggerConfiguration
+	if o.Model.IsNull() || o.Model.IsUnknown() {
+		return e, false
+	}
+	var v []ModelTriggerConfiguration
+	d := o.Model.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in TriggerSettings.
+func (o *TriggerSettings) SetModel(ctx context.Context, v ModelTriggerConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	o.Model = vs
 }
 
 // GetPeriodic returns the value of the Periodic field in TriggerSettings as
@@ -19217,10 +19369,10 @@ type TriggerStateProto struct {
 	FileArrival types.Object `tfsdk:"file_arrival"`
 }
 
-func (newState *TriggerStateProto) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerStateProto) {
+func (newState *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(plan TriggerStateProto) {
 }
 
-func (newState *TriggerStateProto) SyncEffectiveFieldsDuringRead(existingState TriggerStateProto) {
+func (newState *TriggerStateProto) SyncFieldsDuringRead(existingState TriggerStateProto) {
 }
 
 func (c TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19446,10 +19598,10 @@ type ViewItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem) {
+func (newState *ViewItem) SyncFieldsDuringCreateOrUpdate(plan ViewItem) {
 }
 
-func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
+func (newState *ViewItem) SyncFieldsDuringRead(existingState ViewItem) {
 }
 
 func (c ViewItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19499,10 +19651,10 @@ type Webhook struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
+func (newState *Webhook) SyncFieldsDuringCreateOrUpdate(plan Webhook) {
 }
 
-func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
+func (newState *Webhook) SyncFieldsDuringRead(existingState Webhook) {
 }
 
 func (c Webhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19569,10 +19721,10 @@ type WebhookNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
+func (newState *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
 }
 
-func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
+func (newState *WebhookNotifications) SyncFieldsDuringRead(existingState WebhookNotifications) {
 }
 
 func (c WebhookNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19774,10 +19926,10 @@ type WidgetErrorDetail struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *WidgetErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetErrorDetail) {
+func (newState *WidgetErrorDetail) SyncFieldsDuringCreateOrUpdate(plan WidgetErrorDetail) {
 }
 
-func (newState *WidgetErrorDetail) SyncEffectiveFieldsDuringRead(existingState WidgetErrorDetail) {
+func (newState *WidgetErrorDetail) SyncFieldsDuringRead(existingState WidgetErrorDetail) {
 }
 
 func (c WidgetErrorDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

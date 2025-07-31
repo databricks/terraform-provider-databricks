@@ -117,7 +117,7 @@ terraform import databricks_sql_permissions.foo /<object-type>/<object-name>
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_group](group.md) to manage [Account-level](https://docs.databricks.com/aws/en/admin/users-groups/groups) or [Workspace-level](https://docs.databricks.com/aws/en/admin/users-groups/workspace-local-groups) groups.
 * [databricks_grants](grants.md) to manage data access in Unity Catalog.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
 * [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.

@@ -1,10 +1,13 @@
 package sharing_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
 const preTestTemplate = `
@@ -318,4 +321,62 @@ func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
 			owner = "account users"
 		}`,
 	})
+}
+
+// TestUcAccShareMigrationFromSDKv2 tests the transition from sdkv2 to plugin framework.
+// This test verifies that existing state created by SDK v2 implementation can be
+// successfully managed by the plugin framework implementation without any changes.
+func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t,
+		// Step 1: Create share using SDK v2 implementation
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: preTestTemplate + preTestTemplateUpdate + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
+					owner = "account users"
+					object {
+						name = databricks_table.mytable.id
+						comment = "Shared table for migration test"
+						data_object_type = "TABLE"
+					}
+					object {
+						name = databricks_table.mytable_2.id
+						comment = "Second shared table"
+						data_object_type = "TABLE"
+						cdf_enabled = false
+					}
+				}`,
+		},
+		// Step 2: Update the share using plugin framework implementation (default)
+		// This verifies no changes are needed when switching implementations
+		acceptance.Step{
+			Template: preTestTemplate + preTestTemplateUpdate + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
+					owner = "account users"
+					object {
+						name = databricks_table.mytable.id
+						comment = "Updated comment after migration"
+						data_object_type = "TABLE"
+					}
+					object {
+						name = databricks_table.mytable_2.id
+						comment = "Second shared table"
+						data_object_type = "TABLE"
+						cdf_enabled = false
+					}
+					object {
+						name = databricks_table.mytable_3.id
+						comment = "New table added post-migration"
+						data_object_type = "TABLE"
+					}
+				}`,
+		},
+	)
 }

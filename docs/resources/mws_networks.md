@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 ## Databricks on AWS usage
 
-Use this resource to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.
+Use this resource to configure VPC & subnets for new workspaces within AWS and GCP.
 
 -> This resource can only be used with an account-level provider!
 

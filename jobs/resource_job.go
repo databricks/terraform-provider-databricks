@@ -616,6 +616,8 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 		}
 	}
 
+	s.SchemaPath("library", "egg").SetDeprecated(clusters.EggDeprecationWarning)
+
 	// we need to have only one of user name vs service principal in the run_as block
 	run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
 	s.SchemaPath("run_as", "user_name").SetExactlyOneOf(run_as_eoo)

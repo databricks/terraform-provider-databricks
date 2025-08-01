@@ -14,7 +14,7 @@ data "databricks_current_user" "me" {}
 
 resource "databricks_mlflow_experiment" "this" {
   name              = "${data.databricks_current_user.me.home}/Sample"
-  artifact_location = "dbfs:/tmp/my-experiment"
+  artifact_location = "s3://bucket/my-experiment"
 
   tags {
     key   = "key1"
@@ -23,7 +23,7 @@ resource "databricks_mlflow_experiment" "this" {
   tags {
     key   = "key2"
     value = "value2"
-  }  
+  }
 }
 ```
 
@@ -32,7 +32,7 @@ resource "databricks_mlflow_experiment" "this" {
 The following arguments are supported:
 
 * `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions, see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
-* `artifact_location` - Path to dbfs:/ or s3:// artifact location of the MLflow experiment.
+* `artifact_location` - Path to artifact location of the MLflow experiment.
 * `tags` - Tags for the MLflow experiment.
 
 ## Attribute Reference

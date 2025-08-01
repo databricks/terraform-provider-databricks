@@ -72,6 +72,7 @@ resource "databricks_connection" "hms" {
     builtin = "true"
   }
 }
+```
 
 Create a HTTP connection with bearer token
 
@@ -87,6 +88,7 @@ resource "databricks_connection" "http_bearer" {
     bearer_token = "bearer_token"
   }
 }
+```
 
 Create a HTTP connection with OAuth M2M
 

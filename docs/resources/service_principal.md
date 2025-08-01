@@ -146,5 +146,5 @@ The following resources are often used in the same context:
 * [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
-* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](<https://docs.databricks>.
+* [databricks_grants](grant.md) to manage data access in Unity Catalog.
 * [databricks-service-principal-secret](service_principal_secret.md) to manage secrets for the service principal (only for AWS deployments)

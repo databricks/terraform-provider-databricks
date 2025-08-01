@@ -7,8 +7,7 @@ contact_links:
   - name: General Terraform questions
     url: https://www.terraform.io/community
     about: Issues related to Terraform and not related to Databricks Terraform Provider.
-    
+
   - name: General questions on Databricks Terraform provider
     url: https://stackoverflow.com/questions/tagged/terraform-provider-databricks
     about: Please create a new question on StackOverflow with tag `terraform-provider-databricks`.
-    

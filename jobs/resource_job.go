@@ -541,6 +541,26 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	jobSettingsSchema(s.GetSchemaMap(), "")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "task"), "task.0.")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "job_cluster"), "job_cluster.0.")
+
+	// Include an additional field to the cluster schema.
+	// This field can be set to control which fields are sent to the API.
+	// This is necessary to avoid including previously set server-side defaults when
+	// updating a job, when the user intent is to apply new cluster policy defaults.
+	for _, sub := range []map[string]*schema.Schema{
+		// Cluster specs can be configured in a task.
+		common.MustSchemaMap(s.GetSchemaMap(), "task", "new_cluster"),
+		// Cluster specs can be configured in a job cluster.
+		common.MustSchemaMap(s.GetSchemaMap(), "job_cluster", "new_cluster"),
+	} {
+		sub[applyPolicyDefaultValuesAllowListField] = &schema.Schema{
+			Optional: true,
+			Type:     schema.TypeList,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		}
+	}
+
 	gitSourceSchema(common.MustSchemaMap(s.GetSchemaMap(), "git_source"), "")
 
 	s.SchemaPath("schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
@@ -595,6 +615,8 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 			s.SchemaPath(attr).SetConflictsWith([]string{"parameter"})
 		}
 	}
+
+	s.SchemaPath("library", "egg").SetDeprecated(clusters.EggDeprecationWarning)
 
 	// we need to have only one of user name vs service principal in the run_as block
 	run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}

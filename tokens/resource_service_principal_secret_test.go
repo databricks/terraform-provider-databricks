@@ -17,7 +17,7 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
 			e.Create(mock.Anything, oauth2.CreateServicePrincipalSecretRequest{
-				ServicePrincipalId: 123,
+				ServicePrincipalId: "123",
 				Lifetime:           "20s",
 			}).Return(&oauth2.CreateServicePrincipalSecretResponse{
 				Secret:     "qwe",
@@ -55,7 +55,7 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
 			e.Delete(mock.Anything, oauth2.DeleteServicePrincipalSecretRequest{
-				ServicePrincipalId: 123,
+				ServicePrincipalId: "123",
 				SecretId:           "003",
 			}).Return(nil)
 		},
@@ -73,13 +73,13 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
-			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
-				Secrets: []oauth2.SecretInfo{
-					{
-						Id:         "003",
-						SecretHash: "abc",
-						Status:     "ACTIVE",
-					},
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "003",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
 				},
 			}, nil)
 		},
@@ -100,13 +100,13 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
-			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
-				Secrets: []oauth2.SecretInfo{
-					{
-						Id:         "004",
-						SecretHash: "abc",
-						Status:     "ACTIVE",
-					},
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "004",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
 				},
 			}, nil)
 		},

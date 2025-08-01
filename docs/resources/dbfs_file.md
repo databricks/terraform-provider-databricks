@@ -3,6 +3,8 @@ subcategory: "Storage"
 ---
 # databricks_dbfs_file Resource
 
+-> Please switch to [databricks_file](file.md) or [databricks_workspace_file](workspace_file.md) to manage files. Databricks recommends against storing any production data or sensitive information in the DBFS root.
+
 This is a resource that lets you manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html). The best use cases are libraries for [databricks_cluster](cluster.md) or [databricks_job](job.md). You can also use [databricks_dbfs_file](../data-sources/dbfs_file.md) and [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data sources.
 
 -> This resource can only be used with a workspace-level provider!

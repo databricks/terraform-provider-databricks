@@ -77,15 +77,15 @@ resource "databricks_model_serving" "gpt_4o" {
       enabled = true
     }
     rate_limits {
-      calls = 10
-      key = "endpoint"
+      calls          = 10
+      key            = "endpoint"
       renewal_period = "minute"
     }
     inference_table_config {
-      enabled = true
+      enabled           = true
       table_name_prefix = "gpt-4o-mini"
-      catalog_name = "ml"
-      schema_name = "ai_gateway"
+      catalog_name      = "ml"
+      schema_name       = "ai_gateway"
     }
     guardrails {
       input {
@@ -132,6 +132,7 @@ The following arguments are supported:
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. *Note: only available for custom models.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
+* `description` - (Optional) The description of the model serving endpoint.
 
 ### served_entities Configuration Block
 
@@ -237,7 +238,8 @@ The following arguments are supported:
 ### rate_limits Configuration Block
 
 * `calls` - (Required) Used to specify how many calls are allowed for a key within the renewal_period.
-* `key` - (Optional) Key field for a serving endpoint rate limit. Currently, only `user` and `endpoint` are supported, with `endpoint` being the default if not specified.
+* `key` - (Optional) Key field for a serving endpoint rate limit. Currently, `user`, `user_group`, `service_principal`, and `endpoint` are supported, with `endpoint` being the default if not specified.
+* `principal` - (Optional) Principal field for a user, user group, or service principal to apply rate limiting to. Accepts a user email, group name, or service principal application ID.
 * `renewal_period` - (Required) Renewal period field for a serving endpoint rate limit. Currently, only `minute` is supported.
 
 ### ai_gateway Configuration Block
@@ -246,8 +248,8 @@ The following arguments are supported:
   * `enabled` -  Whether to enable traffic fallback. When a served entity in the serving endpoint returns specific error codes (e.g. 500), the request will automatically be round-robin attempted with other served entities in the same endpoint, following the order of served entity list, until a successful response is returned.
 * `guardrails` - (Optional) Block with configuration for AI Guardrails to prevent unwanted data and unsafe data in requests and responses. Consists of the following attributes:
   * `input` - A block with configuration for input guardrail filters:
-    * `invalid_keywords` - List of invalid keywords. AI guardrail uses keyword or string matching to decide if the keyword exists in the request or response content.
-    * `valid_topics` - The list of allowed topics. Given a chat request, this guardrail flags the request if its topic is not in the allowed topics.
+    * `invalid_keywords` - (Deprecated) List of invalid keywords. AI guardrail uses keyword or string matching to decide if the keyword exists in the request or response content.
+    * `valid_topics` - (Deprecated) The list of allowed topics. Given a chat request, this guardrail flags the request if its topic is not in the allowed topics.
     * `safety` - the boolean flag that indicates whether the safety filter is enabled.
     * `pii` - Block with configuration for guardrail PII filter:
       * `behavior` - a string that describes the behavior for PII filter. Currently only `BLOCK` value is supported.
@@ -263,6 +265,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 * `id` - Equal to the `name` argument and used to identify the serving endpoint.
 * `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
+* `endpoint_url` - Invocation url of the endpoint.
 
 ## Access Control
 
@@ -294,7 +297,6 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
-
 
 ## Related Resources
 

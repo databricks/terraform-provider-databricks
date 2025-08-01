@@ -33,7 +33,7 @@ resource "databricks_table" "mytable" {
 	name = "bar"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
-	
+
 	column {
 		name      = "id"
 		position  = 0
@@ -57,7 +57,7 @@ resource "databricks_external_location" "some" {
 	credential_name = databricks_storage_credential.external.id
 	comment         = "Managed by TF"
 }
-		
+
 resource "databricks_grants" "metastore" {
 	metastore = "{env.TEST_METASTORE_ID}"
 	grant {
@@ -125,7 +125,7 @@ func grantsTemplateForNamePermissionChange(suffix string, permission string) str
 		}
 		comment = "Managed by TF"
 	}
-	
+
 	resource "databricks_grants" "cred" {
 		storage_credential = databricks_storage_credential.external.id
 		grant {

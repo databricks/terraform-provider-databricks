@@ -86,7 +86,7 @@ To make Databricks Terraform Provider generally available, we've moved it from [
 You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
 
 ```text
-Warning: Additional provider information from registry 
+Warning: Additional provider information from registry
 
 The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
 - For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.
@@ -108,10 +108,10 @@ Duration fields accept Go-style duration strings. Use standard time units like `
 
 ```hcl
 resource "databricks_example" "this" {
-  timeout_duration = "30m"      # 30 minutes
-  retry_delay     = "10s"       # 10 seconds  
-  max_lifetime    = "24h"       # 24 hours
-  short_timeout   = "500ms"     # 500 milliseconds
+  timeout_duration = "30m"   # 30 minutes
+  retry_delay      = "10s"   # 10 seconds
+  max_lifetime     = "24h"   # 24 hours
+  short_timeout    = "500ms" # 500 milliseconds
 }
 ```
 
@@ -121,9 +121,9 @@ Timestamp fields require RFC3339 formatted datetime strings. Include timezone in
 
 ```hcl
 resource "databricks_example" "this" {
-  start_time    = "2023-10-15T14:30:00Z"           # UTC timezone
-  end_time      = "2023-10-15T14:30:00-07:00"      # Pacific timezone
-  created_at    = "2023-10-15T14:30:00.123Z"       # With milliseconds
+  start_time = "2023-10-15T14:30:00Z"      # UTC timezone
+  end_time   = "2023-10-15T14:30:00-07:00" # Pacific timezone
+  created_at = "2023-10-15T14:30:00.123Z"  # With milliseconds
 }
 ```
 

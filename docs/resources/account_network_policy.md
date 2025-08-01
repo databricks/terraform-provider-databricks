@@ -2,10 +2,45 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policy Resource
+Network policies control which network destinations can be accessed from the Databricks environment. 
 
+Each Databricks account includes a default policy named `default-policy`. This policy is:
+
+- Associated with any workspace lacking an explicit network policy assignment
+- Automatically associated with each newly created workspace
+- Reserved and cannot be deleted, but can be updated to customize the default network access rules for your account
+
+The `default-policy` provides a baseline security configuration that ensures all workspaces have network access controls in place.
+
+-> **Note** This resource can only be used with an account-level provider!
 
 ## Example Usage
-
+```hcl
+resource "databricks_account_network_policy" "example_network_policy" {
+  network_policy_id    = "example-network-policy"
+  egress = {
+    network_access = {
+      restriction_mode = "RESTRICTED_ACCESS"
+      allowed_internet_destinations = [
+        {
+            destination = "example.com"
+            internet_destination_type = "DNS_NAME"
+        }
+      ],
+      allowed_storage_destinations = [
+        {
+          bucket_name = "example-aws-cloud-storage"
+          region = "us-west-1"
+          storage_destination_type = "AWS_S3"
+        }
+      ]
+      policy_enforcement = {
+        enforcement_mode = "ENFORCED"
+      }
+    }
+  }
+}
+```
 
 ## Arguments
 The following arguments are supported:

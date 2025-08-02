@@ -29,24 +29,24 @@ func NewGroupsCache() *GroupCache {
 	}
 }
 
-func (c *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+func (gc *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
+	gc.lock.Lock()
+	defer gc.lock.Unlock()
 
-	groupInfo, exists := c.cache[groupID]
+	groupInfo, exists := gc.cache[groupID]
 	if !exists {
 		groupInfo = &GroupMembersInfo{
 			initialized: false,
 			members:     make(map[string]struct{}),
 			lock:        sync.Mutex{},
 		}
-		c.cache[groupID] = groupInfo
+		gc.cache[groupID] = groupInfo
 	}
 	return groupInfo
 }
 
-func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
-	groupInfo := c.getOrCreateGroupInfo(groupID)
+func (gc *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
@@ -73,8 +73,8 @@ func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struc
 	return membersCopy, nil
 }
 
-func (c *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
-	groupInfo := c.getOrCreateGroupInfo(groupID)
+func (gc *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
+	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
@@ -91,8 +91,8 @@ func (c *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string
 	return err
 }
 
-func (c *GroupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
-	groupInfo := c.getOrCreateGroupInfo(groupID)
+func (gc *GroupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
+	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 

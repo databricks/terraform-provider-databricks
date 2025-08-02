@@ -38,7 +38,7 @@ func (c *UsersCache) populate(api UsersAPI) error {
 	}
 	u := users.Resources
 	for _, user := range u {
-		tflog.Info(api.context, fmt.Sprintf("Caching user %s", user.UserName))
+		tflog.Debug(api.context, fmt.Sprintf("Caching user %s", user.UserName))
 		c.cache[strings.ToLower(user.UserName)] = user
 	}
 	c.populated = true

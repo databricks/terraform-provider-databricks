@@ -16,7 +16,7 @@ If not, you can also download the [latest released binary](https://github.com/da
 
 ## Example Usage
 
-Resource Exporter can run in interactive or non-interactive mode. 
+Resource Exporter can run in interactive or non-interactive mode.
 
 When running in interactive mode, the Resource Exporter will prompt the user for the [Databricks Workspace URL and a Databricks Workspace PAT](../index.md#authenticating-with-hostname-and-token). It is also possible to authenticate using environment variables.
 
@@ -165,6 +165,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
+* `mws` - **listing** resources related to deployment of workspaces on AWS and GCP (networks, credentials, workspaces, ...).
 * `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) and [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md).  **Note** we can't export [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) because of the missing API.
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
@@ -244,10 +245,17 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes | Yes | No |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
-| [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
+| [databricks_mws_credentials](../resources/mws_credentials.md) | Yes | Yes | No | Yes |
+| [databricks_mws_customer_managed_keys](../resources/mws_customer_managed_keys.md) | Yes | Yes | No | Yes |
 | [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | No | No | No | No |
 | [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md) | Yes | No | No | Yes |
+| [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
+| [databricks_mws_networks](../resources/mws_networks.md) | Yes | No | No | Yes |
 | [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
+| [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) | Yes | No | No | Yes |
+| [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md) | Yes | Yes | No | Yes |
+| [databricks_mws_vpc_endpoint](../resources/mws_vpc_endpoint.md) | Yes | No | No | Yes |
+| [databricks_mws_workspaces](../resources/mws_workspaces.md) | Yes | Yes | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
 | [databricks_notification_destination](../resources/notification_destination.md) | Yes | No | Yes\*\* | No |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable | No | No | No |

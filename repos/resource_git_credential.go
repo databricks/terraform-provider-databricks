@@ -2,14 +2,22 @@ package repos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func isOnlyOneGitCredentialForProviderError(err error) bool {
+	errStr := err.Error()
+	return errors.Is(err, apierr.ErrResourceConflict) ||
+		(strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time"))
+}
 
 func ResourceGitCredential() common.Resource {
 	s := common.StructToSchema(workspace.CreateCredentialsRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -39,7 +47,7 @@ func ResourceGitCredential() common.Resource {
 			resp, err := w.GitCredentials.Create(ctx, req)
 
 			if err != nil {
-				if !d.Get("force").(bool) || !(strings.Contains(err.Error(), "Only one Git credential is supported ") && strings.Contains(err.Error(), " at this time")) {
+				if !d.Get("force").(bool) || !isOnlyOneGitCredentialForProviderError(err) {
 					return err
 				}
 				creds, err := w.GitCredentials.ListAll(ctx)

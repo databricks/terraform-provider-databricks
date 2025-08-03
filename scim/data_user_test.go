@@ -16,7 +16,7 @@ func TestDataSourceUser(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles",
+				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22ds%22",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -33,7 +33,7 @@ func TestDataSourceUser(t *testing.T) {
 		Resource:    DataSourceUser(),
 		ID:          ".",
 		State: map[string]any{
-			"user_name": "mr.test@example.com",
+			"user_name": "ds",
 		},
 	}.Apply(t)
 	require.NoError(t, err)
@@ -56,11 +56,16 @@ func TestDataSourceUserGerUser(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22searching_error%22",
 			Status:   404,
 			Response: apierr.APIError{
 				Message: "searching_error",
 			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22empty_search%22",
+			Response: UserList{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		usersAPI := NewUsersAPI(ctx, client)
@@ -69,20 +74,9 @@ func TestDataSourceUserGerUser(t *testing.T) {
 		assert.Equal(t, "a", user.ID)
 
 		_, err = getUser(usersAPI, "", "searching_error")
-		assert.EqualError(t, err, "cannot find user searching_error")
-	})
-}
+		assert.EqualError(t, err, "searching_error")
 
-func TestDataSourceUserGerUserEmpty(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles",
-			Response: UserList{},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		usersAPI := NewUsersAPI(ctx, client)
-		_, err := getUser(usersAPI, "", "empty_search")
+		_, err = getUser(usersAPI, "", "empty_search")
 		assert.EqualError(t, err, "cannot find user empty_search")
 	})
 }

@@ -15,7 +15,6 @@ resource "databricks_user" "this" {
 }
 data "databricks_user" "this" {
 	user_name = databricks_user.this.user_name
-	depends_on = [databricks_user.this]
 }`
 
 func checkUserDataSourcePopulated(t *testing.T) func(s *terraform.State) error {

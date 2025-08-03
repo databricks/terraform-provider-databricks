@@ -1031,7 +1031,7 @@ Arguments for the `access_control` block are:
 Exactly one of the below arguments is required:
 
 - `user_name` - (Optional) name of the [user](user.md).
-- `service_principal_name` - (Optional) Application ID of the [service_principal](service_principal.md#application_id).
+- `service_principal_name` - (Optional) Application ID (**not service principal name!**) of the [service_principal](service_principal.md#application_id).
 - `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
 
 ## Attribute Reference

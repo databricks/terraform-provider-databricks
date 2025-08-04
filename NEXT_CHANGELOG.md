@@ -3,6 +3,7 @@
 ## Release v1.86.0
 
 ### Breaking Changes
+* Do not set `run_as from run_as_user_name in DLT pipelines. This fixes an issue where the value for run_as was unintentionally cached in the terraform state. More details and the workaround are specified in the PR: ([#4886](https://github.com/databricks/terraform-provider-databricks/pull/4886))
 
 ### New Features and Improvements
 

@@ -43,7 +43,7 @@ Data source allows you to pick service principals by the following attributes
 
 Data source exposes the following attributes:
 
-- `application_ids` - List of `application_ids` of service principals Individual service principal can be retrieved using [databricks_service_principal](service_principal.md) data source
+- `application_ids` - List of `application_ids` of service principals.  Individual service principal can be retrieved using [databricks_service_principal](service_principal.md) data source
 
 ## Related Resources
 

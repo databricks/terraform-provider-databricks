@@ -25,6 +25,7 @@
 * Updated documentation for `databricks_disable_legacy_features_setting` resource ([#4884](https://github.com/databricks/terraform-provider-databricks/pull/4884)).
 * Improve docs for `databricks_compliance_security_profile_setting` ([#4880](https://github.com/databricks/terraform-provider-databricks/pull/4880)).
 * Improve instructions for the Terraform Exporter ([#4892](https://github.com/databricks/terraform-provider-databricks/pull/4892)).
+* Improve documentation for service principal data sources ([#4900](https://github.com/databricks/terraform-provider-databricks/pull/4900)).
 
 ### Exporter
 

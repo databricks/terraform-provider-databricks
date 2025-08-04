@@ -356,6 +356,7 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 		// Step 2: Update the share using plugin framework implementation (default)
 		// This verifies no changes are needed when switching implementations
 		acceptance.Step{
+			ExpectNonEmptyPlan: false,
 			Template: preTestTemplate + preTestTemplateUpdate + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
@@ -370,11 +371,6 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 						comment = "Second shared table"
 						data_object_type = "TABLE"
 						cdf_enabled = false
-					}
-					object {
-						name = databricks_table.mytable_3.id
-						comment = "New table added post-migration"
-						data_object_type = "TABLE"
 					}
 				}`,
 		},

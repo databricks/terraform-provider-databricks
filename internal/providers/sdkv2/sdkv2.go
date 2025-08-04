@@ -127,6 +127,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_external_location":                    catalog.DataSourceExternalLocation().ToResource(),
 		"databricks_external_locations":                   catalog.DataSourceExternalLocations().ToResource(),
 		"databricks_group":                                scim.DataSourceGroup().ToResource(),
+		"databricks_groups":                               scim.DataSourceGroups().ToResource(),
 		"databricks_instance_pool":                        pools.DataSourceInstancePool().ToResource(),
 		"databricks_instance_profiles":                    aws.DataSourceInstanceProfiles().ToResource(),
 		"databricks_jobs":                                 jobs.DataSourceJobs().ToResource(),

@@ -31,7 +31,7 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick service principals by one of the following attributes (only one of them):
 
-- `application_id` - (Required if neither `display_name` nor `scim_id` is used) ID of the service principal. The service principal must exist before this resource can be retrieved.
+- `application_id` - (Required if neither `display_name` nor `scim_id` is used) Application ID of the service principal. The service principal must exist before this resource can be retrieved.
 - `display_name` - (Required if neither `application_id` nor `scim_id` is  used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
 - `scim_id` - (Required if neither `application_id` nor `display_name` is used) Unique SCIM ID for a service principal in the Databricks workspace. The service principal must exist before this resource can be retrieved.
 
@@ -40,9 +40,10 @@ Data source allows you to pick service principals by one of the following attrib
 Data source exposes the following attributes:
 
 - `id` - The id of the service principal (SCIM ID).
-- `external_id` - ID of the service principal in an external identity provider.
+- `application_id` - Application ID of the service principal.
 - `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
 - `scim_id` - same as `id`.
+- `external_id` - ID of the service principal in an external identity provider.
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
 - `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
 - `active` - Whether service principal is active or not.
@@ -55,7 +56,7 @@ The following resources are used in the same context:
 
 - [End to end workspace management](../guides/workspace-management.md) guide.
 - [databricks_current_user](current_user.md) data to retrieve information about [databricks_user](../resources/user.md) or [databricks_service_principal](../resources/service_principal.md), that is calling Databricks REST API.
-- [databricks_group](../resources/group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+- [databricks_group](../resources/group.md) to manage [Account-level](https://docs.databricks.com/aws/en/admin/users-groups/groups) or [Workspace-level](https://docs.databricks.com/aws/en/admin/users-groups/workspace-local-groups) groups.
 - [databricks_group](group.md) data to retrieve information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
 - [databricks_group_instance_profile](../resources/group_instance_profile.md) to attach [databricks_instance_profile](../resources/instance_profile.md) (AWS) to [databricks_group](../resources/group.md).
 - [databricks_group_member](../resources/group_member.md) to attach [users](../resources/user.md) and [groups](../resources/group.md) as group members.

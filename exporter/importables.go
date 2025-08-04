@@ -30,6 +30,7 @@ import (
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tf_settings "github.com/databricks/terraform-provider-databricks/settings"
+	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -1991,39 +1992,67 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			// Handle share objects by reading them directly from the data
-			// since the resource has been migrated to pluginfw
+			resourceInfo := ic.Resources["databricks_share"]
+			if resourceInfo == nil {
+				// Fallback to direct data access if schema is not available
+				objectsList := r.Data.Get("object").([]any)
+				ic.emitUCGrantsWithOwner("share/"+r.ID, r)
+				for _, objRaw := range objectsList {
+					obj := objRaw.(map[string]any)
+					dataObjectType := obj["data_object_type"].(string)
+					name := obj["name"].(string)
+
+					switch dataObjectType {
+					case "TABLE":
+						ic.Emit(&resource{
+							Resource: "databricks_sql_table",
+							ID:       name,
+						})
+					case "VOLUME":
+						ic.Emit(&resource{
+							Resource: "databricks_volume",
+							ID:       name,
+						})
+					case "MODEL":
+						ic.Emit(&resource{
+							Resource: "databricks_registered_model",
+							ID:       name,
+						})
+					default:
+						log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'",
+							dataObjectType, name, r.ID)
+					}
+				}
+				return nil
+			}
+
+			var share tf_sharing.ShareInfo
+			s := resourceInfo.Schema
+			common.DataToStructPointer(r.Data, s, &share)
+			// TODO: how to link recipients to share?
 			ic.emitUCGrantsWithOwner("share/"+r.ID, r)
-
-			// Get objects array from the resource data
-			objectsList := r.Data.Get("object").([]any)
-			for _, objRaw := range objectsList {
-				obj := objRaw.(map[string]any)
-				dataObjectType := obj["data_object_type"].(string)
-				name := obj["name"].(string)
-
-				switch dataObjectType {
+			for _, obj := range share.Objects {
+				switch obj.DataObjectType {
 				case "TABLE":
 					ic.Emit(&resource{
 						Resource: "databricks_sql_table",
-						ID:       name,
+						ID:       obj.Name,
 					})
 				case "VOLUME":
 					ic.Emit(&resource{
 						Resource: "databricks_volume",
-						ID:       name,
+						ID:       obj.Name,
 					})
 				case "MODEL":
 					ic.Emit(&resource{
 						Resource: "databricks_registered_model",
-						ID:       name,
+						ID:       obj.Name,
 					})
 				default:
 					log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'",
-						dataObjectType, name, r.ID)
+						obj.DataObjectType, obj.Name, r.ID)
 				}
 			}
-
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,

@@ -104,7 +104,7 @@ terraform import databricks_permission_assignment.this "<principal_id>"
 
 The following resources are used in the same context:
 
-* [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_group](group.md) to manage [Account-level](https://docs.databricks.com/aws/en/admin/users-groups/groups) or [Workspace-level](https://docs.databricks.com/aws/en/admin/users-groups/workspace-local-groups) groups.
 * [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_mws_permission_assignment](mws_permission_assignment.md) to manage permission assignment from an account context

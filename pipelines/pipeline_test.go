@@ -186,7 +186,7 @@ func TestUcAccPipelineRunAsMutations(t *testing.T) {
 		acceptance.Step{
 			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
-		// Remove run_as, and there should be no change.
+		// Remove run_as, and there should be an error.
 		acceptance.Step{
 			Template:    pipelineRunAsTemplate(""),
 			ExpectError: regexp.MustCompile("Once configured, run_as of the pipeline can not be set to null. Please set run_as to " + spId + " to preserve the pipeline's run_as"),

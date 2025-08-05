@@ -40,7 +40,7 @@ The following arguments are supported:
 * `git_provider` -  (Required) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Git Credentials API documentation](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`, `azureDevOpsServicesAad`.
 * `is_default_for_provider` - (Optional) boolean flag specifying if the credential is the default for the given provider type.
 * `name` - (Optional) the name of the git credential, used for identification and ease of lookup.
-* `force` - (Optional) specify if settings need to be enforced.
+* `force` - (Optional) specify if settings need to be enforced (i.e., to overwrite previously set credential for service principals).
 
 ## Attribute Reference
 

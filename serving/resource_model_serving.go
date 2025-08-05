@@ -178,6 +178,10 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			m["endpoint_url"] = &schema.Schema{
+				Computed: true,
+				Type:     schema.TypeString,
+			}
 			return m
 		})
 
@@ -234,6 +238,7 @@ func ResourceModelServing() common.Resource {
 				return err
 			}
 			d.Set("serving_endpoint_id", endpoint.Id)
+			d.Set("endpoint_url", endpoint.EndpointUrl)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

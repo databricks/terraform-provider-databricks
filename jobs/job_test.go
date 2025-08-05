@@ -87,7 +87,7 @@ func TestAccJobTasks(t *testing.T) {
 
 			task {
 				task_key = "c"
-				
+
 				job_cluster_key = "j"
 
 				depends_on {
@@ -165,7 +165,7 @@ func TestAccForEachTask(t *testing.T) {
 					}
 				}
 			}
-			
+
 			parameter {
 				name = "empty_default"
 				default = ""

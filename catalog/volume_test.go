@@ -34,7 +34,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -44,7 +44,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-pqr"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -55,7 +55,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			comment = "comment-pqr"
 			owner = "{env.TEST_DATA_ENG_GROUP}"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -66,7 +66,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			comment = "comment-def"
 			owner = "account users"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -81,7 +81,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			comment = "comment-abc"
 			owner = "account users"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -92,7 +92,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			comment = "comment-abc"
 			owner = "{env.TEST_DATA_ENG_GROUP}"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
@@ -103,7 +103,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			comment = "comment-def"
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,

@@ -25,7 +25,10 @@ func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSch
 	return s
 }
 
+const EggDeprecationWarning = "The `egg` library type is deprecated. Please use `whl` or `pypi` instead."
+
 func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("egg").SetDeprecated(EggDeprecationWarning)
 	return s
 }
 

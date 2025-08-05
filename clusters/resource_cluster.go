@@ -330,6 +330,7 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 		lib := libraries.NewLibraryFromInstanceState(i)
 		return schema.HashString(lib.String())
 	}
+	s.SchemaPath("library", "egg").SetDeprecated(EggDeprecationWarning)
 	s.AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,

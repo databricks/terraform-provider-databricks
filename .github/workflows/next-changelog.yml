@@ -22,10 +22,10 @@ jobs:
         run: |
           # Use the GitHub API to fetch changed files
           files=$(gh pr view ${{ github.event.pull_request.number }} --json files -q '.files[].path')
-          
+
           # Sanitize to avoid code injection
           sanitized_files=$(echo "$files" | sed 's/[^a-zA-Z0-9._/-]/_/g')
-          
+
           # Store the sanitized list of files in a temporary file to avoid env variable issues
           echo "$sanitized_files" > modified_files.txt
 
@@ -36,10 +36,10 @@ jobs:
         run: |
           # Use the GitHub API to fetch the PR message
           pr_message=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
-          
+
           # Sanitize the PR message to avoid code injection, keeping the equal sign
           sanitized_pr_message=$(echo "$pr_message" | sed 's/[^a-zA-Z0-9._/-=]/_/g')
-          
+
           # Store the sanitized PR message
           echo "$sanitized_pr_message" > pr_message.txt
 
@@ -48,12 +48,12 @@ jobs:
           # Read the sanitized files and PR message from the temporary files
           modified_files=$(cat modified_files.txt)
           pr_message=$(cat pr_message.txt)
-          
+
           # Check if NEXT_CHANGELOG.md exists in the list of changed files
           echo "Changed files: $modified_files"
           if ! echo "$modified_files" | grep -q "NEXT_CHANGELOG.md"; then
             echo "NEXT_CHANGELOG.md not modified."
-          
+
             # Check if PR message contains NO_CHANGELOG=true
             if echo "$pr_message" | grep -q "NO_CHANGELOG=true"; then
               echo "NO_CHANGELOG=true found in PR message. Skipping changelog check."
@@ -79,7 +79,7 @@ jobs:
             echo "Adding instructions comment."
             gh pr comment ${{ github.event.pull_request.number }} --body \
             "<!-- NEXT_CHANGELOG_INSTRUCTIONS -->
-            Please ensure that the NEXT_CHANGELOG.md file is updated with any relevant changes. 
+            Please ensure that the NEXT_CHANGELOG.md file is updated with any relevant changes.
             If this is not necessary for your PR, please include the following in your PR description:
             NO_CHANGELOG=true
             and rerun the job."
@@ -93,7 +93,7 @@ jobs:
           # Check if there is a previous instructions comment
           previous_comment_ids=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
             --jq '.[] | select(.body | startswith("<!-- NEXT_CHANGELOG_INSTRUCTIONS -->")) | .id')
-          
+
             # If a comment exists, delete it
             if [ -n "$previous_comment_ids" ]; then
               echo "Deleting previous instructions comment."

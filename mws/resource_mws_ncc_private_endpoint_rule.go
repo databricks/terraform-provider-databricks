@@ -11,6 +11,9 @@ import (
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
 	s := common.StructToSchema(settings.NccPrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		for _, p := range []string{"endpoint_service", "group_id", "resource_id", "domain_names", "resource_names"} {
+			common.CustomizeSchemaPath(m, p).SetOptional()
+		}
 		for _, p := range []string{"endpoint_service", "group_id", "resource_id"} {
 			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}

@@ -38,6 +38,8 @@ The following arguments are supported:
 * `personal_access_token` - (Optional, required for some Git providers) The personal access token used to authenticate to the corresponding Git provider. If value is not provided, it's sourced from the first environment variable of [`GITHUB_TOKEN`](https://registry.terraform.io/providers/integrations/github/latest/docs#oauth--personal-access-token), [`GITLAB_TOKEN`](https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs#required), or [`AZDO_PERSONAL_ACCESS_TOKEN`](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs#argument-reference), that has a non-empty value.
 * `git_username` - (Optional, required for some Git providers) user name at Git provider.
 * `git_provider` -  (Required) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Git Credentials API documentation](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`, `azureDevOpsServicesAad`.
+* `is_default_for_provider` - (Optional) boolean flag specifying if the credential is the default for the given provider type.
+* `name` - (Optional) the name of the git credential, used for identification and ease of lookup.
 * `force` - (Optional) specify if settings need to be enforced.
 
 ## Attribute Reference

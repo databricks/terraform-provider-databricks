@@ -30,10 +30,10 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -62,10 +62,10 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -98,10 +98,10 @@ func TestUcAccFileUpdateOnLocalContentChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjZA=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -130,10 +130,10 @@ func TestUcAccFileUpdateOnLocalContentChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -167,10 +167,10 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 		name = "name-abc"
 		comment = "comment-abc"
 		catalog_name = "main"
-		schema_name = databricks_schema.this.name 
+		schema_name = databricks_schema.this.name
 		volume_type = "MANAGED"
 	}
-	
+
 	resource "databricks_file" "this" {
 		source = "%s"
 		path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -228,10 +228,10 @@ func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
 		name = "name-abc"
 		comment = "comment-abc"
 		catalog_name = "main"
-		schema_name = databricks_schema.this.name 
+		schema_name = databricks_schema.this.name
 		volume_type = "MANAGED"
 	}
-	
+
 	resource "databricks_file" "this" {
 		source = "%s"
 		path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -285,10 +285,10 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -326,10 +326,10 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -368,10 +368,10 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			source = "{var.CWD}/testdata/tf-test-python.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -387,10 +387,10 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			source = "{var.CWD}/testdata/tf-test-python2.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -410,10 +410,10 @@ func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
@@ -429,10 +429,10 @@ func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
-			schema_name = databricks_schema.this.name 
+			schema_name = databricks_schema.this.name
 			volume_type = "MANAGED"
 		}
-		
+
 		resource "databricks_file" "this" {
 			content_base64 = "YWJjDg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"

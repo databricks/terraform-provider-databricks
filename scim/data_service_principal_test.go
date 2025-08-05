@@ -96,6 +96,7 @@ func TestDataServicePrincipalReadBySpId(t *testing.T) {
 		"acl_principal_id": "servicePrincipals/abc",
 	})
 }
+
 func TestDataServicePrincipalReadByDisplayName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -140,6 +141,7 @@ func TestDataServicePrincipalReadByDisplayName(t *testing.T) {
 		"acl_principal_id": "servicePrincipals/abc",
 	})
 }
+
 func TestDataServicePrincipalReadByAppIdNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -173,6 +175,7 @@ func TestDataServicePrincipalReadByIdNotFound(t *testing.T) {
 		ID:          "_",
 	}.ExpectError(t, "cannot find SP with an ID abc")
 }
+
 func TestDataServicePrincipalReadByNameNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -10,7 +10,7 @@ if ! type terraform &> /dev/null; then
     exit 1
 fi
 
-if [ "" == "$1" ]; then 
+if [ "" == "$1" ]; then
     echo "Just exporting environment variables:"
     echo "$0 <env-name> --export"
     echo ""
@@ -33,7 +33,7 @@ if ! [ -d "$TARGET" ]; then
 fi
 
 # ./run.sh mws --export to print exportable env
-if [ "--export" == "$2" ]; then 
+if [ "--export" == "$2" ]; then
     if ! [ -f "$STATE" ]; then
         >&2 echo "[-] $1 didn't provision environment yet."
         exit 1
@@ -112,6 +112,6 @@ $1
 ${FAILURES}
 ${PASSES}
 EOF
-else 
+else
     go_test $2
 fi

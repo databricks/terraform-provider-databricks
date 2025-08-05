@@ -52,7 +52,7 @@ func TestQualityMonitorCreateTimeseries(t *testing.T) {
 			time_series = {
 				granularities = ["1 day"],
 				timestamp_col = "timestamp"
-			} 
+			}
 		`,
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{
@@ -107,7 +107,7 @@ func TestQualityMonitorCreateInference(t *testing.T) {
 				prediction_col = "prediction",
 				model_id_col = "model_id",
 				problem_type = "PROBLEM_TYPE_REGRESSION"
-			} 
+			}
 		`,
 		Create: true,
 	}.ApplyNoError(t)
@@ -227,7 +227,7 @@ func TestQualityMonitorUpdate(t *testing.T) {
 				prediction_col = "prediction",
 				model_id_col = "model_id",
 				problem_type = "PROBLEM_TYPE_REGRESSION"
-			} 
+			}
 		`,
 	}.ApplyNoError(t)
 }

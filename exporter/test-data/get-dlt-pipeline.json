@@ -27,7 +27,7 @@
             "workspace": {
               "destination": "/init.sh"
             }
-          }            
+          }
         ],
         "spark_conf": {
           "fs.azure.account.auth.type": "OAuth",

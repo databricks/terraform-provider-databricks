@@ -18,7 +18,7 @@ func TestUcAccDataSourceCatalog(t *testing.T) {
 				purpose = "testing"
 			}
 		}
-		
+
 		data "databricks_catalog" "this" {
 			name = databricks_catalog.sandbox.name
 			depends_on = [

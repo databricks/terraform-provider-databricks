@@ -22,9 +22,9 @@ resource "databricks_model_serving_provisioned_throughput" "llama" {
   }
   config {
     served_entities {
-      entity_name                = "system.ai.llama-4-maverick"
-      entity_version             = "1"
-      provisioned_model_units    = 100
+      entity_name             = "system.ai.llama-4-maverick"
+      entity_version          = "1"
+      provisioned_model_units = 100
     }
   }
 }

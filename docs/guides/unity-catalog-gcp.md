@@ -114,9 +114,9 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
 }
 
 resource "databricks_metastore_assignment" "this" {
-  provider             = databricks.accounts
-  workspace_id         = var.databricks_workspace_id
-  metastore_id         = databricks_metastore.this.id
+  provider     = databricks.accounts
+  workspace_id = var.databricks_workspace_id
+  metastore_id = databricks_metastore.this.id
 }
 ```
 
@@ -143,8 +143,8 @@ resource "databricks_storage_credential" "ext" {
 }
 
 resource "google_project_iam_custom_role" "uc_file_events" {
-  role_id     = "ucFileEvents"
-  title       = "Unity Catalog file events role"
+  role_id = "ucFileEvents"
+  title   = "Unity Catalog file events role"
   permissions = [
     "pubsub.subscriptions.consume",
     "pubsub.subscriptions.create",
@@ -172,8 +172,8 @@ resource "google_project_iam_member" "uc_project_file_events_admin" {
 
 resource "google_project_iam_member" "cloud_storage_sa_pubsub_publisher" {
   project = var.project
-  role  = "roles/pubsub.publisher"
-  member = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {

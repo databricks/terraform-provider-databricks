@@ -117,6 +117,3 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/serving
       test_name: TestUcAccModelServingProvisionedThroughputResource
       comment: Failure due to limited capacity in specific regions
-    - package: github.com/databricks/terraform-provider-databricks/catalog
-      test_name: TestUcAccResourceSystemSchema
-      comment: Failure due to changes in the List API. Tracked in https://databricks.atlassian.net/browse/ES-1536716

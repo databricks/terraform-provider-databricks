@@ -3,6 +3,7 @@ package pipelines_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
@@ -169,21 +170,26 @@ func TestUcAccPipelineRunAsMutations(t *testing.T) {
 	attribute := acceptance.GetRunAsAttribute(t, ctx)
 	acceptance.UnityWorkspaceLevel(
 		t,
-		// Provision job with service principal `run_as`
+		// Create a pipeline without a run_as configured.
+		acceptance.Step{
+			Template: pipelineRunAsTemplate(""),
+		},
+		// Update pipeline to a service principal `run_as`
 		acceptance.Step{
 			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
-		// Update job to a user `run_as`
+		// Update pipeline to a user `run_as`
 		acceptance.Step{
 			Template: pipelineRunAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
 		},
-		// Update job back to a service principal `run_as`
+		// Update pipeline back to a service principal `run_as`
 		acceptance.Step{
 			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
-		// Remove run_as, and there should be no change.
+		// Remove run_as, and there should be an error.
 		acceptance.Step{
-			Template: pipelineRunAsTemplate(""),
+			Template:    pipelineRunAsTemplate(""),
+			ExpectError: regexp.MustCompile("Once configured, run_as of the pipeline can not be set to null. Please set run_as to " + spId + " to preserve the pipeline's run_as"),
 		},
 	)
 }

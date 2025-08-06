@@ -31,8 +31,8 @@ resource "aws_iam_policy" "unity_metastore" {
 }
 
 resource "aws_iam_role" "metastore_data_access" {
-  name                = "${var.prefix}-uc-access"
-  assume_role_policy  = data.databricks_aws_unity_catalog_assume_role_policy.this.json
+  name               = "${var.prefix}-uc-access"
+  assume_role_policy = data.databricks_aws_unity_catalog_assume_role_policy.this.json
 }
 
 resource "aws_iam_role_policy_attachment" "metastore_data_access" {

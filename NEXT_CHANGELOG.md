@@ -1,39 +1,47 @@
 # NEXT CHANGELOG
 
-## Release v1.85.0
+## Release v1.86.0
 
 ### Breaking Changes
 
+* Do not set `run_as from run_as_user_name in DLT pipelines. This fixes an issue where the value for run_as was unintentionally cached in the terraform state. More details and the workaround are specified in the PR: ([#4886](https://github.com/databricks/terraform-provider-databricks/pull/4886))
+
 ### New Features and Improvements
 
-* Add `bearer_token` to the list of sensitive options in `databricks_connection` ([#4812](https://github.com/databricks/terraform-provider-databricks/pull/4812)).
-* Use single-node cluster for `databricks_sql_permissions` ([#4813](https://github.com/databricks/terraform-provider-databricks/pull/4813)).
 * Don't redeploy `databricks_sql_table` for tables with struct subcolumns ([#4001](https://github.com/databricks/terraform-provider-databricks/pull/4001)).
-* Allow to retrieve service principal data by SCIM ID ([#3142](https://github.com/databricks/terraform-provider-databricks/pull/3142)).
-* Add support for Lakebase `databricks_database_instance` in  `databricks_permissions` ([#4824](https://github.com/databricks/terraform-provider-databricks/pull/4824)).
-* Added support for Alert V2 in `databricks_permissions` ([#4831](https://github.com/databricks/terraform-provider-databricks/pull/4831)).
-* Replace instead of dropping Delta `databricks_sql_table` ([#2424](https://github.com/databricks/terraform-provider-databricks/pull/2424)).
+* Added ability to add `comment` when defining a new `databricks_share` ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
+* Added output attribute `endpoint_url` in `databricks_model_serving` ([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
+* Deprecate `egg` library type in `databricks_cluster`, `databricks_job`, and `databricks_library` ([#4881](https://github.com/databricks/terraform-provider-databricks/pull/4881)).
+* Support `databricks_service_principal_secret` on workspace level ([#4896](https://github.com/databricks/terraform-provider-databricks/pull/4896)).
 
 ### Bug Fixes
 
-* Don't redeploy `databricks_sql_table` when view definition contains newlines or tabs ([#4003](https://github.com/databricks/terraform-provider-databricks/pull/4003)).
-* Preserve `queue` setting for `databricks_job` resource when upgrading from provider version <1.71.0.
-* Fix updating of of `fallback_config` in `databricks_model_serving` ([#4830](https://github.com/databricks/terraform-provider-databricks/pull/4830)).
+* Corrected accidentally removed `SpID` field from `databricks_service_principal` ([#4868](https://github.com/databricks/terraform-provider-databricks/pull/4868)).
+* Corrected optional fields in `databricks_mws_ncc_private_endpoint_rule`([#4856](https://github.com/databricks/terraform-provider-databricks/pull/4856)).
+* Fix handling of `force` option in `databricks_git_credential` ([#4873](https://github.com/databricks/terraform-provider-databricks/pull/4873)).
+* Restricted create or replace statement to managed tables in `databricks_sql_table`([#4874](https://github.com/databricks/terraform-provider-databricks/pull/4874)).
+* Mitigate issue due to internal caching in `databricks_secret_acl` by retrying until ACL are applied with the right permission ([#4885](https://github.com/databricks/terraform-provider-databricks/pull/4885)).
+* Fix schema mismatch bug in `databricks_functions` data source ([#4902](https://github.com/databricks/terraform-provider-databricks/pull/4902)).
+* Set suppressDiff on string_shared_as in the Legacy databricks_share Resource ([#4904](https://github.com/databricks/terraform-provider-databricks/pull/4904)).
 
 ### Documentation
 
-* Update documentation for single-node clusters in `databricks_cluster` resource ([#4817](https://github.com/databricks/terraform-provider-databricks/pull/4817)).
-* Update GCP example for `databricks_external_location` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
-* Fix formatting for HTTP connection example in `databricks_connection` resource ([#4826](https://github.com/databricks/terraform-provider-databricks/pull/4826))
-* Update Databricks SQL objects documentation ([#4840](https://github.com/databricks/terraform-provider-databricks/pull/4840))
-* Improve documentation for `databricks_git_credential` resource ([#4837](https://github.com/databricks/terraform-provider-databricks/pull/4837))
-* Rename DLT references to Lakeflow Declarative pipelines ([#4842](https://github.com/databricks/terraform-provider-databricks/pull/4842))
+* Updated `share` documentation to be more in line with Terraform styling ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
+* Refreshed `databricks_job` documentation ([#4861](https://github.com/databricks/terraform-provider-databricks/pull/4861)).
+* Document `environment` block in `databricks_pipeline` ([#4878](https://github.com/databricks/terraform-provider-databricks/pull/4878)).
+* Updated documentation for `databricks_disable_legacy_dbfs_setting` resource ([#4870](https://github.com/databricks/terraform-provider-databricks/pull/4870)).
+* Add deprecation notice to `databricks_dbfs_file` and `databricks_mount` ([#4876](https://github.com/databricks/terraform-provider-databricks/pull/4876))
+* Updated documentation for `databricks_disable_legacy_features_setting` resource ([#4884](https://github.com/databricks/terraform-provider-databricks/pull/4884)).
+* Improve docs for `databricks_compliance_security_profile_setting` ([#4880](https://github.com/databricks/terraform-provider-databricks/pull/4880)).
+* Improve instructions for the Terraform Exporter ([#4892](https://github.com/databricks/terraform-provider-databricks/pull/4892)).
+* Improve documentation for service principal data sources ([#4900](https://github.com/databricks/terraform-provider-databricks/pull/4900)).
+* Add warning about disabling legacy features and default catalog ([#4905](https://github.com/databricks/terraform-provider-databricks/pull/4905)).
+* Improve documentation for grants resources ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4906))
 
 ### Exporter
 
-* Fix generation of columns in `databricks_sql_table` resource ([#4819](https://github.com/databricks/terraform-provider-databricks/pull/4819)).
+* Added support for exporting of workspaces and related resources ([#4899](https://github.com/databricks/terraform-provider-databricks/pull/4899)).
 
 ### Internal Changes
 
-* Updated the contributing guide with instructions on how to modify the changelog ([#4404](https://github.com/databricks/terraform-provider-databricks/pull/4404)).
-* Add synthetic field to jobs resource to control behavior of `apply_policy_default_values` ([#4834](https://github.com/databricks/terraform-provider-databricks/pull/4834)).
+* Promote Plugin Framework Share Resource to Production ([#4846](https://github.com/databricks/terraform-provider-databricks/pull/4846)).

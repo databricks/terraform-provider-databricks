@@ -140,7 +140,7 @@ type ShareResource struct {
 }
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -347,12 +347,16 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 {
+	if len(changes) > 0 || !plan.Comment.IsNull() {
 		// if there are any other changes, update the share with the changes
-		upToDateShareInfo, err = client.Shares.Update(ctx, sharing.UpdateShare{
+		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
-		})
+		}
+		if !plan.Comment.IsNull() {
+			update.Comment = plan.Comment.ValueString()
+		}
+		upToDateShareInfo, err = client.Shares.Update(ctx, update)
 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())

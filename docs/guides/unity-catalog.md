@@ -180,10 +180,10 @@ resource "databricks_metastore" "this" {
 }
 
 resource "databricks_metastore_assignment" "default_metastore" {
-  provider             = databricks.mws
-  for_each             = toset(var.databricks_workspace_ids)
-  workspace_id         = each.key
-  metastore_id         = databricks_metastore.this.id
+  provider     = databricks.mws
+  for_each     = toset(var.databricks_workspace_ids)
+  workspace_id = each.key
+  metastore_id = databricks_metastore.this.id
 }
 
 
@@ -262,8 +262,8 @@ resource "aws_iam_policy" "external_data_access" {
 }
 
 resource "aws_iam_role" "external_data_access" {
-  name                = local.uc_iam_role
-  assume_role_policy  = data.databricks_aws_unity_catalog_assume_role_policy.this.json
+  name               = local.uc_iam_role
+  assume_role_policy = data.databricks_aws_unity_catalog_assume_role_policy.this.json
   tags = merge(var.tags, {
     Name = "${local.prefix}-unity-catalog external access IAM role"
   })

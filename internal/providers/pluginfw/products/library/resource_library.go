@@ -106,6 +106,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		c.SetRequired("cluster_id")
 		c.SetOptional("id")
 		c.SetComputed("id")
+		c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
 		return c
 	})
 	resp.Schema = schema.Schema{

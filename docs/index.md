@@ -180,21 +180,21 @@ These can be declared in the provider block or set in the environment variables 
 Workspace level provider:
 ```hcl
 provider "databricks" {
-  alias       = "workspace"
-  auth_type   = "github-oidc" 
-  host        = var.workspace_host
-  client_id   = var.client_id
+  alias     = "workspace"
+  auth_type = "github-oidc"
+  host      = var.workspace_host
+  client_id = var.client_id
 }
 ```
 
 Configure the account-level provider as follows. Make sure to configure the account host [as described above](#host-argument).
 ```hcl
 provider "databricks" {
-  alias       = "account"
-  auth_type   = "github-oidc" 
-  host        = var.account_host
-  client_id   = var.client_id
-  account_id  = var.account_id
+  alias      = "account"
+  auth_type  = "github-oidc"
+  host       = var.account_host
+  client_id  = var.client_id
+  account_id = var.account_id
 }
 ```
 
@@ -282,21 +282,21 @@ To create resources at both the account and workspace levels, you can create two
 Workspace level provider:
 ```hcl
 provider "databricks" {
-  alias       = "workspace"
-  auth_type   = "env-oidc"
-  host        = var.workspace_host
-  client_id   = var.client_id
+  alias     = "workspace"
+  auth_type = "env-oidc"
+  host      = var.workspace_host
+  client_id = var.client_id
 }
 ```
 
 Account level provider:
 ```hcl
 provider "databricks" {
-  alias       = "account"
-  auth_type   = "env-oidc"
-  host        = var.account_host
-  client_id   = var.client_id
-  account_id  = var.account_id
+  alias      = "account"
+  auth_type  = "env-oidc"
+  host       = var.account_host
+  client_id  = var.client_id
+  account_id = var.account_id
 }
 ```
 

@@ -239,7 +239,7 @@ func (o *CreateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
-
+	// The schedule to create. A dashboard is limited to 10 schedules.
 	Schedule types.Object `tfsdk:"schedule"`
 }
 
@@ -311,7 +311,7 @@ type CreateSubscriptionRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
-
+	// The subscription to create. A schedule is limited to 100 subscriptions.
 	Subscription types.Object `tfsdk:"subscription"`
 }
 
@@ -591,36 +591,6 @@ func (o DeleteScheduleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteScheduleResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteScheduleResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteScheduleResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteScheduleResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteScheduleResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -667,36 +637,6 @@ func (o DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 			"schedule_id":     types.StringType,
 			"subscription_id": types.StringType,
 		},
-	}
-}
-
-type DeleteSubscriptionResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteSubscriptionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSubscriptionResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteSubscriptionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteSubscriptionResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -896,6 +836,63 @@ func (o GenieConversation) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieConversationSummary struct {
+	ConversationId types.String `tfsdk:"conversation_id"`
+
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+
+	Title types.String `tfsdk:"title"`
+}
+
+func (newState *GenieConversationSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversationSummary) {
+}
+
+func (newState *GenieConversationSummary) SyncEffectiveFieldsDuringRead(existingState GenieConversationSummary) {
+}
+
+func (c GenieConversationSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetRequired()
+	attrs["title"] = attrs["title"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieConversationSummary.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieConversationSummary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieConversationSummary
+// only implements ToObjectValue() and Type().
+func (o GenieConversationSummary) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id":   o.ConversationId,
+			"created_timestamp": o.CreatedTimestamp,
+			"title":             o.Title,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieConversationSummary) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id":   types.StringType,
+			"created_timestamp": types.Int64Type,
+			"title":             types.StringType,
+		},
+	}
+}
+
 type GenieCreateConversationMessageRequest struct {
 	// User message content.
 	Content types.String `tfsdk:"content"`
@@ -903,20 +900,6 @@ type GenieCreateConversationMessageRequest struct {
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is started.
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieCreateConversationMessageRequest) {
-}
-
-func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
-}
-
-func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
@@ -948,6 +931,46 @@ func (o GenieCreateConversationMessageRequest) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content":         types.StringType,
+			"conversation_id": types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieDeleteConversationRequest struct {
+	// The ID of the conversation to delete.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the conversation is located.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieDeleteConversationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieDeleteConversationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieDeleteConversationRequest
+// only implements ToObjectValue() and Type().
+func (o GenieDeleteConversationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": o.ConversationId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieDeleteConversationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"conversation_id": types.StringType,
 			"space_id":        types.StringType,
 		},
@@ -1046,103 +1069,6 @@ func (o GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type GenieGenerateDownloadFullQueryResultRequest struct {
-	// Attachment ID
-	AttachmentId types.String `tfsdk:"-"`
-	// Conversation ID
-	ConversationId types.String `tfsdk:"-"`
-	// Message ID
-	MessageId types.String `tfsdk:"-"`
-	// Genie space ID
-	SpaceId types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGenerateDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultRequest
-// only implements ToObjectValue() and Type().
-func (o GenieGenerateDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"attachment_id":   o.AttachmentId,
-			"conversation_id": o.ConversationId,
-			"message_id":      o.MessageId,
-			"space_id":        o.SpaceId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGenerateDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attachment_id":   types.StringType,
-			"conversation_id": types.StringType,
-			"message_id":      types.StringType,
-			"space_id":        types.StringType,
-		},
-	}
-}
-
-type GenieGenerateDownloadFullQueryResultResponse struct {
-	// Download ID. Use this ID to track the download request in subsequent
-	// polling calls
-	DownloadId types.String `tfsdk:"download_id"`
-}
-
-func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGenerateDownloadFullQueryResultResponse) {
-}
-
-func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGenerateDownloadFullQueryResultResponse) {
-}
-
-func (c GenieGenerateDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["download_id"] = attrs["download_id"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGenerateDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultResponse
-// only implements ToObjectValue() and Type().
-func (o GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"download_id": o.DownloadId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"download_id": types.StringType,
-		},
-	}
-}
-
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1187,138 +1113,6 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 			"space_id":        types.StringType,
 		},
 	}
-}
-
-type GenieGetDownloadFullQueryResultRequest struct {
-	// Attachment ID
-	AttachmentId types.String `tfsdk:"-"`
-	// Conversation ID
-	ConversationId types.String `tfsdk:"-"`
-	// Download ID. This ID is provided by the [Generate Download
-	// endpoint](:method:genie/generateDownloadFullQueryResult)
-	DownloadId types.String `tfsdk:"-"`
-	// Message ID
-	MessageId types.String `tfsdk:"-"`
-	// Genie space ID
-	SpaceId types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGetDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultRequest
-// only implements ToObjectValue() and Type().
-func (o GenieGetDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"attachment_id":   o.AttachmentId,
-			"conversation_id": o.ConversationId,
-			"download_id":     o.DownloadId,
-			"message_id":      o.MessageId,
-			"space_id":        o.SpaceId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGetDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attachment_id":   types.StringType,
-			"conversation_id": types.StringType,
-			"download_id":     types.StringType,
-			"message_id":      types.StringType,
-			"space_id":        types.StringType,
-		},
-	}
-}
-
-type GenieGetDownloadFullQueryResultResponse struct {
-	// SQL Statement Execution response. See [Get status, manifest, and result
-	// first chunk](:method:statementexecution/getstatement) for more details.
-	StatementResponse types.Object `tfsdk:"statement_response"`
-}
-
-func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetDownloadFullQueryResultResponse) {
-}
-
-func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetDownloadFullQueryResultResponse) {
-}
-
-func (c GenieGetDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["statement_response"] = attrs["statement_response"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGetDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultResponse
-// only implements ToObjectValue() and Type().
-func (o GenieGetDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"statement_response": o.StatementResponse,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGetDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
-		},
-	}
-}
-
-// GetStatementResponse returns the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse as
-// a sql_tf.StatementResponse value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *GenieGetDownloadFullQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
-	var e sql_tf.StatementResponse
-	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
-		return e, false
-	}
-	var v []sql_tf.StatementResponse
-	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetStatementResponse sets the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse.
-func (o *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
-	vs := v.ToObjectValue(ctx)
-	o.StatementResponse = vs
 }
 
 type GenieGetMessageAttachmentQueryResultRequest struct {
@@ -1576,6 +1370,133 @@ func (o GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieListConversationsRequest struct {
+	// Maximum number of conversations to return per page
+	PageSize types.Int64 `tfsdk:"-"`
+	// Token to get the next page of results
+	PageToken types.String `tfsdk:"-"`
+	// The ID of the Genie space to retrieve conversations from.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationsRequest
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+			"space_id":   o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"space_id":   types.StringType,
+		},
+	}
+}
+
+type GenieListConversationsResponse struct {
+	// List of conversations in the Genie space
+	Conversations types.List `tfsdk:"conversations"`
+	// Token to get the next page of results
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (newState *GenieListConversationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieListConversationsResponse) {
+}
+
+func (newState *GenieListConversationsResponse) SyncEffectiveFieldsDuringRead(existingState GenieListConversationsResponse) {
+}
+
+func (c GenieListConversationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversations"] = attrs["conversations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"conversations": reflect.TypeOf(GenieConversationSummary{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationsResponse
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversations":   o.Conversations,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversations": basetypes.ListType{
+				ElemType: GenieConversationSummary{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetConversations returns the value of the Conversations field in GenieListConversationsResponse as
+// a slice of GenieConversationSummary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieListConversationsResponse) GetConversations(ctx context.Context) ([]GenieConversationSummary, bool) {
+	if o.Conversations.IsNull() || o.Conversations.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieConversationSummary
+	d := o.Conversations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConversations sets the value of the Conversations field in GenieListConversationsResponse.
+func (o *GenieListConversationsResponse) SetConversations(ctx context.Context, v []GenieConversationSummary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["conversations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Conversations = types.ListValueMust(t, vs)
+}
+
 type GenieListSpacesRequest struct {
 	// Maximum number of spaces to return per page
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1722,23 +1643,7 @@ type GenieMessage struct {
 	QueryResult types.Object `tfsdk:"query_result"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
-	// MessageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
-	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
-	// context step to determine relevant context. * `ASKING_AI`: Waiting for
-	// the LLM to respond to the user's question. * `PENDING_WAREHOUSE`: Waiting
-	// for warehouse before the SQL query can start executing. *
-	// `EXECUTING_QUERY`: Executing a generated SQL query. Get the SQL query
-	// result by calling
-	// [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult)
-	// API. * `FAILED`: The response generation or query execution failed. See
-	// `error` field. * `COMPLETED`: Message processing is completed. Results
-	// are in the `attachments` field. Get the SQL query result by calling
-	// [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult)
-	// API. * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`:
-	// SQL result is not available anymore. The user needs to rerun the query.
-	// Rerun the SQL query result by calling
-	// [executeMessageAttachmentQuery](:method:genie/executeMessageAttachmentQuery)
-	// API. * `CANCELLED`: Message has been cancelled.
+
 	Status types.String `tfsdk:"status"`
 	// ID of the user who created the message
 	UserId types.Int64 `tfsdk:"user_id"`
@@ -2137,19 +2042,6 @@ type GenieStartConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationMessageRequest) {
-}
-
-func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
-}
-
-func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2302,6 +2194,42 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 func (o *GenieStartConversationResponse) SetMessage(ctx context.Context, v GenieMessage) {
 	vs := v.ToObjectValue(ctx)
 	o.Message = vs
+}
+
+type GenieTrashSpaceRequest struct {
+	// The ID associated with the Genie space to be sent to the trash.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieTrashSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieTrashSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieTrashSpaceRequest
+// only implements ToObjectValue() and Type().
+func (o GenieTrashSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"space_id": o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieTrashSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"space_id": types.StringType,
+		},
+	}
 }
 
 type GetDashboardRequest struct {
@@ -3059,21 +2987,6 @@ type MigrateDashboardRequest struct {
 	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
-func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest) {
-}
-
-func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
-}
-
-func (c MigrateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["parent_path"] = attrs["parent_path"].SetOptional()
-	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
-	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3121,20 +3034,6 @@ type PublishRequest struct {
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishRequest) {
-}
-
-func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
-}
-
-func (c PublishRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -4023,7 +3922,7 @@ func (o *UpdateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
-
+	// The schedule to update.
 	Schedule types.Object `tfsdk:"schedule"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`

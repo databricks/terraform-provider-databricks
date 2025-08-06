@@ -58,7 +58,7 @@ resource "databricks_cluster_policy" "fair_use" {
 
 resource "databricks_permissions" "use_policy" {
     cluster_policy_id = databricks_cluster_policy.fair_use.id
-    
+
     access_control {
         group_name = databricks_group.marketing.display_name
         permission_level = "CAN_USE"
@@ -124,7 +124,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 resource "databricks_permissions" "shared_autoscaling" {
     cluster_id = databricks_cluster.shared_autoscaling.id
-    
+
     access_control {
         group_name = databricks_group.marketing.display_name
         permission_level = "CAN_ATTACH_TO"
@@ -186,7 +186,7 @@ resource "databricks_job" "featurization" {
     num_workers      = 3
     instance_pool_id = databricks_instance_pool.this.id
     spark_version    = "6.6.x-scala2.11"
-    
+
     cluster_log_conf {
       dbfs {
         destination = "dbfs:/mnt/sample/cluster-logs"
@@ -220,7 +220,7 @@ resource "databricks_job" "featurization" {
 
 resource "databricks_permissions" "featurization" {
     job_id = databricks_job.featurization.id
-    
+
     access_control {
         group_name = databricks_group.support.display_name
         permission_level = "CAN_MANAGE"

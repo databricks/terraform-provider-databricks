@@ -38,7 +38,8 @@ This data source exports a single attribute, `results`. It is a list of resource
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
-* `run_as_user_name` (string) - The run as username. This field is set to "Unavailable" if the user has been deleted
+* `run_as_user_name` (string) - The run as username or application ID of service principal.
+  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role
 * `schedule` (CronSchedule) - 
 * `update_time` (string) - The timestamp indicating when the alert was updated
 * `warehouse_id` (string) - ID of the SQL warehouse attached to the alert

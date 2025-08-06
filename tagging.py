@@ -16,8 +16,8 @@ CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
 """
-This script tags the release of the SDKs using a combination of the GitHub API and Git commands.  
-It reads the local repository to determine necessary changes, updates changelogs, and creates tags.  
+This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
+It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
 
 ### How it Works:
 - It does **not** modify the local repository directly.
@@ -479,7 +479,7 @@ def run_command(command: List[str]) -> str:
 
 def pull_last_release_commit() -> None:
     """
-    Reset the repository to the last release. 
+    Reset the repository to the last release.
     Uses commit for last change to .release_metadata.json, since it's only updated on releases.
     """
     commit_hash = subprocess.check_output(

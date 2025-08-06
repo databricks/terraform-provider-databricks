@@ -90,17 +90,17 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var database_instances = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var database_instance database_tf.DatabaseInstance
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &database_instance)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		database_instances = append(database_instances, database_instance.ToObjectValue(ctx))
+		results = append(results, database_instance.ToObjectValue(ctx))
 	}
 
 	var newState DatabaseInstancesList
-	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), database_instances)
+	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

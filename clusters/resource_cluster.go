@@ -102,6 +102,17 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 	return false
 }
 
+// These are aliases which is the reason why we suppress these changes
+func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED" ||
+		old == "USER_ISOLATION" && new == "DATA_SECURITY_MODE_STANDARD" ||
+		(old == "SINGLE_USER" || old == "USER_ISOLATION") && new == "DATA_SECURITY_MODE_AUTO" {
+		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func ModifyRequestOnInstancePool(cluster any) error {
@@ -341,6 +352,7 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
 	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
+	s.SchemaPath("data_security_mode").SetCustomSuppressDiff(DataSecurityModeDiffSuppressFunc)
 	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
 	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})

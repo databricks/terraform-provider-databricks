@@ -8,7 +8,10 @@ subcategory: "Settings"
 
 The `databricks_disable_legacy_features_setting` resource allows you to disable legacy features on newly created workspaces.
 
+~> Before disabling legacy features, make sure that default catalog for the workspace is set to value different than `hive_metastore`!  You can set it using the [databricks_default_namespace_setting](default_namespace_setting.md) resource.
+
 When this setting is on, the following applies to new workspaces:
+
 - Disables the use of DBFS root and mounts.
 - Hive Metastore will not be provisioned.
 - Disables the use of 'No-isolation clusters'.
@@ -17,6 +20,14 @@ When this setting is on, the following applies to new workspaces:
 ## Example Usage
 
 ```hcl
+# Change default catalog to anything than `hive_metastore`
+resource "databricks_default_namespace_setting" "this" {
+  namespace {
+    value = "default_catalog"
+  }
+}
+
+# Disable legacy features
 resource "databricks_disable_legacy_features_setting" "this" {
   disable_legacy_features {
     value = true

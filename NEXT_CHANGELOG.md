@@ -39,6 +39,7 @@
 * Improve documentation for service principal data sources ([#4900](https://github.com/databricks/terraform-provider-databricks/pull/4900)).
 * Add warning about disabling legacy features and default catalog ([#4905](https://github.com/databricks/terraform-provider-databricks/pull/4905)).
 * Improve documentation for grants resources ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4906))
+* Document `email_notifications` block in model serving resources ([#4910](https://github.com/databricks/terraform-provider-databricks/pull/4910))
 
 ### Exporter
 

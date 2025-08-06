@@ -104,13 +104,10 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 
 // These are aliases which is the reason why we suppress these changes
 func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	if old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED" ||
-		old == "USER_ISOLATION" && new == "DATA_SECURITY_MODE_STANDARD" ||
-		(old == "SINGLE_USER" || old == "USER_ISOLATION") && new == "DATA_SECURITY_MODE_AUTO" {
-		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
-		return true
-	}
-	return false
+	log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+	return (old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED") ||
+		(old == "USER_ISOLATION" && new == "DATA_SECURITY_MODE_STANDARD") ||
+		((old == "SINGLE_USER" || old == "USER_ISOLATION") && new == "DATA_SECURITY_MODE_AUTO")
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.

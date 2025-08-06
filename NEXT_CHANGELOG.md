@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Suppress `data_security_mode` aliases for `databricks_cluster` resource ([#4911](https://github.com/databricks/terraform-provider-databricks/pull/4911)).
+
 ### Documentation
 
 ### Exporter

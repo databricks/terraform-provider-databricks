@@ -29,7 +29,9 @@ type App_SdkV2 struct {
 	ActiveDeployment types.List `tfsdk:"active_deployment"`
 
 	AppStatus types.List `tfsdk:"app_status"`
-
+	// TODO: Deprecate this field after serverless entitlements are released to
+	// all prod stages and the new usage_policy_id is properly populated and
+	// used.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 
 	ComputeStatus types.List `tfsdk:"compute_status"`
@@ -43,7 +45,9 @@ type App_SdkV2 struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
-
+	// TODO: Deprecate this field after serverless entitlements are released to
+	// all prod stages and the new usage_policy_id is properly populated and
+	// used.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
@@ -77,10 +81,74 @@ type App_SdkV2 struct {
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
-func (newState *App_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan App_SdkV2) {
+func (toState *App_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan App_SdkV2) {
+	if !fromPlan.ActiveDeployment.IsNull() && !fromPlan.ActiveDeployment.IsUnknown() {
+		if toStateActiveDeployment, ok := toState.GetActiveDeployment(ctx); ok {
+			if fromPlanActiveDeployment, ok := fromPlan.GetActiveDeployment(ctx); ok {
+				toStateActiveDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanActiveDeployment)
+				toState.SetActiveDeployment(ctx, toStateActiveDeployment)
+			}
+		}
+	}
+	if !fromPlan.AppStatus.IsNull() && !fromPlan.AppStatus.IsUnknown() {
+		if toStateAppStatus, ok := toState.GetAppStatus(ctx); ok {
+			if fromPlanAppStatus, ok := fromPlan.GetAppStatus(ctx); ok {
+				toStateAppStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAppStatus)
+				toState.SetAppStatus(ctx, toStateAppStatus)
+			}
+		}
+	}
+	if !fromPlan.ComputeStatus.IsNull() && !fromPlan.ComputeStatus.IsUnknown() {
+		if toStateComputeStatus, ok := toState.GetComputeStatus(ctx); ok {
+			if fromPlanComputeStatus, ok := fromPlan.GetComputeStatus(ctx); ok {
+				toStateComputeStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanComputeStatus)
+				toState.SetComputeStatus(ctx, toStateComputeStatus)
+			}
+		}
+	}
+	if !fromPlan.PendingDeployment.IsNull() && !fromPlan.PendingDeployment.IsUnknown() {
+		if toStatePendingDeployment, ok := toState.GetPendingDeployment(ctx); ok {
+			if fromPlanPendingDeployment, ok := fromPlan.GetPendingDeployment(ctx); ok {
+				toStatePendingDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPendingDeployment)
+				toState.SetPendingDeployment(ctx, toStatePendingDeployment)
+			}
+		}
+	}
 }
 
-func (newState *App_SdkV2) SyncEffectiveFieldsDuringRead(existingState App_SdkV2) {
+func (toState *App_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState App_SdkV2) {
+	if !fromState.ActiveDeployment.IsNull() && !fromState.ActiveDeployment.IsUnknown() {
+		if toStateActiveDeployment, ok := toState.GetActiveDeployment(ctx); ok {
+			if fromStateActiveDeployment, ok := fromState.GetActiveDeployment(ctx); ok {
+				toStateActiveDeployment.SyncFieldsDuringRead(ctx, fromStateActiveDeployment)
+				toState.SetActiveDeployment(ctx, toStateActiveDeployment)
+			}
+		}
+	}
+	if !fromState.AppStatus.IsNull() && !fromState.AppStatus.IsUnknown() {
+		if toStateAppStatus, ok := toState.GetAppStatus(ctx); ok {
+			if fromStateAppStatus, ok := fromState.GetAppStatus(ctx); ok {
+				toStateAppStatus.SyncFieldsDuringRead(ctx, fromStateAppStatus)
+				toState.SetAppStatus(ctx, toStateAppStatus)
+			}
+		}
+	}
+	if !fromState.ComputeStatus.IsNull() && !fromState.ComputeStatus.IsUnknown() {
+		if toStateComputeStatus, ok := toState.GetComputeStatus(ctx); ok {
+			if fromStateComputeStatus, ok := fromState.GetComputeStatus(ctx); ok {
+				toStateComputeStatus.SyncFieldsDuringRead(ctx, fromStateComputeStatus)
+				toState.SetComputeStatus(ctx, toStateComputeStatus)
+			}
+		}
+	}
+	if !fromState.PendingDeployment.IsNull() && !fromState.PendingDeployment.IsUnknown() {
+		if toStatePendingDeployment, ok := toState.GetPendingDeployment(ctx); ok {
+			if fromStatePendingDeployment, ok := fromState.GetPendingDeployment(ctx); ok {
+				toStatePendingDeployment.SyncFieldsDuringRead(ctx, fromStatePendingDeployment)
+				toState.SetPendingDeployment(ctx, toStatePendingDeployment)
+			}
+		}
+	}
 }
 
 func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -405,10 +473,10 @@ type AppAccessControlRequest_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlRequest_SdkV2) {
+func (toState *AppAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppAccessControlRequest_SdkV2) {
 }
 
-func (newState *AppAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppAccessControlRequest_SdkV2) {
+func (toState *AppAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppAccessControlRequest_SdkV2) {
 }
 
 func (c AppAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -470,10 +538,10 @@ type AppAccessControlResponse_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlResponse_SdkV2) {
+func (toState *AppAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppAccessControlResponse_SdkV2) {
 }
 
-func (newState *AppAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppAccessControlResponse_SdkV2) {
+func (toState *AppAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppAccessControlResponse_SdkV2) {
 }
 
 func (c AppAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -580,10 +648,42 @@ type AppDeployment_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *AppDeployment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment_SdkV2) {
+func (toState *AppDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeployment_SdkV2) {
+	if !fromPlan.DeploymentArtifacts.IsNull() && !fromPlan.DeploymentArtifacts.IsUnknown() {
+		if toStateDeploymentArtifacts, ok := toState.GetDeploymentArtifacts(ctx); ok {
+			if fromPlanDeploymentArtifacts, ok := fromPlan.GetDeploymentArtifacts(ctx); ok {
+				toStateDeploymentArtifacts.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeploymentArtifacts)
+				toState.SetDeploymentArtifacts(ctx, toStateDeploymentArtifacts)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *AppDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeployment_SdkV2) {
+func (toState *AppDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppDeployment_SdkV2) {
+	if !fromState.DeploymentArtifacts.IsNull() && !fromState.DeploymentArtifacts.IsUnknown() {
+		if toStateDeploymentArtifacts, ok := toState.GetDeploymentArtifacts(ctx); ok {
+			if fromStateDeploymentArtifacts, ok := fromState.GetDeploymentArtifacts(ctx); ok {
+				toStateDeploymentArtifacts.SyncFieldsDuringRead(ctx, fromStateDeploymentArtifacts)
+				toState.SetDeploymentArtifacts(ctx, toStateDeploymentArtifacts)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -711,10 +811,10 @@ type AppDeploymentArtifacts_SdkV2 struct {
 	SourceCodePath types.String `tfsdk:"source_code_path"`
 }
 
-func (newState *AppDeploymentArtifacts_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentArtifacts_SdkV2) {
+func (toState *AppDeploymentArtifacts_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeploymentArtifacts_SdkV2) {
 }
 
-func (newState *AppDeploymentArtifacts_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeploymentArtifacts_SdkV2) {
+func (toState *AppDeploymentArtifacts_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppDeploymentArtifacts_SdkV2) {
 }
 
 func (c AppDeploymentArtifacts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -761,10 +861,10 @@ type AppDeploymentStatus_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *AppDeploymentStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus_SdkV2) {
+func (toState *AppDeploymentStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeploymentStatus_SdkV2) {
 }
 
-func (newState *AppDeploymentStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus_SdkV2) {
+func (toState *AppDeploymentStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppDeploymentStatus_SdkV2) {
 }
 
 func (c AppDeploymentStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -815,10 +915,10 @@ type AppPermission_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermission_SdkV2) {
+func (toState *AppPermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermission_SdkV2) {
 }
 
-func (newState *AppPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermission_SdkV2) {
+func (toState *AppPermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppPermission_SdkV2) {
 }
 
 func (c AppPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -902,10 +1002,10 @@ type AppPermissions_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *AppPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissions_SdkV2) {
+func (toState *AppPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermissions_SdkV2) {
 }
 
-func (newState *AppPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissions_SdkV2) {
+func (toState *AppPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppPermissions_SdkV2) {
 }
 
 func (c AppPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -987,10 +1087,10 @@ type AppPermissionsDescription_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsDescription_SdkV2) {
+func (toState *AppPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermissionsDescription_SdkV2) {
 }
 
-func (newState *AppPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissionsDescription_SdkV2) {
+func (toState *AppPermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppPermissionsDescription_SdkV2) {
 }
 
 func (c AppPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1120,10 +1220,106 @@ type AppResource_SdkV2 struct {
 	UcSecurable types.List `tfsdk:"uc_securable"`
 }
 
-func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource_SdkV2) {
+func (toState *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResource_SdkV2) {
+	if !fromPlan.Database.IsNull() && !fromPlan.Database.IsUnknown() {
+		if toStateDatabase, ok := toState.GetDatabase(ctx); ok {
+			if fromPlanDatabase, ok := fromPlan.GetDatabase(ctx); ok {
+				toStateDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabase)
+				toState.SetDatabase(ctx, toStateDatabase)
+			}
+		}
+	}
+	if !fromPlan.Job.IsNull() && !fromPlan.Job.IsUnknown() {
+		if toStateJob, ok := toState.GetJob(ctx); ok {
+			if fromPlanJob, ok := fromPlan.GetJob(ctx); ok {
+				toStateJob.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJob)
+				toState.SetJob(ctx, toStateJob)
+			}
+		}
+	}
+	if !fromPlan.Secret.IsNull() && !fromPlan.Secret.IsUnknown() {
+		if toStateSecret, ok := toState.GetSecret(ctx); ok {
+			if fromPlanSecret, ok := fromPlan.GetSecret(ctx); ok {
+				toStateSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSecret)
+				toState.SetSecret(ctx, toStateSecret)
+			}
+		}
+	}
+	if !fromPlan.ServingEndpoint.IsNull() && !fromPlan.ServingEndpoint.IsUnknown() {
+		if toStateServingEndpoint, ok := toState.GetServingEndpoint(ctx); ok {
+			if fromPlanServingEndpoint, ok := fromPlan.GetServingEndpoint(ctx); ok {
+				toStateServingEndpoint.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanServingEndpoint)
+				toState.SetServingEndpoint(ctx, toStateServingEndpoint)
+			}
+		}
+	}
+	if !fromPlan.SqlWarehouse.IsNull() && !fromPlan.SqlWarehouse.IsUnknown() {
+		if toStateSqlWarehouse, ok := toState.GetSqlWarehouse(ctx); ok {
+			if fromPlanSqlWarehouse, ok := fromPlan.GetSqlWarehouse(ctx); ok {
+				toStateSqlWarehouse.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlWarehouse)
+				toState.SetSqlWarehouse(ctx, toStateSqlWarehouse)
+			}
+		}
+	}
+	if !fromPlan.UcSecurable.IsNull() && !fromPlan.UcSecurable.IsUnknown() {
+		if toStateUcSecurable, ok := toState.GetUcSecurable(ctx); ok {
+			if fromPlanUcSecurable, ok := fromPlan.GetUcSecurable(ctx); ok {
+				toStateUcSecurable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUcSecurable)
+				toState.SetUcSecurable(ctx, toStateUcSecurable)
+			}
+		}
+	}
 }
 
-func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResource_SdkV2) {
+func (toState *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResource_SdkV2) {
+	if !fromState.Database.IsNull() && !fromState.Database.IsUnknown() {
+		if toStateDatabase, ok := toState.GetDatabase(ctx); ok {
+			if fromStateDatabase, ok := fromState.GetDatabase(ctx); ok {
+				toStateDatabase.SyncFieldsDuringRead(ctx, fromStateDatabase)
+				toState.SetDatabase(ctx, toStateDatabase)
+			}
+		}
+	}
+	if !fromState.Job.IsNull() && !fromState.Job.IsUnknown() {
+		if toStateJob, ok := toState.GetJob(ctx); ok {
+			if fromStateJob, ok := fromState.GetJob(ctx); ok {
+				toStateJob.SyncFieldsDuringRead(ctx, fromStateJob)
+				toState.SetJob(ctx, toStateJob)
+			}
+		}
+	}
+	if !fromState.Secret.IsNull() && !fromState.Secret.IsUnknown() {
+		if toStateSecret, ok := toState.GetSecret(ctx); ok {
+			if fromStateSecret, ok := fromState.GetSecret(ctx); ok {
+				toStateSecret.SyncFieldsDuringRead(ctx, fromStateSecret)
+				toState.SetSecret(ctx, toStateSecret)
+			}
+		}
+	}
+	if !fromState.ServingEndpoint.IsNull() && !fromState.ServingEndpoint.IsUnknown() {
+		if toStateServingEndpoint, ok := toState.GetServingEndpoint(ctx); ok {
+			if fromStateServingEndpoint, ok := fromState.GetServingEndpoint(ctx); ok {
+				toStateServingEndpoint.SyncFieldsDuringRead(ctx, fromStateServingEndpoint)
+				toState.SetServingEndpoint(ctx, toStateServingEndpoint)
+			}
+		}
+	}
+	if !fromState.SqlWarehouse.IsNull() && !fromState.SqlWarehouse.IsUnknown() {
+		if toStateSqlWarehouse, ok := toState.GetSqlWarehouse(ctx); ok {
+			if fromStateSqlWarehouse, ok := fromState.GetSqlWarehouse(ctx); ok {
+				toStateSqlWarehouse.SyncFieldsDuringRead(ctx, fromStateSqlWarehouse)
+				toState.SetSqlWarehouse(ctx, toStateSqlWarehouse)
+			}
+		}
+	}
+	if !fromState.UcSecurable.IsNull() && !fromState.UcSecurable.IsUnknown() {
+		if toStateUcSecurable, ok := toState.GetUcSecurable(ctx); ok {
+			if fromStateUcSecurable, ok := fromState.GetUcSecurable(ctx); ok {
+				toStateUcSecurable.SyncFieldsDuringRead(ctx, fromStateUcSecurable)
+				toState.SetUcSecurable(ctx, toStateUcSecurable)
+			}
+		}
+	}
 }
 
 func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1373,10 +1569,10 @@ type AppResourceDatabase_SdkV2 struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceDatabase_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceDatabase_SdkV2) {
+func (toState *AppResourceDatabase_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceDatabase_SdkV2) {
 }
 
-func (newState *AppResourceDatabase_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceDatabase_SdkV2) {
+func (toState *AppResourceDatabase_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceDatabase_SdkV2) {
 }
 
 func (c AppResourceDatabase_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1430,10 +1626,10 @@ type AppResourceJob_SdkV2 struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceJob_SdkV2) {
+func (toState *AppResourceJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceJob_SdkV2) {
 }
 
-func (newState *AppResourceJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceJob_SdkV2) {
+func (toState *AppResourceJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceJob_SdkV2) {
 }
 
 func (c AppResourceJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1486,10 +1682,10 @@ type AppResourceSecret_SdkV2 struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *AppResourceSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSecret_SdkV2) {
+func (toState *AppResourceSecret_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceSecret_SdkV2) {
 }
 
-func (newState *AppResourceSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceSecret_SdkV2) {
+func (toState *AppResourceSecret_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceSecret_SdkV2) {
 }
 
 func (c AppResourceSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1543,10 +1739,10 @@ type AppResourceServingEndpoint_SdkV2 struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceServingEndpoint_SdkV2) {
+func (toState *AppResourceServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceServingEndpoint_SdkV2) {
 }
 
-func (newState *AppResourceServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceServingEndpoint_SdkV2) {
+func (toState *AppResourceServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceServingEndpoint_SdkV2) {
 }
 
 func (c AppResourceServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1597,10 +1793,10 @@ type AppResourceSqlWarehouse_SdkV2 struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceSqlWarehouse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSqlWarehouse_SdkV2) {
+func (toState *AppResourceSqlWarehouse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceSqlWarehouse_SdkV2) {
 }
 
-func (newState *AppResourceSqlWarehouse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceSqlWarehouse_SdkV2) {
+func (toState *AppResourceSqlWarehouse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceSqlWarehouse_SdkV2) {
 }
 
 func (c AppResourceSqlWarehouse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1651,10 +1847,10 @@ type AppResourceUcSecurable_SdkV2 struct {
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
-func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable_SdkV2) {
+func (toState *AppResourceUcSecurable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceUcSecurable_SdkV2) {
 }
 
-func (newState *AppResourceUcSecurable_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceUcSecurable_SdkV2) {
+func (toState *AppResourceUcSecurable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceUcSecurable_SdkV2) {
 }
 
 func (c AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1707,10 +1903,10 @@ type ApplicationStatus_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ApplicationStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus_SdkV2) {
+func (toState *ApplicationStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ApplicationStatus_SdkV2) {
 }
 
-func (newState *ApplicationStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus_SdkV2) {
+func (toState *ApplicationStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ApplicationStatus_SdkV2) {
 }
 
 func (c ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1760,10 +1956,10 @@ type ComputeStatus_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ComputeStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus_SdkV2) {
+func (toState *ComputeStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComputeStatus_SdkV2) {
 }
 
-func (newState *ComputeStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComputeStatus_SdkV2) {
+func (toState *ComputeStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ComputeStatus_SdkV2) {
 }
 
 func (c ComputeStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2062,10 +2258,10 @@ type GetAppPermissionLevelsResponse_SdkV2 struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetAppPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsResponse_SdkV2) {
+func (toState *GetAppPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppPermissionLevelsResponse_SdkV2) {
 }
 
-func (newState *GetAppPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsResponse_SdkV2) {
+func (toState *GetAppPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetAppPermissionLevelsResponse_SdkV2) {
 }
 
 func (c GetAppPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2259,10 +2455,10 @@ type ListAppDeploymentsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppDeploymentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsResponse_SdkV2) {
+func (toState *ListAppDeploymentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppDeploymentsResponse_SdkV2) {
 }
 
-func (newState *ListAppDeploymentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsResponse_SdkV2) {
+func (toState *ListAppDeploymentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAppDeploymentsResponse_SdkV2) {
 }
 
 func (c ListAppDeploymentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2382,10 +2578,10 @@ type ListAppsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsResponse_SdkV2) {
+func (toState *ListAppsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppsResponse_SdkV2) {
 }
 
-func (newState *ListAppsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppsResponse_SdkV2) {
+func (toState *ListAppsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAppsResponse_SdkV2) {
 }
 
 func (c ListAppsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

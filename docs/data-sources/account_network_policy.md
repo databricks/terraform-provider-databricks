@@ -36,7 +36,7 @@ The following attributes are exported:
 * `internet_destination_type` (string) - The type of internet destination. Currently only DNS_NAME is supported. Possible values are: `DNS_NAME`
 
 ### EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement
-* `dry_run_mode_product_filter` (list of ) - When empty, it means dry run for all products.
+* `dry_run_mode_product_filter` (list of string) - When empty, it means dry run for all products.
   When non-empty, it means dry run for specific products and for the other products, they will run in enforced mode
 * `enforcement_mode` (string) - The mode of policy enforcement. ENFORCED blocks traffic that violates policy,
   while DRY_RUN only logs violations without blocking. When not specified,
@@ -45,8 +45,8 @@ The following attributes are exported:
 ### EgressNetworkPolicyNetworkAccessPolicyStorageDestination
 * `azure_storage_account` (string) - The Azure storage account name
 * `azure_storage_service` (string) - The Azure storage service type (blob, dfs, etc.)
-* `bucket_name` (string) - 
-* `region` (string) - 
+* `bucket_name` (string)
+* `region` (string)
 * `storage_destination_type` (string) - The type of storage destination. Possible values are: `AWS_S3`, `AZURE_STORAGE`, `GOOGLE_CLOUD_STORAGE`
 
 ### NetworkPolicyEgress

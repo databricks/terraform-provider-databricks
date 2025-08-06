@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `anomaly_detection_config` (AnomalyDetectionConfig) - 
+* `anomaly_detection_config` (AnomalyDetectionConfig)
 
 ### AnomalyDetectionConfig
 * `last_run_id` (string) - Run id of the last run of the workflow

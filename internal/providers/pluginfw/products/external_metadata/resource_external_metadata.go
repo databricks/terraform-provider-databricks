@@ -62,6 +62,7 @@ func (r *ExternalMetadataResource) update(ctx context.Context, plan catalog_tf.E
 	}
 
 	var external_metadata catalog.ExternalMetadata
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &external_metadata)...)
 	if diags.HasError() {
 		return
@@ -85,7 +86,7 @@ func (r *ExternalMetadataResource) update(ctx context.Context, plan catalog_tf.E
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -97,14 +98,13 @@ func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan catalog_tf.ExternalMetadata
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var external_metadata catalog.ExternalMetadata
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &external_metadata)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,7 +128,7 @@ func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
@@ -174,7 +174,7 @@ func (r *ExternalMetadataResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

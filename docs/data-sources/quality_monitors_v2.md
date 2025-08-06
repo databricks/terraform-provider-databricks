@@ -17,13 +17,13 @@ data "databricks_quality_monitors_v2" "all" {
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - 
+* `page_size` (integer, optional)
 
 
 
 ## Attributes
 This data source exports a single attribute, `quality_monitors`. It is a list of resources, each with the following attributes:
-* `anomaly_detection_config` (AnomalyDetectionConfig) - 
+* `anomaly_detection_config` (AnomalyDetectionConfig)
 * `object_id` (string) - The uuid of the request object. For example, schema id
 * `object_type` (string) - The type of the monitored object. Can be one of the following: schema
 

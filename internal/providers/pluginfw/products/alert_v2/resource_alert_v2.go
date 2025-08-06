@@ -86,7 +86,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -128,7 +128,8 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,13 +169,12 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	var newState sql_tf.AlertV2
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

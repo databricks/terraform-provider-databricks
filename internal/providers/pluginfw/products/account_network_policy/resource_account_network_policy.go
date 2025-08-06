@@ -85,7 +85,7 @@ func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan settings
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -127,7 +127,8 @@ func (r *AccountNetworkPolicyResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,13 +168,12 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 	}
 
 	var newState settings_tf.AccountNetworkPolicy
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

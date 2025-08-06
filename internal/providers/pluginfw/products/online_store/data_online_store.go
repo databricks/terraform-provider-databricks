@@ -83,7 +83,7 @@ func (r *OnlineStoreDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	newState.SyncFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

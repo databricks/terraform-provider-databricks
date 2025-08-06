@@ -91,10 +91,10 @@ func (o AddInstanceProfile) Type(ctx context.Context) attr.Type {
 type AddResponse struct {
 }
 
-func (newState *AddResponse) SyncFieldsDuringCreateOrUpdate(plan AddResponse) {
+func (toState *AddResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AddResponse) {
 }
 
-func (newState *AddResponse) SyncFieldsDuringRead(existingState AddResponse) {
+func (toState *AddResponse) SyncFieldsDuringRead(ctx context.Context, fromState AddResponse) {
 }
 
 func (c AddResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -136,10 +136,10 @@ type Adlsgen2Info struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *Adlsgen2Info) SyncFieldsDuringCreateOrUpdate(plan Adlsgen2Info) {
+func (toState *Adlsgen2Info) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Adlsgen2Info) {
 }
 
-func (newState *Adlsgen2Info) SyncFieldsDuringRead(existingState Adlsgen2Info) {
+func (toState *Adlsgen2Info) SyncFieldsDuringRead(ctx context.Context, fromState Adlsgen2Info) {
 }
 
 func (c Adlsgen2Info) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -190,10 +190,10 @@ type AutoScale struct {
 	MinWorkers types.Int64 `tfsdk:"min_workers"`
 }
 
-func (newState *AutoScale) SyncFieldsDuringCreateOrUpdate(plan AutoScale) {
+func (toState *AutoScale) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AutoScale) {
 }
 
-func (newState *AutoScale) SyncFieldsDuringRead(existingState AutoScale) {
+func (toState *AutoScale) SyncFieldsDuringRead(ctx context.Context, fromState AutoScale) {
 }
 
 func (c AutoScale) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -314,10 +314,10 @@ type AwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *AwsAttributes) SyncFieldsDuringCreateOrUpdate(plan AwsAttributes) {
+func (toState *AwsAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsAttributes) {
 }
 
-func (newState *AwsAttributes) SyncFieldsDuringRead(existingState AwsAttributes) {
+func (toState *AwsAttributes) SyncFieldsDuringRead(ctx context.Context, fromState AwsAttributes) {
 }
 
 func (c AwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -410,10 +410,26 @@ type AzureAttributes struct {
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
-func (newState *AzureAttributes) SyncFieldsDuringCreateOrUpdate(plan AzureAttributes) {
+func (toState *AzureAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureAttributes) {
+	if !fromPlan.LogAnalyticsInfo.IsNull() && !fromPlan.LogAnalyticsInfo.IsUnknown() {
+		if toStateLogAnalyticsInfo, ok := toState.GetLogAnalyticsInfo(ctx); ok {
+			if fromPlanLogAnalyticsInfo, ok := fromPlan.GetLogAnalyticsInfo(ctx); ok {
+				toStateLogAnalyticsInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLogAnalyticsInfo)
+				toState.SetLogAnalyticsInfo(ctx, toStateLogAnalyticsInfo)
+			}
+		}
+	}
 }
 
-func (newState *AzureAttributes) SyncFieldsDuringRead(existingState AzureAttributes) {
+func (toState *AzureAttributes) SyncFieldsDuringRead(ctx context.Context, fromState AzureAttributes) {
+	if !fromState.LogAnalyticsInfo.IsNull() && !fromState.LogAnalyticsInfo.IsUnknown() {
+		if toStateLogAnalyticsInfo, ok := toState.GetLogAnalyticsInfo(ctx); ok {
+			if fromStateLogAnalyticsInfo, ok := fromState.GetLogAnalyticsInfo(ctx); ok {
+				toStateLogAnalyticsInfo.SyncFieldsDuringRead(ctx, fromStateLogAnalyticsInfo)
+				toState.SetLogAnalyticsInfo(ctx, toStateLogAnalyticsInfo)
+			}
+		}
+	}
 }
 
 func (c AzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -472,7 +488,7 @@ func (o *AzureAttributes) GetLogAnalyticsInfo(ctx context.Context) (LogAnalytics
 	if o.LogAnalyticsInfo.IsNull() || o.LogAnalyticsInfo.IsUnknown() {
 		return e, false
 	}
-	var v []LogAnalyticsInfo
+	var v LogAnalyticsInfo
 	d := o.LogAnalyticsInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -480,10 +496,7 @@ func (o *AzureAttributes) GetLogAnalyticsInfo(ctx context.Context) (LogAnalytics
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLogAnalyticsInfo sets the value of the LogAnalyticsInfo field in AzureAttributes.
@@ -538,10 +551,10 @@ func (o CancelCommand) Type(ctx context.Context) attr.Type {
 type CancelResponse struct {
 }
 
-func (newState *CancelResponse) SyncFieldsDuringCreateOrUpdate(plan CancelResponse) {
+func (toState *CancelResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CancelResponse) {
 }
 
-func (newState *CancelResponse) SyncFieldsDuringRead(existingState CancelResponse) {
+func (toState *CancelResponse) SyncFieldsDuringRead(ctx context.Context, fromState CancelResponse) {
 }
 
 func (c CancelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -618,10 +631,10 @@ func (o ChangeClusterOwner) Type(ctx context.Context) attr.Type {
 type ChangeClusterOwnerResponse struct {
 }
 
-func (newState *ChangeClusterOwnerResponse) SyncFieldsDuringCreateOrUpdate(plan ChangeClusterOwnerResponse) {
+func (toState *ChangeClusterOwnerResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ChangeClusterOwnerResponse) {
 }
 
-func (newState *ChangeClusterOwnerResponse) SyncFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
+func (toState *ChangeClusterOwnerResponse) SyncFieldsDuringRead(ctx context.Context, fromState ChangeClusterOwnerResponse) {
 }
 
 func (c ChangeClusterOwnerResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -663,10 +676,10 @@ type ClientsTypes struct {
 	Notebooks types.Bool `tfsdk:"notebooks"`
 }
 
-func (newState *ClientsTypes) SyncFieldsDuringCreateOrUpdate(plan ClientsTypes) {
+func (toState *ClientsTypes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClientsTypes) {
 }
 
-func (newState *ClientsTypes) SyncFieldsDuringRead(existingState ClientsTypes) {
+func (toState *ClientsTypes) SyncFieldsDuringRead(ctx context.Context, fromState ClientsTypes) {
 }
 
 func (c ClientsTypes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -714,10 +727,10 @@ type CloneCluster struct {
 	SourceClusterId types.String `tfsdk:"source_cluster_id"`
 }
 
-func (newState *CloneCluster) SyncFieldsDuringCreateOrUpdate(plan CloneCluster) {
+func (toState *CloneCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloneCluster) {
 }
 
-func (newState *CloneCluster) SyncFieldsDuringRead(existingState CloneCluster) {
+func (toState *CloneCluster) SyncFieldsDuringRead(ctx context.Context, fromState CloneCluster) {
 }
 
 func (c CloneCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -762,10 +775,10 @@ type CloudProviderNodeInfo struct {
 	Status types.List `tfsdk:"status"`
 }
 
-func (newState *CloudProviderNodeInfo) SyncFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
+func (toState *CloudProviderNodeInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloudProviderNodeInfo) {
 }
 
-func (newState *CloudProviderNodeInfo) SyncFieldsDuringRead(existingState CloudProviderNodeInfo) {
+func (toState *CloudProviderNodeInfo) SyncFieldsDuringRead(ctx context.Context, fromState CloudProviderNodeInfo) {
 }
 
 func (c CloudProviderNodeInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -846,10 +859,10 @@ type ClusterAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan ClusterAccessControlRequest) {
+func (toState *ClusterAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAccessControlRequest) {
 }
 
-func (newState *ClusterAccessControlRequest) SyncFieldsDuringRead(existingState ClusterAccessControlRequest) {
+func (toState *ClusterAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAccessControlRequest) {
 }
 
 func (c ClusterAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -911,10 +924,10 @@ type ClusterAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan ClusterAccessControlResponse) {
+func (toState *ClusterAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAccessControlResponse) {
 }
 
-func (newState *ClusterAccessControlResponse) SyncFieldsDuringRead(existingState ClusterAccessControlResponse) {
+func (toState *ClusterAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAccessControlResponse) {
 }
 
 func (c ClusterAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1137,10 +1150,106 @@ type ClusterAttributes struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterAttributes) SyncFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
+func (toState *ClusterAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAttributes) {
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogConf.IsNull() && !fromPlan.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromPlanClusterLogConf, ok := fromPlan.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromPlan.DockerImage.IsNull() && !fromPlan.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromPlanDockerImage, ok := fromPlan.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.WorkloadType.IsNull() && !fromPlan.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromPlanWorkloadType, ok := fromPlan.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
-func (newState *ClusterAttributes) SyncFieldsDuringRead(existingState ClusterAttributes) {
+func (toState *ClusterAttributes) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAttributes) {
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterLogConf.IsNull() && !fromState.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromStateClusterLogConf, ok := fromState.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringRead(ctx, fromStateClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromState.DockerImage.IsNull() && !fromState.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromStateDockerImage, ok := fromState.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringRead(ctx, fromStateDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.WorkloadType.IsNull() && !fromState.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromStateWorkloadType, ok := fromState.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringRead(ctx, fromStateWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
 func (c ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1294,7 +1403,7 @@ func (o *ClusterAttributes) GetAwsAttributes(ctx context.Context) (AwsAttributes
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1302,10 +1411,7 @@ func (o *ClusterAttributes) GetAwsAttributes(ctx context.Context) (AwsAttributes
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterAttributes.
@@ -1322,7 +1428,7 @@ func (o *ClusterAttributes) GetAzureAttributes(ctx context.Context) (AzureAttrib
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1330,10 +1436,7 @@ func (o *ClusterAttributes) GetAzureAttributes(ctx context.Context) (AzureAttrib
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterAttributes.
@@ -1350,7 +1453,7 @@ func (o *ClusterAttributes) GetClusterLogConf(ctx context.Context) (ClusterLogCo
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1358,10 +1461,7 @@ func (o *ClusterAttributes) GetClusterLogConf(ctx context.Context) (ClusterLogCo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterAttributes.
@@ -1404,7 +1504,7 @@ func (o *ClusterAttributes) GetDockerImage(ctx context.Context) (DockerImage, bo
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1412,10 +1512,7 @@ func (o *ClusterAttributes) GetDockerImage(ctx context.Context) (DockerImage, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in ClusterAttributes.
@@ -1432,7 +1529,7 @@ func (o *ClusterAttributes) GetGcpAttributes(ctx context.Context) (GcpAttributes
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1440,10 +1537,7 @@ func (o *ClusterAttributes) GetGcpAttributes(ctx context.Context) (GcpAttributes
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterAttributes.
@@ -1564,7 +1658,7 @@ func (o *ClusterAttributes) GetWorkloadType(ctx context.Context) (WorkloadType, 
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1572,10 +1666,7 @@ func (o *ClusterAttributes) GetWorkloadType(ctx context.Context) (WorkloadType, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterAttributes.
@@ -1597,10 +1688,10 @@ type ClusterCompliance struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *ClusterCompliance) SyncFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
+func (toState *ClusterCompliance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterCompliance) {
 }
 
-func (newState *ClusterCompliance) SyncFieldsDuringRead(existingState ClusterCompliance) {
+func (toState *ClusterCompliance) SyncFieldsDuringRead(ctx context.Context, fromState ClusterCompliance) {
 }
 
 func (c ClusterCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1897,10 +1988,186 @@ type ClusterDetails struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterDetails) SyncFieldsDuringCreateOrUpdate(plan ClusterDetails) {
+func (toState *ClusterDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterDetails) {
+	if !fromPlan.Autoscale.IsNull() && !fromPlan.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromPlanAutoscale, ok := fromPlan.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogConf.IsNull() && !fromPlan.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromPlanClusterLogConf, ok := fromPlan.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogStatus.IsNull() && !fromPlan.ClusterLogStatus.IsUnknown() {
+		if toStateClusterLogStatus, ok := toState.GetClusterLogStatus(ctx); ok {
+			if fromPlanClusterLogStatus, ok := fromPlan.GetClusterLogStatus(ctx); ok {
+				toStateClusterLogStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogStatus)
+				toState.SetClusterLogStatus(ctx, toStateClusterLogStatus)
+			}
+		}
+	}
+	if !fromPlan.DockerImage.IsNull() && !fromPlan.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromPlanDockerImage, ok := fromPlan.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromPlan.Driver.IsNull() && !fromPlan.Driver.IsUnknown() {
+		if toStateDriver, ok := toState.GetDriver(ctx); ok {
+			if fromPlanDriver, ok := fromPlan.GetDriver(ctx); ok {
+				toStateDriver.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDriver)
+				toState.SetDriver(ctx, toStateDriver)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
+	if !fromPlan.TerminationReason.IsNull() && !fromPlan.TerminationReason.IsUnknown() {
+		if toStateTerminationReason, ok := toState.GetTerminationReason(ctx); ok {
+			if fromPlanTerminationReason, ok := fromPlan.GetTerminationReason(ctx); ok {
+				toStateTerminationReason.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTerminationReason)
+				toState.SetTerminationReason(ctx, toStateTerminationReason)
+			}
+		}
+	}
+	if !fromPlan.WorkloadType.IsNull() && !fromPlan.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromPlanWorkloadType, ok := fromPlan.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
-func (newState *ClusterDetails) SyncFieldsDuringRead(existingState ClusterDetails) {
+func (toState *ClusterDetails) SyncFieldsDuringRead(ctx context.Context, fromState ClusterDetails) {
+	if !fromState.Autoscale.IsNull() && !fromState.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromStateAutoscale, ok := fromState.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringRead(ctx, fromStateAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterLogConf.IsNull() && !fromState.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromStateClusterLogConf, ok := fromState.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringRead(ctx, fromStateClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromState.ClusterLogStatus.IsNull() && !fromState.ClusterLogStatus.IsUnknown() {
+		if toStateClusterLogStatus, ok := toState.GetClusterLogStatus(ctx); ok {
+			if fromStateClusterLogStatus, ok := fromState.GetClusterLogStatus(ctx); ok {
+				toStateClusterLogStatus.SyncFieldsDuringRead(ctx, fromStateClusterLogStatus)
+				toState.SetClusterLogStatus(ctx, toStateClusterLogStatus)
+			}
+		}
+	}
+	if !fromState.DockerImage.IsNull() && !fromState.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromStateDockerImage, ok := fromState.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringRead(ctx, fromStateDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromState.Driver.IsNull() && !fromState.Driver.IsUnknown() {
+		if toStateDriver, ok := toState.GetDriver(ctx); ok {
+			if fromStateDriver, ok := fromState.GetDriver(ctx); ok {
+				toStateDriver.SyncFieldsDuringRead(ctx, fromStateDriver)
+				toState.SetDriver(ctx, toStateDriver)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
+	if !fromState.TerminationReason.IsNull() && !fromState.TerminationReason.IsUnknown() {
+		if toStateTerminationReason, ok := toState.GetTerminationReason(ctx); ok {
+			if fromStateTerminationReason, ok := fromState.GetTerminationReason(ctx); ok {
+				toStateTerminationReason.SyncFieldsDuringRead(ctx, fromStateTerminationReason)
+				toState.SetTerminationReason(ctx, toStateTerminationReason)
+			}
+		}
+	}
+	if !fromState.WorkloadType.IsNull() && !fromState.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromStateWorkloadType, ok := fromState.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringRead(ctx, fromStateWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
 func (c ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2128,7 +2395,7 @@ func (o *ClusterDetails) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2136,10 +2403,7 @@ func (o *ClusterDetails) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in ClusterDetails.
@@ -2156,7 +2420,7 @@ func (o *ClusterDetails) GetAwsAttributes(ctx context.Context) (AwsAttributes, b
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2164,10 +2428,7 @@ func (o *ClusterDetails) GetAwsAttributes(ctx context.Context) (AwsAttributes, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterDetails.
@@ -2184,7 +2445,7 @@ func (o *ClusterDetails) GetAzureAttributes(ctx context.Context) (AzureAttribute
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2192,10 +2453,7 @@ func (o *ClusterDetails) GetAzureAttributes(ctx context.Context) (AzureAttribute
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterDetails.
@@ -2212,7 +2470,7 @@ func (o *ClusterDetails) GetClusterLogConf(ctx context.Context) (ClusterLogConf,
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2220,10 +2478,7 @@ func (o *ClusterDetails) GetClusterLogConf(ctx context.Context) (ClusterLogConf,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterDetails.
@@ -2240,7 +2495,7 @@ func (o *ClusterDetails) GetClusterLogStatus(ctx context.Context) (LogSyncStatus
 	if o.ClusterLogStatus.IsNull() || o.ClusterLogStatus.IsUnknown() {
 		return e, false
 	}
-	var v []LogSyncStatus
+	var v LogSyncStatus
 	d := o.ClusterLogStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2248,10 +2503,7 @@ func (o *ClusterDetails) GetClusterLogStatus(ctx context.Context) (LogSyncStatus
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogStatus sets the value of the ClusterLogStatus field in ClusterDetails.
@@ -2320,7 +2572,7 @@ func (o *ClusterDetails) GetDockerImage(ctx context.Context) (DockerImage, bool)
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2328,10 +2580,7 @@ func (o *ClusterDetails) GetDockerImage(ctx context.Context) (DockerImage, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in ClusterDetails.
@@ -2348,7 +2597,7 @@ func (o *ClusterDetails) GetDriver(ctx context.Context) (SparkNode, bool) {
 	if o.Driver.IsNull() || o.Driver.IsUnknown() {
 		return e, false
 	}
-	var v []SparkNode
+	var v SparkNode
 	d := o.Driver.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2356,10 +2605,7 @@ func (o *ClusterDetails) GetDriver(ctx context.Context) (SparkNode, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDriver sets the value of the Driver field in ClusterDetails.
@@ -2402,7 +2648,7 @@ func (o *ClusterDetails) GetGcpAttributes(ctx context.Context) (GcpAttributes, b
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2410,10 +2656,7 @@ func (o *ClusterDetails) GetGcpAttributes(ctx context.Context) (GcpAttributes, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterDetails.
@@ -2508,7 +2751,7 @@ func (o *ClusterDetails) GetSpec(ctx context.Context) (ClusterSpec, bool) {
 	if o.Spec.IsNull() || o.Spec.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterSpec
+	var v ClusterSpec
 	d := o.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2516,10 +2759,7 @@ func (o *ClusterDetails) GetSpec(ctx context.Context) (ClusterSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSpec sets the value of the Spec field in ClusterDetails.
@@ -2562,7 +2802,7 @@ func (o *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationR
 	if o.TerminationReason.IsNull() || o.TerminationReason.IsUnknown() {
 		return e, false
 	}
-	var v []TerminationReason
+	var v TerminationReason
 	d := o.TerminationReason.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2570,10 +2810,7 @@ func (o *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationR
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTerminationReason sets the value of the TerminationReason field in ClusterDetails.
@@ -2590,7 +2827,7 @@ func (o *ClusterDetails) GetWorkloadType(ctx context.Context) (WorkloadType, boo
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2598,10 +2835,7 @@ func (o *ClusterDetails) GetWorkloadType(ctx context.Context) (WorkloadType, boo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterDetails.
@@ -2624,10 +2858,42 @@ type ClusterEvent struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *ClusterEvent) SyncFieldsDuringCreateOrUpdate(plan ClusterEvent) {
+func (toState *ClusterEvent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterEvent) {
+	if !fromPlan.DataPlaneEventDetails.IsNull() && !fromPlan.DataPlaneEventDetails.IsUnknown() {
+		if toStateDataPlaneEventDetails, ok := toState.GetDataPlaneEventDetails(ctx); ok {
+			if fromPlanDataPlaneEventDetails, ok := fromPlan.GetDataPlaneEventDetails(ctx); ok {
+				toStateDataPlaneEventDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataPlaneEventDetails)
+				toState.SetDataPlaneEventDetails(ctx, toStateDataPlaneEventDetails)
+			}
+		}
+	}
+	if !fromPlan.Details.IsNull() && !fromPlan.Details.IsUnknown() {
+		if toStateDetails, ok := toState.GetDetails(ctx); ok {
+			if fromPlanDetails, ok := fromPlan.GetDetails(ctx); ok {
+				toStateDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDetails)
+				toState.SetDetails(ctx, toStateDetails)
+			}
+		}
+	}
 }
 
-func (newState *ClusterEvent) SyncFieldsDuringRead(existingState ClusterEvent) {
+func (toState *ClusterEvent) SyncFieldsDuringRead(ctx context.Context, fromState ClusterEvent) {
+	if !fromState.DataPlaneEventDetails.IsNull() && !fromState.DataPlaneEventDetails.IsUnknown() {
+		if toStateDataPlaneEventDetails, ok := toState.GetDataPlaneEventDetails(ctx); ok {
+			if fromStateDataPlaneEventDetails, ok := fromState.GetDataPlaneEventDetails(ctx); ok {
+				toStateDataPlaneEventDetails.SyncFieldsDuringRead(ctx, fromStateDataPlaneEventDetails)
+				toState.SetDataPlaneEventDetails(ctx, toStateDataPlaneEventDetails)
+			}
+		}
+	}
+	if !fromState.Details.IsNull() && !fromState.Details.IsUnknown() {
+		if toStateDetails, ok := toState.GetDetails(ctx); ok {
+			if fromStateDetails, ok := fromState.GetDetails(ctx); ok {
+				toStateDetails.SyncFieldsDuringRead(ctx, fromStateDetails)
+				toState.SetDetails(ctx, toStateDetails)
+			}
+		}
+	}
 }
 
 func (c ClusterEvent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2690,7 +2956,7 @@ func (o *ClusterEvent) GetDataPlaneEventDetails(ctx context.Context) (DataPlaneE
 	if o.DataPlaneEventDetails.IsNull() || o.DataPlaneEventDetails.IsUnknown() {
 		return e, false
 	}
-	var v []DataPlaneEventDetails
+	var v DataPlaneEventDetails
 	d := o.DataPlaneEventDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2698,10 +2964,7 @@ func (o *ClusterEvent) GetDataPlaneEventDetails(ctx context.Context) (DataPlaneE
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDataPlaneEventDetails sets the value of the DataPlaneEventDetails field in ClusterEvent.
@@ -2718,7 +2981,7 @@ func (o *ClusterEvent) GetDetails(ctx context.Context) (EventDetails, bool) {
 	if o.Details.IsNull() || o.Details.IsUnknown() {
 		return e, false
 	}
-	var v []EventDetails
+	var v EventDetails
 	d := o.Details.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2726,10 +2989,7 @@ func (o *ClusterEvent) GetDetails(ctx context.Context) (EventDetails, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDetails sets the value of the Details field in ClusterEvent.
@@ -2745,10 +3005,10 @@ type ClusterLibraryStatuses struct {
 	LibraryStatuses types.List `tfsdk:"library_statuses"`
 }
 
-func (newState *ClusterLibraryStatuses) SyncFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
+func (toState *ClusterLibraryStatuses) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterLibraryStatuses) {
 }
 
-func (newState *ClusterLibraryStatuses) SyncFieldsDuringRead(existingState ClusterLibraryStatuses) {
+func (toState *ClusterLibraryStatuses) SyncFieldsDuringRead(ctx context.Context, fromState ClusterLibraryStatuses) {
 }
 
 func (c ClusterLibraryStatuses) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2837,10 +3097,58 @@ type ClusterLogConf struct {
 	Volumes types.Object `tfsdk:"volumes"`
 }
 
-func (newState *ClusterLogConf) SyncFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
+func (toState *ClusterLogConf) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterLogConf) {
+	if !fromPlan.Dbfs.IsNull() && !fromPlan.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromPlanDbfs, ok := fromPlan.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromPlan.S3.IsNull() && !fromPlan.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromPlanS3, ok := fromPlan.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromPlan.Volumes.IsNull() && !fromPlan.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromPlanVolumes, ok := fromPlan.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
 }
 
-func (newState *ClusterLogConf) SyncFieldsDuringRead(existingState ClusterLogConf) {
+func (toState *ClusterLogConf) SyncFieldsDuringRead(ctx context.Context, fromState ClusterLogConf) {
+	if !fromState.Dbfs.IsNull() && !fromState.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromStateDbfs, ok := fromState.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringRead(ctx, fromStateDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromState.S3.IsNull() && !fromState.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromStateS3, ok := fromState.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringRead(ctx, fromStateS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromState.Volumes.IsNull() && !fromState.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromStateVolumes, ok := fromState.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringRead(ctx, fromStateVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
 }
 
 func (c ClusterLogConf) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2898,7 +3206,7 @@ func (o *ClusterLogConf) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
 		return e, false
 	}
-	var v []DbfsStorageInfo
+	var v DbfsStorageInfo
 	d := o.Dbfs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2906,10 +3214,7 @@ func (o *ClusterLogConf) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbfs sets the value of the Dbfs field in ClusterLogConf.
@@ -2926,7 +3231,7 @@ func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 	if o.S3.IsNull() || o.S3.IsUnknown() {
 		return e, false
 	}
-	var v []S3StorageInfo
+	var v S3StorageInfo
 	d := o.S3.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2934,10 +3239,7 @@ func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetS3 sets the value of the S3 field in ClusterLogConf.
@@ -2954,7 +3256,7 @@ func (o *ClusterLogConf) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
 		return e, false
 	}
-	var v []VolumesStorageInfo
+	var v VolumesStorageInfo
 	d := o.Volumes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2962,10 +3264,7 @@ func (o *ClusterLogConf) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetVolumes sets the value of the Volumes field in ClusterLogConf.
@@ -2982,10 +3281,10 @@ type ClusterPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPermission) SyncFieldsDuringCreateOrUpdate(plan ClusterPermission) {
+func (toState *ClusterPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPermission) {
 }
 
-func (newState *ClusterPermission) SyncFieldsDuringRead(existingState ClusterPermission) {
+func (toState *ClusterPermission) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPermission) {
 }
 
 func (c ClusterPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3069,10 +3368,10 @@ type ClusterPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ClusterPermissions) SyncFieldsDuringCreateOrUpdate(plan ClusterPermissions) {
+func (toState *ClusterPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPermissions) {
 }
 
-func (newState *ClusterPermissions) SyncFieldsDuringRead(existingState ClusterPermissions) {
+func (toState *ClusterPermissions) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPermissions) {
 }
 
 func (c ClusterPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3154,10 +3453,10 @@ type ClusterPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan ClusterPermissionsDescription) {
+func (toState *ClusterPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPermissionsDescription) {
 }
 
-func (newState *ClusterPermissionsDescription) SyncFieldsDuringRead(existingState ClusterPermissionsDescription) {
+func (toState *ClusterPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPermissionsDescription) {
 }
 
 func (c ClusterPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3280,10 +3579,10 @@ type ClusterPolicyAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterPolicyAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlRequest) {
+func (toState *ClusterPolicyAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPolicyAccessControlRequest) {
 }
 
-func (newState *ClusterPolicyAccessControlRequest) SyncFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
+func (toState *ClusterPolicyAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPolicyAccessControlRequest) {
 }
 
 func (c ClusterPolicyAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3345,10 +3644,10 @@ type ClusterPolicyAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ClusterPolicyAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlResponse) {
+func (toState *ClusterPolicyAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPolicyAccessControlResponse) {
 }
 
-func (newState *ClusterPolicyAccessControlResponse) SyncFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
+func (toState *ClusterPolicyAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPolicyAccessControlResponse) {
 }
 
 func (c ClusterPolicyAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3438,10 +3737,10 @@ type ClusterPolicyPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPolicyPermission) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermission) {
+func (toState *ClusterPolicyPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPolicyPermission) {
 }
 
-func (newState *ClusterPolicyPermission) SyncFieldsDuringRead(existingState ClusterPolicyPermission) {
+func (toState *ClusterPolicyPermission) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPolicyPermission) {
 }
 
 func (c ClusterPolicyPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3525,10 +3824,10 @@ type ClusterPolicyPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ClusterPolicyPermissions) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissions) {
+func (toState *ClusterPolicyPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPolicyPermissions) {
 }
 
-func (newState *ClusterPolicyPermissions) SyncFieldsDuringRead(existingState ClusterPolicyPermissions) {
+func (toState *ClusterPolicyPermissions) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPolicyPermissions) {
 }
 
 func (c ClusterPolicyPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3610,10 +3909,10 @@ type ClusterPolicyPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ClusterPolicyPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsDescription) {
+func (toState *ClusterPolicyPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterPolicyPermissionsDescription) {
 }
 
-func (newState *ClusterPolicyPermissionsDescription) SyncFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
+func (toState *ClusterPolicyPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState ClusterPolicyPermissionsDescription) {
 }
 
 func (c ClusterPolicyPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3742,10 +4041,10 @@ type ClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
-func (newState *ClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(plan ClusterSettingsChange) {
+func (toState *ClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterSettingsChange) {
 }
 
-func (newState *ClusterSettingsChange) SyncFieldsDuringRead(existingState ClusterSettingsChange) {
+func (toState *ClusterSettingsChange) SyncFieldsDuringRead(ctx context.Context, fromState ClusterSettingsChange) {
 }
 
 func (c ClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3809,10 +4108,26 @@ type ClusterSize struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers"`
 }
 
-func (newState *ClusterSize) SyncFieldsDuringCreateOrUpdate(plan ClusterSize) {
+func (toState *ClusterSize) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterSize) {
+	if !fromPlan.Autoscale.IsNull() && !fromPlan.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromPlanAutoscale, ok := fromPlan.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
 }
 
-func (newState *ClusterSize) SyncFieldsDuringRead(existingState ClusterSize) {
+func (toState *ClusterSize) SyncFieldsDuringRead(ctx context.Context, fromState ClusterSize) {
+	if !fromState.Autoscale.IsNull() && !fromState.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromStateAutoscale, ok := fromState.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringRead(ctx, fromStateAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
 }
 
 func (c ClusterSize) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3865,7 +4180,7 @@ func (o *ClusterSize) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3873,10 +4188,7 @@ func (o *ClusterSize) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in ClusterSize.
@@ -4045,10 +4357,122 @@ type ClusterSpec struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+func (toState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterSpec) {
+	if !fromPlan.Autoscale.IsNull() && !fromPlan.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromPlanAutoscale, ok := fromPlan.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogConf.IsNull() && !fromPlan.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromPlanClusterLogConf, ok := fromPlan.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromPlan.DockerImage.IsNull() && !fromPlan.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromPlanDockerImage, ok := fromPlan.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.WorkloadType.IsNull() && !fromPlan.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromPlanWorkloadType, ok := fromPlan.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
-func (newState *ClusterSpec) SyncFieldsDuringRead(existingState ClusterSpec) {
+func (toState *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, fromState ClusterSpec) {
+	if !fromState.Autoscale.IsNull() && !fromState.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromStateAutoscale, ok := fromState.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringRead(ctx, fromStateAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterLogConf.IsNull() && !fromState.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromStateClusterLogConf, ok := fromState.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringRead(ctx, fromStateClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromState.DockerImage.IsNull() && !fromState.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromStateDockerImage, ok := fromState.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringRead(ctx, fromStateDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.WorkloadType.IsNull() && !fromState.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromStateWorkloadType, ok := fromState.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringRead(ctx, fromStateWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
 func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4212,7 +4636,7 @@ func (o *ClusterSpec) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4220,10 +4644,7 @@ func (o *ClusterSpec) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in ClusterSpec.
@@ -4240,7 +4661,7 @@ func (o *ClusterSpec) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4248,10 +4669,7 @@ func (o *ClusterSpec) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterSpec.
@@ -4268,7 +4686,7 @@ func (o *ClusterSpec) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4276,10 +4694,7 @@ func (o *ClusterSpec) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterSpec.
@@ -4296,7 +4711,7 @@ func (o *ClusterSpec) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4304,10 +4719,7 @@ func (o *ClusterSpec) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterSpec.
@@ -4350,7 +4762,7 @@ func (o *ClusterSpec) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4358,10 +4770,7 @@ func (o *ClusterSpec) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in ClusterSpec.
@@ -4378,7 +4787,7 @@ func (o *ClusterSpec) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4386,10 +4795,7 @@ func (o *ClusterSpec) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterSpec.
@@ -4510,7 +4916,7 @@ func (o *ClusterSpec) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4518,10 +4924,7 @@ func (o *ClusterSpec) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterSpec.
@@ -4665,10 +5068,26 @@ type CommandStatusResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *CommandStatusResponse) SyncFieldsDuringCreateOrUpdate(plan CommandStatusResponse) {
+func (toState *CommandStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CommandStatusResponse) {
+	if !fromPlan.Results.IsNull() && !fromPlan.Results.IsUnknown() {
+		if toStateResults, ok := toState.GetResults(ctx); ok {
+			if fromPlanResults, ok := fromPlan.GetResults(ctx); ok {
+				toStateResults.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResults)
+				toState.SetResults(ctx, toStateResults)
+			}
+		}
+	}
 }
 
-func (newState *CommandStatusResponse) SyncFieldsDuringRead(existingState CommandStatusResponse) {
+func (toState *CommandStatusResponse) SyncFieldsDuringRead(ctx context.Context, fromState CommandStatusResponse) {
+	if !fromState.Results.IsNull() && !fromState.Results.IsUnknown() {
+		if toStateResults, ok := toState.GetResults(ctx); ok {
+			if fromStateResults, ok := fromState.GetResults(ctx); ok {
+				toStateResults.SyncFieldsDuringRead(ctx, fromStateResults)
+				toState.SetResults(ctx, toStateResults)
+			}
+		}
+	}
 }
 
 func (c CommandStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4724,7 +5143,7 @@ func (o *CommandStatusResponse) GetResults(ctx context.Context) (Results, bool) 
 	if o.Results.IsNull() || o.Results.IsUnknown() {
 		return e, false
 	}
-	var v []Results
+	var v Results
 	d := o.Results.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4732,10 +5151,7 @@ func (o *CommandStatusResponse) GetResults(ctx context.Context) (Results, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetResults sets the value of the Results field in CommandStatusResponse.
@@ -4789,10 +5205,10 @@ type ContextStatusResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *ContextStatusResponse) SyncFieldsDuringCreateOrUpdate(plan ContextStatusResponse) {
+func (toState *ContextStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ContextStatusResponse) {
 }
 
-func (newState *ContextStatusResponse) SyncFieldsDuringRead(existingState ContextStatusResponse) {
+func (toState *ContextStatusResponse) SyncFieldsDuringRead(ctx context.Context, fromState ContextStatusResponse) {
 }
 
 func (c ContextStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5123,7 +5539,7 @@ func (o *CreateCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5131,10 +5547,7 @@ func (o *CreateCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in CreateCluster.
@@ -5151,7 +5564,7 @@ func (o *CreateCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bo
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5159,10 +5572,7 @@ func (o *CreateCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in CreateCluster.
@@ -5179,7 +5589,7 @@ func (o *CreateCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5187,10 +5597,7 @@ func (o *CreateCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in CreateCluster.
@@ -5207,7 +5614,7 @@ func (o *CreateCluster) GetCloneFrom(ctx context.Context) (CloneCluster, bool) {
 	if o.CloneFrom.IsNull() || o.CloneFrom.IsUnknown() {
 		return e, false
 	}
-	var v []CloneCluster
+	var v CloneCluster
 	d := o.CloneFrom.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5215,10 +5622,7 @@ func (o *CreateCluster) GetCloneFrom(ctx context.Context) (CloneCluster, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCloneFrom sets the value of the CloneFrom field in CreateCluster.
@@ -5235,7 +5639,7 @@ func (o *CreateCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, 
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5243,10 +5647,7 @@ func (o *CreateCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in CreateCluster.
@@ -5289,7 +5690,7 @@ func (o *CreateCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) 
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5297,10 +5698,7 @@ func (o *CreateCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in CreateCluster.
@@ -5317,7 +5715,7 @@ func (o *CreateCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bo
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5325,10 +5723,7 @@ func (o *CreateCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in CreateCluster.
@@ -5449,7 +5844,7 @@ func (o *CreateCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5457,10 +5852,7 @@ func (o *CreateCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in CreateCluster.
@@ -5473,10 +5865,10 @@ type CreateClusterResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
-func (newState *CreateClusterResponse) SyncFieldsDuringCreateOrUpdate(plan CreateClusterResponse) {
+func (toState *CreateClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateClusterResponse) {
 }
 
-func (newState *CreateClusterResponse) SyncFieldsDuringRead(existingState CreateClusterResponse) {
+func (toState *CreateClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateClusterResponse) {
 }
 
 func (c CreateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5556,76 +5948,6 @@ func (o CreateContext) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CreateDefaultBaseEnvironmentRequest struct {
-	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
-	// A unique identifier for this request. A random UUID is recommended. This
-	// request is only idempotent if a `request_id` is provided.
-	RequestId types.String `tfsdk:"request_id"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDefaultBaseEnvironmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDefaultBaseEnvironmentRequest
-// only implements ToObjectValue() and Type().
-func (o CreateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"default_base_environment": o.DefaultBaseEnvironment,
-			"request_id":               o.RequestId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
-			"request_id":               types.StringType,
-		},
-	}
-}
-
-// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest as
-// a DefaultBaseEnvironment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
-	var e DefaultBaseEnvironment
-	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
-		return e, false
-	}
-	var v []DefaultBaseEnvironment
-	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in CreateDefaultBaseEnvironmentRequest.
-func (o *CreateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
-	vs := v.ToObjectValue(ctx)
-	o.DefaultBaseEnvironment = vs
-}
-
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
@@ -5642,10 +5964,6 @@ type CreateInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// For pools with node type flexibility (Fleet-V2), whether auto generated
-	// alternate node type ids are enabled. This field should not be true if
-	// node_type_flexibility is set.
-	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -5672,11 +5990,6 @@ type CreateInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For pools with node type flexibility (Fleet-V2), this object contains the
-	// information about the alternate node type ids to use when attempting to
-	// launch a cluster if the node type id is not available. This field should
-	// not be set if enable_auto_alternate_node_types is true.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -5712,7 +6025,6 @@ func (a CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
-		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -5729,14 +6041,12 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"azure_attributes":                      o.AzureAttributes,
 			"custom_tags":                           o.CustomTags,
 			"disk_spec":                             o.DiskSpec,
-			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -5755,14 +6065,12 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
-			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -5784,7 +6092,7 @@ func (o *CreateInstancePool) GetAwsAttributes(ctx context.Context) (InstancePool
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAwsAttributes
+	var v InstancePoolAwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5792,10 +6100,7 @@ func (o *CreateInstancePool) GetAwsAttributes(ctx context.Context) (InstancePool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in CreateInstancePool.
@@ -5812,7 +6117,7 @@ func (o *CreateInstancePool) GetAzureAttributes(ctx context.Context) (InstancePo
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAzureAttributes
+	var v InstancePoolAzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5820,10 +6125,7 @@ func (o *CreateInstancePool) GetAzureAttributes(ctx context.Context) (InstancePo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in CreateInstancePool.
@@ -5866,7 +6168,7 @@ func (o *CreateInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DiskSpec
+	var v DiskSpec
 	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5874,10 +6176,7 @@ func (o *CreateInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDiskSpec sets the value of the DiskSpec field in CreateInstancePool.
@@ -5894,7 +6193,7 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolGcpAttributes
+	var v InstancePoolGcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5902,44 +6201,13 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in CreateInstancePool.
 func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool.
-func (o *CreateInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
@@ -5999,10 +6267,10 @@ type CreateInstancePoolResponse struct {
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
-func (newState *CreateInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan CreateInstancePoolResponse) {
+func (toState *CreateInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateInstancePoolResponse) {
 }
 
-func (newState *CreateInstancePoolResponse) SyncFieldsDuringRead(existingState CreateInstancePoolResponse) {
+func (toState *CreateInstancePoolResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateInstancePoolResponse) {
 }
 
 func (c CreateInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6156,10 +6424,10 @@ type CreatePolicyResponse struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *CreatePolicyResponse) SyncFieldsDuringCreateOrUpdate(plan CreatePolicyResponse) {
+func (toState *CreatePolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePolicyResponse) {
 }
 
-func (newState *CreatePolicyResponse) SyncFieldsDuringRead(existingState CreatePolicyResponse) {
+func (toState *CreatePolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreatePolicyResponse) {
 }
 
 func (c CreatePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6204,10 +6472,10 @@ type CreateResponse struct {
 	ScriptId types.String `tfsdk:"script_id"`
 }
 
-func (newState *CreateResponse) SyncFieldsDuringCreateOrUpdate(plan CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse) {
 }
 
-func (newState *CreateResponse) SyncFieldsDuringRead(existingState CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6251,10 +6519,10 @@ type Created struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *Created) SyncFieldsDuringCreateOrUpdate(plan Created) {
+func (toState *Created) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Created) {
 }
 
-func (newState *Created) SyncFieldsDuringRead(existingState Created) {
+func (toState *Created) SyncFieldsDuringRead(ctx context.Context, fromState Created) {
 }
 
 func (c Created) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6303,10 +6571,10 @@ type CustomPolicyTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *CustomPolicyTag) SyncFieldsDuringCreateOrUpdate(plan CustomPolicyTag) {
+func (toState *CustomPolicyTag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomPolicyTag) {
 }
 
-func (newState *CustomPolicyTag) SyncFieldsDuringRead(existingState CustomPolicyTag) {
+func (toState *CustomPolicyTag) SyncFieldsDuringRead(ctx context.Context, fromState CustomPolicyTag) {
 }
 
 func (c CustomPolicyTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6359,10 +6627,10 @@ type DataPlaneEventDetails struct {
 	Timestamp types.Int64 `tfsdk:"timestamp"`
 }
 
-func (newState *DataPlaneEventDetails) SyncFieldsDuringCreateOrUpdate(plan DataPlaneEventDetails) {
+func (toState *DataPlaneEventDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataPlaneEventDetails) {
 }
 
-func (newState *DataPlaneEventDetails) SyncFieldsDuringRead(existingState DataPlaneEventDetails) {
+func (toState *DataPlaneEventDetails) SyncFieldsDuringRead(ctx context.Context, fromState DataPlaneEventDetails) {
 }
 
 func (c DataPlaneEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6417,10 +6685,10 @@ type DbfsStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *DbfsStorageInfo) SyncFieldsDuringCreateOrUpdate(plan DbfsStorageInfo) {
+func (toState *DbfsStorageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbfsStorageInfo) {
 }
 
-func (newState *DbfsStorageInfo) SyncFieldsDuringRead(existingState DbfsStorageInfo) {
+func (toState *DbfsStorageInfo) SyncFieldsDuringRead(ctx context.Context, fromState DbfsStorageInfo) {
 }
 
 func (c DbfsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6458,289 +6726,6 @@ func (o DbfsStorageInfo) Type(ctx context.Context) attr.Type {
 			"destination": types.StringType,
 		},
 	}
-}
-
-type DefaultBaseEnvironment struct {
-	BaseEnvironmentCache types.List `tfsdk:"base_environment_cache"`
-
-	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
-
-	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
-	// Note: we made `environment` non-internal because we need to expose its
-	// `client` field. All other fields should be treated as internal.
-	Environment types.Object `tfsdk:"environment"`
-
-	Filepath types.String `tfsdk:"filepath"`
-
-	Id types.String `tfsdk:"id"`
-
-	IsDefault types.Bool `tfsdk:"is_default"`
-
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-
-	LastUpdatedUserId types.Int64 `tfsdk:"last_updated_user_id"`
-
-	Message types.String `tfsdk:"message"`
-
-	Name types.String `tfsdk:"name"`
-
-	PrincipalIds types.List `tfsdk:"principal_ids"`
-
-	Status types.String `tfsdk:"status"`
-}
-
-func (newState *DefaultBaseEnvironment) SyncFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironment) {
-}
-
-func (newState *DefaultBaseEnvironment) SyncFieldsDuringRead(existingState DefaultBaseEnvironment) {
-}
-
-func (c DefaultBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["base_environment_cache"] = attrs["base_environment_cache"].SetOptional()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
-	attrs["creator_user_id"] = attrs["creator_user_id"].SetOptional()
-	attrs["environment"] = attrs["environment"].SetOptional()
-	attrs["filepath"] = attrs["filepath"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["is_default"] = attrs["is_default"].SetOptional()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
-	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetOptional()
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["principal_ids"] = attrs["principal_ids"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironment.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DefaultBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"base_environment_cache": reflect.TypeOf(DefaultBaseEnvironmentCache{}),
-		"environment":            reflect.TypeOf(Environment{}),
-		"principal_ids":          reflect.TypeOf(types.Int64{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironment
-// only implements ToObjectValue() and Type().
-func (o DefaultBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"base_environment_cache": o.BaseEnvironmentCache,
-			"created_timestamp":      o.CreatedTimestamp,
-			"creator_user_id":        o.CreatorUserId,
-			"environment":            o.Environment,
-			"filepath":               o.Filepath,
-			"id":                     o.Id,
-			"is_default":             o.IsDefault,
-			"last_updated_timestamp": o.LastUpdatedTimestamp,
-			"last_updated_user_id":   o.LastUpdatedUserId,
-			"message":                o.Message,
-			"name":                   o.Name,
-			"principal_ids":          o.PrincipalIds,
-			"status":                 o.Status,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DefaultBaseEnvironment) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"base_environment_cache": basetypes.ListType{
-				ElemType: DefaultBaseEnvironmentCache{}.Type(ctx),
-			},
-			"created_timestamp":      types.Int64Type,
-			"creator_user_id":        types.Int64Type,
-			"environment":            Environment{}.Type(ctx),
-			"filepath":               types.StringType,
-			"id":                     types.StringType,
-			"is_default":             types.BoolType,
-			"last_updated_timestamp": types.Int64Type,
-			"last_updated_user_id":   types.Int64Type,
-			"message":                types.StringType,
-			"name":                   types.StringType,
-			"principal_ids": basetypes.ListType{
-				ElemType: types.Int64Type,
-			},
-			"status": types.StringType,
-		},
-	}
-}
-
-// GetBaseEnvironmentCache returns the value of the BaseEnvironmentCache field in DefaultBaseEnvironment as
-// a slice of DefaultBaseEnvironmentCache values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *DefaultBaseEnvironment) GetBaseEnvironmentCache(ctx context.Context) ([]DefaultBaseEnvironmentCache, bool) {
-	if o.BaseEnvironmentCache.IsNull() || o.BaseEnvironmentCache.IsUnknown() {
-		return nil, false
-	}
-	var v []DefaultBaseEnvironmentCache
-	d := o.BaseEnvironmentCache.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetBaseEnvironmentCache sets the value of the BaseEnvironmentCache field in DefaultBaseEnvironment.
-func (o *DefaultBaseEnvironment) SetBaseEnvironmentCache(ctx context.Context, v []DefaultBaseEnvironmentCache) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_environment_cache"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.BaseEnvironmentCache = types.ListValueMust(t, vs)
-}
-
-// GetEnvironment returns the value of the Environment field in DefaultBaseEnvironment as
-// a Environment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *DefaultBaseEnvironment) GetEnvironment(ctx context.Context) (Environment, bool) {
-	var e Environment
-	if o.Environment.IsNull() || o.Environment.IsUnknown() {
-		return e, false
-	}
-	var v []Environment
-	d := o.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetEnvironment sets the value of the Environment field in DefaultBaseEnvironment.
-func (o *DefaultBaseEnvironment) SetEnvironment(ctx context.Context, v Environment) {
-	vs := v.ToObjectValue(ctx)
-	o.Environment = vs
-}
-
-// GetPrincipalIds returns the value of the PrincipalIds field in DefaultBaseEnvironment as
-// a slice of types.Int64 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *DefaultBaseEnvironment) GetPrincipalIds(ctx context.Context) ([]types.Int64, bool) {
-	if o.PrincipalIds.IsNull() || o.PrincipalIds.IsUnknown() {
-		return nil, false
-	}
-	var v []types.Int64
-	d := o.PrincipalIds.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetPrincipalIds sets the value of the PrincipalIds field in DefaultBaseEnvironment.
-func (o *DefaultBaseEnvironment) SetPrincipalIds(ctx context.Context, v []types.Int64) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principal_ids"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.PrincipalIds = types.ListValueMust(t, vs)
-}
-
-type DefaultBaseEnvironmentCache struct {
-	MaterializedEnvironment types.Object `tfsdk:"materialized_environment"`
-
-	Message types.String `tfsdk:"message"`
-
-	Status types.String `tfsdk:"status"`
-}
-
-func (newState *DefaultBaseEnvironmentCache) SyncFieldsDuringCreateOrUpdate(plan DefaultBaseEnvironmentCache) {
-}
-
-func (newState *DefaultBaseEnvironmentCache) SyncFieldsDuringRead(existingState DefaultBaseEnvironmentCache) {
-}
-
-func (c DefaultBaseEnvironmentCache) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["materialized_environment"] = attrs["materialized_environment"].SetOptional()
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultBaseEnvironmentCache.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DefaultBaseEnvironmentCache) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"materialized_environment": reflect.TypeOf(MaterializedEnvironment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultBaseEnvironmentCache
-// only implements ToObjectValue() and Type().
-func (o DefaultBaseEnvironmentCache) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"materialized_environment": o.MaterializedEnvironment,
-			"message":                  o.Message,
-			"status":                   o.Status,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DefaultBaseEnvironmentCache) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"materialized_environment": MaterializedEnvironment{}.Type(ctx),
-			"message":                  types.StringType,
-			"status":                   types.StringType,
-		},
-	}
-}
-
-// GetMaterializedEnvironment returns the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache as
-// a MaterializedEnvironment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *DefaultBaseEnvironmentCache) GetMaterializedEnvironment(ctx context.Context) (MaterializedEnvironment, bool) {
-	var e MaterializedEnvironment
-	if o.MaterializedEnvironment.IsNull() || o.MaterializedEnvironment.IsUnknown() {
-		return e, false
-	}
-	var v []MaterializedEnvironment
-	d := o.MaterializedEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetMaterializedEnvironment sets the value of the MaterializedEnvironment field in DefaultBaseEnvironmentCache.
-func (o *DefaultBaseEnvironmentCache) SetMaterializedEnvironment(ctx context.Context, v MaterializedEnvironment) {
-	vs := v.ToObjectValue(ctx)
-	o.MaterializedEnvironment = vs
 }
 
 type DeleteCluster struct {
@@ -6782,10 +6767,10 @@ func (o DeleteCluster) Type(ctx context.Context) attr.Type {
 type DeleteClusterResponse struct {
 }
 
-func (newState *DeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteClusterResponse) {
+func (toState *DeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteClusterResponse) {
 }
 
-func (newState *DeleteClusterResponse) SyncFieldsDuringRead(existingState DeleteClusterResponse) {
+func (toState *DeleteClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteClusterResponse) {
 }
 
 func (c DeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6817,41 +6802,6 @@ func (o DeleteClusterResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o DeleteClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-type DeleteDefaultBaseEnvironmentRequest struct {
-	Id types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultBaseEnvironmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultBaseEnvironmentRequest
-// only implements ToObjectValue() and Type().
-func (o DeleteDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"id": o.Id,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
 	}
 }
 
@@ -6930,10 +6880,10 @@ func (o DeleteInstancePool) Type(ctx context.Context) attr.Type {
 type DeleteInstancePoolResponse struct {
 }
 
-func (newState *DeleteInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteInstancePoolResponse) {
+func (toState *DeleteInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteInstancePoolResponse) {
 }
 
-func (newState *DeleteInstancePoolResponse) SyncFieldsDuringRead(existingState DeleteInstancePoolResponse) {
+func (toState *DeleteInstancePoolResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteInstancePoolResponse) {
 }
 
 func (c DeleteInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7007,10 +6957,10 @@ func (o DeletePolicy) Type(ctx context.Context) attr.Type {
 type DeletePolicyResponse struct {
 }
 
-func (newState *DeletePolicyResponse) SyncFieldsDuringCreateOrUpdate(plan DeletePolicyResponse) {
+func (toState *DeletePolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePolicyResponse) {
 }
 
-func (newState *DeletePolicyResponse) SyncFieldsDuringRead(existingState DeletePolicyResponse) {
+func (toState *DeletePolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeletePolicyResponse) {
 }
 
 func (c DeletePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7048,10 +6998,10 @@ func (o DeletePolicyResponse) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse) {
 }
 
-func (newState *DeleteResponse) SyncFieldsDuringRead(existingState DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7128,10 +7078,10 @@ func (o DestroyContext) Type(ctx context.Context) attr.Type {
 type DestroyResponse struct {
 }
 
-func (newState *DestroyResponse) SyncFieldsDuringCreateOrUpdate(plan DestroyResponse) {
+func (toState *DestroyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DestroyResponse) {
 }
 
-func (newState *DestroyResponse) SyncFieldsDuringRead(existingState DestroyResponse) {
+func (toState *DestroyResponse) SyncFieldsDuringRead(ctx context.Context, fromState DestroyResponse) {
 }
 
 func (c DestroyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7205,10 +7155,26 @@ type DiskSpec struct {
 	DiskType types.Object `tfsdk:"disk_type"`
 }
 
-func (newState *DiskSpec) SyncFieldsDuringCreateOrUpdate(plan DiskSpec) {
+func (toState *DiskSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DiskSpec) {
+	if !fromPlan.DiskType.IsNull() && !fromPlan.DiskType.IsUnknown() {
+		if toStateDiskType, ok := toState.GetDiskType(ctx); ok {
+			if fromPlanDiskType, ok := fromPlan.GetDiskType(ctx); ok {
+				toStateDiskType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDiskType)
+				toState.SetDiskType(ctx, toStateDiskType)
+			}
+		}
+	}
 }
 
-func (newState *DiskSpec) SyncFieldsDuringRead(existingState DiskSpec) {
+func (toState *DiskSpec) SyncFieldsDuringRead(ctx context.Context, fromState DiskSpec) {
+	if !fromState.DiskType.IsNull() && !fromState.DiskType.IsUnknown() {
+		if toStateDiskType, ok := toState.GetDiskType(ctx); ok {
+			if fromStateDiskType, ok := fromState.GetDiskType(ctx); ok {
+				toStateDiskType.SyncFieldsDuringRead(ctx, fromStateDiskType)
+				toState.SetDiskType(ctx, toStateDiskType)
+			}
+		}
+	}
 }
 
 func (c DiskSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7270,7 +7236,7 @@ func (o *DiskSpec) GetDiskType(ctx context.Context) (DiskType, bool) {
 	if o.DiskType.IsNull() || o.DiskType.IsUnknown() {
 		return e, false
 	}
-	var v []DiskType
+	var v DiskType
 	d := o.DiskType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7278,10 +7244,7 @@ func (o *DiskSpec) GetDiskType(ctx context.Context) (DiskType, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDiskType sets the value of the DiskType field in DiskSpec.
@@ -7297,10 +7260,10 @@ type DiskType struct {
 	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 }
 
-func (newState *DiskType) SyncFieldsDuringCreateOrUpdate(plan DiskType) {
+func (toState *DiskType) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DiskType) {
 }
 
-func (newState *DiskType) SyncFieldsDuringRead(existingState DiskType) {
+func (toState *DiskType) SyncFieldsDuringRead(ctx context.Context, fromState DiskType) {
 }
 
 func (c DiskType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7350,10 +7313,10 @@ type DockerBasicAuth struct {
 	Username types.String `tfsdk:"username"`
 }
 
-func (newState *DockerBasicAuth) SyncFieldsDuringCreateOrUpdate(plan DockerBasicAuth) {
+func (toState *DockerBasicAuth) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DockerBasicAuth) {
 }
 
-func (newState *DockerBasicAuth) SyncFieldsDuringRead(existingState DockerBasicAuth) {
+func (toState *DockerBasicAuth) SyncFieldsDuringRead(ctx context.Context, fromState DockerBasicAuth) {
 }
 
 func (c DockerBasicAuth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7403,10 +7366,26 @@ type DockerImage struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *DockerImage) SyncFieldsDuringCreateOrUpdate(plan DockerImage) {
+func (toState *DockerImage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DockerImage) {
+	if !fromPlan.BasicAuth.IsNull() && !fromPlan.BasicAuth.IsUnknown() {
+		if toStateBasicAuth, ok := toState.GetBasicAuth(ctx); ok {
+			if fromPlanBasicAuth, ok := fromPlan.GetBasicAuth(ctx); ok {
+				toStateBasicAuth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBasicAuth)
+				toState.SetBasicAuth(ctx, toStateBasicAuth)
+			}
+		}
+	}
 }
 
-func (newState *DockerImage) SyncFieldsDuringRead(existingState DockerImage) {
+func (toState *DockerImage) SyncFieldsDuringRead(ctx context.Context, fromState DockerImage) {
+	if !fromState.BasicAuth.IsNull() && !fromState.BasicAuth.IsUnknown() {
+		if toStateBasicAuth, ok := toState.GetBasicAuth(ctx); ok {
+			if fromStateBasicAuth, ok := fromState.GetBasicAuth(ctx); ok {
+				toStateBasicAuth.SyncFieldsDuringRead(ctx, fromStateBasicAuth)
+				toState.SetBasicAuth(ctx, toStateBasicAuth)
+			}
+		}
+	}
 }
 
 func (c DockerImage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7459,7 +7438,7 @@ func (o *DockerImage) GetBasicAuth(ctx context.Context) (DockerBasicAuth, bool) 
 	if o.BasicAuth.IsNull() || o.BasicAuth.IsUnknown() {
 		return e, false
 	}
-	var v []DockerBasicAuth
+	var v DockerBasicAuth
 	d := o.BasicAuth.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7467,10 +7446,7 @@ func (o *DockerImage) GetBasicAuth(ctx context.Context) (DockerBasicAuth, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBasicAuth sets the value of the BasicAuth field in DockerImage.
@@ -7765,7 +7741,7 @@ func (o *EditCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7773,10 +7749,7 @@ func (o *EditCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in EditCluster.
@@ -7793,7 +7766,7 @@ func (o *EditCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7801,10 +7774,7 @@ func (o *EditCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in EditCluster.
@@ -7821,7 +7791,7 @@ func (o *EditCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7829,10 +7799,7 @@ func (o *EditCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in EditCluster.
@@ -7849,7 +7816,7 @@ func (o *EditCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7857,10 +7824,7 @@ func (o *EditCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in EditCluster.
@@ -7903,7 +7867,7 @@ func (o *EditCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7911,10 +7875,7 @@ func (o *EditCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in EditCluster.
@@ -7931,7 +7892,7 @@ func (o *EditCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7939,10 +7900,7 @@ func (o *EditCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in EditCluster.
@@ -8063,7 +8021,7 @@ func (o *EditCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8071,10 +8029,7 @@ func (o *EditCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in EditCluster.
@@ -8086,10 +8041,10 @@ func (o *EditCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
 type EditClusterResponse struct {
 }
 
-func (newState *EditClusterResponse) SyncFieldsDuringCreateOrUpdate(plan EditClusterResponse) {
+func (toState *EditClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditClusterResponse) {
 }
 
-func (newState *EditClusterResponse) SyncFieldsDuringRead(existingState EditClusterResponse) {
+func (toState *EditClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState EditClusterResponse) {
 }
 
 func (c EditClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8131,10 +8086,6 @@ type EditInstancePool struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// For pools with node type flexibility (Fleet-V2), whether auto generated
-	// alternate node type ids are enabled. This field should not be true if
-	// node_type_flexibility is set.
-	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -8154,11 +8105,6 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For pools with node type flexibility (Fleet-V2), this object contains the
-	// information about the alternate node type ids to use when attempting to
-	// launch a cluster if the node type id is not available. This field should
-	// not be set if enable_auto_alternate_node_types is true.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -8182,8 +8128,7 @@ type EditInstancePool struct {
 // SDK values.
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags":           reflect.TypeOf(types.String{}),
-		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"custom_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8195,13 +8140,11 @@ func (o EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"custom_tags":                           o.CustomTags,
-			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
 			"instance_pool_id":                      o.InstancePoolId,
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"remote_disk_throughput":                o.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        o.TotalInitialRemoteDiskSize,
@@ -8215,13 +8158,11 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"enable_auto_alternate_node_types":      types.BoolType,
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"remote_disk_throughput":                types.Int64Type,
 			"total_initial_remote_disk_size":        types.Int64Type,
@@ -8255,41 +8196,13 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
-func (o *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
-}
-
 type EditInstancePoolResponse struct {
 }
 
-func (newState *EditInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(plan EditInstancePoolResponse) {
+func (toState *EditInstancePoolResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditInstancePoolResponse) {
 }
 
-func (newState *EditInstancePoolResponse) SyncFieldsDuringRead(existingState EditInstancePoolResponse) {
+func (toState *EditInstancePoolResponse) SyncFieldsDuringRead(ctx context.Context, fromState EditInstancePoolResponse) {
 }
 
 func (c EditInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8440,10 +8353,10 @@ func (o *EditPolicy) SetLibraries(ctx context.Context, v []Library) {
 type EditPolicyResponse struct {
 }
 
-func (newState *EditPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan EditPolicyResponse) {
+func (toState *EditPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditPolicyResponse) {
 }
 
-func (newState *EditPolicyResponse) SyncFieldsDuringRead(existingState EditPolicyResponse) {
+func (toState *EditPolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState EditPolicyResponse) {
 }
 
 func (c EditPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8481,10 +8394,10 @@ func (o EditPolicyResponse) Type(ctx context.Context) attr.Type {
 type EditResponse struct {
 }
 
-func (newState *EditResponse) SyncFieldsDuringCreateOrUpdate(plan EditResponse) {
+func (toState *EditResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditResponse) {
 }
 
-func (newState *EditResponse) SyncFieldsDuringRead(existingState EditResponse) {
+func (toState *EditResponse) SyncFieldsDuringRead(ctx context.Context, fromState EditResponse) {
 }
 
 func (c EditResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8569,10 +8482,10 @@ type EnforceClusterComplianceResponse struct {
 	HasChanges types.Bool `tfsdk:"has_changes"`
 }
 
-func (newState *EnforceClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceResponse) {
+func (toState *EnforceClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforceClusterComplianceResponse) {
 }
 
-func (newState *EnforceClusterComplianceResponse) SyncFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
+func (toState *EnforceClusterComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState EnforceClusterComplianceResponse) {
 }
 
 func (c EnforceClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8668,10 +8581,10 @@ type Environment struct {
 	JarDependencies types.List `tfsdk:"jar_dependencies"`
 }
 
-func (newState *Environment) SyncFieldsDuringCreateOrUpdate(plan Environment) {
+func (toState *Environment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Environment) {
 }
 
-func (newState *Environment) SyncFieldsDuringRead(existingState Environment) {
+func (toState *Environment) SyncFieldsDuringRead(ctx context.Context, fromState Environment) {
 }
 
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8830,10 +8743,106 @@ type EventDetails struct {
 	User types.String `tfsdk:"user"`
 }
 
-func (newState *EventDetails) SyncFieldsDuringCreateOrUpdate(plan EventDetails) {
+func (toState *EventDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EventDetails) {
+	if !fromPlan.Attributes.IsNull() && !fromPlan.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromPlanAttributes, ok := fromPlan.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterSize.IsNull() && !fromPlan.ClusterSize.IsUnknown() {
+		if toStateClusterSize, ok := toState.GetClusterSize(ctx); ok {
+			if fromPlanClusterSize, ok := fromPlan.GetClusterSize(ctx); ok {
+				toStateClusterSize.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterSize)
+				toState.SetClusterSize(ctx, toStateClusterSize)
+			}
+		}
+	}
+	if !fromPlan.InitScripts.IsNull() && !fromPlan.InitScripts.IsUnknown() {
+		if toStateInitScripts, ok := toState.GetInitScripts(ctx); ok {
+			if fromPlanInitScripts, ok := fromPlan.GetInitScripts(ctx); ok {
+				toStateInitScripts.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitScripts)
+				toState.SetInitScripts(ctx, toStateInitScripts)
+			}
+		}
+	}
+	if !fromPlan.PreviousAttributes.IsNull() && !fromPlan.PreviousAttributes.IsUnknown() {
+		if toStatePreviousAttributes, ok := toState.GetPreviousAttributes(ctx); ok {
+			if fromPlanPreviousAttributes, ok := fromPlan.GetPreviousAttributes(ctx); ok {
+				toStatePreviousAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPreviousAttributes)
+				toState.SetPreviousAttributes(ctx, toStatePreviousAttributes)
+			}
+		}
+	}
+	if !fromPlan.PreviousClusterSize.IsNull() && !fromPlan.PreviousClusterSize.IsUnknown() {
+		if toStatePreviousClusterSize, ok := toState.GetPreviousClusterSize(ctx); ok {
+			if fromPlanPreviousClusterSize, ok := fromPlan.GetPreviousClusterSize(ctx); ok {
+				toStatePreviousClusterSize.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPreviousClusterSize)
+				toState.SetPreviousClusterSize(ctx, toStatePreviousClusterSize)
+			}
+		}
+	}
+	if !fromPlan.Reason.IsNull() && !fromPlan.Reason.IsUnknown() {
+		if toStateReason, ok := toState.GetReason(ctx); ok {
+			if fromPlanReason, ok := fromPlan.GetReason(ctx); ok {
+				toStateReason.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanReason)
+				toState.SetReason(ctx, toStateReason)
+			}
+		}
+	}
 }
 
-func (newState *EventDetails) SyncFieldsDuringRead(existingState EventDetails) {
+func (toState *EventDetails) SyncFieldsDuringRead(ctx context.Context, fromState EventDetails) {
+	if !fromState.Attributes.IsNull() && !fromState.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromStateAttributes, ok := fromState.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringRead(ctx, fromStateAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterSize.IsNull() && !fromState.ClusterSize.IsUnknown() {
+		if toStateClusterSize, ok := toState.GetClusterSize(ctx); ok {
+			if fromStateClusterSize, ok := fromState.GetClusterSize(ctx); ok {
+				toStateClusterSize.SyncFieldsDuringRead(ctx, fromStateClusterSize)
+				toState.SetClusterSize(ctx, toStateClusterSize)
+			}
+		}
+	}
+	if !fromState.InitScripts.IsNull() && !fromState.InitScripts.IsUnknown() {
+		if toStateInitScripts, ok := toState.GetInitScripts(ctx); ok {
+			if fromStateInitScripts, ok := fromState.GetInitScripts(ctx); ok {
+				toStateInitScripts.SyncFieldsDuringRead(ctx, fromStateInitScripts)
+				toState.SetInitScripts(ctx, toStateInitScripts)
+			}
+		}
+	}
+	if !fromState.PreviousAttributes.IsNull() && !fromState.PreviousAttributes.IsUnknown() {
+		if toStatePreviousAttributes, ok := toState.GetPreviousAttributes(ctx); ok {
+			if fromStatePreviousAttributes, ok := fromState.GetPreviousAttributes(ctx); ok {
+				toStatePreviousAttributes.SyncFieldsDuringRead(ctx, fromStatePreviousAttributes)
+				toState.SetPreviousAttributes(ctx, toStatePreviousAttributes)
+			}
+		}
+	}
+	if !fromState.PreviousClusterSize.IsNull() && !fromState.PreviousClusterSize.IsUnknown() {
+		if toStatePreviousClusterSize, ok := toState.GetPreviousClusterSize(ctx); ok {
+			if fromStatePreviousClusterSize, ok := fromState.GetPreviousClusterSize(ctx); ok {
+				toStatePreviousClusterSize.SyncFieldsDuringRead(ctx, fromStatePreviousClusterSize)
+				toState.SetPreviousClusterSize(ctx, toStatePreviousClusterSize)
+			}
+		}
+	}
+	if !fromState.Reason.IsNull() && !fromState.Reason.IsUnknown() {
+		if toStateReason, ok := toState.GetReason(ctx); ok {
+			if fromStateReason, ok := fromState.GetReason(ctx); ok {
+				toStateReason.SyncFieldsDuringRead(ctx, fromStateReason)
+				toState.SetReason(ctx, toStateReason)
+			}
+		}
+	}
 }
 
 func (c EventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8945,7 +8954,7 @@ func (o *EventDetails) GetAttributes(ctx context.Context) (ClusterAttributes, bo
 	if o.Attributes.IsNull() || o.Attributes.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAttributes
+	var v ClusterAttributes
 	d := o.Attributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8953,10 +8962,7 @@ func (o *EventDetails) GetAttributes(ctx context.Context) (ClusterAttributes, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAttributes sets the value of the Attributes field in EventDetails.
@@ -8973,7 +8979,7 @@ func (o *EventDetails) GetClusterSize(ctx context.Context) (ClusterSize, bool) {
 	if o.ClusterSize.IsNull() || o.ClusterSize.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterSize
+	var v ClusterSize
 	d := o.ClusterSize.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8981,10 +8987,7 @@ func (o *EventDetails) GetClusterSize(ctx context.Context) (ClusterSize, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterSize sets the value of the ClusterSize field in EventDetails.
@@ -9001,7 +9004,7 @@ func (o *EventDetails) GetInitScripts(ctx context.Context) (InitScriptEventDetai
 	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
 		return e, false
 	}
-	var v []InitScriptEventDetails
+	var v InitScriptEventDetails
 	d := o.InitScripts.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9009,10 +9012,7 @@ func (o *EventDetails) GetInitScripts(ctx context.Context) (InitScriptEventDetai
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInitScripts sets the value of the InitScripts field in EventDetails.
@@ -9029,7 +9029,7 @@ func (o *EventDetails) GetPreviousAttributes(ctx context.Context) (ClusterAttrib
 	if o.PreviousAttributes.IsNull() || o.PreviousAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAttributes
+	var v ClusterAttributes
 	d := o.PreviousAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9037,10 +9037,7 @@ func (o *EventDetails) GetPreviousAttributes(ctx context.Context) (ClusterAttrib
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPreviousAttributes sets the value of the PreviousAttributes field in EventDetails.
@@ -9057,7 +9054,7 @@ func (o *EventDetails) GetPreviousClusterSize(ctx context.Context) (ClusterSize,
 	if o.PreviousClusterSize.IsNull() || o.PreviousClusterSize.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterSize
+	var v ClusterSize
 	d := o.PreviousClusterSize.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9065,10 +9062,7 @@ func (o *EventDetails) GetPreviousClusterSize(ctx context.Context) (ClusterSize,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPreviousClusterSize sets the value of the PreviousClusterSize field in EventDetails.
@@ -9085,7 +9079,7 @@ func (o *EventDetails) GetReason(ctx context.Context) (TerminationReason, bool) 
 	if o.Reason.IsNull() || o.Reason.IsUnknown() {
 		return e, false
 	}
-	var v []TerminationReason
+	var v TerminationReason
 	d := o.Reason.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9093,10 +9087,7 @@ func (o *EventDetails) GetReason(ctx context.Context) (TerminationReason, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetReason sets the value of the Reason field in EventDetails.
@@ -9140,10 +9131,10 @@ type GcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *GcpAttributes) SyncFieldsDuringCreateOrUpdate(plan GcpAttributes) {
+func (toState *GcpAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpAttributes) {
 }
 
-func (newState *GcpAttributes) SyncFieldsDuringRead(existingState GcpAttributes) {
+func (toState *GcpAttributes) SyncFieldsDuringRead(ctx context.Context, fromState GcpAttributes) {
 }
 
 func (c GcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9204,10 +9195,10 @@ type GcsStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *GcsStorageInfo) SyncFieldsDuringCreateOrUpdate(plan GcsStorageInfo) {
+func (toState *GcsStorageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcsStorageInfo) {
 }
 
-func (newState *GcsStorageInfo) SyncFieldsDuringRead(existingState GcsStorageInfo) {
+func (toState *GcsStorageInfo) SyncFieldsDuringRead(ctx context.Context, fromState GcsStorageInfo) {
 }
 
 func (c GcsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9295,10 +9286,10 @@ type GetClusterComplianceResponse struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *GetClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
+func (toState *GetClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetClusterComplianceResponse) {
 }
 
-func (newState *GetClusterComplianceResponse) SyncFieldsDuringRead(existingState GetClusterComplianceResponse) {
+func (toState *GetClusterComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetClusterComplianceResponse) {
 }
 
 func (c GetClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9412,10 +9403,10 @@ type GetClusterPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetClusterPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
+func (toState *GetClusterPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetClusterPermissionLevelsResponse) {
 }
 
-func (newState *GetClusterPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
+func (toState *GetClusterPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetClusterPermissionLevelsResponse) {
 }
 
 func (c GetClusterPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9562,10 +9553,10 @@ type GetClusterPolicyPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
+func (toState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetClusterPolicyPermissionLevelsResponse) {
 }
 
-func (newState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
+func (toState *GetClusterPolicyPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetClusterPolicyPermissionLevelsResponse) {
 }
 
 func (c GetClusterPolicyPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9780,10 +9771,10 @@ type GetEvents struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (newState *GetEvents) SyncFieldsDuringCreateOrUpdate(plan GetEvents) {
+func (toState *GetEvents) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetEvents) {
 }
 
-func (newState *GetEvents) SyncFieldsDuringRead(existingState GetEvents) {
+func (toState *GetEvents) SyncFieldsDuringRead(ctx context.Context, fromState GetEvents) {
 }
 
 func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9899,10 +9890,26 @@ type GetEventsResponse struct {
 	TotalCount types.Int64 `tfsdk:"total_count"`
 }
 
-func (newState *GetEventsResponse) SyncFieldsDuringCreateOrUpdate(plan GetEventsResponse) {
+func (toState *GetEventsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetEventsResponse) {
+	if !fromPlan.NextPage.IsNull() && !fromPlan.NextPage.IsUnknown() {
+		if toStateNextPage, ok := toState.GetNextPage(ctx); ok {
+			if fromPlanNextPage, ok := fromPlan.GetNextPage(ctx); ok {
+				toStateNextPage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNextPage)
+				toState.SetNextPage(ctx, toStateNextPage)
+			}
+		}
+	}
 }
 
-func (newState *GetEventsResponse) SyncFieldsDuringRead(existingState GetEventsResponse) {
+func (toState *GetEventsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetEventsResponse) {
+	if !fromState.NextPage.IsNull() && !fromState.NextPage.IsUnknown() {
+		if toStateNextPage, ok := toState.GetNextPage(ctx); ok {
+			if fromStateNextPage, ok := fromState.GetNextPage(ctx); ok {
+				toStateNextPage.SyncFieldsDuringRead(ctx, fromStateNextPage)
+				toState.SetNextPage(ctx, toStateNextPage)
+			}
+		}
+	}
 }
 
 func (c GetEventsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9993,7 +10000,7 @@ func (o *GetEventsResponse) GetNextPage(ctx context.Context) (GetEvents, bool) {
 	if o.NextPage.IsNull() || o.NextPage.IsUnknown() {
 		return e, false
 	}
-	var v []GetEvents
+	var v GetEvents
 	d := o.NextPage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10001,10 +10008,7 @@ func (o *GetEventsResponse) GetNextPage(ctx context.Context) (GetEvents, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNextPage sets the value of the NextPage field in GetEventsResponse.
@@ -10076,10 +10080,6 @@ type GetInstancePool struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// For pools with node type flexibility (Fleet-V2), whether auto generated
-	// alternate node type ids are enabled. This field should not be true if
-	// node_type_flexibility is set.
-	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -10108,11 +10108,6 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For pools with node type flexibility (Fleet-V2), this object contains the
-	// information about the alternate node type ids to use when attempting to
-	// launch a cluster if the node type id is not available. This field should
-	// not be set if enable_auto_alternate_node_types is true.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -10140,10 +10135,106 @@ type GetInstancePool struct {
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
-func (newState *GetInstancePool) SyncFieldsDuringCreateOrUpdate(plan GetInstancePool) {
+func (toState *GetInstancePool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetInstancePool) {
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.DiskSpec.IsNull() && !fromPlan.DiskSpec.IsUnknown() {
+		if toStateDiskSpec, ok := toState.GetDiskSpec(ctx); ok {
+			if fromPlanDiskSpec, ok := fromPlan.GetDiskSpec(ctx); ok {
+				toStateDiskSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDiskSpec)
+				toState.SetDiskSpec(ctx, toStateDiskSpec)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.Stats.IsNull() && !fromPlan.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromPlanStats, ok := fromPlan.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *GetInstancePool) SyncFieldsDuringRead(existingState GetInstancePool) {
+func (toState *GetInstancePool) SyncFieldsDuringRead(ctx context.Context, fromState GetInstancePool) {
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.DiskSpec.IsNull() && !fromState.DiskSpec.IsUnknown() {
+		if toStateDiskSpec, ok := toState.GetDiskSpec(ctx); ok {
+			if fromStateDiskSpec, ok := fromState.GetDiskSpec(ctx); ok {
+				toStateDiskSpec.SyncFieldsDuringRead(ctx, fromStateDiskSpec)
+				toState.SetDiskSpec(ctx, toStateDiskSpec)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.Stats.IsNull() && !fromState.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromStateStats, ok := fromState.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringRead(ctx, fromStateStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10152,7 +10243,6 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
-	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -10160,7 +10250,6 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -10188,7 +10277,6 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
-		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -10208,7 +10296,6 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
-			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -10216,7 +10303,6 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -10241,7 +10327,6 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
-			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -10249,7 +10334,6 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -10274,7 +10358,7 @@ func (o *GetInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAws
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAwsAttributes
+	var v InstancePoolAwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10282,10 +10366,7 @@ func (o *GetInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAws
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in GetInstancePool.
@@ -10302,7 +10383,7 @@ func (o *GetInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolA
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAzureAttributes
+	var v InstancePoolAzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10310,10 +10391,7 @@ func (o *GetInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolA
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in GetInstancePool.
@@ -10382,7 +10460,7 @@ func (o *GetInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DiskSpec
+	var v DiskSpec
 	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10390,10 +10468,7 @@ func (o *GetInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDiskSpec sets the value of the DiskSpec field in GetInstancePool.
@@ -10410,7 +10485,7 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolGcpAttributes
+	var v InstancePoolGcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10418,44 +10493,13 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in GetInstancePool.
 func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
-func (o *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -10518,7 +10562,7 @@ func (o *GetInstancePool) GetStats(ctx context.Context) (InstancePoolStats, bool
 	if o.Stats.IsNull() || o.Stats.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolStats
+	var v InstancePoolStats
 	d := o.Stats.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10526,10 +10570,7 @@ func (o *GetInstancePool) GetStats(ctx context.Context) (InstancePoolStats, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStats sets the value of the Stats field in GetInstancePool.
@@ -10546,7 +10587,7 @@ func (o *GetInstancePool) GetStatus(ctx context.Context) (InstancePoolStatus, bo
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolStatus
+	var v InstancePoolStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10554,10 +10595,7 @@ func (o *GetInstancePool) GetStatus(ctx context.Context) (InstancePoolStatus, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in GetInstancePool.
@@ -10607,10 +10645,10 @@ type GetInstancePoolPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
+func (toState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetInstancePoolPermissionLevelsResponse) {
 }
 
-func (newState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
+func (toState *GetInstancePoolPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetInstancePoolPermissionLevelsResponse) {
 }
 
 func (c GetInstancePoolPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10798,10 +10836,10 @@ type GetSparkVersionsResponse struct {
 	Versions types.List `tfsdk:"versions"`
 }
 
-func (newState *GetSparkVersionsResponse) SyncFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
+func (toState *GetSparkVersionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetSparkVersionsResponse) {
 }
 
-func (newState *GetSparkVersionsResponse) SyncFieldsDuringRead(existingState GetSparkVersionsResponse) {
+func (toState *GetSparkVersionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetSparkVersionsResponse) {
 }
 
 func (c GetSparkVersionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10951,10 +10989,10 @@ type GlobalInitScriptDetails struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *GlobalInitScriptDetails) SyncFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetails) {
+func (toState *GlobalInitScriptDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GlobalInitScriptDetails) {
 }
 
-func (newState *GlobalInitScriptDetails) SyncFieldsDuringRead(existingState GlobalInitScriptDetails) {
+func (toState *GlobalInitScriptDetails) SyncFieldsDuringRead(ctx context.Context, fromState GlobalInitScriptDetails) {
 }
 
 func (c GlobalInitScriptDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11039,10 +11077,10 @@ type GlobalInitScriptDetailsWithContent struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetailsWithContent) {
+func (toState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GlobalInitScriptDetailsWithContent) {
 }
 
-func (newState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
+func (toState *GlobalInitScriptDetailsWithContent) SyncFieldsDuringRead(ctx context.Context, fromState GlobalInitScriptDetailsWithContent) {
 }
 
 func (c GlobalInitScriptDetailsWithContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11183,10 +11221,10 @@ type InitScriptEventDetails struct {
 	ReportedForNode types.String `tfsdk:"reported_for_node"`
 }
 
-func (newState *InitScriptEventDetails) SyncFieldsDuringCreateOrUpdate(plan InitScriptEventDetails) {
+func (toState *InitScriptEventDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InitScriptEventDetails) {
 }
 
-func (newState *InitScriptEventDetails) SyncFieldsDuringRead(existingState InitScriptEventDetails) {
+func (toState *InitScriptEventDetails) SyncFieldsDuringRead(ctx context.Context, fromState InitScriptEventDetails) {
 }
 
 func (c InitScriptEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11319,10 +11357,122 @@ type InitScriptInfo struct {
 	Workspace types.Object `tfsdk:"workspace"`
 }
 
-func (newState *InitScriptInfo) SyncFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
+func (toState *InitScriptInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InitScriptInfo) {
+	if !fromPlan.Abfss.IsNull() && !fromPlan.Abfss.IsUnknown() {
+		if toStateAbfss, ok := toState.GetAbfss(ctx); ok {
+			if fromPlanAbfss, ok := fromPlan.GetAbfss(ctx); ok {
+				toStateAbfss.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAbfss)
+				toState.SetAbfss(ctx, toStateAbfss)
+			}
+		}
+	}
+	if !fromPlan.Dbfs.IsNull() && !fromPlan.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromPlanDbfs, ok := fromPlan.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromPlan.File.IsNull() && !fromPlan.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromPlanFile, ok := fromPlan.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromPlan.Gcs.IsNull() && !fromPlan.Gcs.IsUnknown() {
+		if toStateGcs, ok := toState.GetGcs(ctx); ok {
+			if fromPlanGcs, ok := fromPlan.GetGcs(ctx); ok {
+				toStateGcs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcs)
+				toState.SetGcs(ctx, toStateGcs)
+			}
+		}
+	}
+	if !fromPlan.S3.IsNull() && !fromPlan.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromPlanS3, ok := fromPlan.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromPlan.Volumes.IsNull() && !fromPlan.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromPlanVolumes, ok := fromPlan.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
+	if !fromPlan.Workspace.IsNull() && !fromPlan.Workspace.IsUnknown() {
+		if toStateWorkspace, ok := toState.GetWorkspace(ctx); ok {
+			if fromPlanWorkspace, ok := fromPlan.GetWorkspace(ctx); ok {
+				toStateWorkspace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkspace)
+				toState.SetWorkspace(ctx, toStateWorkspace)
+			}
+		}
+	}
 }
 
-func (newState *InitScriptInfo) SyncFieldsDuringRead(existingState InitScriptInfo) {
+func (toState *InitScriptInfo) SyncFieldsDuringRead(ctx context.Context, fromState InitScriptInfo) {
+	if !fromState.Abfss.IsNull() && !fromState.Abfss.IsUnknown() {
+		if toStateAbfss, ok := toState.GetAbfss(ctx); ok {
+			if fromStateAbfss, ok := fromState.GetAbfss(ctx); ok {
+				toStateAbfss.SyncFieldsDuringRead(ctx, fromStateAbfss)
+				toState.SetAbfss(ctx, toStateAbfss)
+			}
+		}
+	}
+	if !fromState.Dbfs.IsNull() && !fromState.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromStateDbfs, ok := fromState.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringRead(ctx, fromStateDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromState.File.IsNull() && !fromState.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromStateFile, ok := fromState.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringRead(ctx, fromStateFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromState.Gcs.IsNull() && !fromState.Gcs.IsUnknown() {
+		if toStateGcs, ok := toState.GetGcs(ctx); ok {
+			if fromStateGcs, ok := fromState.GetGcs(ctx); ok {
+				toStateGcs.SyncFieldsDuringRead(ctx, fromStateGcs)
+				toState.SetGcs(ctx, toStateGcs)
+			}
+		}
+	}
+	if !fromState.S3.IsNull() && !fromState.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromStateS3, ok := fromState.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringRead(ctx, fromStateS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromState.Volumes.IsNull() && !fromState.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromStateVolumes, ok := fromState.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringRead(ctx, fromStateVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
+	if !fromState.Workspace.IsNull() && !fromState.Workspace.IsUnknown() {
+		if toStateWorkspace, ok := toState.GetWorkspace(ctx); ok {
+			if fromStateWorkspace, ok := fromState.GetWorkspace(ctx); ok {
+				toStateWorkspace.SyncFieldsDuringRead(ctx, fromStateWorkspace)
+				toState.SetWorkspace(ctx, toStateWorkspace)
+			}
+		}
+	}
 }
 
 func (c InitScriptInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11396,7 +11546,7 @@ func (o *InitScriptInfo) GetAbfss(ctx context.Context) (Adlsgen2Info, bool) {
 	if o.Abfss.IsNull() || o.Abfss.IsUnknown() {
 		return e, false
 	}
-	var v []Adlsgen2Info
+	var v Adlsgen2Info
 	d := o.Abfss.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11404,10 +11554,7 @@ func (o *InitScriptInfo) GetAbfss(ctx context.Context) (Adlsgen2Info, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAbfss sets the value of the Abfss field in InitScriptInfo.
@@ -11424,7 +11571,7 @@ func (o *InitScriptInfo) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
 		return e, false
 	}
-	var v []DbfsStorageInfo
+	var v DbfsStorageInfo
 	d := o.Dbfs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11432,10 +11579,7 @@ func (o *InitScriptInfo) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbfs sets the value of the Dbfs field in InitScriptInfo.
@@ -11452,7 +11596,7 @@ func (o *InitScriptInfo) GetFile(ctx context.Context) (LocalFileInfo, bool) {
 	if o.File.IsNull() || o.File.IsUnknown() {
 		return e, false
 	}
-	var v []LocalFileInfo
+	var v LocalFileInfo
 	d := o.File.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11460,10 +11604,7 @@ func (o *InitScriptInfo) GetFile(ctx context.Context) (LocalFileInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFile sets the value of the File field in InitScriptInfo.
@@ -11480,7 +11621,7 @@ func (o *InitScriptInfo) GetGcs(ctx context.Context) (GcsStorageInfo, bool) {
 	if o.Gcs.IsNull() || o.Gcs.IsUnknown() {
 		return e, false
 	}
-	var v []GcsStorageInfo
+	var v GcsStorageInfo
 	d := o.Gcs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11488,10 +11629,7 @@ func (o *InitScriptInfo) GetGcs(ctx context.Context) (GcsStorageInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcs sets the value of the Gcs field in InitScriptInfo.
@@ -11508,7 +11646,7 @@ func (o *InitScriptInfo) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 	if o.S3.IsNull() || o.S3.IsUnknown() {
 		return e, false
 	}
-	var v []S3StorageInfo
+	var v S3StorageInfo
 	d := o.S3.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11516,10 +11654,7 @@ func (o *InitScriptInfo) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetS3 sets the value of the S3 field in InitScriptInfo.
@@ -11536,7 +11671,7 @@ func (o *InitScriptInfo) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
 		return e, false
 	}
-	var v []VolumesStorageInfo
+	var v VolumesStorageInfo
 	d := o.Volumes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11544,10 +11679,7 @@ func (o *InitScriptInfo) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetVolumes sets the value of the Volumes field in InitScriptInfo.
@@ -11564,7 +11696,7 @@ func (o *InitScriptInfo) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo
 	if o.Workspace.IsNull() || o.Workspace.IsUnknown() {
 		return e, false
 	}
-	var v []WorkspaceStorageInfo
+	var v WorkspaceStorageInfo
 	d := o.Workspace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11572,10 +11704,7 @@ func (o *InitScriptInfo) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkspace sets the value of the Workspace field in InitScriptInfo.
@@ -11619,10 +11748,122 @@ type InitScriptInfoAndExecutionDetails struct {
 	Workspace types.Object `tfsdk:"workspace"`
 }
 
-func (newState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
+func (toState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InitScriptInfoAndExecutionDetails) {
+	if !fromPlan.Abfss.IsNull() && !fromPlan.Abfss.IsUnknown() {
+		if toStateAbfss, ok := toState.GetAbfss(ctx); ok {
+			if fromPlanAbfss, ok := fromPlan.GetAbfss(ctx); ok {
+				toStateAbfss.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAbfss)
+				toState.SetAbfss(ctx, toStateAbfss)
+			}
+		}
+	}
+	if !fromPlan.Dbfs.IsNull() && !fromPlan.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromPlanDbfs, ok := fromPlan.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromPlan.File.IsNull() && !fromPlan.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromPlanFile, ok := fromPlan.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromPlan.Gcs.IsNull() && !fromPlan.Gcs.IsUnknown() {
+		if toStateGcs, ok := toState.GetGcs(ctx); ok {
+			if fromPlanGcs, ok := fromPlan.GetGcs(ctx); ok {
+				toStateGcs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcs)
+				toState.SetGcs(ctx, toStateGcs)
+			}
+		}
+	}
+	if !fromPlan.S3.IsNull() && !fromPlan.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromPlanS3, ok := fromPlan.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromPlan.Volumes.IsNull() && !fromPlan.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromPlanVolumes, ok := fromPlan.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
+	if !fromPlan.Workspace.IsNull() && !fromPlan.Workspace.IsUnknown() {
+		if toStateWorkspace, ok := toState.GetWorkspace(ctx); ok {
+			if fromPlanWorkspace, ok := fromPlan.GetWorkspace(ctx); ok {
+				toStateWorkspace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkspace)
+				toState.SetWorkspace(ctx, toStateWorkspace)
+			}
+		}
+	}
 }
 
-func (newState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
+func (toState *InitScriptInfoAndExecutionDetails) SyncFieldsDuringRead(ctx context.Context, fromState InitScriptInfoAndExecutionDetails) {
+	if !fromState.Abfss.IsNull() && !fromState.Abfss.IsUnknown() {
+		if toStateAbfss, ok := toState.GetAbfss(ctx); ok {
+			if fromStateAbfss, ok := fromState.GetAbfss(ctx); ok {
+				toStateAbfss.SyncFieldsDuringRead(ctx, fromStateAbfss)
+				toState.SetAbfss(ctx, toStateAbfss)
+			}
+		}
+	}
+	if !fromState.Dbfs.IsNull() && !fromState.Dbfs.IsUnknown() {
+		if toStateDbfs, ok := toState.GetDbfs(ctx); ok {
+			if fromStateDbfs, ok := fromState.GetDbfs(ctx); ok {
+				toStateDbfs.SyncFieldsDuringRead(ctx, fromStateDbfs)
+				toState.SetDbfs(ctx, toStateDbfs)
+			}
+		}
+	}
+	if !fromState.File.IsNull() && !fromState.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromStateFile, ok := fromState.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringRead(ctx, fromStateFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromState.Gcs.IsNull() && !fromState.Gcs.IsUnknown() {
+		if toStateGcs, ok := toState.GetGcs(ctx); ok {
+			if fromStateGcs, ok := fromState.GetGcs(ctx); ok {
+				toStateGcs.SyncFieldsDuringRead(ctx, fromStateGcs)
+				toState.SetGcs(ctx, toStateGcs)
+			}
+		}
+	}
+	if !fromState.S3.IsNull() && !fromState.S3.IsUnknown() {
+		if toStateS3, ok := toState.GetS3(ctx); ok {
+			if fromStateS3, ok := fromState.GetS3(ctx); ok {
+				toStateS3.SyncFieldsDuringRead(ctx, fromStateS3)
+				toState.SetS3(ctx, toStateS3)
+			}
+		}
+	}
+	if !fromState.Volumes.IsNull() && !fromState.Volumes.IsUnknown() {
+		if toStateVolumes, ok := toState.GetVolumes(ctx); ok {
+			if fromStateVolumes, ok := fromState.GetVolumes(ctx); ok {
+				toStateVolumes.SyncFieldsDuringRead(ctx, fromStateVolumes)
+				toState.SetVolumes(ctx, toStateVolumes)
+			}
+		}
+	}
+	if !fromState.Workspace.IsNull() && !fromState.Workspace.IsUnknown() {
+		if toStateWorkspace, ok := toState.GetWorkspace(ctx); ok {
+			if fromStateWorkspace, ok := fromState.GetWorkspace(ctx); ok {
+				toStateWorkspace.SyncFieldsDuringRead(ctx, fromStateWorkspace)
+				toState.SetWorkspace(ctx, toStateWorkspace)
+			}
+		}
+	}
 }
 
 func (c InitScriptInfoAndExecutionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11705,7 +11946,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetAbfss(ctx context.Context) (Adlsg
 	if o.Abfss.IsNull() || o.Abfss.IsUnknown() {
 		return e, false
 	}
-	var v []Adlsgen2Info
+	var v Adlsgen2Info
 	d := o.Abfss.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11713,10 +11954,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetAbfss(ctx context.Context) (Adlsg
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAbfss sets the value of the Abfss field in InitScriptInfoAndExecutionDetails.
@@ -11733,7 +11971,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetDbfs(ctx context.Context) (DbfsSt
 	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
 		return e, false
 	}
-	var v []DbfsStorageInfo
+	var v DbfsStorageInfo
 	d := o.Dbfs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11741,10 +11979,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetDbfs(ctx context.Context) (DbfsSt
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbfs sets the value of the Dbfs field in InitScriptInfoAndExecutionDetails.
@@ -11761,7 +11996,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetFile(ctx context.Context) (LocalF
 	if o.File.IsNull() || o.File.IsUnknown() {
 		return e, false
 	}
-	var v []LocalFileInfo
+	var v LocalFileInfo
 	d := o.File.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11769,10 +12004,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetFile(ctx context.Context) (LocalF
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFile sets the value of the File field in InitScriptInfoAndExecutionDetails.
@@ -11789,7 +12021,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetGcs(ctx context.Context) (GcsStor
 	if o.Gcs.IsNull() || o.Gcs.IsUnknown() {
 		return e, false
 	}
-	var v []GcsStorageInfo
+	var v GcsStorageInfo
 	d := o.Gcs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11797,10 +12029,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetGcs(ctx context.Context) (GcsStor
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcs sets the value of the Gcs field in InitScriptInfoAndExecutionDetails.
@@ -11817,7 +12046,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetS3(ctx context.Context) (S3Storag
 	if o.S3.IsNull() || o.S3.IsUnknown() {
 		return e, false
 	}
-	var v []S3StorageInfo
+	var v S3StorageInfo
 	d := o.S3.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11825,10 +12054,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetS3(ctx context.Context) (S3Storag
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetS3 sets the value of the S3 field in InitScriptInfoAndExecutionDetails.
@@ -11845,7 +12071,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetVolumes(ctx context.Context) (Vol
 	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
 		return e, false
 	}
-	var v []VolumesStorageInfo
+	var v VolumesStorageInfo
 	d := o.Volumes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11853,10 +12079,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetVolumes(ctx context.Context) (Vol
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetVolumes sets the value of the Volumes field in InitScriptInfoAndExecutionDetails.
@@ -11873,7 +12096,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetWorkspace(ctx context.Context) (W
 	if o.Workspace.IsNull() || o.Workspace.IsUnknown() {
 		return e, false
 	}
-	var v []WorkspaceStorageInfo
+	var v WorkspaceStorageInfo
 	d := o.Workspace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11881,10 +12104,7 @@ func (o *InitScriptInfoAndExecutionDetails) GetWorkspace(ctx context.Context) (W
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkspace sets the value of the Workspace field in InitScriptInfoAndExecutionDetails.
@@ -11966,10 +12186,10 @@ func (o *InstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 type InstallLibrariesResponse struct {
 }
 
-func (newState *InstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(plan InstallLibrariesResponse) {
+func (toState *InstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstallLibrariesResponse) {
 }
 
-func (newState *InstallLibrariesResponse) SyncFieldsDuringRead(existingState InstallLibrariesResponse) {
+func (toState *InstallLibrariesResponse) SyncFieldsDuringRead(ctx context.Context, fromState InstallLibrariesResponse) {
 }
 
 func (c InstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12015,10 +12235,10 @@ type InstancePoolAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *InstancePoolAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlRequest) {
+func (toState *InstancePoolAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolAccessControlRequest) {
 }
 
-func (newState *InstancePoolAccessControlRequest) SyncFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
+func (toState *InstancePoolAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolAccessControlRequest) {
 }
 
 func (c InstancePoolAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12080,10 +12300,10 @@ type InstancePoolAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *InstancePoolAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlResponse) {
+func (toState *InstancePoolAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolAccessControlResponse) {
 }
 
-func (newState *InstancePoolAccessControlResponse) SyncFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
+func (toState *InstancePoolAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolAccessControlResponse) {
 }
 
 func (c InstancePoolAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12192,10 +12412,6 @@ type InstancePoolAndStats struct {
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// For pools with node type flexibility (Fleet-V2), whether auto generated
-	// alternate node type ids are enabled. This field should not be true if
-	// node_type_flexibility is set.
-	EnableAutoAlternateNodeTypes types.Bool `tfsdk:"enable_auto_alternate_node_types"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -12224,11 +12440,6 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For pools with node type flexibility (Fleet-V2), this object contains the
-	// information about the alternate node type ids to use when attempting to
-	// launch a cluster if the node type id is not available. This field should
-	// not be set if enable_auto_alternate_node_types is true.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -12256,10 +12467,106 @@ type InstancePoolAndStats struct {
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 }
 
-func (newState *InstancePoolAndStats) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
+func (toState *InstancePoolAndStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolAndStats) {
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.DiskSpec.IsNull() && !fromPlan.DiskSpec.IsUnknown() {
+		if toStateDiskSpec, ok := toState.GetDiskSpec(ctx); ok {
+			if fromPlanDiskSpec, ok := fromPlan.GetDiskSpec(ctx); ok {
+				toStateDiskSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDiskSpec)
+				toState.SetDiskSpec(ctx, toStateDiskSpec)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.Stats.IsNull() && !fromPlan.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromPlanStats, ok := fromPlan.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *InstancePoolAndStats) SyncFieldsDuringRead(existingState InstancePoolAndStats) {
+func (toState *InstancePoolAndStats) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolAndStats) {
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.DiskSpec.IsNull() && !fromState.DiskSpec.IsUnknown() {
+		if toStateDiskSpec, ok := toState.GetDiskSpec(ctx); ok {
+			if fromStateDiskSpec, ok := fromState.GetDiskSpec(ctx); ok {
+				toStateDiskSpec.SyncFieldsDuringRead(ctx, fromStateDiskSpec)
+				toState.SetDiskSpec(ctx, toStateDiskSpec)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.Stats.IsNull() && !fromState.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromStateStats, ok := fromState.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringRead(ctx, fromStateStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12268,7 +12575,6 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
-	attrs["enable_auto_alternate_node_types"] = attrs["enable_auto_alternate_node_types"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
 	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
@@ -12276,7 +12582,6 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -12304,7 +12609,6 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
-		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -12324,7 +12628,6 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"custom_tags":                           o.CustomTags,
 			"default_tags":                          o.DefaultTags,
 			"disk_spec":                             o.DiskSpec,
-			"enable_auto_alternate_node_types":      o.EnableAutoAlternateNodeTypes,
 			"enable_elastic_disk":                   o.EnableElasticDisk,
 			"gcp_attributes":                        o.GcpAttributes,
 			"idle_instance_autotermination_minutes": o.IdleInstanceAutoterminationMinutes,
@@ -12332,7 +12635,6 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -12357,7 +12659,6 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"disk_spec":                             DiskSpec{}.Type(ctx),
-			"enable_auto_alternate_node_types":      types.BoolType,
 			"enable_elastic_disk":                   types.BoolType,
 			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
@@ -12365,7 +12666,6 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -12390,7 +12690,7 @@ func (o *InstancePoolAndStats) GetAwsAttributes(ctx context.Context) (InstancePo
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAwsAttributes
+	var v InstancePoolAwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12398,10 +12698,7 @@ func (o *InstancePoolAndStats) GetAwsAttributes(ctx context.Context) (InstancePo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in InstancePoolAndStats.
@@ -12418,7 +12715,7 @@ func (o *InstancePoolAndStats) GetAzureAttributes(ctx context.Context) (Instance
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolAzureAttributes
+	var v InstancePoolAzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12426,10 +12723,7 @@ func (o *InstancePoolAndStats) GetAzureAttributes(ctx context.Context) (Instance
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in InstancePoolAndStats.
@@ -12498,7 +12792,7 @@ func (o *InstancePoolAndStats) GetDiskSpec(ctx context.Context) (DiskSpec, bool)
 	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DiskSpec
+	var v DiskSpec
 	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12506,10 +12800,7 @@ func (o *InstancePoolAndStats) GetDiskSpec(ctx context.Context) (DiskSpec, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDiskSpec sets the value of the DiskSpec field in InstancePoolAndStats.
@@ -12526,7 +12817,7 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolGcpAttributes
+	var v InstancePoolGcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12534,44 +12825,13 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
-func (o *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -12634,7 +12894,7 @@ func (o *InstancePoolAndStats) GetStats(ctx context.Context) (InstancePoolStats,
 	if o.Stats.IsNull() || o.Stats.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolStats
+	var v InstancePoolStats
 	d := o.Stats.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12642,10 +12902,7 @@ func (o *InstancePoolAndStats) GetStats(ctx context.Context) (InstancePoolStats,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStats sets the value of the Stats field in InstancePoolAndStats.
@@ -12662,7 +12919,7 @@ func (o *InstancePoolAndStats) GetStatus(ctx context.Context) (InstancePoolStatu
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []InstancePoolStatus
+	var v InstancePoolStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12670,10 +12927,7 @@ func (o *InstancePoolAndStats) GetStatus(ctx context.Context) (InstancePoolStatu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in InstancePoolAndStats.
@@ -12709,10 +12963,10 @@ type InstancePoolAwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *InstancePoolAwsAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAwsAttributes) {
+func (toState *InstancePoolAwsAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolAwsAttributes) {
 }
 
-func (newState *InstancePoolAwsAttributes) SyncFieldsDuringRead(existingState InstancePoolAwsAttributes) {
+func (toState *InstancePoolAwsAttributes) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolAwsAttributes) {
 }
 
 func (c InstancePoolAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12771,10 +13025,10 @@ type InstancePoolAzureAttributes struct {
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
-func (newState *InstancePoolAzureAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolAzureAttributes) {
+func (toState *InstancePoolAzureAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolAzureAttributes) {
 }
 
-func (newState *InstancePoolAzureAttributes) SyncFieldsDuringRead(existingState InstancePoolAzureAttributes) {
+func (toState *InstancePoolAzureAttributes) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolAzureAttributes) {
 }
 
 func (c InstancePoolAzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12846,10 +13100,10 @@ type InstancePoolGcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
-func (newState *InstancePoolGcpAttributes) SyncFieldsDuringCreateOrUpdate(plan InstancePoolGcpAttributes) {
+func (toState *InstancePoolGcpAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolGcpAttributes) {
 }
 
-func (newState *InstancePoolGcpAttributes) SyncFieldsDuringRead(existingState InstancePoolGcpAttributes) {
+func (toState *InstancePoolGcpAttributes) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolGcpAttributes) {
 }
 
 func (c InstancePoolGcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12903,10 +13157,10 @@ type InstancePoolPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *InstancePoolPermission) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermission) {
+func (toState *InstancePoolPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolPermission) {
 }
 
-func (newState *InstancePoolPermission) SyncFieldsDuringRead(existingState InstancePoolPermission) {
+func (toState *InstancePoolPermission) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolPermission) {
 }
 
 func (c InstancePoolPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12990,10 +13244,10 @@ type InstancePoolPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *InstancePoolPermissions) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermissions) {
+func (toState *InstancePoolPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolPermissions) {
 }
 
-func (newState *InstancePoolPermissions) SyncFieldsDuringRead(existingState InstancePoolPermissions) {
+func (toState *InstancePoolPermissions) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolPermissions) {
 }
 
 func (c InstancePoolPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13075,10 +13329,10 @@ type InstancePoolPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *InstancePoolPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsDescription) {
+func (toState *InstancePoolPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolPermissionsDescription) {
 }
 
-func (newState *InstancePoolPermissionsDescription) SyncFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
+func (toState *InstancePoolPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolPermissionsDescription) {
 }
 
 func (c InstancePoolPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13201,10 +13455,10 @@ type InstancePoolStats struct {
 	UsedCount types.Int64 `tfsdk:"used_count"`
 }
 
-func (newState *InstancePoolStats) SyncFieldsDuringCreateOrUpdate(plan InstancePoolStats) {
+func (toState *InstancePoolStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolStats) {
 }
 
-func (newState *InstancePoolStats) SyncFieldsDuringRead(existingState InstancePoolStats) {
+func (toState *InstancePoolStats) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolStats) {
 }
 
 func (c InstancePoolStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13261,10 +13515,10 @@ type InstancePoolStatus struct {
 	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors"`
 }
 
-func (newState *InstancePoolStatus) SyncFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
+func (toState *InstancePoolStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstancePoolStatus) {
 }
 
-func (newState *InstancePoolStatus) SyncFieldsDuringRead(existingState InstancePoolStatus) {
+func (toState *InstancePoolStatus) SyncFieldsDuringRead(ctx context.Context, fromState InstancePoolStatus) {
 }
 
 func (c InstancePoolStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13355,10 +13609,10 @@ type InstanceProfile struct {
 	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
 }
 
-func (newState *InstanceProfile) SyncFieldsDuringCreateOrUpdate(plan InstanceProfile) {
+func (toState *InstanceProfile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan InstanceProfile) {
 }
 
-func (newState *InstanceProfile) SyncFieldsDuringRead(existingState InstanceProfile) {
+func (toState *InstanceProfile) SyncFieldsDuringRead(ctx context.Context, fromState InstanceProfile) {
 }
 
 func (c InstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13440,10 +13694,58 @@ type Library struct {
 	Whl types.String `tfsdk:"whl"`
 }
 
-func (newState *Library) SyncFieldsDuringCreateOrUpdate(plan Library) {
+func (toState *Library) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Library) {
+	if !fromPlan.Cran.IsNull() && !fromPlan.Cran.IsUnknown() {
+		if toStateCran, ok := toState.GetCran(ctx); ok {
+			if fromPlanCran, ok := fromPlan.GetCran(ctx); ok {
+				toStateCran.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCran)
+				toState.SetCran(ctx, toStateCran)
+			}
+		}
+	}
+	if !fromPlan.Maven.IsNull() && !fromPlan.Maven.IsUnknown() {
+		if toStateMaven, ok := toState.GetMaven(ctx); ok {
+			if fromPlanMaven, ok := fromPlan.GetMaven(ctx); ok {
+				toStateMaven.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMaven)
+				toState.SetMaven(ctx, toStateMaven)
+			}
+		}
+	}
+	if !fromPlan.Pypi.IsNull() && !fromPlan.Pypi.IsUnknown() {
+		if toStatePypi, ok := toState.GetPypi(ctx); ok {
+			if fromPlanPypi, ok := fromPlan.GetPypi(ctx); ok {
+				toStatePypi.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPypi)
+				toState.SetPypi(ctx, toStatePypi)
+			}
+		}
+	}
 }
 
-func (newState *Library) SyncFieldsDuringRead(existingState Library) {
+func (toState *Library) SyncFieldsDuringRead(ctx context.Context, fromState Library) {
+	if !fromState.Cran.IsNull() && !fromState.Cran.IsUnknown() {
+		if toStateCran, ok := toState.GetCran(ctx); ok {
+			if fromStateCran, ok := fromState.GetCran(ctx); ok {
+				toStateCran.SyncFieldsDuringRead(ctx, fromStateCran)
+				toState.SetCran(ctx, toStateCran)
+			}
+		}
+	}
+	if !fromState.Maven.IsNull() && !fromState.Maven.IsUnknown() {
+		if toStateMaven, ok := toState.GetMaven(ctx); ok {
+			if fromStateMaven, ok := fromState.GetMaven(ctx); ok {
+				toStateMaven.SyncFieldsDuringRead(ctx, fromStateMaven)
+				toState.SetMaven(ctx, toStateMaven)
+			}
+		}
+	}
+	if !fromState.Pypi.IsNull() && !fromState.Pypi.IsUnknown() {
+		if toStatePypi, ok := toState.GetPypi(ctx); ok {
+			if fromStatePypi, ok := fromState.GetPypi(ctx); ok {
+				toStatePypi.SyncFieldsDuringRead(ctx, fromStatePypi)
+				toState.SetPypi(ctx, toStatePypi)
+			}
+		}
+	}
 }
 
 func (c Library) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13513,7 +13815,7 @@ func (o *Library) GetCran(ctx context.Context) (RCranLibrary, bool) {
 	if o.Cran.IsNull() || o.Cran.IsUnknown() {
 		return e, false
 	}
-	var v []RCranLibrary
+	var v RCranLibrary
 	d := o.Cran.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13521,10 +13823,7 @@ func (o *Library) GetCran(ctx context.Context) (RCranLibrary, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCran sets the value of the Cran field in Library.
@@ -13541,7 +13840,7 @@ func (o *Library) GetMaven(ctx context.Context) (MavenLibrary, bool) {
 	if o.Maven.IsNull() || o.Maven.IsUnknown() {
 		return e, false
 	}
-	var v []MavenLibrary
+	var v MavenLibrary
 	d := o.Maven.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13549,10 +13848,7 @@ func (o *Library) GetMaven(ctx context.Context) (MavenLibrary, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMaven sets the value of the Maven field in Library.
@@ -13569,7 +13865,7 @@ func (o *Library) GetPypi(ctx context.Context) (PythonPyPiLibrary, bool) {
 	if o.Pypi.IsNull() || o.Pypi.IsUnknown() {
 		return e, false
 	}
-	var v []PythonPyPiLibrary
+	var v PythonPyPiLibrary
 	d := o.Pypi.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13577,10 +13873,7 @@ func (o *Library) GetPypi(ctx context.Context) (PythonPyPiLibrary, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPypi sets the value of the Pypi field in Library.
@@ -13603,10 +13896,26 @@ type LibraryFullStatus struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *LibraryFullStatus) SyncFieldsDuringCreateOrUpdate(plan LibraryFullStatus) {
+func (toState *LibraryFullStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LibraryFullStatus) {
+	if !fromPlan.Library.IsNull() && !fromPlan.Library.IsUnknown() {
+		if toStateLibrary, ok := toState.GetLibrary(ctx); ok {
+			if fromPlanLibrary, ok := fromPlan.GetLibrary(ctx); ok {
+				toStateLibrary.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLibrary)
+				toState.SetLibrary(ctx, toStateLibrary)
+			}
+		}
+	}
 }
 
-func (newState *LibraryFullStatus) SyncFieldsDuringRead(existingState LibraryFullStatus) {
+func (toState *LibraryFullStatus) SyncFieldsDuringRead(ctx context.Context, fromState LibraryFullStatus) {
+	if !fromState.Library.IsNull() && !fromState.Library.IsUnknown() {
+		if toStateLibrary, ok := toState.GetLibrary(ctx); ok {
+			if fromStateLibrary, ok := fromState.GetLibrary(ctx); ok {
+				toStateLibrary.SyncFieldsDuringRead(ctx, fromStateLibrary)
+				toState.SetLibrary(ctx, toStateLibrary)
+			}
+		}
+	}
 }
 
 func (c LibraryFullStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13668,7 +13977,7 @@ func (o *LibraryFullStatus) GetLibrary(ctx context.Context) (Library, bool) {
 	if o.Library.IsNull() || o.Library.IsUnknown() {
 		return e, false
 	}
-	var v []Library
+	var v Library
 	d := o.Library.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13676,10 +13985,7 @@ func (o *LibraryFullStatus) GetLibrary(ctx context.Context) (Library, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLibrary sets the value of the Library field in LibraryFullStatus.
@@ -13749,10 +14055,10 @@ type ListAllClusterLibraryStatusesResponse struct {
 	Statuses types.List `tfsdk:"statuses"`
 }
 
-func (newState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
+func (toState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAllClusterLibraryStatusesResponse) {
 }
 
-func (newState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
+func (toState *ListAllClusterLibraryStatusesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAllClusterLibraryStatusesResponse) {
 }
 
 func (c ListAllClusterLibraryStatusesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13830,10 +14136,10 @@ type ListAvailableZonesResponse struct {
 	Zones types.List `tfsdk:"zones"`
 }
 
-func (newState *ListAvailableZonesResponse) SyncFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
+func (toState *ListAvailableZonesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAvailableZonesResponse) {
 }
 
-func (newState *ListAvailableZonesResponse) SyncFieldsDuringRead(existingState ListAvailableZonesResponse) {
+func (toState *ListAvailableZonesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAvailableZonesResponse) {
 }
 
 func (c ListAvailableZonesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13965,10 +14271,10 @@ type ListClusterCompliancesResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListClusterCompliancesResponse) SyncFieldsDuringCreateOrUpdate(plan ListClusterCompliancesResponse) {
+func (toState *ListClusterCompliancesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListClusterCompliancesResponse) {
 }
 
-func (newState *ListClusterCompliancesResponse) SyncFieldsDuringRead(existingState ListClusterCompliancesResponse) {
+func (toState *ListClusterCompliancesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListClusterCompliancesResponse) {
 }
 
 func (c ListClusterCompliancesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14098,10 +14404,10 @@ type ListClustersFilterBy struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *ListClustersFilterBy) SyncFieldsDuringCreateOrUpdate(plan ListClustersFilterBy) {
+func (toState *ListClustersFilterBy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListClustersFilterBy) {
 }
 
-func (newState *ListClustersFilterBy) SyncFieldsDuringRead(existingState ListClustersFilterBy) {
+func (toState *ListClustersFilterBy) SyncFieldsDuringRead(ctx context.Context, fromState ListClustersFilterBy) {
 }
 
 func (c ListClustersFilterBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14271,7 +14577,7 @@ func (o *ListClustersRequest) GetFilterBy(ctx context.Context) (ListClustersFilt
 	if o.FilterBy.IsNull() || o.FilterBy.IsUnknown() {
 		return e, false
 	}
-	var v []ListClustersFilterBy
+	var v ListClustersFilterBy
 	d := o.FilterBy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14279,10 +14585,7 @@ func (o *ListClustersRequest) GetFilterBy(ctx context.Context) (ListClustersFilt
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFilterBy sets the value of the FilterBy field in ListClustersRequest.
@@ -14299,7 +14602,7 @@ func (o *ListClustersRequest) GetSortBy(ctx context.Context) (ListClustersSortBy
 	if o.SortBy.IsNull() || o.SortBy.IsUnknown() {
 		return e, false
 	}
-	var v []ListClustersSortBy
+	var v ListClustersSortBy
 	d := o.SortBy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14307,10 +14610,7 @@ func (o *ListClustersRequest) GetSortBy(ctx context.Context) (ListClustersSortBy
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSortBy sets the value of the SortBy field in ListClustersRequest.
@@ -14330,10 +14630,10 @@ type ListClustersResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListClustersResponse) SyncFieldsDuringCreateOrUpdate(plan ListClustersResponse) {
+func (toState *ListClustersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListClustersResponse) {
 }
 
-func (newState *ListClustersResponse) SyncFieldsDuringRead(existingState ListClustersResponse) {
+func (toState *ListClustersResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListClustersResponse) {
 }
 
 func (c ListClustersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14418,10 +14718,10 @@ type ListClustersSortBy struct {
 	Field types.String `tfsdk:"field"`
 }
 
-func (newState *ListClustersSortBy) SyncFieldsDuringCreateOrUpdate(plan ListClustersSortBy) {
+func (toState *ListClustersSortBy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListClustersSortBy) {
 }
 
-func (newState *ListClustersSortBy) SyncFieldsDuringRead(existingState ListClustersSortBy) {
+func (toState *ListClustersSortBy) SyncFieldsDuringRead(ctx context.Context, fromState ListClustersSortBy) {
 }
 
 func (c ListClustersSortBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14464,127 +14764,6 @@ func (o ListClustersSortBy) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListDefaultBaseEnvironmentsRequest struct {
-	PageSize types.Int64 `tfsdk:"-"`
-
-	PageToken types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsRequest
-// only implements ToObjectValue() and Type().
-func (o ListDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
-		},
-	}
-}
-
-type ListDefaultBaseEnvironmentsResponse struct {
-	DefaultBaseEnvironments types.List `tfsdk:"default_base_environments"`
-
-	NextPageToken types.String `tfsdk:"next_page_token"`
-}
-
-func (newState *ListDefaultBaseEnvironmentsResponse) SyncFieldsDuringCreateOrUpdate(plan ListDefaultBaseEnvironmentsResponse) {
-}
-
-func (newState *ListDefaultBaseEnvironmentsResponse) SyncFieldsDuringRead(existingState ListDefaultBaseEnvironmentsResponse) {
-}
-
-func (c ListDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_base_environments"] = attrs["default_base_environments"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultBaseEnvironmentsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"default_base_environments": reflect.TypeOf(DefaultBaseEnvironment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultBaseEnvironmentsResponse
-// only implements ToObjectValue() and Type().
-func (o ListDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"default_base_environments": o.DefaultBaseEnvironments,
-			"next_page_token":           o.NextPageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"default_base_environments": basetypes.ListType{
-				ElemType: DefaultBaseEnvironment{}.Type(ctx),
-			},
-			"next_page_token": types.StringType,
-		},
-	}
-}
-
-// GetDefaultBaseEnvironments returns the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse as
-// a slice of DefaultBaseEnvironment values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListDefaultBaseEnvironmentsResponse) GetDefaultBaseEnvironments(ctx context.Context) ([]DefaultBaseEnvironment, bool) {
-	if o.DefaultBaseEnvironments.IsNull() || o.DefaultBaseEnvironments.IsUnknown() {
-		return nil, false
-	}
-	var v []DefaultBaseEnvironment
-	d := o.DefaultBaseEnvironments.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetDefaultBaseEnvironments sets the value of the DefaultBaseEnvironments field in ListDefaultBaseEnvironmentsResponse.
-func (o *ListDefaultBaseEnvironmentsResponse) SetDefaultBaseEnvironments(ctx context.Context, v []DefaultBaseEnvironment) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_base_environments"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.DefaultBaseEnvironments = types.ListValueMust(t, vs)
-}
-
 type ListGlobalInitScriptsRequest struct {
 }
 
@@ -14619,10 +14798,10 @@ type ListGlobalInitScriptsResponse struct {
 	Scripts types.List `tfsdk:"scripts"`
 }
 
-func (newState *ListGlobalInitScriptsResponse) SyncFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
+func (toState *ListGlobalInitScriptsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListGlobalInitScriptsResponse) {
 }
 
-func (newState *ListGlobalInitScriptsResponse) SyncFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
+func (toState *ListGlobalInitScriptsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListGlobalInitScriptsResponse) {
 }
 
 func (c ListGlobalInitScriptsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14696,10 +14875,10 @@ type ListInstancePools struct {
 	InstancePools types.List `tfsdk:"instance_pools"`
 }
 
-func (newState *ListInstancePools) SyncFieldsDuringCreateOrUpdate(plan ListInstancePools) {
+func (toState *ListInstancePools) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListInstancePools) {
 }
 
-func (newState *ListInstancePools) SyncFieldsDuringRead(existingState ListInstancePools) {
+func (toState *ListInstancePools) SyncFieldsDuringRead(ctx context.Context, fromState ListInstancePools) {
 }
 
 func (c ListInstancePools) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14834,10 +15013,10 @@ type ListInstanceProfilesResponse struct {
 	InstanceProfiles types.List `tfsdk:"instance_profiles"`
 }
 
-func (newState *ListInstanceProfilesResponse) SyncFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
+func (toState *ListInstanceProfilesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListInstanceProfilesResponse) {
 }
 
-func (newState *ListInstanceProfilesResponse) SyncFieldsDuringRead(existingState ListInstanceProfilesResponse) {
+func (toState *ListInstanceProfilesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListInstanceProfilesResponse) {
 }
 
 func (c ListInstanceProfilesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14942,10 +15121,10 @@ type ListNodeTypesResponse struct {
 	NodeTypes types.List `tfsdk:"node_types"`
 }
 
-func (newState *ListNodeTypesResponse) SyncFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
+func (toState *ListNodeTypesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListNodeTypesResponse) {
 }
 
-func (newState *ListNodeTypesResponse) SyncFieldsDuringRead(existingState ListNodeTypesResponse) {
+func (toState *ListNodeTypesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListNodeTypesResponse) {
 }
 
 func (c ListNodeTypesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15020,10 +15199,10 @@ type ListPoliciesResponse struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
+func (toState *ListPoliciesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPoliciesResponse) {
 }
 
-func (newState *ListPoliciesResponse) SyncFieldsDuringRead(existingState ListPoliciesResponse) {
+func (toState *ListPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListPoliciesResponse) {
 }
 
 func (c ListPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15141,10 +15320,10 @@ type ListPolicyFamiliesResponse struct {
 	PolicyFamilies types.List `tfsdk:"policy_families"`
 }
 
-func (newState *ListPolicyFamiliesResponse) SyncFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
+func (toState *ListPolicyFamiliesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPolicyFamiliesResponse) {
 }
 
-func (newState *ListPolicyFamiliesResponse) SyncFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
+func (toState *ListPolicyFamiliesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListPolicyFamiliesResponse) {
 }
 
 func (c ListPolicyFamiliesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15252,10 +15431,10 @@ type LocalFileInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *LocalFileInfo) SyncFieldsDuringCreateOrUpdate(plan LocalFileInfo) {
+func (toState *LocalFileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LocalFileInfo) {
 }
 
-func (newState *LocalFileInfo) SyncFieldsDuringRead(existingState LocalFileInfo) {
+func (toState *LocalFileInfo) SyncFieldsDuringRead(ctx context.Context, fromState LocalFileInfo) {
 }
 
 func (c LocalFileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15301,10 +15480,10 @@ type LogAnalyticsInfo struct {
 	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id"`
 }
 
-func (newState *LogAnalyticsInfo) SyncFieldsDuringCreateOrUpdate(plan LogAnalyticsInfo) {
+func (toState *LogAnalyticsInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LogAnalyticsInfo) {
 }
 
-func (newState *LogAnalyticsInfo) SyncFieldsDuringRead(existingState LogAnalyticsInfo) {
+func (toState *LogAnalyticsInfo) SyncFieldsDuringRead(ctx context.Context, fromState LogAnalyticsInfo) {
 }
 
 func (c LogAnalyticsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15357,10 +15536,10 @@ type LogSyncStatus struct {
 	LastException types.String `tfsdk:"last_exception"`
 }
 
-func (newState *LogSyncStatus) SyncFieldsDuringCreateOrUpdate(plan LogSyncStatus) {
+func (toState *LogSyncStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LogSyncStatus) {
 }
 
-func (newState *LogSyncStatus) SyncFieldsDuringRead(existingState LogSyncStatus) {
+func (toState *LogSyncStatus) SyncFieldsDuringRead(ctx context.Context, fromState LogSyncStatus) {
 }
 
 func (c LogSyncStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15403,69 +15582,6 @@ func (o LogSyncStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Materialized Environment information enables environment sharing and reuse
-// via Environment Caching during library installations. Currently this feature
-// is only supported for Python libraries.
-//
-// - If the env cache entry in LMv2 DB doesn't exist or invalid, library
-// installations and environment materialization will occur. A new Materialized
-// Environment metadata will be sent from DP upon successful library
-// installations and env materialization, and is persisted into database by
-// LMv2. - If the env cache entry in LMv2 DB is valid, the Materialized
-// Environment will be sent to DP by LMv2, and DP will restore the cached
-// environment from a store instead of reinstalling libraries from scratch.
-//
-// If changed, also update
-// estore/namespaces/defaultbaseenvironments/latest.proto with new version
-type MaterializedEnvironment struct {
-	// The timestamp (in epoch milliseconds) when the materialized env is
-	// updated.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-}
-
-func (newState *MaterializedEnvironment) SyncFieldsDuringCreateOrUpdate(plan MaterializedEnvironment) {
-}
-
-func (newState *MaterializedEnvironment) SyncFieldsDuringRead(existingState MaterializedEnvironment) {
-}
-
-func (c MaterializedEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializedEnvironment.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a MaterializedEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializedEnvironment
-// only implements ToObjectValue() and Type().
-func (o MaterializedEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"last_updated_timestamp": o.LastUpdatedTimestamp,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o MaterializedEnvironment) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"last_updated_timestamp": types.Int64Type,
-		},
-	}
-}
-
 type MavenLibrary struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates"`
@@ -15480,10 +15596,10 @@ type MavenLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *MavenLibrary) SyncFieldsDuringCreateOrUpdate(plan MavenLibrary) {
+func (toState *MavenLibrary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MavenLibrary) {
 }
 
-func (newState *MavenLibrary) SyncFieldsDuringRead(existingState MavenLibrary) {
+func (toState *MavenLibrary) SyncFieldsDuringRead(ctx context.Context, fromState MavenLibrary) {
 }
 
 func (c MavenLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15577,10 +15693,10 @@ type NodeInstanceType struct {
 	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks"`
 }
 
-func (newState *NodeInstanceType) SyncFieldsDuringCreateOrUpdate(plan NodeInstanceType) {
+func (toState *NodeInstanceType) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NodeInstanceType) {
 }
 
-func (newState *NodeInstanceType) SyncFieldsDuringRead(existingState NodeInstanceType) {
+func (toState *NodeInstanceType) SyncFieldsDuringRead(ctx context.Context, fromState NodeInstanceType) {
 }
 
 func (c NodeInstanceType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15686,10 +15802,42 @@ type NodeType struct {
 	SupportPortForwarding types.Bool `tfsdk:"support_port_forwarding"`
 }
 
-func (newState *NodeType) SyncFieldsDuringCreateOrUpdate(plan NodeType) {
+func (toState *NodeType) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NodeType) {
+	if !fromPlan.NodeInfo.IsNull() && !fromPlan.NodeInfo.IsUnknown() {
+		if toStateNodeInfo, ok := toState.GetNodeInfo(ctx); ok {
+			if fromPlanNodeInfo, ok := fromPlan.GetNodeInfo(ctx); ok {
+				toStateNodeInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNodeInfo)
+				toState.SetNodeInfo(ctx, toStateNodeInfo)
+			}
+		}
+	}
+	if !fromPlan.NodeInstanceType.IsNull() && !fromPlan.NodeInstanceType.IsUnknown() {
+		if toStateNodeInstanceType, ok := toState.GetNodeInstanceType(ctx); ok {
+			if fromPlanNodeInstanceType, ok := fromPlan.GetNodeInstanceType(ctx); ok {
+				toStateNodeInstanceType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNodeInstanceType)
+				toState.SetNodeInstanceType(ctx, toStateNodeInstanceType)
+			}
+		}
+	}
 }
 
-func (newState *NodeType) SyncFieldsDuringRead(existingState NodeType) {
+func (toState *NodeType) SyncFieldsDuringRead(ctx context.Context, fromState NodeType) {
+	if !fromState.NodeInfo.IsNull() && !fromState.NodeInfo.IsUnknown() {
+		if toStateNodeInfo, ok := toState.GetNodeInfo(ctx); ok {
+			if fromStateNodeInfo, ok := fromState.GetNodeInfo(ctx); ok {
+				toStateNodeInfo.SyncFieldsDuringRead(ctx, fromStateNodeInfo)
+				toState.SetNodeInfo(ctx, toStateNodeInfo)
+			}
+		}
+	}
+	if !fromState.NodeInstanceType.IsNull() && !fromState.NodeInstanceType.IsUnknown() {
+		if toStateNodeInstanceType, ok := toState.GetNodeInstanceType(ctx); ok {
+			if fromStateNodeInstanceType, ok := fromState.GetNodeInstanceType(ctx); ok {
+				toStateNodeInstanceType.SyncFieldsDuringRead(ctx, fromStateNodeInstanceType)
+				toState.SetNodeInstanceType(ctx, toStateNodeInstanceType)
+			}
+		}
+	}
 }
 
 func (c NodeType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15797,7 +15945,7 @@ func (o *NodeType) GetNodeInfo(ctx context.Context) (CloudProviderNodeInfo, bool
 	if o.NodeInfo.IsNull() || o.NodeInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CloudProviderNodeInfo
+	var v CloudProviderNodeInfo
 	d := o.NodeInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15805,10 +15953,7 @@ func (o *NodeType) GetNodeInfo(ctx context.Context) (CloudProviderNodeInfo, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNodeInfo sets the value of the NodeInfo field in NodeType.
@@ -15825,7 +15970,7 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 	if o.NodeInstanceType.IsNull() || o.NodeInstanceType.IsUnknown() {
 		return e, false
 	}
-	var v []NodeInstanceType
+	var v NodeInstanceType
 	d := o.NodeInstanceType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15833,60 +15978,13 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNodeInstanceType sets the value of the NodeInstanceType field in NodeType.
 func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) {
 	vs := v.ToObjectValue(ctx)
 	o.NodeInstanceType = vs
-}
-
-// For Fleet-V2 using classic clusters, this object contains the information
-// about the alternate node type ids to use when attempting to launch a cluster.
-// It can be used with both the driver and worker node types.
-type NodeTypeFlexibility struct {
-}
-
-func (newState *NodeTypeFlexibility) SyncFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility) {
-}
-
-func (newState *NodeTypeFlexibility) SyncFieldsDuringRead(existingState NodeTypeFlexibility) {
-}
-
-func (c NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
-// only implements ToObjectValue() and Type().
-func (o NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 // Error message of a failed pending instances
@@ -15896,10 +15994,10 @@ type PendingInstanceError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *PendingInstanceError) SyncFieldsDuringCreateOrUpdate(plan PendingInstanceError) {
+func (toState *PendingInstanceError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PendingInstanceError) {
 }
 
-func (newState *PendingInstanceError) SyncFieldsDuringRead(existingState PendingInstanceError) {
+func (toState *PendingInstanceError) SyncFieldsDuringRead(ctx context.Context, fromState PendingInstanceError) {
 }
 
 func (c PendingInstanceError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15981,10 +16079,10 @@ func (o PermanentDeleteCluster) Type(ctx context.Context) attr.Type {
 type PermanentDeleteClusterResponse struct {
 }
 
-func (newState *PermanentDeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(plan PermanentDeleteClusterResponse) {
+func (toState *PermanentDeleteClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermanentDeleteClusterResponse) {
 }
 
-func (newState *PermanentDeleteClusterResponse) SyncFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
+func (toState *PermanentDeleteClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState PermanentDeleteClusterResponse) {
 }
 
 func (c PermanentDeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16057,10 +16155,10 @@ func (o PinCluster) Type(ctx context.Context) attr.Type {
 type PinClusterResponse struct {
 }
 
-func (newState *PinClusterResponse) SyncFieldsDuringCreateOrUpdate(plan PinClusterResponse) {
+func (toState *PinClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PinClusterResponse) {
 }
 
-func (newState *PinClusterResponse) SyncFieldsDuringRead(existingState PinClusterResponse) {
+func (toState *PinClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState PinClusterResponse) {
 }
 
 func (c PinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16144,10 +16242,10 @@ type Policy struct {
 	PolicyId types.String `tfsdk:"policy_id"`
 }
 
-func (newState *Policy) SyncFieldsDuringCreateOrUpdate(plan Policy) {
+func (toState *Policy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Policy) {
 }
 
-func (newState *Policy) SyncFieldsDuringRead(existingState Policy) {
+func (toState *Policy) SyncFieldsDuringRead(ctx context.Context, fromState Policy) {
 }
 
 func (c Policy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16261,10 +16359,10 @@ type PolicyFamily struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 }
 
-func (newState *PolicyFamily) SyncFieldsDuringCreateOrUpdate(plan PolicyFamily) {
+func (toState *PolicyFamily) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PolicyFamily) {
 }
 
-func (newState *PolicyFamily) SyncFieldsDuringRead(existingState PolicyFamily) {
+func (toState *PolicyFamily) SyncFieldsDuringRead(ctx context.Context, fromState PolicyFamily) {
 }
 
 func (c PolicyFamily) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16323,10 +16421,10 @@ type PythonPyPiLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *PythonPyPiLibrary) SyncFieldsDuringCreateOrUpdate(plan PythonPyPiLibrary) {
+func (toState *PythonPyPiLibrary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PythonPyPiLibrary) {
 }
 
-func (newState *PythonPyPiLibrary) SyncFieldsDuringRead(existingState PythonPyPiLibrary) {
+func (toState *PythonPyPiLibrary) SyncFieldsDuringRead(ctx context.Context, fromState PythonPyPiLibrary) {
 }
 
 func (c PythonPyPiLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16377,10 +16475,10 @@ type RCranLibrary struct {
 	Repo types.String `tfsdk:"repo"`
 }
 
-func (newState *RCranLibrary) SyncFieldsDuringCreateOrUpdate(plan RCranLibrary) {
+func (toState *RCranLibrary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RCranLibrary) {
 }
 
-func (newState *RCranLibrary) SyncFieldsDuringRead(existingState RCranLibrary) {
+func (toState *RCranLibrary) SyncFieldsDuringRead(ctx context.Context, fromState RCranLibrary) {
 }
 
 func (c RCranLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16423,112 +16521,6 @@ func (o RCranLibrary) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type RefreshDefaultBaseEnvironmentsRequest struct {
-	Ids types.List `tfsdk:"ids"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a RefreshDefaultBaseEnvironmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"ids": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsRequest
-// only implements ToObjectValue() and Type().
-func (o RefreshDefaultBaseEnvironmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"ids": o.Ids,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o RefreshDefaultBaseEnvironmentsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"ids": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
-}
-
-// GetIds returns the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *RefreshDefaultBaseEnvironmentsRequest) GetIds(ctx context.Context) ([]types.String, bool) {
-	if o.Ids.IsNull() || o.Ids.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Ids.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetIds sets the value of the Ids field in RefreshDefaultBaseEnvironmentsRequest.
-func (o *RefreshDefaultBaseEnvironmentsRequest) SetIds(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Ids = types.ListValueMust(t, vs)
-}
-
-type RefreshDefaultBaseEnvironmentsResponse struct {
-}
-
-func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncFieldsDuringCreateOrUpdate(plan RefreshDefaultBaseEnvironmentsResponse) {
-}
-
-func (newState *RefreshDefaultBaseEnvironmentsResponse) SyncFieldsDuringRead(existingState RefreshDefaultBaseEnvironmentsResponse) {
-}
-
-func (c RefreshDefaultBaseEnvironmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in RefreshDefaultBaseEnvironmentsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a RefreshDefaultBaseEnvironmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RefreshDefaultBaseEnvironmentsResponse
-// only implements ToObjectValue() and Type().
-func (o RefreshDefaultBaseEnvironmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o RefreshDefaultBaseEnvironmentsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
@@ -16568,10 +16560,10 @@ func (o RemoveInstanceProfile) Type(ctx context.Context) attr.Type {
 type RemoveResponse struct {
 }
 
-func (newState *RemoveResponse) SyncFieldsDuringCreateOrUpdate(plan RemoveResponse) {
+func (toState *RemoveResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RemoveResponse) {
 }
 
-func (newState *RemoveResponse) SyncFieldsDuringRead(existingState RemoveResponse) {
+func (toState *RemoveResponse) SyncFieldsDuringRead(ctx context.Context, fromState RemoveResponse) {
 }
 
 func (c RemoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16671,7 +16663,7 @@ func (o *ResizeCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16679,10 +16671,7 @@ func (o *ResizeCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in ResizeCluster.
@@ -16694,10 +16683,10 @@ func (o *ResizeCluster) SetAutoscale(ctx context.Context, v AutoScale) {
 type ResizeClusterResponse struct {
 }
 
-func (newState *ResizeClusterResponse) SyncFieldsDuringCreateOrUpdate(plan ResizeClusterResponse) {
+func (toState *ResizeClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResizeClusterResponse) {
 }
 
-func (newState *ResizeClusterResponse) SyncFieldsDuringRead(existingState ResizeClusterResponse) {
+func (toState *ResizeClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState ResizeClusterResponse) {
 }
 
 func (c ResizeClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16775,10 +16764,10 @@ func (o RestartCluster) Type(ctx context.Context) attr.Type {
 type RestartClusterResponse struct {
 }
 
-func (newState *RestartClusterResponse) SyncFieldsDuringCreateOrUpdate(plan RestartClusterResponse) {
+func (toState *RestartClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestartClusterResponse) {
 }
 
-func (newState *RestartClusterResponse) SyncFieldsDuringRead(existingState RestartClusterResponse) {
+func (toState *RestartClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState RestartClusterResponse) {
 }
 
 func (c RestartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16837,10 +16826,10 @@ type Results struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (newState *Results) SyncFieldsDuringCreateOrUpdate(plan Results) {
+func (toState *Results) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Results) {
 }
 
-func (newState *Results) SyncFieldsDuringRead(existingState Results) {
+func (toState *Results) SyncFieldsDuringRead(ctx context.Context, fromState Results) {
 }
 
 func (c Results) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17002,10 +16991,10 @@ type S3StorageInfo struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *S3StorageInfo) SyncFieldsDuringCreateOrUpdate(plan S3StorageInfo) {
+func (toState *S3StorageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan S3StorageInfo) {
 }
 
-func (newState *S3StorageInfo) SyncFieldsDuringRead(existingState S3StorageInfo) {
+func (toState *S3StorageInfo) SyncFieldsDuringRead(ctx context.Context, fromState S3StorageInfo) {
 }
 
 func (c S3StorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17085,10 +17074,26 @@ type SparkNode struct {
 	StartTimestamp types.Int64 `tfsdk:"start_timestamp"`
 }
 
-func (newState *SparkNode) SyncFieldsDuringCreateOrUpdate(plan SparkNode) {
+func (toState *SparkNode) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkNode) {
+	if !fromPlan.NodeAwsAttributes.IsNull() && !fromPlan.NodeAwsAttributes.IsUnknown() {
+		if toStateNodeAwsAttributes, ok := toState.GetNodeAwsAttributes(ctx); ok {
+			if fromPlanNodeAwsAttributes, ok := fromPlan.GetNodeAwsAttributes(ctx); ok {
+				toStateNodeAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNodeAwsAttributes)
+				toState.SetNodeAwsAttributes(ctx, toStateNodeAwsAttributes)
+			}
+		}
+	}
 }
 
-func (newState *SparkNode) SyncFieldsDuringRead(existingState SparkNode) {
+func (toState *SparkNode) SyncFieldsDuringRead(ctx context.Context, fromState SparkNode) {
+	if !fromState.NodeAwsAttributes.IsNull() && !fromState.NodeAwsAttributes.IsUnknown() {
+		if toStateNodeAwsAttributes, ok := toState.GetNodeAwsAttributes(ctx); ok {
+			if fromStateNodeAwsAttributes, ok := fromState.GetNodeAwsAttributes(ctx); ok {
+				toStateNodeAwsAttributes.SyncFieldsDuringRead(ctx, fromStateNodeAwsAttributes)
+				toState.SetNodeAwsAttributes(ctx, toStateNodeAwsAttributes)
+			}
+		}
+	}
 }
 
 func (c SparkNode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17156,7 +17161,7 @@ func (o *SparkNode) GetNodeAwsAttributes(ctx context.Context) (SparkNodeAwsAttri
 	if o.NodeAwsAttributes.IsNull() || o.NodeAwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []SparkNodeAwsAttributes
+	var v SparkNodeAwsAttributes
 	d := o.NodeAwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17164,10 +17169,7 @@ func (o *SparkNode) GetNodeAwsAttributes(ctx context.Context) (SparkNodeAwsAttri
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNodeAwsAttributes sets the value of the NodeAwsAttributes field in SparkNode.
@@ -17182,10 +17184,10 @@ type SparkNodeAwsAttributes struct {
 	IsSpot types.Bool `tfsdk:"is_spot"`
 }
 
-func (newState *SparkNodeAwsAttributes) SyncFieldsDuringCreateOrUpdate(plan SparkNodeAwsAttributes) {
+func (toState *SparkNodeAwsAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkNodeAwsAttributes) {
 }
 
-func (newState *SparkNodeAwsAttributes) SyncFieldsDuringRead(existingState SparkNodeAwsAttributes) {
+func (toState *SparkNodeAwsAttributes) SyncFieldsDuringRead(ctx context.Context, fromState SparkNodeAwsAttributes) {
 }
 
 func (c SparkNodeAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17236,10 +17238,10 @@ type SparkVersion struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *SparkVersion) SyncFieldsDuringCreateOrUpdate(plan SparkVersion) {
+func (toState *SparkVersion) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkVersion) {
 }
 
-func (newState *SparkVersion) SyncFieldsDuringRead(existingState SparkVersion) {
+func (toState *SparkVersion) SyncFieldsDuringRead(ctx context.Context, fromState SparkVersion) {
 }
 
 func (c SparkVersion) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17351,10 +17353,10 @@ func (o StartCluster) Type(ctx context.Context) attr.Type {
 type StartClusterResponse struct {
 }
 
-func (newState *StartClusterResponse) SyncFieldsDuringCreateOrUpdate(plan StartClusterResponse) {
+func (toState *StartClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartClusterResponse) {
 }
 
-func (newState *StartClusterResponse) SyncFieldsDuringRead(existingState StartClusterResponse) {
+func (toState *StartClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState StartClusterResponse) {
 }
 
 func (c StartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17399,10 +17401,10 @@ type TerminationReason struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *TerminationReason) SyncFieldsDuringCreateOrUpdate(plan TerminationReason) {
+func (toState *TerminationReason) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TerminationReason) {
 }
 
-func (newState *TerminationReason) SyncFieldsDuringRead(existingState TerminationReason) {
+func (toState *TerminationReason) SyncFieldsDuringRead(ctx context.Context, fromState TerminationReason) {
 }
 
 func (c TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17551,10 +17553,10 @@ func (o *UninstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 type UninstallLibrariesResponse struct {
 }
 
-func (newState *UninstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(plan UninstallLibrariesResponse) {
+func (toState *UninstallLibrariesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UninstallLibrariesResponse) {
 }
 
-func (newState *UninstallLibrariesResponse) SyncFieldsDuringRead(existingState UninstallLibrariesResponse) {
+func (toState *UninstallLibrariesResponse) SyncFieldsDuringRead(ctx context.Context, fromState UninstallLibrariesResponse) {
 }
 
 func (c UninstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17627,10 +17629,10 @@ func (o UnpinCluster) Type(ctx context.Context) attr.Type {
 type UnpinClusterResponse struct {
 }
 
-func (newState *UnpinClusterResponse) SyncFieldsDuringCreateOrUpdate(plan UnpinClusterResponse) {
+func (toState *UnpinClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnpinClusterResponse) {
 }
 
-func (newState *UnpinClusterResponse) SyncFieldsDuringRead(existingState UnpinClusterResponse) {
+func (toState *UnpinClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState UnpinClusterResponse) {
 }
 
 func (c UnpinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17732,7 +17734,7 @@ func (o *UpdateCluster) GetCluster(ctx context.Context) (UpdateClusterResource, 
 	if o.Cluster.IsNull() || o.Cluster.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateClusterResource
+	var v UpdateClusterResource
 	d := o.Cluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17740,10 +17742,7 @@ func (o *UpdateCluster) GetCluster(ctx context.Context) (UpdateClusterResource, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCluster sets the value of the Cluster field in UpdateCluster.
@@ -17906,10 +17905,122 @@ type UpdateClusterResource struct {
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
-func (newState *UpdateClusterResource) SyncFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
+func (toState *UpdateClusterResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateClusterResource) {
+	if !fromPlan.Autoscale.IsNull() && !fromPlan.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromPlanAutoscale, ok := fromPlan.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogConf.IsNull() && !fromPlan.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromPlanClusterLogConf, ok := fromPlan.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromPlan.DockerImage.IsNull() && !fromPlan.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromPlanDockerImage, ok := fromPlan.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromPlan.WorkloadType.IsNull() && !fromPlan.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromPlanWorkloadType, ok := fromPlan.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
-func (newState *UpdateClusterResource) SyncFieldsDuringRead(existingState UpdateClusterResource) {
+func (toState *UpdateClusterResource) SyncFieldsDuringRead(ctx context.Context, fromState UpdateClusterResource) {
+	if !fromState.Autoscale.IsNull() && !fromState.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromStateAutoscale, ok := fromState.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringRead(ctx, fromStateAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterLogConf.IsNull() && !fromState.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromStateClusterLogConf, ok := fromState.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringRead(ctx, fromStateClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromState.DockerImage.IsNull() && !fromState.DockerImage.IsUnknown() {
+		if toStateDockerImage, ok := toState.GetDockerImage(ctx); ok {
+			if fromStateDockerImage, ok := fromState.GetDockerImage(ctx); ok {
+				toStateDockerImage.SyncFieldsDuringRead(ctx, fromStateDockerImage)
+				toState.SetDockerImage(ctx, toStateDockerImage)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
+	if !fromState.WorkloadType.IsNull() && !fromState.WorkloadType.IsUnknown() {
+		if toStateWorkloadType, ok := toState.GetWorkloadType(ctx); ok {
+			if fromStateWorkloadType, ok := fromState.GetWorkloadType(ctx); ok {
+				toStateWorkloadType.SyncFieldsDuringRead(ctx, fromStateWorkloadType)
+				toState.SetWorkloadType(ctx, toStateWorkloadType)
+			}
+		}
+	}
 }
 
 func (c UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18070,7 +18181,7 @@ func (o *UpdateClusterResource) GetAutoscale(ctx context.Context) (AutoScale, bo
 	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
 		return e, false
 	}
-	var v []AutoScale
+	var v AutoScale
 	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18078,10 +18189,7 @@ func (o *UpdateClusterResource) GetAutoscale(ctx context.Context) (AutoScale, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutoscale sets the value of the Autoscale field in UpdateClusterResource.
@@ -18098,7 +18206,7 @@ func (o *UpdateClusterResource) GetAwsAttributes(ctx context.Context) (AwsAttrib
 	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AwsAttributes
+	var v AwsAttributes
 	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18106,10 +18214,7 @@ func (o *UpdateClusterResource) GetAwsAttributes(ctx context.Context) (AwsAttrib
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsAttributes sets the value of the AwsAttributes field in UpdateClusterResource.
@@ -18126,7 +18231,7 @@ func (o *UpdateClusterResource) GetAzureAttributes(ctx context.Context) (AzureAt
 	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []AzureAttributes
+	var v AzureAttributes
 	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18134,10 +18239,7 @@ func (o *UpdateClusterResource) GetAzureAttributes(ctx context.Context) (AzureAt
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAttributes sets the value of the AzureAttributes field in UpdateClusterResource.
@@ -18154,7 +18256,7 @@ func (o *UpdateClusterResource) GetClusterLogConf(ctx context.Context) (ClusterL
 	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterLogConf
+	var v ClusterLogConf
 	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18162,10 +18264,7 @@ func (o *UpdateClusterResource) GetClusterLogConf(ctx context.Context) (ClusterL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in UpdateClusterResource.
@@ -18208,7 +18307,7 @@ func (o *UpdateClusterResource) GetDockerImage(ctx context.Context) (DockerImage
 	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
 		return e, false
 	}
-	var v []DockerImage
+	var v DockerImage
 	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18216,10 +18315,7 @@ func (o *UpdateClusterResource) GetDockerImage(ctx context.Context) (DockerImage
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDockerImage sets the value of the DockerImage field in UpdateClusterResource.
@@ -18236,7 +18332,7 @@ func (o *UpdateClusterResource) GetGcpAttributes(ctx context.Context) (GcpAttrib
 	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []GcpAttributes
+	var v GcpAttributes
 	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18244,10 +18340,7 @@ func (o *UpdateClusterResource) GetGcpAttributes(ctx context.Context) (GcpAttrib
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpAttributes sets the value of the GcpAttributes field in UpdateClusterResource.
@@ -18368,7 +18461,7 @@ func (o *UpdateClusterResource) GetWorkloadType(ctx context.Context) (WorkloadTy
 	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
 		return e, false
 	}
-	var v []WorkloadType
+	var v WorkloadType
 	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18376,10 +18469,7 @@ func (o *UpdateClusterResource) GetWorkloadType(ctx context.Context) (WorkloadTy
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkloadType sets the value of the WorkloadType field in UpdateClusterResource.
@@ -18391,10 +18481,10 @@ func (o *UpdateClusterResource) SetWorkloadType(ctx context.Context, v WorkloadT
 type UpdateClusterResponse struct {
 }
 
-func (newState *UpdateClusterResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateClusterResponse) {
+func (toState *UpdateClusterResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateClusterResponse) {
 }
 
-func (newState *UpdateClusterResponse) SyncFieldsDuringRead(existingState UpdateClusterResponse) {
+func (toState *UpdateClusterResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateClusterResponse) {
 }
 
 func (c UpdateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18429,117 +18519,13 @@ func (o UpdateClusterResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type UpdateDefaultBaseEnvironmentRequest struct {
-	DefaultBaseEnvironment types.Object `tfsdk:"default_base_environment"`
-
-	Id types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultBaseEnvironmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"default_base_environment": reflect.TypeOf(DefaultBaseEnvironment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultBaseEnvironmentRequest
-// only implements ToObjectValue() and Type().
-func (o UpdateDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"default_base_environment": o.DefaultBaseEnvironment,
-			"id":                       o.Id,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"default_base_environment": DefaultBaseEnvironment{}.Type(ctx),
-			"id":                       types.StringType,
-		},
-	}
-}
-
-// GetDefaultBaseEnvironment returns the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest as
-// a DefaultBaseEnvironment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpdateDefaultBaseEnvironmentRequest) GetDefaultBaseEnvironment(ctx context.Context) (DefaultBaseEnvironment, bool) {
-	var e DefaultBaseEnvironment
-	if o.DefaultBaseEnvironment.IsNull() || o.DefaultBaseEnvironment.IsUnknown() {
-		return e, false
-	}
-	var v []DefaultBaseEnvironment
-	d := o.DefaultBaseEnvironment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetDefaultBaseEnvironment sets the value of the DefaultBaseEnvironment field in UpdateDefaultBaseEnvironmentRequest.
-func (o *UpdateDefaultBaseEnvironmentRequest) SetDefaultBaseEnvironment(ctx context.Context, v DefaultBaseEnvironment) {
-	vs := v.ToObjectValue(ctx)
-	o.DefaultBaseEnvironment = vs
-}
-
-type UpdateDefaultDefaultBaseEnvironmentRequest struct {
-	Id types.String `tfsdk:"id"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultDefaultBaseEnvironmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateDefaultDefaultBaseEnvironmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultDefaultBaseEnvironmentRequest
-// only implements ToObjectValue() and Type().
-func (o UpdateDefaultDefaultBaseEnvironmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"id": o.Id,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateDefaultDefaultBaseEnvironmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
-}
-
 type UpdateResponse struct {
 }
 
-func (newState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+func (toState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateResponse) {
 }
 
-func (newState *UpdateResponse) SyncFieldsDuringRead(existingState UpdateResponse) {
+func (toState *UpdateResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateResponse) {
 }
 
 func (c UpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18582,10 +18568,10 @@ type VolumesStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *VolumesStorageInfo) SyncFieldsDuringCreateOrUpdate(plan VolumesStorageInfo) {
+func (toState *VolumesStorageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VolumesStorageInfo) {
 }
 
-func (newState *VolumesStorageInfo) SyncFieldsDuringRead(existingState VolumesStorageInfo) {
+func (toState *VolumesStorageInfo) SyncFieldsDuringRead(ctx context.Context, fromState VolumesStorageInfo) {
 }
 
 func (c VolumesStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18631,10 +18617,26 @@ type WorkloadType struct {
 	Clients types.Object `tfsdk:"clients"`
 }
 
-func (newState *WorkloadType) SyncFieldsDuringCreateOrUpdate(plan WorkloadType) {
+func (toState *WorkloadType) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkloadType) {
+	if !fromPlan.Clients.IsNull() && !fromPlan.Clients.IsUnknown() {
+		if toStateClients, ok := toState.GetClients(ctx); ok {
+			if fromPlanClients, ok := fromPlan.GetClients(ctx); ok {
+				toStateClients.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClients)
+				toState.SetClients(ctx, toStateClients)
+			}
+		}
+	}
 }
 
-func (newState *WorkloadType) SyncFieldsDuringRead(existingState WorkloadType) {
+func (toState *WorkloadType) SyncFieldsDuringRead(ctx context.Context, fromState WorkloadType) {
+	if !fromState.Clients.IsNull() && !fromState.Clients.IsUnknown() {
+		if toStateClients, ok := toState.GetClients(ctx); ok {
+			if fromStateClients, ok := fromState.GetClients(ctx); ok {
+				toStateClients.SyncFieldsDuringRead(ctx, fromStateClients)
+				toState.SetClients(ctx, toStateClients)
+			}
+		}
+	}
 }
 
 func (c WorkloadType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18684,7 +18686,7 @@ func (o *WorkloadType) GetClients(ctx context.Context) (ClientsTypes, bool) {
 	if o.Clients.IsNull() || o.Clients.IsUnknown() {
 		return e, false
 	}
-	var v []ClientsTypes
+	var v ClientsTypes
 	d := o.Clients.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18692,10 +18694,7 @@ func (o *WorkloadType) GetClients(ctx context.Context) (ClientsTypes, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClients sets the value of the Clients field in WorkloadType.
@@ -18710,10 +18709,10 @@ type WorkspaceStorageInfo struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
-func (newState *WorkspaceStorageInfo) SyncFieldsDuringCreateOrUpdate(plan WorkspaceStorageInfo) {
+func (toState *WorkspaceStorageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkspaceStorageInfo) {
 }
 
-func (newState *WorkspaceStorageInfo) SyncFieldsDuringRead(existingState WorkspaceStorageInfo) {
+func (toState *WorkspaceStorageInfo) SyncFieldsDuringRead(ctx context.Context, fromState WorkspaceStorageInfo) {
 }
 
 func (c WorkspaceStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -367,17 +368,17 @@ type DatabaseCatalog_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseCatalog_SdkV2) {
-	if !plan.CreateDatabaseIfNotExists.IsUnknown() && !plan.CreateDatabaseIfNotExists.IsNull() {
+func (toState *DatabaseCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseCatalog_SdkV2) {
+	if !fromPlan.CreateDatabaseIfNotExists.IsUnknown() && !fromPlan.CreateDatabaseIfNotExists.IsNull() {
 		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the plan.
-		newState.CreateDatabaseIfNotExists = plan.CreateDatabaseIfNotExists
+		toState.CreateDatabaseIfNotExists = fromPlan.CreateDatabaseIfNotExists
 	}
 }
 
-func (newState *DatabaseCatalog_SdkV2) SyncFieldsDuringRead(existingState DatabaseCatalog_SdkV2) {
-	if !existingState.CreateDatabaseIfNotExists.IsUnknown() && !existingState.CreateDatabaseIfNotExists.IsNull() {
+func (toState *DatabaseCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseCatalog_SdkV2) {
+	if !fromState.CreateDatabaseIfNotExists.IsUnknown() && !fromState.CreateDatabaseIfNotExists.IsNull() {
 		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the existing state.
-		newState.CreateDatabaseIfNotExists = existingState.CreateDatabaseIfNotExists
+		toState.CreateDatabaseIfNotExists = fromState.CreateDatabaseIfNotExists
 	}
 }
 
@@ -438,10 +439,10 @@ type DatabaseCredential_SdkV2 struct {
 	Token types.String `tfsdk:"token"`
 }
 
-func (newState *DatabaseCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseCredential_SdkV2) {
+func (toState *DatabaseCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseCredential_SdkV2) {
 }
 
-func (newState *DatabaseCredential_SdkV2) SyncFieldsDuringRead(existingState DatabaseCredential_SdkV2) {
+func (toState *DatabaseCredential_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseCredential_SdkV2) {
 }
 
 func (c DatabaseCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -487,11 +488,6 @@ func (o DatabaseCredential_SdkV2) Type(ctx context.Context) attr.Type {
 // A DatabaseInstance represents a logical Postgres instance, comprised of both
 // compute and storage.
 type DatabaseInstance_SdkV2 struct {
-	// The desired budget policy to associate with the instance. This field is
-	// only returned on create/update responses, and represents the customer
-	// provided budget policy. See effective_budget_policy_id for the policy
-	// that is actually applied to the instance.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
 	Capacity types.String `tfsdk:"capacity"`
 	// The refs of the child instances. This is only available if the instance
@@ -501,15 +497,6 @@ type DatabaseInstance_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
-	// The policy that is applied to the instance.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// xref AIP-129. `enable_pg_native_login` is owned by the client, while
-	// `effective_enable_pg_native_login` is owned by the server.
-	// `enable_pg_native_login` will only be set in Create/Update response
-	// messages if and only if the user provides the field via the request.
-	// `effective_enable_pg_native_login` on the other hand will always bet set
-	// in all response messages (Create/Update/Get/List).
-	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// xref AIP-129. `enable_readable_secondaries` is owned by the client, while
 	// `effective_enable_readable_secondaries` is owned by the server.
 	// `enable_readable_secondaries` will only be set in Create/Update response
@@ -536,9 +523,6 @@ type DatabaseInstance_SdkV2 struct {
 	// request. `effective_stopped` on the other hand will always bet set in all
 	// response messages (Create/Update/Get/List).
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
-	// Whether the instance has PG native password login enabled. Defaults to
-	// true.
-	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// Whether to enable secondaries to serve read-only traffic. Defaults to
 	// false.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
@@ -571,25 +555,37 @@ type DatabaseInstance_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseInstance_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseInstance_SdkV2) {
+func (toState *DatabaseInstance_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstance_SdkV2) {
+	if !fromPlan.ParentInstanceRef.IsNull() && !fromPlan.ParentInstanceRef.IsUnknown() {
+		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
+			if fromPlanParentInstanceRef, ok := fromPlan.GetParentInstanceRef(ctx); ok {
+				toStateParentInstanceRef.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanParentInstanceRef)
+				toState.SetParentInstanceRef(ctx, toStateParentInstanceRef)
+			}
+		}
+	}
 }
 
-func (newState *DatabaseInstance_SdkV2) SyncFieldsDuringRead(existingState DatabaseInstance_SdkV2) {
+func (toState *DatabaseInstance_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstance_SdkV2) {
+	if !fromState.ParentInstanceRef.IsNull() && !fromState.ParentInstanceRef.IsUnknown() {
+		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
+			if fromStateParentInstanceRef, ok := fromState.GetParentInstanceRef(ctx); ok {
+				toStateParentInstanceRef.SyncFieldsDuringRead(ctx, fromStateParentInstanceRef)
+				toState.SetParentInstanceRef(ctx, toStateParentInstanceRef)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["capacity"] = attrs["capacity"].SetOptional()
 	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
-	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
 	attrs["effective_enable_readable_secondaries"] = attrs["effective_enable_readable_secondaries"].SetComputed()
 	attrs["effective_node_count"] = attrs["effective_node_count"].SetComputed()
 	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
 	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
-	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
 	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["node_count"] = attrs["node_count"].SetOptional()
@@ -627,18 +623,14 @@ func (o DatabaseInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_policy_id":                      o.BudgetPolicyId,
 			"capacity":                              o.Capacity,
 			"child_instance_refs":                   o.ChildInstanceRefs,
 			"creation_time":                         o.CreationTime,
 			"creator":                               o.Creator,
-			"effective_budget_policy_id":            o.EffectiveBudgetPolicyId,
-			"effective_enable_pg_native_login":      o.EffectiveEnablePgNativeLogin,
 			"effective_enable_readable_secondaries": o.EffectiveEnableReadableSecondaries,
 			"effective_node_count":                  o.EffectiveNodeCount,
 			"effective_retention_window_in_days":    o.EffectiveRetentionWindowInDays,
 			"effective_stopped":                     o.EffectiveStopped,
-			"enable_pg_native_login":                o.EnablePgNativeLogin,
 			"enable_readable_secondaries":           o.EnableReadableSecondaries,
 			"name":                                  o.Name,
 			"node_count":                            o.NodeCount,
@@ -657,20 +649,16 @@ func (o DatabaseInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o DatabaseInstance_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget_policy_id": types.StringType,
-			"capacity":         types.StringType,
+			"capacity": types.StringType,
 			"child_instance_refs": basetypes.ListType{
 				ElemType: DatabaseInstanceRef_SdkV2{}.Type(ctx),
 			},
 			"creation_time":                         types.StringType,
 			"creator":                               types.StringType,
-			"effective_budget_policy_id":            types.StringType,
-			"effective_enable_pg_native_login":      types.BoolType,
 			"effective_enable_readable_secondaries": types.BoolType,
 			"effective_node_count":                  types.Int64Type,
 			"effective_retention_window_in_days":    types.Int64Type,
 			"effective_stopped":                     types.BoolType,
-			"enable_pg_native_login":                types.BoolType,
 			"enable_readable_secondaries":           types.BoolType,
 			"name":                                  types.StringType,
 			"node_count":                            types.Int64Type,
@@ -775,10 +763,10 @@ type DatabaseInstanceRef_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseInstanceRef_SdkV2) {
+func (toState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRef_SdkV2) {
 }
 
-func (newState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringRead(existingState DatabaseInstanceRef_SdkV2) {
+func (toState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRef_SdkV2) {
 }
 
 func (c DatabaseInstanceRef_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -843,10 +831,26 @@ type DatabaseInstanceRole_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseInstanceRole_SdkV2) {
+func (toState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRole_SdkV2) {
+	if !fromPlan.Attributes.IsNull() && !fromPlan.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromPlanAttributes, ok := fromPlan.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
 }
 
-func (newState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringRead(existingState DatabaseInstanceRole_SdkV2) {
+func (toState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRole_SdkV2) {
+	if !fromState.Attributes.IsNull() && !fromState.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromStateAttributes, ok := fromState.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringRead(ctx, fromStateAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstanceRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -941,10 +945,10 @@ type DatabaseInstanceRoleAttributes_SdkV2 struct {
 	Createrole types.Bool `tfsdk:"createrole"`
 }
 
-func (newState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseInstanceRoleAttributes_SdkV2) {
+func (toState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRoleAttributes_SdkV2) {
 }
 
-func (newState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringRead(existingState DatabaseInstanceRoleAttributes_SdkV2) {
+func (toState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRoleAttributes_SdkV2) {
 }
 
 func (c DatabaseInstanceRoleAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1013,21 +1017,18 @@ type DatabaseTable_SdkV2 struct {
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`
-	// Data serving REST API URL for this table
-	TableServingUrl types.String `tfsdk:"table_serving_url"`
 }
 
-func (newState *DatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DatabaseTable_SdkV2) {
+func (toState *DatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseTable_SdkV2) {
 }
 
-func (newState *DatabaseTable_SdkV2) SyncFieldsDuringRead(existingState DatabaseTable_SdkV2) {
+func (toState *DatabaseTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseTable_SdkV2) {
 }
 
 func (c DatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 
 	return attrs
 }
@@ -1053,7 +1054,6 @@ func (o DatabaseTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"database_instance_name": o.DatabaseInstanceName,
 			"logical_database_name":  o.LogicalDatabaseName,
 			"name":                   o.Name,
-			"table_serving_url":      o.TableServingUrl,
 		})
 }
 
@@ -1064,7 +1064,6 @@ func (o DatabaseTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"database_instance_name": types.StringType,
 			"logical_database_name":  types.StringType,
 			"name":                   types.StringType,
-			"table_serving_url":      types.StringType,
 		},
 	}
 }
@@ -1285,15 +1284,15 @@ type DeltaTableSyncInfo_SdkV2 struct {
 	DeltaCommitVersion types.Int64 `tfsdk:"delta_commit_version"`
 }
 
-func (newState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DeltaTableSyncInfo_SdkV2) {
+func (toState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaTableSyncInfo_SdkV2) {
 }
 
-func (newState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringRead(existingState DeltaTableSyncInfo_SdkV2) {
+func (toState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeltaTableSyncInfo_SdkV2) {
 }
 
 func (c DeltaTableSyncInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_commit_timestamp"] = attrs["delta_commit_timestamp"].SetOptional()
-	attrs["delta_commit_version"] = attrs["delta_commit_version"].SetOptional()
+	attrs["delta_commit_timestamp"] = attrs["delta_commit_timestamp"].SetComputed()
+	attrs["delta_commit_version"] = attrs["delta_commit_version"].SetComputed()
 
 	return attrs
 }
@@ -1327,45 +1326,6 @@ func (o DeltaTableSyncInfo_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"delta_commit_timestamp": types.StringType,
 			"delta_commit_version":   types.Int64Type,
-		},
-	}
-}
-
-type FailoverDatabaseInstanceRequest_SdkV2 struct {
-	FailoverTargetDatabaseInstanceName types.String `tfsdk:"failover_target_database_instance_name"`
-	// Name of the instance to failover.
-	Name types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in FailoverDatabaseInstanceRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a FailoverDatabaseInstanceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, FailoverDatabaseInstanceRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o FailoverDatabaseInstanceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"failover_target_database_instance_name": o.FailoverTargetDatabaseInstanceName,
-			"name":                                   o.Name,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o FailoverDatabaseInstanceRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"failover_target_database_instance_name": types.StringType,
-			"name":                                   types.StringType,
 		},
 	}
 }
@@ -1692,133 +1652,6 @@ func (o GetSyncedDatabaseTableRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-type ListDatabaseCatalogsRequest_SdkV2 struct {
-	// Name of the instance to get database catalogs for.
-	InstanceName types.String `tfsdk:"-"`
-	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of synced database tables.
-	// Requests first page if absent.
-	PageToken types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseCatalogsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListDatabaseCatalogsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabaseCatalogsRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListDatabaseCatalogsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"instance_name": o.InstanceName,
-			"page_size":     o.PageSize,
-			"page_token":    o.PageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListDatabaseCatalogsRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"instance_name": types.StringType,
-			"page_size":     types.Int64Type,
-			"page_token":    types.StringType,
-		},
-	}
-}
-
-type ListDatabaseCatalogsResponse_SdkV2 struct {
-	DatabaseCatalogs types.List `tfsdk:"database_catalogs"`
-	// Pagination token to request the next page of database catalogs.
-	NextPageToken types.String `tfsdk:"next_page_token"`
-}
-
-func (newState *ListDatabaseCatalogsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListDatabaseCatalogsResponse_SdkV2) {
-}
-
-func (newState *ListDatabaseCatalogsResponse_SdkV2) SyncFieldsDuringRead(existingState ListDatabaseCatalogsResponse_SdkV2) {
-}
-
-func (c ListDatabaseCatalogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_catalogs"] = attrs["database_catalogs"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseCatalogsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListDatabaseCatalogsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"database_catalogs": reflect.TypeOf(DatabaseCatalog_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabaseCatalogsResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListDatabaseCatalogsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"database_catalogs": o.DatabaseCatalogs,
-			"next_page_token":   o.NextPageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListDatabaseCatalogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"database_catalogs": basetypes.ListType{
-				ElemType: DatabaseCatalog_SdkV2{}.Type(ctx),
-			},
-			"next_page_token": types.StringType,
-		},
-	}
-}
-
-// GetDatabaseCatalogs returns the value of the DatabaseCatalogs field in ListDatabaseCatalogsResponse_SdkV2 as
-// a slice of DatabaseCatalog_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListDatabaseCatalogsResponse_SdkV2) GetDatabaseCatalogs(ctx context.Context) ([]DatabaseCatalog_SdkV2, bool) {
-	if o.DatabaseCatalogs.IsNull() || o.DatabaseCatalogs.IsUnknown() {
-		return nil, false
-	}
-	var v []DatabaseCatalog_SdkV2
-	d := o.DatabaseCatalogs.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetDatabaseCatalogs sets the value of the DatabaseCatalogs field in ListDatabaseCatalogsResponse_SdkV2.
-func (o *ListDatabaseCatalogsResponse_SdkV2) SetDatabaseCatalogs(ctx context.Context, v []DatabaseCatalog_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_catalogs"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.DatabaseCatalogs = types.ListValueMust(t, vs)
-}
-
 type ListDatabaseInstanceRolesRequest_SdkV2 struct {
 	InstanceName types.String `tfsdk:"-"`
 	// Upper bound for items returned.
@@ -1870,10 +1703,10 @@ type ListDatabaseInstanceRolesResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListDatabaseInstanceRolesResponse_SdkV2) {
+func (toState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstanceRolesResponse_SdkV2) {
 }
 
-func (newState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringRead(existingState ListDatabaseInstanceRolesResponse_SdkV2) {
+func (toState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstanceRolesResponse_SdkV2) {
 }
 
 func (c ListDatabaseInstanceRolesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1994,10 +1827,10 @@ type ListDatabaseInstancesResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListDatabaseInstancesResponse_SdkV2) {
+func (toState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstancesResponse_SdkV2) {
 }
 
-func (newState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringRead(existingState ListDatabaseInstancesResponse_SdkV2) {
+func (toState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstancesResponse_SdkV2) {
 }
 
 func (c ListDatabaseInstancesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2070,140 +1903,10 @@ func (o *ListDatabaseInstancesResponse_SdkV2) SetDatabaseInstances(ctx context.C
 	o.DatabaseInstances = types.ListValueMust(t, vs)
 }
 
-type ListSyncedDatabaseTablesRequest_SdkV2 struct {
-	// Name of the instance to get synced tables for.
-	InstanceName types.String `tfsdk:"-"`
-	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of synced database tables.
-	// Requests first page if absent.
-	PageToken types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSyncedDatabaseTablesRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListSyncedDatabaseTablesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSyncedDatabaseTablesRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListSyncedDatabaseTablesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"instance_name": o.InstanceName,
-			"page_size":     o.PageSize,
-			"page_token":    o.PageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListSyncedDatabaseTablesRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"instance_name": types.StringType,
-			"page_size":     types.Int64Type,
-			"page_token":    types.StringType,
-		},
-	}
-}
-
-type ListSyncedDatabaseTablesResponse_SdkV2 struct {
-	// Pagination token to request the next page of synced tables.
-	NextPageToken types.String `tfsdk:"next_page_token"`
-
-	SyncedTables types.List `tfsdk:"synced_tables"`
-}
-
-func (newState *ListSyncedDatabaseTablesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListSyncedDatabaseTablesResponse_SdkV2) {
-}
-
-func (newState *ListSyncedDatabaseTablesResponse_SdkV2) SyncFieldsDuringRead(existingState ListSyncedDatabaseTablesResponse_SdkV2) {
-}
-
-func (c ListSyncedDatabaseTablesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
-	attrs["synced_tables"] = attrs["synced_tables"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSyncedDatabaseTablesResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListSyncedDatabaseTablesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"synced_tables": reflect.TypeOf(SyncedDatabaseTable_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSyncedDatabaseTablesResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListSyncedDatabaseTablesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"next_page_token": o.NextPageToken,
-			"synced_tables":   o.SyncedTables,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListSyncedDatabaseTablesResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"next_page_token": types.StringType,
-			"synced_tables": basetypes.ListType{
-				ElemType: SyncedDatabaseTable_SdkV2{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetSyncedTables returns the value of the SyncedTables field in ListSyncedDatabaseTablesResponse_SdkV2 as
-// a slice of SyncedDatabaseTable_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListSyncedDatabaseTablesResponse_SdkV2) GetSyncedTables(ctx context.Context) ([]SyncedDatabaseTable_SdkV2, bool) {
-	if o.SyncedTables.IsNull() || o.SyncedTables.IsUnknown() {
-		return nil, false
-	}
-	var v []SyncedDatabaseTable_SdkV2
-	d := o.SyncedTables.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetSyncedTables sets the value of the SyncedTables field in ListSyncedDatabaseTablesResponse_SdkV2.
-func (o *ListSyncedDatabaseTablesResponse_SdkV2) SetSyncedTables(ctx context.Context, v []SyncedDatabaseTable_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["synced_tables"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.SyncedTables = types.ListValueMust(t, vs)
-}
-
 // Custom fields that user can set for pipeline while creating
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec_SdkV2 struct {
-	// Budget policy of this pipeline.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// This field needs to be specified if the destination catalog is a managed
 	// postgres catalog.
 	//
@@ -2220,24 +1923,13 @@ type NewPipelineSpec_SdkV2 struct {
 	StorageSchema types.String `tfsdk:"storage_schema"`
 }
 
-func (newState *NewPipelineSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(plan NewPipelineSpec_SdkV2) {
-	if !plan.BudgetPolicyId.IsUnknown() && !plan.BudgetPolicyId.IsNull() {
-		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the plan.
-		newState.BudgetPolicyId = plan.BudgetPolicyId
-	}
+func (toState *NewPipelineSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NewPipelineSpec_SdkV2) {
 }
 
-func (newState *NewPipelineSpec_SdkV2) SyncFieldsDuringRead(existingState NewPipelineSpec_SdkV2) {
-	if !existingState.BudgetPolicyId.IsUnknown() && !existingState.BudgetPolicyId.IsNull() {
-		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the existing state.
-		newState.BudgetPolicyId = existingState.BudgetPolicyId
-	}
+func (toState *NewPipelineSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NewPipelineSpec_SdkV2) {
 }
 
 func (c NewPipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -2262,9 +1954,8 @@ func (o NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_policy_id": o.BudgetPolicyId,
-			"storage_catalog":  o.StorageCatalog,
-			"storage_schema":   o.StorageSchema,
+			"storage_catalog": o.StorageCatalog,
+			"storage_schema":  o.StorageSchema,
 		})
 }
 
@@ -2272,9 +1963,8 @@ func (o NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o NewPipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget_policy_id": types.StringType,
-			"storage_catalog":  types.StringType,
-			"storage_schema":   types.StringType,
+			"storage_catalog": types.StringType,
+			"storage_schema":  types.StringType,
 		},
 	}
 }
@@ -2285,10 +1975,10 @@ type RequestedClaims_SdkV2 struct {
 	Resources types.List `tfsdk:"resources"`
 }
 
-func (newState *RequestedClaims_SdkV2) SyncFieldsDuringCreateOrUpdate(plan RequestedClaims_SdkV2) {
+func (toState *RequestedClaims_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RequestedClaims_SdkV2) {
 }
 
-func (newState *RequestedClaims_SdkV2) SyncFieldsDuringRead(existingState RequestedClaims_SdkV2) {
+func (toState *RequestedClaims_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RequestedClaims_SdkV2) {
 }
 
 func (c RequestedClaims_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2367,10 +2057,10 @@ type RequestedResource_SdkV2 struct {
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
 }
 
-func (newState *RequestedResource_SdkV2) SyncFieldsDuringCreateOrUpdate(plan RequestedResource_SdkV2) {
+func (toState *RequestedResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RequestedResource_SdkV2) {
 }
 
-func (newState *RequestedResource_SdkV2) SyncFieldsDuringRead(existingState RequestedResource_SdkV2) {
+func (toState *RequestedResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RequestedResource_SdkV2) {
 }
 
 func (c RequestedResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2413,7 +2103,7 @@ func (o RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next field marker: 12
+// Next field marker: 14
 type SyncedDatabaseTable_SdkV2 struct {
 	// Synced Table data synchronization status
 	DataSynchronizationStatus types.List `tfsdk:"data_synchronization_status"`
@@ -2424,6 +2114,12 @@ type SyncedDatabaseTable_SdkV2 struct {
 	// the database instance name MUST match that of the registered catalog (or
 	// the request will be rejected).
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
+	// The name of the database instance that this table is registered to. This
+	// field is always returned, and for tables inside database catalogs is
+	// inferred database instance associated with the catalog.
+	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
+	// The name of the logical database that this table is registered to.
+	EffectiveLogicalDatabaseName types.String `tfsdk:"effective_logical_database_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//
 	// When creating a synced table in a registered Postgres catalog, the target
@@ -2441,8 +2137,6 @@ type SyncedDatabaseTable_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 
 	Spec types.List `tfsdk:"spec"`
-	// Data serving REST API URL for this table
-	TableServingUrl types.String `tfsdk:"table_serving_url"`
 	// The provisioning state of the synced table entity in Unity Catalog. This
 	// is distinct from the state of the data synchronization pipeline (i.e. the
 	// table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it
@@ -2450,21 +2144,74 @@ type SyncedDatabaseTable_SdkV2 struct {
 	UnityCatalogProvisioningState types.String `tfsdk:"unity_catalog_provisioning_state"`
 }
 
-func (newState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedDatabaseTable_SdkV2) {
+func (toState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedDatabaseTable_SdkV2) {
+	if !fromPlan.DataSynchronizationStatus.IsNull() && !fromPlan.DataSynchronizationStatus.IsUnknown() {
+		if toStateDataSynchronizationStatus, ok := toState.GetDataSynchronizationStatus(ctx); ok {
+			if fromPlanDataSynchronizationStatus, ok := fromPlan.GetDataSynchronizationStatus(ctx); ok {
+				toStateDataSynchronizationStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataSynchronizationStatus)
+				toState.SetDataSynchronizationStatus(ctx, toStateDataSynchronizationStatus)
+			}
+		}
+	}
+	if !fromPlan.DatabaseInstanceName.IsUnknown() && !fromPlan.DatabaseInstanceName.IsNull() {
+		// DatabaseInstanceName is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.DatabaseInstanceName = fromPlan.DatabaseInstanceName
+	}
+	if !fromPlan.LogicalDatabaseName.IsUnknown() && !fromPlan.LogicalDatabaseName.IsNull() {
+		// LogicalDatabaseName is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.LogicalDatabaseName = fromPlan.LogicalDatabaseName
+	}
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
-func (newState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringRead(existingState SyncedDatabaseTable_SdkV2) {
+func (toState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedDatabaseTable_SdkV2) {
+	if !fromState.DataSynchronizationStatus.IsNull() && !fromState.DataSynchronizationStatus.IsUnknown() {
+		if toStateDataSynchronizationStatus, ok := toState.GetDataSynchronizationStatus(ctx); ok {
+			if fromStateDataSynchronizationStatus, ok := fromState.GetDataSynchronizationStatus(ctx); ok {
+				toStateDataSynchronizationStatus.SyncFieldsDuringRead(ctx, fromStateDataSynchronizationStatus)
+				toState.SetDataSynchronizationStatus(ctx, toStateDataSynchronizationStatus)
+			}
+		}
+	}
+	if !fromState.DatabaseInstanceName.IsUnknown() && !fromState.DatabaseInstanceName.IsNull() {
+		// DatabaseInstanceName is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.DatabaseInstanceName = fromState.DatabaseInstanceName
+	}
+	if !fromState.LogicalDatabaseName.IsUnknown() && !fromState.LogicalDatabaseName.IsNull() {
+		// LogicalDatabaseName is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.LogicalDatabaseName = fromState.LogicalDatabaseName
+	}
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
 func (c SyncedDatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["data_synchronization_status"] = attrs["data_synchronization_status"].SetComputed()
 	attrs["data_synchronization_status"] = attrs["data_synchronization_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetComputed()
+	attrs["database_instance_name"] = attrs["database_instance_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["effective_database_instance_name"] = attrs["effective_database_instance_name"].SetComputed()
+	attrs["effective_logical_database_name"] = attrs["effective_logical_database_name"].SetComputed()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
+	attrs["logical_database_name"] = attrs["logical_database_name"].SetComputed()
+	attrs["logical_database_name"] = attrs["logical_database_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table_serving_url"] = attrs["table_serving_url"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
 	return attrs
@@ -2493,10 +2240,11 @@ func (o SyncedDatabaseTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"data_synchronization_status":      o.DataSynchronizationStatus,
 			"database_instance_name":           o.DatabaseInstanceName,
+			"effective_database_instance_name": o.EffectiveDatabaseInstanceName,
+			"effective_logical_database_name":  o.EffectiveLogicalDatabaseName,
 			"logical_database_name":            o.LogicalDatabaseName,
 			"name":                             o.Name,
 			"spec":                             o.Spec,
-			"table_serving_url":                o.TableServingUrl,
 			"unity_catalog_provisioning_state": o.UnityCatalogProvisioningState,
 		})
 }
@@ -2508,13 +2256,14 @@ func (o SyncedDatabaseTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_synchronization_status": basetypes.ListType{
 				ElemType: SyncedTableStatus_SdkV2{}.Type(ctx),
 			},
-			"database_instance_name": types.StringType,
-			"logical_database_name":  types.StringType,
-			"name":                   types.StringType,
+			"database_instance_name":           types.StringType,
+			"effective_database_instance_name": types.StringType,
+			"effective_logical_database_name":  types.StringType,
+			"logical_database_name":            types.StringType,
+			"name":                             types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: SyncedTableSpec_SdkV2{}.Type(ctx),
 			},
-			"table_serving_url":                types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},
 	}
@@ -2586,17 +2335,33 @@ type SyncedTableContinuousUpdateStatus_SdkV2 struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableContinuousUpdateStatus_SdkV2) {
+func (toState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableContinuousUpdateStatus_SdkV2) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringRead(existingState SyncedTableContinuousUpdateStatus_SdkV2) {
+func (toState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableContinuousUpdateStatus_SdkV2) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableContinuousUpdateStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetOptional()
+	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetComputed()
 	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2680,15 +2445,15 @@ type SyncedTableFailedStatus_SdkV2 struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableFailedStatus_SdkV2) {
+func (toState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableFailedStatus_SdkV2) {
 }
 
-func (newState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringRead(existingState SyncedTableFailedStatus_SdkV2) {
+func (toState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableFailedStatus_SdkV2) {
 }
 
 func (c SyncedTableFailedStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2744,19 +2509,19 @@ type SyncedTablePipelineProgress_SdkV2 struct {
 	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
 }
 
-func (newState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTablePipelineProgress_SdkV2) {
+func (toState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTablePipelineProgress_SdkV2) {
 }
 
-func (newState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringRead(existingState SyncedTablePipelineProgress_SdkV2) {
+func (toState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTablePipelineProgress_SdkV2) {
 }
 
 func (c SyncedTablePipelineProgress_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetOptional()
-	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetOptional()
-	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetOptional()
-	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetOptional()
-	attrs["synced_row_count"] = attrs["synced_row_count"].SetOptional()
-	attrs["total_row_count"] = attrs["total_row_count"].SetOptional()
+	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetComputed()
+	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetComputed()
+	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetComputed()
+	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetComputed()
+	attrs["synced_row_count"] = attrs["synced_row_count"].SetComputed()
+	attrs["total_row_count"] = attrs["total_row_count"].SetComputed()
 
 	return attrs
 }
@@ -2814,17 +2579,33 @@ type SyncedTablePosition_SdkV2 struct {
 	SyncStartTimestamp types.String `tfsdk:"sync_start_timestamp"`
 }
 
-func (newState *SyncedTablePosition_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTablePosition_SdkV2) {
+func (toState *SyncedTablePosition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTablePosition_SdkV2) {
+	if !fromPlan.DeltaTableSyncInfo.IsNull() && !fromPlan.DeltaTableSyncInfo.IsUnknown() {
+		if toStateDeltaTableSyncInfo, ok := toState.GetDeltaTableSyncInfo(ctx); ok {
+			if fromPlanDeltaTableSyncInfo, ok := fromPlan.GetDeltaTableSyncInfo(ctx); ok {
+				toStateDeltaTableSyncInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaTableSyncInfo)
+				toState.SetDeltaTableSyncInfo(ctx, toStateDeltaTableSyncInfo)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTablePosition_SdkV2) SyncFieldsDuringRead(existingState SyncedTablePosition_SdkV2) {
+func (toState *SyncedTablePosition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTablePosition_SdkV2) {
+	if !fromState.DeltaTableSyncInfo.IsNull() && !fromState.DeltaTableSyncInfo.IsUnknown() {
+		if toStateDeltaTableSyncInfo, ok := toState.GetDeltaTableSyncInfo(ctx); ok {
+			if fromStateDeltaTableSyncInfo, ok := fromState.GetDeltaTableSyncInfo(ctx); ok {
+				toStateDeltaTableSyncInfo.SyncFieldsDuringRead(ctx, fromStateDeltaTableSyncInfo)
+				toState.SetDeltaTableSyncInfo(ctx, toStateDeltaTableSyncInfo)
+			}
+		}
+	}
 }
 
 func (c SyncedTablePosition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].SetOptional()
+	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].SetComputed()
 	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["sync_end_timestamp"] = attrs["sync_end_timestamp"].SetOptional()
-	attrs["sync_start_timestamp"] = attrs["sync_start_timestamp"].SetOptional()
+	attrs["sync_end_timestamp"] = attrs["sync_end_timestamp"].SetComputed()
+	attrs["sync_start_timestamp"] = attrs["sync_start_timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2902,14 +2683,30 @@ type SyncedTableProvisioningStatus_SdkV2 struct {
 	InitialPipelineSyncProgress types.List `tfsdk:"initial_pipeline_sync_progress"`
 }
 
-func (newState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableProvisioningStatus_SdkV2) {
+func (toState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableProvisioningStatus_SdkV2) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringRead(existingState SyncedTableProvisioningStatus_SdkV2) {
+func (toState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableProvisioningStatus_SdkV2) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableProvisioningStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetOptional()
+	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetComputed()
 	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -3011,17 +2808,49 @@ type SyncedTableSpec_SdkV2 struct {
 	TimeseriesKey types.String `tfsdk:"timeseries_key"`
 }
 
-func (newState *SyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableSpec_SdkV2) {
-	if !plan.CreateDatabaseObjectsIfMissing.IsUnknown() && !plan.CreateDatabaseObjectsIfMissing.IsNull() {
+func (toState *SyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableSpec_SdkV2) {
+	if !fromPlan.CreateDatabaseObjectsIfMissing.IsUnknown() && !fromPlan.CreateDatabaseObjectsIfMissing.IsNull() {
 		// CreateDatabaseObjectsIfMissing is an input only field and not returned by the service, so we keep the value from the plan.
-		newState.CreateDatabaseObjectsIfMissing = plan.CreateDatabaseObjectsIfMissing
+		toState.CreateDatabaseObjectsIfMissing = fromPlan.CreateDatabaseObjectsIfMissing
+	}
+	if !fromPlan.ExistingPipelineId.IsUnknown() && !fromPlan.ExistingPipelineId.IsNull() {
+		// ExistingPipelineId is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.ExistingPipelineId = fromPlan.ExistingPipelineId
+	}
+	if !fromPlan.NewPipelineSpec.IsUnknown() && !fromPlan.NewPipelineSpec.IsNull() {
+		// NewPipelineSpec is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.NewPipelineSpec = fromPlan.NewPipelineSpec
+	}
+	if !fromPlan.NewPipelineSpec.IsNull() && !fromPlan.NewPipelineSpec.IsUnknown() {
+		if toStateNewPipelineSpec, ok := toState.GetNewPipelineSpec(ctx); ok {
+			if fromPlanNewPipelineSpec, ok := fromPlan.GetNewPipelineSpec(ctx); ok {
+				toStateNewPipelineSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewPipelineSpec)
+				toState.SetNewPipelineSpec(ctx, toStateNewPipelineSpec)
+			}
+		}
 	}
 }
 
-func (newState *SyncedTableSpec_SdkV2) SyncFieldsDuringRead(existingState SyncedTableSpec_SdkV2) {
-	if !existingState.CreateDatabaseObjectsIfMissing.IsUnknown() && !existingState.CreateDatabaseObjectsIfMissing.IsNull() {
+func (toState *SyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableSpec_SdkV2) {
+	if !fromState.CreateDatabaseObjectsIfMissing.IsUnknown() && !fromState.CreateDatabaseObjectsIfMissing.IsNull() {
 		// CreateDatabaseObjectsIfMissing is an input only field and not returned by the service, so we keep the value from the existing state.
-		newState.CreateDatabaseObjectsIfMissing = existingState.CreateDatabaseObjectsIfMissing
+		toState.CreateDatabaseObjectsIfMissing = fromState.CreateDatabaseObjectsIfMissing
+	}
+	if !fromState.ExistingPipelineId.IsUnknown() && !fromState.ExistingPipelineId.IsNull() {
+		// ExistingPipelineId is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.ExistingPipelineId = fromState.ExistingPipelineId
+	}
+	if !fromState.NewPipelineSpec.IsUnknown() && !fromState.NewPipelineSpec.IsNull() {
+		// NewPipelineSpec is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.NewPipelineSpec = fromState.NewPipelineSpec
+	}
+	if !fromState.NewPipelineSpec.IsNull() && !fromState.NewPipelineSpec.IsUnknown() {
+		if toStateNewPipelineSpec, ok := toState.GetNewPipelineSpec(ctx); ok {
+			if fromStateNewPipelineSpec, ok := fromState.GetNewPipelineSpec(ctx); ok {
+				toStateNewPipelineSpec.SyncFieldsDuringRead(ctx, fromStateNewPipelineSpec)
+				toState.SetNewPipelineSpec(ctx, toStateNewPipelineSpec)
+			}
+		}
 	}
 }
 
@@ -3030,7 +2859,11 @@ func (c SyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetComputed()
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetComputed()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetOptional()
+	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetComputed()
+	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["primary_key_columns"] = attrs["primary_key_columns"].SetOptional()
 	attrs["scheduling_policy"] = attrs["scheduling_policy"].SetOptional()
@@ -3175,22 +3008,102 @@ type SyncedTableStatus_SdkV2 struct {
 	TriggeredUpdateStatus types.List `tfsdk:"triggered_update_status"`
 }
 
-func (newState *SyncedTableStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableStatus_SdkV2) {
+func (toState *SyncedTableStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableStatus_SdkV2) {
+	if !fromPlan.ContinuousUpdateStatus.IsNull() && !fromPlan.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromPlanContinuousUpdateStatus, ok := fromPlan.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromPlan.FailedStatus.IsNull() && !fromPlan.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromPlanFailedStatus, ok := fromPlan.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromPlan.LastSync.IsNull() && !fromPlan.LastSync.IsUnknown() {
+		if toStateLastSync, ok := toState.GetLastSync(ctx); ok {
+			if fromPlanLastSync, ok := fromPlan.GetLastSync(ctx); ok {
+				toStateLastSync.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLastSync)
+				toState.SetLastSync(ctx, toStateLastSync)
+			}
+		}
+	}
+	if !fromPlan.ProvisioningStatus.IsNull() && !fromPlan.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromPlanProvisioningStatus, ok := fromPlan.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromPlan.TriggeredUpdateStatus.IsNull() && !fromPlan.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromPlanTriggeredUpdateStatus, ok := fromPlan.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableStatus_SdkV2) SyncFieldsDuringRead(existingState SyncedTableStatus_SdkV2) {
+func (toState *SyncedTableStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableStatus_SdkV2) {
+	if !fromState.ContinuousUpdateStatus.IsNull() && !fromState.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromStateContinuousUpdateStatus, ok := fromState.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringRead(ctx, fromStateContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromState.FailedStatus.IsNull() && !fromState.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromStateFailedStatus, ok := fromState.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringRead(ctx, fromStateFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromState.LastSync.IsNull() && !fromState.LastSync.IsUnknown() {
+		if toStateLastSync, ok := toState.GetLastSync(ctx); ok {
+			if fromStateLastSync, ok := fromState.GetLastSync(ctx); ok {
+				toStateLastSync.SyncFieldsDuringRead(ctx, fromStateLastSync)
+				toState.SetLastSync(ctx, toStateLastSync)
+			}
+		}
+	}
+	if !fromState.ProvisioningStatus.IsNull() && !fromState.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromStateProvisioningStatus, ok := fromState.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringRead(ctx, fromStateProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromState.TriggeredUpdateStatus.IsNull() && !fromState.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromStateTriggeredUpdateStatus, ok := fromState.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
 func (c SyncedTableStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous_update_status"] = attrs["continuous_update_status"].SetOptional()
 	attrs["continuous_update_status"] = attrs["continuous_update_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["detailed_state"] = attrs["detailed_state"].SetOptional()
+	attrs["detailed_state"] = attrs["detailed_state"].SetComputed()
 	attrs["failed_status"] = attrs["failed_status"].SetOptional()
 	attrs["failed_status"] = attrs["failed_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["last_sync"] = attrs["last_sync"].SetOptional()
+	attrs["last_sync"] = attrs["last_sync"].SetComputed()
 	attrs["last_sync"] = attrs["last_sync"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
 	attrs["provisioning_status"] = attrs["provisioning_status"].SetOptional()
 	attrs["provisioning_status"] = attrs["provisioning_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["triggered_update_status"] = attrs["triggered_update_status"].SetOptional()
@@ -3404,16 +3317,32 @@ type SyncedTableTriggeredUpdateStatus_SdkV2 struct {
 	TriggeredUpdateProgress types.List `tfsdk:"triggered_update_progress"`
 }
 
-func (newState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(plan SyncedTableTriggeredUpdateStatus_SdkV2) {
+func (toState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableTriggeredUpdateStatus_SdkV2) {
+	if !fromPlan.TriggeredUpdateProgress.IsNull() && !fromPlan.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromPlanTriggeredUpdateProgress, ok := fromPlan.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringRead(existingState SyncedTableTriggeredUpdateStatus_SdkV2) {
+func (toState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableTriggeredUpdateStatus_SdkV2) {
+	if !fromState.TriggeredUpdateProgress.IsNull() && !fromState.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromStateTriggeredUpdateProgress, ok := fromState.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableTriggeredUpdateStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
-	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
+	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].SetComputed()
 	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -3482,80 +3411,6 @@ func (o *SyncedTableTriggeredUpdateStatus_SdkV2) SetTriggeredUpdateProgress(ctx 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["triggered_update_progress"]
 	o.TriggeredUpdateProgress = types.ListValueMust(t, vs)
-}
-
-type UpdateDatabaseCatalogRequest_SdkV2 struct {
-	// Note that updating a database catalog is not yet supported.
-	DatabaseCatalog types.List `tfsdk:"database_catalog"`
-	// The name of the catalog in UC.
-	Name types.String `tfsdk:"-"`
-	// The list of fields to update. Setting this field is not yet supported.
-	UpdateMask types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDatabaseCatalogRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateDatabaseCatalogRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"database_catalog": reflect.TypeOf(DatabaseCatalog_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDatabaseCatalogRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpdateDatabaseCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"database_catalog": o.DatabaseCatalog,
-			"name":             o.Name,
-			"update_mask":      o.UpdateMask,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateDatabaseCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"database_catalog": basetypes.ListType{
-				ElemType: DatabaseCatalog_SdkV2{}.Type(ctx),
-			},
-			"name":        types.StringType,
-			"update_mask": types.StringType,
-		},
-	}
-}
-
-// GetDatabaseCatalog returns the value of the DatabaseCatalog field in UpdateDatabaseCatalogRequest_SdkV2 as
-// a DatabaseCatalog_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpdateDatabaseCatalogRequest_SdkV2) GetDatabaseCatalog(ctx context.Context) (DatabaseCatalog_SdkV2, bool) {
-	var e DatabaseCatalog_SdkV2
-	if o.DatabaseCatalog.IsNull() || o.DatabaseCatalog.IsUnknown() {
-		return e, false
-	}
-	var v []DatabaseCatalog_SdkV2
-	d := o.DatabaseCatalog.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetDatabaseCatalog sets the value of the DatabaseCatalog field in UpdateDatabaseCatalogRequest_SdkV2.
-func (o *UpdateDatabaseCatalogRequest_SdkV2) SetDatabaseCatalog(ctx context.Context, v DatabaseCatalog_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_catalog"]
-	o.DatabaseCatalog = types.ListValueMust(t, vs)
 }
 
 type UpdateDatabaseInstanceRequest_SdkV2 struct {
@@ -3630,78 +3485,4 @@ func (o *UpdateDatabaseInstanceRequest_SdkV2) SetDatabaseInstance(ctx context.Co
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database_instance"]
 	o.DatabaseInstance = types.ListValueMust(t, vs)
-}
-
-type UpdateSyncedDatabaseTableRequest_SdkV2 struct {
-	// Full three-part (catalog, schema, table) name of the table.
-	Name types.String `tfsdk:"-"`
-	// Note that updating a synced database table is not yet supported.
-	SyncedTable types.List `tfsdk:"synced_table"`
-	// The list of fields to update. Setting this field is not yet supported.
-	UpdateMask types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSyncedDatabaseTableRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateSyncedDatabaseTableRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"synced_table": reflect.TypeOf(SyncedDatabaseTable_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSyncedDatabaseTableRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpdateSyncedDatabaseTableRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"name":         o.Name,
-			"synced_table": o.SyncedTable,
-			"update_mask":  o.UpdateMask,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateSyncedDatabaseTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
-			"synced_table": basetypes.ListType{
-				ElemType: SyncedDatabaseTable_SdkV2{}.Type(ctx),
-			},
-			"update_mask": types.StringType,
-		},
-	}
-}
-
-// GetSyncedTable returns the value of the SyncedTable field in UpdateSyncedDatabaseTableRequest_SdkV2 as
-// a SyncedDatabaseTable_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpdateSyncedDatabaseTableRequest_SdkV2) GetSyncedTable(ctx context.Context) (SyncedDatabaseTable_SdkV2, bool) {
-	var e SyncedDatabaseTable_SdkV2
-	if o.SyncedTable.IsNull() || o.SyncedTable.IsUnknown() {
-		return e, false
-	}
-	var v []SyncedDatabaseTable_SdkV2
-	d := o.SyncedTable.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSyncedTable sets the value of the SyncedTable field in UpdateSyncedDatabaseTableRequest_SdkV2.
-func (o *UpdateSyncedDatabaseTableRequest_SdkV2) SetSyncedTable(ctx context.Context, v SyncedDatabaseTable_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["synced_table"]
-	o.SyncedTable = types.ListValueMust(t, vs)
 }

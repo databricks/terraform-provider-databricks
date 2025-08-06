@@ -63,10 +63,42 @@ type CleanRoom_SdkV2 struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
-func (newState *CleanRoom_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoom_SdkV2) {
+func (toState *CleanRoom_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoom_SdkV2) {
+	if !fromPlan.OutputCatalog.IsNull() && !fromPlan.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromPlanOutputCatalog, ok := fromPlan.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
+	if !fromPlan.RemoteDetailedInfo.IsNull() && !fromPlan.RemoteDetailedInfo.IsUnknown() {
+		if toStateRemoteDetailedInfo, ok := toState.GetRemoteDetailedInfo(ctx); ok {
+			if fromPlanRemoteDetailedInfo, ok := fromPlan.GetRemoteDetailedInfo(ctx); ok {
+				toStateRemoteDetailedInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRemoteDetailedInfo)
+				toState.SetRemoteDetailedInfo(ctx, toStateRemoteDetailedInfo)
+			}
+		}
+	}
 }
 
-func (newState *CleanRoom_SdkV2) SyncFieldsDuringRead(existingState CleanRoom_SdkV2) {
+func (toState *CleanRoom_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoom_SdkV2) {
+	if !fromState.OutputCatalog.IsNull() && !fromState.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromStateOutputCatalog, ok := fromState.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringRead(ctx, fromStateOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
+	if !fromState.RemoteDetailedInfo.IsNull() && !fromState.RemoteDetailedInfo.IsUnknown() {
+		if toStateRemoteDetailedInfo, ok := toState.GetRemoteDetailedInfo(ctx); ok {
+			if fromStateRemoteDetailedInfo, ok := fromState.GetRemoteDetailedInfo(ctx); ok {
+				toStateRemoteDetailedInfo.SyncFieldsDuringRead(ctx, fromStateRemoteDetailedInfo)
+				toState.SetRemoteDetailedInfo(ctx, toStateRemoteDetailedInfo)
+			}
+		}
+	}
 }
 
 func (c CleanRoom_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -242,10 +274,138 @@ type CleanRoomAsset_SdkV2 struct {
 	VolumeLocalDetails types.List `tfsdk:"volume_local_details"`
 }
 
-func (newState *CleanRoomAsset_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAsset_SdkV2) {
+func (toState *CleanRoomAsset_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAsset_SdkV2) {
+	if !fromPlan.ForeignTable.IsNull() && !fromPlan.ForeignTable.IsUnknown() {
+		if toStateForeignTable, ok := toState.GetForeignTable(ctx); ok {
+			if fromPlanForeignTable, ok := fromPlan.GetForeignTable(ctx); ok {
+				toStateForeignTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForeignTable)
+				toState.SetForeignTable(ctx, toStateForeignTable)
+			}
+		}
+	}
+	if !fromPlan.ForeignTableLocalDetails.IsNull() && !fromPlan.ForeignTableLocalDetails.IsUnknown() {
+		if toStateForeignTableLocalDetails, ok := toState.GetForeignTableLocalDetails(ctx); ok {
+			if fromPlanForeignTableLocalDetails, ok := fromPlan.GetForeignTableLocalDetails(ctx); ok {
+				toStateForeignTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForeignTableLocalDetails)
+				toState.SetForeignTableLocalDetails(ctx, toStateForeignTableLocalDetails)
+			}
+		}
+	}
+	if !fromPlan.Notebook.IsNull() && !fromPlan.Notebook.IsUnknown() {
+		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
+			if fromPlanNotebook, ok := fromPlan.GetNotebook(ctx); ok {
+				toStateNotebook.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebook)
+				toState.SetNotebook(ctx, toStateNotebook)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+	if !fromPlan.TableLocalDetails.IsNull() && !fromPlan.TableLocalDetails.IsUnknown() {
+		if toStateTableLocalDetails, ok := toState.GetTableLocalDetails(ctx); ok {
+			if fromPlanTableLocalDetails, ok := fromPlan.GetTableLocalDetails(ctx); ok {
+				toStateTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableLocalDetails)
+				toState.SetTableLocalDetails(ctx, toStateTableLocalDetails)
+			}
+		}
+	}
+	if !fromPlan.View.IsNull() && !fromPlan.View.IsUnknown() {
+		if toStateView, ok := toState.GetView(ctx); ok {
+			if fromPlanView, ok := fromPlan.GetView(ctx); ok {
+				toStateView.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanView)
+				toState.SetView(ctx, toStateView)
+			}
+		}
+	}
+	if !fromPlan.ViewLocalDetails.IsNull() && !fromPlan.ViewLocalDetails.IsUnknown() {
+		if toStateViewLocalDetails, ok := toState.GetViewLocalDetails(ctx); ok {
+			if fromPlanViewLocalDetails, ok := fromPlan.GetViewLocalDetails(ctx); ok {
+				toStateViewLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanViewLocalDetails)
+				toState.SetViewLocalDetails(ctx, toStateViewLocalDetails)
+			}
+		}
+	}
+	if !fromPlan.VolumeLocalDetails.IsNull() && !fromPlan.VolumeLocalDetails.IsUnknown() {
+		if toStateVolumeLocalDetails, ok := toState.GetVolumeLocalDetails(ctx); ok {
+			if fromPlanVolumeLocalDetails, ok := fromPlan.GetVolumeLocalDetails(ctx); ok {
+				toStateVolumeLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVolumeLocalDetails)
+				toState.SetVolumeLocalDetails(ctx, toStateVolumeLocalDetails)
+			}
+		}
+	}
 }
 
-func (newState *CleanRoomAsset_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAsset_SdkV2) {
+func (toState *CleanRoomAsset_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAsset_SdkV2) {
+	if !fromState.ForeignTable.IsNull() && !fromState.ForeignTable.IsUnknown() {
+		if toStateForeignTable, ok := toState.GetForeignTable(ctx); ok {
+			if fromStateForeignTable, ok := fromState.GetForeignTable(ctx); ok {
+				toStateForeignTable.SyncFieldsDuringRead(ctx, fromStateForeignTable)
+				toState.SetForeignTable(ctx, toStateForeignTable)
+			}
+		}
+	}
+	if !fromState.ForeignTableLocalDetails.IsNull() && !fromState.ForeignTableLocalDetails.IsUnknown() {
+		if toStateForeignTableLocalDetails, ok := toState.GetForeignTableLocalDetails(ctx); ok {
+			if fromStateForeignTableLocalDetails, ok := fromState.GetForeignTableLocalDetails(ctx); ok {
+				toStateForeignTableLocalDetails.SyncFieldsDuringRead(ctx, fromStateForeignTableLocalDetails)
+				toState.SetForeignTableLocalDetails(ctx, toStateForeignTableLocalDetails)
+			}
+		}
+	}
+	if !fromState.Notebook.IsNull() && !fromState.Notebook.IsUnknown() {
+		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
+			if fromStateNotebook, ok := fromState.GetNotebook(ctx); ok {
+				toStateNotebook.SyncFieldsDuringRead(ctx, fromStateNotebook)
+				toState.SetNotebook(ctx, toStateNotebook)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+	if !fromState.TableLocalDetails.IsNull() && !fromState.TableLocalDetails.IsUnknown() {
+		if toStateTableLocalDetails, ok := toState.GetTableLocalDetails(ctx); ok {
+			if fromStateTableLocalDetails, ok := fromState.GetTableLocalDetails(ctx); ok {
+				toStateTableLocalDetails.SyncFieldsDuringRead(ctx, fromStateTableLocalDetails)
+				toState.SetTableLocalDetails(ctx, toStateTableLocalDetails)
+			}
+		}
+	}
+	if !fromState.View.IsNull() && !fromState.View.IsUnknown() {
+		if toStateView, ok := toState.GetView(ctx); ok {
+			if fromStateView, ok := fromState.GetView(ctx); ok {
+				toStateView.SyncFieldsDuringRead(ctx, fromStateView)
+				toState.SetView(ctx, toStateView)
+			}
+		}
+	}
+	if !fromState.ViewLocalDetails.IsNull() && !fromState.ViewLocalDetails.IsUnknown() {
+		if toStateViewLocalDetails, ok := toState.GetViewLocalDetails(ctx); ok {
+			if fromStateViewLocalDetails, ok := fromState.GetViewLocalDetails(ctx); ok {
+				toStateViewLocalDetails.SyncFieldsDuringRead(ctx, fromStateViewLocalDetails)
+				toState.SetViewLocalDetails(ctx, toStateViewLocalDetails)
+			}
+		}
+	}
+	if !fromState.VolumeLocalDetails.IsNull() && !fromState.VolumeLocalDetails.IsUnknown() {
+		if toStateVolumeLocalDetails, ok := toState.GetVolumeLocalDetails(ctx); ok {
+			if fromStateVolumeLocalDetails, ok := fromState.GetVolumeLocalDetails(ctx); ok {
+				toStateVolumeLocalDetails.SyncFieldsDuringRead(ctx, fromStateVolumeLocalDetails)
+				toState.SetVolumeLocalDetails(ctx, toStateVolumeLocalDetails)
+			}
+		}
+	}
 }
 
 func (c CleanRoomAsset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -570,10 +730,10 @@ type CleanRoomAssetForeignTable_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable_SdkV2) {
+func (toState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetForeignTable_SdkV2) {
 }
 
-func (newState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetForeignTable_SdkV2) {
+func (toState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetForeignTable_SdkV2) {
 }
 
 func (c CleanRoomAssetForeignTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -649,10 +809,10 @@ type CleanRoomAssetForeignTableLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetForeignTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -706,10 +866,10 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
-func (newState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook_SdkV2) {
+func (toState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetNotebook_SdkV2) {
 }
 
-func (newState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetNotebook_SdkV2) {
+func (toState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetNotebook_SdkV2) {
 }
 
 func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -825,10 +985,10 @@ type CleanRoomAssetTable_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable_SdkV2) {
+func (toState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetTable_SdkV2) {
 }
 
-func (newState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetTable_SdkV2) {
+func (toState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetTable_SdkV2) {
 }
 
 func (c CleanRoomAssetTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -906,10 +1066,10 @@ type CleanRoomAssetTableLocalDetails_SdkV2 struct {
 	Partitions types.List `tfsdk:"partitions"`
 }
 
-func (newState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetTableLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetTableLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -987,10 +1147,10 @@ type CleanRoomAssetView_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *CleanRoomAssetView_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetView_SdkV2) {
+func (toState *CleanRoomAssetView_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetView_SdkV2) {
 }
 
-func (newState *CleanRoomAssetView_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetView_SdkV2) {
+func (toState *CleanRoomAssetView_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetView_SdkV2) {
 }
 
 func (c CleanRoomAssetView_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1066,10 +1226,10 @@ type CleanRoomAssetViewLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetViewLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1115,10 +1275,10 @@ type CleanRoomAssetVolumeLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails_SdkV2) {
+func (toState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetVolumeLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1174,10 +1334,10 @@ type CleanRoomAutoApprovalRule_SdkV2 struct {
 	RunnerCollaboratorAlias types.String `tfsdk:"runner_collaborator_alias"`
 }
 
-func (newState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomAutoApprovalRule_SdkV2) {
+func (toState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAutoApprovalRule_SdkV2) {
 }
 
-func (newState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringRead(existingState CleanRoomAutoApprovalRule_SdkV2) {
+func (toState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAutoApprovalRule_SdkV2) {
 }
 
 func (c CleanRoomAutoApprovalRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1268,17 +1428,17 @@ type CleanRoomCollaborator_SdkV2 struct {
 	OrganizationName types.String `tfsdk:"organization_name"`
 }
 
-func (newState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator_SdkV2) {
-	if !plan.InviteRecipientWorkspaceId.IsUnknown() && !plan.InviteRecipientWorkspaceId.IsNull() {
+func (toState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomCollaborator_SdkV2) {
+	if !fromPlan.InviteRecipientWorkspaceId.IsUnknown() && !fromPlan.InviteRecipientWorkspaceId.IsNull() {
 		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the plan.
-		newState.InviteRecipientWorkspaceId = plan.InviteRecipientWorkspaceId
+		toState.InviteRecipientWorkspaceId = fromPlan.InviteRecipientWorkspaceId
 	}
 }
 
-func (newState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringRead(existingState CleanRoomCollaborator_SdkV2) {
-	if !existingState.InviteRecipientWorkspaceId.IsUnknown() && !existingState.InviteRecipientWorkspaceId.IsNull() {
+func (toState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomCollaborator_SdkV2) {
+	if !fromState.InviteRecipientWorkspaceId.IsUnknown() && !fromState.InviteRecipientWorkspaceId.IsNull() {
 		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the existing state.
-		newState.InviteRecipientWorkspaceId = existingState.InviteRecipientWorkspaceId
+		toState.InviteRecipientWorkspaceId = fromState.InviteRecipientWorkspaceId
 	}
 }
 
@@ -1351,10 +1511,10 @@ type CleanRoomNotebookReview_SdkV2 struct {
 	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
 }
 
-func (newState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomNotebookReview_SdkV2) {
+func (toState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomNotebookReview_SdkV2) {
 }
 
-func (newState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringRead(existingState CleanRoomNotebookReview_SdkV2) {
+func (toState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomNotebookReview_SdkV2) {
 }
 
 func (c CleanRoomNotebookReview_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1434,10 +1594,42 @@ type CleanRoomNotebookTaskRun_SdkV2 struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (newState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun_SdkV2) {
+func (toState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomNotebookTaskRun_SdkV2) {
+	if !fromPlan.CollaboratorJobRunInfo.IsNull() && !fromPlan.CollaboratorJobRunInfo.IsUnknown() {
+		if toStateCollaboratorJobRunInfo, ok := toState.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromPlanCollaboratorJobRunInfo, ok := fromPlan.GetCollaboratorJobRunInfo(ctx); ok {
+				toStateCollaboratorJobRunInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCollaboratorJobRunInfo)
+				toState.SetCollaboratorJobRunInfo(ctx, toStateCollaboratorJobRunInfo)
+			}
+		}
+	}
+	if !fromPlan.NotebookJobRunState.IsNull() && !fromPlan.NotebookJobRunState.IsUnknown() {
+		if toStateNotebookJobRunState, ok := toState.GetNotebookJobRunState(ctx); ok {
+			if fromPlanNotebookJobRunState, ok := fromPlan.GetNotebookJobRunState(ctx); ok {
+				toStateNotebookJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookJobRunState)
+				toState.SetNotebookJobRunState(ctx, toStateNotebookJobRunState)
+			}
+		}
+	}
 }
 
-func (newState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringRead(existingState CleanRoomNotebookTaskRun_SdkV2) {
+func (toState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomNotebookTaskRun_SdkV2) {
+	if !fromState.CollaboratorJobRunInfo.IsNull() && !fromState.CollaboratorJobRunInfo.IsUnknown() {
+		if toStateCollaboratorJobRunInfo, ok := toState.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromStateCollaboratorJobRunInfo, ok := fromState.GetCollaboratorJobRunInfo(ctx); ok {
+				toStateCollaboratorJobRunInfo.SyncFieldsDuringRead(ctx, fromStateCollaboratorJobRunInfo)
+				toState.SetCollaboratorJobRunInfo(ctx, toStateCollaboratorJobRunInfo)
+			}
+		}
+	}
+	if !fromState.NotebookJobRunState.IsNull() && !fromState.NotebookJobRunState.IsUnknown() {
+		if toStateNotebookJobRunState, ok := toState.GetNotebookJobRunState(ctx); ok {
+			if fromStateNotebookJobRunState, ok := fromState.GetNotebookJobRunState(ctx); ok {
+				toStateNotebookJobRunState.SyncFieldsDuringRead(ctx, fromStateNotebookJobRunState)
+				toState.SetNotebookJobRunState(ctx, toStateNotebookJobRunState)
+			}
+		}
+	}
 }
 
 func (c CleanRoomNotebookTaskRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1572,10 +1764,10 @@ type CleanRoomOutputCatalog_SdkV2 struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog_SdkV2) {
+func (toState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomOutputCatalog_SdkV2) {
 }
 
-func (newState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringRead(existingState CleanRoomOutputCatalog_SdkV2) {
+func (toState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomOutputCatalog_SdkV2) {
 }
 
 func (c CleanRoomOutputCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1642,10 +1834,58 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail_SdkV2) {
+func (toState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomRemoteDetail_SdkV2) {
+	if !fromPlan.ComplianceSecurityProfile.IsNull() && !fromPlan.ComplianceSecurityProfile.IsUnknown() {
+		if toStateComplianceSecurityProfile, ok := toState.GetComplianceSecurityProfile(ctx); ok {
+			if fromPlanComplianceSecurityProfile, ok := fromPlan.GetComplianceSecurityProfile(ctx); ok {
+				toStateComplianceSecurityProfile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanComplianceSecurityProfile)
+				toState.SetComplianceSecurityProfile(ctx, toStateComplianceSecurityProfile)
+			}
+		}
+	}
+	if !fromPlan.Creator.IsNull() && !fromPlan.Creator.IsUnknown() {
+		if toStateCreator, ok := toState.GetCreator(ctx); ok {
+			if fromPlanCreator, ok := fromPlan.GetCreator(ctx); ok {
+				toStateCreator.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCreator)
+				toState.SetCreator(ctx, toStateCreator)
+			}
+		}
+	}
+	if !fromPlan.EgressNetworkPolicy.IsNull() && !fromPlan.EgressNetworkPolicy.IsUnknown() {
+		if toStateEgressNetworkPolicy, ok := toState.GetEgressNetworkPolicy(ctx); ok {
+			if fromPlanEgressNetworkPolicy, ok := fromPlan.GetEgressNetworkPolicy(ctx); ok {
+				toStateEgressNetworkPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEgressNetworkPolicy)
+				toState.SetEgressNetworkPolicy(ctx, toStateEgressNetworkPolicy)
+			}
+		}
+	}
 }
 
-func (newState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringRead(existingState CleanRoomRemoteDetail_SdkV2) {
+func (toState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomRemoteDetail_SdkV2) {
+	if !fromState.ComplianceSecurityProfile.IsNull() && !fromState.ComplianceSecurityProfile.IsUnknown() {
+		if toStateComplianceSecurityProfile, ok := toState.GetComplianceSecurityProfile(ctx); ok {
+			if fromStateComplianceSecurityProfile, ok := fromState.GetComplianceSecurityProfile(ctx); ok {
+				toStateComplianceSecurityProfile.SyncFieldsDuringRead(ctx, fromStateComplianceSecurityProfile)
+				toState.SetComplianceSecurityProfile(ctx, toStateComplianceSecurityProfile)
+			}
+		}
+	}
+	if !fromState.Creator.IsNull() && !fromState.Creator.IsUnknown() {
+		if toStateCreator, ok := toState.GetCreator(ctx); ok {
+			if fromStateCreator, ok := fromState.GetCreator(ctx); ok {
+				toStateCreator.SyncFieldsDuringRead(ctx, fromStateCreator)
+				toState.SetCreator(ctx, toStateCreator)
+			}
+		}
+	}
+	if !fromState.EgressNetworkPolicy.IsNull() && !fromState.EgressNetworkPolicy.IsUnknown() {
+		if toStateEgressNetworkPolicy, ok := toState.GetEgressNetworkPolicy(ctx); ok {
+			if fromStateEgressNetworkPolicy, ok := fromState.GetEgressNetworkPolicy(ctx); ok {
+				toStateEgressNetworkPolicy.SyncFieldsDuringRead(ctx, fromStateEgressNetworkPolicy)
+				toState.SetEgressNetworkPolicy(ctx, toStateEgressNetworkPolicy)
+			}
+		}
+	}
 }
 
 func (c CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1840,10 +2080,10 @@ type CollaboratorJobRunInfo_SdkV2 struct {
 	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id"`
 }
 
-func (newState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo_SdkV2) {
+func (toState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CollaboratorJobRunInfo_SdkV2) {
 }
 
-func (newState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringRead(existingState CollaboratorJobRunInfo_SdkV2) {
+func (toState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CollaboratorJobRunInfo_SdkV2) {
 }
 
 func (c CollaboratorJobRunInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1905,10 +2145,10 @@ type ComplianceSecurityProfile_SdkV2 struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile_SdkV2) {
+func (toState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComplianceSecurityProfile_SdkV2) {
 }
 
-func (newState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringRead(existingState ComplianceSecurityProfile_SdkV2) {
+func (toState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ComplianceSecurityProfile_SdkV2) {
 }
 
 func (c ComplianceSecurityProfile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2136,10 +2376,10 @@ type CreateCleanRoomAssetReviewResponse_SdkV2 struct {
 	NotebookReviews types.List `tfsdk:"notebook_reviews"`
 }
 
-func (newState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetReviewResponse_SdkV2) {
+func (toState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomAssetReviewResponse_SdkV2) {
 }
 
-func (newState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringRead(existingState CreateCleanRoomAssetReviewResponse_SdkV2) {
+func (toState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomAssetReviewResponse_SdkV2) {
 }
 
 func (c CreateCleanRoomAssetReviewResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2355,10 +2595,26 @@ type CreateCleanRoomOutputCatalogResponse_SdkV2 struct {
 	OutputCatalog types.List `tfsdk:"output_catalog"`
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse_SdkV2) {
+func (toState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomOutputCatalogResponse_SdkV2) {
+	if !fromPlan.OutputCatalog.IsNull() && !fromPlan.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromPlanOutputCatalog, ok := fromPlan.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse_SdkV2) {
+func (toState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomOutputCatalogResponse_SdkV2) {
+	if !fromState.OutputCatalog.IsNull() && !fromState.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromStateOutputCatalog, ok := fromState.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringRead(ctx, fromStateOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
 }
 
 func (c CreateCleanRoomOutputCatalogResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2544,10 +2800,10 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteCleanRoomAssetResponse_SdkV2 struct {
 }
 
-func (newState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetResponse_SdkV2) {
+func (toState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
-func (newState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringRead(existingState DeleteCleanRoomAssetResponse_SdkV2) {
+func (toState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
 func (c DeleteCleanRoomAssetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2883,10 +3139,10 @@ type ListCleanRoomAssetRevisionsResponse_SdkV2 struct {
 	Revisions types.List `tfsdk:"revisions"`
 }
 
-func (newState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetRevisionsResponse_SdkV2) {
+func (toState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetRevisionsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringRead(existingState ListCleanRoomAssetRevisionsResponse_SdkV2) {
+func (toState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetRevisionsResponse_SdkV2) {
 }
 
 func (c ListCleanRoomAssetRevisionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3008,10 +3264,10 @@ type ListCleanRoomAssetsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse_SdkV2) {
+func (toState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringRead(existingState ListCleanRoomAssetsResponse_SdkV2) {
+func (toState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetsResponse_SdkV2) {
 }
 
 func (c ListCleanRoomAssetsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3136,10 +3392,10 @@ type ListCleanRoomAutoApprovalRulesResponse_SdkV2 struct {
 	Rules types.List `tfsdk:"rules"`
 }
 
-func (newState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+func (toState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringRead(existingState ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+func (toState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
 }
 
 func (c ListCleanRoomAutoApprovalRulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3270,10 +3526,10 @@ type ListCleanRoomNotebookTaskRunsResponse_SdkV2 struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+func (toState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+func (toState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
 }
 
 func (c ListCleanRoomNotebookTaskRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3395,10 +3651,10 @@ type ListCleanRoomsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse_SdkV2) {
+func (toState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringRead(existingState ListCleanRoomsResponse_SdkV2) {
+func (toState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomsResponse_SdkV2) {
 }
 
 func (c ListCleanRoomsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3480,10 +3736,10 @@ type NotebookVersionReview_SdkV2 struct {
 	ReviewState types.String `tfsdk:"review_state"`
 }
 
-func (newState *NotebookVersionReview_SdkV2) SyncFieldsDuringCreateOrUpdate(plan NotebookVersionReview_SdkV2) {
+func (toState *NotebookVersionReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookVersionReview_SdkV2) {
 }
 
-func (newState *NotebookVersionReview_SdkV2) SyncFieldsDuringRead(existingState NotebookVersionReview_SdkV2) {
+func (toState *NotebookVersionReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NotebookVersionReview_SdkV2) {
 }
 
 func (c NotebookVersionReview_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

@@ -85,7 +85,7 @@ func (r *CleanRoomAutoApprovalRuleResource) update(ctx context.Context, plan cle
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -127,7 +127,8 @@ func (r *CleanRoomAutoApprovalRuleResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,13 +168,12 @@ func (r *CleanRoomAutoApprovalRuleResource) Read(ctx context.Context, req resour
 	}
 
 	var newState cleanrooms_tf.CleanRoomAutoApprovalRule
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

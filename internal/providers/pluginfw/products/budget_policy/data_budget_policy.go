@@ -83,7 +83,7 @@ func (r *BudgetPolicyDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	newState.SyncFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

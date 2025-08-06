@@ -85,7 +85,7 @@ func (r *CleanRoomResource) update(ctx context.Context, plan cleanrooms_tf.Clean
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -143,7 +143,8 @@ func (r *CleanRoomResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,13 +184,12 @@ func (r *CleanRoomResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var newState cleanrooms_tf.CleanRoom
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

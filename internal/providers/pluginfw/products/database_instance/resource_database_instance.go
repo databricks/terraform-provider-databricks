@@ -56,6 +56,9 @@ func (m DatabaseInstanceExtended) GetComplexFieldTypes(ctx context.Context) map[
 	return m.DatabaseInstance.GetComplexFieldTypes(ctx)
 }
 
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model with resource behavior fields.
+//
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceExtended
 // only implements ToObjectValue() and Type().
@@ -70,7 +73,8 @@ func (m DatabaseInstanceExtended) ToObjectValue(ctx context.Context) basetypes.O
 	)
 }
 
-// Type implements basetypes.ObjectValuable.
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and resource behavior fields.
 func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
@@ -79,13 +83,19 @@ func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{AttrTypes: attrTypes}
 }
 
-func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(plan DatabaseInstanceExtended) {
-	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(plan.DatabaseInstance)
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and resource behavior fields. This method is called
+// during create and update.
+func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstanceExtended) {
+	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseInstance)
 	m.PurgeOnDelete = plan.PurgeOnDelete
 }
 
-func (m *DatabaseInstanceExtended) SyncFieldsDuringRead(existingState DatabaseInstanceExtended) {
-	m.DatabaseInstance.SyncFieldsDuringRead(existingState.DatabaseInstance)
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and resource behavior fields. This method is called
+// during read.
+func (m *DatabaseInstanceExtended) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceExtended) {
+	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
 	m.PurgeOnDelete = existingState.PurgeOnDelete
 }
 
@@ -127,7 +137,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 	updateRequest := database.UpdateDatabaseInstanceRequest{
 		DatabaseInstance: database_instance,
 		Name:             plan.Name.ValueString(),
-		UpdateMask:       "budget_policy_id,capacity,enable_pg_native_login,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
+		UpdateMask:       "capacity,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
 	}
 
 	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
@@ -142,7 +152,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -200,7 +210,8 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -240,13 +251,12 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	var newState DatabaseInstanceExtended
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState.DatabaseInstance)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -22,126 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-type AccessRequestDestinations struct {
-	// Indicates whether any destinations are hidden from the caller due to a
-	// lack of permissions. This value is true if the caller does not have
-	// permission to see all destinations.
-	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
-	// The access request destinations for the securable.
-	Destinations types.List `tfsdk:"destinations"`
-	// The securable for which the access request destinations are being
-	// retrieved.
-	Securable types.Object `tfsdk:"securable"`
-}
-
-func (newState *AccessRequestDestinations) SyncFieldsDuringCreateOrUpdate(plan AccessRequestDestinations) {
-}
-
-func (newState *AccessRequestDestinations) SyncFieldsDuringRead(existingState AccessRequestDestinations) {
-}
-
-func (c AccessRequestDestinations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
-	attrs["destinations"] = attrs["destinations"].SetRequired()
-	attrs["securable"] = attrs["securable"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in AccessRequestDestinations.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a AccessRequestDestinations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"destinations": reflect.TypeOf(NotificationDestination{}),
-		"securable":    reflect.TypeOf(Securable{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinations
-// only implements ToObjectValue() and Type().
-func (o AccessRequestDestinations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"are_any_destinations_hidden": o.AreAnyDestinationsHidden,
-			"destinations":                o.Destinations,
-			"securable":                   o.Securable,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o AccessRequestDestinations) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"are_any_destinations_hidden": types.BoolType,
-			"destinations": basetypes.ListType{
-				ElemType: NotificationDestination{}.Type(ctx),
-			},
-			"securable": Securable{}.Type(ctx),
-		},
-	}
-}
-
-// GetDestinations returns the value of the Destinations field in AccessRequestDestinations as
-// a slice of NotificationDestination values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *AccessRequestDestinations) GetDestinations(ctx context.Context) ([]NotificationDestination, bool) {
-	if o.Destinations.IsNull() || o.Destinations.IsUnknown() {
-		return nil, false
-	}
-	var v []NotificationDestination
-	d := o.Destinations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetDestinations sets the value of the Destinations field in AccessRequestDestinations.
-func (o *AccessRequestDestinations) SetDestinations(ctx context.Context, v []NotificationDestination) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["destinations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Destinations = types.ListValueMust(t, vs)
-}
-
-// GetSecurable returns the value of the Securable field in AccessRequestDestinations as
-// a Securable value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *AccessRequestDestinations) GetSecurable(ctx context.Context) (Securable, bool) {
-	var e Securable
-	if o.Securable.IsNull() || o.Securable.IsUnknown() {
-		return e, false
-	}
-	var v []Securable
-	d := o.Securable.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSecurable sets the value of the Securable field in AccessRequestDestinations.
-func (o *AccessRequestDestinations) SetSecurable(ctx context.Context, v Securable) {
-	vs := v.ToObjectValue(ctx)
-	o.Securable = vs
-}
-
 type AccountsCreateMetastore struct {
 	MetastoreInfo types.Object `tfsdk:"metastore_info"`
 }
@@ -187,7 +67,7 @@ func (o *AccountsCreateMetastore) GetMetastoreInfo(ctx context.Context) (CreateM
 	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CreateMetastore
+	var v CreateMetastore
 	d := o.MetastoreInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -195,10 +75,7 @@ func (o *AccountsCreateMetastore) GetMetastoreInfo(ctx context.Context) (CreateM
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsCreateMetastore.
@@ -260,7 +137,7 @@ func (o *AccountsCreateMetastoreAssignment) GetMetastoreAssignment(ctx context.C
 	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
 		return e, false
 	}
-	var v []CreateMetastoreAssignment
+	var v CreateMetastoreAssignment
 	d := o.MetastoreAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -268,10 +145,7 @@ func (o *AccountsCreateMetastoreAssignment) GetMetastoreAssignment(ctx context.C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsCreateMetastoreAssignment.
@@ -329,7 +203,7 @@ func (o *AccountsCreateStorageCredential) GetCredentialInfo(ctx context.Context)
 	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CreateStorageCredential
+	var v CreateStorageCredential
 	d := o.CredentialInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -337,10 +211,7 @@ func (o *AccountsCreateStorageCredential) GetCredentialInfo(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCredentialInfo sets the value of the CredentialInfo field in AccountsCreateStorageCredential.
@@ -353,10 +224,26 @@ type AccountsMetastoreAssignment struct {
 	MetastoreAssignment types.Object `tfsdk:"metastore_assignment"`
 }
 
-func (newState *AccountsMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(plan AccountsMetastoreAssignment) {
+func (toState *AccountsMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccountsMetastoreAssignment) {
+	if !fromPlan.MetastoreAssignment.IsNull() && !fromPlan.MetastoreAssignment.IsUnknown() {
+		if toStateMetastoreAssignment, ok := toState.GetMetastoreAssignment(ctx); ok {
+			if fromPlanMetastoreAssignment, ok := fromPlan.GetMetastoreAssignment(ctx); ok {
+				toStateMetastoreAssignment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetastoreAssignment)
+				toState.SetMetastoreAssignment(ctx, toStateMetastoreAssignment)
+			}
+		}
+	}
 }
 
-func (newState *AccountsMetastoreAssignment) SyncFieldsDuringRead(existingState AccountsMetastoreAssignment) {
+func (toState *AccountsMetastoreAssignment) SyncFieldsDuringRead(ctx context.Context, fromState AccountsMetastoreAssignment) {
+	if !fromState.MetastoreAssignment.IsNull() && !fromState.MetastoreAssignment.IsUnknown() {
+		if toStateMetastoreAssignment, ok := toState.GetMetastoreAssignment(ctx); ok {
+			if fromStateMetastoreAssignment, ok := fromState.GetMetastoreAssignment(ctx); ok {
+				toStateMetastoreAssignment.SyncFieldsDuringRead(ctx, fromStateMetastoreAssignment)
+				toState.SetMetastoreAssignment(ctx, toStateMetastoreAssignment)
+			}
+		}
+	}
 }
 
 func (c AccountsMetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -406,7 +293,7 @@ func (o *AccountsMetastoreAssignment) GetMetastoreAssignment(ctx context.Context
 	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
 		return e, false
 	}
-	var v []MetastoreAssignment
+	var v MetastoreAssignment
 	d := o.MetastoreAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -414,10 +301,7 @@ func (o *AccountsMetastoreAssignment) GetMetastoreAssignment(ctx context.Context
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsMetastoreAssignment.
@@ -430,10 +314,26 @@ type AccountsMetastoreInfo struct {
 	MetastoreInfo types.Object `tfsdk:"metastore_info"`
 }
 
-func (newState *AccountsMetastoreInfo) SyncFieldsDuringCreateOrUpdate(plan AccountsMetastoreInfo) {
+func (toState *AccountsMetastoreInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccountsMetastoreInfo) {
+	if !fromPlan.MetastoreInfo.IsNull() && !fromPlan.MetastoreInfo.IsUnknown() {
+		if toStateMetastoreInfo, ok := toState.GetMetastoreInfo(ctx); ok {
+			if fromPlanMetastoreInfo, ok := fromPlan.GetMetastoreInfo(ctx); ok {
+				toStateMetastoreInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetastoreInfo)
+				toState.SetMetastoreInfo(ctx, toStateMetastoreInfo)
+			}
+		}
+	}
 }
 
-func (newState *AccountsMetastoreInfo) SyncFieldsDuringRead(existingState AccountsMetastoreInfo) {
+func (toState *AccountsMetastoreInfo) SyncFieldsDuringRead(ctx context.Context, fromState AccountsMetastoreInfo) {
+	if !fromState.MetastoreInfo.IsNull() && !fromState.MetastoreInfo.IsUnknown() {
+		if toStateMetastoreInfo, ok := toState.GetMetastoreInfo(ctx); ok {
+			if fromStateMetastoreInfo, ok := fromState.GetMetastoreInfo(ctx); ok {
+				toStateMetastoreInfo.SyncFieldsDuringRead(ctx, fromStateMetastoreInfo)
+				toState.SetMetastoreInfo(ctx, toStateMetastoreInfo)
+			}
+		}
+	}
 }
 
 func (c AccountsMetastoreInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -483,7 +383,7 @@ func (o *AccountsMetastoreInfo) GetMetastoreInfo(ctx context.Context) (Metastore
 	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
 		return e, false
 	}
-	var v []MetastoreInfo
+	var v MetastoreInfo
 	d := o.MetastoreInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -491,10 +391,7 @@ func (o *AccountsMetastoreInfo) GetMetastoreInfo(ctx context.Context) (Metastore
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsMetastoreInfo.
@@ -507,10 +404,26 @@ type AccountsStorageCredentialInfo struct {
 	CredentialInfo types.Object `tfsdk:"credential_info"`
 }
 
-func (newState *AccountsStorageCredentialInfo) SyncFieldsDuringCreateOrUpdate(plan AccountsStorageCredentialInfo) {
+func (toState *AccountsStorageCredentialInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccountsStorageCredentialInfo) {
+	if !fromPlan.CredentialInfo.IsNull() && !fromPlan.CredentialInfo.IsUnknown() {
+		if toStateCredentialInfo, ok := toState.GetCredentialInfo(ctx); ok {
+			if fromPlanCredentialInfo, ok := fromPlan.GetCredentialInfo(ctx); ok {
+				toStateCredentialInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCredentialInfo)
+				toState.SetCredentialInfo(ctx, toStateCredentialInfo)
+			}
+		}
+	}
 }
 
-func (newState *AccountsStorageCredentialInfo) SyncFieldsDuringRead(existingState AccountsStorageCredentialInfo) {
+func (toState *AccountsStorageCredentialInfo) SyncFieldsDuringRead(ctx context.Context, fromState AccountsStorageCredentialInfo) {
+	if !fromState.CredentialInfo.IsNull() && !fromState.CredentialInfo.IsUnknown() {
+		if toStateCredentialInfo, ok := toState.GetCredentialInfo(ctx); ok {
+			if fromStateCredentialInfo, ok := fromState.GetCredentialInfo(ctx); ok {
+				toStateCredentialInfo.SyncFieldsDuringRead(ctx, fromStateCredentialInfo)
+				toState.SetCredentialInfo(ctx, toStateCredentialInfo)
+			}
+		}
+	}
 }
 
 func (c AccountsStorageCredentialInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -560,7 +473,7 @@ func (o *AccountsStorageCredentialInfo) GetCredentialInfo(ctx context.Context) (
 	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
 		return e, false
 	}
-	var v []StorageCredentialInfo
+	var v StorageCredentialInfo
 	d := o.CredentialInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -568,10 +481,7 @@ func (o *AccountsStorageCredentialInfo) GetCredentialInfo(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCredentialInfo sets the value of the CredentialInfo field in AccountsStorageCredentialInfo.
@@ -630,7 +540,7 @@ func (o *AccountsUpdateMetastore) GetMetastoreInfo(ctx context.Context) (UpdateM
 	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateMetastore
+	var v UpdateMetastore
 	d := o.MetastoreInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -638,10 +548,7 @@ func (o *AccountsUpdateMetastore) GetMetastoreInfo(ctx context.Context) (UpdateM
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsUpdateMetastore.
@@ -703,7 +610,7 @@ func (o *AccountsUpdateMetastoreAssignment) GetMetastoreAssignment(ctx context.C
 	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateMetastoreAssignment
+	var v UpdateMetastoreAssignment
 	d := o.MetastoreAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -711,10 +618,7 @@ func (o *AccountsUpdateMetastoreAssignment) GetMetastoreAssignment(ctx context.C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsUpdateMetastoreAssignment.
@@ -776,7 +680,7 @@ func (o *AccountsUpdateStorageCredential) GetCredentialInfo(ctx context.Context)
 	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateStorageCredential
+	var v UpdateStorageCredential
 	d := o.CredentialInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -784,10 +688,7 @@ func (o *AccountsUpdateStorageCredential) GetCredentialInfo(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCredentialInfo sets the value of the CredentialInfo field in AccountsUpdateStorageCredential.
@@ -807,10 +708,10 @@ type ArtifactAllowlistInfo struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 }
 
-func (newState *ArtifactAllowlistInfo) SyncFieldsDuringCreateOrUpdate(plan ArtifactAllowlistInfo) {
+func (toState *ArtifactAllowlistInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ArtifactAllowlistInfo) {
 }
 
-func (newState *ArtifactAllowlistInfo) SyncFieldsDuringRead(existingState ArtifactAllowlistInfo) {
+func (toState *ArtifactAllowlistInfo) SyncFieldsDuringRead(ctx context.Context, fromState ArtifactAllowlistInfo) {
 }
 
 func (c ArtifactAllowlistInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -896,10 +797,10 @@ type ArtifactMatcher struct {
 	MatchType types.String `tfsdk:"match_type"`
 }
 
-func (newState *ArtifactMatcher) SyncFieldsDuringCreateOrUpdate(plan ArtifactMatcher) {
+func (toState *ArtifactMatcher) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ArtifactMatcher) {
 }
 
-func (newState *ArtifactMatcher) SyncFieldsDuringRead(existingState ArtifactMatcher) {
+func (toState *ArtifactMatcher) SyncFieldsDuringRead(ctx context.Context, fromState ArtifactMatcher) {
 }
 
 func (c ArtifactMatcher) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -945,10 +846,10 @@ func (o ArtifactMatcher) Type(ctx context.Context) attr.Type {
 type AssignResponse struct {
 }
 
-func (newState *AssignResponse) SyncFieldsDuringCreateOrUpdate(plan AssignResponse) {
+func (toState *AssignResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AssignResponse) {
 }
 
-func (newState *AssignResponse) SyncFieldsDuringRead(existingState AssignResponse) {
+func (toState *AssignResponse) SyncFieldsDuringRead(ctx context.Context, fromState AssignResponse) {
 }
 
 func (c AssignResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -998,10 +899,10 @@ type AwsCredentials struct {
 	SessionToken types.String `tfsdk:"session_token"`
 }
 
-func (newState *AwsCredentials) SyncFieldsDuringCreateOrUpdate(plan AwsCredentials) {
+func (toState *AwsCredentials) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsCredentials) {
 }
 
-func (newState *AwsCredentials) SyncFieldsDuringRead(existingState AwsCredentials) {
+func (toState *AwsCredentials) SyncFieldsDuringRead(ctx context.Context, fromState AwsCredentials) {
 }
 
 func (c AwsCredentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1063,10 +964,10 @@ type AwsIamRole struct {
 	UnityCatalogIamArn types.String `tfsdk:"unity_catalog_iam_arn"`
 }
 
-func (newState *AwsIamRole) SyncFieldsDuringCreateOrUpdate(plan AwsIamRole) {
+func (toState *AwsIamRole) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsIamRole) {
 }
 
-func (newState *AwsIamRole) SyncFieldsDuringRead(existingState AwsIamRole) {
+func (toState *AwsIamRole) SyncFieldsDuringRead(ctx context.Context, fromState AwsIamRole) {
 }
 
 func (c AwsIamRole) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1119,10 +1020,10 @@ type AwsIamRoleRequest struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (newState *AwsIamRoleRequest) SyncFieldsDuringCreateOrUpdate(plan AwsIamRoleRequest) {
+func (toState *AwsIamRoleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsIamRoleRequest) {
 }
 
-func (newState *AwsIamRoleRequest) SyncFieldsDuringRead(existingState AwsIamRoleRequest) {
+func (toState *AwsIamRoleRequest) SyncFieldsDuringRead(ctx context.Context, fromState AwsIamRoleRequest) {
 }
 
 func (c AwsIamRoleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1175,10 +1076,10 @@ type AwsIamRoleResponse struct {
 	UnityCatalogIamArn types.String `tfsdk:"unity_catalog_iam_arn"`
 }
 
-func (newState *AwsIamRoleResponse) SyncFieldsDuringCreateOrUpdate(plan AwsIamRoleResponse) {
+func (toState *AwsIamRoleResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsIamRoleResponse) {
 }
 
-func (newState *AwsIamRoleResponse) SyncFieldsDuringRead(existingState AwsIamRoleResponse) {
+func (toState *AwsIamRoleResponse) SyncFieldsDuringRead(ctx context.Context, fromState AwsIamRoleResponse) {
 }
 
 func (c AwsIamRoleResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1234,10 +1135,10 @@ type AwsSqsQueue struct {
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
 
-func (newState *AwsSqsQueue) SyncFieldsDuringCreateOrUpdate(plan AwsSqsQueue) {
+func (toState *AwsSqsQueue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsSqsQueue) {
 }
 
-func (newState *AwsSqsQueue) SyncFieldsDuringRead(existingState AwsSqsQueue) {
+func (toState *AwsSqsQueue) SyncFieldsDuringRead(ctx context.Context, fromState AwsSqsQueue) {
 }
 
 func (c AwsSqsQueue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1289,10 +1190,10 @@ type AzureActiveDirectoryToken struct {
 	AadToken types.String `tfsdk:"aad_token"`
 }
 
-func (newState *AzureActiveDirectoryToken) SyncFieldsDuringCreateOrUpdate(plan AzureActiveDirectoryToken) {
+func (toState *AzureActiveDirectoryToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureActiveDirectoryToken) {
 }
 
-func (newState *AzureActiveDirectoryToken) SyncFieldsDuringRead(existingState AzureActiveDirectoryToken) {
+func (toState *AzureActiveDirectoryToken) SyncFieldsDuringRead(ctx context.Context, fromState AzureActiveDirectoryToken) {
 }
 
 func (c AzureActiveDirectoryToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1349,10 +1250,10 @@ type AzureManagedIdentity struct {
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
-func (newState *AzureManagedIdentity) SyncFieldsDuringCreateOrUpdate(plan AzureManagedIdentity) {
+func (toState *AzureManagedIdentity) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureManagedIdentity) {
 }
 
-func (newState *AzureManagedIdentity) SyncFieldsDuringRead(existingState AzureManagedIdentity) {
+func (toState *AzureManagedIdentity) SyncFieldsDuringRead(ctx context.Context, fromState AzureManagedIdentity) {
 }
 
 func (c AzureManagedIdentity) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1413,10 +1314,10 @@ type AzureManagedIdentityRequest struct {
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
-func (newState *AzureManagedIdentityRequest) SyncFieldsDuringCreateOrUpdate(plan AzureManagedIdentityRequest) {
+func (toState *AzureManagedIdentityRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureManagedIdentityRequest) {
 }
 
-func (newState *AzureManagedIdentityRequest) SyncFieldsDuringRead(existingState AzureManagedIdentityRequest) {
+func (toState *AzureManagedIdentityRequest) SyncFieldsDuringRead(ctx context.Context, fromState AzureManagedIdentityRequest) {
 }
 
 func (c AzureManagedIdentityRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1476,10 +1377,10 @@ type AzureManagedIdentityResponse struct {
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id"`
 }
 
-func (newState *AzureManagedIdentityResponse) SyncFieldsDuringCreateOrUpdate(plan AzureManagedIdentityResponse) {
+func (toState *AzureManagedIdentityResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureManagedIdentityResponse) {
 }
 
-func (newState *AzureManagedIdentityResponse) SyncFieldsDuringRead(existingState AzureManagedIdentityResponse) {
+func (toState *AzureManagedIdentityResponse) SyncFieldsDuringRead(ctx context.Context, fromState AzureManagedIdentityResponse) {
 }
 
 func (c AzureManagedIdentityResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1542,10 +1443,10 @@ type AzureQueueStorage struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (newState *AzureQueueStorage) SyncFieldsDuringCreateOrUpdate(plan AzureQueueStorage) {
+func (toState *AzureQueueStorage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureQueueStorage) {
 }
 
-func (newState *AzureQueueStorage) SyncFieldsDuringRead(existingState AzureQueueStorage) {
+func (toState *AzureQueueStorage) SyncFieldsDuringRead(ctx context.Context, fromState AzureQueueStorage) {
 }
 
 func (c AzureQueueStorage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1607,10 +1508,10 @@ type AzureServicePrincipal struct {
 	DirectoryId types.String `tfsdk:"directory_id"`
 }
 
-func (newState *AzureServicePrincipal) SyncFieldsDuringCreateOrUpdate(plan AzureServicePrincipal) {
+func (toState *AzureServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureServicePrincipal) {
 }
 
-func (newState *AzureServicePrincipal) SyncFieldsDuringRead(existingState AzureServicePrincipal) {
+func (toState *AzureServicePrincipal) SyncFieldsDuringRead(ctx context.Context, fromState AzureServicePrincipal) {
 }
 
 func (c AzureServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1663,10 +1564,10 @@ type AzureUserDelegationSas struct {
 	SasToken types.String `tfsdk:"sas_token"`
 }
 
-func (newState *AzureUserDelegationSas) SyncFieldsDuringCreateOrUpdate(plan AzureUserDelegationSas) {
+func (toState *AzureUserDelegationSas) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureUserDelegationSas) {
 }
 
-func (newState *AzureUserDelegationSas) SyncFieldsDuringRead(existingState AzureUserDelegationSas) {
+func (toState *AzureUserDelegationSas) SyncFieldsDuringRead(ctx context.Context, fromState AzureUserDelegationSas) {
 }
 
 func (c AzureUserDelegationSas) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1704,155 +1605,6 @@ func (o AzureUserDelegationSas) Type(ctx context.Context) attr.Type {
 			"sas_token": types.StringType,
 		},
 	}
-}
-
-type BatchCreateAccessRequestsRequest struct {
-	// A list of individual access requests, where each request corresponds to a
-	// set of permissions being requested on a list of securables for a
-	// specified principal.
-	//
-	// At most 30 requests per API call.
-	Requests types.List `tfsdk:"requests"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateAccessRequestsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a BatchCreateAccessRequestsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"requests": reflect.TypeOf(CreateAccessRequest{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateAccessRequestsRequest
-// only implements ToObjectValue() and Type().
-func (o BatchCreateAccessRequestsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"requests": o.Requests,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o BatchCreateAccessRequestsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"requests": basetypes.ListType{
-				ElemType: CreateAccessRequest{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetRequests returns the value of the Requests field in BatchCreateAccessRequestsRequest as
-// a slice of CreateAccessRequest values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *BatchCreateAccessRequestsRequest) GetRequests(ctx context.Context) ([]CreateAccessRequest, bool) {
-	if o.Requests.IsNull() || o.Requests.IsUnknown() {
-		return nil, false
-	}
-	var v []CreateAccessRequest
-	d := o.Requests.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetRequests sets the value of the Requests field in BatchCreateAccessRequestsRequest.
-func (o *BatchCreateAccessRequestsRequest) SetRequests(ctx context.Context, v []CreateAccessRequest) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["requests"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Requests = types.ListValueMust(t, vs)
-}
-
-type BatchCreateAccessRequestsResponse struct {
-	// The access request destinations for each securable object the principal
-	// requested.
-	Responses types.List `tfsdk:"responses"`
-}
-
-func (newState *BatchCreateAccessRequestsResponse) SyncFieldsDuringCreateOrUpdate(plan BatchCreateAccessRequestsResponse) {
-}
-
-func (newState *BatchCreateAccessRequestsResponse) SyncFieldsDuringRead(existingState BatchCreateAccessRequestsResponse) {
-}
-
-func (c BatchCreateAccessRequestsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["responses"] = attrs["responses"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateAccessRequestsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a BatchCreateAccessRequestsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"responses": reflect.TypeOf(CreateAccessRequestResponse{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateAccessRequestsResponse
-// only implements ToObjectValue() and Type().
-func (o BatchCreateAccessRequestsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"responses": o.Responses,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o BatchCreateAccessRequestsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"responses": basetypes.ListType{
-				ElemType: CreateAccessRequestResponse{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetResponses returns the value of the Responses field in BatchCreateAccessRequestsResponse as
-// a slice of CreateAccessRequestResponse values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *BatchCreateAccessRequestsResponse) GetResponses(ctx context.Context) ([]CreateAccessRequestResponse, bool) {
-	if o.Responses.IsNull() || o.Responses.IsUnknown() {
-		return nil, false
-	}
-	var v []CreateAccessRequestResponse
-	d := o.Responses.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetResponses sets the value of the Responses field in BatchCreateAccessRequestsResponse.
-func (o *BatchCreateAccessRequestsResponse) SetResponses(ctx context.Context, v []CreateAccessRequestResponse) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["responses"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Responses = types.ListValueMust(t, vs)
 }
 
 type CancelRefreshRequest struct {
@@ -1898,10 +1650,10 @@ func (o CancelRefreshRequest) Type(ctx context.Context) attr.Type {
 type CancelRefreshResponse struct {
 }
 
-func (newState *CancelRefreshResponse) SyncFieldsDuringCreateOrUpdate(plan CancelRefreshResponse) {
+func (toState *CancelRefreshResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CancelRefreshResponse) {
 }
 
-func (newState *CancelRefreshResponse) SyncFieldsDuringRead(existingState CancelRefreshResponse) {
+func (toState *CancelRefreshResponse) SyncFieldsDuringRead(ctx context.Context, fromState CancelRefreshResponse) {
 }
 
 func (c CancelRefreshResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1992,10 +1744,42 @@ type CatalogInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *CatalogInfo) SyncFieldsDuringCreateOrUpdate(plan CatalogInfo) {
+func (toState *CatalogInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CatalogInfo) {
+	if !fromPlan.EffectivePredictiveOptimizationFlag.IsNull() && !fromPlan.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromPlanEffectivePredictiveOptimizationFlag, ok := fromPlan.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
+	if !fromPlan.ProvisioningInfo.IsNull() && !fromPlan.ProvisioningInfo.IsUnknown() {
+		if toStateProvisioningInfo, ok := toState.GetProvisioningInfo(ctx); ok {
+			if fromPlanProvisioningInfo, ok := fromPlan.GetProvisioningInfo(ctx); ok {
+				toStateProvisioningInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvisioningInfo)
+				toState.SetProvisioningInfo(ctx, toStateProvisioningInfo)
+			}
+		}
+	}
 }
 
-func (newState *CatalogInfo) SyncFieldsDuringRead(existingState CatalogInfo) {
+func (toState *CatalogInfo) SyncFieldsDuringRead(ctx context.Context, fromState CatalogInfo) {
+	if !fromState.EffectivePredictiveOptimizationFlag.IsNull() && !fromState.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromStateEffectivePredictiveOptimizationFlag, ok := fromState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringRead(ctx, fromStateEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
+	if !fromState.ProvisioningInfo.IsNull() && !fromState.ProvisioningInfo.IsUnknown() {
+		if toStateProvisioningInfo, ok := toState.GetProvisioningInfo(ctx); ok {
+			if fromStateProvisioningInfo, ok := fromState.GetProvisioningInfo(ctx); ok {
+				toStateProvisioningInfo.SyncFieldsDuringRead(ctx, fromStateProvisioningInfo)
+				toState.SetProvisioningInfo(ctx, toStateProvisioningInfo)
+			}
+		}
+	}
 }
 
 func (c CatalogInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2118,7 +1902,7 @@ func (o *CatalogInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context
 	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
 		return e, false
 	}
-	var v []EffectivePredictiveOptimizationFlag
+	var v EffectivePredictiveOptimizationFlag
 	d := o.EffectivePredictiveOptimizationFlag.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2126,10 +1910,7 @@ func (o *CatalogInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in CatalogInfo.
@@ -2198,7 +1979,7 @@ func (o *CatalogInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo
 	if o.ProvisioningInfo.IsNull() || o.ProvisioningInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ProvisioningInfo
+	var v ProvisioningInfo
 	d := o.ProvisioningInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2206,10 +1987,7 @@ func (o *CatalogInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvisioningInfo sets the value of the ProvisioningInfo field in CatalogInfo.
@@ -2229,10 +2007,10 @@ type CloudflareApiToken struct {
 	SecretAccessKey types.String `tfsdk:"secret_access_key"`
 }
 
-func (newState *CloudflareApiToken) SyncFieldsDuringCreateOrUpdate(plan CloudflareApiToken) {
+func (toState *CloudflareApiToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloudflareApiToken) {
 }
 
-func (newState *CloudflareApiToken) SyncFieldsDuringRead(existingState CloudflareApiToken) {
+func (toState *CloudflareApiToken) SyncFieldsDuringRead(ctx context.Context, fromState CloudflareApiToken) {
 }
 
 func (c CloudflareApiToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2305,10 +2083,26 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text"`
 }
 
-func (newState *ColumnInfo) SyncFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+func (toState *ColumnInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnInfo) {
+	if !fromPlan.Mask.IsNull() && !fromPlan.Mask.IsUnknown() {
+		if toStateMask, ok := toState.GetMask(ctx); ok {
+			if fromPlanMask, ok := fromPlan.GetMask(ctx); ok {
+				toStateMask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMask)
+				toState.SetMask(ctx, toStateMask)
+			}
+		}
+	}
 }
 
-func (newState *ColumnInfo) SyncFieldsDuringRead(existingState ColumnInfo) {
+func (toState *ColumnInfo) SyncFieldsDuringRead(ctx context.Context, fromState ColumnInfo) {
+	if !fromState.Mask.IsNull() && !fromState.Mask.IsUnknown() {
+		if toStateMask, ok := toState.GetMask(ctx); ok {
+			if fromStateMask, ok := fromState.GetMask(ctx); ok {
+				toStateMask.SyncFieldsDuringRead(ctx, fromStateMask)
+				toState.SetMask(ctx, toStateMask)
+			}
+		}
+	}
 }
 
 func (c ColumnInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2391,7 +2185,7 @@ func (o *ColumnInfo) GetMask(ctx context.Context) (ColumnMask, bool) {
 	if o.Mask.IsNull() || o.Mask.IsUnknown() {
 		return e, false
 	}
-	var v []ColumnMask
+	var v ColumnMask
 	d := o.Mask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2399,10 +2193,7 @@ func (o *ColumnInfo) GetMask(ctx context.Context) (ColumnMask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMask sets the value of the Mask field in ColumnInfo.
@@ -2421,10 +2212,10 @@ type ColumnMask struct {
 	UsingColumnNames types.List `tfsdk:"using_column_names"`
 }
 
-func (newState *ColumnMask) SyncFieldsDuringCreateOrUpdate(plan ColumnMask) {
+func (toState *ColumnMask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnMask) {
 }
 
-func (newState *ColumnMask) SyncFieldsDuringRead(existingState ColumnMask) {
+func (toState *ColumnMask) SyncFieldsDuringRead(ctx context.Context, fromState ColumnMask) {
 }
 
 func (c ColumnMask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2503,10 +2294,10 @@ type ColumnRelationship struct {
 	Target types.String `tfsdk:"target"`
 }
 
-func (newState *ColumnRelationship) SyncFieldsDuringCreateOrUpdate(plan ColumnRelationship) {
+func (toState *ColumnRelationship) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnRelationship) {
 }
 
-func (newState *ColumnRelationship) SyncFieldsDuringRead(existingState ColumnRelationship) {
+func (toState *ColumnRelationship) SyncFieldsDuringRead(ctx context.Context, fromState ColumnRelationship) {
 }
 
 func (c ColumnRelationship) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2556,10 +2347,10 @@ type ConnectionDependency struct {
 	ConnectionName types.String `tfsdk:"connection_name"`
 }
 
-func (newState *ConnectionDependency) SyncFieldsDuringCreateOrUpdate(plan ConnectionDependency) {
+func (toState *ConnectionDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ConnectionDependency) {
 }
 
-func (newState *ConnectionDependency) SyncFieldsDuringRead(existingState ConnectionDependency) {
+func (toState *ConnectionDependency) SyncFieldsDuringRead(ctx context.Context, fromState ConnectionDependency) {
 }
 
 func (c ConnectionDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2642,10 +2433,42 @@ type ConnectionInfo struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *ConnectionInfo) SyncFieldsDuringCreateOrUpdate(plan ConnectionInfo) {
+func (toState *ConnectionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ConnectionInfo) {
+	if !fromPlan.EnvironmentSettings.IsNull() && !fromPlan.EnvironmentSettings.IsUnknown() {
+		if toStateEnvironmentSettings, ok := toState.GetEnvironmentSettings(ctx); ok {
+			if fromPlanEnvironmentSettings, ok := fromPlan.GetEnvironmentSettings(ctx); ok {
+				toStateEnvironmentSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnvironmentSettings)
+				toState.SetEnvironmentSettings(ctx, toStateEnvironmentSettings)
+			}
+		}
+	}
+	if !fromPlan.ProvisioningInfo.IsNull() && !fromPlan.ProvisioningInfo.IsUnknown() {
+		if toStateProvisioningInfo, ok := toState.GetProvisioningInfo(ctx); ok {
+			if fromPlanProvisioningInfo, ok := fromPlan.GetProvisioningInfo(ctx); ok {
+				toStateProvisioningInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvisioningInfo)
+				toState.SetProvisioningInfo(ctx, toStateProvisioningInfo)
+			}
+		}
+	}
 }
 
-func (newState *ConnectionInfo) SyncFieldsDuringRead(existingState ConnectionInfo) {
+func (toState *ConnectionInfo) SyncFieldsDuringRead(ctx context.Context, fromState ConnectionInfo) {
+	if !fromState.EnvironmentSettings.IsNull() && !fromState.EnvironmentSettings.IsUnknown() {
+		if toStateEnvironmentSettings, ok := toState.GetEnvironmentSettings(ctx); ok {
+			if fromStateEnvironmentSettings, ok := fromState.GetEnvironmentSettings(ctx); ok {
+				toStateEnvironmentSettings.SyncFieldsDuringRead(ctx, fromStateEnvironmentSettings)
+				toState.SetEnvironmentSettings(ctx, toStateEnvironmentSettings)
+			}
+		}
+	}
+	if !fromState.ProvisioningInfo.IsNull() && !fromState.ProvisioningInfo.IsUnknown() {
+		if toStateProvisioningInfo, ok := toState.GetProvisioningInfo(ctx); ok {
+			if fromStateProvisioningInfo, ok := fromState.GetProvisioningInfo(ctx); ok {
+				toStateProvisioningInfo.SyncFieldsDuringRead(ctx, fromStateProvisioningInfo)
+				toState.SetProvisioningInfo(ctx, toStateProvisioningInfo)
+			}
+		}
+	}
 }
 
 func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2756,7 +2579,7 @@ func (o *ConnectionInfo) GetEnvironmentSettings(ctx context.Context) (Environmen
 	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
 		return e, false
 	}
-	var v []EnvironmentSettings
+	var v EnvironmentSettings
 	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2764,10 +2587,7 @@ func (o *ConnectionInfo) GetEnvironmentSettings(ctx context.Context) (Environmen
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEnvironmentSettings sets the value of the EnvironmentSettings field in ConnectionInfo.
@@ -2836,7 +2656,7 @@ func (o *ConnectionInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningI
 	if o.ProvisioningInfo.IsNull() || o.ProvisioningInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ProvisioningInfo
+	var v ProvisioningInfo
 	d := o.ProvisioningInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2844,10 +2664,7 @@ func (o *ConnectionInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningI
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvisioningInfo sets the value of the ProvisioningInfo field in ConnectionInfo.
@@ -2870,10 +2687,26 @@ type ContinuousUpdateStatus struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *ContinuousUpdateStatus) SyncFieldsDuringCreateOrUpdate(plan ContinuousUpdateStatus) {
+func (toState *ContinuousUpdateStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ContinuousUpdateStatus) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *ContinuousUpdateStatus) SyncFieldsDuringRead(existingState ContinuousUpdateStatus) {
+func (toState *ContinuousUpdateStatus) SyncFieldsDuringRead(ctx context.Context, fromState ContinuousUpdateStatus) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c ContinuousUpdateStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2929,7 +2762,7 @@ func (o *ContinuousUpdateStatus) GetInitialPipelineSyncProgress(ctx context.Cont
 	if o.InitialPipelineSyncProgress.IsNull() || o.InitialPipelineSyncProgress.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineProgress
+	var v PipelineProgress
 	d := o.InitialPipelineSyncProgress.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2937,255 +2770,13 @@ func (o *ContinuousUpdateStatus) GetInitialPipelineSyncProgress(ctx context.Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInitialPipelineSyncProgress sets the value of the InitialPipelineSyncProgress field in ContinuousUpdateStatus.
 func (o *ContinuousUpdateStatus) SetInitialPipelineSyncProgress(ctx context.Context, v PipelineProgress) {
 	vs := v.ToObjectValue(ctx)
 	o.InitialPipelineSyncProgress = vs
-}
-
-type CreateAccessRequest struct {
-	// Optional. The principal this request is for. Empty `behalf_of` defaults
-	// to the requester's identity.
-	//
-	// Principals must be unique across the API call.
-	BehalfOf types.Object `tfsdk:"behalf_of"`
-	// Optional. Comment associated with the request.
-	//
-	// At most 200 characters, can only contain lowercase/uppercase letters
-	// (a-z, A-Z), numbers (0-9), punctuation, and spaces.
-	Comment types.String `tfsdk:"comment"`
-	// List of securables and their corresponding requested UC privileges.
-	//
-	// At most 30 securables can be requested for a principal per batched call.
-	// Each securable can only be requested once per principal.
-	SecurablePermissions types.List `tfsdk:"securable_permissions"`
-}
-
-func (newState *CreateAccessRequest) SyncFieldsDuringCreateOrUpdate(plan CreateAccessRequest) {
-}
-
-func (newState *CreateAccessRequest) SyncFieldsDuringRead(existingState CreateAccessRequest) {
-}
-
-func (c CreateAccessRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["behalf_of"] = attrs["behalf_of"].SetOptional()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["securable_permissions"] = attrs["securable_permissions"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccessRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateAccessRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"behalf_of":             reflect.TypeOf(Principal{}),
-		"securable_permissions": reflect.TypeOf(SecurablePermissions{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccessRequest
-// only implements ToObjectValue() and Type().
-func (o CreateAccessRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"behalf_of":             o.BehalfOf,
-			"comment":               o.Comment,
-			"securable_permissions": o.SecurablePermissions,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateAccessRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"behalf_of": Principal{}.Type(ctx),
-			"comment":   types.StringType,
-			"securable_permissions": basetypes.ListType{
-				ElemType: SecurablePermissions{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetBehalfOf returns the value of the BehalfOf field in CreateAccessRequest as
-// a Principal value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccessRequest) GetBehalfOf(ctx context.Context) (Principal, bool) {
-	var e Principal
-	if o.BehalfOf.IsNull() || o.BehalfOf.IsUnknown() {
-		return e, false
-	}
-	var v []Principal
-	d := o.BehalfOf.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetBehalfOf sets the value of the BehalfOf field in CreateAccessRequest.
-func (o *CreateAccessRequest) SetBehalfOf(ctx context.Context, v Principal) {
-	vs := v.ToObjectValue(ctx)
-	o.BehalfOf = vs
-}
-
-// GetSecurablePermissions returns the value of the SecurablePermissions field in CreateAccessRequest as
-// a slice of SecurablePermissions values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccessRequest) GetSecurablePermissions(ctx context.Context) ([]SecurablePermissions, bool) {
-	if o.SecurablePermissions.IsNull() || o.SecurablePermissions.IsUnknown() {
-		return nil, false
-	}
-	var v []SecurablePermissions
-	d := o.SecurablePermissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetSecurablePermissions sets the value of the SecurablePermissions field in CreateAccessRequest.
-func (o *CreateAccessRequest) SetSecurablePermissions(ctx context.Context, v []SecurablePermissions) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["securable_permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.SecurablePermissions = types.ListValueMust(t, vs)
-}
-
-type CreateAccessRequestResponse struct {
-	// The principal the request was made on behalf of.
-	BehalfOf types.Object `tfsdk:"behalf_of"`
-	// The access request destinations for all the securables the principal
-	// requested.
-	RequestDestinations types.List `tfsdk:"request_destinations"`
-}
-
-func (newState *CreateAccessRequestResponse) SyncFieldsDuringCreateOrUpdate(plan CreateAccessRequestResponse) {
-}
-
-func (newState *CreateAccessRequestResponse) SyncFieldsDuringRead(existingState CreateAccessRequestResponse) {
-}
-
-func (c CreateAccessRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["behalf_of"] = attrs["behalf_of"].SetOptional()
-	attrs["request_destinations"] = attrs["request_destinations"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccessRequestResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateAccessRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"behalf_of":            reflect.TypeOf(Principal{}),
-		"request_destinations": reflect.TypeOf(AccessRequestDestinations{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccessRequestResponse
-// only implements ToObjectValue() and Type().
-func (o CreateAccessRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"behalf_of":            o.BehalfOf,
-			"request_destinations": o.RequestDestinations,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateAccessRequestResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"behalf_of": Principal{}.Type(ctx),
-			"request_destinations": basetypes.ListType{
-				ElemType: AccessRequestDestinations{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetBehalfOf returns the value of the BehalfOf field in CreateAccessRequestResponse as
-// a Principal value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccessRequestResponse) GetBehalfOf(ctx context.Context) (Principal, bool) {
-	var e Principal
-	if o.BehalfOf.IsNull() || o.BehalfOf.IsUnknown() {
-		return e, false
-	}
-	var v []Principal
-	d := o.BehalfOf.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetBehalfOf sets the value of the BehalfOf field in CreateAccessRequestResponse.
-func (o *CreateAccessRequestResponse) SetBehalfOf(ctx context.Context, v Principal) {
-	vs := v.ToObjectValue(ctx)
-	o.BehalfOf = vs
-}
-
-// GetRequestDestinations returns the value of the RequestDestinations field in CreateAccessRequestResponse as
-// a slice of AccessRequestDestinations values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccessRequestResponse) GetRequestDestinations(ctx context.Context) ([]AccessRequestDestinations, bool) {
-	if o.RequestDestinations.IsNull() || o.RequestDestinations.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessRequestDestinations
-	d := o.RequestDestinations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetRequestDestinations sets the value of the RequestDestinations field in CreateAccessRequestResponse.
-func (o *CreateAccessRequestResponse) SetRequestDestinations(ctx context.Context, v []AccessRequestDestinations) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["request_destinations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.RequestDestinations = types.ListValueMust(t, vs)
 }
 
 type CreateCatalog struct {
@@ -3391,7 +2982,7 @@ func (o *CreateConnection) GetEnvironmentSettings(ctx context.Context) (Environm
 	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
 		return e, false
 	}
-	var v []EnvironmentSettings
+	var v EnvironmentSettings
 	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3399,10 +2990,7 @@ func (o *CreateConnection) GetEnvironmentSettings(ctx context.Context) (Environm
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEnvironmentSettings sets the value of the EnvironmentSettings field in CreateConnection.
@@ -3547,7 +3135,7 @@ func (o *CreateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRole
+	var v AwsIamRole
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3555,10 +3143,7 @@ func (o *CreateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in CreateCredentialRequest.
@@ -3575,7 +3160,7 @@ func (o *CreateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentity
+	var v AzureManagedIdentity
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3583,10 +3168,7 @@ func (o *CreateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CreateCredentialRequest.
@@ -3603,7 +3185,7 @@ func (o *CreateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) 
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3611,10 +3193,7 @@ func (o *CreateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CreateCredentialRequest.
@@ -3631,7 +3210,7 @@ func (o *CreateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Con
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccount
+	var v DatabricksGcpServiceAccount
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3639,81 +3218,13 @@ func (o *CreateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CreateCredentialRequest.
 func (o *CreateCredentialRequest) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccount) {
 	vs := v.ToObjectValue(ctx)
 	o.DatabricksGcpServiceAccount = vs
-}
-
-type CreateEntityTagAssignmentRequest struct {
-	TagAssignment types.Object `tfsdk:"tag_assignment"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateEntityTagAssignmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateEntityTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tag_assignment": reflect.TypeOf(EntityTagAssignment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateEntityTagAssignmentRequest
-// only implements ToObjectValue() and Type().
-func (o CreateEntityTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"tag_assignment": o.TagAssignment,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateEntityTagAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"tag_assignment": EntityTagAssignment{}.Type(ctx),
-		},
-	}
-}
-
-// GetTagAssignment returns the value of the TagAssignment field in CreateEntityTagAssignmentRequest as
-// a EntityTagAssignment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CreateEntityTagAssignmentRequest) GetTagAssignment(ctx context.Context) (EntityTagAssignment, bool) {
-	var e EntityTagAssignment
-	if o.TagAssignment.IsNull() || o.TagAssignment.IsUnknown() {
-		return e, false
-	}
-	var v []EntityTagAssignment
-	d := o.TagAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTagAssignment sets the value of the TagAssignment field in CreateEntityTagAssignmentRequest.
-func (o *CreateEntityTagAssignmentRequest) SetTagAssignment(ctx context.Context, v EntityTagAssignment) {
-	vs := v.ToObjectValue(ctx)
-	o.TagAssignment = vs
 }
 
 type CreateExternalLineageRelationshipRequest struct {
@@ -3761,7 +3272,7 @@ func (o *CreateExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
 		return e, false
 	}
-	var v []CreateRequestExternalLineage
+	var v CreateRequestExternalLineage
 	d := o.ExternalLineageRelationship.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3769,10 +3280,7 @@ func (o *CreateExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in CreateExternalLineageRelationshipRequest.
@@ -3867,7 +3375,7 @@ func (o *CreateExternalLocation) GetEncryptionDetails(ctx context.Context) (Encr
 	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []EncryptionDetails
+	var v EncryptionDetails
 	d := o.EncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3875,10 +3383,7 @@ func (o *CreateExternalLocation) GetEncryptionDetails(ctx context.Context) (Encr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEncryptionDetails sets the value of the EncryptionDetails field in CreateExternalLocation.
@@ -3895,7 +3400,7 @@ func (o *CreateExternalLocation) GetFileEventQueue(ctx context.Context) (FileEve
 	if o.FileEventQueue.IsNull() || o.FileEventQueue.IsUnknown() {
 		return e, false
 	}
-	var v []FileEventQueue
+	var v FileEventQueue
 	d := o.FileEventQueue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3903,10 +3408,7 @@ func (o *CreateExternalLocation) GetFileEventQueue(ctx context.Context) (FileEve
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileEventQueue sets the value of the FileEventQueue field in CreateExternalLocation.
@@ -3960,7 +3462,7 @@ func (o *CreateExternalMetadataRequest) GetExternalMetadata(ctx context.Context)
 	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalMetadata
+	var v ExternalMetadata
 	d := o.ExternalMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3968,10 +3470,7 @@ func (o *CreateExternalMetadataRequest) GetExternalMetadata(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalMetadata sets the value of the ExternalMetadata field in CreateExternalMetadataRequest.
@@ -4029,10 +3528,58 @@ type CreateFunction struct {
 	SqlPath types.String `tfsdk:"sql_path"`
 }
 
-func (newState *CreateFunction) SyncFieldsDuringCreateOrUpdate(plan CreateFunction) {
+func (toState *CreateFunction) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateFunction) {
+	if !fromPlan.InputParams.IsNull() && !fromPlan.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromPlanInputParams, ok := fromPlan.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
+	if !fromPlan.ReturnParams.IsNull() && !fromPlan.ReturnParams.IsUnknown() {
+		if toStateReturnParams, ok := toState.GetReturnParams(ctx); ok {
+			if fromPlanReturnParams, ok := fromPlan.GetReturnParams(ctx); ok {
+				toStateReturnParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanReturnParams)
+				toState.SetReturnParams(ctx, toStateReturnParams)
+			}
+		}
+	}
+	if !fromPlan.RoutineDependencies.IsNull() && !fromPlan.RoutineDependencies.IsUnknown() {
+		if toStateRoutineDependencies, ok := toState.GetRoutineDependencies(ctx); ok {
+			if fromPlanRoutineDependencies, ok := fromPlan.GetRoutineDependencies(ctx); ok {
+				toStateRoutineDependencies.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRoutineDependencies)
+				toState.SetRoutineDependencies(ctx, toStateRoutineDependencies)
+			}
+		}
+	}
 }
 
-func (newState *CreateFunction) SyncFieldsDuringRead(existingState CreateFunction) {
+func (toState *CreateFunction) SyncFieldsDuringRead(ctx context.Context, fromState CreateFunction) {
+	if !fromState.InputParams.IsNull() && !fromState.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromStateInputParams, ok := fromState.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringRead(ctx, fromStateInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
+	if !fromState.ReturnParams.IsNull() && !fromState.ReturnParams.IsUnknown() {
+		if toStateReturnParams, ok := toState.GetReturnParams(ctx); ok {
+			if fromStateReturnParams, ok := fromState.GetReturnParams(ctx); ok {
+				toStateReturnParams.SyncFieldsDuringRead(ctx, fromStateReturnParams)
+				toState.SetReturnParams(ctx, toStateReturnParams)
+			}
+		}
+	}
+	if !fromState.RoutineDependencies.IsNull() && !fromState.RoutineDependencies.IsUnknown() {
+		if toStateRoutineDependencies, ok := toState.GetRoutineDependencies(ctx); ok {
+			if fromStateRoutineDependencies, ok := fromState.GetRoutineDependencies(ctx); ok {
+				toStateRoutineDependencies.SyncFieldsDuringRead(ctx, fromStateRoutineDependencies)
+				toState.SetRoutineDependencies(ctx, toStateRoutineDependencies)
+			}
+		}
+	}
 }
 
 func (c CreateFunction) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4144,7 +3691,7 @@ func (o *CreateFunction) GetInputParams(ctx context.Context) (FunctionParameterI
 	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionParameterInfos
+	var v FunctionParameterInfos
 	d := o.InputParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4152,10 +3699,7 @@ func (o *CreateFunction) GetInputParams(ctx context.Context) (FunctionParameterI
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInputParams sets the value of the InputParams field in CreateFunction.
@@ -4172,7 +3716,7 @@ func (o *CreateFunction) GetReturnParams(ctx context.Context) (FunctionParameter
 	if o.ReturnParams.IsNull() || o.ReturnParams.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionParameterInfos
+	var v FunctionParameterInfos
 	d := o.ReturnParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4180,10 +3724,7 @@ func (o *CreateFunction) GetReturnParams(ctx context.Context) (FunctionParameter
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetReturnParams sets the value of the ReturnParams field in CreateFunction.
@@ -4200,7 +3741,7 @@ func (o *CreateFunction) GetRoutineDependencies(ctx context.Context) (Dependency
 	if o.RoutineDependencies.IsNull() || o.RoutineDependencies.IsUnknown() {
 		return e, false
 	}
-	var v []DependencyList
+	var v DependencyList
 	d := o.RoutineDependencies.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4208,10 +3749,7 @@ func (o *CreateFunction) GetRoutineDependencies(ctx context.Context) (Dependency
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRoutineDependencies sets the value of the RoutineDependencies field in CreateFunction.
@@ -4266,7 +3804,7 @@ func (o *CreateFunctionRequest) GetFunctionInfo(ctx context.Context) (CreateFunc
 	if o.FunctionInfo.IsNull() || o.FunctionInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CreateFunction
+	var v CreateFunction
 	d := o.FunctionInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4274,10 +3812,7 @@ func (o *CreateFunctionRequest) GetFunctionInfo(ctx context.Context) (CreateFunc
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFunctionInfo sets the value of the FunctionInfo field in CreateFunctionRequest.
@@ -4295,10 +3830,10 @@ type CreateMetastore struct {
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
-func (newState *CreateMetastore) SyncFieldsDuringCreateOrUpdate(plan CreateMetastore) {
+func (toState *CreateMetastore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateMetastore) {
 }
 
-func (newState *CreateMetastore) SyncFieldsDuringRead(existingState CreateMetastore) {
+func (toState *CreateMetastore) SyncFieldsDuringRead(ctx context.Context, fromState CreateMetastore) {
 }
 
 func (c CreateMetastore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4355,10 +3890,10 @@ type CreateMetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-func (newState *CreateMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(plan CreateMetastoreAssignment) {
+func (toState *CreateMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateMetastoreAssignment) {
 }
 
-func (newState *CreateMetastoreAssignment) SyncFieldsDuringRead(existingState CreateMetastoreAssignment) {
+func (toState *CreateMetastoreAssignment) SyncFieldsDuringRead(ctx context.Context, fromState CreateMetastoreAssignment) {
 }
 
 func (c CreateMetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4557,7 +4092,7 @@ func (o *CreateMonitor) GetDataClassificationConfig(ctx context.Context) (Monito
 	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorDataClassificationConfig
+	var v MonitorDataClassificationConfig
 	d := o.DataClassificationConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4565,10 +4100,7 @@ func (o *CreateMonitor) GetDataClassificationConfig(ctx context.Context) (Monito
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDataClassificationConfig sets the value of the DataClassificationConfig field in CreateMonitor.
@@ -4585,7 +4117,7 @@ func (o *CreateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLo
 	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorInferenceLog
+	var v MonitorInferenceLog
 	d := o.InferenceLog.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4593,10 +4125,7 @@ func (o *CreateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInferenceLog sets the value of the InferenceLog field in CreateMonitor.
@@ -4613,7 +4142,7 @@ func (o *CreateMonitor) GetNotifications(ctx context.Context) (MonitorNotificati
 	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorNotifications
+	var v MonitorNotifications
 	d := o.Notifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4621,10 +4150,7 @@ func (o *CreateMonitor) GetNotifications(ctx context.Context) (MonitorNotificati
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotifications sets the value of the Notifications field in CreateMonitor.
@@ -4641,7 +4167,7 @@ func (o *CreateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, b
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorCronSchedule
+	var v MonitorCronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4649,10 +4175,7 @@ func (o *CreateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in CreateMonitor.
@@ -4695,7 +4218,7 @@ func (o *CreateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool)
 	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorSnapshot
+	var v MonitorSnapshot
 	d := o.Snapshot.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4703,10 +4226,7 @@ func (o *CreateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSnapshot sets the value of the Snapshot field in CreateMonitor.
@@ -4723,7 +4243,7 @@ func (o *CreateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, b
 	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorTimeSeries
+	var v MonitorTimeSeries
 	d := o.TimeSeries.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4731,10 +4251,7 @@ func (o *CreateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTimeSeries sets the value of the TimeSeries field in CreateMonitor.
@@ -4789,7 +4306,7 @@ func (o *CreateOnlineTableRequest) GetTable(ctx context.Context) (OnlineTable, b
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []OnlineTable
+	var v OnlineTable
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4797,10 +4314,7 @@ func (o *CreateOnlineTableRequest) GetTable(ctx context.Context) (OnlineTable, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in CreateOnlineTableRequest.
@@ -4875,10 +4389,42 @@ type CreateRequestExternalLineage struct {
 	Target types.Object `tfsdk:"target"`
 }
 
-func (newState *CreateRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(plan CreateRequestExternalLineage) {
+func (toState *CreateRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateRequestExternalLineage) {
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Target.IsNull() && !fromPlan.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromPlanTarget, ok := fromPlan.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
-func (newState *CreateRequestExternalLineage) SyncFieldsDuringRead(existingState CreateRequestExternalLineage) {
+func (toState *CreateRequestExternalLineage) SyncFieldsDuringRead(ctx context.Context, fromState CreateRequestExternalLineage) {
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Target.IsNull() && !fromState.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromStateTarget, ok := fromState.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringRead(ctx, fromStateTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
 func (c CreateRequestExternalLineage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4999,7 +4545,7 @@ func (o *CreateRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if o.Source.IsNull() || o.Source.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5007,10 +4553,7 @@ func (o *CreateRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSource sets the value of the Source field in CreateRequestExternalLineage.
@@ -5027,7 +4570,7 @@ func (o *CreateRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if o.Target.IsNull() || o.Target.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Target.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5035,10 +4578,7 @@ func (o *CreateRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTarget sets the value of the Target field in CreateRequestExternalLineage.
@@ -5183,10 +4723,90 @@ type CreateStorageCredential struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 }
 
-func (newState *CreateStorageCredential) SyncFieldsDuringCreateOrUpdate(plan CreateStorageCredential) {
+func (toState *CreateStorageCredential) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateStorageCredential) {
+	if !fromPlan.AwsIamRole.IsNull() && !fromPlan.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromPlanAwsIamRole, ok := fromPlan.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromPlan.AzureManagedIdentity.IsNull() && !fromPlan.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromPlanAzureManagedIdentity, ok := fromPlan.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromPlan.AzureServicePrincipal.IsNull() && !fromPlan.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromPlanAzureServicePrincipal, ok := fromPlan.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromPlan.CloudflareApiToken.IsNull() && !fromPlan.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromPlanCloudflareApiToken, ok := fromPlan.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromPlan.DatabricksGcpServiceAccount.IsNull() && !fromPlan.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromPlanDatabricksGcpServiceAccount, ok := fromPlan.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
-func (newState *CreateStorageCredential) SyncFieldsDuringRead(existingState CreateStorageCredential) {
+func (toState *CreateStorageCredential) SyncFieldsDuringRead(ctx context.Context, fromState CreateStorageCredential) {
+	if !fromState.AwsIamRole.IsNull() && !fromState.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromStateAwsIamRole, ok := fromState.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringRead(ctx, fromStateAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromState.AzureManagedIdentity.IsNull() && !fromState.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromStateAzureManagedIdentity, ok := fromState.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringRead(ctx, fromStateAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromState.AzureServicePrincipal.IsNull() && !fromState.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromStateAzureServicePrincipal, ok := fromState.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringRead(ctx, fromStateAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromState.CloudflareApiToken.IsNull() && !fromState.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromStateCloudflareApiToken, ok := fromState.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringRead(ctx, fromStateCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromState.DatabricksGcpServiceAccount.IsNull() && !fromState.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromStateDatabricksGcpServiceAccount, ok := fromState.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringRead(ctx, fromStateDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (c CreateStorageCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5264,7 +4884,7 @@ func (o *CreateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRoleRequest
+	var v AwsIamRoleRequest
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5272,10 +4892,7 @@ func (o *CreateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in CreateStorageCredential.
@@ -5292,7 +4909,7 @@ func (o *CreateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentityRequest
+	var v AzureManagedIdentityRequest
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5300,10 +4917,7 @@ func (o *CreateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CreateStorageCredential.
@@ -5320,7 +4934,7 @@ func (o *CreateStorageCredential) GetAzureServicePrincipal(ctx context.Context) 
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5328,10 +4942,7 @@ func (o *CreateStorageCredential) GetAzureServicePrincipal(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CreateStorageCredential.
@@ -5348,7 +4959,7 @@ func (o *CreateStorageCredential) GetCloudflareApiToken(ctx context.Context) (Cl
 	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
 		return e, false
 	}
-	var v []CloudflareApiToken
+	var v CloudflareApiToken
 	d := o.CloudflareApiToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5356,10 +4967,7 @@ func (o *CreateStorageCredential) GetCloudflareApiToken(ctx context.Context) (Cl
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCloudflareApiToken sets the value of the CloudflareApiToken field in CreateStorageCredential.
@@ -5376,7 +4984,7 @@ func (o *CreateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Con
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccountRequest
+	var v DatabricksGcpServiceAccountRequest
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5384,10 +4992,7 @@ func (o *CreateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CreateStorageCredential.
@@ -5445,7 +5050,7 @@ func (o *CreateTableConstraint) GetConstraint(ctx context.Context) (TableConstra
 	if o.Constraint.IsNull() || o.Constraint.IsUnknown() {
 		return e, false
 	}
-	var v []TableConstraint
+	var v TableConstraint
 	d := o.Constraint.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5453,10 +5058,7 @@ func (o *CreateTableConstraint) GetConstraint(ctx context.Context) (TableConstra
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConstraint sets the value of the Constraint field in CreateTableConstraint.
@@ -5528,10 +5130,10 @@ type CredentialDependency struct {
 	CredentialName types.String `tfsdk:"credential_name"`
 }
 
-func (newState *CredentialDependency) SyncFieldsDuringCreateOrUpdate(plan CredentialDependency) {
+func (toState *CredentialDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CredentialDependency) {
 }
 
-func (newState *CredentialDependency) SyncFieldsDuringRead(existingState CredentialDependency) {
+func (toState *CredentialDependency) SyncFieldsDuringRead(ctx context.Context, fromState CredentialDependency) {
 }
 
 func (c CredentialDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5614,10 +5216,74 @@ type CredentialInfo struct {
 	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage"`
 }
 
-func (newState *CredentialInfo) SyncFieldsDuringCreateOrUpdate(plan CredentialInfo) {
+func (toState *CredentialInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CredentialInfo) {
+	if !fromPlan.AwsIamRole.IsNull() && !fromPlan.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromPlanAwsIamRole, ok := fromPlan.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromPlan.AzureManagedIdentity.IsNull() && !fromPlan.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromPlanAzureManagedIdentity, ok := fromPlan.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromPlan.AzureServicePrincipal.IsNull() && !fromPlan.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromPlanAzureServicePrincipal, ok := fromPlan.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromPlan.DatabricksGcpServiceAccount.IsNull() && !fromPlan.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromPlanDatabricksGcpServiceAccount, ok := fromPlan.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
-func (newState *CredentialInfo) SyncFieldsDuringRead(existingState CredentialInfo) {
+func (toState *CredentialInfo) SyncFieldsDuringRead(ctx context.Context, fromState CredentialInfo) {
+	if !fromState.AwsIamRole.IsNull() && !fromState.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromStateAwsIamRole, ok := fromState.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringRead(ctx, fromStateAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromState.AzureManagedIdentity.IsNull() && !fromState.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromStateAzureManagedIdentity, ok := fromState.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringRead(ctx, fromStateAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromState.AzureServicePrincipal.IsNull() && !fromState.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromStateAzureServicePrincipal, ok := fromState.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringRead(ctx, fromStateAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromState.DatabricksGcpServiceAccount.IsNull() && !fromState.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromStateDatabricksGcpServiceAccount, ok := fromState.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringRead(ctx, fromStateDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (c CredentialInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5721,7 +5387,7 @@ func (o *CredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRole
+	var v AwsIamRole
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5729,10 +5395,7 @@ func (o *CredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in CredentialInfo.
@@ -5749,7 +5412,7 @@ func (o *CredentialInfo) GetAzureManagedIdentity(ctx context.Context) (AzureMana
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentity
+	var v AzureManagedIdentity
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5757,10 +5420,7 @@ func (o *CredentialInfo) GetAzureManagedIdentity(ctx context.Context) (AzureMana
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CredentialInfo.
@@ -5777,7 +5437,7 @@ func (o *CredentialInfo) GetAzureServicePrincipal(ctx context.Context) (AzureSer
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5785,10 +5445,7 @@ func (o *CredentialInfo) GetAzureServicePrincipal(ctx context.Context) (AzureSer
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CredentialInfo.
@@ -5805,7 +5462,7 @@ func (o *CredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Context) (Da
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccount
+	var v DatabricksGcpServiceAccount
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5813,10 +5470,7 @@ func (o *CredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Context) (Da
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CredentialInfo.
@@ -5832,10 +5486,10 @@ type CredentialValidationResult struct {
 	Result types.String `tfsdk:"result"`
 }
 
-func (newState *CredentialValidationResult) SyncFieldsDuringCreateOrUpdate(plan CredentialValidationResult) {
+func (toState *CredentialValidationResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CredentialValidationResult) {
 }
 
-func (newState *CredentialValidationResult) SyncFieldsDuringRead(existingState CredentialValidationResult) {
+func (toState *CredentialValidationResult) SyncFieldsDuringRead(ctx context.Context, fromState CredentialValidationResult) {
 }
 
 func (c CredentialValidationResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5919,10 +5573,10 @@ type DatabricksGcpServiceAccount struct {
 	PrivateKeyId types.String `tfsdk:"private_key_id"`
 }
 
-func (newState *DatabricksGcpServiceAccount) SyncFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccount) {
+func (toState *DatabricksGcpServiceAccount) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabricksGcpServiceAccount) {
 }
 
-func (newState *DatabricksGcpServiceAccount) SyncFieldsDuringRead(existingState DatabricksGcpServiceAccount) {
+func (toState *DatabricksGcpServiceAccount) SyncFieldsDuringRead(ctx context.Context, fromState DatabricksGcpServiceAccount) {
 }
 
 func (c DatabricksGcpServiceAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5973,10 +5627,10 @@ func (o DatabricksGcpServiceAccount) Type(ctx context.Context) attr.Type {
 type DatabricksGcpServiceAccountRequest struct {
 }
 
-func (newState *DatabricksGcpServiceAccountRequest) SyncFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccountRequest) {
+func (toState *DatabricksGcpServiceAccountRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabricksGcpServiceAccountRequest) {
 }
 
-func (newState *DatabricksGcpServiceAccountRequest) SyncFieldsDuringRead(existingState DatabricksGcpServiceAccountRequest) {
+func (toState *DatabricksGcpServiceAccountRequest) SyncFieldsDuringRead(ctx context.Context, fromState DatabricksGcpServiceAccountRequest) {
 }
 
 func (c DatabricksGcpServiceAccountRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6020,10 +5674,10 @@ type DatabricksGcpServiceAccountResponse struct {
 	Email types.String `tfsdk:"email"`
 }
 
-func (newState *DatabricksGcpServiceAccountResponse) SyncFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccountResponse) {
+func (toState *DatabricksGcpServiceAccountResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabricksGcpServiceAccountResponse) {
 }
 
-func (newState *DatabricksGcpServiceAccountResponse) SyncFieldsDuringRead(existingState DatabricksGcpServiceAccountResponse) {
+func (toState *DatabricksGcpServiceAccountResponse) SyncFieldsDuringRead(ctx context.Context, fromState DatabricksGcpServiceAccountResponse) {
 }
 
 func (c DatabricksGcpServiceAccountResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6382,10 +6036,10 @@ func (o DeleteCredentialRequest) Type(ctx context.Context) attr.Type {
 type DeleteCredentialResponse struct {
 }
 
-func (newState *DeleteCredentialResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteCredentialResponse) {
+func (toState *DeleteCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCredentialResponse) {
 }
 
-func (newState *DeleteCredentialResponse) SyncFieldsDuringRead(existingState DeleteCredentialResponse) {
+func (toState *DeleteCredentialResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCredentialResponse) {
 }
 
 func (c DeleteCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6417,52 +6071,6 @@ func (o DeleteCredentialResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o DeleteCredentialResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-type DeleteEntityTagAssignmentRequest struct {
-	// Required. The fully qualified structured name of the entity to which the
-	// tag is assigned. The entity name should follow the format of:
-	// entity_type/fully_qualified_entity_name. eg. catalogs/my_catalog,
-	// schemas/my_catalog.my_schema,
-	// columns/my_catalog.my_schema.my_table.my_column. When containing segments
-	// with special characters (e.g. '/'), the whole segment must be wrapped
-	// with backticks. For example, columns/catalog.schema.table.\`column/a\`
-	EntityName types.String `tfsdk:"-"`
-	// Required. The key of the tag to delete
-	TagKey types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEntityTagAssignmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteEntityTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteEntityTagAssignmentRequest
-// only implements ToObjectValue() and Type().
-func (o DeleteEntityTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"entity_name": o.EntityName,
-			"tag_key":     o.TagKey,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteEntityTagAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"entity_name": types.StringType,
-			"tag_key":     types.StringType,
-		},
 	}
 }
 
@@ -6511,7 +6119,7 @@ func (o *DeleteExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
 		return e, false
 	}
-	var v []DeleteRequestExternalLineage
+	var v DeleteRequestExternalLineage
 	d := o.ExternalLineageRelationship.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6519,10 +6127,7 @@ func (o *DeleteExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in DeleteExternalLineageRelationshipRequest.
@@ -6730,10 +6335,10 @@ func (o DeleteModelVersionRequest) Type(ctx context.Context) attr.Type {
 type DeleteMonitorResponse struct {
 }
 
-func (newState *DeleteMonitorResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteMonitorResponse) {
+func (toState *DeleteMonitorResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteMonitorResponse) {
 }
 
-func (newState *DeleteMonitorResponse) SyncFieldsDuringRead(existingState DeleteMonitorResponse) {
+func (toState *DeleteMonitorResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteMonitorResponse) {
 }
 
 func (c DeleteMonitorResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6886,10 +6491,42 @@ type DeleteRequestExternalLineage struct {
 	Target types.Object `tfsdk:"target"`
 }
 
-func (newState *DeleteRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(plan DeleteRequestExternalLineage) {
+func (toState *DeleteRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteRequestExternalLineage) {
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Target.IsNull() && !fromPlan.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromPlanTarget, ok := fromPlan.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
-func (newState *DeleteRequestExternalLineage) SyncFieldsDuringRead(existingState DeleteRequestExternalLineage) {
+func (toState *DeleteRequestExternalLineage) SyncFieldsDuringRead(ctx context.Context, fromState DeleteRequestExternalLineage) {
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Target.IsNull() && !fromState.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromStateTarget, ok := fromState.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringRead(ctx, fromStateTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
 func (c DeleteRequestExternalLineage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6946,7 +6583,7 @@ func (o *DeleteRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if o.Source.IsNull() || o.Source.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6954,10 +6591,7 @@ func (o *DeleteRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSource sets the value of the Source field in DeleteRequestExternalLineage.
@@ -6974,7 +6608,7 @@ func (o *DeleteRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if o.Target.IsNull() || o.Target.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Target.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6982,10 +6616,7 @@ func (o *DeleteRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTarget sets the value of the Target field in DeleteRequestExternalLineage.
@@ -6997,10 +6628,10 @@ func (o *DeleteRequestExternalLineage) SetTarget(ctx context.Context, v External
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse) {
 }
 
-func (newState *DeleteResponse) SyncFieldsDuringRead(existingState DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7166,10 +6797,10 @@ func (o DeleteTableConstraintRequest) Type(ctx context.Context) attr.Type {
 type DeleteTableConstraintResponse struct {
 }
 
-func (newState *DeleteTableConstraintResponse) SyncFieldsDuringCreateOrUpdate(plan DeleteTableConstraintResponse) {
+func (toState *DeleteTableConstraintResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteTableConstraintResponse) {
 }
 
-func (newState *DeleteTableConstraintResponse) SyncFieldsDuringRead(existingState DeleteTableConstraintResponse) {
+func (toState *DeleteTableConstraintResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteTableConstraintResponse) {
 }
 
 func (c DeleteTableConstraintResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7284,10 +6915,10 @@ type DeltaRuntimePropertiesKvPairs struct {
 	DeltaRuntimeProperties types.Map `tfsdk:"delta_runtime_properties"`
 }
 
-func (newState *DeltaRuntimePropertiesKvPairs) SyncFieldsDuringCreateOrUpdate(plan DeltaRuntimePropertiesKvPairs) {
+func (toState *DeltaRuntimePropertiesKvPairs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaRuntimePropertiesKvPairs) {
 }
 
-func (newState *DeltaRuntimePropertiesKvPairs) SyncFieldsDuringRead(existingState DeltaRuntimePropertiesKvPairs) {
+func (toState *DeltaRuntimePropertiesKvPairs) SyncFieldsDuringRead(ctx context.Context, fromState DeltaRuntimePropertiesKvPairs) {
 }
 
 func (c DeltaRuntimePropertiesKvPairs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7369,10 +7000,74 @@ type Dependency struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *Dependency) SyncFieldsDuringCreateOrUpdate(plan Dependency) {
+func (toState *Dependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dependency) {
+	if !fromPlan.Connection.IsNull() && !fromPlan.Connection.IsUnknown() {
+		if toStateConnection, ok := toState.GetConnection(ctx); ok {
+			if fromPlanConnection, ok := fromPlan.GetConnection(ctx); ok {
+				toStateConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConnection)
+				toState.SetConnection(ctx, toStateConnection)
+			}
+		}
+	}
+	if !fromPlan.Credential.IsNull() && !fromPlan.Credential.IsUnknown() {
+		if toStateCredential, ok := toState.GetCredential(ctx); ok {
+			if fromPlanCredential, ok := fromPlan.GetCredential(ctx); ok {
+				toStateCredential.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCredential)
+				toState.SetCredential(ctx, toStateCredential)
+			}
+		}
+	}
+	if !fromPlan.Function.IsNull() && !fromPlan.Function.IsUnknown() {
+		if toStateFunction, ok := toState.GetFunction(ctx); ok {
+			if fromPlanFunction, ok := fromPlan.GetFunction(ctx); ok {
+				toStateFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFunction)
+				toState.SetFunction(ctx, toStateFunction)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *Dependency) SyncFieldsDuringRead(existingState Dependency) {
+func (toState *Dependency) SyncFieldsDuringRead(ctx context.Context, fromState Dependency) {
+	if !fromState.Connection.IsNull() && !fromState.Connection.IsUnknown() {
+		if toStateConnection, ok := toState.GetConnection(ctx); ok {
+			if fromStateConnection, ok := fromState.GetConnection(ctx); ok {
+				toStateConnection.SyncFieldsDuringRead(ctx, fromStateConnection)
+				toState.SetConnection(ctx, toStateConnection)
+			}
+		}
+	}
+	if !fromState.Credential.IsNull() && !fromState.Credential.IsUnknown() {
+		if toStateCredential, ok := toState.GetCredential(ctx); ok {
+			if fromStateCredential, ok := fromState.GetCredential(ctx); ok {
+				toStateCredential.SyncFieldsDuringRead(ctx, fromStateCredential)
+				toState.SetCredential(ctx, toStateCredential)
+			}
+		}
+	}
+	if !fromState.Function.IsNull() && !fromState.Function.IsUnknown() {
+		if toStateFunction, ok := toState.GetFunction(ctx); ok {
+			if fromStateFunction, ok := fromState.GetFunction(ctx); ok {
+				toStateFunction.SyncFieldsDuringRead(ctx, fromStateFunction)
+				toState.SetFunction(ctx, toStateFunction)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c Dependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7434,7 +7129,7 @@ func (o *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, b
 	if o.Connection.IsNull() || o.Connection.IsUnknown() {
 		return e, false
 	}
-	var v []ConnectionDependency
+	var v ConnectionDependency
 	d := o.Connection.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7442,10 +7137,7 @@ func (o *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConnection sets the value of the Connection field in Dependency.
@@ -7462,7 +7154,7 @@ func (o *Dependency) GetCredential(ctx context.Context) (CredentialDependency, b
 	if o.Credential.IsNull() || o.Credential.IsUnknown() {
 		return e, false
 	}
-	var v []CredentialDependency
+	var v CredentialDependency
 	d := o.Credential.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7470,10 +7162,7 @@ func (o *Dependency) GetCredential(ctx context.Context) (CredentialDependency, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCredential sets the value of the Credential field in Dependency.
@@ -7490,7 +7179,7 @@ func (o *Dependency) GetFunction(ctx context.Context) (FunctionDependency, bool)
 	if o.Function.IsNull() || o.Function.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionDependency
+	var v FunctionDependency
 	d := o.Function.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7498,10 +7187,7 @@ func (o *Dependency) GetFunction(ctx context.Context) (FunctionDependency, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFunction sets the value of the Function field in Dependency.
@@ -7518,7 +7204,7 @@ func (o *Dependency) GetTable(ctx context.Context) (TableDependency, bool) {
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []TableDependency
+	var v TableDependency
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7526,10 +7212,7 @@ func (o *Dependency) GetTable(ctx context.Context) (TableDependency, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in Dependency.
@@ -7544,10 +7227,10 @@ type DependencyList struct {
 	Dependencies types.List `tfsdk:"dependencies"`
 }
 
-func (newState *DependencyList) SyncFieldsDuringCreateOrUpdate(plan DependencyList) {
+func (toState *DependencyList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DependencyList) {
 }
 
-func (newState *DependencyList) SyncFieldsDuringRead(existingState DependencyList) {
+func (toState *DependencyList) SyncFieldsDuringRead(ctx context.Context, fromState DependencyList) {
 }
 
 func (c DependencyList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7660,10 +7343,10 @@ func (o DisableRequest) Type(ctx context.Context) attr.Type {
 type DisableResponse struct {
 }
 
-func (newState *DisableResponse) SyncFieldsDuringCreateOrUpdate(plan DisableResponse) {
+func (toState *DisableResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DisableResponse) {
 }
 
-func (newState *DisableResponse) SyncFieldsDuringRead(existingState DisableResponse) {
+func (toState *DisableResponse) SyncFieldsDuringRead(ctx context.Context, fromState DisableResponse) {
 }
 
 func (c DisableResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7708,10 +7391,10 @@ type EffectivePermissionsList struct {
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
-func (newState *EffectivePermissionsList) SyncFieldsDuringCreateOrUpdate(plan EffectivePermissionsList) {
+func (toState *EffectivePermissionsList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EffectivePermissionsList) {
 }
 
-func (newState *EffectivePermissionsList) SyncFieldsDuringRead(existingState EffectivePermissionsList) {
+func (toState *EffectivePermissionsList) SyncFieldsDuringRead(ctx context.Context, fromState EffectivePermissionsList) {
 }
 
 func (c EffectivePermissionsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7796,10 +7479,10 @@ type EffectivePredictiveOptimizationFlag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *EffectivePredictiveOptimizationFlag) SyncFieldsDuringCreateOrUpdate(plan EffectivePredictiveOptimizationFlag) {
+func (toState *EffectivePredictiveOptimizationFlag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EffectivePredictiveOptimizationFlag) {
 }
 
-func (newState *EffectivePredictiveOptimizationFlag) SyncFieldsDuringRead(existingState EffectivePredictiveOptimizationFlag) {
+func (toState *EffectivePredictiveOptimizationFlag) SyncFieldsDuringRead(ctx context.Context, fromState EffectivePredictiveOptimizationFlag) {
 }
 
 func (c EffectivePredictiveOptimizationFlag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7858,10 +7541,10 @@ type EffectivePrivilege struct {
 	Privilege types.String `tfsdk:"privilege"`
 }
 
-func (newState *EffectivePrivilege) SyncFieldsDuringCreateOrUpdate(plan EffectivePrivilege) {
+func (toState *EffectivePrivilege) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EffectivePrivilege) {
 }
 
-func (newState *EffectivePrivilege) SyncFieldsDuringRead(existingState EffectivePrivilege) {
+func (toState *EffectivePrivilege) SyncFieldsDuringRead(ctx context.Context, fromState EffectivePrivilege) {
 }
 
 func (c EffectivePrivilege) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7915,10 +7598,10 @@ type EffectivePrivilegeAssignment struct {
 	Privileges types.List `tfsdk:"privileges"`
 }
 
-func (newState *EffectivePrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(plan EffectivePrivilegeAssignment) {
+func (toState *EffectivePrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EffectivePrivilegeAssignment) {
 }
 
-func (newState *EffectivePrivilegeAssignment) SyncFieldsDuringRead(existingState EffectivePrivilegeAssignment) {
+func (toState *EffectivePrivilegeAssignment) SyncFieldsDuringRead(ctx context.Context, fromState EffectivePrivilegeAssignment) {
 }
 
 func (c EffectivePrivilegeAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8038,10 +7721,10 @@ func (o EnableRequest) Type(ctx context.Context) attr.Type {
 type EnableResponse struct {
 }
 
-func (newState *EnableResponse) SyncFieldsDuringCreateOrUpdate(plan EnableResponse) {
+func (toState *EnableResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnableResponse) {
 }
 
-func (newState *EnableResponse) SyncFieldsDuringRead(existingState EnableResponse) {
+func (toState *EnableResponse) SyncFieldsDuringRead(ctx context.Context, fromState EnableResponse) {
 }
 
 func (c EnableResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8082,10 +7765,26 @@ type EncryptionDetails struct {
 	SseEncryptionDetails types.Object `tfsdk:"sse_encryption_details"`
 }
 
-func (newState *EncryptionDetails) SyncFieldsDuringCreateOrUpdate(plan EncryptionDetails) {
+func (toState *EncryptionDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EncryptionDetails) {
+	if !fromPlan.SseEncryptionDetails.IsNull() && !fromPlan.SseEncryptionDetails.IsUnknown() {
+		if toStateSseEncryptionDetails, ok := toState.GetSseEncryptionDetails(ctx); ok {
+			if fromPlanSseEncryptionDetails, ok := fromPlan.GetSseEncryptionDetails(ctx); ok {
+				toStateSseEncryptionDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSseEncryptionDetails)
+				toState.SetSseEncryptionDetails(ctx, toStateSseEncryptionDetails)
+			}
+		}
+	}
 }
 
-func (newState *EncryptionDetails) SyncFieldsDuringRead(existingState EncryptionDetails) {
+func (toState *EncryptionDetails) SyncFieldsDuringRead(ctx context.Context, fromState EncryptionDetails) {
+	if !fromState.SseEncryptionDetails.IsNull() && !fromState.SseEncryptionDetails.IsUnknown() {
+		if toStateSseEncryptionDetails, ok := toState.GetSseEncryptionDetails(ctx); ok {
+			if fromStateSseEncryptionDetails, ok := fromState.GetSseEncryptionDetails(ctx); ok {
+				toStateSseEncryptionDetails.SyncFieldsDuringRead(ctx, fromStateSseEncryptionDetails)
+				toState.SetSseEncryptionDetails(ctx, toStateSseEncryptionDetails)
+			}
+		}
+	}
 }
 
 func (c EncryptionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8135,7 +7834,7 @@ func (o *EncryptionDetails) GetSseEncryptionDetails(ctx context.Context) (SseEnc
 	if o.SseEncryptionDetails.IsNull() || o.SseEncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []SseEncryptionDetails
+	var v SseEncryptionDetails
 	d := o.SseEncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8143,10 +7842,7 @@ func (o *EncryptionDetails) GetSseEncryptionDetails(ctx context.Context) (SseEnc
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSseEncryptionDetails sets the value of the SseEncryptionDetails field in EncryptionDetails.
@@ -8155,81 +7851,16 @@ func (o *EncryptionDetails) SetSseEncryptionDetails(ctx context.Context, v SseEn
 	o.SseEncryptionDetails = vs
 }
 
-// Represents a tag assignment to an entity
-type EntityTagAssignment struct {
-	// Required. The fully qualified structured name of the entity to which the
-	// tag is assigned. The entity name should follow the format of:
-	// entity_type/fully_qualified_entity_name. eg. catalogs/my_catalog,
-	// schemas/my_catalog.my_schema,
-	// columns/my_catalog.my_schema.my_table.my_column. When containing segments
-	// with special characters (e.g. '/'), the whole segment must be wrapped
-	// with backticks. For example, columns/catalog.schema.table.\`column/a\`
-	EntityName types.String `tfsdk:"entity_name"`
-	// The key of the tag
-	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
-	TagValue types.String `tfsdk:"tag_value"`
-}
-
-func (newState *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(plan EntityTagAssignment) {
-}
-
-func (newState *EntityTagAssignment) SyncFieldsDuringRead(existingState EntityTagAssignment) {
-}
-
-func (c EntityTagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["entity_name"] = attrs["entity_name"].SetRequired()
-	attrs["tag_key"] = attrs["tag_key"].SetRequired()
-	attrs["tag_value"] = attrs["tag_value"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in EntityTagAssignment.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignment
-// only implements ToObjectValue() and Type().
-func (o EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"entity_name": o.EntityName,
-			"tag_key":     o.TagKey,
-			"tag_value":   o.TagValue,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o EntityTagAssignment) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"entity_name": types.StringType,
-			"tag_key":     types.StringType,
-			"tag_value":   types.StringType,
-		},
-	}
-}
-
 type EnvironmentSettings struct {
 	EnvironmentVersion types.String `tfsdk:"environment_version"`
 
 	JavaDependencies types.List `tfsdk:"java_dependencies"`
 }
 
-func (newState *EnvironmentSettings) SyncFieldsDuringCreateOrUpdate(plan EnvironmentSettings) {
+func (toState *EnvironmentSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnvironmentSettings) {
 }
 
-func (newState *EnvironmentSettings) SyncFieldsDuringRead(existingState EnvironmentSettings) {
+func (toState *EnvironmentSettings) SyncFieldsDuringRead(ctx context.Context, fromState EnvironmentSettings) {
 }
 
 func (c EnvironmentSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8342,10 +7973,10 @@ type ExternalLineageExternalMetadata struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ExternalLineageExternalMetadata) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageExternalMetadata) {
+func (toState *ExternalLineageExternalMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageExternalMetadata) {
 }
 
-func (newState *ExternalLineageExternalMetadata) SyncFieldsDuringRead(existingState ExternalLineageExternalMetadata) {
+func (toState *ExternalLineageExternalMetadata) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageExternalMetadata) {
 }
 
 func (c ExternalLineageExternalMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8397,10 +8028,10 @@ type ExternalLineageExternalMetadataInfo struct {
 	SystemType types.String `tfsdk:"system_type"`
 }
 
-func (newState *ExternalLineageExternalMetadataInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageExternalMetadataInfo) {
+func (toState *ExternalLineageExternalMetadataInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageExternalMetadataInfo) {
 }
 
-func (newState *ExternalLineageExternalMetadataInfo) SyncFieldsDuringRead(existingState ExternalLineageExternalMetadataInfo) {
+func (toState *ExternalLineageExternalMetadataInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageExternalMetadataInfo) {
 }
 
 func (c ExternalLineageExternalMetadataInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8463,10 +8094,10 @@ type ExternalLineageFileInfo struct {
 	StorageLocation types.String `tfsdk:"storage_location"`
 }
 
-func (newState *ExternalLineageFileInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageFileInfo) {
+func (toState *ExternalLineageFileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageFileInfo) {
 }
 
-func (newState *ExternalLineageFileInfo) SyncFieldsDuringRead(existingState ExternalLineageFileInfo) {
+func (toState *ExternalLineageFileInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageFileInfo) {
 }
 
 func (c ExternalLineageFileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8532,10 +8163,90 @@ type ExternalLineageInfo struct {
 	TableInfo types.Object `tfsdk:"table_info"`
 }
 
-func (newState *ExternalLineageInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageInfo) {
+func (toState *ExternalLineageInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageInfo) {
+	if !fromPlan.ExternalLineageInfo.IsNull() && !fromPlan.ExternalLineageInfo.IsUnknown() {
+		if toStateExternalLineageInfo, ok := toState.GetExternalLineageInfo(ctx); ok {
+			if fromPlanExternalLineageInfo, ok := fromPlan.GetExternalLineageInfo(ctx); ok {
+				toStateExternalLineageInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalLineageInfo)
+				toState.SetExternalLineageInfo(ctx, toStateExternalLineageInfo)
+			}
+		}
+	}
+	if !fromPlan.ExternalMetadataInfo.IsNull() && !fromPlan.ExternalMetadataInfo.IsUnknown() {
+		if toStateExternalMetadataInfo, ok := toState.GetExternalMetadataInfo(ctx); ok {
+			if fromPlanExternalMetadataInfo, ok := fromPlan.GetExternalMetadataInfo(ctx); ok {
+				toStateExternalMetadataInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalMetadataInfo)
+				toState.SetExternalMetadataInfo(ctx, toStateExternalMetadataInfo)
+			}
+		}
+	}
+	if !fromPlan.FileInfo.IsNull() && !fromPlan.FileInfo.IsUnknown() {
+		if toStateFileInfo, ok := toState.GetFileInfo(ctx); ok {
+			if fromPlanFileInfo, ok := fromPlan.GetFileInfo(ctx); ok {
+				toStateFileInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileInfo)
+				toState.SetFileInfo(ctx, toStateFileInfo)
+			}
+		}
+	}
+	if !fromPlan.ModelInfo.IsNull() && !fromPlan.ModelInfo.IsUnknown() {
+		if toStateModelInfo, ok := toState.GetModelInfo(ctx); ok {
+			if fromPlanModelInfo, ok := fromPlan.GetModelInfo(ctx); ok {
+				toStateModelInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanModelInfo)
+				toState.SetModelInfo(ctx, toStateModelInfo)
+			}
+		}
+	}
+	if !fromPlan.TableInfo.IsNull() && !fromPlan.TableInfo.IsUnknown() {
+		if toStateTableInfo, ok := toState.GetTableInfo(ctx); ok {
+			if fromPlanTableInfo, ok := fromPlan.GetTableInfo(ctx); ok {
+				toStateTableInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableInfo)
+				toState.SetTableInfo(ctx, toStateTableInfo)
+			}
+		}
+	}
 }
 
-func (newState *ExternalLineageInfo) SyncFieldsDuringRead(existingState ExternalLineageInfo) {
+func (toState *ExternalLineageInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageInfo) {
+	if !fromState.ExternalLineageInfo.IsNull() && !fromState.ExternalLineageInfo.IsUnknown() {
+		if toStateExternalLineageInfo, ok := toState.GetExternalLineageInfo(ctx); ok {
+			if fromStateExternalLineageInfo, ok := fromState.GetExternalLineageInfo(ctx); ok {
+				toStateExternalLineageInfo.SyncFieldsDuringRead(ctx, fromStateExternalLineageInfo)
+				toState.SetExternalLineageInfo(ctx, toStateExternalLineageInfo)
+			}
+		}
+	}
+	if !fromState.ExternalMetadataInfo.IsNull() && !fromState.ExternalMetadataInfo.IsUnknown() {
+		if toStateExternalMetadataInfo, ok := toState.GetExternalMetadataInfo(ctx); ok {
+			if fromStateExternalMetadataInfo, ok := fromState.GetExternalMetadataInfo(ctx); ok {
+				toStateExternalMetadataInfo.SyncFieldsDuringRead(ctx, fromStateExternalMetadataInfo)
+				toState.SetExternalMetadataInfo(ctx, toStateExternalMetadataInfo)
+			}
+		}
+	}
+	if !fromState.FileInfo.IsNull() && !fromState.FileInfo.IsUnknown() {
+		if toStateFileInfo, ok := toState.GetFileInfo(ctx); ok {
+			if fromStateFileInfo, ok := fromState.GetFileInfo(ctx); ok {
+				toStateFileInfo.SyncFieldsDuringRead(ctx, fromStateFileInfo)
+				toState.SetFileInfo(ctx, toStateFileInfo)
+			}
+		}
+	}
+	if !fromState.ModelInfo.IsNull() && !fromState.ModelInfo.IsUnknown() {
+		if toStateModelInfo, ok := toState.GetModelInfo(ctx); ok {
+			if fromStateModelInfo, ok := fromState.GetModelInfo(ctx); ok {
+				toStateModelInfo.SyncFieldsDuringRead(ctx, fromStateModelInfo)
+				toState.SetModelInfo(ctx, toStateModelInfo)
+			}
+		}
+	}
+	if !fromState.TableInfo.IsNull() && !fromState.TableInfo.IsUnknown() {
+		if toStateTableInfo, ok := toState.GetTableInfo(ctx); ok {
+			if fromStateTableInfo, ok := fromState.GetTableInfo(ctx); ok {
+				toStateTableInfo.SyncFieldsDuringRead(ctx, fromStateTableInfo)
+				toState.SetTableInfo(ctx, toStateTableInfo)
+			}
+		}
+	}
 }
 
 func (c ExternalLineageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8601,7 +8312,7 @@ func (o *ExternalLineageInfo) GetExternalLineageInfo(ctx context.Context) (Exter
 	if o.ExternalLineageInfo.IsNull() || o.ExternalLineageInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageRelationshipInfo
+	var v ExternalLineageRelationshipInfo
 	d := o.ExternalLineageInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8609,10 +8320,7 @@ func (o *ExternalLineageInfo) GetExternalLineageInfo(ctx context.Context) (Exter
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalLineageInfo sets the value of the ExternalLineageInfo field in ExternalLineageInfo.
@@ -8629,7 +8337,7 @@ func (o *ExternalLineageInfo) GetExternalMetadataInfo(ctx context.Context) (Exte
 	if o.ExternalMetadataInfo.IsNull() || o.ExternalMetadataInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageExternalMetadataInfo
+	var v ExternalLineageExternalMetadataInfo
 	d := o.ExternalMetadataInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8637,10 +8345,7 @@ func (o *ExternalLineageInfo) GetExternalMetadataInfo(ctx context.Context) (Exte
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalMetadataInfo sets the value of the ExternalMetadataInfo field in ExternalLineageInfo.
@@ -8657,7 +8362,7 @@ func (o *ExternalLineageInfo) GetFileInfo(ctx context.Context) (ExternalLineageF
 	if o.FileInfo.IsNull() || o.FileInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageFileInfo
+	var v ExternalLineageFileInfo
 	d := o.FileInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8665,10 +8370,7 @@ func (o *ExternalLineageInfo) GetFileInfo(ctx context.Context) (ExternalLineageF
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileInfo sets the value of the FileInfo field in ExternalLineageInfo.
@@ -8685,7 +8387,7 @@ func (o *ExternalLineageInfo) GetModelInfo(ctx context.Context) (ExternalLineage
 	if o.ModelInfo.IsNull() || o.ModelInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageModelVersionInfo
+	var v ExternalLineageModelVersionInfo
 	d := o.ModelInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8693,10 +8395,7 @@ func (o *ExternalLineageInfo) GetModelInfo(ctx context.Context) (ExternalLineage
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetModelInfo sets the value of the ModelInfo field in ExternalLineageInfo.
@@ -8713,7 +8412,7 @@ func (o *ExternalLineageInfo) GetTableInfo(ctx context.Context) (ExternalLineage
 	if o.TableInfo.IsNull() || o.TableInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageTableInfo
+	var v ExternalLineageTableInfo
 	d := o.TableInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8721,10 +8420,7 @@ func (o *ExternalLineageInfo) GetTableInfo(ctx context.Context) (ExternalLineage
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTableInfo sets the value of the TableInfo field in ExternalLineageInfo.
@@ -8739,10 +8435,10 @@ type ExternalLineageModelVersion struct {
 	Version types.String `tfsdk:"version"`
 }
 
-func (newState *ExternalLineageModelVersion) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageModelVersion) {
+func (toState *ExternalLineageModelVersion) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageModelVersion) {
 }
 
-func (newState *ExternalLineageModelVersion) SyncFieldsDuringRead(existingState ExternalLineageModelVersion) {
+func (toState *ExternalLineageModelVersion) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageModelVersion) {
 }
 
 func (c ExternalLineageModelVersion) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8795,10 +8491,10 @@ type ExternalLineageModelVersionInfo struct {
 	Version types.Int64 `tfsdk:"version"`
 }
 
-func (newState *ExternalLineageModelVersionInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageModelVersionInfo) {
+func (toState *ExternalLineageModelVersionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageModelVersionInfo) {
 }
 
-func (newState *ExternalLineageModelVersionInfo) SyncFieldsDuringRead(existingState ExternalLineageModelVersionInfo) {
+func (toState *ExternalLineageModelVersionInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageModelVersionInfo) {
 }
 
 func (c ExternalLineageModelVersionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8854,10 +8550,74 @@ type ExternalLineageObject struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *ExternalLineageObject) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageObject) {
+func (toState *ExternalLineageObject) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageObject) {
+	if !fromPlan.ExternalMetadata.IsNull() && !fromPlan.ExternalMetadata.IsUnknown() {
+		if toStateExternalMetadata, ok := toState.GetExternalMetadata(ctx); ok {
+			if fromPlanExternalMetadata, ok := fromPlan.GetExternalMetadata(ctx); ok {
+				toStateExternalMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalMetadata)
+				toState.SetExternalMetadata(ctx, toStateExternalMetadata)
+			}
+		}
+	}
+	if !fromPlan.ModelVersion.IsNull() && !fromPlan.ModelVersion.IsUnknown() {
+		if toStateModelVersion, ok := toState.GetModelVersion(ctx); ok {
+			if fromPlanModelVersion, ok := fromPlan.GetModelVersion(ctx); ok {
+				toStateModelVersion.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanModelVersion)
+				toState.SetModelVersion(ctx, toStateModelVersion)
+			}
+		}
+	}
+	if !fromPlan.Path.IsNull() && !fromPlan.Path.IsUnknown() {
+		if toStatePath, ok := toState.GetPath(ctx); ok {
+			if fromPlanPath, ok := fromPlan.GetPath(ctx); ok {
+				toStatePath.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPath)
+				toState.SetPath(ctx, toStatePath)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *ExternalLineageObject) SyncFieldsDuringRead(existingState ExternalLineageObject) {
+func (toState *ExternalLineageObject) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageObject) {
+	if !fromState.ExternalMetadata.IsNull() && !fromState.ExternalMetadata.IsUnknown() {
+		if toStateExternalMetadata, ok := toState.GetExternalMetadata(ctx); ok {
+			if fromStateExternalMetadata, ok := fromState.GetExternalMetadata(ctx); ok {
+				toStateExternalMetadata.SyncFieldsDuringRead(ctx, fromStateExternalMetadata)
+				toState.SetExternalMetadata(ctx, toStateExternalMetadata)
+			}
+		}
+	}
+	if !fromState.ModelVersion.IsNull() && !fromState.ModelVersion.IsUnknown() {
+		if toStateModelVersion, ok := toState.GetModelVersion(ctx); ok {
+			if fromStateModelVersion, ok := fromState.GetModelVersion(ctx); ok {
+				toStateModelVersion.SyncFieldsDuringRead(ctx, fromStateModelVersion)
+				toState.SetModelVersion(ctx, toStateModelVersion)
+			}
+		}
+	}
+	if !fromState.Path.IsNull() && !fromState.Path.IsUnknown() {
+		if toStatePath, ok := toState.GetPath(ctx); ok {
+			if fromStatePath, ok := fromState.GetPath(ctx); ok {
+				toStatePath.SyncFieldsDuringRead(ctx, fromStatePath)
+				toState.SetPath(ctx, toStatePath)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c ExternalLineageObject) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8919,7 +8679,7 @@ func (o *ExternalLineageObject) GetExternalMetadata(ctx context.Context) (Extern
 	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageExternalMetadata
+	var v ExternalLineageExternalMetadata
 	d := o.ExternalMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8927,10 +8687,7 @@ func (o *ExternalLineageObject) GetExternalMetadata(ctx context.Context) (Extern
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalMetadata sets the value of the ExternalMetadata field in ExternalLineageObject.
@@ -8947,7 +8704,7 @@ func (o *ExternalLineageObject) GetModelVersion(ctx context.Context) (ExternalLi
 	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageModelVersion
+	var v ExternalLineageModelVersion
 	d := o.ModelVersion.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8955,10 +8712,7 @@ func (o *ExternalLineageObject) GetModelVersion(ctx context.Context) (ExternalLi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetModelVersion sets the value of the ModelVersion field in ExternalLineageObject.
@@ -8975,7 +8729,7 @@ func (o *ExternalLineageObject) GetPath(ctx context.Context) (ExternalLineagePat
 	if o.Path.IsNull() || o.Path.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineagePath
+	var v ExternalLineagePath
 	d := o.Path.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8983,10 +8737,7 @@ func (o *ExternalLineageObject) GetPath(ctx context.Context) (ExternalLineagePat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPath sets the value of the Path field in ExternalLineageObject.
@@ -9003,7 +8754,7 @@ func (o *ExternalLineageObject) GetTable(ctx context.Context) (ExternalLineageTa
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageTable
+	var v ExternalLineageTable
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9011,10 +8762,7 @@ func (o *ExternalLineageObject) GetTable(ctx context.Context) (ExternalLineageTa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in ExternalLineageObject.
@@ -9027,10 +8775,10 @@ type ExternalLineagePath struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *ExternalLineagePath) SyncFieldsDuringCreateOrUpdate(plan ExternalLineagePath) {
+func (toState *ExternalLineagePath) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineagePath) {
 }
 
-func (newState *ExternalLineagePath) SyncFieldsDuringRead(existingState ExternalLineagePath) {
+func (toState *ExternalLineagePath) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineagePath) {
 }
 
 func (c ExternalLineagePath) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9083,10 +8831,42 @@ type ExternalLineageRelationship struct {
 	Target types.Object `tfsdk:"target"`
 }
 
-func (newState *ExternalLineageRelationship) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageRelationship) {
+func (toState *ExternalLineageRelationship) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageRelationship) {
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Target.IsNull() && !fromPlan.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromPlanTarget, ok := fromPlan.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
-func (newState *ExternalLineageRelationship) SyncFieldsDuringRead(existingState ExternalLineageRelationship) {
+func (toState *ExternalLineageRelationship) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageRelationship) {
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Target.IsNull() && !fromState.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromStateTarget, ok := fromState.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringRead(ctx, fromStateTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
 func (c ExternalLineageRelationship) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9207,7 +8987,7 @@ func (o *ExternalLineageRelationship) GetSource(ctx context.Context) (ExternalLi
 	if o.Source.IsNull() || o.Source.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9215,10 +8995,7 @@ func (o *ExternalLineageRelationship) GetSource(ctx context.Context) (ExternalLi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSource sets the value of the Source field in ExternalLineageRelationship.
@@ -9235,7 +9012,7 @@ func (o *ExternalLineageRelationship) GetTarget(ctx context.Context) (ExternalLi
 	if o.Target.IsNull() || o.Target.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Target.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9243,10 +9020,7 @@ func (o *ExternalLineageRelationship) GetTarget(ctx context.Context) (ExternalLi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTarget sets the value of the Target field in ExternalLineageRelationship.
@@ -9268,10 +9042,42 @@ type ExternalLineageRelationshipInfo struct {
 	Target types.Object `tfsdk:"target"`
 }
 
-func (newState *ExternalLineageRelationshipInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageRelationshipInfo) {
+func (toState *ExternalLineageRelationshipInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageRelationshipInfo) {
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Target.IsNull() && !fromPlan.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromPlanTarget, ok := fromPlan.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
-func (newState *ExternalLineageRelationshipInfo) SyncFieldsDuringRead(existingState ExternalLineageRelationshipInfo) {
+func (toState *ExternalLineageRelationshipInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageRelationshipInfo) {
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Target.IsNull() && !fromState.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromStateTarget, ok := fromState.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringRead(ctx, fromStateTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
 func (c ExternalLineageRelationshipInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9392,7 +9198,7 @@ func (o *ExternalLineageRelationshipInfo) GetSource(ctx context.Context) (Extern
 	if o.Source.IsNull() || o.Source.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9400,10 +9206,7 @@ func (o *ExternalLineageRelationshipInfo) GetSource(ctx context.Context) (Extern
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSource sets the value of the Source field in ExternalLineageRelationshipInfo.
@@ -9420,7 +9223,7 @@ func (o *ExternalLineageRelationshipInfo) GetTarget(ctx context.Context) (Extern
 	if o.Target.IsNull() || o.Target.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Target.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9428,10 +9231,7 @@ func (o *ExternalLineageRelationshipInfo) GetTarget(ctx context.Context) (Extern
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTarget sets the value of the Target field in ExternalLineageRelationshipInfo.
@@ -9444,10 +9244,10 @@ type ExternalLineageTable struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ExternalLineageTable) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageTable) {
+func (toState *ExternalLineageTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageTable) {
 }
 
-func (newState *ExternalLineageTable) SyncFieldsDuringRead(existingState ExternalLineageTable) {
+func (toState *ExternalLineageTable) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageTable) {
 }
 
 func (c ExternalLineageTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9499,10 +9299,10 @@ type ExternalLineageTableInfo struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 }
 
-func (newState *ExternalLineageTableInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLineageTableInfo) {
+func (toState *ExternalLineageTableInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLineageTableInfo) {
 }
 
-func (newState *ExternalLineageTableInfo) SyncFieldsDuringRead(existingState ExternalLineageTableInfo) {
+func (toState *ExternalLineageTableInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLineageTableInfo) {
 }
 
 func (c ExternalLineageTableInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9595,10 +9395,42 @@ type ExternalLocationInfo struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *ExternalLocationInfo) SyncFieldsDuringCreateOrUpdate(plan ExternalLocationInfo) {
+func (toState *ExternalLocationInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLocationInfo) {
+	if !fromPlan.EncryptionDetails.IsNull() && !fromPlan.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromPlanEncryptionDetails, ok := fromPlan.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
+	if !fromPlan.FileEventQueue.IsNull() && !fromPlan.FileEventQueue.IsUnknown() {
+		if toStateFileEventQueue, ok := toState.GetFileEventQueue(ctx); ok {
+			if fromPlanFileEventQueue, ok := fromPlan.GetFileEventQueue(ctx); ok {
+				toStateFileEventQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileEventQueue)
+				toState.SetFileEventQueue(ctx, toStateFileEventQueue)
+			}
+		}
+	}
 }
 
-func (newState *ExternalLocationInfo) SyncFieldsDuringRead(existingState ExternalLocationInfo) {
+func (toState *ExternalLocationInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLocationInfo) {
+	if !fromState.EncryptionDetails.IsNull() && !fromState.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromStateEncryptionDetails, ok := fromState.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringRead(ctx, fromStateEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
+	if !fromState.FileEventQueue.IsNull() && !fromState.FileEventQueue.IsUnknown() {
+		if toStateFileEventQueue, ok := toState.GetFileEventQueue(ctx); ok {
+			if fromStateFileEventQueue, ok := fromState.GetFileEventQueue(ctx); ok {
+				toStateFileEventQueue.SyncFieldsDuringRead(ctx, fromStateFileEventQueue)
+				toState.SetFileEventQueue(ctx, toStateFileEventQueue)
+			}
+		}
+	}
 }
 
 func (c ExternalLocationInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9700,7 +9532,7 @@ func (o *ExternalLocationInfo) GetEncryptionDetails(ctx context.Context) (Encryp
 	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []EncryptionDetails
+	var v EncryptionDetails
 	d := o.EncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9708,10 +9540,7 @@ func (o *ExternalLocationInfo) GetEncryptionDetails(ctx context.Context) (Encryp
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEncryptionDetails sets the value of the EncryptionDetails field in ExternalLocationInfo.
@@ -9728,7 +9557,7 @@ func (o *ExternalLocationInfo) GetFileEventQueue(ctx context.Context) (FileEvent
 	if o.FileEventQueue.IsNull() || o.FileEventQueue.IsUnknown() {
 		return e, false
 	}
-	var v []FileEventQueue
+	var v FileEventQueue
 	d := o.FileEventQueue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9736,10 +9565,7 @@ func (o *ExternalLocationInfo) GetFileEventQueue(ctx context.Context) (FileEvent
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileEventQueue sets the value of the FileEventQueue field in ExternalLocationInfo.
@@ -9779,10 +9605,10 @@ type ExternalMetadata struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *ExternalMetadata) SyncFieldsDuringCreateOrUpdate(plan ExternalMetadata) {
+func (toState *ExternalMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalMetadata) {
 }
 
-func (newState *ExternalMetadata) SyncFieldsDuringRead(existingState ExternalMetadata) {
+func (toState *ExternalMetadata) SyncFieldsDuringRead(ctx context.Context, fromState ExternalMetadata) {
 }
 
 func (c ExternalMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9934,10 +9760,10 @@ type FailedStatus struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *FailedStatus) SyncFieldsDuringCreateOrUpdate(plan FailedStatus) {
+func (toState *FailedStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FailedStatus) {
 }
 
-func (newState *FailedStatus) SyncFieldsDuringRead(existingState FailedStatus) {
+func (toState *FailedStatus) SyncFieldsDuringRead(ctx context.Context, fromState FailedStatus) {
 }
 
 func (c FailedStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9994,10 +9820,106 @@ type FileEventQueue struct {
 	ProvidedSqs types.Object `tfsdk:"provided_sqs"`
 }
 
-func (newState *FileEventQueue) SyncFieldsDuringCreateOrUpdate(plan FileEventQueue) {
+func (toState *FileEventQueue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileEventQueue) {
+	if !fromPlan.ManagedAqs.IsNull() && !fromPlan.ManagedAqs.IsUnknown() {
+		if toStateManagedAqs, ok := toState.GetManagedAqs(ctx); ok {
+			if fromPlanManagedAqs, ok := fromPlan.GetManagedAqs(ctx); ok {
+				toStateManagedAqs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManagedAqs)
+				toState.SetManagedAqs(ctx, toStateManagedAqs)
+			}
+		}
+	}
+	if !fromPlan.ManagedPubsub.IsNull() && !fromPlan.ManagedPubsub.IsUnknown() {
+		if toStateManagedPubsub, ok := toState.GetManagedPubsub(ctx); ok {
+			if fromPlanManagedPubsub, ok := fromPlan.GetManagedPubsub(ctx); ok {
+				toStateManagedPubsub.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManagedPubsub)
+				toState.SetManagedPubsub(ctx, toStateManagedPubsub)
+			}
+		}
+	}
+	if !fromPlan.ManagedSqs.IsNull() && !fromPlan.ManagedSqs.IsUnknown() {
+		if toStateManagedSqs, ok := toState.GetManagedSqs(ctx); ok {
+			if fromPlanManagedSqs, ok := fromPlan.GetManagedSqs(ctx); ok {
+				toStateManagedSqs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManagedSqs)
+				toState.SetManagedSqs(ctx, toStateManagedSqs)
+			}
+		}
+	}
+	if !fromPlan.ProvidedAqs.IsNull() && !fromPlan.ProvidedAqs.IsUnknown() {
+		if toStateProvidedAqs, ok := toState.GetProvidedAqs(ctx); ok {
+			if fromPlanProvidedAqs, ok := fromPlan.GetProvidedAqs(ctx); ok {
+				toStateProvidedAqs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvidedAqs)
+				toState.SetProvidedAqs(ctx, toStateProvidedAqs)
+			}
+		}
+	}
+	if !fromPlan.ProvidedPubsub.IsNull() && !fromPlan.ProvidedPubsub.IsUnknown() {
+		if toStateProvidedPubsub, ok := toState.GetProvidedPubsub(ctx); ok {
+			if fromPlanProvidedPubsub, ok := fromPlan.GetProvidedPubsub(ctx); ok {
+				toStateProvidedPubsub.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvidedPubsub)
+				toState.SetProvidedPubsub(ctx, toStateProvidedPubsub)
+			}
+		}
+	}
+	if !fromPlan.ProvidedSqs.IsNull() && !fromPlan.ProvidedSqs.IsUnknown() {
+		if toStateProvidedSqs, ok := toState.GetProvidedSqs(ctx); ok {
+			if fromPlanProvidedSqs, ok := fromPlan.GetProvidedSqs(ctx); ok {
+				toStateProvidedSqs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvidedSqs)
+				toState.SetProvidedSqs(ctx, toStateProvidedSqs)
+			}
+		}
+	}
 }
 
-func (newState *FileEventQueue) SyncFieldsDuringRead(existingState FileEventQueue) {
+func (toState *FileEventQueue) SyncFieldsDuringRead(ctx context.Context, fromState FileEventQueue) {
+	if !fromState.ManagedAqs.IsNull() && !fromState.ManagedAqs.IsUnknown() {
+		if toStateManagedAqs, ok := toState.GetManagedAqs(ctx); ok {
+			if fromStateManagedAqs, ok := fromState.GetManagedAqs(ctx); ok {
+				toStateManagedAqs.SyncFieldsDuringRead(ctx, fromStateManagedAqs)
+				toState.SetManagedAqs(ctx, toStateManagedAqs)
+			}
+		}
+	}
+	if !fromState.ManagedPubsub.IsNull() && !fromState.ManagedPubsub.IsUnknown() {
+		if toStateManagedPubsub, ok := toState.GetManagedPubsub(ctx); ok {
+			if fromStateManagedPubsub, ok := fromState.GetManagedPubsub(ctx); ok {
+				toStateManagedPubsub.SyncFieldsDuringRead(ctx, fromStateManagedPubsub)
+				toState.SetManagedPubsub(ctx, toStateManagedPubsub)
+			}
+		}
+	}
+	if !fromState.ManagedSqs.IsNull() && !fromState.ManagedSqs.IsUnknown() {
+		if toStateManagedSqs, ok := toState.GetManagedSqs(ctx); ok {
+			if fromStateManagedSqs, ok := fromState.GetManagedSqs(ctx); ok {
+				toStateManagedSqs.SyncFieldsDuringRead(ctx, fromStateManagedSqs)
+				toState.SetManagedSqs(ctx, toStateManagedSqs)
+			}
+		}
+	}
+	if !fromState.ProvidedAqs.IsNull() && !fromState.ProvidedAqs.IsUnknown() {
+		if toStateProvidedAqs, ok := toState.GetProvidedAqs(ctx); ok {
+			if fromStateProvidedAqs, ok := fromState.GetProvidedAqs(ctx); ok {
+				toStateProvidedAqs.SyncFieldsDuringRead(ctx, fromStateProvidedAqs)
+				toState.SetProvidedAqs(ctx, toStateProvidedAqs)
+			}
+		}
+	}
+	if !fromState.ProvidedPubsub.IsNull() && !fromState.ProvidedPubsub.IsUnknown() {
+		if toStateProvidedPubsub, ok := toState.GetProvidedPubsub(ctx); ok {
+			if fromStateProvidedPubsub, ok := fromState.GetProvidedPubsub(ctx); ok {
+				toStateProvidedPubsub.SyncFieldsDuringRead(ctx, fromStateProvidedPubsub)
+				toState.SetProvidedPubsub(ctx, toStateProvidedPubsub)
+			}
+		}
+	}
+	if !fromState.ProvidedSqs.IsNull() && !fromState.ProvidedSqs.IsUnknown() {
+		if toStateProvidedSqs, ok := toState.GetProvidedSqs(ctx); ok {
+			if fromStateProvidedSqs, ok := fromState.GetProvidedSqs(ctx); ok {
+				toStateProvidedSqs.SyncFieldsDuringRead(ctx, fromStateProvidedSqs)
+				toState.SetProvidedSqs(ctx, toStateProvidedSqs)
+			}
+		}
+	}
 }
 
 func (c FileEventQueue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10067,7 +9989,7 @@ func (o *FileEventQueue) GetManagedAqs(ctx context.Context) (AzureQueueStorage, 
 	if o.ManagedAqs.IsNull() || o.ManagedAqs.IsUnknown() {
 		return e, false
 	}
-	var v []AzureQueueStorage
+	var v AzureQueueStorage
 	d := o.ManagedAqs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10075,10 +9997,7 @@ func (o *FileEventQueue) GetManagedAqs(ctx context.Context) (AzureQueueStorage, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetManagedAqs sets the value of the ManagedAqs field in FileEventQueue.
@@ -10095,7 +10014,7 @@ func (o *FileEventQueue) GetManagedPubsub(ctx context.Context) (GcpPubsub, bool)
 	if o.ManagedPubsub.IsNull() || o.ManagedPubsub.IsUnknown() {
 		return e, false
 	}
-	var v []GcpPubsub
+	var v GcpPubsub
 	d := o.ManagedPubsub.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10103,10 +10022,7 @@ func (o *FileEventQueue) GetManagedPubsub(ctx context.Context) (GcpPubsub, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetManagedPubsub sets the value of the ManagedPubsub field in FileEventQueue.
@@ -10123,7 +10039,7 @@ func (o *FileEventQueue) GetManagedSqs(ctx context.Context) (AwsSqsQueue, bool) 
 	if o.ManagedSqs.IsNull() || o.ManagedSqs.IsUnknown() {
 		return e, false
 	}
-	var v []AwsSqsQueue
+	var v AwsSqsQueue
 	d := o.ManagedSqs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10131,10 +10047,7 @@ func (o *FileEventQueue) GetManagedSqs(ctx context.Context) (AwsSqsQueue, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetManagedSqs sets the value of the ManagedSqs field in FileEventQueue.
@@ -10151,7 +10064,7 @@ func (o *FileEventQueue) GetProvidedAqs(ctx context.Context) (AzureQueueStorage,
 	if o.ProvidedAqs.IsNull() || o.ProvidedAqs.IsUnknown() {
 		return e, false
 	}
-	var v []AzureQueueStorage
+	var v AzureQueueStorage
 	d := o.ProvidedAqs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10159,10 +10072,7 @@ func (o *FileEventQueue) GetProvidedAqs(ctx context.Context) (AzureQueueStorage,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvidedAqs sets the value of the ProvidedAqs field in FileEventQueue.
@@ -10179,7 +10089,7 @@ func (o *FileEventQueue) GetProvidedPubsub(ctx context.Context) (GcpPubsub, bool
 	if o.ProvidedPubsub.IsNull() || o.ProvidedPubsub.IsUnknown() {
 		return e, false
 	}
-	var v []GcpPubsub
+	var v GcpPubsub
 	d := o.ProvidedPubsub.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10187,10 +10097,7 @@ func (o *FileEventQueue) GetProvidedPubsub(ctx context.Context) (GcpPubsub, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvidedPubsub sets the value of the ProvidedPubsub field in FileEventQueue.
@@ -10207,7 +10114,7 @@ func (o *FileEventQueue) GetProvidedSqs(ctx context.Context) (AwsSqsQueue, bool)
 	if o.ProvidedSqs.IsNull() || o.ProvidedSqs.IsUnknown() {
 		return e, false
 	}
-	var v []AwsSqsQueue
+	var v AwsSqsQueue
 	d := o.ProvidedSqs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10215,10 +10122,7 @@ func (o *FileEventQueue) GetProvidedSqs(ctx context.Context) (AwsSqsQueue, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvidedSqs sets the value of the ProvidedSqs field in FileEventQueue.
@@ -10240,10 +10144,10 @@ type ForeignKeyConstraint struct {
 	Rely types.Bool `tfsdk:"rely"`
 }
 
-func (newState *ForeignKeyConstraint) SyncFieldsDuringCreateOrUpdate(plan ForeignKeyConstraint) {
+func (toState *ForeignKeyConstraint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForeignKeyConstraint) {
 }
 
-func (newState *ForeignKeyConstraint) SyncFieldsDuringRead(existingState ForeignKeyConstraint) {
+func (toState *ForeignKeyConstraint) SyncFieldsDuringRead(ctx context.Context, fromState ForeignKeyConstraint) {
 }
 
 func (c ForeignKeyConstraint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10361,10 +10265,10 @@ type FunctionDependency struct {
 	FunctionFullName types.String `tfsdk:"function_full_name"`
 }
 
-func (newState *FunctionDependency) SyncFieldsDuringCreateOrUpdate(plan FunctionDependency) {
+func (toState *FunctionDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionDependency) {
 }
 
-func (newState *FunctionDependency) SyncFieldsDuringRead(existingState FunctionDependency) {
+func (toState *FunctionDependency) SyncFieldsDuringRead(ctx context.Context, fromState FunctionDependency) {
 }
 
 func (c FunctionDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10474,10 +10378,58 @@ type FunctionInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *FunctionInfo) SyncFieldsDuringCreateOrUpdate(plan FunctionInfo) {
+func (toState *FunctionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionInfo) {
+	if !fromPlan.InputParams.IsNull() && !fromPlan.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromPlanInputParams, ok := fromPlan.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
+	if !fromPlan.ReturnParams.IsNull() && !fromPlan.ReturnParams.IsUnknown() {
+		if toStateReturnParams, ok := toState.GetReturnParams(ctx); ok {
+			if fromPlanReturnParams, ok := fromPlan.GetReturnParams(ctx); ok {
+				toStateReturnParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanReturnParams)
+				toState.SetReturnParams(ctx, toStateReturnParams)
+			}
+		}
+	}
+	if !fromPlan.RoutineDependencies.IsNull() && !fromPlan.RoutineDependencies.IsUnknown() {
+		if toStateRoutineDependencies, ok := toState.GetRoutineDependencies(ctx); ok {
+			if fromPlanRoutineDependencies, ok := fromPlan.GetRoutineDependencies(ctx); ok {
+				toStateRoutineDependencies.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRoutineDependencies)
+				toState.SetRoutineDependencies(ctx, toStateRoutineDependencies)
+			}
+		}
+	}
 }
 
-func (newState *FunctionInfo) SyncFieldsDuringRead(existingState FunctionInfo) {
+func (toState *FunctionInfo) SyncFieldsDuringRead(ctx context.Context, fromState FunctionInfo) {
+	if !fromState.InputParams.IsNull() && !fromState.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromStateInputParams, ok := fromState.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringRead(ctx, fromStateInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
+	if !fromState.ReturnParams.IsNull() && !fromState.ReturnParams.IsUnknown() {
+		if toStateReturnParams, ok := toState.GetReturnParams(ctx); ok {
+			if fromStateReturnParams, ok := fromState.GetReturnParams(ctx); ok {
+				toStateReturnParams.SyncFieldsDuringRead(ctx, fromStateReturnParams)
+				toState.SetReturnParams(ctx, toStateReturnParams)
+			}
+		}
+	}
+	if !fromState.RoutineDependencies.IsNull() && !fromState.RoutineDependencies.IsUnknown() {
+		if toStateRoutineDependencies, ok := toState.GetRoutineDependencies(ctx); ok {
+			if fromStateRoutineDependencies, ok := fromState.GetRoutineDependencies(ctx); ok {
+				toStateRoutineDependencies.SyncFieldsDuringRead(ctx, fromStateRoutineDependencies)
+				toState.SetRoutineDependencies(ctx, toStateRoutineDependencies)
+			}
+		}
+	}
 }
 
 func (c FunctionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10616,7 +10568,7 @@ func (o *FunctionInfo) GetInputParams(ctx context.Context) (FunctionParameterInf
 	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionParameterInfos
+	var v FunctionParameterInfos
 	d := o.InputParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10624,10 +10576,7 @@ func (o *FunctionInfo) GetInputParams(ctx context.Context) (FunctionParameterInf
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInputParams sets the value of the InputParams field in FunctionInfo.
@@ -10644,7 +10593,7 @@ func (o *FunctionInfo) GetReturnParams(ctx context.Context) (FunctionParameterIn
 	if o.ReturnParams.IsNull() || o.ReturnParams.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionParameterInfos
+	var v FunctionParameterInfos
 	d := o.ReturnParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10652,10 +10601,7 @@ func (o *FunctionInfo) GetReturnParams(ctx context.Context) (FunctionParameterIn
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetReturnParams sets the value of the ReturnParams field in FunctionInfo.
@@ -10672,7 +10618,7 @@ func (o *FunctionInfo) GetRoutineDependencies(ctx context.Context) (DependencyLi
 	if o.RoutineDependencies.IsNull() || o.RoutineDependencies.IsUnknown() {
 		return e, false
 	}
-	var v []DependencyList
+	var v DependencyList
 	d := o.RoutineDependencies.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10680,10 +10626,7 @@ func (o *FunctionInfo) GetRoutineDependencies(ctx context.Context) (DependencyLi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRoutineDependencies sets the value of the RoutineDependencies field in FunctionInfo.
@@ -10719,10 +10662,10 @@ type FunctionParameterInfo struct {
 	TypeText types.String `tfsdk:"type_text"`
 }
 
-func (newState *FunctionParameterInfo) SyncFieldsDuringCreateOrUpdate(plan FunctionParameterInfo) {
+func (toState *FunctionParameterInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionParameterInfo) {
 }
 
-func (newState *FunctionParameterInfo) SyncFieldsDuringRead(existingState FunctionParameterInfo) {
+func (toState *FunctionParameterInfo) SyncFieldsDuringRead(ctx context.Context, fromState FunctionParameterInfo) {
 }
 
 func (c FunctionParameterInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10801,10 +10744,10 @@ type FunctionParameterInfos struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *FunctionParameterInfos) SyncFieldsDuringCreateOrUpdate(plan FunctionParameterInfos) {
+func (toState *FunctionParameterInfos) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionParameterInfos) {
 }
 
-func (newState *FunctionParameterInfos) SyncFieldsDuringRead(existingState FunctionParameterInfos) {
+func (toState *FunctionParameterInfos) SyncFieldsDuringRead(ctx context.Context, fromState FunctionParameterInfos) {
 }
 
 func (c FunctionParameterInfos) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10880,10 +10823,10 @@ type GcpOauthToken struct {
 	OauthToken types.String `tfsdk:"oauth_token"`
 }
 
-func (newState *GcpOauthToken) SyncFieldsDuringCreateOrUpdate(plan GcpOauthToken) {
+func (toState *GcpOauthToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpOauthToken) {
 }
 
-func (newState *GcpOauthToken) SyncFieldsDuringRead(existingState GcpOauthToken) {
+func (toState *GcpOauthToken) SyncFieldsDuringRead(ctx context.Context, fromState GcpOauthToken) {
 }
 
 func (c GcpOauthToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10933,10 +10876,10 @@ type GcpPubsub struct {
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
 
-func (newState *GcpPubsub) SyncFieldsDuringCreateOrUpdate(plan GcpPubsub) {
+func (toState *GcpPubsub) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpPubsub) {
 }
 
-func (newState *GcpPubsub) SyncFieldsDuringRead(existingState GcpPubsub) {
+func (toState *GcpPubsub) SyncFieldsDuringRead(ctx context.Context, fromState GcpPubsub) {
 }
 
 func (c GcpPubsub) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10987,10 +10930,10 @@ type GenerateTemporaryServiceCredentialAzureOptions struct {
 	Resources types.List `tfsdk:"resources"`
 }
 
-func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialAzureOptions) {
+func (toState *GenerateTemporaryServiceCredentialAzureOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenerateTemporaryServiceCredentialAzureOptions) {
 }
 
-func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncFieldsDuringRead(existingState GenerateTemporaryServiceCredentialAzureOptions) {
+func (toState *GenerateTemporaryServiceCredentialAzureOptions) SyncFieldsDuringRead(ctx context.Context, fromState GenerateTemporaryServiceCredentialAzureOptions) {
 }
 
 func (c GenerateTemporaryServiceCredentialAzureOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11068,10 +11011,10 @@ type GenerateTemporaryServiceCredentialGcpOptions struct {
 	Scopes types.List `tfsdk:"scopes"`
 }
 
-func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialGcpOptions) {
+func (toState *GenerateTemporaryServiceCredentialGcpOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenerateTemporaryServiceCredentialGcpOptions) {
 }
 
-func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncFieldsDuringRead(existingState GenerateTemporaryServiceCredentialGcpOptions) {
+func (toState *GenerateTemporaryServiceCredentialGcpOptions) SyncFieldsDuringRead(ctx context.Context, fromState GenerateTemporaryServiceCredentialGcpOptions) {
 }
 
 func (c GenerateTemporaryServiceCredentialGcpOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11196,7 +11139,7 @@ func (o *GenerateTemporaryServiceCredentialRequest) GetAzureOptions(ctx context.
 	if o.AzureOptions.IsNull() || o.AzureOptions.IsUnknown() {
 		return e, false
 	}
-	var v []GenerateTemporaryServiceCredentialAzureOptions
+	var v GenerateTemporaryServiceCredentialAzureOptions
 	d := o.AzureOptions.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11204,10 +11147,7 @@ func (o *GenerateTemporaryServiceCredentialRequest) GetAzureOptions(ctx context.
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureOptions sets the value of the AzureOptions field in GenerateTemporaryServiceCredentialRequest.
@@ -11224,7 +11164,7 @@ func (o *GenerateTemporaryServiceCredentialRequest) GetGcpOptions(ctx context.Co
 	if o.GcpOptions.IsNull() || o.GcpOptions.IsUnknown() {
 		return e, false
 	}
-	var v []GenerateTemporaryServiceCredentialGcpOptions
+	var v GenerateTemporaryServiceCredentialGcpOptions
 	d := o.GcpOptions.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11232,10 +11172,7 @@ func (o *GenerateTemporaryServiceCredentialRequest) GetGcpOptions(ctx context.Co
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpOptions sets the value of the GcpOptions field in GenerateTemporaryServiceCredentialRequest.
@@ -11303,10 +11240,90 @@ type GenerateTemporaryTableCredentialResponse struct {
 	Url types.String `tfsdk:"url"`
 }
 
-func (newState *GenerateTemporaryTableCredentialResponse) SyncFieldsDuringCreateOrUpdate(plan GenerateTemporaryTableCredentialResponse) {
+func (toState *GenerateTemporaryTableCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenerateTemporaryTableCredentialResponse) {
+	if !fromPlan.AwsTempCredentials.IsNull() && !fromPlan.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromPlanAwsTempCredentials, ok := fromPlan.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromPlan.AzureAad.IsNull() && !fromPlan.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromPlanAzureAad, ok := fromPlan.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromPlan.AzureUserDelegationSas.IsNull() && !fromPlan.AzureUserDelegationSas.IsUnknown() {
+		if toStateAzureUserDelegationSas, ok := toState.GetAzureUserDelegationSas(ctx); ok {
+			if fromPlanAzureUserDelegationSas, ok := fromPlan.GetAzureUserDelegationSas(ctx); ok {
+				toStateAzureUserDelegationSas.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureUserDelegationSas)
+				toState.SetAzureUserDelegationSas(ctx, toStateAzureUserDelegationSas)
+			}
+		}
+	}
+	if !fromPlan.GcpOauthToken.IsNull() && !fromPlan.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromPlanGcpOauthToken, ok := fromPlan.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
+	if !fromPlan.R2TempCredentials.IsNull() && !fromPlan.R2TempCredentials.IsUnknown() {
+		if toStateR2TempCredentials, ok := toState.GetR2TempCredentials(ctx); ok {
+			if fromPlanR2TempCredentials, ok := fromPlan.GetR2TempCredentials(ctx); ok {
+				toStateR2TempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanR2TempCredentials)
+				toState.SetR2TempCredentials(ctx, toStateR2TempCredentials)
+			}
+		}
+	}
 }
 
-func (newState *GenerateTemporaryTableCredentialResponse) SyncFieldsDuringRead(existingState GenerateTemporaryTableCredentialResponse) {
+func (toState *GenerateTemporaryTableCredentialResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenerateTemporaryTableCredentialResponse) {
+	if !fromState.AwsTempCredentials.IsNull() && !fromState.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromStateAwsTempCredentials, ok := fromState.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringRead(ctx, fromStateAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromState.AzureAad.IsNull() && !fromState.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromStateAzureAad, ok := fromState.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringRead(ctx, fromStateAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromState.AzureUserDelegationSas.IsNull() && !fromState.AzureUserDelegationSas.IsUnknown() {
+		if toStateAzureUserDelegationSas, ok := toState.GetAzureUserDelegationSas(ctx); ok {
+			if fromStateAzureUserDelegationSas, ok := fromState.GetAzureUserDelegationSas(ctx); ok {
+				toStateAzureUserDelegationSas.SyncFieldsDuringRead(ctx, fromStateAzureUserDelegationSas)
+				toState.SetAzureUserDelegationSas(ctx, toStateAzureUserDelegationSas)
+			}
+		}
+	}
+	if !fromState.GcpOauthToken.IsNull() && !fromState.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromStateGcpOauthToken, ok := fromState.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringRead(ctx, fromStateGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
+	if !fromState.R2TempCredentials.IsNull() && !fromState.R2TempCredentials.IsUnknown() {
+		if toStateR2TempCredentials, ok := toState.GetR2TempCredentials(ctx); ok {
+			if fromStateR2TempCredentials, ok := fromState.GetR2TempCredentials(ctx); ok {
+				toStateR2TempCredentials.SyncFieldsDuringRead(ctx, fromStateR2TempCredentials)
+				toState.SetR2TempCredentials(ctx, toStateR2TempCredentials)
+			}
+		}
+	}
 }
 
 func (c GenerateTemporaryTableCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11378,7 +11395,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAwsTempCredentials(ctx con
 	if o.AwsTempCredentials.IsNull() || o.AwsTempCredentials.IsUnknown() {
 		return e, false
 	}
-	var v []AwsCredentials
+	var v AwsCredentials
 	d := o.AwsTempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11386,10 +11403,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAwsTempCredentials(ctx con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsTempCredentials sets the value of the AwsTempCredentials field in GenerateTemporaryTableCredentialResponse.
@@ -11406,7 +11420,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAzureAad(ctx context.Conte
 	if o.AzureAad.IsNull() || o.AzureAad.IsUnknown() {
 		return e, false
 	}
-	var v []AzureActiveDirectoryToken
+	var v AzureActiveDirectoryToken
 	d := o.AzureAad.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11414,10 +11428,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAzureAad(ctx context.Conte
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAad sets the value of the AzureAad field in GenerateTemporaryTableCredentialResponse.
@@ -11434,7 +11445,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAzureUserDelegationSas(ctx
 	if o.AzureUserDelegationSas.IsNull() || o.AzureUserDelegationSas.IsUnknown() {
 		return e, false
 	}
-	var v []AzureUserDelegationSas
+	var v AzureUserDelegationSas
 	d := o.AzureUserDelegationSas.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11442,10 +11453,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetAzureUserDelegationSas(ctx
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureUserDelegationSas sets the value of the AzureUserDelegationSas field in GenerateTemporaryTableCredentialResponse.
@@ -11462,7 +11470,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetGcpOauthToken(ctx context.
 	if o.GcpOauthToken.IsNull() || o.GcpOauthToken.IsUnknown() {
 		return e, false
 	}
-	var v []GcpOauthToken
+	var v GcpOauthToken
 	d := o.GcpOauthToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11470,10 +11478,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetGcpOauthToken(ctx context.
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpOauthToken sets the value of the GcpOauthToken field in GenerateTemporaryTableCredentialResponse.
@@ -11490,7 +11495,7 @@ func (o *GenerateTemporaryTableCredentialResponse) GetR2TempCredentials(ctx cont
 	if o.R2TempCredentials.IsNull() || o.R2TempCredentials.IsUnknown() {
 		return e, false
 	}
-	var v []R2Credentials
+	var v R2Credentials
 	d := o.R2TempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11498,56 +11503,13 @@ func (o *GenerateTemporaryTableCredentialResponse) GetR2TempCredentials(ctx cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetR2TempCredentials sets the value of the R2TempCredentials field in GenerateTemporaryTableCredentialResponse.
 func (o *GenerateTemporaryTableCredentialResponse) SetR2TempCredentials(ctx context.Context, v R2Credentials) {
 	vs := v.ToObjectValue(ctx)
 	o.R2TempCredentials = vs
-}
-
-type GetAccessRequestDestinationsRequest struct {
-	// The full name of the securable.
-	FullName types.String `tfsdk:"-"`
-	// The type of the securable.
-	SecurableType types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccessRequestDestinationsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GetAccessRequestDestinationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAccessRequestDestinationsRequest
-// only implements ToObjectValue() and Type().
-func (o GetAccessRequestDestinationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"full_name":      o.FullName,
-			"securable_type": o.SecurableType,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GetAccessRequestDestinationsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"full_name":      types.StringType,
-			"securable_type": types.StringType,
-		},
-	}
 }
 
 type GetAccountMetastoreAssignmentRequest struct {
@@ -11843,10 +11805,10 @@ type GetCatalogWorkspaceBindingsResponse struct {
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
-func (newState *GetCatalogWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(plan GetCatalogWorkspaceBindingsResponse) {
+func (toState *GetCatalogWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCatalogWorkspaceBindingsResponse) {
 }
 
-func (newState *GetCatalogWorkspaceBindingsResponse) SyncFieldsDuringRead(existingState GetCatalogWorkspaceBindingsResponse) {
+func (toState *GetCatalogWorkspaceBindingsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetCatalogWorkspaceBindingsResponse) {
 }
 
 func (c GetCatalogWorkspaceBindingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12052,52 +12014,6 @@ func (o GetEffectiveRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type GetEntityTagAssignmentRequest struct {
-	// Required. The fully qualified structured name of the entity to which the
-	// tag is assigned. The entity name should follow the format of:
-	// entity_type/fully_qualified_entity_name. eg. catalogs/my_catalog,
-	// schemas/my_catalog.my_schema,
-	// columns/my_catalog.my_schema.my_table.my_column. When containing segments
-	// with special characters (e.g. '/'), the whole segment must be wrapped
-	// with backticks. For example, columns/catalog.schema.table.\`column/a\`
-	EntityName types.String `tfsdk:"-"`
-	// Required. The key of the tag
-	TagKey types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEntityTagAssignmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GetEntityTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetEntityTagAssignmentRequest
-// only implements ToObjectValue() and Type().
-func (o GetEntityTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"entity_name": o.EntityName,
-			"tag_key":     o.TagKey,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GetEntityTagAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"entity_name": types.StringType,
-			"tag_key":     types.StringType,
-		},
-	}
-}
-
 type GetExternalLocationRequest struct {
 	// Whether to include external locations in the response for which the
 	// principal can only access selective metadata for
@@ -12219,9 +12135,6 @@ func (o GetFunctionRequest) Type(ctx context.Context) attr.Type {
 type GetGrantRequest struct {
 	// Full name of securable.
 	FullName types.String `tfsdk:"-"`
-	// Optional. If true, also return privilege assignments whose principals
-	// have been deleted.
-	IncludeDeletedPrincipals types.Bool `tfsdk:"-"`
 	// Specifies the maximum number of privileges to return (page length). Every
 	// PrivilegeAssignment present in a single page response is guaranteed to
 	// contain all the privileges granted on the requested Securable for the
@@ -12262,12 +12175,11 @@ func (o GetGrantRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name":                  o.FullName,
-			"include_deleted_principals": o.IncludeDeletedPrincipals,
-			"max_results":                o.MaxResults,
-			"page_token":                 o.PageToken,
-			"principal":                  o.Principal,
-			"securable_type":             o.SecurableType,
+			"full_name":      o.FullName,
+			"max_results":    o.MaxResults,
+			"page_token":     o.PageToken,
+			"principal":      o.Principal,
+			"securable_type": o.SecurableType,
 		})
 }
 
@@ -12275,12 +12187,11 @@ func (o GetGrantRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetGrantRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name":                  types.StringType,
-			"include_deleted_principals": types.BoolType,
-			"max_results":                types.Int64Type,
-			"page_token":                 types.StringType,
-			"principal":                  types.StringType,
-			"securable_type":             types.StringType,
+			"full_name":      types.StringType,
+			"max_results":    types.Int64Type,
+			"page_token":     types.StringType,
+			"principal":      types.StringType,
+			"securable_type": types.StringType,
 		},
 	}
 }
@@ -12366,10 +12277,10 @@ type GetMetastoreSummaryResponse struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *GetMetastoreSummaryResponse) SyncFieldsDuringCreateOrUpdate(plan GetMetastoreSummaryResponse) {
+func (toState *GetMetastoreSummaryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetMetastoreSummaryResponse) {
 }
 
-func (newState *GetMetastoreSummaryResponse) SyncFieldsDuringRead(existingState GetMetastoreSummaryResponse) {
+func (toState *GetMetastoreSummaryResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetMetastoreSummaryResponse) {
 }
 
 func (c GetMetastoreSummaryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12558,10 +12469,10 @@ type GetPermissionsResponse struct {
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
-func (newState *GetPermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan GetPermissionsResponse) {
+func (toState *GetPermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPermissionsResponse) {
 }
 
-func (newState *GetPermissionsResponse) SyncFieldsDuringRead(existingState GetPermissionsResponse) {
+func (toState *GetPermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPermissionsResponse) {
 }
 
 func (c GetPermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12722,10 +12633,26 @@ type GetQuotaResponse struct {
 	QuotaInfo types.Object `tfsdk:"quota_info"`
 }
 
-func (newState *GetQuotaResponse) SyncFieldsDuringCreateOrUpdate(plan GetQuotaResponse) {
+func (toState *GetQuotaResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetQuotaResponse) {
+	if !fromPlan.QuotaInfo.IsNull() && !fromPlan.QuotaInfo.IsUnknown() {
+		if toStateQuotaInfo, ok := toState.GetQuotaInfo(ctx); ok {
+			if fromPlanQuotaInfo, ok := fromPlan.GetQuotaInfo(ctx); ok {
+				toStateQuotaInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuotaInfo)
+				toState.SetQuotaInfo(ctx, toStateQuotaInfo)
+			}
+		}
+	}
 }
 
-func (newState *GetQuotaResponse) SyncFieldsDuringRead(existingState GetQuotaResponse) {
+func (toState *GetQuotaResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetQuotaResponse) {
+	if !fromState.QuotaInfo.IsNull() && !fromState.QuotaInfo.IsUnknown() {
+		if toStateQuotaInfo, ok := toState.GetQuotaInfo(ctx); ok {
+			if fromStateQuotaInfo, ok := fromState.GetQuotaInfo(ctx); ok {
+				toStateQuotaInfo.SyncFieldsDuringRead(ctx, fromStateQuotaInfo)
+				toState.SetQuotaInfo(ctx, toStateQuotaInfo)
+			}
+		}
+	}
 }
 
 func (c GetQuotaResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12775,7 +12702,7 @@ func (o *GetQuotaResponse) GetQuotaInfo(ctx context.Context) (QuotaInfo, bool) {
 	if o.QuotaInfo.IsNull() || o.QuotaInfo.IsUnknown() {
 		return e, false
 	}
-	var v []QuotaInfo
+	var v QuotaInfo
 	d := o.QuotaInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12783,10 +12710,7 @@ func (o *GetQuotaResponse) GetQuotaInfo(ctx context.Context) (QuotaInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQuotaInfo sets the value of the QuotaInfo field in GetQuotaResponse.
@@ -13052,10 +12976,10 @@ type GetWorkspaceBindingsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(plan GetWorkspaceBindingsResponse) {
+func (toState *GetWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceBindingsResponse) {
 }
 
-func (newState *GetWorkspaceBindingsResponse) SyncFieldsDuringRead(existingState GetWorkspaceBindingsResponse) {
+func (toState *GetWorkspaceBindingsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceBindingsResponse) {
 }
 
 func (c GetWorkspaceBindingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13169,10 +13093,10 @@ type ListAccountMetastoreAssignmentsResponse struct {
 	WorkspaceIds types.List `tfsdk:"workspace_ids"`
 }
 
-func (newState *ListAccountMetastoreAssignmentsResponse) SyncFieldsDuringCreateOrUpdate(plan ListAccountMetastoreAssignmentsResponse) {
+func (toState *ListAccountMetastoreAssignmentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountMetastoreAssignmentsResponse) {
 }
 
-func (newState *ListAccountMetastoreAssignmentsResponse) SyncFieldsDuringRead(existingState ListAccountMetastoreAssignmentsResponse) {
+func (toState *ListAccountMetastoreAssignmentsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountMetastoreAssignmentsResponse) {
 }
 
 func (c ListAccountMetastoreAssignmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13313,10 +13237,10 @@ type ListAccountStorageCredentialsResponse struct {
 	StorageCredentials types.List `tfsdk:"storage_credentials"`
 }
 
-func (newState *ListAccountStorageCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan ListAccountStorageCredentialsResponse) {
+func (toState *ListAccountStorageCredentialsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountStorageCredentialsResponse) {
 }
 
-func (newState *ListAccountStorageCredentialsResponse) SyncFieldsDuringRead(existingState ListAccountStorageCredentialsResponse) {
+func (toState *ListAccountStorageCredentialsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountStorageCredentialsResponse) {
 }
 
 func (c ListAccountStorageCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13448,10 +13372,10 @@ type ListCatalogsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCatalogsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCatalogsResponse) {
+func (toState *ListCatalogsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCatalogsResponse) {
 }
 
-func (newState *ListCatalogsResponse) SyncFieldsDuringRead(existingState ListCatalogsResponse) {
+func (toState *ListCatalogsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListCatalogsResponse) {
 }
 
 func (c ListCatalogsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13578,10 +13502,10 @@ type ListConnectionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListConnectionsResponse) SyncFieldsDuringCreateOrUpdate(plan ListConnectionsResponse) {
+func (toState *ListConnectionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListConnectionsResponse) {
 }
 
-func (newState *ListConnectionsResponse) SyncFieldsDuringRead(existingState ListConnectionsResponse) {
+func (toState *ListConnectionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListConnectionsResponse) {
 }
 
 func (c ListConnectionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13710,10 +13634,10 @@ type ListCredentialsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan ListCredentialsResponse) {
+func (toState *ListCredentialsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCredentialsResponse) {
 }
 
-func (newState *ListCredentialsResponse) SyncFieldsDuringRead(existingState ListCredentialsResponse) {
+func (toState *ListCredentialsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListCredentialsResponse) {
 }
 
 func (c ListCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13786,139 +13710,6 @@ func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
-type ListEntityTagAssignmentsRequest struct {
-	// Required. The fully qualified structured name of the entity to which the
-	// tag is assigned. The entity name should follow the format of:
-	// entity_type/fully_qualified_entity_name. eg. catalogs/my_catalog,
-	// schemas/my_catalog.my_schema,
-	// columns/my_catalog.my_schema.my_table.my_column. When containing segments
-	// with special characters (e.g. '/'), the whole segment must be wrapped
-	// with backticks. For example, columns/catalog.schema.table.\`column/a\`
-	EntityName types.String `tfsdk:"-"`
-	// Optional. Maximum number of tag assignments to return in a single page
-	MaxResults types.Int64 `tfsdk:"-"`
-	// Optional. Pagination token to retrieve the next page of results
-	PageToken types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEntityTagAssignmentsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListEntityTagAssignmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListEntityTagAssignmentsRequest
-// only implements ToObjectValue() and Type().
-func (o ListEntityTagAssignmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"entity_name": o.EntityName,
-			"max_results": o.MaxResults,
-			"page_token":  o.PageToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListEntityTagAssignmentsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"entity_name": types.StringType,
-			"max_results": types.Int64Type,
-			"page_token":  types.StringType,
-		},
-	}
-}
-
-type ListEntityTagAssignmentsResponse struct {
-	// Optional. Pagination token for retrieving the next page of results
-	NextPageToken types.String `tfsdk:"next_page_token"`
-	// The list of tag assignments
-	TagAssignments types.List `tfsdk:"tag_assignments"`
-}
-
-func (newState *ListEntityTagAssignmentsResponse) SyncFieldsDuringCreateOrUpdate(plan ListEntityTagAssignmentsResponse) {
-}
-
-func (newState *ListEntityTagAssignmentsResponse) SyncFieldsDuringRead(existingState ListEntityTagAssignmentsResponse) {
-}
-
-func (c ListEntityTagAssignmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
-	attrs["tag_assignments"] = attrs["tag_assignments"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEntityTagAssignmentsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListEntityTagAssignmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tag_assignments": reflect.TypeOf(EntityTagAssignment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListEntityTagAssignmentsResponse
-// only implements ToObjectValue() and Type().
-func (o ListEntityTagAssignmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"next_page_token": o.NextPageToken,
-			"tag_assignments": o.TagAssignments,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListEntityTagAssignmentsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"next_page_token": types.StringType,
-			"tag_assignments": basetypes.ListType{
-				ElemType: EntityTagAssignment{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetTagAssignments returns the value of the TagAssignments field in ListEntityTagAssignmentsResponse as
-// a slice of EntityTagAssignment values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListEntityTagAssignmentsResponse) GetTagAssignments(ctx context.Context) ([]EntityTagAssignment, bool) {
-	if o.TagAssignments.IsNull() || o.TagAssignments.IsUnknown() {
-		return nil, false
-	}
-	var v []EntityTagAssignment
-	d := o.TagAssignments.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTagAssignments sets the value of the TagAssignments field in ListEntityTagAssignmentsResponse.
-func (o *ListEntityTagAssignmentsResponse) SetTagAssignments(ctx context.Context, v []EntityTagAssignment) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_assignments"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.TagAssignments = types.ListValueMust(t, vs)
-}
-
 type ListExternalLineageRelationshipsRequest struct {
 	// The lineage direction to filter on.
 	LineageDirection types.String `tfsdk:"-"`
@@ -13981,7 +13772,7 @@ func (o *ListExternalLineageRelationshipsRequest) GetObjectInfo(ctx context.Cont
 	if o.ObjectInfo.IsNull() || o.ObjectInfo.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.ObjectInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13989,10 +13780,7 @@ func (o *ListExternalLineageRelationshipsRequest) GetObjectInfo(ctx context.Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetObjectInfo sets the value of the ObjectInfo field in ListExternalLineageRelationshipsRequest.
@@ -14007,10 +13795,10 @@ type ListExternalLineageRelationshipsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListExternalLineageRelationshipsResponse) SyncFieldsDuringCreateOrUpdate(plan ListExternalLineageRelationshipsResponse) {
+func (toState *ListExternalLineageRelationshipsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListExternalLineageRelationshipsResponse) {
 }
 
-func (newState *ListExternalLineageRelationshipsResponse) SyncFieldsDuringRead(existingState ListExternalLineageRelationshipsResponse) {
+func (toState *ListExternalLineageRelationshipsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListExternalLineageRelationshipsResponse) {
 }
 
 func (c ListExternalLineageRelationshipsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14142,10 +13930,10 @@ type ListExternalLocationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListExternalLocationsResponse) SyncFieldsDuringCreateOrUpdate(plan ListExternalLocationsResponse) {
+func (toState *ListExternalLocationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListExternalLocationsResponse) {
 }
 
-func (newState *ListExternalLocationsResponse) SyncFieldsDuringRead(existingState ListExternalLocationsResponse) {
+func (toState *ListExternalLocationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListExternalLocationsResponse) {
 }
 
 func (c ListExternalLocationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14265,10 +14053,10 @@ type ListExternalMetadataResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListExternalMetadataResponse) SyncFieldsDuringCreateOrUpdate(plan ListExternalMetadataResponse) {
+func (toState *ListExternalMetadataResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListExternalMetadataResponse) {
 }
 
-func (newState *ListExternalMetadataResponse) SyncFieldsDuringRead(existingState ListExternalMetadataResponse) {
+func (toState *ListExternalMetadataResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListExternalMetadataResponse) {
 }
 
 func (c ListExternalMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14408,10 +14196,10 @@ type ListFunctionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListFunctionsResponse) SyncFieldsDuringCreateOrUpdate(plan ListFunctionsResponse) {
+func (toState *ListFunctionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListFunctionsResponse) {
 }
 
-func (newState *ListFunctionsResponse) SyncFieldsDuringRead(existingState ListFunctionsResponse) {
+func (toState *ListFunctionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListFunctionsResponse) {
 }
 
 func (c ListFunctionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14541,10 +14329,10 @@ type ListMetastoresResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListMetastoresResponse) SyncFieldsDuringCreateOrUpdate(plan ListMetastoresResponse) {
+func (toState *ListMetastoresResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListMetastoresResponse) {
 }
 
-func (newState *ListMetastoresResponse) SyncFieldsDuringRead(existingState ListMetastoresResponse) {
+func (toState *ListMetastoresResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListMetastoresResponse) {
 }
 
 func (c ListMetastoresResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14681,10 +14469,10 @@ type ListModelVersionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListModelVersionsResponse) SyncFieldsDuringCreateOrUpdate(plan ListModelVersionsResponse) {
+func (toState *ListModelVersionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListModelVersionsResponse) {
 }
 
-func (newState *ListModelVersionsResponse) SyncFieldsDuringRead(existingState ListModelVersionsResponse) {
+func (toState *ListModelVersionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListModelVersionsResponse) {
 }
 
 func (c ListModelVersionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14806,10 +14594,10 @@ type ListQuotasResponse struct {
 	Quotas types.List `tfsdk:"quotas"`
 }
 
-func (newState *ListQuotasResponse) SyncFieldsDuringCreateOrUpdate(plan ListQuotasResponse) {
+func (toState *ListQuotasResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQuotasResponse) {
 }
 
-func (newState *ListQuotasResponse) SyncFieldsDuringRead(existingState ListQuotasResponse) {
+func (toState *ListQuotasResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListQuotasResponse) {
 }
 
 func (c ListQuotasResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14998,10 +14786,10 @@ type ListRegisteredModelsResponse struct {
 	RegisteredModels types.List `tfsdk:"registered_models"`
 }
 
-func (newState *ListRegisteredModelsResponse) SyncFieldsDuringCreateOrUpdate(plan ListRegisteredModelsResponse) {
+func (toState *ListRegisteredModelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListRegisteredModelsResponse) {
 }
 
-func (newState *ListRegisteredModelsResponse) SyncFieldsDuringRead(existingState ListRegisteredModelsResponse) {
+func (toState *ListRegisteredModelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListRegisteredModelsResponse) {
 }
 
 func (c ListRegisteredModelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15137,10 +14925,10 @@ type ListSchemasResponse struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *ListSchemasResponse) SyncFieldsDuringCreateOrUpdate(plan ListSchemasResponse) {
+func (toState *ListSchemasResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSchemasResponse) {
 }
 
-func (newState *ListSchemasResponse) SyncFieldsDuringRead(existingState ListSchemasResponse) {
+func (toState *ListSchemasResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSchemasResponse) {
 }
 
 func (c ListSchemasResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15267,10 +15055,10 @@ type ListStorageCredentialsResponse struct {
 	StorageCredentials types.List `tfsdk:"storage_credentials"`
 }
 
-func (newState *ListStorageCredentialsResponse) SyncFieldsDuringCreateOrUpdate(plan ListStorageCredentialsResponse) {
+func (toState *ListStorageCredentialsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListStorageCredentialsResponse) {
 }
 
-func (newState *ListStorageCredentialsResponse) SyncFieldsDuringRead(existingState ListStorageCredentialsResponse) {
+func (toState *ListStorageCredentialsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListStorageCredentialsResponse) {
 }
 
 func (c ListStorageCredentialsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15466,10 +15254,10 @@ type ListSystemSchemasResponse struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *ListSystemSchemasResponse) SyncFieldsDuringCreateOrUpdate(plan ListSystemSchemasResponse) {
+func (toState *ListSystemSchemasResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSystemSchemasResponse) {
 }
 
-func (newState *ListSystemSchemasResponse) SyncFieldsDuringRead(existingState ListSystemSchemasResponse) {
+func (toState *ListSystemSchemasResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSystemSchemasResponse) {
 }
 
 func (c ListSystemSchemasResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15551,10 +15339,10 @@ type ListTableSummariesResponse struct {
 	Tables types.List `tfsdk:"tables"`
 }
 
-func (newState *ListTableSummariesResponse) SyncFieldsDuringCreateOrUpdate(plan ListTableSummariesResponse) {
+func (toState *ListTableSummariesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListTableSummariesResponse) {
 }
 
-func (newState *ListTableSummariesResponse) SyncFieldsDuringRead(existingState ListTableSummariesResponse) {
+func (toState *ListTableSummariesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListTableSummariesResponse) {
 }
 
 func (c ListTableSummariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15712,10 +15500,10 @@ type ListTablesResponse struct {
 	Tables types.List `tfsdk:"tables"`
 }
 
-func (newState *ListTablesResponse) SyncFieldsDuringCreateOrUpdate(plan ListTablesResponse) {
+func (toState *ListTablesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListTablesResponse) {
 }
 
-func (newState *ListTablesResponse) SyncFieldsDuringRead(existingState ListTablesResponse) {
+func (toState *ListTablesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListTablesResponse) {
 }
 
 func (c ListTablesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15862,10 +15650,10 @@ type ListVolumesResponseContent struct {
 	Volumes types.List `tfsdk:"volumes"`
 }
 
-func (newState *ListVolumesResponseContent) SyncFieldsDuringCreateOrUpdate(plan ListVolumesResponseContent) {
+func (toState *ListVolumesResponseContent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListVolumesResponseContent) {
 }
 
-func (newState *ListVolumesResponseContent) SyncFieldsDuringRead(existingState ListVolumesResponseContent) {
+func (toState *ListVolumesResponseContent) SyncFieldsDuringRead(ctx context.Context, fromState ListVolumesResponseContent) {
 }
 
 func (c ListVolumesResponseContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15947,10 +15735,10 @@ type MetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *MetastoreAssignment) SyncFieldsDuringCreateOrUpdate(plan MetastoreAssignment) {
+func (toState *MetastoreAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MetastoreAssignment) {
 }
 
-func (newState *MetastoreAssignment) SyncFieldsDuringRead(existingState MetastoreAssignment) {
+func (toState *MetastoreAssignment) SyncFieldsDuringRead(ctx context.Context, fromState MetastoreAssignment) {
 }
 
 func (c MetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16041,10 +15829,10 @@ type MetastoreInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *MetastoreInfo) SyncFieldsDuringCreateOrUpdate(plan MetastoreInfo) {
+func (toState *MetastoreInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MetastoreInfo) {
 }
 
-func (newState *MetastoreInfo) SyncFieldsDuringRead(existingState MetastoreInfo) {
+func (toState *MetastoreInfo) SyncFieldsDuringRead(ctx context.Context, fromState MetastoreInfo) {
 }
 
 func (c MetastoreInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16191,10 +15979,26 @@ type ModelVersionInfo struct {
 	Version types.Int64 `tfsdk:"version"`
 }
 
-func (newState *ModelVersionInfo) SyncFieldsDuringCreateOrUpdate(plan ModelVersionInfo) {
+func (toState *ModelVersionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ModelVersionInfo) {
+	if !fromPlan.ModelVersionDependencies.IsNull() && !fromPlan.ModelVersionDependencies.IsUnknown() {
+		if toStateModelVersionDependencies, ok := toState.GetModelVersionDependencies(ctx); ok {
+			if fromPlanModelVersionDependencies, ok := fromPlan.GetModelVersionDependencies(ctx); ok {
+				toStateModelVersionDependencies.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanModelVersionDependencies)
+				toState.SetModelVersionDependencies(ctx, toStateModelVersionDependencies)
+			}
+		}
+	}
 }
 
-func (newState *ModelVersionInfo) SyncFieldsDuringRead(existingState ModelVersionInfo) {
+func (toState *ModelVersionInfo) SyncFieldsDuringRead(ctx context.Context, fromState ModelVersionInfo) {
+	if !fromState.ModelVersionDependencies.IsNull() && !fromState.ModelVersionDependencies.IsUnknown() {
+		if toStateModelVersionDependencies, ok := toState.GetModelVersionDependencies(ctx); ok {
+			if fromStateModelVersionDependencies, ok := fromState.GetModelVersionDependencies(ctx); ok {
+				toStateModelVersionDependencies.SyncFieldsDuringRead(ctx, fromStateModelVersionDependencies)
+				toState.SetModelVersionDependencies(ctx, toStateModelVersionDependencies)
+			}
+		}
+	}
 }
 
 func (c ModelVersionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16327,7 +16131,7 @@ func (o *ModelVersionInfo) GetModelVersionDependencies(ctx context.Context) (Dep
 	if o.ModelVersionDependencies.IsNull() || o.ModelVersionDependencies.IsUnknown() {
 		return e, false
 	}
-	var v []DependencyList
+	var v DependencyList
 	d := o.ModelVersionDependencies.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16335,10 +16139,7 @@ func (o *ModelVersionInfo) GetModelVersionDependencies(ctx context.Context) (Dep
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetModelVersionDependencies sets the value of the ModelVersionDependencies field in ModelVersionInfo.
@@ -16359,10 +16160,10 @@ type MonitorCronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *MonitorCronSchedule) SyncFieldsDuringCreateOrUpdate(plan MonitorCronSchedule) {
+func (toState *MonitorCronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorCronSchedule) {
 }
 
-func (newState *MonitorCronSchedule) SyncFieldsDuringRead(existingState MonitorCronSchedule) {
+func (toState *MonitorCronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState MonitorCronSchedule) {
 }
 
 func (c MonitorCronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16414,10 +16215,10 @@ type MonitorDataClassificationConfig struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *MonitorDataClassificationConfig) SyncFieldsDuringCreateOrUpdate(plan MonitorDataClassificationConfig) {
+func (toState *MonitorDataClassificationConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorDataClassificationConfig) {
 }
 
-func (newState *MonitorDataClassificationConfig) SyncFieldsDuringRead(existingState MonitorDataClassificationConfig) {
+func (toState *MonitorDataClassificationConfig) SyncFieldsDuringRead(ctx context.Context, fromState MonitorDataClassificationConfig) {
 }
 
 func (c MonitorDataClassificationConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16463,10 +16264,10 @@ type MonitorDestination struct {
 	EmailAddresses types.List `tfsdk:"email_addresses"`
 }
 
-func (newState *MonitorDestination) SyncFieldsDuringCreateOrUpdate(plan MonitorDestination) {
+func (toState *MonitorDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorDestination) {
 }
 
-func (newState *MonitorDestination) SyncFieldsDuringRead(existingState MonitorDestination) {
+func (toState *MonitorDestination) SyncFieldsDuringRead(ctx context.Context, fromState MonitorDestination) {
 }
 
 func (c MonitorDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16554,10 +16355,10 @@ type MonitorInferenceLog struct {
 	TimestampCol types.String `tfsdk:"timestamp_col"`
 }
 
-func (newState *MonitorInferenceLog) SyncFieldsDuringCreateOrUpdate(plan MonitorInferenceLog) {
+func (toState *MonitorInferenceLog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorInferenceLog) {
 }
 
-func (newState *MonitorInferenceLog) SyncFieldsDuringRead(existingState MonitorInferenceLog) {
+func (toState *MonitorInferenceLog) SyncFieldsDuringRead(ctx context.Context, fromState MonitorInferenceLog) {
 }
 
 func (c MonitorInferenceLog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16702,10 +16503,106 @@ type MonitorInfo struct {
 	TimeSeries types.Object `tfsdk:"time_series"`
 }
 
-func (newState *MonitorInfo) SyncFieldsDuringCreateOrUpdate(plan MonitorInfo) {
+func (toState *MonitorInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorInfo) {
+	if !fromPlan.DataClassificationConfig.IsNull() && !fromPlan.DataClassificationConfig.IsUnknown() {
+		if toStateDataClassificationConfig, ok := toState.GetDataClassificationConfig(ctx); ok {
+			if fromPlanDataClassificationConfig, ok := fromPlan.GetDataClassificationConfig(ctx); ok {
+				toStateDataClassificationConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataClassificationConfig)
+				toState.SetDataClassificationConfig(ctx, toStateDataClassificationConfig)
+			}
+		}
+	}
+	if !fromPlan.InferenceLog.IsNull() && !fromPlan.InferenceLog.IsUnknown() {
+		if toStateInferenceLog, ok := toState.GetInferenceLog(ctx); ok {
+			if fromPlanInferenceLog, ok := fromPlan.GetInferenceLog(ctx); ok {
+				toStateInferenceLog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInferenceLog)
+				toState.SetInferenceLog(ctx, toStateInferenceLog)
+			}
+		}
+	}
+	if !fromPlan.Notifications.IsNull() && !fromPlan.Notifications.IsUnknown() {
+		if toStateNotifications, ok := toState.GetNotifications(ctx); ok {
+			if fromPlanNotifications, ok := fromPlan.GetNotifications(ctx); ok {
+				toStateNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotifications)
+				toState.SetNotifications(ctx, toStateNotifications)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromPlan.Snapshot.IsNull() && !fromPlan.Snapshot.IsUnknown() {
+		if toStateSnapshot, ok := toState.GetSnapshot(ctx); ok {
+			if fromPlanSnapshot, ok := fromPlan.GetSnapshot(ctx); ok {
+				toStateSnapshot.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSnapshot)
+				toState.SetSnapshot(ctx, toStateSnapshot)
+			}
+		}
+	}
+	if !fromPlan.TimeSeries.IsNull() && !fromPlan.TimeSeries.IsUnknown() {
+		if toStateTimeSeries, ok := toState.GetTimeSeries(ctx); ok {
+			if fromPlanTimeSeries, ok := fromPlan.GetTimeSeries(ctx); ok {
+				toStateTimeSeries.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTimeSeries)
+				toState.SetTimeSeries(ctx, toStateTimeSeries)
+			}
+		}
+	}
 }
 
-func (newState *MonitorInfo) SyncFieldsDuringRead(existingState MonitorInfo) {
+func (toState *MonitorInfo) SyncFieldsDuringRead(ctx context.Context, fromState MonitorInfo) {
+	if !fromState.DataClassificationConfig.IsNull() && !fromState.DataClassificationConfig.IsUnknown() {
+		if toStateDataClassificationConfig, ok := toState.GetDataClassificationConfig(ctx); ok {
+			if fromStateDataClassificationConfig, ok := fromState.GetDataClassificationConfig(ctx); ok {
+				toStateDataClassificationConfig.SyncFieldsDuringRead(ctx, fromStateDataClassificationConfig)
+				toState.SetDataClassificationConfig(ctx, toStateDataClassificationConfig)
+			}
+		}
+	}
+	if !fromState.InferenceLog.IsNull() && !fromState.InferenceLog.IsUnknown() {
+		if toStateInferenceLog, ok := toState.GetInferenceLog(ctx); ok {
+			if fromStateInferenceLog, ok := fromState.GetInferenceLog(ctx); ok {
+				toStateInferenceLog.SyncFieldsDuringRead(ctx, fromStateInferenceLog)
+				toState.SetInferenceLog(ctx, toStateInferenceLog)
+			}
+		}
+	}
+	if !fromState.Notifications.IsNull() && !fromState.Notifications.IsUnknown() {
+		if toStateNotifications, ok := toState.GetNotifications(ctx); ok {
+			if fromStateNotifications, ok := fromState.GetNotifications(ctx); ok {
+				toStateNotifications.SyncFieldsDuringRead(ctx, fromStateNotifications)
+				toState.SetNotifications(ctx, toStateNotifications)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromState.Snapshot.IsNull() && !fromState.Snapshot.IsUnknown() {
+		if toStateSnapshot, ok := toState.GetSnapshot(ctx); ok {
+			if fromStateSnapshot, ok := fromState.GetSnapshot(ctx); ok {
+				toStateSnapshot.SyncFieldsDuringRead(ctx, fromStateSnapshot)
+				toState.SetSnapshot(ctx, toStateSnapshot)
+			}
+		}
+	}
+	if !fromState.TimeSeries.IsNull() && !fromState.TimeSeries.IsUnknown() {
+		if toStateTimeSeries, ok := toState.GetTimeSeries(ctx); ok {
+			if fromStateTimeSeries, ok := fromState.GetTimeSeries(ctx); ok {
+				toStateTimeSeries.SyncFieldsDuringRead(ctx, fromStateTimeSeries)
+				toState.SetTimeSeries(ctx, toStateTimeSeries)
+			}
+		}
+	}
 }
 
 func (c MonitorInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16843,7 +16740,7 @@ func (o *MonitorInfo) GetDataClassificationConfig(ctx context.Context) (MonitorD
 	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorDataClassificationConfig
+	var v MonitorDataClassificationConfig
 	d := o.DataClassificationConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16851,10 +16748,7 @@ func (o *MonitorInfo) GetDataClassificationConfig(ctx context.Context) (MonitorD
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDataClassificationConfig sets the value of the DataClassificationConfig field in MonitorInfo.
@@ -16871,7 +16765,7 @@ func (o *MonitorInfo) GetInferenceLog(ctx context.Context) (MonitorInferenceLog,
 	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorInferenceLog
+	var v MonitorInferenceLog
 	d := o.InferenceLog.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16879,10 +16773,7 @@ func (o *MonitorInfo) GetInferenceLog(ctx context.Context) (MonitorInferenceLog,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInferenceLog sets the value of the InferenceLog field in MonitorInfo.
@@ -16899,7 +16790,7 @@ func (o *MonitorInfo) GetNotifications(ctx context.Context) (MonitorNotification
 	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorNotifications
+	var v MonitorNotifications
 	d := o.Notifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16907,10 +16798,7 @@ func (o *MonitorInfo) GetNotifications(ctx context.Context) (MonitorNotification
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotifications sets the value of the Notifications field in MonitorInfo.
@@ -16927,7 +16815,7 @@ func (o *MonitorInfo) GetSchedule(ctx context.Context) (MonitorCronSchedule, boo
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorCronSchedule
+	var v MonitorCronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16935,10 +16823,7 @@ func (o *MonitorInfo) GetSchedule(ctx context.Context) (MonitorCronSchedule, boo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in MonitorInfo.
@@ -16981,7 +16866,7 @@ func (o *MonitorInfo) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool) {
 	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorSnapshot
+	var v MonitorSnapshot
 	d := o.Snapshot.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16989,10 +16874,7 @@ func (o *MonitorInfo) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSnapshot sets the value of the Snapshot field in MonitorInfo.
@@ -17009,7 +16891,7 @@ func (o *MonitorInfo) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, boo
 	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorTimeSeries
+	var v MonitorTimeSeries
 	d := o.TimeSeries.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17017,10 +16899,7 @@ func (o *MonitorInfo) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, boo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTimeSeries sets the value of the TimeSeries field in MonitorInfo.
@@ -17057,10 +16936,10 @@ type MonitorMetric struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *MonitorMetric) SyncFieldsDuringCreateOrUpdate(plan MonitorMetric) {
+func (toState *MonitorMetric) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorMetric) {
 }
 
-func (newState *MonitorMetric) SyncFieldsDuringRead(existingState MonitorMetric) {
+func (toState *MonitorMetric) SyncFieldsDuringRead(ctx context.Context, fromState MonitorMetric) {
 }
 
 func (c MonitorMetric) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17149,10 +17028,42 @@ type MonitorNotifications struct {
 	OnNewClassificationTagDetected types.Object `tfsdk:"on_new_classification_tag_detected"`
 }
 
-func (newState *MonitorNotifications) SyncFieldsDuringCreateOrUpdate(plan MonitorNotifications) {
+func (toState *MonitorNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorNotifications) {
+	if !fromPlan.OnFailure.IsNull() && !fromPlan.OnFailure.IsUnknown() {
+		if toStateOnFailure, ok := toState.GetOnFailure(ctx); ok {
+			if fromPlanOnFailure, ok := fromPlan.GetOnFailure(ctx); ok {
+				toStateOnFailure.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOnFailure)
+				toState.SetOnFailure(ctx, toStateOnFailure)
+			}
+		}
+	}
+	if !fromPlan.OnNewClassificationTagDetected.IsNull() && !fromPlan.OnNewClassificationTagDetected.IsUnknown() {
+		if toStateOnNewClassificationTagDetected, ok := toState.GetOnNewClassificationTagDetected(ctx); ok {
+			if fromPlanOnNewClassificationTagDetected, ok := fromPlan.GetOnNewClassificationTagDetected(ctx); ok {
+				toStateOnNewClassificationTagDetected.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOnNewClassificationTagDetected)
+				toState.SetOnNewClassificationTagDetected(ctx, toStateOnNewClassificationTagDetected)
+			}
+		}
+	}
 }
 
-func (newState *MonitorNotifications) SyncFieldsDuringRead(existingState MonitorNotifications) {
+func (toState *MonitorNotifications) SyncFieldsDuringRead(ctx context.Context, fromState MonitorNotifications) {
+	if !fromState.OnFailure.IsNull() && !fromState.OnFailure.IsUnknown() {
+		if toStateOnFailure, ok := toState.GetOnFailure(ctx); ok {
+			if fromStateOnFailure, ok := fromState.GetOnFailure(ctx); ok {
+				toStateOnFailure.SyncFieldsDuringRead(ctx, fromStateOnFailure)
+				toState.SetOnFailure(ctx, toStateOnFailure)
+			}
+		}
+	}
+	if !fromState.OnNewClassificationTagDetected.IsNull() && !fromState.OnNewClassificationTagDetected.IsUnknown() {
+		if toStateOnNewClassificationTagDetected, ok := toState.GetOnNewClassificationTagDetected(ctx); ok {
+			if fromStateOnNewClassificationTagDetected, ok := fromState.GetOnNewClassificationTagDetected(ctx); ok {
+				toStateOnNewClassificationTagDetected.SyncFieldsDuringRead(ctx, fromStateOnNewClassificationTagDetected)
+				toState.SetOnNewClassificationTagDetected(ctx, toStateOnNewClassificationTagDetected)
+			}
+		}
+	}
 }
 
 func (c MonitorNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17206,7 +17117,7 @@ func (o *MonitorNotifications) GetOnFailure(ctx context.Context) (MonitorDestina
 	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorDestination
+	var v MonitorDestination
 	d := o.OnFailure.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17214,10 +17125,7 @@ func (o *MonitorNotifications) GetOnFailure(ctx context.Context) (MonitorDestina
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOnFailure sets the value of the OnFailure field in MonitorNotifications.
@@ -17234,7 +17142,7 @@ func (o *MonitorNotifications) GetOnNewClassificationTagDetected(ctx context.Con
 	if o.OnNewClassificationTagDetected.IsNull() || o.OnNewClassificationTagDetected.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorDestination
+	var v MonitorDestination
 	d := o.OnNewClassificationTagDetected.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17242,10 +17150,7 @@ func (o *MonitorNotifications) GetOnNewClassificationTagDetected(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOnNewClassificationTagDetected sets the value of the OnNewClassificationTagDetected field in MonitorNotifications.
@@ -17272,10 +17177,10 @@ type MonitorRefreshInfo struct {
 	Trigger types.String `tfsdk:"trigger"`
 }
 
-func (newState *MonitorRefreshInfo) SyncFieldsDuringCreateOrUpdate(plan MonitorRefreshInfo) {
+func (toState *MonitorRefreshInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorRefreshInfo) {
 }
 
-func (newState *MonitorRefreshInfo) SyncFieldsDuringRead(existingState MonitorRefreshInfo) {
+func (toState *MonitorRefreshInfo) SyncFieldsDuringRead(ctx context.Context, fromState MonitorRefreshInfo) {
 }
 
 func (c MonitorRefreshInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17335,10 +17240,10 @@ type MonitorRefreshListResponse struct {
 	Refreshes types.List `tfsdk:"refreshes"`
 }
 
-func (newState *MonitorRefreshListResponse) SyncFieldsDuringCreateOrUpdate(plan MonitorRefreshListResponse) {
+func (toState *MonitorRefreshListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorRefreshListResponse) {
 }
 
-func (newState *MonitorRefreshListResponse) SyncFieldsDuringRead(existingState MonitorRefreshListResponse) {
+func (toState *MonitorRefreshListResponse) SyncFieldsDuringRead(ctx context.Context, fromState MonitorRefreshListResponse) {
 }
 
 func (c MonitorRefreshListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17412,10 +17317,10 @@ func (o *MonitorRefreshListResponse) SetRefreshes(ctx context.Context, v []Monit
 type MonitorSnapshot struct {
 }
 
-func (newState *MonitorSnapshot) SyncFieldsDuringCreateOrUpdate(plan MonitorSnapshot) {
+func (toState *MonitorSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorSnapshot) {
 }
 
-func (newState *MonitorSnapshot) SyncFieldsDuringRead(existingState MonitorSnapshot) {
+func (toState *MonitorSnapshot) SyncFieldsDuringRead(ctx context.Context, fromState MonitorSnapshot) {
 }
 
 func (c MonitorSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17461,10 +17366,10 @@ type MonitorTimeSeries struct {
 	TimestampCol types.String `tfsdk:"timestamp_col"`
 }
 
-func (newState *MonitorTimeSeries) SyncFieldsDuringCreateOrUpdate(plan MonitorTimeSeries) {
+func (toState *MonitorTimeSeries) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MonitorTimeSeries) {
 }
 
-func (newState *MonitorTimeSeries) SyncFieldsDuringRead(existingState MonitorTimeSeries) {
+func (toState *MonitorTimeSeries) SyncFieldsDuringRead(ctx context.Context, fromState MonitorTimeSeries) {
 }
 
 func (c MonitorTimeSeries) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17542,10 +17447,10 @@ type NamedTableConstraint struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *NamedTableConstraint) SyncFieldsDuringCreateOrUpdate(plan NamedTableConstraint) {
+func (toState *NamedTableConstraint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NamedTableConstraint) {
 }
 
-func (newState *NamedTableConstraint) SyncFieldsDuringRead(existingState NamedTableConstraint) {
+func (toState *NamedTableConstraint) SyncFieldsDuringRead(ctx context.Context, fromState NamedTableConstraint) {
 }
 
 func (c NamedTableConstraint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17585,72 +17490,6 @@ func (o NamedTableConstraint) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type NotificationDestination struct {
-	// The identifier for the destination. This is the email address for EMAIL
-	// destinations, the URL for URL destinations, or the unique Databricks
-	// notification destination ID for all other external destinations.
-	DestinationId types.String `tfsdk:"destination_id"`
-	// The type of the destination.
-	DestinationType types.String `tfsdk:"destination_type"`
-	// This field is used to denote whether the destination is the email of the
-	// owner of the securable object. The special destination cannot be assigned
-	// to a securable and only represents the default destination of the
-	// securable. The securable types that support default special destinations
-	// are: "catalog", "external_location", "connection", "credential", and
-	// "metastore". The **destination_type** of a **special_destination** is
-	// always EMAIL.
-	SpecialDestination types.String `tfsdk:"special_destination"`
-}
-
-func (newState *NotificationDestination) SyncFieldsDuringCreateOrUpdate(plan NotificationDestination) {
-}
-
-func (newState *NotificationDestination) SyncFieldsDuringRead(existingState NotificationDestination) {
-}
-
-func (c NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_id"] = attrs["destination_id"].SetOptional()
-	attrs["destination_type"] = attrs["destination_type"].SetOptional()
-	attrs["special_destination"] = attrs["special_destination"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in NotificationDestination.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a NotificationDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, NotificationDestination
-// only implements ToObjectValue() and Type().
-func (o NotificationDestination) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"destination_id":      o.DestinationId,
-			"destination_type":    o.DestinationType,
-			"special_destination": o.SpecialDestination,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o NotificationDestination) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"destination_id":      types.StringType,
-			"destination_type":    types.StringType,
-			"special_destination": types.StringType,
-		},
-	}
-}
-
 // Online Table information.
 type OnlineTable struct {
 	// Full three-part (catalog, schema, table) name of the table.
@@ -17668,10 +17507,42 @@ type OnlineTable struct {
 	UnityCatalogProvisioningState types.String `tfsdk:"unity_catalog_provisioning_state"`
 }
 
-func (newState *OnlineTable) SyncFieldsDuringCreateOrUpdate(plan OnlineTable) {
+func (toState *OnlineTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OnlineTable) {
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *OnlineTable) SyncFieldsDuringRead(existingState OnlineTable) {
+func (toState *OnlineTable) SyncFieldsDuringRead(ctx context.Context, fromState OnlineTable) {
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c OnlineTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17734,7 +17605,7 @@ func (o *OnlineTable) GetSpec(ctx context.Context) (OnlineTableSpec, bool) {
 	if o.Spec.IsNull() || o.Spec.IsUnknown() {
 		return e, false
 	}
-	var v []OnlineTableSpec
+	var v OnlineTableSpec
 	d := o.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17742,10 +17613,7 @@ func (o *OnlineTable) GetSpec(ctx context.Context) (OnlineTableSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSpec sets the value of the Spec field in OnlineTable.
@@ -17762,7 +17630,7 @@ func (o *OnlineTable) GetStatus(ctx context.Context) (OnlineTableStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []OnlineTableStatus
+	var v OnlineTableStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17770,10 +17638,7 @@ func (o *OnlineTable) GetStatus(ctx context.Context) (OnlineTableStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in OnlineTable.
@@ -17809,10 +17674,42 @@ type OnlineTableSpec struct {
 	TimeseriesKey types.String `tfsdk:"timeseries_key"`
 }
 
-func (newState *OnlineTableSpec) SyncFieldsDuringCreateOrUpdate(plan OnlineTableSpec) {
+func (toState *OnlineTableSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OnlineTableSpec) {
+	if !fromPlan.RunContinuously.IsNull() && !fromPlan.RunContinuously.IsUnknown() {
+		if toStateRunContinuously, ok := toState.GetRunContinuously(ctx); ok {
+			if fromPlanRunContinuously, ok := fromPlan.GetRunContinuously(ctx); ok {
+				toStateRunContinuously.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunContinuously)
+				toState.SetRunContinuously(ctx, toStateRunContinuously)
+			}
+		}
+	}
+	if !fromPlan.RunTriggered.IsNull() && !fromPlan.RunTriggered.IsUnknown() {
+		if toStateRunTriggered, ok := toState.GetRunTriggered(ctx); ok {
+			if fromPlanRunTriggered, ok := fromPlan.GetRunTriggered(ctx); ok {
+				toStateRunTriggered.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunTriggered)
+				toState.SetRunTriggered(ctx, toStateRunTriggered)
+			}
+		}
+	}
 }
 
-func (newState *OnlineTableSpec) SyncFieldsDuringRead(existingState OnlineTableSpec) {
+func (toState *OnlineTableSpec) SyncFieldsDuringRead(ctx context.Context, fromState OnlineTableSpec) {
+	if !fromState.RunContinuously.IsNull() && !fromState.RunContinuously.IsUnknown() {
+		if toStateRunContinuously, ok := toState.GetRunContinuously(ctx); ok {
+			if fromStateRunContinuously, ok := fromState.GetRunContinuously(ctx); ok {
+				toStateRunContinuously.SyncFieldsDuringRead(ctx, fromStateRunContinuously)
+				toState.SetRunContinuously(ctx, toStateRunContinuously)
+			}
+		}
+	}
+	if !fromState.RunTriggered.IsNull() && !fromState.RunTriggered.IsUnknown() {
+		if toStateRunTriggered, ok := toState.GetRunTriggered(ctx); ok {
+			if fromStateRunTriggered, ok := fromState.GetRunTriggered(ctx); ok {
+				toStateRunTriggered.SyncFieldsDuringRead(ctx, fromStateRunTriggered)
+				toState.SetRunTriggered(ctx, toStateRunTriggered)
+			}
+		}
+	}
 }
 
 func (c OnlineTableSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17910,7 +17807,7 @@ func (o *OnlineTableSpec) GetRunContinuously(ctx context.Context) (OnlineTableSp
 	if o.RunContinuously.IsNull() || o.RunContinuously.IsUnknown() {
 		return e, false
 	}
-	var v []OnlineTableSpecContinuousSchedulingPolicy
+	var v OnlineTableSpecContinuousSchedulingPolicy
 	d := o.RunContinuously.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17918,10 +17815,7 @@ func (o *OnlineTableSpec) GetRunContinuously(ctx context.Context) (OnlineTableSp
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunContinuously sets the value of the RunContinuously field in OnlineTableSpec.
@@ -17938,7 +17832,7 @@ func (o *OnlineTableSpec) GetRunTriggered(ctx context.Context) (OnlineTableSpecT
 	if o.RunTriggered.IsNull() || o.RunTriggered.IsUnknown() {
 		return e, false
 	}
-	var v []OnlineTableSpecTriggeredSchedulingPolicy
+	var v OnlineTableSpecTriggeredSchedulingPolicy
 	d := o.RunTriggered.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17946,10 +17840,7 @@ func (o *OnlineTableSpec) GetRunTriggered(ctx context.Context) (OnlineTableSpecT
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunTriggered sets the value of the RunTriggered field in OnlineTableSpec.
@@ -17961,10 +17852,10 @@ func (o *OnlineTableSpec) SetRunTriggered(ctx context.Context, v OnlineTableSpec
 type OnlineTableSpecContinuousSchedulingPolicy struct {
 }
 
-func (newState *OnlineTableSpecContinuousSchedulingPolicy) SyncFieldsDuringCreateOrUpdate(plan OnlineTableSpecContinuousSchedulingPolicy) {
+func (toState *OnlineTableSpecContinuousSchedulingPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OnlineTableSpecContinuousSchedulingPolicy) {
 }
 
-func (newState *OnlineTableSpecContinuousSchedulingPolicy) SyncFieldsDuringRead(existingState OnlineTableSpecContinuousSchedulingPolicy) {
+func (toState *OnlineTableSpecContinuousSchedulingPolicy) SyncFieldsDuringRead(ctx context.Context, fromState OnlineTableSpecContinuousSchedulingPolicy) {
 }
 
 func (c OnlineTableSpecContinuousSchedulingPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18002,10 +17893,10 @@ func (o OnlineTableSpecContinuousSchedulingPolicy) Type(ctx context.Context) att
 type OnlineTableSpecTriggeredSchedulingPolicy struct {
 }
 
-func (newState *OnlineTableSpecTriggeredSchedulingPolicy) SyncFieldsDuringCreateOrUpdate(plan OnlineTableSpecTriggeredSchedulingPolicy) {
+func (toState *OnlineTableSpecTriggeredSchedulingPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OnlineTableSpecTriggeredSchedulingPolicy) {
 }
 
-func (newState *OnlineTableSpecTriggeredSchedulingPolicy) SyncFieldsDuringRead(existingState OnlineTableSpecTriggeredSchedulingPolicy) {
+func (toState *OnlineTableSpecTriggeredSchedulingPolicy) SyncFieldsDuringRead(ctx context.Context, fromState OnlineTableSpecTriggeredSchedulingPolicy) {
 }
 
 func (c OnlineTableSpecTriggeredSchedulingPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18055,10 +17946,74 @@ type OnlineTableStatus struct {
 	TriggeredUpdateStatus types.Object `tfsdk:"triggered_update_status"`
 }
 
-func (newState *OnlineTableStatus) SyncFieldsDuringCreateOrUpdate(plan OnlineTableStatus) {
+func (toState *OnlineTableStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OnlineTableStatus) {
+	if !fromPlan.ContinuousUpdateStatus.IsNull() && !fromPlan.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromPlanContinuousUpdateStatus, ok := fromPlan.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromPlan.FailedStatus.IsNull() && !fromPlan.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromPlanFailedStatus, ok := fromPlan.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromPlan.ProvisioningStatus.IsNull() && !fromPlan.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromPlanProvisioningStatus, ok := fromPlan.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromPlan.TriggeredUpdateStatus.IsNull() && !fromPlan.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromPlanTriggeredUpdateStatus, ok := fromPlan.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
-func (newState *OnlineTableStatus) SyncFieldsDuringRead(existingState OnlineTableStatus) {
+func (toState *OnlineTableStatus) SyncFieldsDuringRead(ctx context.Context, fromState OnlineTableStatus) {
+	if !fromState.ContinuousUpdateStatus.IsNull() && !fromState.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromStateContinuousUpdateStatus, ok := fromState.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringRead(ctx, fromStateContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromState.FailedStatus.IsNull() && !fromState.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromStateFailedStatus, ok := fromState.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringRead(ctx, fromStateFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromState.ProvisioningStatus.IsNull() && !fromState.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromStateProvisioningStatus, ok := fromState.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringRead(ctx, fromStateProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromState.TriggeredUpdateStatus.IsNull() && !fromState.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromStateTriggeredUpdateStatus, ok := fromState.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
 func (c OnlineTableStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18126,7 +18081,7 @@ func (o *OnlineTableStatus) GetContinuousUpdateStatus(ctx context.Context) (Cont
 	if o.ContinuousUpdateStatus.IsNull() || o.ContinuousUpdateStatus.IsUnknown() {
 		return e, false
 	}
-	var v []ContinuousUpdateStatus
+	var v ContinuousUpdateStatus
 	d := o.ContinuousUpdateStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18134,10 +18089,7 @@ func (o *OnlineTableStatus) GetContinuousUpdateStatus(ctx context.Context) (Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetContinuousUpdateStatus sets the value of the ContinuousUpdateStatus field in OnlineTableStatus.
@@ -18154,7 +18106,7 @@ func (o *OnlineTableStatus) GetFailedStatus(ctx context.Context) (FailedStatus, 
 	if o.FailedStatus.IsNull() || o.FailedStatus.IsUnknown() {
 		return e, false
 	}
-	var v []FailedStatus
+	var v FailedStatus
 	d := o.FailedStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18162,10 +18114,7 @@ func (o *OnlineTableStatus) GetFailedStatus(ctx context.Context) (FailedStatus, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFailedStatus sets the value of the FailedStatus field in OnlineTableStatus.
@@ -18182,7 +18131,7 @@ func (o *OnlineTableStatus) GetProvisioningStatus(ctx context.Context) (Provisio
 	if o.ProvisioningStatus.IsNull() || o.ProvisioningStatus.IsUnknown() {
 		return e, false
 	}
-	var v []ProvisioningStatus
+	var v ProvisioningStatus
 	d := o.ProvisioningStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18190,10 +18139,7 @@ func (o *OnlineTableStatus) GetProvisioningStatus(ctx context.Context) (Provisio
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetProvisioningStatus sets the value of the ProvisioningStatus field in OnlineTableStatus.
@@ -18210,7 +18156,7 @@ func (o *OnlineTableStatus) GetTriggeredUpdateStatus(ctx context.Context) (Trigg
 	if o.TriggeredUpdateStatus.IsNull() || o.TriggeredUpdateStatus.IsUnknown() {
 		return e, false
 	}
-	var v []TriggeredUpdateStatus
+	var v TriggeredUpdateStatus
 	d := o.TriggeredUpdateStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18218,10 +18164,7 @@ func (o *OnlineTableStatus) GetTriggeredUpdateStatus(ctx context.Context) (Trigg
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggeredUpdateStatus sets the value of the TriggeredUpdateStatus field in OnlineTableStatus.
@@ -18274,10 +18217,10 @@ type OptionSpec struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *OptionSpec) SyncFieldsDuringCreateOrUpdate(plan OptionSpec) {
+func (toState *OptionSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OptionSpec) {
 }
 
-func (newState *OptionSpec) SyncFieldsDuringRead(existingState OptionSpec) {
+func (toState *OptionSpec) SyncFieldsDuringRead(ctx context.Context, fromState OptionSpec) {
 }
 
 func (c OptionSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18392,30 +18335,19 @@ type PermissionsChange struct {
 	// The principal whose privileges we are changing. Only one of principal or
 	// principal_id should be specified, never both at the same time.
 	Principal types.String `tfsdk:"principal"`
-	// An opaque internal ID that identifies the principal whose privileges
-	// should be removed.
-	//
-	// This field is intended for removing privileges associated with a deleted
-	// user. When set, only the entries specified in the remove field are
-	// processed; any entries in the add field will be rejected.
-	//
-	// Only one of principal or principal_id should be specified, never both at
-	// the same time.
-	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
 }
 
-func (newState *PermissionsChange) SyncFieldsDuringCreateOrUpdate(plan PermissionsChange) {
+func (toState *PermissionsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionsChange) {
 }
 
-func (newState *PermissionsChange) SyncFieldsDuringRead(existingState PermissionsChange) {
+func (toState *PermissionsChange) SyncFieldsDuringRead(ctx context.Context, fromState PermissionsChange) {
 }
 
 func (c PermissionsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["add"] = attrs["add"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["remove"] = attrs["remove"].SetOptional()
 
 	return attrs
@@ -18442,10 +18374,9 @@ func (o PermissionsChange) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"add":          o.Add,
-			"principal":    o.Principal,
-			"principal_id": o.PrincipalId,
-			"remove":       o.Remove,
+			"add":       o.Add,
+			"principal": o.Principal,
+			"remove":    o.Remove,
 		})
 }
 
@@ -18456,8 +18387,7 @@ func (o PermissionsChange) Type(ctx context.Context) attr.Type {
 			"add": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"principal":    types.StringType,
-			"principal_id": types.Int64Type,
+			"principal": types.StringType,
 			"remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -18533,10 +18463,10 @@ type PipelineProgress struct {
 	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
 }
 
-func (newState *PipelineProgress) SyncFieldsDuringCreateOrUpdate(plan PipelineProgress) {
+func (toState *PipelineProgress) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineProgress) {
 }
 
-func (newState *PipelineProgress) SyncFieldsDuringRead(existingState PipelineProgress) {
+func (toState *PipelineProgress) SyncFieldsDuringRead(ctx context.Context, fromState PipelineProgress) {
 }
 
 func (c PipelineProgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18599,10 +18529,10 @@ type PrimaryKeyConstraint struct {
 	TimeseriesColumns types.List `tfsdk:"timeseries_columns"`
 }
 
-func (newState *PrimaryKeyConstraint) SyncFieldsDuringCreateOrUpdate(plan PrimaryKeyConstraint) {
+func (toState *PrimaryKeyConstraint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrimaryKeyConstraint) {
 }
 
-func (newState *PrimaryKeyConstraint) SyncFieldsDuringRead(existingState PrimaryKeyConstraint) {
+func (toState *PrimaryKeyConstraint) SyncFieldsDuringRead(ctx context.Context, fromState PrimaryKeyConstraint) {
 }
 
 func (c PrimaryKeyConstraint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18710,79 +18640,22 @@ func (o *PrimaryKeyConstraint) SetTimeseriesColumns(ctx context.Context, v []typ
 	o.TimeseriesColumns = types.ListValueMust(t, vs)
 }
 
-type Principal struct {
-	// Databricks user, group or service principal ID.
-	Id types.String `tfsdk:"id"`
-
-	PrincipalType types.String `tfsdk:"principal_type"`
-}
-
-func (newState *Principal) SyncFieldsDuringCreateOrUpdate(plan Principal) {
-}
-
-func (newState *Principal) SyncFieldsDuringRead(existingState Principal) {
-}
-
-func (c Principal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["principal_type"] = attrs["principal_type"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Principal.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a Principal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Principal
-// only implements ToObjectValue() and Type().
-func (o Principal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"id":             o.Id,
-			"principal_type": o.PrincipalType,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o Principal) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id":             types.StringType,
-			"principal_type": types.StringType,
-		},
-	}
-}
-
 type PrivilegeAssignment struct {
 	// The principal (user email address or group name). For deleted principals,
 	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
-	// Unique identifier of the principal. For active principals, both
-	// `principal` and `principal_id` are present.
-	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
 }
 
-func (newState *PrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
+func (toState *PrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrivilegeAssignment) {
 }
 
-func (newState *PrivilegeAssignment) SyncFieldsDuringRead(existingState PrivilegeAssignment) {
+func (toState *PrivilegeAssignment) SyncFieldsDuringRead(ctx context.Context, fromState PrivilegeAssignment) {
 }
 
 func (c PrivilegeAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principal"] = attrs["principal"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["privileges"] = attrs["privileges"].SetOptional()
 
 	return attrs
@@ -18808,9 +18681,8 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal":    o.Principal,
-			"principal_id": o.PrincipalId,
-			"privileges":   o.Privileges,
+			"principal":  o.Principal,
+			"privileges": o.Privileges,
 		})
 }
 
@@ -18818,8 +18690,7 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal":    types.StringType,
-			"principal_id": types.Int64Type,
+			"principal": types.StringType,
 			"privileges": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -18859,10 +18730,10 @@ type ProvisioningInfo struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ProvisioningInfo) SyncFieldsDuringCreateOrUpdate(plan ProvisioningInfo) {
+func (toState *ProvisioningInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ProvisioningInfo) {
 }
 
-func (newState *ProvisioningInfo) SyncFieldsDuringRead(existingState ProvisioningInfo) {
+func (toState *ProvisioningInfo) SyncFieldsDuringRead(ctx context.Context, fromState ProvisioningInfo) {
 }
 
 func (c ProvisioningInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18910,10 +18781,26 @@ type ProvisioningStatus struct {
 	InitialPipelineSyncProgress types.Object `tfsdk:"initial_pipeline_sync_progress"`
 }
 
-func (newState *ProvisioningStatus) SyncFieldsDuringCreateOrUpdate(plan ProvisioningStatus) {
+func (toState *ProvisioningStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ProvisioningStatus) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *ProvisioningStatus) SyncFieldsDuringRead(existingState ProvisioningStatus) {
+func (toState *ProvisioningStatus) SyncFieldsDuringRead(ctx context.Context, fromState ProvisioningStatus) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c ProvisioningStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18963,7 +18850,7 @@ func (o *ProvisioningStatus) GetInitialPipelineSyncProgress(ctx context.Context)
 	if o.InitialPipelineSyncProgress.IsNull() || o.InitialPipelineSyncProgress.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineProgress
+	var v PipelineProgress
 	d := o.InitialPipelineSyncProgress.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18971,10 +18858,7 @@ func (o *ProvisioningStatus) GetInitialPipelineSyncProgress(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInitialPipelineSyncProgress sets the value of the InitialPipelineSyncProgress field in ProvisioningStatus.
@@ -18999,10 +18883,10 @@ type QuotaInfo struct {
 	QuotaName types.String `tfsdk:"quota_name"`
 }
 
-func (newState *QuotaInfo) SyncFieldsDuringCreateOrUpdate(plan QuotaInfo) {
+func (toState *QuotaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QuotaInfo) {
 }
 
-func (newState *QuotaInfo) SyncFieldsDuringRead(existingState QuotaInfo) {
+func (toState *QuotaInfo) SyncFieldsDuringRead(ctx context.Context, fromState QuotaInfo) {
 }
 
 func (c QuotaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19068,10 +18952,10 @@ type R2Credentials struct {
 	SessionToken types.String `tfsdk:"session_token"`
 }
 
-func (newState *R2Credentials) SyncFieldsDuringCreateOrUpdate(plan R2Credentials) {
+func (toState *R2Credentials) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan R2Credentials) {
 }
 
-func (newState *R2Credentials) SyncFieldsDuringRead(existingState R2Credentials) {
+func (toState *R2Credentials) SyncFieldsDuringRead(ctx context.Context, fromState R2Credentials) {
 }
 
 func (c R2Credentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19206,10 +19090,10 @@ type RegenerateDashboardResponse struct {
 	ParentFolder types.String `tfsdk:"parent_folder"`
 }
 
-func (newState *RegenerateDashboardResponse) SyncFieldsDuringCreateOrUpdate(plan RegenerateDashboardResponse) {
+func (toState *RegenerateDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RegenerateDashboardResponse) {
 }
 
-func (newState *RegenerateDashboardResponse) SyncFieldsDuringRead(existingState RegenerateDashboardResponse) {
+func (toState *RegenerateDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState RegenerateDashboardResponse) {
 }
 
 func (c RegenerateDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19260,10 +19144,10 @@ type RegisteredModelAlias struct {
 	VersionNum types.Int64 `tfsdk:"version_num"`
 }
 
-func (newState *RegisteredModelAlias) SyncFieldsDuringCreateOrUpdate(plan RegisteredModelAlias) {
+func (toState *RegisteredModelAlias) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RegisteredModelAlias) {
 }
 
-func (newState *RegisteredModelAlias) SyncFieldsDuringRead(existingState RegisteredModelAlias) {
+func (toState *RegisteredModelAlias) SyncFieldsDuringRead(ctx context.Context, fromState RegisteredModelAlias) {
 }
 
 func (c RegisteredModelAlias) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19342,10 +19226,10 @@ type RegisteredModelInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *RegisteredModelInfo) SyncFieldsDuringCreateOrUpdate(plan RegisteredModelInfo) {
+func (toState *RegisteredModelInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RegisteredModelInfo) {
 }
 
-func (newState *RegisteredModelInfo) SyncFieldsDuringRead(existingState RegisteredModelInfo) {
+func (toState *RegisteredModelInfo) SyncFieldsDuringRead(ctx context.Context, fromState RegisteredModelInfo) {
 }
 
 func (c RegisteredModelInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19534,10 +19418,26 @@ type SchemaInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *SchemaInfo) SyncFieldsDuringCreateOrUpdate(plan SchemaInfo) {
+func (toState *SchemaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SchemaInfo) {
+	if !fromPlan.EffectivePredictiveOptimizationFlag.IsNull() && !fromPlan.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromPlanEffectivePredictiveOptimizationFlag, ok := fromPlan.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
 }
 
-func (newState *SchemaInfo) SyncFieldsDuringRead(existingState SchemaInfo) {
+func (toState *SchemaInfo) SyncFieldsDuringRead(ctx context.Context, fromState SchemaInfo) {
+	if !fromState.EffectivePredictiveOptimizationFlag.IsNull() && !fromState.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromStateEffectivePredictiveOptimizationFlag, ok := fromState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringRead(ctx, fromStateEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
 }
 
 func (c SchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19641,7 +19541,7 @@ func (o *SchemaInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context)
 	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
 		return e, false
 	}
-	var v []EffectivePredictiveOptimizationFlag
+	var v EffectivePredictiveOptimizationFlag
 	d := o.EffectivePredictiveOptimizationFlag.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19649,10 +19549,7 @@ func (o *SchemaInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in SchemaInfo.
@@ -19687,69 +19584,6 @@ func (o *SchemaInfo) SetProperties(ctx context.Context, v map[string]types.Strin
 	o.Properties = types.MapValueMust(t, vs)
 }
 
-// Generic definition of a securable, which is uniquely defined in a metastore
-// by its type and full name.
-type Securable struct {
-	// Required. The full name of the catalog/schema/table. Optional if
-	// resource_name is present.
-	FullName types.String `tfsdk:"full_name"`
-	// Optional. The name of the Share object that contains the securable when
-	// the securable is getting shared in D2D Delta Sharing.
-	ProviderShare types.String `tfsdk:"provider_share"`
-	// Required. The type of securable (catalog/schema/table). Optional if
-	// resource_name is present.
-	Type_ types.String `tfsdk:"type"`
-}
-
-func (newState *Securable) SyncFieldsDuringCreateOrUpdate(plan Securable) {
-}
-
-func (newState *Securable) SyncFieldsDuringRead(existingState Securable) {
-}
-
-func (c Securable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["full_name"] = attrs["full_name"].SetOptional()
-	attrs["provider_share"] = attrs["provider_share"].SetOptional()
-	attrs["type"] = attrs["type"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Securable.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a Securable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Securable
-// only implements ToObjectValue() and Type().
-func (o Securable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"full_name":      o.FullName,
-			"provider_share": o.ProviderShare,
-			"type":           o.Type_,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o Securable) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"full_name":      types.StringType,
-			"provider_share": types.StringType,
-			"type":           types.StringType,
-		},
-	}
-}
-
 // Manifest of a specific securable kind.
 type SecurableKindManifest struct {
 	// Privileges that can be assigned to the securable.
@@ -19764,10 +19598,10 @@ type SecurableKindManifest struct {
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
-func (newState *SecurableKindManifest) SyncFieldsDuringCreateOrUpdate(plan SecurableKindManifest) {
+func (toState *SecurableKindManifest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SecurableKindManifest) {
 }
 
-func (newState *SecurableKindManifest) SyncFieldsDuringRead(existingState SecurableKindManifest) {
+func (toState *SecurableKindManifest) SyncFieldsDuringRead(ctx context.Context, fromState SecurableKindManifest) {
 }
 
 func (c SecurableKindManifest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19907,119 +19741,6 @@ func (o *SecurableKindManifest) SetOptions(ctx context.Context, v []OptionSpec) 
 	o.Options = types.ListValueMust(t, vs)
 }
 
-type SecurablePermissions struct {
-	// List of requested Unity Catalog permissions.
-	Permissions types.List `tfsdk:"permissions"`
-	// The securable for which the access request destinations are being
-	// requested.
-	Securable types.Object `tfsdk:"securable"`
-}
-
-func (newState *SecurablePermissions) SyncFieldsDuringCreateOrUpdate(plan SecurablePermissions) {
-}
-
-func (newState *SecurablePermissions) SyncFieldsDuringRead(existingState SecurablePermissions) {
-}
-
-func (c SecurablePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["securable"] = attrs["securable"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in SecurablePermissions.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a SecurablePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(types.String{}),
-		"securable":   reflect.TypeOf(Securable{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurablePermissions
-// only implements ToObjectValue() and Type().
-func (o SecurablePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"permissions": o.Permissions,
-			"securable":   o.Securable,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o SecurablePermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permissions": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"securable": Securable{}.Type(ctx),
-		},
-	}
-}
-
-// GetPermissions returns the value of the Permissions field in SecurablePermissions as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *SecurablePermissions) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Permissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetPermissions sets the value of the Permissions field in SecurablePermissions.
-func (o *SecurablePermissions) SetPermissions(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Permissions = types.ListValueMust(t, vs)
-}
-
-// GetSecurable returns the value of the Securable field in SecurablePermissions as
-// a Securable value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *SecurablePermissions) GetSecurable(ctx context.Context) (Securable, bool) {
-	var e Securable
-	if o.Securable.IsNull() || o.Securable.IsUnknown() {
-		return e, false
-	}
-	var v []Securable
-	d := o.Securable.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSecurable sets the value of the Securable field in SecurablePermissions.
-func (o *SecurablePermissions) SetSecurable(ctx context.Context, v Securable) {
-	vs := v.ToObjectValue(ctx)
-	o.Securable = vs
-}
-
 type SetArtifactAllowlist struct {
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
@@ -20157,10 +19878,10 @@ type SseEncryptionDetails struct {
 	AwsKmsKeyArn types.String `tfsdk:"aws_kms_key_arn"`
 }
 
-func (newState *SseEncryptionDetails) SyncFieldsDuringCreateOrUpdate(plan SseEncryptionDetails) {
+func (toState *SseEncryptionDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SseEncryptionDetails) {
 }
 
-func (newState *SseEncryptionDetails) SyncFieldsDuringRead(existingState SseEncryptionDetails) {
+func (toState *SseEncryptionDetails) SyncFieldsDuringRead(ctx context.Context, fromState SseEncryptionDetails) {
 }
 
 func (c SseEncryptionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20246,10 +19967,90 @@ type StorageCredentialInfo struct {
 	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage"`
 }
 
-func (newState *StorageCredentialInfo) SyncFieldsDuringCreateOrUpdate(plan StorageCredentialInfo) {
+func (toState *StorageCredentialInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StorageCredentialInfo) {
+	if !fromPlan.AwsIamRole.IsNull() && !fromPlan.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromPlanAwsIamRole, ok := fromPlan.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromPlan.AzureManagedIdentity.IsNull() && !fromPlan.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromPlanAzureManagedIdentity, ok := fromPlan.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromPlan.AzureServicePrincipal.IsNull() && !fromPlan.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromPlanAzureServicePrincipal, ok := fromPlan.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromPlan.CloudflareApiToken.IsNull() && !fromPlan.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromPlanCloudflareApiToken, ok := fromPlan.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromPlan.DatabricksGcpServiceAccount.IsNull() && !fromPlan.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromPlanDatabricksGcpServiceAccount, ok := fromPlan.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
-func (newState *StorageCredentialInfo) SyncFieldsDuringRead(existingState StorageCredentialInfo) {
+func (toState *StorageCredentialInfo) SyncFieldsDuringRead(ctx context.Context, fromState StorageCredentialInfo) {
+	if !fromState.AwsIamRole.IsNull() && !fromState.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromStateAwsIamRole, ok := fromState.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringRead(ctx, fromStateAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromState.AzureManagedIdentity.IsNull() && !fromState.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromStateAzureManagedIdentity, ok := fromState.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringRead(ctx, fromStateAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromState.AzureServicePrincipal.IsNull() && !fromState.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromStateAzureServicePrincipal, ok := fromState.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringRead(ctx, fromStateAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromState.CloudflareApiToken.IsNull() && !fromState.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromStateCloudflareApiToken, ok := fromState.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringRead(ctx, fromStateCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromState.DatabricksGcpServiceAccount.IsNull() && !fromState.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromStateDatabricksGcpServiceAccount, ok := fromState.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringRead(ctx, fromStateDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (c StorageCredentialInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20354,7 +20155,7 @@ func (o *StorageCredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRoleRe
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRoleResponse
+	var v AwsIamRoleResponse
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20362,10 +20163,7 @@ func (o *StorageCredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRoleRe
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in StorageCredentialInfo.
@@ -20382,7 +20180,7 @@ func (o *StorageCredentialInfo) GetAzureManagedIdentity(ctx context.Context) (Az
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentityResponse
+	var v AzureManagedIdentityResponse
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20390,10 +20188,7 @@ func (o *StorageCredentialInfo) GetAzureManagedIdentity(ctx context.Context) (Az
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in StorageCredentialInfo.
@@ -20410,7 +20205,7 @@ func (o *StorageCredentialInfo) GetAzureServicePrincipal(ctx context.Context) (A
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20418,10 +20213,7 @@ func (o *StorageCredentialInfo) GetAzureServicePrincipal(ctx context.Context) (A
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in StorageCredentialInfo.
@@ -20438,7 +20230,7 @@ func (o *StorageCredentialInfo) GetCloudflareApiToken(ctx context.Context) (Clou
 	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
 		return e, false
 	}
-	var v []CloudflareApiToken
+	var v CloudflareApiToken
 	d := o.CloudflareApiToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20446,10 +20238,7 @@ func (o *StorageCredentialInfo) GetCloudflareApiToken(ctx context.Context) (Clou
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCloudflareApiToken sets the value of the CloudflareApiToken field in StorageCredentialInfo.
@@ -20466,7 +20255,7 @@ func (o *StorageCredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Conte
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccountResponse
+	var v DatabricksGcpServiceAccountResponse
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20474,10 +20263,7 @@ func (o *StorageCredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Conte
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in StorageCredentialInfo.
@@ -20526,10 +20312,10 @@ type SystemSchemaInfo struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *SystemSchemaInfo) SyncFieldsDuringCreateOrUpdate(plan SystemSchemaInfo) {
+func (toState *SystemSchemaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SystemSchemaInfo) {
 }
 
-func (newState *SystemSchemaInfo) SyncFieldsDuringRead(existingState SystemSchemaInfo) {
+func (toState *SystemSchemaInfo) SyncFieldsDuringRead(ctx context.Context, fromState SystemSchemaInfo) {
 }
 
 func (c SystemSchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20583,10 +20369,58 @@ type TableConstraint struct {
 	PrimaryKeyConstraint types.Object `tfsdk:"primary_key_constraint"`
 }
 
-func (newState *TableConstraint) SyncFieldsDuringCreateOrUpdate(plan TableConstraint) {
+func (toState *TableConstraint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableConstraint) {
+	if !fromPlan.ForeignKeyConstraint.IsNull() && !fromPlan.ForeignKeyConstraint.IsUnknown() {
+		if toStateForeignKeyConstraint, ok := toState.GetForeignKeyConstraint(ctx); ok {
+			if fromPlanForeignKeyConstraint, ok := fromPlan.GetForeignKeyConstraint(ctx); ok {
+				toStateForeignKeyConstraint.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForeignKeyConstraint)
+				toState.SetForeignKeyConstraint(ctx, toStateForeignKeyConstraint)
+			}
+		}
+	}
+	if !fromPlan.NamedTableConstraint.IsNull() && !fromPlan.NamedTableConstraint.IsUnknown() {
+		if toStateNamedTableConstraint, ok := toState.GetNamedTableConstraint(ctx); ok {
+			if fromPlanNamedTableConstraint, ok := fromPlan.GetNamedTableConstraint(ctx); ok {
+				toStateNamedTableConstraint.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNamedTableConstraint)
+				toState.SetNamedTableConstraint(ctx, toStateNamedTableConstraint)
+			}
+		}
+	}
+	if !fromPlan.PrimaryKeyConstraint.IsNull() && !fromPlan.PrimaryKeyConstraint.IsUnknown() {
+		if toStatePrimaryKeyConstraint, ok := toState.GetPrimaryKeyConstraint(ctx); ok {
+			if fromPlanPrimaryKeyConstraint, ok := fromPlan.GetPrimaryKeyConstraint(ctx); ok {
+				toStatePrimaryKeyConstraint.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPrimaryKeyConstraint)
+				toState.SetPrimaryKeyConstraint(ctx, toStatePrimaryKeyConstraint)
+			}
+		}
+	}
 }
 
-func (newState *TableConstraint) SyncFieldsDuringRead(existingState TableConstraint) {
+func (toState *TableConstraint) SyncFieldsDuringRead(ctx context.Context, fromState TableConstraint) {
+	if !fromState.ForeignKeyConstraint.IsNull() && !fromState.ForeignKeyConstraint.IsUnknown() {
+		if toStateForeignKeyConstraint, ok := toState.GetForeignKeyConstraint(ctx); ok {
+			if fromStateForeignKeyConstraint, ok := fromState.GetForeignKeyConstraint(ctx); ok {
+				toStateForeignKeyConstraint.SyncFieldsDuringRead(ctx, fromStateForeignKeyConstraint)
+				toState.SetForeignKeyConstraint(ctx, toStateForeignKeyConstraint)
+			}
+		}
+	}
+	if !fromState.NamedTableConstraint.IsNull() && !fromState.NamedTableConstraint.IsUnknown() {
+		if toStateNamedTableConstraint, ok := toState.GetNamedTableConstraint(ctx); ok {
+			if fromStateNamedTableConstraint, ok := fromState.GetNamedTableConstraint(ctx); ok {
+				toStateNamedTableConstraint.SyncFieldsDuringRead(ctx, fromStateNamedTableConstraint)
+				toState.SetNamedTableConstraint(ctx, toStateNamedTableConstraint)
+			}
+		}
+	}
+	if !fromState.PrimaryKeyConstraint.IsNull() && !fromState.PrimaryKeyConstraint.IsUnknown() {
+		if toStatePrimaryKeyConstraint, ok := toState.GetPrimaryKeyConstraint(ctx); ok {
+			if fromStatePrimaryKeyConstraint, ok := fromState.GetPrimaryKeyConstraint(ctx); ok {
+				toStatePrimaryKeyConstraint.SyncFieldsDuringRead(ctx, fromStatePrimaryKeyConstraint)
+				toState.SetPrimaryKeyConstraint(ctx, toStatePrimaryKeyConstraint)
+			}
+		}
+	}
 }
 
 func (c TableConstraint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20644,7 +20478,7 @@ func (o *TableConstraint) GetForeignKeyConstraint(ctx context.Context) (ForeignK
 	if o.ForeignKeyConstraint.IsNull() || o.ForeignKeyConstraint.IsUnknown() {
 		return e, false
 	}
-	var v []ForeignKeyConstraint
+	var v ForeignKeyConstraint
 	d := o.ForeignKeyConstraint.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20652,10 +20486,7 @@ func (o *TableConstraint) GetForeignKeyConstraint(ctx context.Context) (ForeignK
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetForeignKeyConstraint sets the value of the ForeignKeyConstraint field in TableConstraint.
@@ -20672,7 +20503,7 @@ func (o *TableConstraint) GetNamedTableConstraint(ctx context.Context) (NamedTab
 	if o.NamedTableConstraint.IsNull() || o.NamedTableConstraint.IsUnknown() {
 		return e, false
 	}
-	var v []NamedTableConstraint
+	var v NamedTableConstraint
 	d := o.NamedTableConstraint.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20680,10 +20511,7 @@ func (o *TableConstraint) GetNamedTableConstraint(ctx context.Context) (NamedTab
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNamedTableConstraint sets the value of the NamedTableConstraint field in TableConstraint.
@@ -20700,7 +20528,7 @@ func (o *TableConstraint) GetPrimaryKeyConstraint(ctx context.Context) (PrimaryK
 	if o.PrimaryKeyConstraint.IsNull() || o.PrimaryKeyConstraint.IsUnknown() {
 		return e, false
 	}
-	var v []PrimaryKeyConstraint
+	var v PrimaryKeyConstraint
 	d := o.PrimaryKeyConstraint.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -20708,10 +20536,7 @@ func (o *TableConstraint) GetPrimaryKeyConstraint(ctx context.Context) (PrimaryK
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPrimaryKeyConstraint sets the value of the PrimaryKeyConstraint field in TableConstraint.
@@ -20727,10 +20552,10 @@ type TableDependency struct {
 	TableFullName types.String `tfsdk:"table_full_name"`
 }
 
-func (newState *TableDependency) SyncFieldsDuringCreateOrUpdate(plan TableDependency) {
+func (toState *TableDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableDependency) {
 }
 
-func (newState *TableDependency) SyncFieldsDuringRead(existingState TableDependency) {
+func (toState *TableDependency) SyncFieldsDuringRead(ctx context.Context, fromState TableDependency) {
 }
 
 func (c TableDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20775,10 +20600,10 @@ type TableExistsResponse struct {
 	TableExists types.Bool `tfsdk:"table_exists"`
 }
 
-func (newState *TableExistsResponse) SyncFieldsDuringCreateOrUpdate(plan TableExistsResponse) {
+func (toState *TableExistsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableExistsResponse) {
 }
 
-func (newState *TableExistsResponse) SyncFieldsDuringRead(existingState TableExistsResponse) {
+func (toState *TableExistsResponse) SyncFieldsDuringRead(ctx context.Context, fromState TableExistsResponse) {
 }
 
 func (c TableExistsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20899,10 +20724,106 @@ type TableInfo struct {
 	ViewDependencies types.Object `tfsdk:"view_dependencies"`
 }
 
-func (newState *TableInfo) SyncFieldsDuringCreateOrUpdate(plan TableInfo) {
+func (toState *TableInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableInfo) {
+	if !fromPlan.DeltaRuntimePropertiesKvpairs.IsNull() && !fromPlan.DeltaRuntimePropertiesKvpairs.IsUnknown() {
+		if toStateDeltaRuntimePropertiesKvpairs, ok := toState.GetDeltaRuntimePropertiesKvpairs(ctx); ok {
+			if fromPlanDeltaRuntimePropertiesKvpairs, ok := fromPlan.GetDeltaRuntimePropertiesKvpairs(ctx); ok {
+				toStateDeltaRuntimePropertiesKvpairs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaRuntimePropertiesKvpairs)
+				toState.SetDeltaRuntimePropertiesKvpairs(ctx, toStateDeltaRuntimePropertiesKvpairs)
+			}
+		}
+	}
+	if !fromPlan.EffectivePredictiveOptimizationFlag.IsNull() && !fromPlan.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromPlanEffectivePredictiveOptimizationFlag, ok := fromPlan.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
+	if !fromPlan.EncryptionDetails.IsNull() && !fromPlan.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromPlanEncryptionDetails, ok := fromPlan.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
+	if !fromPlan.RowFilter.IsNull() && !fromPlan.RowFilter.IsUnknown() {
+		if toStateRowFilter, ok := toState.GetRowFilter(ctx); ok {
+			if fromPlanRowFilter, ok := fromPlan.GetRowFilter(ctx); ok {
+				toStateRowFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRowFilter)
+				toState.SetRowFilter(ctx, toStateRowFilter)
+			}
+		}
+	}
+	if !fromPlan.SecurableKindManifest.IsNull() && !fromPlan.SecurableKindManifest.IsUnknown() {
+		if toStateSecurableKindManifest, ok := toState.GetSecurableKindManifest(ctx); ok {
+			if fromPlanSecurableKindManifest, ok := fromPlan.GetSecurableKindManifest(ctx); ok {
+				toStateSecurableKindManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSecurableKindManifest)
+				toState.SetSecurableKindManifest(ctx, toStateSecurableKindManifest)
+			}
+		}
+	}
+	if !fromPlan.ViewDependencies.IsNull() && !fromPlan.ViewDependencies.IsUnknown() {
+		if toStateViewDependencies, ok := toState.GetViewDependencies(ctx); ok {
+			if fromPlanViewDependencies, ok := fromPlan.GetViewDependencies(ctx); ok {
+				toStateViewDependencies.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanViewDependencies)
+				toState.SetViewDependencies(ctx, toStateViewDependencies)
+			}
+		}
+	}
 }
 
-func (newState *TableInfo) SyncFieldsDuringRead(existingState TableInfo) {
+func (toState *TableInfo) SyncFieldsDuringRead(ctx context.Context, fromState TableInfo) {
+	if !fromState.DeltaRuntimePropertiesKvpairs.IsNull() && !fromState.DeltaRuntimePropertiesKvpairs.IsUnknown() {
+		if toStateDeltaRuntimePropertiesKvpairs, ok := toState.GetDeltaRuntimePropertiesKvpairs(ctx); ok {
+			if fromStateDeltaRuntimePropertiesKvpairs, ok := fromState.GetDeltaRuntimePropertiesKvpairs(ctx); ok {
+				toStateDeltaRuntimePropertiesKvpairs.SyncFieldsDuringRead(ctx, fromStateDeltaRuntimePropertiesKvpairs)
+				toState.SetDeltaRuntimePropertiesKvpairs(ctx, toStateDeltaRuntimePropertiesKvpairs)
+			}
+		}
+	}
+	if !fromState.EffectivePredictiveOptimizationFlag.IsNull() && !fromState.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		if toStateEffectivePredictiveOptimizationFlag, ok := toState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+			if fromStateEffectivePredictiveOptimizationFlag, ok := fromState.GetEffectivePredictiveOptimizationFlag(ctx); ok {
+				toStateEffectivePredictiveOptimizationFlag.SyncFieldsDuringRead(ctx, fromStateEffectivePredictiveOptimizationFlag)
+				toState.SetEffectivePredictiveOptimizationFlag(ctx, toStateEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
+	if !fromState.EncryptionDetails.IsNull() && !fromState.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromStateEncryptionDetails, ok := fromState.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringRead(ctx, fromStateEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
+	if !fromState.RowFilter.IsNull() && !fromState.RowFilter.IsUnknown() {
+		if toStateRowFilter, ok := toState.GetRowFilter(ctx); ok {
+			if fromStateRowFilter, ok := fromState.GetRowFilter(ctx); ok {
+				toStateRowFilter.SyncFieldsDuringRead(ctx, fromStateRowFilter)
+				toState.SetRowFilter(ctx, toStateRowFilter)
+			}
+		}
+	}
+	if !fromState.SecurableKindManifest.IsNull() && !fromState.SecurableKindManifest.IsUnknown() {
+		if toStateSecurableKindManifest, ok := toState.GetSecurableKindManifest(ctx); ok {
+			if fromStateSecurableKindManifest, ok := fromState.GetSecurableKindManifest(ctx); ok {
+				toStateSecurableKindManifest.SyncFieldsDuringRead(ctx, fromStateSecurableKindManifest)
+				toState.SetSecurableKindManifest(ctx, toStateSecurableKindManifest)
+			}
+		}
+	}
+	if !fromState.ViewDependencies.IsNull() && !fromState.ViewDependencies.IsUnknown() {
+		if toStateViewDependencies, ok := toState.GetViewDependencies(ctx); ok {
+			if fromStateViewDependencies, ok := fromState.GetViewDependencies(ctx); ok {
+				toStateViewDependencies.SyncFieldsDuringRead(ctx, fromStateViewDependencies)
+				toState.SetViewDependencies(ctx, toStateViewDependencies)
+			}
+		}
+	}
 }
 
 func (c TableInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21088,7 +21009,7 @@ func (o *TableInfo) GetDeltaRuntimePropertiesKvpairs(ctx context.Context) (Delta
 	if o.DeltaRuntimePropertiesKvpairs.IsNull() || o.DeltaRuntimePropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaRuntimePropertiesKvPairs
+	var v DeltaRuntimePropertiesKvPairs
 	d := o.DeltaRuntimePropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21096,10 +21017,7 @@ func (o *TableInfo) GetDeltaRuntimePropertiesKvpairs(ctx context.Context) (Delta
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeltaRuntimePropertiesKvpairs sets the value of the DeltaRuntimePropertiesKvpairs field in TableInfo.
@@ -21116,7 +21034,7 @@ func (o *TableInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context) 
 	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
 		return e, false
 	}
-	var v []EffectivePredictiveOptimizationFlag
+	var v EffectivePredictiveOptimizationFlag
 	d := o.EffectivePredictiveOptimizationFlag.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21124,10 +21042,7 @@ func (o *TableInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in TableInfo.
@@ -21144,7 +21059,7 @@ func (o *TableInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetails
 	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []EncryptionDetails
+	var v EncryptionDetails
 	d := o.EncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21152,10 +21067,7 @@ func (o *TableInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetails
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEncryptionDetails sets the value of the EncryptionDetails field in TableInfo.
@@ -21198,7 +21110,7 @@ func (o *TableInfo) GetRowFilter(ctx context.Context) (TableRowFilter, bool) {
 	if o.RowFilter.IsNull() || o.RowFilter.IsUnknown() {
 		return e, false
 	}
-	var v []TableRowFilter
+	var v TableRowFilter
 	d := o.RowFilter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21206,10 +21118,7 @@ func (o *TableInfo) GetRowFilter(ctx context.Context) (TableRowFilter, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRowFilter sets the value of the RowFilter field in TableInfo.
@@ -21226,7 +21135,7 @@ func (o *TableInfo) GetSecurableKindManifest(ctx context.Context) (SecurableKind
 	if o.SecurableKindManifest.IsNull() || o.SecurableKindManifest.IsUnknown() {
 		return e, false
 	}
-	var v []SecurableKindManifest
+	var v SecurableKindManifest
 	d := o.SecurableKindManifest.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21234,10 +21143,7 @@ func (o *TableInfo) GetSecurableKindManifest(ctx context.Context) (SecurableKind
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSecurableKindManifest sets the value of the SecurableKindManifest field in TableInfo.
@@ -21280,7 +21186,7 @@ func (o *TableInfo) GetViewDependencies(ctx context.Context) (DependencyList, bo
 	if o.ViewDependencies.IsNull() || o.ViewDependencies.IsUnknown() {
 		return e, false
 	}
-	var v []DependencyList
+	var v DependencyList
 	d := o.ViewDependencies.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21288,10 +21194,7 @@ func (o *TableInfo) GetViewDependencies(ctx context.Context) (DependencyList, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetViewDependencies sets the value of the ViewDependencies field in TableInfo.
@@ -21309,10 +21212,10 @@ type TableRowFilter struct {
 	InputColumnNames types.List `tfsdk:"input_column_names"`
 }
 
-func (newState *TableRowFilter) SyncFieldsDuringCreateOrUpdate(plan TableRowFilter) {
+func (toState *TableRowFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableRowFilter) {
 }
 
-func (newState *TableRowFilter) SyncFieldsDuringRead(existingState TableRowFilter) {
+func (toState *TableRowFilter) SyncFieldsDuringRead(ctx context.Context, fromState TableRowFilter) {
 }
 
 func (c TableRowFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21394,10 +21297,26 @@ type TableSummary struct {
 	TableType types.String `tfsdk:"table_type"`
 }
 
-func (newState *TableSummary) SyncFieldsDuringCreateOrUpdate(plan TableSummary) {
+func (toState *TableSummary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableSummary) {
+	if !fromPlan.SecurableKindManifest.IsNull() && !fromPlan.SecurableKindManifest.IsUnknown() {
+		if toStateSecurableKindManifest, ok := toState.GetSecurableKindManifest(ctx); ok {
+			if fromPlanSecurableKindManifest, ok := fromPlan.GetSecurableKindManifest(ctx); ok {
+				toStateSecurableKindManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSecurableKindManifest)
+				toState.SetSecurableKindManifest(ctx, toStateSecurableKindManifest)
+			}
+		}
+	}
 }
 
-func (newState *TableSummary) SyncFieldsDuringRead(existingState TableSummary) {
+func (toState *TableSummary) SyncFieldsDuringRead(ctx context.Context, fromState TableSummary) {
+	if !fromState.SecurableKindManifest.IsNull() && !fromState.SecurableKindManifest.IsUnknown() {
+		if toStateSecurableKindManifest, ok := toState.GetSecurableKindManifest(ctx); ok {
+			if fromStateSecurableKindManifest, ok := fromState.GetSecurableKindManifest(ctx); ok {
+				toStateSecurableKindManifest.SyncFieldsDuringRead(ctx, fromStateSecurableKindManifest)
+				toState.SetSecurableKindManifest(ctx, toStateSecurableKindManifest)
+			}
+		}
+	}
 }
 
 func (c TableSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21453,7 +21372,7 @@ func (o *TableSummary) GetSecurableKindManifest(ctx context.Context) (SecurableK
 	if o.SecurableKindManifest.IsNull() || o.SecurableKindManifest.IsUnknown() {
 		return e, false
 	}
-	var v []SecurableKindManifest
+	var v SecurableKindManifest
 	d := o.SecurableKindManifest.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21461,10 +21380,7 @@ func (o *TableSummary) GetSecurableKindManifest(ctx context.Context) (SecurableK
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSecurableKindManifest sets the value of the SecurableKindManifest field in TableSummary.
@@ -21480,10 +21396,10 @@ type TagKeyValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *TagKeyValue) SyncFieldsDuringCreateOrUpdate(plan TagKeyValue) {
+func (toState *TagKeyValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TagKeyValue) {
 }
 
-func (newState *TagKeyValue) SyncFieldsDuringRead(existingState TagKeyValue) {
+func (toState *TagKeyValue) SyncFieldsDuringRead(ctx context.Context, fromState TagKeyValue) {
 }
 
 func (c TagKeyValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21537,10 +21453,58 @@ type TemporaryCredentials struct {
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
 }
 
-func (newState *TemporaryCredentials) SyncFieldsDuringCreateOrUpdate(plan TemporaryCredentials) {
+func (toState *TemporaryCredentials) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TemporaryCredentials) {
+	if !fromPlan.AwsTempCredentials.IsNull() && !fromPlan.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromPlanAwsTempCredentials, ok := fromPlan.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromPlan.AzureAad.IsNull() && !fromPlan.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromPlanAzureAad, ok := fromPlan.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromPlan.GcpOauthToken.IsNull() && !fromPlan.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromPlanGcpOauthToken, ok := fromPlan.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
 }
 
-func (newState *TemporaryCredentials) SyncFieldsDuringRead(existingState TemporaryCredentials) {
+func (toState *TemporaryCredentials) SyncFieldsDuringRead(ctx context.Context, fromState TemporaryCredentials) {
+	if !fromState.AwsTempCredentials.IsNull() && !fromState.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromStateAwsTempCredentials, ok := fromState.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringRead(ctx, fromStateAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromState.AzureAad.IsNull() && !fromState.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromStateAzureAad, ok := fromState.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringRead(ctx, fromStateAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromState.GcpOauthToken.IsNull() && !fromState.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromStateGcpOauthToken, ok := fromState.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringRead(ctx, fromStateGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
 }
 
 func (c TemporaryCredentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21601,7 +21565,7 @@ func (o *TemporaryCredentials) GetAwsTempCredentials(ctx context.Context) (AwsCr
 	if o.AwsTempCredentials.IsNull() || o.AwsTempCredentials.IsUnknown() {
 		return e, false
 	}
-	var v []AwsCredentials
+	var v AwsCredentials
 	d := o.AwsTempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21609,10 +21573,7 @@ func (o *TemporaryCredentials) GetAwsTempCredentials(ctx context.Context) (AwsCr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsTempCredentials sets the value of the AwsTempCredentials field in TemporaryCredentials.
@@ -21629,7 +21590,7 @@ func (o *TemporaryCredentials) GetAzureAad(ctx context.Context) (AzureActiveDire
 	if o.AzureAad.IsNull() || o.AzureAad.IsUnknown() {
 		return e, false
 	}
-	var v []AzureActiveDirectoryToken
+	var v AzureActiveDirectoryToken
 	d := o.AzureAad.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21637,10 +21598,7 @@ func (o *TemporaryCredentials) GetAzureAad(ctx context.Context) (AzureActiveDire
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureAad sets the value of the AzureAad field in TemporaryCredentials.
@@ -21657,7 +21615,7 @@ func (o *TemporaryCredentials) GetGcpOauthToken(ctx context.Context) (GcpOauthTo
 	if o.GcpOauthToken.IsNull() || o.GcpOauthToken.IsUnknown() {
 		return e, false
 	}
-	var v []GcpOauthToken
+	var v GcpOauthToken
 	d := o.GcpOauthToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21665,10 +21623,7 @@ func (o *TemporaryCredentials) GetGcpOauthToken(ctx context.Context) (GcpOauthTo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGcpOauthToken sets the value of the GcpOauthToken field in TemporaryCredentials.
@@ -21691,10 +21646,26 @@ type TriggeredUpdateStatus struct {
 	TriggeredUpdateProgress types.Object `tfsdk:"triggered_update_progress"`
 }
 
-func (newState *TriggeredUpdateStatus) SyncFieldsDuringCreateOrUpdate(plan TriggeredUpdateStatus) {
+func (toState *TriggeredUpdateStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggeredUpdateStatus) {
+	if !fromPlan.TriggeredUpdateProgress.IsNull() && !fromPlan.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromPlanTriggeredUpdateProgress, ok := fromPlan.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
-func (newState *TriggeredUpdateStatus) SyncFieldsDuringRead(existingState TriggeredUpdateStatus) {
+func (toState *TriggeredUpdateStatus) SyncFieldsDuringRead(ctx context.Context, fromState TriggeredUpdateStatus) {
+	if !fromState.TriggeredUpdateProgress.IsNull() && !fromState.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromStateTriggeredUpdateProgress, ok := fromState.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
 func (c TriggeredUpdateStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21750,7 +21721,7 @@ func (o *TriggeredUpdateStatus) GetTriggeredUpdateProgress(ctx context.Context) 
 	if o.TriggeredUpdateProgress.IsNull() || o.TriggeredUpdateProgress.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineProgress
+	var v PipelineProgress
 	d := o.TriggeredUpdateProgress.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -21758,10 +21729,7 @@ func (o *TriggeredUpdateStatus) GetTriggeredUpdateProgress(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggeredUpdateProgress sets the value of the TriggeredUpdateProgress field in TriggeredUpdateStatus.
@@ -21813,10 +21781,10 @@ func (o UnassignRequest) Type(ctx context.Context) attr.Type {
 type UnassignResponse struct {
 }
 
-func (newState *UnassignResponse) SyncFieldsDuringCreateOrUpdate(plan UnassignResponse) {
+func (toState *UnassignResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnassignResponse) {
 }
 
-func (newState *UnassignResponse) SyncFieldsDuringRead(existingState UnassignResponse) {
+func (toState *UnassignResponse) SyncFieldsDuringRead(ctx context.Context, fromState UnassignResponse) {
 }
 
 func (c UnassignResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21851,95 +21819,13 @@ func (o UnassignResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type UpdateAccessRequestDestinationsRequest struct {
-	// The access request destinations to assign to the securable. For each
-	// destination, a **destination_id** and **destination_type** must be
-	// defined.
-	AccessRequestDestinations types.Object `tfsdk:"access_request_destinations"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
-	UpdateMask types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccessRequestDestinationsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateAccessRequestDestinationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_request_destinations": reflect.TypeOf(AccessRequestDestinations{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAccessRequestDestinationsRequest
-// only implements ToObjectValue() and Type().
-func (o UpdateAccessRequestDestinationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"access_request_destinations": o.AccessRequestDestinations,
-			"update_mask":                 o.UpdateMask,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateAccessRequestDestinationsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_request_destinations": AccessRequestDestinations{}.Type(ctx),
-			"update_mask":                 types.StringType,
-		},
-	}
-}
-
-// GetAccessRequestDestinations returns the value of the AccessRequestDestinations field in UpdateAccessRequestDestinationsRequest as
-// a AccessRequestDestinations value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccessRequestDestinationsRequest) GetAccessRequestDestinations(ctx context.Context) (AccessRequestDestinations, bool) {
-	var e AccessRequestDestinations
-	if o.AccessRequestDestinations.IsNull() || o.AccessRequestDestinations.IsUnknown() {
-		return e, false
-	}
-	var v []AccessRequestDestinations
-	d := o.AccessRequestDestinations.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetAccessRequestDestinations sets the value of the AccessRequestDestinations field in UpdateAccessRequestDestinationsRequest.
-func (o *UpdateAccessRequestDestinationsRequest) SetAccessRequestDestinations(ctx context.Context, v AccessRequestDestinations) {
-	vs := v.ToObjectValue(ctx)
-	o.AccessRequestDestinations = vs
-}
-
 type UpdateAssignmentResponse struct {
 }
 
-func (newState *UpdateAssignmentResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateAssignmentResponse) {
+func (toState *UpdateAssignmentResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateAssignmentResponse) {
 }
 
-func (newState *UpdateAssignmentResponse) SyncFieldsDuringRead(existingState UpdateAssignmentResponse) {
+func (toState *UpdateAssignmentResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateAssignmentResponse) {
 }
 
 func (c UpdateAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -22104,10 +21990,10 @@ type UpdateCatalogWorkspaceBindingsResponse struct {
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
-func (newState *UpdateCatalogWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateCatalogWorkspaceBindingsResponse) {
+func (toState *UpdateCatalogWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCatalogWorkspaceBindingsResponse) {
 }
 
-func (newState *UpdateCatalogWorkspaceBindingsResponse) SyncFieldsDuringRead(existingState UpdateCatalogWorkspaceBindingsResponse) {
+func (toState *UpdateCatalogWorkspaceBindingsResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCatalogWorkspaceBindingsResponse) {
 }
 
 func (c UpdateCatalogWorkspaceBindingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -22243,7 +22129,7 @@ func (o *UpdateConnection) GetEnvironmentSettings(ctx context.Context) (Environm
 	if o.EnvironmentSettings.IsNull() || o.EnvironmentSettings.IsUnknown() {
 		return e, false
 	}
-	var v []EnvironmentSettings
+	var v EnvironmentSettings
 	d := o.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22251,10 +22137,7 @@ func (o *UpdateConnection) GetEnvironmentSettings(ctx context.Context) (Environm
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEnvironmentSettings sets the value of the EnvironmentSettings field in UpdateConnection.
@@ -22387,7 +22270,7 @@ func (o *UpdateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRole
+	var v AwsIamRole
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22395,10 +22278,7 @@ func (o *UpdateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in UpdateCredentialRequest.
@@ -22415,7 +22295,7 @@ func (o *UpdateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentity
+	var v AzureManagedIdentity
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22423,10 +22303,7 @@ func (o *UpdateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in UpdateCredentialRequest.
@@ -22443,7 +22320,7 @@ func (o *UpdateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) 
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22451,10 +22328,7 @@ func (o *UpdateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in UpdateCredentialRequest.
@@ -22471,7 +22345,7 @@ func (o *UpdateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Con
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccount
+	var v DatabricksGcpServiceAccount
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22479,110 +22353,13 @@ func (o *UpdateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in UpdateCredentialRequest.
 func (o *UpdateCredentialRequest) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccount) {
 	vs := v.ToObjectValue(ctx)
 	o.DatabricksGcpServiceAccount = vs
-}
-
-type UpdateEntityTagAssignmentRequest struct {
-	// Required. The fully qualified structured name of the entity to which the
-	// tag is assigned. The entity name should follow the format of:
-	// entity_type/fully_qualified_entity_name. eg. catalogs/my_catalog,
-	// schemas/my_catalog.my_schema,
-	// columns/my_catalog.my_schema.my_table.my_column. When containing segments
-	// with special characters (e.g. '/'), the whole segment must be wrapped
-	// with backticks. For example, columns/catalog.schema.table.\`column/a\`
-	EntityName types.String `tfsdk:"-"`
-
-	TagAssignment types.Object `tfsdk:"tag_assignment"`
-	// The key of the tag
-	TagKey types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
-	UpdateMask types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEntityTagAssignmentRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateEntityTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tag_assignment": reflect.TypeOf(EntityTagAssignment{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEntityTagAssignmentRequest
-// only implements ToObjectValue() and Type().
-func (o UpdateEntityTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"entity_name":    o.EntityName,
-			"tag_assignment": o.TagAssignment,
-			"tag_key":        o.TagKey,
-			"update_mask":    o.UpdateMask,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateEntityTagAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"entity_name":    types.StringType,
-			"tag_assignment": EntityTagAssignment{}.Type(ctx),
-			"tag_key":        types.StringType,
-			"update_mask":    types.StringType,
-		},
-	}
-}
-
-// GetTagAssignment returns the value of the TagAssignment field in UpdateEntityTagAssignmentRequest as
-// a EntityTagAssignment value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpdateEntityTagAssignmentRequest) GetTagAssignment(ctx context.Context) (EntityTagAssignment, bool) {
-	var e EntityTagAssignment
-	if o.TagAssignment.IsNull() || o.TagAssignment.IsUnknown() {
-		return e, false
-	}
-	var v []EntityTagAssignment
-	d := o.TagAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTagAssignment sets the value of the TagAssignment field in UpdateEntityTagAssignmentRequest.
-func (o *UpdateEntityTagAssignmentRequest) SetTagAssignment(ctx context.Context, v EntityTagAssignment) {
-	vs := v.ToObjectValue(ctx)
-	o.TagAssignment = vs
 }
 
 type UpdateExternalLineageRelationshipRequest struct {
@@ -22644,7 +22421,7 @@ func (o *UpdateExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if o.ExternalLineageRelationship.IsNull() || o.ExternalLineageRelationship.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateRequestExternalLineage
+	var v UpdateRequestExternalLineage
 	d := o.ExternalLineageRelationship.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22652,10 +22429,7 @@ func (o *UpdateExternalLineageRelationshipRequest) GetExternalLineageRelationshi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalLineageRelationship sets the value of the ExternalLineageRelationship field in UpdateExternalLineageRelationshipRequest.
@@ -22767,7 +22541,7 @@ func (o *UpdateExternalLocation) GetEncryptionDetails(ctx context.Context) (Encr
 	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []EncryptionDetails
+	var v EncryptionDetails
 	d := o.EncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22775,10 +22549,7 @@ func (o *UpdateExternalLocation) GetEncryptionDetails(ctx context.Context) (Encr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEncryptionDetails sets the value of the EncryptionDetails field in UpdateExternalLocation.
@@ -22795,7 +22566,7 @@ func (o *UpdateExternalLocation) GetFileEventQueue(ctx context.Context) (FileEve
 	if o.FileEventQueue.IsNull() || o.FileEventQueue.IsUnknown() {
 		return e, false
 	}
-	var v []FileEventQueue
+	var v FileEventQueue
 	d := o.FileEventQueue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22803,10 +22574,7 @@ func (o *UpdateExternalLocation) GetFileEventQueue(ctx context.Context) (FileEve
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileEventQueue sets the value of the FileEventQueue field in UpdateExternalLocation.
@@ -22878,7 +22646,7 @@ func (o *UpdateExternalMetadataRequest) GetExternalMetadata(ctx context.Context)
 	if o.ExternalMetadata.IsNull() || o.ExternalMetadata.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalMetadata
+	var v ExternalMetadata
 	d := o.ExternalMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -22886,10 +22654,7 @@ func (o *UpdateExternalMetadataRequest) GetExternalMetadata(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetExternalMetadata sets the value of the ExternalMetadata field in UpdateExternalMetadataRequest.
@@ -22960,10 +22725,10 @@ type UpdateMetastore struct {
 	StorageRootCredentialId types.String `tfsdk:"storage_root_credential_id"`
 }
 
-func (newState *UpdateMetastore) SyncFieldsDuringCreateOrUpdate(plan UpdateMetastore) {
+func (toState *UpdateMetastore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateMetastore) {
 }
 
-func (newState *UpdateMetastore) SyncFieldsDuringRead(existingState UpdateMetastore) {
+func (toState *UpdateMetastore) SyncFieldsDuringRead(ctx context.Context, fromState UpdateMetastore) {
 }
 
 func (c UpdateMetastore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -23035,10 +22800,10 @@ type UpdateMetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-func (newState *UpdateMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(plan UpdateMetastoreAssignment) {
+func (toState *UpdateMetastoreAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateMetastoreAssignment) {
 }
 
-func (newState *UpdateMetastoreAssignment) SyncFieldsDuringRead(existingState UpdateMetastoreAssignment) {
+func (toState *UpdateMetastoreAssignment) SyncFieldsDuringRead(ctx context.Context, fromState UpdateMetastoreAssignment) {
 }
 
 func (c UpdateMetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -23270,7 +23035,7 @@ func (o *UpdateMonitor) GetDataClassificationConfig(ctx context.Context) (Monito
 	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorDataClassificationConfig
+	var v MonitorDataClassificationConfig
 	d := o.DataClassificationConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23278,10 +23043,7 @@ func (o *UpdateMonitor) GetDataClassificationConfig(ctx context.Context) (Monito
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDataClassificationConfig sets the value of the DataClassificationConfig field in UpdateMonitor.
@@ -23298,7 +23060,7 @@ func (o *UpdateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLo
 	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorInferenceLog
+	var v MonitorInferenceLog
 	d := o.InferenceLog.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23306,10 +23068,7 @@ func (o *UpdateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInferenceLog sets the value of the InferenceLog field in UpdateMonitor.
@@ -23326,7 +23085,7 @@ func (o *UpdateMonitor) GetNotifications(ctx context.Context) (MonitorNotificati
 	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorNotifications
+	var v MonitorNotifications
 	d := o.Notifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23334,10 +23093,7 @@ func (o *UpdateMonitor) GetNotifications(ctx context.Context) (MonitorNotificati
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotifications sets the value of the Notifications field in UpdateMonitor.
@@ -23354,7 +23110,7 @@ func (o *UpdateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, b
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorCronSchedule
+	var v MonitorCronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23362,10 +23118,7 @@ func (o *UpdateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in UpdateMonitor.
@@ -23408,7 +23161,7 @@ func (o *UpdateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool)
 	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorSnapshot
+	var v MonitorSnapshot
 	d := o.Snapshot.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23416,10 +23169,7 @@ func (o *UpdateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSnapshot sets the value of the Snapshot field in UpdateMonitor.
@@ -23436,7 +23186,7 @@ func (o *UpdateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, b
 	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
 		return e, false
 	}
-	var v []MonitorTimeSeries
+	var v MonitorTimeSeries
 	d := o.TimeSeries.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23444,10 +23194,7 @@ func (o *UpdateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTimeSeries sets the value of the TimeSeries field in UpdateMonitor.
@@ -23535,10 +23282,10 @@ type UpdatePermissionsResponse struct {
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
-func (newState *UpdatePermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdatePermissionsResponse) {
+func (toState *UpdatePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdatePermissionsResponse) {
 }
 
-func (newState *UpdatePermissionsResponse) SyncFieldsDuringRead(existingState UpdatePermissionsResponse) {
+func (toState *UpdatePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdatePermissionsResponse) {
 }
 
 func (c UpdatePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -23669,10 +23416,42 @@ type UpdateRequestExternalLineage struct {
 	Target types.Object `tfsdk:"target"`
 }
 
-func (newState *UpdateRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(plan UpdateRequestExternalLineage) {
+func (toState *UpdateRequestExternalLineage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateRequestExternalLineage) {
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Target.IsNull() && !fromPlan.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromPlanTarget, ok := fromPlan.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
-func (newState *UpdateRequestExternalLineage) SyncFieldsDuringRead(existingState UpdateRequestExternalLineage) {
+func (toState *UpdateRequestExternalLineage) SyncFieldsDuringRead(ctx context.Context, fromState UpdateRequestExternalLineage) {
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Target.IsNull() && !fromState.Target.IsUnknown() {
+		if toStateTarget, ok := toState.GetTarget(ctx); ok {
+			if fromStateTarget, ok := fromState.GetTarget(ctx); ok {
+				toStateTarget.SyncFieldsDuringRead(ctx, fromStateTarget)
+				toState.SetTarget(ctx, toStateTarget)
+			}
+		}
+	}
 }
 
 func (c UpdateRequestExternalLineage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -23793,7 +23572,7 @@ func (o *UpdateRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if o.Source.IsNull() || o.Source.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23801,10 +23580,7 @@ func (o *UpdateRequestExternalLineage) GetSource(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSource sets the value of the Source field in UpdateRequestExternalLineage.
@@ -23821,7 +23597,7 @@ func (o *UpdateRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if o.Target.IsNull() || o.Target.IsUnknown() {
 		return e, false
 	}
-	var v []ExternalLineageObject
+	var v ExternalLineageObject
 	d := o.Target.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -23829,10 +23605,7 @@ func (o *UpdateRequestExternalLineage) GetTarget(ctx context.Context) (ExternalL
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTarget sets the value of the Target field in UpdateRequestExternalLineage.
@@ -23844,10 +23617,10 @@ func (o *UpdateRequestExternalLineage) SetTarget(ctx context.Context, v External
 type UpdateResponse struct {
 }
 
-func (newState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+func (toState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateResponse) {
 }
 
-func (newState *UpdateResponse) SyncFieldsDuringRead(existingState UpdateResponse) {
+func (toState *UpdateResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateResponse) {
 }
 
 func (c UpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -24002,10 +23775,90 @@ type UpdateStorageCredential struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
 }
 
-func (newState *UpdateStorageCredential) SyncFieldsDuringCreateOrUpdate(plan UpdateStorageCredential) {
+func (toState *UpdateStorageCredential) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateStorageCredential) {
+	if !fromPlan.AwsIamRole.IsNull() && !fromPlan.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromPlanAwsIamRole, ok := fromPlan.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromPlan.AzureManagedIdentity.IsNull() && !fromPlan.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromPlanAzureManagedIdentity, ok := fromPlan.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromPlan.AzureServicePrincipal.IsNull() && !fromPlan.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromPlanAzureServicePrincipal, ok := fromPlan.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromPlan.CloudflareApiToken.IsNull() && !fromPlan.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromPlanCloudflareApiToken, ok := fromPlan.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromPlan.DatabricksGcpServiceAccount.IsNull() && !fromPlan.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromPlanDatabricksGcpServiceAccount, ok := fromPlan.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
-func (newState *UpdateStorageCredential) SyncFieldsDuringRead(existingState UpdateStorageCredential) {
+func (toState *UpdateStorageCredential) SyncFieldsDuringRead(ctx context.Context, fromState UpdateStorageCredential) {
+	if !fromState.AwsIamRole.IsNull() && !fromState.AwsIamRole.IsUnknown() {
+		if toStateAwsIamRole, ok := toState.GetAwsIamRole(ctx); ok {
+			if fromStateAwsIamRole, ok := fromState.GetAwsIamRole(ctx); ok {
+				toStateAwsIamRole.SyncFieldsDuringRead(ctx, fromStateAwsIamRole)
+				toState.SetAwsIamRole(ctx, toStateAwsIamRole)
+			}
+		}
+	}
+	if !fromState.AzureManagedIdentity.IsNull() && !fromState.AzureManagedIdentity.IsUnknown() {
+		if toStateAzureManagedIdentity, ok := toState.GetAzureManagedIdentity(ctx); ok {
+			if fromStateAzureManagedIdentity, ok := fromState.GetAzureManagedIdentity(ctx); ok {
+				toStateAzureManagedIdentity.SyncFieldsDuringRead(ctx, fromStateAzureManagedIdentity)
+				toState.SetAzureManagedIdentity(ctx, toStateAzureManagedIdentity)
+			}
+		}
+	}
+	if !fromState.AzureServicePrincipal.IsNull() && !fromState.AzureServicePrincipal.IsUnknown() {
+		if toStateAzureServicePrincipal, ok := toState.GetAzureServicePrincipal(ctx); ok {
+			if fromStateAzureServicePrincipal, ok := fromState.GetAzureServicePrincipal(ctx); ok {
+				toStateAzureServicePrincipal.SyncFieldsDuringRead(ctx, fromStateAzureServicePrincipal)
+				toState.SetAzureServicePrincipal(ctx, toStateAzureServicePrincipal)
+			}
+		}
+	}
+	if !fromState.CloudflareApiToken.IsNull() && !fromState.CloudflareApiToken.IsUnknown() {
+		if toStateCloudflareApiToken, ok := toState.GetCloudflareApiToken(ctx); ok {
+			if fromStateCloudflareApiToken, ok := fromState.GetCloudflareApiToken(ctx); ok {
+				toStateCloudflareApiToken.SyncFieldsDuringRead(ctx, fromStateCloudflareApiToken)
+				toState.SetCloudflareApiToken(ctx, toStateCloudflareApiToken)
+			}
+		}
+	}
+	if !fromState.DatabricksGcpServiceAccount.IsNull() && !fromState.DatabricksGcpServiceAccount.IsUnknown() {
+		if toStateDatabricksGcpServiceAccount, ok := toState.GetDatabricksGcpServiceAccount(ctx); ok {
+			if fromStateDatabricksGcpServiceAccount, ok := fromState.GetDatabricksGcpServiceAccount(ctx); ok {
+				toStateDatabricksGcpServiceAccount.SyncFieldsDuringRead(ctx, fromStateDatabricksGcpServiceAccount)
+				toState.SetDatabricksGcpServiceAccount(ctx, toStateDatabricksGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (c UpdateStorageCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -24095,7 +23948,7 @@ func (o *UpdateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRoleRequest
+	var v AwsIamRoleRequest
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24103,10 +23956,7 @@ func (o *UpdateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in UpdateStorageCredential.
@@ -24123,7 +23973,7 @@ func (o *UpdateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentityResponse
+	var v AzureManagedIdentityResponse
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24131,10 +23981,7 @@ func (o *UpdateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in UpdateStorageCredential.
@@ -24151,7 +23998,7 @@ func (o *UpdateStorageCredential) GetAzureServicePrincipal(ctx context.Context) 
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24159,10 +24006,7 @@ func (o *UpdateStorageCredential) GetAzureServicePrincipal(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in UpdateStorageCredential.
@@ -24179,7 +24023,7 @@ func (o *UpdateStorageCredential) GetCloudflareApiToken(ctx context.Context) (Cl
 	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
 		return e, false
 	}
-	var v []CloudflareApiToken
+	var v CloudflareApiToken
 	d := o.CloudflareApiToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24187,10 +24031,7 @@ func (o *UpdateStorageCredential) GetCloudflareApiToken(ctx context.Context) (Cl
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCloudflareApiToken sets the value of the CloudflareApiToken field in UpdateStorageCredential.
@@ -24207,7 +24048,7 @@ func (o *UpdateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Con
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccountRequest
+	var v DatabricksGcpServiceAccountRequest
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24215,10 +24056,7 @@ func (o *UpdateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in UpdateStorageCredential.
@@ -24532,10 +24370,10 @@ type UpdateWorkspaceBindingsResponse struct {
 	Bindings types.List `tfsdk:"bindings"`
 }
 
-func (newState *UpdateWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindingsResponse) {
+func (toState *UpdateWorkspaceBindingsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateWorkspaceBindingsResponse) {
 }
 
-func (newState *UpdateWorkspaceBindingsResponse) SyncFieldsDuringRead(existingState UpdateWorkspaceBindingsResponse) {
+func (toState *UpdateWorkspaceBindingsResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateWorkspaceBindingsResponse) {
 }
 
 func (c UpdateWorkspaceBindingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -24686,7 +24524,7 @@ func (o *ValidateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRo
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRole
+	var v AwsIamRole
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24694,10 +24532,7 @@ func (o *ValidateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in ValidateCredentialRequest.
@@ -24714,7 +24549,7 @@ func (o *ValidateCredentialRequest) GetAzureManagedIdentity(ctx context.Context)
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentity
+	var v AzureManagedIdentity
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24722,10 +24557,7 @@ func (o *ValidateCredentialRequest) GetAzureManagedIdentity(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in ValidateCredentialRequest.
@@ -24742,7 +24574,7 @@ func (o *ValidateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.C
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccount
+	var v DatabricksGcpServiceAccount
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24750,10 +24582,7 @@ func (o *ValidateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in ValidateCredentialRequest.
@@ -24770,10 +24599,10 @@ type ValidateCredentialResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ValidateCredentialResponse) SyncFieldsDuringCreateOrUpdate(plan ValidateCredentialResponse) {
+func (toState *ValidateCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ValidateCredentialResponse) {
 }
 
-func (newState *ValidateCredentialResponse) SyncFieldsDuringRead(existingState ValidateCredentialResponse) {
+func (toState *ValidateCredentialResponse) SyncFieldsDuringRead(ctx context.Context, fromState ValidateCredentialResponse) {
 }
 
 func (c ValidateCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -24929,7 +24758,7 @@ func (o *ValidateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRo
 	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
 		return e, false
 	}
-	var v []AwsIamRoleRequest
+	var v AwsIamRoleRequest
 	d := o.AwsIamRole.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24937,10 +24766,7 @@ func (o *ValidateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsIamRole sets the value of the AwsIamRole field in ValidateStorageCredential.
@@ -24957,7 +24783,7 @@ func (o *ValidateStorageCredential) GetAzureManagedIdentity(ctx context.Context)
 	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
 		return e, false
 	}
-	var v []AzureManagedIdentityRequest
+	var v AzureManagedIdentityRequest
 	d := o.AzureManagedIdentity.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24965,10 +24791,7 @@ func (o *ValidateStorageCredential) GetAzureManagedIdentity(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in ValidateStorageCredential.
@@ -24985,7 +24808,7 @@ func (o *ValidateStorageCredential) GetAzureServicePrincipal(ctx context.Context
 	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v []AzureServicePrincipal
+	var v AzureServicePrincipal
 	d := o.AzureServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -24993,10 +24816,7 @@ func (o *ValidateStorageCredential) GetAzureServicePrincipal(ctx context.Context
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in ValidateStorageCredential.
@@ -25013,7 +24833,7 @@ func (o *ValidateStorageCredential) GetCloudflareApiToken(ctx context.Context) (
 	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
 		return e, false
 	}
-	var v []CloudflareApiToken
+	var v CloudflareApiToken
 	d := o.CloudflareApiToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -25021,10 +24841,7 @@ func (o *ValidateStorageCredential) GetCloudflareApiToken(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCloudflareApiToken sets the value of the CloudflareApiToken field in ValidateStorageCredential.
@@ -25041,7 +24858,7 @@ func (o *ValidateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.C
 	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []DatabricksGcpServiceAccountRequest
+	var v DatabricksGcpServiceAccountRequest
 	d := o.DatabricksGcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -25049,10 +24866,7 @@ func (o *ValidateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in ValidateStorageCredential.
@@ -25068,10 +24882,10 @@ type ValidateStorageCredentialResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ValidateStorageCredentialResponse) SyncFieldsDuringCreateOrUpdate(plan ValidateStorageCredentialResponse) {
+func (toState *ValidateStorageCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ValidateStorageCredentialResponse) {
 }
 
-func (newState *ValidateStorageCredentialResponse) SyncFieldsDuringRead(existingState ValidateStorageCredentialResponse) {
+func (toState *ValidateStorageCredentialResponse) SyncFieldsDuringRead(ctx context.Context, fromState ValidateStorageCredentialResponse) {
 }
 
 func (c ValidateStorageCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -25153,10 +24967,10 @@ type ValidationResult struct {
 	Result types.String `tfsdk:"result"`
 }
 
-func (newState *ValidationResult) SyncFieldsDuringCreateOrUpdate(plan ValidationResult) {
+func (toState *ValidationResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ValidationResult) {
 }
 
-func (newState *ValidationResult) SyncFieldsDuringRead(existingState ValidationResult) {
+func (toState *ValidationResult) SyncFieldsDuringRead(ctx context.Context, fromState ValidationResult) {
 }
 
 func (c ValidationResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -25241,10 +25055,26 @@ type VolumeInfo struct {
 	VolumeType types.String `tfsdk:"volume_type"`
 }
 
-func (newState *VolumeInfo) SyncFieldsDuringCreateOrUpdate(plan VolumeInfo) {
+func (toState *VolumeInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VolumeInfo) {
+	if !fromPlan.EncryptionDetails.IsNull() && !fromPlan.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromPlanEncryptionDetails, ok := fromPlan.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
 }
 
-func (newState *VolumeInfo) SyncFieldsDuringRead(existingState VolumeInfo) {
+func (toState *VolumeInfo) SyncFieldsDuringRead(ctx context.Context, fromState VolumeInfo) {
+	if !fromState.EncryptionDetails.IsNull() && !fromState.EncryptionDetails.IsUnknown() {
+		if toStateEncryptionDetails, ok := toState.GetEncryptionDetails(ctx); ok {
+			if fromStateEncryptionDetails, ok := fromState.GetEncryptionDetails(ctx); ok {
+				toStateEncryptionDetails.SyncFieldsDuringRead(ctx, fromStateEncryptionDetails)
+				toState.SetEncryptionDetails(ctx, toStateEncryptionDetails)
+			}
+		}
+	}
 }
 
 func (c VolumeInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -25342,7 +25172,7 @@ func (o *VolumeInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetail
 	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
 		return e, false
 	}
-	var v []EncryptionDetails
+	var v EncryptionDetails
 	d := o.EncryptionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -25350,10 +25180,7 @@ func (o *VolumeInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetail
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEncryptionDetails sets the value of the EncryptionDetails field in VolumeInfo.
@@ -25369,10 +25196,10 @@ type WorkspaceBinding struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *WorkspaceBinding) SyncFieldsDuringCreateOrUpdate(plan WorkspaceBinding) {
+func (toState *WorkspaceBinding) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkspaceBinding) {
 }
 
-func (newState *WorkspaceBinding) SyncFieldsDuringRead(existingState WorkspaceBinding) {
+func (toState *WorkspaceBinding) SyncFieldsDuringRead(ctx context.Context, fromState WorkspaceBinding) {
 }
 
 func (c WorkspaceBinding) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

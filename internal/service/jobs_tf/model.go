@@ -51,10 +51,42 @@ type BaseJob struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (newState *BaseJob) SyncFieldsDuringCreateOrUpdate(plan BaseJob) {
+func (toState *BaseJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseJob) {
+	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
+	if !fromPlan.TriggerState.IsNull() && !fromPlan.TriggerState.IsUnknown() {
+		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
+			if fromPlanTriggerState, ok := fromPlan.GetTriggerState(ctx); ok {
+				toStateTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerState)
+				toState.SetTriggerState(ctx, toStateTriggerState)
+			}
+		}
+	}
 }
 
-func (newState *BaseJob) SyncFieldsDuringRead(existingState BaseJob) {
+func (toState *BaseJob) SyncFieldsDuringRead(ctx context.Context, fromState BaseJob) {
+	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
+	if !fromState.TriggerState.IsNull() && !fromState.TriggerState.IsUnknown() {
+		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
+			if fromStateTriggerState, ok := fromState.GetTriggerState(ctx); ok {
+				toStateTriggerState.SyncFieldsDuringRead(ctx, fromStateTriggerState)
+				toState.SetTriggerState(ctx, toStateTriggerState)
+			}
+		}
+	}
 }
 
 func (c BaseJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -123,7 +155,7 @@ func (o *BaseJob) GetSettings(ctx context.Context) (JobSettings, bool) {
 	if o.Settings.IsNull() || o.Settings.IsUnknown() {
 		return e, false
 	}
-	var v []JobSettings
+	var v JobSettings
 	d := o.Settings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -131,10 +163,7 @@ func (o *BaseJob) GetSettings(ctx context.Context) (JobSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSettings sets the value of the Settings field in BaseJob.
@@ -151,7 +180,7 @@ func (o *BaseJob) GetTriggerState(ctx context.Context) (TriggerStateProto, bool)
 	if o.TriggerState.IsNull() || o.TriggerState.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerStateProto
+	var v TriggerStateProto
 	d := o.TriggerState.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -159,10 +188,7 @@ func (o *BaseJob) GetTriggerState(ctx context.Context) (TriggerStateProto, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggerState sets the value of the TriggerState field in BaseJob.
@@ -306,10 +332,138 @@ type BaseRun struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (newState *BaseRun) SyncFieldsDuringCreateOrUpdate(plan BaseRun) {
+func (toState *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseRun) {
+	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromPlan.ClusterSpec.IsNull() && !fromPlan.ClusterSpec.IsUnknown() {
+		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
+			if fromPlanClusterSpec, ok := fromPlan.GetClusterSpec(ctx); ok {
+				toStateClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterSpec)
+				toState.SetClusterSpec(ctx, toStateClusterSpec)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.OverridingParameters.IsNull() && !fromPlan.OverridingParameters.IsUnknown() {
+		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
+			if fromPlanOverridingParameters, ok := fromPlan.GetOverridingParameters(ctx); ok {
+				toStateOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOverridingParameters)
+				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromPlan.TriggerInfo.IsNull() && !fromPlan.TriggerInfo.IsUnknown() {
+		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
+			if fromPlanTriggerInfo, ok := fromPlan.GetTriggerInfo(ctx); ok {
+				toStateTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerInfo)
+				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+			}
+		}
+	}
 }
 
-func (newState *BaseRun) SyncFieldsDuringRead(existingState BaseRun) {
+func (toState *BaseRun) SyncFieldsDuringRead(ctx context.Context, fromState BaseRun) {
+	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromState.ClusterSpec.IsNull() && !fromState.ClusterSpec.IsUnknown() {
+		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
+			if fromStateClusterSpec, ok := fromState.GetClusterSpec(ctx); ok {
+				toStateClusterSpec.SyncFieldsDuringRead(ctx, fromStateClusterSpec)
+				toState.SetClusterSpec(ctx, toStateClusterSpec)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.OverridingParameters.IsNull() && !fromState.OverridingParameters.IsUnknown() {
+		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
+			if fromStateOverridingParameters, ok := fromState.GetOverridingParameters(ctx); ok {
+				toStateOverridingParameters.SyncFieldsDuringRead(ctx, fromStateOverridingParameters)
+				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromState.TriggerInfo.IsNull() && !fromState.TriggerInfo.IsUnknown() {
+		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
+			if fromStateTriggerInfo, ok := fromState.GetTriggerInfo(ctx); ok {
+				toStateTriggerInfo.SyncFieldsDuringRead(ctx, fromStateTriggerInfo)
+				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+			}
+		}
+	}
 }
 
 func (c BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -474,7 +628,7 @@ func (o *BaseRun) GetClusterInstance(ctx context.Context) (ClusterInstance, bool
 	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterInstance
+	var v ClusterInstance
 	d := o.ClusterInstance.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -482,10 +636,7 @@ func (o *BaseRun) GetClusterInstance(ctx context.Context) (ClusterInstance, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in BaseRun.
@@ -502,7 +653,7 @@ func (o *BaseRun) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterSpec
+	var v ClusterSpec
 	d := o.ClusterSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -510,10 +661,7 @@ func (o *BaseRun) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterSpec sets the value of the ClusterSpec field in BaseRun.
@@ -530,7 +678,7 @@ func (o *BaseRun) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -538,10 +686,7 @@ func (o *BaseRun) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in BaseRun.
@@ -610,7 +755,7 @@ func (o *BaseRun) GetOverridingParameters(ctx context.Context) (RunParameters, b
 	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
 		return e, false
 	}
-	var v []RunParameters
+	var v RunParameters
 	d := o.OverridingParameters.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -618,10 +763,7 @@ func (o *BaseRun) GetOverridingParameters(ctx context.Context) (RunParameters, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOverridingParameters sets the value of the OverridingParameters field in BaseRun.
@@ -664,7 +806,7 @@ func (o *BaseRun) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -672,10 +814,7 @@ func (o *BaseRun) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in BaseRun.
@@ -692,7 +831,7 @@ func (o *BaseRun) GetState(ctx context.Context) (RunState, bool) {
 	if o.State.IsNull() || o.State.IsUnknown() {
 		return e, false
 	}
-	var v []RunState
+	var v RunState
 	d := o.State.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -700,10 +839,7 @@ func (o *BaseRun) GetState(ctx context.Context) (RunState, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetState sets the value of the State field in BaseRun.
@@ -720,7 +856,7 @@ func (o *BaseRun) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []RunStatus
+	var v RunStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -728,10 +864,7 @@ func (o *BaseRun) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in BaseRun.
@@ -774,7 +907,7 @@ func (o *BaseRun) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
 	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerInfo
+	var v TriggerInfo
 	d := o.TriggerInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -782,10 +915,7 @@ func (o *BaseRun) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggerInfo sets the value of the TriggerInfo field in BaseRun.
@@ -943,10 +1073,10 @@ type CleanRoomTaskRunState struct {
 	ResultState types.String `tfsdk:"result_state"`
 }
 
-func (newState *CleanRoomTaskRunState) SyncFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
+func (toState *CleanRoomTaskRunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomTaskRunState) {
 }
 
-func (newState *CleanRoomTaskRunState) SyncFieldsDuringRead(existingState CleanRoomTaskRunState) {
+func (toState *CleanRoomTaskRunState) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomTaskRunState) {
 }
 
 func (c CleanRoomTaskRunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1002,10 +1132,10 @@ type CleanRoomsNotebookTask struct {
 	NotebookName types.String `tfsdk:"notebook_name"`
 }
 
-func (newState *CleanRoomsNotebookTask) SyncFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTask) {
+func (toState *CleanRoomsNotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomsNotebookTask) {
 }
 
-func (newState *CleanRoomsNotebookTask) SyncFieldsDuringRead(existingState CleanRoomsNotebookTask) {
+func (toState *CleanRoomsNotebookTask) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomsNotebookTask) {
 }
 
 func (c CleanRoomsNotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1093,10 +1223,58 @@ type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput struct {
 	OutputSchemaInfo types.Object `tfsdk:"output_schema_info"`
 }
 
-func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+func (toState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+	if !fromPlan.CleanRoomJobRunState.IsNull() && !fromPlan.CleanRoomJobRunState.IsUnknown() {
+		if toStateCleanRoomJobRunState, ok := toState.GetCleanRoomJobRunState(ctx); ok {
+			if fromPlanCleanRoomJobRunState, ok := fromPlan.GetCleanRoomJobRunState(ctx); ok {
+				toStateCleanRoomJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomJobRunState)
+				toState.SetCleanRoomJobRunState(ctx, toStateCleanRoomJobRunState)
+			}
+		}
+	}
+	if !fromPlan.NotebookOutput.IsNull() && !fromPlan.NotebookOutput.IsUnknown() {
+		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
+			if fromPlanNotebookOutput, ok := fromPlan.GetNotebookOutput(ctx); ok {
+				toStateNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookOutput)
+				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+			}
+		}
+	}
+	if !fromPlan.OutputSchemaInfo.IsNull() && !fromPlan.OutputSchemaInfo.IsUnknown() {
+		if toStateOutputSchemaInfo, ok := toState.GetOutputSchemaInfo(ctx); ok {
+			if fromPlanOutputSchemaInfo, ok := fromPlan.GetOutputSchemaInfo(ctx); ok {
+				toStateOutputSchemaInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputSchemaInfo)
+				toState.SetOutputSchemaInfo(ctx, toStateOutputSchemaInfo)
+			}
+		}
+	}
 }
 
-func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringRead(existingState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+func (toState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+	if !fromState.CleanRoomJobRunState.IsNull() && !fromState.CleanRoomJobRunState.IsUnknown() {
+		if toStateCleanRoomJobRunState, ok := toState.GetCleanRoomJobRunState(ctx); ok {
+			if fromStateCleanRoomJobRunState, ok := fromState.GetCleanRoomJobRunState(ctx); ok {
+				toStateCleanRoomJobRunState.SyncFieldsDuringRead(ctx, fromStateCleanRoomJobRunState)
+				toState.SetCleanRoomJobRunState(ctx, toStateCleanRoomJobRunState)
+			}
+		}
+	}
+	if !fromState.NotebookOutput.IsNull() && !fromState.NotebookOutput.IsUnknown() {
+		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
+			if fromStateNotebookOutput, ok := fromState.GetNotebookOutput(ctx); ok {
+				toStateNotebookOutput.SyncFieldsDuringRead(ctx, fromStateNotebookOutput)
+				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+			}
+		}
+	}
+	if !fromState.OutputSchemaInfo.IsNull() && !fromState.OutputSchemaInfo.IsUnknown() {
+		if toStateOutputSchemaInfo, ok := toState.GetOutputSchemaInfo(ctx); ok {
+			if fromStateOutputSchemaInfo, ok := fromState.GetOutputSchemaInfo(ctx); ok {
+				toStateOutputSchemaInfo.SyncFieldsDuringRead(ctx, fromStateOutputSchemaInfo)
+				toState.SetOutputSchemaInfo(ctx, toStateOutputSchemaInfo)
+			}
+		}
+	}
 }
 
 func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1154,7 +1332,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetCleanRoomJobRunS
 	if o.CleanRoomJobRunState.IsNull() || o.CleanRoomJobRunState.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomTaskRunState
+	var v CleanRoomTaskRunState
 	d := o.CleanRoomJobRunState.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1162,10 +1340,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetCleanRoomJobRunS
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCleanRoomJobRunState sets the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
@@ -1182,7 +1357,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetNotebookOutput(c
 	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
 		return e, false
 	}
-	var v []NotebookOutput
+	var v NotebookOutput
 	d := o.NotebookOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1190,10 +1365,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetNotebookOutput(c
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookOutput sets the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
@@ -1210,7 +1382,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetOutputSchemaInfo
 	if o.OutputSchemaInfo.IsNull() || o.OutputSchemaInfo.IsUnknown() {
 		return e, false
 	}
-	var v []OutputSchemaInfo
+	var v OutputSchemaInfo
 	d := o.OutputSchemaInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1218,10 +1390,7 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetOutputSchemaInfo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOutputSchemaInfo sets the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
@@ -1251,10 +1420,10 @@ type ClusterInstance struct {
 	SparkContextId types.String `tfsdk:"spark_context_id"`
 }
 
-func (newState *ClusterInstance) SyncFieldsDuringCreateOrUpdate(plan ClusterInstance) {
+func (toState *ClusterInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterInstance) {
 }
 
-func (newState *ClusterInstance) SyncFieldsDuringRead(existingState ClusterInstance) {
+func (toState *ClusterInstance) SyncFieldsDuringRead(ctx context.Context, fromState ClusterInstance) {
 }
 
 func (c ClusterInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1314,10 +1483,26 @@ type ClusterSpec struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (newState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+func (toState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterSpec) {
+	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
 }
 
-func (newState *ClusterSpec) SyncFieldsDuringRead(existingState ClusterSpec) {
+func (toState *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, fromState ClusterSpec) {
+	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
 }
 
 func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1405,7 +1590,7 @@ func (o *ClusterSpec) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec
 	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.ClusterSpec
+	var v compute_tf.ClusterSpec
 	d := o.NewCluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1413,10 +1598,7 @@ func (o *ClusterSpec) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewCluster sets the value of the NewCluster field in ClusterSpec.
@@ -1434,10 +1616,10 @@ type ComputeConfig struct {
 	NumGpus types.Int64 `tfsdk:"num_gpus"`
 }
 
-func (newState *ComputeConfig) SyncFieldsDuringCreateOrUpdate(plan ComputeConfig) {
+func (toState *ComputeConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComputeConfig) {
 }
 
-func (newState *ComputeConfig) SyncFieldsDuringRead(existingState ComputeConfig) {
+func (toState *ComputeConfig) SyncFieldsDuringRead(ctx context.Context, fromState ComputeConfig) {
 }
 
 func (c ComputeConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1503,10 +1685,10 @@ type ConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *ConditionTask) SyncFieldsDuringCreateOrUpdate(plan ConditionTask) {
+func (toState *ConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ConditionTask) {
 }
 
-func (newState *ConditionTask) SyncFieldsDuringRead(existingState ConditionTask) {
+func (toState *ConditionTask) SyncFieldsDuringRead(ctx context.Context, fromState ConditionTask) {
 }
 
 func (c ConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1556,20 +1738,16 @@ type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
-	// Indicate whether the continuous job is applying task level retries or
-	// not. Defaults to NEVER.
-	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
-func (newState *Continuous) SyncFieldsDuringCreateOrUpdate(plan Continuous) {
+func (toState *Continuous) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Continuous) {
 }
 
-func (newState *Continuous) SyncFieldsDuringRead(existingState Continuous) {
+func (toState *Continuous) SyncFieldsDuringRead(ctx context.Context, fromState Continuous) {
 }
 
 func (c Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
-	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1592,8 +1770,7 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status":    o.PauseStatus,
-			"task_retry_mode": o.TaskRetryMode,
+			"pause_status": o.PauseStatus,
 		})
 }
 
@@ -1601,8 +1778,7 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Continuous) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status":    types.StringType,
-			"task_retry_mode": types.StringType,
+			"pause_status": types.StringType,
 		},
 	}
 }
@@ -1867,7 +2043,7 @@ func (o *CreateJob) GetContinuous(ctx context.Context) (Continuous, bool) {
 	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
 		return e, false
 	}
-	var v []Continuous
+	var v Continuous
 	d := o.Continuous.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1875,10 +2051,7 @@ func (o *CreateJob) GetContinuous(ctx context.Context) (Continuous, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetContinuous sets the value of the Continuous field in CreateJob.
@@ -1895,7 +2068,7 @@ func (o *CreateJob) GetDeployment(ctx context.Context) (JobDeployment, bool) {
 	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
 		return e, false
 	}
-	var v []JobDeployment
+	var v JobDeployment
 	d := o.Deployment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1903,10 +2076,7 @@ func (o *CreateJob) GetDeployment(ctx context.Context) (JobDeployment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeployment sets the value of the Deployment field in CreateJob.
@@ -1923,7 +2093,7 @@ func (o *CreateJob) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []JobEmailNotifications
+	var v JobEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1931,10 +2101,7 @@ func (o *CreateJob) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in CreateJob.
@@ -1977,7 +2144,7 @@ func (o *CreateJob) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1985,10 +2152,7 @@ func (o *CreateJob) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in CreateJob.
@@ -2005,7 +2169,7 @@ func (o *CreateJob) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if o.Health.IsNull() || o.Health.IsUnknown() {
 		return e, false
 	}
-	var v []JobsHealthRules
+	var v JobsHealthRules
 	d := o.Health.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2013,10 +2177,7 @@ func (o *CreateJob) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetHealth sets the value of the Health field in CreateJob.
@@ -2059,7 +2220,7 @@ func (o *CreateJob) GetNotificationSettings(ctx context.Context) (JobNotificatio
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []JobNotificationSettings
+	var v JobNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2067,10 +2228,7 @@ func (o *CreateJob) GetNotificationSettings(ctx context.Context) (JobNotificatio
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in CreateJob.
@@ -2113,7 +2271,7 @@ func (o *CreateJob) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if o.Queue.IsNull() || o.Queue.IsUnknown() {
 		return e, false
 	}
-	var v []QueueSettings
+	var v QueueSettings
 	d := o.Queue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2121,10 +2279,7 @@ func (o *CreateJob) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueue sets the value of the Queue field in CreateJob.
@@ -2141,7 +2296,7 @@ func (o *CreateJob) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
 		return e, false
 	}
-	var v []JobRunAs
+	var v JobRunAs
 	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2149,10 +2304,7 @@ func (o *CreateJob) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunAs sets the value of the RunAs field in CreateJob.
@@ -2169,7 +2321,7 @@ func (o *CreateJob) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2177,10 +2329,7 @@ func (o *CreateJob) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in CreateJob.
@@ -2249,7 +2398,7 @@ func (o *CreateJob) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
 	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerSettings
+	var v TriggerSettings
 	d := o.Trigger.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2257,10 +2406,7 @@ func (o *CreateJob) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTrigger sets the value of the Trigger field in CreateJob.
@@ -2277,7 +2423,7 @@ func (o *CreateJob) GetWebhookNotifications(ctx context.Context) (WebhookNotific
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2285,10 +2431,7 @@ func (o *CreateJob) GetWebhookNotifications(ctx context.Context) (WebhookNotific
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in CreateJob.
@@ -2303,10 +2446,10 @@ type CreateResponse struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (newState *CreateResponse) SyncFieldsDuringCreateOrUpdate(plan CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse) {
 }
 
-func (newState *CreateResponse) SyncFieldsDuringRead(existingState CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2361,10 +2504,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule) SyncFieldsDuringCreateOrUpdate(plan CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule) {
 }
 
-func (newState *CronSchedule) SyncFieldsDuringRead(existingState CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2416,10 +2559,10 @@ type DashboardPageSnapshot struct {
 	WidgetErrorDetails types.List `tfsdk:"widget_error_details"`
 }
 
-func (newState *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(plan DashboardPageSnapshot) {
+func (toState *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardPageSnapshot) {
 }
 
-func (newState *DashboardPageSnapshot) SyncFieldsDuringRead(existingState DashboardPageSnapshot) {
+func (toState *DashboardPageSnapshot) SyncFieldsDuringRead(ctx context.Context, fromState DashboardPageSnapshot) {
 }
 
 func (c DashboardPageSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2504,10 +2647,26 @@ type DashboardTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *DashboardTask) SyncFieldsDuringCreateOrUpdate(plan DashboardTask) {
+func (toState *DashboardTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardTask) {
+	if !fromPlan.Subscription.IsNull() && !fromPlan.Subscription.IsUnknown() {
+		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
+			if fromPlanSubscription, ok := fromPlan.GetSubscription(ctx); ok {
+				toStateSubscription.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscription)
+				toState.SetSubscription(ctx, toStateSubscription)
+			}
+		}
+	}
 }
 
-func (newState *DashboardTask) SyncFieldsDuringRead(existingState DashboardTask) {
+func (toState *DashboardTask) SyncFieldsDuringRead(ctx context.Context, fromState DashboardTask) {
+	if !fromState.Subscription.IsNull() && !fromState.Subscription.IsUnknown() {
+		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
+			if fromStateSubscription, ok := fromState.GetSubscription(ctx); ok {
+				toStateSubscription.SyncFieldsDuringRead(ctx, fromStateSubscription)
+				toState.SetSubscription(ctx, toStateSubscription)
+			}
+		}
+	}
 }
 
 func (c DashboardTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2563,7 +2722,7 @@ func (o *DashboardTask) GetSubscription(ctx context.Context) (Subscription, bool
 	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
 		return e, false
 	}
-	var v []Subscription
+	var v Subscription
 	d := o.Subscription.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2571,10 +2730,7 @@ func (o *DashboardTask) GetSubscription(ctx context.Context) (Subscription, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSubscription sets the value of the Subscription field in DashboardTask.
@@ -2588,10 +2744,10 @@ type DashboardTaskOutput struct {
 	PageSnapshots types.List `tfsdk:"page_snapshots"`
 }
 
-func (newState *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DashboardTaskOutput) {
+func (toState *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardTaskOutput) {
 }
 
-func (newState *DashboardTaskOutput) SyncFieldsDuringRead(existingState DashboardTaskOutput) {
+func (toState *DashboardTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DashboardTaskOutput) {
 }
 
 func (c DashboardTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2674,10 +2830,10 @@ type DbtCloudJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DbtCloudJobRunStep) SyncFieldsDuringCreateOrUpdate(plan DbtCloudJobRunStep) {
+func (toState *DbtCloudJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudJobRunStep) {
 }
 
-func (newState *DbtCloudJobRunStep) SyncFieldsDuringRead(existingState DbtCloudJobRunStep) {
+func (toState *DbtCloudJobRunStep) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudJobRunStep) {
 }
 
 func (c DbtCloudJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2735,10 +2891,10 @@ type DbtCloudTask struct {
 	DbtCloudJobId types.Int64 `tfsdk:"dbt_cloud_job_id"`
 }
 
-func (newState *DbtCloudTask) SyncFieldsDuringCreateOrUpdate(plan DbtCloudTask) {
+func (toState *DbtCloudTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudTask) {
 }
 
-func (newState *DbtCloudTask) SyncFieldsDuringRead(existingState DbtCloudTask) {
+func (toState *DbtCloudTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudTask) {
 }
 
 func (c DbtCloudTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2791,10 +2947,10 @@ type DbtCloudTaskOutput struct {
 	DbtCloudJobRunUrl types.String `tfsdk:"dbt_cloud_job_run_url"`
 }
 
-func (newState *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DbtCloudTaskOutput) {
+func (toState *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudTaskOutput) {
 }
 
-func (newState *DbtCloudTaskOutput) SyncFieldsDuringRead(existingState DbtCloudTaskOutput) {
+func (toState *DbtCloudTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudTaskOutput) {
 }
 
 func (c DbtCloudTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2880,10 +3036,10 @@ type DbtOutput struct {
 	ArtifactsLink types.String `tfsdk:"artifacts_link"`
 }
 
-func (newState *DbtOutput) SyncFieldsDuringCreateOrUpdate(plan DbtOutput) {
+func (toState *DbtOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtOutput) {
 }
 
-func (newState *DbtOutput) SyncFieldsDuringRead(existingState DbtOutput) {
+func (toState *DbtOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtOutput) {
 }
 
 func (c DbtOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2974,10 +3130,10 @@ type DbtPlatformJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DbtPlatformJobRunStep) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformJobRunStep) {
+func (toState *DbtPlatformJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformJobRunStep) {
 }
 
-func (newState *DbtPlatformJobRunStep) SyncFieldsDuringRead(existingState DbtPlatformJobRunStep) {
+func (toState *DbtPlatformJobRunStep) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformJobRunStep) {
 }
 
 func (c DbtPlatformJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3041,10 +3197,10 @@ type DbtPlatformTask struct {
 	DbtPlatformJobId types.String `tfsdk:"dbt_platform_job_id"`
 }
 
-func (newState *DbtPlatformTask) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformTask) {
+func (toState *DbtPlatformTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformTask) {
 }
 
-func (newState *DbtPlatformTask) SyncFieldsDuringRead(existingState DbtPlatformTask) {
+func (toState *DbtPlatformTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformTask) {
 }
 
 func (c DbtPlatformTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3100,10 +3256,10 @@ type DbtPlatformTaskOutput struct {
 	StepsTruncated types.Bool `tfsdk:"steps_truncated"`
 }
 
-func (newState *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(plan DbtPlatformTaskOutput) {
+func (toState *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformTaskOutput) {
 }
 
-func (newState *DbtPlatformTaskOutput) SyncFieldsDuringRead(existingState DbtPlatformTaskOutput) {
+func (toState *DbtPlatformTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformTaskOutput) {
 }
 
 func (c DbtPlatformTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3219,10 +3375,10 @@ type DbtTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *DbtTask) SyncFieldsDuringCreateOrUpdate(plan DbtTask) {
+func (toState *DbtTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtTask) {
 }
 
-func (newState *DbtTask) SyncFieldsDuringRead(existingState DbtTask) {
+func (toState *DbtTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtTask) {
 }
 
 func (c DbtTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3460,10 +3616,10 @@ type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
-func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (toState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (toState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringRead(ctx context.Context, fromState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
 func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3567,10 +3723,26 @@ type EnforcePolicyComplianceResponse struct {
 	Settings types.Object `tfsdk:"settings"`
 }
 
-func (newState *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
+func (toState *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforcePolicyComplianceResponse) {
+	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
 }
 
-func (newState *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
+func (toState *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState EnforcePolicyComplianceResponse) {
+	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
 }
 
 func (c EnforcePolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3655,7 +3827,7 @@ func (o *EnforcePolicyComplianceResponse) GetSettings(ctx context.Context) (JobS
 	if o.Settings.IsNull() || o.Settings.IsUnknown() {
 		return e, false
 	}
-	var v []JobSettings
+	var v JobSettings
 	d := o.Settings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3663,10 +3835,7 @@ func (o *EnforcePolicyComplianceResponse) GetSettings(ctx context.Context) (JobS
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSettings sets the value of the Settings field in EnforcePolicyComplianceResponse.
@@ -3685,10 +3854,10 @@ type ExportRunOutput struct {
 	Views types.List `tfsdk:"views"`
 }
 
-func (newState *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
+func (toState *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportRunOutput) {
 }
 
-func (newState *ExportRunOutput) SyncFieldsDuringRead(existingState ExportRunOutput) {
+func (toState *ExportRunOutput) SyncFieldsDuringRead(ctx context.Context, fromState ExportRunOutput) {
 }
 
 func (c ExportRunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3813,10 +3982,10 @@ type FileArrivalTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (newState *FileArrivalTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
+func (toState *FileArrivalTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileArrivalTriggerConfiguration) {
 }
 
-func (newState *FileArrivalTriggerConfiguration) SyncFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
+func (toState *FileArrivalTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState FileArrivalTriggerConfiguration) {
 }
 
 func (c FileArrivalTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3868,10 +4037,10 @@ type FileArrivalTriggerState struct {
 	UsingFileEvents types.Bool `tfsdk:"using_file_events"`
 }
 
-func (newState *FileArrivalTriggerState) SyncFieldsDuringCreateOrUpdate(plan FileArrivalTriggerState) {
+func (toState *FileArrivalTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileArrivalTriggerState) {
 }
 
-func (newState *FileArrivalTriggerState) SyncFieldsDuringRead(existingState FileArrivalTriggerState) {
+func (toState *FileArrivalTriggerState) SyncFieldsDuringRead(ctx context.Context, fromState FileArrivalTriggerState) {
 }
 
 func (c FileArrivalTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3918,10 +4087,26 @@ type ForEachStats struct {
 	TaskRunStats types.Object `tfsdk:"task_run_stats"`
 }
 
-func (newState *ForEachStats) SyncFieldsDuringCreateOrUpdate(plan ForEachStats) {
+func (toState *ForEachStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachStats) {
+	if !fromPlan.TaskRunStats.IsNull() && !fromPlan.TaskRunStats.IsUnknown() {
+		if toStateTaskRunStats, ok := toState.GetTaskRunStats(ctx); ok {
+			if fromPlanTaskRunStats, ok := fromPlan.GetTaskRunStats(ctx); ok {
+				toStateTaskRunStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTaskRunStats)
+				toState.SetTaskRunStats(ctx, toStateTaskRunStats)
+			}
+		}
+	}
 }
 
-func (newState *ForEachStats) SyncFieldsDuringRead(existingState ForEachStats) {
+func (toState *ForEachStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachStats) {
+	if !fromState.TaskRunStats.IsNull() && !fromState.TaskRunStats.IsUnknown() {
+		if toStateTaskRunStats, ok := toState.GetTaskRunStats(ctx); ok {
+			if fromStateTaskRunStats, ok := fromState.GetTaskRunStats(ctx); ok {
+				toStateTaskRunStats.SyncFieldsDuringRead(ctx, fromStateTaskRunStats)
+				toState.SetTaskRunStats(ctx, toStateTaskRunStats)
+			}
+		}
+	}
 }
 
 func (c ForEachStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4003,7 +4188,7 @@ func (o *ForEachStats) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunS
 	if o.TaskRunStats.IsNull() || o.TaskRunStats.IsUnknown() {
 		return e, false
 	}
-	var v []ForEachTaskTaskRunStats
+	var v ForEachTaskTaskRunStats
 	d := o.TaskRunStats.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4011,10 +4196,7 @@ func (o *ForEachStats) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunS
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTaskRunStats sets the value of the TaskRunStats field in ForEachStats.
@@ -4035,10 +4217,26 @@ type ForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (newState *ForEachTask) SyncFieldsDuringCreateOrUpdate(plan ForEachTask) {
+func (toState *ForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTask) {
+	if !fromPlan.Task.IsNull() && !fromPlan.Task.IsUnknown() {
+		if toStateTask, ok := toState.GetTask(ctx); ok {
+			if fromPlanTask, ok := fromPlan.GetTask(ctx); ok {
+				toStateTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTask)
+				toState.SetTask(ctx, toStateTask)
+			}
+		}
+	}
 }
 
-func (newState *ForEachTask) SyncFieldsDuringRead(existingState ForEachTask) {
+func (toState *ForEachTask) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTask) {
+	if !fromState.Task.IsNull() && !fromState.Task.IsUnknown() {
+		if toStateTask, ok := toState.GetTask(ctx); ok {
+			if fromStateTask, ok := fromState.GetTask(ctx); ok {
+				toStateTask.SyncFieldsDuringRead(ctx, fromStateTask)
+				toState.SetTask(ctx, toStateTask)
+			}
+		}
+	}
 }
 
 func (c ForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4094,7 +4292,7 @@ func (o *ForEachTask) GetTask(ctx context.Context) (Task, bool) {
 	if o.Task.IsNull() || o.Task.IsUnknown() {
 		return e, false
 	}
-	var v []Task
+	var v Task
 	d := o.Task.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4102,10 +4300,7 @@ func (o *ForEachTask) GetTask(ctx context.Context) (Task, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTask sets the value of the Task field in ForEachTask.
@@ -4124,10 +4319,10 @@ type ForEachTaskErrorMessageStats struct {
 	TerminationCategory types.String `tfsdk:"termination_category"`
 }
 
-func (newState *ForEachTaskErrorMessageStats) SyncFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
+func (toState *ForEachTaskErrorMessageStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTaskErrorMessageStats) {
 }
 
-func (newState *ForEachTaskErrorMessageStats) SyncFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
+func (toState *ForEachTaskErrorMessageStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTaskErrorMessageStats) {
 }
 
 func (c ForEachTaskErrorMessageStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4189,10 +4384,10 @@ type ForEachTaskTaskRunStats struct {
 	TotalIterations types.Int64 `tfsdk:"total_iterations"`
 }
 
-func (newState *ForEachTaskTaskRunStats) SyncFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
+func (toState *ForEachTaskTaskRunStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTaskTaskRunStats) {
 }
 
-func (newState *ForEachTaskTaskRunStats) SyncFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
+func (toState *ForEachTaskTaskRunStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTaskTaskRunStats) {
 }
 
 func (c ForEachTaskTaskRunStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4281,10 +4476,26 @@ type GenAiComputeTask struct {
 	YamlParametersFilePath types.String `tfsdk:"yaml_parameters_file_path"`
 }
 
-func (newState *GenAiComputeTask) SyncFieldsDuringCreateOrUpdate(plan GenAiComputeTask) {
+func (toState *GenAiComputeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenAiComputeTask) {
+	if !fromPlan.Compute.IsNull() && !fromPlan.Compute.IsUnknown() {
+		if toStateCompute, ok := toState.GetCompute(ctx); ok {
+			if fromPlanCompute, ok := fromPlan.GetCompute(ctx); ok {
+				toStateCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCompute)
+				toState.SetCompute(ctx, toStateCompute)
+			}
+		}
+	}
 }
 
-func (newState *GenAiComputeTask) SyncFieldsDuringRead(existingState GenAiComputeTask) {
+func (toState *GenAiComputeTask) SyncFieldsDuringRead(ctx context.Context, fromState GenAiComputeTask) {
+	if !fromState.Compute.IsNull() && !fromState.Compute.IsUnknown() {
+		if toStateCompute, ok := toState.GetCompute(ctx); ok {
+			if fromStateCompute, ok := fromState.GetCompute(ctx); ok {
+				toStateCompute.SyncFieldsDuringRead(ctx, fromStateCompute)
+				toState.SetCompute(ctx, toStateCompute)
+			}
+		}
+	}
 }
 
 func (c GenAiComputeTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4355,7 +4566,7 @@ func (o *GenAiComputeTask) GetCompute(ctx context.Context) (ComputeConfig, bool)
 	if o.Compute.IsNull() || o.Compute.IsUnknown() {
 		return e, false
 	}
-	var v []ComputeConfig
+	var v ComputeConfig
 	d := o.Compute.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4363,10 +4574,7 @@ func (o *GenAiComputeTask) GetCompute(ctx context.Context) (ComputeConfig, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCompute sets the value of the Compute field in GenAiComputeTask.
@@ -4416,10 +4624,10 @@ type GetJobPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
+func (toState *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetJobPermissionLevelsResponse) {
 }
 
-func (newState *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
+func (toState *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetJobPermissionLevelsResponse) {
 }
 
 func (c GetJobPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4617,10 +4825,10 @@ type GetPolicyComplianceResponse struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *GetPolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
+func (toState *GetPolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPolicyComplianceResponse) {
 }
 
-func (newState *GetPolicyComplianceResponse) SyncFieldsDuringRead(existingState GetPolicyComplianceResponse) {
+func (toState *GetPolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPolicyComplianceResponse) {
 }
 
 func (c GetPolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4788,10 +4996,10 @@ type GitSnapshot struct {
 	UsedCommit types.String `tfsdk:"used_commit"`
 }
 
-func (newState *GitSnapshot) SyncFieldsDuringCreateOrUpdate(plan GitSnapshot) {
+func (toState *GitSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GitSnapshot) {
 }
 
-func (newState *GitSnapshot) SyncFieldsDuringRead(existingState GitSnapshot) {
+func (toState *GitSnapshot) SyncFieldsDuringRead(ctx context.Context, fromState GitSnapshot) {
 }
 
 func (c GitSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4863,10 +5071,42 @@ type GitSource struct {
 	JobSource types.Object `tfsdk:"job_source"`
 }
 
-func (newState *GitSource) SyncFieldsDuringCreateOrUpdate(plan GitSource) {
+func (toState *GitSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GitSource) {
+	if !fromPlan.GitSnapshot.IsNull() && !fromPlan.GitSnapshot.IsUnknown() {
+		if toStateGitSnapshot, ok := toState.GetGitSnapshot(ctx); ok {
+			if fromPlanGitSnapshot, ok := fromPlan.GetGitSnapshot(ctx); ok {
+				toStateGitSnapshot.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSnapshot)
+				toState.SetGitSnapshot(ctx, toStateGitSnapshot)
+			}
+		}
+	}
+	if !fromPlan.JobSource.IsNull() && !fromPlan.JobSource.IsUnknown() {
+		if toStateJobSource, ok := toState.GetJobSource(ctx); ok {
+			if fromPlanJobSource, ok := fromPlan.GetJobSource(ctx); ok {
+				toStateJobSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJobSource)
+				toState.SetJobSource(ctx, toStateJobSource)
+			}
+		}
+	}
 }
 
-func (newState *GitSource) SyncFieldsDuringRead(existingState GitSource) {
+func (toState *GitSource) SyncFieldsDuringRead(ctx context.Context, fromState GitSource) {
+	if !fromState.GitSnapshot.IsNull() && !fromState.GitSnapshot.IsUnknown() {
+		if toStateGitSnapshot, ok := toState.GetGitSnapshot(ctx); ok {
+			if fromStateGitSnapshot, ok := fromState.GetGitSnapshot(ctx); ok {
+				toStateGitSnapshot.SyncFieldsDuringRead(ctx, fromStateGitSnapshot)
+				toState.SetGitSnapshot(ctx, toStateGitSnapshot)
+			}
+		}
+	}
+	if !fromState.JobSource.IsNull() && !fromState.JobSource.IsUnknown() {
+		if toStateJobSource, ok := toState.GetJobSource(ctx); ok {
+			if fromStateJobSource, ok := fromState.GetJobSource(ctx); ok {
+				toStateJobSource.SyncFieldsDuringRead(ctx, fromStateJobSource)
+				toState.SetJobSource(ctx, toStateJobSource)
+			}
+		}
+	}
 }
 
 func (c GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4935,7 +5175,7 @@ func (o *GitSource) GetGitSnapshot(ctx context.Context) (GitSnapshot, bool) {
 	if o.GitSnapshot.IsNull() || o.GitSnapshot.IsUnknown() {
 		return e, false
 	}
-	var v []GitSnapshot
+	var v GitSnapshot
 	d := o.GitSnapshot.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4943,10 +5183,7 @@ func (o *GitSource) GetGitSnapshot(ctx context.Context) (GitSnapshot, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSnapshot sets the value of the GitSnapshot field in GitSource.
@@ -4963,7 +5200,7 @@ func (o *GitSource) GetJobSource(ctx context.Context) (JobSource, bool) {
 	if o.JobSource.IsNull() || o.JobSource.IsUnknown() {
 		return e, false
 	}
-	var v []JobSource
+	var v JobSource
 	d := o.JobSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4971,10 +5208,7 @@ func (o *GitSource) GetJobSource(ctx context.Context) (JobSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetJobSource sets the value of the JobSource field in GitSource.
@@ -5022,10 +5256,42 @@ type Job struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (newState *Job) SyncFieldsDuringCreateOrUpdate(plan Job) {
+func (toState *Job) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Job) {
+	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
+	if !fromPlan.TriggerState.IsNull() && !fromPlan.TriggerState.IsUnknown() {
+		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
+			if fromPlanTriggerState, ok := fromPlan.GetTriggerState(ctx); ok {
+				toStateTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerState)
+				toState.SetTriggerState(ctx, toStateTriggerState)
+			}
+		}
+	}
 }
 
-func (newState *Job) SyncFieldsDuringRead(existingState Job) {
+func (toState *Job) SyncFieldsDuringRead(ctx context.Context, fromState Job) {
+	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
+		if toStateSettings, ok := toState.GetSettings(ctx); ok {
+			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
+				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
+				toState.SetSettings(ctx, toStateSettings)
+			}
+		}
+	}
+	if !fromState.TriggerState.IsNull() && !fromState.TriggerState.IsUnknown() {
+		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
+			if fromStateTriggerState, ok := fromState.GetTriggerState(ctx); ok {
+				toStateTriggerState.SyncFieldsDuringRead(ctx, fromStateTriggerState)
+				toState.SetTriggerState(ctx, toStateTriggerState)
+			}
+		}
+	}
 }
 
 func (c Job) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5100,7 +5366,7 @@ func (o *Job) GetSettings(ctx context.Context) (JobSettings, bool) {
 	if o.Settings.IsNull() || o.Settings.IsUnknown() {
 		return e, false
 	}
-	var v []JobSettings
+	var v JobSettings
 	d := o.Settings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5108,10 +5374,7 @@ func (o *Job) GetSettings(ctx context.Context) (JobSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSettings sets the value of the Settings field in Job.
@@ -5128,7 +5391,7 @@ func (o *Job) GetTriggerState(ctx context.Context) (TriggerStateProto, bool) {
 	if o.TriggerState.IsNull() || o.TriggerState.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerStateProto
+	var v TriggerStateProto
 	d := o.TriggerState.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5136,10 +5399,7 @@ func (o *Job) GetTriggerState(ctx context.Context) (TriggerStateProto, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggerState sets the value of the TriggerState field in Job.
@@ -5159,10 +5419,10 @@ type JobAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobAccessControlRequest) SyncFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
+func (toState *JobAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobAccessControlRequest) {
 }
 
-func (newState *JobAccessControlRequest) SyncFieldsDuringRead(existingState JobAccessControlRequest) {
+func (toState *JobAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState JobAccessControlRequest) {
 }
 
 func (c JobAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5224,10 +5484,10 @@ type JobAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
+func (toState *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobAccessControlResponse) {
 }
 
-func (newState *JobAccessControlResponse) SyncFieldsDuringRead(existingState JobAccessControlResponse) {
+func (toState *JobAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState JobAccessControlResponse) {
 }
 
 func (c JobAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5318,10 +5578,26 @@ type JobCluster struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (newState *JobCluster) SyncFieldsDuringCreateOrUpdate(plan JobCluster) {
+func (toState *JobCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobCluster) {
+	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
 }
 
-func (newState *JobCluster) SyncFieldsDuringRead(existingState JobCluster) {
+func (toState *JobCluster) SyncFieldsDuringRead(ctx context.Context, fromState JobCluster) {
+	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
 }
 
 func (c JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5374,7 +5650,7 @@ func (o *JobCluster) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec,
 	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.ClusterSpec
+	var v compute_tf.ClusterSpec
 	d := o.NewCluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5382,10 +5658,7 @@ func (o *JobCluster) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewCluster sets the value of the NewCluster field in JobCluster.
@@ -5407,10 +5680,10 @@ type JobCompliance struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (newState *JobCompliance) SyncFieldsDuringCreateOrUpdate(plan JobCompliance) {
+func (toState *JobCompliance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobCompliance) {
 }
 
-func (newState *JobCompliance) SyncFieldsDuringRead(existingState JobCompliance) {
+func (toState *JobCompliance) SyncFieldsDuringRead(ctx context.Context, fromState JobCompliance) {
 }
 
 func (c JobCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5495,10 +5768,10 @@ type JobDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
-func (newState *JobDeployment) SyncFieldsDuringCreateOrUpdate(plan JobDeployment) {
+func (toState *JobDeployment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobDeployment) {
 }
 
-func (newState *JobDeployment) SyncFieldsDuringRead(existingState JobDeployment) {
+func (toState *JobDeployment) SyncFieldsDuringRead(ctx context.Context, fromState JobDeployment) {
 }
 
 func (c JobDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5577,10 +5850,10 @@ type JobEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
+func (toState *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobEmailNotifications) {
 }
 
-func (newState *JobEmailNotifications) SyncFieldsDuringRead(existingState JobEmailNotifications) {
+func (toState *JobEmailNotifications) SyncFieldsDuringRead(ctx context.Context, fromState JobEmailNotifications) {
 }
 
 func (c JobEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5788,10 +6061,26 @@ type JobEnvironment struct {
 	Spec types.Object `tfsdk:"spec"`
 }
 
-func (newState *JobEnvironment) SyncFieldsDuringCreateOrUpdate(plan JobEnvironment) {
+func (toState *JobEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobEnvironment) {
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
-func (newState *JobEnvironment) SyncFieldsDuringRead(existingState JobEnvironment) {
+func (toState *JobEnvironment) SyncFieldsDuringRead(ctx context.Context, fromState JobEnvironment) {
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
 func (c JobEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5844,7 +6133,7 @@ func (o *JobEnvironment) GetSpec(ctx context.Context) (compute_tf.Environment, b
 	if o.Spec.IsNull() || o.Spec.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.Environment
+	var v compute_tf.Environment
 	d := o.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5852,10 +6141,7 @@ func (o *JobEnvironment) GetSpec(ctx context.Context) (compute_tf.Environment, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSpec sets the value of the Spec field in JobEnvironment.
@@ -5873,10 +6159,10 @@ type JobNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (newState *JobNotificationSettings) SyncFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
+func (toState *JobNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobNotificationSettings) {
 }
 
-func (newState *JobNotificationSettings) SyncFieldsDuringRead(existingState JobNotificationSettings) {
+func (toState *JobNotificationSettings) SyncFieldsDuringRead(ctx context.Context, fromState JobNotificationSettings) {
 }
 
 func (c JobNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5928,10 +6214,10 @@ type JobParameter struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *JobParameter) SyncFieldsDuringCreateOrUpdate(plan JobParameter) {
+func (toState *JobParameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobParameter) {
 }
 
-func (newState *JobParameter) SyncFieldsDuringRead(existingState JobParameter) {
+func (toState *JobParameter) SyncFieldsDuringRead(ctx context.Context, fromState JobParameter) {
 }
 
 func (c JobParameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5985,10 +6271,10 @@ type JobParameterDefinition struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *JobParameterDefinition) SyncFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
+func (toState *JobParameterDefinition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobParameterDefinition) {
 }
 
-func (newState *JobParameterDefinition) SyncFieldsDuringRead(existingState JobParameterDefinition) {
+func (toState *JobParameterDefinition) SyncFieldsDuringRead(ctx context.Context, fromState JobParameterDefinition) {
 }
 
 func (c JobParameterDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6039,10 +6325,10 @@ type JobPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *JobPermission) SyncFieldsDuringCreateOrUpdate(plan JobPermission) {
+func (toState *JobPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermission) {
 }
 
-func (newState *JobPermission) SyncFieldsDuringRead(existingState JobPermission) {
+func (toState *JobPermission) SyncFieldsDuringRead(ctx context.Context, fromState JobPermission) {
 }
 
 func (c JobPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6126,10 +6412,10 @@ type JobPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *JobPermissions) SyncFieldsDuringCreateOrUpdate(plan JobPermissions) {
+func (toState *JobPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermissions) {
 }
 
-func (newState *JobPermissions) SyncFieldsDuringRead(existingState JobPermissions) {
+func (toState *JobPermissions) SyncFieldsDuringRead(ctx context.Context, fromState JobPermissions) {
 }
 
 func (c JobPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6211,10 +6497,10 @@ type JobPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *JobPermissionsDescription) SyncFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
+func (toState *JobPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermissionsDescription) {
 }
 
-func (newState *JobPermissionsDescription) SyncFieldsDuringRead(existingState JobPermissionsDescription) {
+func (toState *JobPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState JobPermissionsDescription) {
 }
 
 func (c JobPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6340,10 +6626,10 @@ type JobRunAs struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *JobRunAs) SyncFieldsDuringCreateOrUpdate(plan JobRunAs) {
+func (toState *JobRunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobRunAs) {
 }
 
-func (newState *JobRunAs) SyncFieldsDuringRead(existingState JobRunAs) {
+func (toState *JobRunAs) SyncFieldsDuringRead(ctx context.Context, fromState JobRunAs) {
 }
 
 func (c JobRunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6501,10 +6787,186 @@ type JobSettings struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *JobSettings) SyncFieldsDuringCreateOrUpdate(plan JobSettings) {
+func (toState *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobSettings) {
+	if !fromPlan.Continuous.IsNull() && !fromPlan.Continuous.IsUnknown() {
+		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
+			if fromPlanContinuous, ok := fromPlan.GetContinuous(ctx); ok {
+				toStateContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuous)
+				toState.SetContinuous(ctx, toStateContinuous)
+			}
+		}
+	}
+	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.Queue.IsNull() && !fromPlan.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromPlanQueue, ok := fromPlan.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
-func (newState *JobSettings) SyncFieldsDuringRead(existingState JobSettings) {
+func (toState *JobSettings) SyncFieldsDuringRead(ctx context.Context, fromState JobSettings) {
+	if !fromState.Continuous.IsNull() && !fromState.Continuous.IsUnknown() {
+		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
+			if fromStateContinuous, ok := fromState.GetContinuous(ctx); ok {
+				toStateContinuous.SyncFieldsDuringRead(ctx, fromStateContinuous)
+				toState.SetContinuous(ctx, toStateContinuous)
+			}
+		}
+	}
+	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.Queue.IsNull() && !fromState.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromStateQueue, ok := fromState.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringRead(ctx, fromStateQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
 func (c JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6648,7 +7110,7 @@ func (o *JobSettings) GetContinuous(ctx context.Context) (Continuous, bool) {
 	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
 		return e, false
 	}
-	var v []Continuous
+	var v Continuous
 	d := o.Continuous.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6656,10 +7118,7 @@ func (o *JobSettings) GetContinuous(ctx context.Context) (Continuous, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetContinuous sets the value of the Continuous field in JobSettings.
@@ -6676,7 +7135,7 @@ func (o *JobSettings) GetDeployment(ctx context.Context) (JobDeployment, bool) {
 	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
 		return e, false
 	}
-	var v []JobDeployment
+	var v JobDeployment
 	d := o.Deployment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6684,10 +7143,7 @@ func (o *JobSettings) GetDeployment(ctx context.Context) (JobDeployment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeployment sets the value of the Deployment field in JobSettings.
@@ -6704,7 +7160,7 @@ func (o *JobSettings) GetEmailNotifications(ctx context.Context) (JobEmailNotifi
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []JobEmailNotifications
+	var v JobEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6712,10 +7168,7 @@ func (o *JobSettings) GetEmailNotifications(ctx context.Context) (JobEmailNotifi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in JobSettings.
@@ -6758,7 +7211,7 @@ func (o *JobSettings) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6766,10 +7219,7 @@ func (o *JobSettings) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in JobSettings.
@@ -6786,7 +7236,7 @@ func (o *JobSettings) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if o.Health.IsNull() || o.Health.IsUnknown() {
 		return e, false
 	}
-	var v []JobsHealthRules
+	var v JobsHealthRules
 	d := o.Health.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6794,10 +7244,7 @@ func (o *JobSettings) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetHealth sets the value of the Health field in JobSettings.
@@ -6840,7 +7287,7 @@ func (o *JobSettings) GetNotificationSettings(ctx context.Context) (JobNotificat
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []JobNotificationSettings
+	var v JobNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6848,10 +7295,7 @@ func (o *JobSettings) GetNotificationSettings(ctx context.Context) (JobNotificat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in JobSettings.
@@ -6894,7 +7338,7 @@ func (o *JobSettings) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if o.Queue.IsNull() || o.Queue.IsUnknown() {
 		return e, false
 	}
-	var v []QueueSettings
+	var v QueueSettings
 	d := o.Queue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6902,10 +7346,7 @@ func (o *JobSettings) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueue sets the value of the Queue field in JobSettings.
@@ -6922,7 +7363,7 @@ func (o *JobSettings) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
 		return e, false
 	}
-	var v []JobRunAs
+	var v JobRunAs
 	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6930,10 +7371,7 @@ func (o *JobSettings) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunAs sets the value of the RunAs field in JobSettings.
@@ -6950,7 +7388,7 @@ func (o *JobSettings) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6958,10 +7396,7 @@ func (o *JobSettings) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in JobSettings.
@@ -7030,7 +7465,7 @@ func (o *JobSettings) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
 	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerSettings
+	var v TriggerSettings
 	d := o.Trigger.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7038,10 +7473,7 @@ func (o *JobSettings) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTrigger sets the value of the Trigger field in JobSettings.
@@ -7058,7 +7490,7 @@ func (o *JobSettings) GetWebhookNotifications(ctx context.Context) (WebhookNotif
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7066,10 +7498,7 @@ func (o *JobSettings) GetWebhookNotifications(ctx context.Context) (WebhookNotif
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in JobSettings.
@@ -7097,10 +7526,10 @@ type JobSource struct {
 	JobConfigPath types.String `tfsdk:"job_config_path"`
 }
 
-func (newState *JobSource) SyncFieldsDuringCreateOrUpdate(plan JobSource) {
+func (toState *JobSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobSource) {
 }
 
-func (newState *JobSource) SyncFieldsDuringRead(existingState JobSource) {
+func (toState *JobSource) SyncFieldsDuringRead(ctx context.Context, fromState JobSource) {
 }
 
 func (c JobSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7155,10 +7584,10 @@ type JobsHealthRule struct {
 	Value types.Int64 `tfsdk:"value"`
 }
 
-func (newState *JobsHealthRule) SyncFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
+func (toState *JobsHealthRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobsHealthRule) {
 }
 
-func (newState *JobsHealthRule) SyncFieldsDuringRead(existingState JobsHealthRule) {
+func (toState *JobsHealthRule) SyncFieldsDuringRead(ctx context.Context, fromState JobsHealthRule) {
 }
 
 func (c JobsHealthRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7209,10 +7638,10 @@ type JobsHealthRules struct {
 	Rules types.List `tfsdk:"rules"`
 }
 
-func (newState *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
+func (toState *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobsHealthRules) {
 }
 
-func (newState *JobsHealthRules) SyncFieldsDuringRead(existingState JobsHealthRules) {
+func (toState *JobsHealthRules) SyncFieldsDuringRead(ctx context.Context, fromState JobsHealthRules) {
 }
 
 func (c JobsHealthRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7295,10 +7724,10 @@ type ListJobComplianceForPolicyResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
+func (toState *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobComplianceForPolicyResponse) {
 }
 
-func (newState *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
+func (toState *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListJobComplianceForPolicyResponse) {
 }
 
 func (c ListJobComplianceForPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7494,10 +7923,10 @@ type ListJobsResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
+func (toState *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobsResponse) {
 }
 
-func (newState *ListJobsResponse) SyncFieldsDuringRead(existingState ListJobsResponse) {
+func (toState *ListJobsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListJobsResponse) {
 }
 
 func (c ListJobsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7681,10 +8110,10 @@ type ListRunsResponse struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (newState *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
+func (toState *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListRunsResponse) {
 }
 
-func (newState *ListRunsResponse) SyncFieldsDuringRead(existingState ListRunsResponse) {
+func (toState *ListRunsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListRunsResponse) {
 }
 
 func (c ListRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7763,112 +8192,6 @@ func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
 	o.Runs = types.ListValueMust(t, vs)
 }
 
-type ModelTriggerConfiguration struct {
-	// Aliases of the model versions to monitor. Can only be used in conjunction
-	// with condition MODEL_ALIAS_SET.
-	Aliases types.List `tfsdk:"aliases"`
-	// The condition based on which to trigger a job run.
-	Condition types.String `tfsdk:"condition"`
-	// If set, the trigger starts a run only after the specified amount of time
-	// has passed since the last time the trigger fired. The minimum allowed
-	// value is 60 seconds.
-	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
-	// Name of the securable to monitor ("mycatalog.myschema.mymodel" in the
-	// case of model-level triggers, "mycatalog.myschema" in the case of
-	// schema-level triggers) or empty in the case of metastore-level triggers.
-	SecurableName types.String `tfsdk:"securable_name"`
-	// If set, the trigger starts a run only after no model updates have
-	// occurred for the specified time and can be used to wait for a series of
-	// model updates before triggering a run. The minimum allowed value is 60
-	// seconds.
-	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
-}
-
-func (newState *ModelTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan ModelTriggerConfiguration) {
-}
-
-func (newState *ModelTriggerConfiguration) SyncFieldsDuringRead(existingState ModelTriggerConfiguration) {
-}
-
-func (c ModelTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["condition"] = attrs["condition"].SetRequired()
-	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
-	attrs["securable_name"] = attrs["securable_name"].SetOptional()
-	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTriggerConfiguration.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ModelTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"aliases": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelTriggerConfiguration
-// only implements ToObjectValue() and Type().
-func (o ModelTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"aliases":                           o.Aliases,
-			"condition":                         o.Condition,
-			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
-			"securable_name":                    o.SecurableName,
-			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ModelTriggerConfiguration) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"aliases": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"condition":                         types.StringType,
-			"min_time_between_triggers_seconds": types.Int64Type,
-			"securable_name":                    types.StringType,
-			"wait_after_last_change_seconds":    types.Int64Type,
-		},
-	}
-}
-
-// GetAliases returns the value of the Aliases field in ModelTriggerConfiguration as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ModelTriggerConfiguration) GetAliases(ctx context.Context) ([]types.String, bool) {
-	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Aliases.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetAliases sets the value of the Aliases field in ModelTriggerConfiguration.
-func (o *ModelTriggerConfiguration) SetAliases(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Aliases = types.ListValueMust(t, vs)
-}
-
 type NotebookOutput struct {
 	// The value passed to
 	// [dbutils.notebook.exit()](/notebooks/notebook-workflows.html#notebook-workflows-exit).
@@ -7881,10 +8204,10 @@ type NotebookOutput struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (newState *NotebookOutput) SyncFieldsDuringCreateOrUpdate(plan NotebookOutput) {
+func (toState *NotebookOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookOutput) {
 }
 
-func (newState *NotebookOutput) SyncFieldsDuringRead(existingState NotebookOutput) {
+func (toState *NotebookOutput) SyncFieldsDuringRead(ctx context.Context, fromState NotebookOutput) {
 }
 
 func (c NotebookOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7968,10 +8291,10 @@ type NotebookTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *NotebookTask) SyncFieldsDuringCreateOrUpdate(plan NotebookTask) {
+func (toState *NotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookTask) {
 }
 
-func (newState *NotebookTask) SyncFieldsDuringRead(existingState NotebookTask) {
+func (toState *NotebookTask) SyncFieldsDuringRead(ctx context.Context, fromState NotebookTask) {
 }
 
 func (c NotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8061,10 +8384,10 @@ type OutputSchemaInfo struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 }
 
-func (newState *OutputSchemaInfo) SyncFieldsDuringCreateOrUpdate(plan OutputSchemaInfo) {
+func (toState *OutputSchemaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OutputSchemaInfo) {
 }
 
-func (newState *OutputSchemaInfo) SyncFieldsDuringRead(existingState OutputSchemaInfo) {
+func (toState *OutputSchemaInfo) SyncFieldsDuringRead(ctx context.Context, fromState OutputSchemaInfo) {
 }
 
 func (c OutputSchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8117,10 +8440,10 @@ type PeriodicTriggerConfiguration struct {
 	Unit types.String `tfsdk:"unit"`
 }
 
-func (newState *PeriodicTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
+func (toState *PeriodicTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PeriodicTriggerConfiguration) {
 }
 
-func (newState *PeriodicTriggerConfiguration) SyncFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
+func (toState *PeriodicTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState PeriodicTriggerConfiguration) {
 }
 
 func (c PeriodicTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8168,10 +8491,10 @@ type PipelineParams struct {
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 }
 
-func (newState *PipelineParams) SyncFieldsDuringCreateOrUpdate(plan PipelineParams) {
+func (toState *PipelineParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineParams) {
 }
 
-func (newState *PipelineParams) SyncFieldsDuringRead(existingState PipelineParams) {
+func (toState *PipelineParams) SyncFieldsDuringRead(ctx context.Context, fromState PipelineParams) {
 }
 
 func (c PipelineParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8218,10 +8541,10 @@ type PipelineTask struct {
 	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
-func (newState *PipelineTask) SyncFieldsDuringCreateOrUpdate(plan PipelineTask) {
+func (toState *PipelineTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineTask) {
 }
 
-func (newState *PipelineTask) SyncFieldsDuringRead(existingState PipelineTask) {
+func (toState *PipelineTask) SyncFieldsDuringRead(ctx context.Context, fromState PipelineTask) {
 }
 
 func (c PipelineTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8277,10 +8600,10 @@ type PowerBiModel struct {
 	WorkspaceName types.String `tfsdk:"workspace_name"`
 }
 
-func (newState *PowerBiModel) SyncFieldsDuringCreateOrUpdate(plan PowerBiModel) {
+func (toState *PowerBiModel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiModel) {
 }
 
-func (newState *PowerBiModel) SyncFieldsDuringRead(existingState PowerBiModel) {
+func (toState *PowerBiModel) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiModel) {
 }
 
 func (c PowerBiModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8343,10 +8666,10 @@ type PowerBiTable struct {
 	StorageMode types.String `tfsdk:"storage_mode"`
 }
 
-func (newState *PowerBiTable) SyncFieldsDuringCreateOrUpdate(plan PowerBiTable) {
+func (toState *PowerBiTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiTable) {
 }
 
-func (newState *PowerBiTable) SyncFieldsDuringRead(existingState PowerBiTable) {
+func (toState *PowerBiTable) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiTable) {
 }
 
 func (c PowerBiTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8409,10 +8732,26 @@ type PowerBiTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *PowerBiTask) SyncFieldsDuringCreateOrUpdate(plan PowerBiTask) {
+func (toState *PowerBiTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiTask) {
+	if !fromPlan.PowerBiModel.IsNull() && !fromPlan.PowerBiModel.IsUnknown() {
+		if toStatePowerBiModel, ok := toState.GetPowerBiModel(ctx); ok {
+			if fromPlanPowerBiModel, ok := fromPlan.GetPowerBiModel(ctx); ok {
+				toStatePowerBiModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiModel)
+				toState.SetPowerBiModel(ctx, toStatePowerBiModel)
+			}
+		}
+	}
 }
 
-func (newState *PowerBiTask) SyncFieldsDuringRead(existingState PowerBiTask) {
+func (toState *PowerBiTask) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiTask) {
+	if !fromState.PowerBiModel.IsNull() && !fromState.PowerBiModel.IsUnknown() {
+		if toStatePowerBiModel, ok := toState.GetPowerBiModel(ctx); ok {
+			if fromStatePowerBiModel, ok := fromState.GetPowerBiModel(ctx); ok {
+				toStatePowerBiModel.SyncFieldsDuringRead(ctx, fromStatePowerBiModel)
+				toState.SetPowerBiModel(ctx, toStatePowerBiModel)
+			}
+		}
+	}
 }
 
 func (c PowerBiTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8477,7 +8816,7 @@ func (o *PowerBiTask) GetPowerBiModel(ctx context.Context) (PowerBiModel, bool) 
 	if o.PowerBiModel.IsNull() || o.PowerBiModel.IsUnknown() {
 		return e, false
 	}
-	var v []PowerBiModel
+	var v PowerBiModel
 	d := o.PowerBiModel.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8485,10 +8824,7 @@ func (o *PowerBiTask) GetPowerBiModel(ctx context.Context) (PowerBiModel, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPowerBiModel sets the value of the PowerBiModel field in PowerBiTask.
@@ -8539,10 +8875,10 @@ type PythonWheelTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *PythonWheelTask) SyncFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
+func (toState *PythonWheelTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PythonWheelTask) {
 }
 
-func (newState *PythonWheelTask) SyncFieldsDuringRead(existingState PythonWheelTask) {
+func (toState *PythonWheelTask) SyncFieldsDuringRead(ctx context.Context, fromState PythonWheelTask) {
 }
 
 func (c PythonWheelTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8657,10 +8993,10 @@ type QueueDetails struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *QueueDetails) SyncFieldsDuringCreateOrUpdate(plan QueueDetails) {
+func (toState *QueueDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueueDetails) {
 }
 
-func (newState *QueueDetails) SyncFieldsDuringRead(existingState QueueDetails) {
+func (toState *QueueDetails) SyncFieldsDuringRead(ctx context.Context, fromState QueueDetails) {
 }
 
 func (c QueueDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8708,10 +9044,10 @@ type QueueSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *QueueSettings) SyncFieldsDuringCreateOrUpdate(plan QueueSettings) {
+func (toState *QueueSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueueSettings) {
 }
 
-func (newState *QueueSettings) SyncFieldsDuringRead(existingState QueueSettings) {
+func (toState *QueueSettings) SyncFieldsDuringRead(ctx context.Context, fromState QueueSettings) {
 }
 
 func (c QueueSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8780,10 +9116,42 @@ type RepairHistoryItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *RepairHistoryItem) SyncFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
+func (toState *RepairHistoryItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepairHistoryItem) {
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *RepairHistoryItem) SyncFieldsDuringRead(existingState RepairHistoryItem) {
+func (toState *RepairHistoryItem) SyncFieldsDuringRead(ctx context.Context, fromState RepairHistoryItem) {
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c RepairHistoryItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8858,7 +9226,7 @@ func (o *RepairHistoryItem) GetState(ctx context.Context) (RunState, bool) {
 	if o.State.IsNull() || o.State.IsUnknown() {
 		return e, false
 	}
-	var v []RunState
+	var v RunState
 	d := o.State.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8866,10 +9234,7 @@ func (o *RepairHistoryItem) GetState(ctx context.Context) (RunState, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetState sets the value of the State field in RepairHistoryItem.
@@ -8886,7 +9251,7 @@ func (o *RepairHistoryItem) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []RunStatus
+	var v RunStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8894,10 +9259,7 @@ func (o *RepairHistoryItem) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in RepairHistoryItem.
@@ -9244,7 +9606,7 @@ func (o *RepairRun) GetPipelineParams(ctx context.Context) (PipelineParams, bool
 	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineParams
+	var v PipelineParams
 	d := o.PipelineParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9252,10 +9614,7 @@ func (o *RepairRun) GetPipelineParams(ctx context.Context) (PipelineParams, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RepairRun.
@@ -9401,10 +9760,10 @@ type RepairRunResponse struct {
 	RepairId types.Int64 `tfsdk:"repair_id"`
 }
 
-func (newState *RepairRunResponse) SyncFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
+func (toState *RepairRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepairRunResponse) {
 }
 
-func (newState *RepairRunResponse) SyncFieldsDuringRead(existingState RepairRunResponse) {
+func (toState *RepairRunResponse) SyncFieldsDuringRead(ctx context.Context, fromState RepairRunResponse) {
 }
 
 func (c RepairRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9498,7 +9857,7 @@ func (o *ResetJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
 	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
 		return e, false
 	}
-	var v []JobSettings
+	var v JobSettings
 	d := o.NewSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9506,10 +9865,7 @@ func (o *ResetJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewSettings sets the value of the NewSettings field in ResetJob.
@@ -9554,10 +9910,10 @@ type ResolvedConditionTaskValues struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *ResolvedConditionTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
+func (toState *ResolvedConditionTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedConditionTaskValues) {
 }
 
-func (newState *ResolvedConditionTaskValues) SyncFieldsDuringRead(existingState ResolvedConditionTaskValues) {
+func (toState *ResolvedConditionTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedConditionTaskValues) {
 }
 
 func (c ResolvedConditionTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9604,10 +9960,10 @@ type ResolvedDbtTaskValues struct {
 	Commands types.List `tfsdk:"commands"`
 }
 
-func (newState *ResolvedDbtTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
+func (toState *ResolvedDbtTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedDbtTaskValues) {
 }
 
-func (newState *ResolvedDbtTaskValues) SyncFieldsDuringRead(existingState ResolvedDbtTaskValues) {
+func (toState *ResolvedDbtTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedDbtTaskValues) {
 }
 
 func (c ResolvedDbtTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9681,10 +10037,10 @@ type ResolvedNotebookTaskValues struct {
 	BaseParameters types.Map `tfsdk:"base_parameters"`
 }
 
-func (newState *ResolvedNotebookTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
+func (toState *ResolvedNotebookTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedNotebookTaskValues) {
 }
 
-func (newState *ResolvedNotebookTaskValues) SyncFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
+func (toState *ResolvedNotebookTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedNotebookTaskValues) {
 }
 
 func (c ResolvedNotebookTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9758,10 +10114,10 @@ type ResolvedParamPairValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedParamPairValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
+func (toState *ResolvedParamPairValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedParamPairValues) {
 }
 
-func (newState *ResolvedParamPairValues) SyncFieldsDuringRead(existingState ResolvedParamPairValues) {
+func (toState *ResolvedParamPairValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedParamPairValues) {
 }
 
 func (c ResolvedParamPairValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9837,10 +10193,10 @@ type ResolvedPythonWheelTaskValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedPythonWheelTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
+func (toState *ResolvedPythonWheelTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedPythonWheelTaskValues) {
 }
 
-func (newState *ResolvedPythonWheelTaskValues) SyncFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
+func (toState *ResolvedPythonWheelTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedPythonWheelTaskValues) {
 }
 
 func (c ResolvedPythonWheelTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9948,10 +10304,10 @@ type ResolvedRunJobTaskValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedRunJobTaskValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
+func (toState *ResolvedRunJobTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedRunJobTaskValues) {
 }
 
-func (newState *ResolvedRunJobTaskValues) SyncFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
+func (toState *ResolvedRunJobTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedRunJobTaskValues) {
 }
 
 func (c ResolvedRunJobTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10057,10 +10413,10 @@ type ResolvedStringParamsValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *ResolvedStringParamsValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
+func (toState *ResolvedStringParamsValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedStringParamsValues) {
 }
 
-func (newState *ResolvedStringParamsValues) SyncFieldsDuringRead(existingState ResolvedStringParamsValues) {
+func (toState *ResolvedStringParamsValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedStringParamsValues) {
 }
 
 func (c ResolvedStringParamsValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10152,10 +10508,170 @@ type ResolvedValues struct {
 	SqlTask types.Object `tfsdk:"sql_task"`
 }
 
-func (newState *ResolvedValues) SyncFieldsDuringCreateOrUpdate(plan ResolvedValues) {
+func (toState *ResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedValues) {
+	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromPlan.SimulationTask.IsNull() && !fromPlan.SimulationTask.IsUnknown() {
+		if toStateSimulationTask, ok := toState.GetSimulationTask(ctx); ok {
+			if fromPlanSimulationTask, ok := fromPlan.GetSimulationTask(ctx); ok {
+				toStateSimulationTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSimulationTask)
+				toState.SetSimulationTask(ctx, toStateSimulationTask)
+			}
+		}
+	}
+	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
 }
 
-func (newState *ResolvedValues) SyncFieldsDuringRead(existingState ResolvedValues) {
+func (toState *ResolvedValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedValues) {
+	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromState.SimulationTask.IsNull() && !fromState.SimulationTask.IsUnknown() {
+		if toStateSimulationTask, ok := toState.GetSimulationTask(ctx); ok {
+			if fromStateSimulationTask, ok := fromState.GetSimulationTask(ctx); ok {
+				toStateSimulationTask.SyncFieldsDuringRead(ctx, fromStateSimulationTask)
+				toState.SetSimulationTask(ctx, toStateSimulationTask)
+			}
+		}
+	}
+	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
 }
 
 func (c ResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10241,7 +10757,7 @@ func (o *ResolvedValues) GetConditionTask(ctx context.Context) (ResolvedConditio
 	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedConditionTaskValues
+	var v ResolvedConditionTaskValues
 	d := o.ConditionTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10249,10 +10765,7 @@ func (o *ResolvedValues) GetConditionTask(ctx context.Context) (ResolvedConditio
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConditionTask sets the value of the ConditionTask field in ResolvedValues.
@@ -10269,7 +10782,7 @@ func (o *ResolvedValues) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues,
 	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedDbtTaskValues
+	var v ResolvedDbtTaskValues
 	d := o.DbtTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10277,10 +10790,7 @@ func (o *ResolvedValues) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtTask sets the value of the DbtTask field in ResolvedValues.
@@ -10297,7 +10807,7 @@ func (o *ResolvedValues) GetNotebookTask(ctx context.Context) (ResolvedNotebookT
 	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedNotebookTaskValues
+	var v ResolvedNotebookTaskValues
 	d := o.NotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10305,10 +10815,7 @@ func (o *ResolvedValues) GetNotebookTask(ctx context.Context) (ResolvedNotebookT
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in ResolvedValues.
@@ -10325,7 +10832,7 @@ func (o *ResolvedValues) GetPythonWheelTask(ctx context.Context) (ResolvedPython
 	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedPythonWheelTaskValues
+	var v ResolvedPythonWheelTaskValues
 	d := o.PythonWheelTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10333,10 +10840,7 @@ func (o *ResolvedValues) GetPythonWheelTask(ctx context.Context) (ResolvedPython
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in ResolvedValues.
@@ -10353,7 +10857,7 @@ func (o *ResolvedValues) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskV
 	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedRunJobTaskValues
+	var v ResolvedRunJobTaskValues
 	d := o.RunJobTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10361,10 +10865,7 @@ func (o *ResolvedValues) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskV
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in ResolvedValues.
@@ -10381,7 +10882,7 @@ func (o *ResolvedValues) GetSimulationTask(ctx context.Context) (ResolvedParamPa
 	if o.SimulationTask.IsNull() || o.SimulationTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedParamPairValues
+	var v ResolvedParamPairValues
 	d := o.SimulationTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10389,10 +10890,7 @@ func (o *ResolvedValues) GetSimulationTask(ctx context.Context) (ResolvedParamPa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSimulationTask sets the value of the SimulationTask field in ResolvedValues.
@@ -10409,7 +10907,7 @@ func (o *ResolvedValues) GetSparkJarTask(ctx context.Context) (ResolvedStringPar
 	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedStringParamsValues
+	var v ResolvedStringParamsValues
 	d := o.SparkJarTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10417,10 +10915,7 @@ func (o *ResolvedValues) GetSparkJarTask(ctx context.Context) (ResolvedStringPar
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in ResolvedValues.
@@ -10437,7 +10932,7 @@ func (o *ResolvedValues) GetSparkPythonTask(ctx context.Context) (ResolvedString
 	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedStringParamsValues
+	var v ResolvedStringParamsValues
 	d := o.SparkPythonTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10445,10 +10940,7 @@ func (o *ResolvedValues) GetSparkPythonTask(ctx context.Context) (ResolvedString
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in ResolvedValues.
@@ -10465,7 +10957,7 @@ func (o *ResolvedValues) GetSparkSubmitTask(ctx context.Context) (ResolvedString
 	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedStringParamsValues
+	var v ResolvedStringParamsValues
 	d := o.SparkSubmitTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10473,10 +10965,7 @@ func (o *ResolvedValues) GetSparkSubmitTask(ctx context.Context) (ResolvedString
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in ResolvedValues.
@@ -10493,7 +10982,7 @@ func (o *ResolvedValues) GetSqlTask(ctx context.Context) (ResolvedParamPairValue
 	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedParamPairValues
+	var v ResolvedParamPairValues
 	d := o.SqlTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10501,10 +10990,7 @@ func (o *ResolvedValues) GetSqlTask(ctx context.Context) (ResolvedParamPairValue
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlTask sets the value of the SqlTask field in ResolvedValues.
@@ -10654,10 +11140,138 @@ type Run struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (newState *Run) SyncFieldsDuringCreateOrUpdate(plan Run) {
+func (toState *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Run) {
+	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromPlan.ClusterSpec.IsNull() && !fromPlan.ClusterSpec.IsUnknown() {
+		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
+			if fromPlanClusterSpec, ok := fromPlan.GetClusterSpec(ctx); ok {
+				toStateClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterSpec)
+				toState.SetClusterSpec(ctx, toStateClusterSpec)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.OverridingParameters.IsNull() && !fromPlan.OverridingParameters.IsUnknown() {
+		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
+			if fromPlanOverridingParameters, ok := fromPlan.GetOverridingParameters(ctx); ok {
+				toStateOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOverridingParameters)
+				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromPlan.TriggerInfo.IsNull() && !fromPlan.TriggerInfo.IsUnknown() {
+		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
+			if fromPlanTriggerInfo, ok := fromPlan.GetTriggerInfo(ctx); ok {
+				toStateTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerInfo)
+				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+			}
+		}
+	}
 }
 
-func (newState *Run) SyncFieldsDuringRead(existingState Run) {
+func (toState *Run) SyncFieldsDuringRead(ctx context.Context, fromState Run) {
+	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromState.ClusterSpec.IsNull() && !fromState.ClusterSpec.IsUnknown() {
+		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
+			if fromStateClusterSpec, ok := fromState.GetClusterSpec(ctx); ok {
+				toStateClusterSpec.SyncFieldsDuringRead(ctx, fromStateClusterSpec)
+				toState.SetClusterSpec(ctx, toStateClusterSpec)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.OverridingParameters.IsNull() && !fromState.OverridingParameters.IsUnknown() {
+		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
+			if fromStateOverridingParameters, ok := fromState.GetOverridingParameters(ctx); ok {
+				toStateOverridingParameters.SyncFieldsDuringRead(ctx, fromStateOverridingParameters)
+				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromState.TriggerInfo.IsNull() && !fromState.TriggerInfo.IsUnknown() {
+		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
+			if fromStateTriggerInfo, ok := fromState.GetTriggerInfo(ctx); ok {
+				toStateTriggerInfo.SyncFieldsDuringRead(ctx, fromStateTriggerInfo)
+				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+			}
+		}
+	}
 }
 
 func (c Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10831,7 +11445,7 @@ func (o *Run) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
 	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterInstance
+	var v ClusterInstance
 	d := o.ClusterInstance.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10839,10 +11453,7 @@ func (o *Run) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in Run.
@@ -10859,7 +11470,7 @@ func (o *Run) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterSpec
+	var v ClusterSpec
 	d := o.ClusterSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10867,10 +11478,7 @@ func (o *Run) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterSpec sets the value of the ClusterSpec field in Run.
@@ -10887,7 +11495,7 @@ func (o *Run) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10895,10 +11503,7 @@ func (o *Run) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in Run.
@@ -10993,7 +11598,7 @@ func (o *Run) GetOverridingParameters(ctx context.Context) (RunParameters, bool)
 	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
 		return e, false
 	}
-	var v []RunParameters
+	var v RunParameters
 	d := o.OverridingParameters.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11001,10 +11606,7 @@ func (o *Run) GetOverridingParameters(ctx context.Context) (RunParameters, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOverridingParameters sets the value of the OverridingParameters field in Run.
@@ -11047,7 +11649,7 @@ func (o *Run) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11055,10 +11657,7 @@ func (o *Run) GetSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in Run.
@@ -11075,7 +11674,7 @@ func (o *Run) GetState(ctx context.Context) (RunState, bool) {
 	if o.State.IsNull() || o.State.IsUnknown() {
 		return e, false
 	}
-	var v []RunState
+	var v RunState
 	d := o.State.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11083,10 +11682,7 @@ func (o *Run) GetState(ctx context.Context) (RunState, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetState sets the value of the State field in Run.
@@ -11103,7 +11699,7 @@ func (o *Run) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []RunStatus
+	var v RunStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11111,10 +11707,7 @@ func (o *Run) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in Run.
@@ -11157,7 +11750,7 @@ func (o *Run) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
 	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
 		return e, false
 	}
-	var v []TriggerInfo
+	var v TriggerInfo
 	d := o.TriggerInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11165,10 +11758,7 @@ func (o *Run) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTriggerInfo sets the value of the TriggerInfo field in Run.
@@ -11200,10 +11790,10 @@ type RunConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (newState *RunConditionTask) SyncFieldsDuringCreateOrUpdate(plan RunConditionTask) {
+func (toState *RunConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunConditionTask) {
 }
 
-func (newState *RunConditionTask) SyncFieldsDuringRead(existingState RunConditionTask) {
+func (toState *RunConditionTask) SyncFieldsDuringRead(ctx context.Context, fromState RunConditionTask) {
 }
 
 func (c RunConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11267,10 +11857,42 @@ type RunForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (newState *RunForEachTask) SyncFieldsDuringCreateOrUpdate(plan RunForEachTask) {
+func (toState *RunForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunForEachTask) {
+	if !fromPlan.Stats.IsNull() && !fromPlan.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromPlanStats, ok := fromPlan.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromPlan.Task.IsNull() && !fromPlan.Task.IsUnknown() {
+		if toStateTask, ok := toState.GetTask(ctx); ok {
+			if fromPlanTask, ok := fromPlan.GetTask(ctx); ok {
+				toStateTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTask)
+				toState.SetTask(ctx, toStateTask)
+			}
+		}
+	}
 }
 
-func (newState *RunForEachTask) SyncFieldsDuringRead(existingState RunForEachTask) {
+func (toState *RunForEachTask) SyncFieldsDuringRead(ctx context.Context, fromState RunForEachTask) {
+	if !fromState.Stats.IsNull() && !fromState.Stats.IsUnknown() {
+		if toStateStats, ok := toState.GetStats(ctx); ok {
+			if fromStateStats, ok := fromState.GetStats(ctx); ok {
+				toStateStats.SyncFieldsDuringRead(ctx, fromStateStats)
+				toState.SetStats(ctx, toStateStats)
+			}
+		}
+	}
+	if !fromState.Task.IsNull() && !fromState.Task.IsUnknown() {
+		if toStateTask, ok := toState.GetTask(ctx); ok {
+			if fromStateTask, ok := fromState.GetTask(ctx); ok {
+				toStateTask.SyncFieldsDuringRead(ctx, fromStateTask)
+				toState.SetTask(ctx, toStateTask)
+			}
+		}
+	}
 }
 
 func (c RunForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11330,7 +11952,7 @@ func (o *RunForEachTask) GetStats(ctx context.Context) (ForEachStats, bool) {
 	if o.Stats.IsNull() || o.Stats.IsUnknown() {
 		return e, false
 	}
-	var v []ForEachStats
+	var v ForEachStats
 	d := o.Stats.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11338,10 +11960,7 @@ func (o *RunForEachTask) GetStats(ctx context.Context) (ForEachStats, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStats sets the value of the Stats field in RunForEachTask.
@@ -11358,7 +11977,7 @@ func (o *RunForEachTask) GetTask(ctx context.Context) (Task, bool) {
 	if o.Task.IsNull() || o.Task.IsUnknown() {
 		return e, false
 	}
-	var v []Task
+	var v Task
 	d := o.Task.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11366,10 +11985,7 @@ func (o *RunForEachTask) GetTask(ctx context.Context) (Task, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTask sets the value of the Task field in RunForEachTask.
@@ -11383,10 +11999,10 @@ type RunJobOutput struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *RunJobOutput) SyncFieldsDuringCreateOrUpdate(plan RunJobOutput) {
+func (toState *RunJobOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunJobOutput) {
 }
 
-func (newState *RunJobOutput) SyncFieldsDuringRead(existingState RunJobOutput) {
+func (toState *RunJobOutput) SyncFieldsDuringRead(ctx context.Context, fromState RunJobOutput) {
 }
 
 func (c RunJobOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11515,10 +12131,26 @@ type RunJobTask struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RunJobTask) SyncFieldsDuringCreateOrUpdate(plan RunJobTask) {
+func (toState *RunJobTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunJobTask) {
+	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
 }
 
-func (newState *RunJobTask) SyncFieldsDuringRead(existingState RunJobTask) {
+func (toState *RunJobTask) SyncFieldsDuringRead(ctx context.Context, fromState RunJobTask) {
+	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
 }
 
 func (c RunJobTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11723,7 +12355,7 @@ func (o *RunJobTask) GetPipelineParams(ctx context.Context) (PipelineParams, boo
 	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineParams
+	var v PipelineParams
 	d := o.PipelineParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11731,10 +12363,7 @@ func (o *RunJobTask) GetPipelineParams(ctx context.Context) (PipelineParams, boo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunJobTask.
@@ -12191,7 +12820,7 @@ func (o *RunNow) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
 	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineParams
+	var v PipelineParams
 	d := o.PipelineParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12199,10 +12828,7 @@ func (o *RunNow) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunNow.
@@ -12271,7 +12897,7 @@ func (o *RunNow) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if o.Queue.IsNull() || o.Queue.IsUnknown() {
 		return e, false
 	}
-	var v []QueueSettings
+	var v QueueSettings
 	d := o.Queue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12279,10 +12905,7 @@ func (o *RunNow) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueue sets the value of the Queue field in RunNow.
@@ -12352,10 +12975,10 @@ type RunNowResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *RunNowResponse) SyncFieldsDuringCreateOrUpdate(plan RunNowResponse) {
+func (toState *RunNowResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunNowResponse) {
 }
 
-func (newState *RunNowResponse) SyncFieldsDuringRead(existingState RunNowResponse) {
+func (toState *RunNowResponse) SyncFieldsDuringRead(ctx context.Context, fromState RunNowResponse) {
 }
 
 func (c RunNowResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12446,10 +13069,154 @@ type RunOutput struct {
 	SqlOutput types.Object `tfsdk:"sql_output"`
 }
 
-func (newState *RunOutput) SyncFieldsDuringCreateOrUpdate(plan RunOutput) {
+func (toState *RunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunOutput) {
+	if !fromPlan.CleanRoomsNotebookOutput.IsNull() && !fromPlan.CleanRoomsNotebookOutput.IsUnknown() {
+		if toStateCleanRoomsNotebookOutput, ok := toState.GetCleanRoomsNotebookOutput(ctx); ok {
+			if fromPlanCleanRoomsNotebookOutput, ok := fromPlan.GetCleanRoomsNotebookOutput(ctx); ok {
+				toStateCleanRoomsNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookOutput)
+				toState.SetCleanRoomsNotebookOutput(ctx, toStateCleanRoomsNotebookOutput)
+			}
+		}
+	}
+	if !fromPlan.DashboardOutput.IsNull() && !fromPlan.DashboardOutput.IsUnknown() {
+		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
+			if fromPlanDashboardOutput, ok := fromPlan.GetDashboardOutput(ctx); ok {
+				toStateDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardOutput)
+				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+			}
+		}
+	}
+	if !fromPlan.DbtCloudOutput.IsNull() && !fromPlan.DbtCloudOutput.IsUnknown() {
+		if toStateDbtCloudOutput, ok := toState.GetDbtCloudOutput(ctx); ok {
+			if fromPlanDbtCloudOutput, ok := fromPlan.GetDbtCloudOutput(ctx); ok {
+				toStateDbtCloudOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudOutput)
+				toState.SetDbtCloudOutput(ctx, toStateDbtCloudOutput)
+			}
+		}
+	}
+	if !fromPlan.DbtOutput.IsNull() && !fromPlan.DbtOutput.IsUnknown() {
+		if toStateDbtOutput, ok := toState.GetDbtOutput(ctx); ok {
+			if fromPlanDbtOutput, ok := fromPlan.GetDbtOutput(ctx); ok {
+				toStateDbtOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtOutput)
+				toState.SetDbtOutput(ctx, toStateDbtOutput)
+			}
+		}
+	}
+	if !fromPlan.DbtPlatformOutput.IsNull() && !fromPlan.DbtPlatformOutput.IsUnknown() {
+		if toStateDbtPlatformOutput, ok := toState.GetDbtPlatformOutput(ctx); ok {
+			if fromPlanDbtPlatformOutput, ok := fromPlan.GetDbtPlatformOutput(ctx); ok {
+				toStateDbtPlatformOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformOutput)
+				toState.SetDbtPlatformOutput(ctx, toStateDbtPlatformOutput)
+			}
+		}
+	}
+	if !fromPlan.Metadata.IsNull() && !fromPlan.Metadata.IsUnknown() {
+		if toStateMetadata, ok := toState.GetMetadata(ctx); ok {
+			if fromPlanMetadata, ok := fromPlan.GetMetadata(ctx); ok {
+				toStateMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetadata)
+				toState.SetMetadata(ctx, toStateMetadata)
+			}
+		}
+	}
+	if !fromPlan.NotebookOutput.IsNull() && !fromPlan.NotebookOutput.IsUnknown() {
+		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
+			if fromPlanNotebookOutput, ok := fromPlan.GetNotebookOutput(ctx); ok {
+				toStateNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookOutput)
+				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+			}
+		}
+	}
+	if !fromPlan.RunJobOutput.IsNull() && !fromPlan.RunJobOutput.IsUnknown() {
+		if toStateRunJobOutput, ok := toState.GetRunJobOutput(ctx); ok {
+			if fromPlanRunJobOutput, ok := fromPlan.GetRunJobOutput(ctx); ok {
+				toStateRunJobOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobOutput)
+				toState.SetRunJobOutput(ctx, toStateRunJobOutput)
+			}
+		}
+	}
+	if !fromPlan.SqlOutput.IsNull() && !fromPlan.SqlOutput.IsUnknown() {
+		if toStateSqlOutput, ok := toState.GetSqlOutput(ctx); ok {
+			if fromPlanSqlOutput, ok := fromPlan.GetSqlOutput(ctx); ok {
+				toStateSqlOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlOutput)
+				toState.SetSqlOutput(ctx, toStateSqlOutput)
+			}
+		}
+	}
 }
 
-func (newState *RunOutput) SyncFieldsDuringRead(existingState RunOutput) {
+func (toState *RunOutput) SyncFieldsDuringRead(ctx context.Context, fromState RunOutput) {
+	if !fromState.CleanRoomsNotebookOutput.IsNull() && !fromState.CleanRoomsNotebookOutput.IsUnknown() {
+		if toStateCleanRoomsNotebookOutput, ok := toState.GetCleanRoomsNotebookOutput(ctx); ok {
+			if fromStateCleanRoomsNotebookOutput, ok := fromState.GetCleanRoomsNotebookOutput(ctx); ok {
+				toStateCleanRoomsNotebookOutput.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookOutput)
+				toState.SetCleanRoomsNotebookOutput(ctx, toStateCleanRoomsNotebookOutput)
+			}
+		}
+	}
+	if !fromState.DashboardOutput.IsNull() && !fromState.DashboardOutput.IsUnknown() {
+		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
+			if fromStateDashboardOutput, ok := fromState.GetDashboardOutput(ctx); ok {
+				toStateDashboardOutput.SyncFieldsDuringRead(ctx, fromStateDashboardOutput)
+				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+			}
+		}
+	}
+	if !fromState.DbtCloudOutput.IsNull() && !fromState.DbtCloudOutput.IsUnknown() {
+		if toStateDbtCloudOutput, ok := toState.GetDbtCloudOutput(ctx); ok {
+			if fromStateDbtCloudOutput, ok := fromState.GetDbtCloudOutput(ctx); ok {
+				toStateDbtCloudOutput.SyncFieldsDuringRead(ctx, fromStateDbtCloudOutput)
+				toState.SetDbtCloudOutput(ctx, toStateDbtCloudOutput)
+			}
+		}
+	}
+	if !fromState.DbtOutput.IsNull() && !fromState.DbtOutput.IsUnknown() {
+		if toStateDbtOutput, ok := toState.GetDbtOutput(ctx); ok {
+			if fromStateDbtOutput, ok := fromState.GetDbtOutput(ctx); ok {
+				toStateDbtOutput.SyncFieldsDuringRead(ctx, fromStateDbtOutput)
+				toState.SetDbtOutput(ctx, toStateDbtOutput)
+			}
+		}
+	}
+	if !fromState.DbtPlatformOutput.IsNull() && !fromState.DbtPlatformOutput.IsUnknown() {
+		if toStateDbtPlatformOutput, ok := toState.GetDbtPlatformOutput(ctx); ok {
+			if fromStateDbtPlatformOutput, ok := fromState.GetDbtPlatformOutput(ctx); ok {
+				toStateDbtPlatformOutput.SyncFieldsDuringRead(ctx, fromStateDbtPlatformOutput)
+				toState.SetDbtPlatformOutput(ctx, toStateDbtPlatformOutput)
+			}
+		}
+	}
+	if !fromState.Metadata.IsNull() && !fromState.Metadata.IsUnknown() {
+		if toStateMetadata, ok := toState.GetMetadata(ctx); ok {
+			if fromStateMetadata, ok := fromState.GetMetadata(ctx); ok {
+				toStateMetadata.SyncFieldsDuringRead(ctx, fromStateMetadata)
+				toState.SetMetadata(ctx, toStateMetadata)
+			}
+		}
+	}
+	if !fromState.NotebookOutput.IsNull() && !fromState.NotebookOutput.IsUnknown() {
+		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
+			if fromStateNotebookOutput, ok := fromState.GetNotebookOutput(ctx); ok {
+				toStateNotebookOutput.SyncFieldsDuringRead(ctx, fromStateNotebookOutput)
+				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+			}
+		}
+	}
+	if !fromState.RunJobOutput.IsNull() && !fromState.RunJobOutput.IsUnknown() {
+		if toStateRunJobOutput, ok := toState.GetRunJobOutput(ctx); ok {
+			if fromStateRunJobOutput, ok := fromState.GetRunJobOutput(ctx); ok {
+				toStateRunJobOutput.SyncFieldsDuringRead(ctx, fromStateRunJobOutput)
+				toState.SetRunJobOutput(ctx, toStateRunJobOutput)
+			}
+		}
+	}
+	if !fromState.SqlOutput.IsNull() && !fromState.SqlOutput.IsUnknown() {
+		if toStateSqlOutput, ok := toState.GetSqlOutput(ctx); ok {
+			if fromStateSqlOutput, ok := fromState.GetSqlOutput(ctx); ok {
+				toStateSqlOutput.SyncFieldsDuringRead(ctx, fromStateSqlOutput)
+				toState.SetSqlOutput(ctx, toStateSqlOutput)
+			}
+		}
+	}
 }
 
 func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12546,7 +13313,7 @@ func (o *RunOutput) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRooms
 	if o.CleanRoomsNotebookOutput.IsNull() || o.CleanRoomsNotebookOutput.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput
+	var v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput
 	d := o.CleanRoomsNotebookOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12554,10 +13321,7 @@ func (o *RunOutput) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRooms
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCleanRoomsNotebookOutput sets the value of the CleanRoomsNotebookOutput field in RunOutput.
@@ -12574,7 +13338,7 @@ func (o *RunOutput) GetDashboardOutput(ctx context.Context) (DashboardTaskOutput
 	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
 		return e, false
 	}
-	var v []DashboardTaskOutput
+	var v DashboardTaskOutput
 	d := o.DashboardOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12582,10 +13346,7 @@ func (o *RunOutput) GetDashboardOutput(ctx context.Context) (DashboardTaskOutput
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboardOutput sets the value of the DashboardOutput field in RunOutput.
@@ -12602,7 +13363,7 @@ func (o *RunOutput) GetDbtCloudOutput(ctx context.Context) (DbtCloudTaskOutput, 
 	if o.DbtCloudOutput.IsNull() || o.DbtCloudOutput.IsUnknown() {
 		return e, false
 	}
-	var v []DbtCloudTaskOutput
+	var v DbtCloudTaskOutput
 	d := o.DbtCloudOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12610,10 +13371,7 @@ func (o *RunOutput) GetDbtCloudOutput(ctx context.Context) (DbtCloudTaskOutput, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtCloudOutput sets the value of the DbtCloudOutput field in RunOutput.
@@ -12630,7 +13388,7 @@ func (o *RunOutput) GetDbtOutput(ctx context.Context) (DbtOutput, bool) {
 	if o.DbtOutput.IsNull() || o.DbtOutput.IsUnknown() {
 		return e, false
 	}
-	var v []DbtOutput
+	var v DbtOutput
 	d := o.DbtOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12638,10 +13396,7 @@ func (o *RunOutput) GetDbtOutput(ctx context.Context) (DbtOutput, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtOutput sets the value of the DbtOutput field in RunOutput.
@@ -12658,7 +13413,7 @@ func (o *RunOutput) GetDbtPlatformOutput(ctx context.Context) (DbtPlatformTaskOu
 	if o.DbtPlatformOutput.IsNull() || o.DbtPlatformOutput.IsUnknown() {
 		return e, false
 	}
-	var v []DbtPlatformTaskOutput
+	var v DbtPlatformTaskOutput
 	d := o.DbtPlatformOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12666,10 +13421,7 @@ func (o *RunOutput) GetDbtPlatformOutput(ctx context.Context) (DbtPlatformTaskOu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtPlatformOutput sets the value of the DbtPlatformOutput field in RunOutput.
@@ -12686,7 +13438,7 @@ func (o *RunOutput) GetMetadata(ctx context.Context) (Run, bool) {
 	if o.Metadata.IsNull() || o.Metadata.IsUnknown() {
 		return e, false
 	}
-	var v []Run
+	var v Run
 	d := o.Metadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12694,10 +13446,7 @@ func (o *RunOutput) GetMetadata(ctx context.Context) (Run, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMetadata sets the value of the Metadata field in RunOutput.
@@ -12714,7 +13463,7 @@ func (o *RunOutput) GetNotebookOutput(ctx context.Context) (NotebookOutput, bool
 	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
 		return e, false
 	}
-	var v []NotebookOutput
+	var v NotebookOutput
 	d := o.NotebookOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12722,10 +13471,7 @@ func (o *RunOutput) GetNotebookOutput(ctx context.Context) (NotebookOutput, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookOutput sets the value of the NotebookOutput field in RunOutput.
@@ -12742,7 +13488,7 @@ func (o *RunOutput) GetRunJobOutput(ctx context.Context) (RunJobOutput, bool) {
 	if o.RunJobOutput.IsNull() || o.RunJobOutput.IsUnknown() {
 		return e, false
 	}
-	var v []RunJobOutput
+	var v RunJobOutput
 	d := o.RunJobOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12750,10 +13496,7 @@ func (o *RunOutput) GetRunJobOutput(ctx context.Context) (RunJobOutput, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunJobOutput sets the value of the RunJobOutput field in RunOutput.
@@ -12770,7 +13513,7 @@ func (o *RunOutput) GetSqlOutput(ctx context.Context) (SqlOutput, bool) {
 	if o.SqlOutput.IsNull() || o.SqlOutput.IsUnknown() {
 		return e, false
 	}
-	var v []SqlOutput
+	var v SqlOutput
 	d := o.SqlOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12778,10 +13521,7 @@ func (o *RunOutput) GetSqlOutput(ctx context.Context) (SqlOutput, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlOutput sets the value of the SqlOutput field in RunOutput.
@@ -12875,10 +13615,26 @@ type RunParameters struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (newState *RunParameters) SyncFieldsDuringCreateOrUpdate(plan RunParameters) {
+func (toState *RunParameters) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunParameters) {
+	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
 }
 
-func (newState *RunParameters) SyncFieldsDuringRead(existingState RunParameters) {
+func (toState *RunParameters) SyncFieldsDuringRead(ctx context.Context, fromState RunParameters) {
+	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
 }
 
 func (c RunParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13048,7 +13804,7 @@ func (o *RunParameters) GetPipelineParams(ctx context.Context) (PipelineParams, 
 	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineParams
+	var v PipelineParams
 	d := o.PipelineParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13056,10 +13812,7 @@ func (o *RunParameters) GetPipelineParams(ctx context.Context) (PipelineParams, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunParameters.
@@ -13192,10 +13945,10 @@ type RunState struct {
 	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout"`
 }
 
-func (newState *RunState) SyncFieldsDuringCreateOrUpdate(plan RunState) {
+func (toState *RunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunState) {
 }
 
-func (newState *RunState) SyncFieldsDuringRead(existingState RunState) {
+func (toState *RunState) SyncFieldsDuringRead(ctx context.Context, fromState RunState) {
 }
 
 func (c RunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13258,10 +14011,42 @@ type RunStatus struct {
 	TerminationDetails types.Object `tfsdk:"termination_details"`
 }
 
-func (newState *RunStatus) SyncFieldsDuringCreateOrUpdate(plan RunStatus) {
+func (toState *RunStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunStatus) {
+	if !fromPlan.QueueDetails.IsNull() && !fromPlan.QueueDetails.IsUnknown() {
+		if toStateQueueDetails, ok := toState.GetQueueDetails(ctx); ok {
+			if fromPlanQueueDetails, ok := fromPlan.GetQueueDetails(ctx); ok {
+				toStateQueueDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueueDetails)
+				toState.SetQueueDetails(ctx, toStateQueueDetails)
+			}
+		}
+	}
+	if !fromPlan.TerminationDetails.IsNull() && !fromPlan.TerminationDetails.IsUnknown() {
+		if toStateTerminationDetails, ok := toState.GetTerminationDetails(ctx); ok {
+			if fromPlanTerminationDetails, ok := fromPlan.GetTerminationDetails(ctx); ok {
+				toStateTerminationDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTerminationDetails)
+				toState.SetTerminationDetails(ctx, toStateTerminationDetails)
+			}
+		}
+	}
 }
 
-func (newState *RunStatus) SyncFieldsDuringRead(existingState RunStatus) {
+func (toState *RunStatus) SyncFieldsDuringRead(ctx context.Context, fromState RunStatus) {
+	if !fromState.QueueDetails.IsNull() && !fromState.QueueDetails.IsUnknown() {
+		if toStateQueueDetails, ok := toState.GetQueueDetails(ctx); ok {
+			if fromStateQueueDetails, ok := fromState.GetQueueDetails(ctx); ok {
+				toStateQueueDetails.SyncFieldsDuringRead(ctx, fromStateQueueDetails)
+				toState.SetQueueDetails(ctx, toStateQueueDetails)
+			}
+		}
+	}
+	if !fromState.TerminationDetails.IsNull() && !fromState.TerminationDetails.IsUnknown() {
+		if toStateTerminationDetails, ok := toState.GetTerminationDetails(ctx); ok {
+			if fromStateTerminationDetails, ok := fromState.GetTerminationDetails(ctx); ok {
+				toStateTerminationDetails.SyncFieldsDuringRead(ctx, fromStateTerminationDetails)
+				toState.SetTerminationDetails(ctx, toStateTerminationDetails)
+			}
+		}
+	}
 }
 
 func (c RunStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13318,7 +14103,7 @@ func (o *RunStatus) GetQueueDetails(ctx context.Context) (QueueDetails, bool) {
 	if o.QueueDetails.IsNull() || o.QueueDetails.IsUnknown() {
 		return e, false
 	}
-	var v []QueueDetails
+	var v QueueDetails
 	d := o.QueueDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13326,10 +14111,7 @@ func (o *RunStatus) GetQueueDetails(ctx context.Context) (QueueDetails, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueueDetails sets the value of the QueueDetails field in RunStatus.
@@ -13346,7 +14128,7 @@ func (o *RunStatus) GetTerminationDetails(ctx context.Context) (TerminationDetai
 	if o.TerminationDetails.IsNull() || o.TerminationDetails.IsUnknown() {
 		return e, false
 	}
-	var v []TerminationDetails
+	var v TerminationDetails
 	d := o.TerminationDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13354,10 +14136,7 @@ func (o *RunStatus) GetTerminationDetails(ctx context.Context) (TerminationDetai
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTerminationDetails sets the value of the TerminationDetails field in RunStatus.
@@ -13562,10 +14341,426 @@ type RunTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *RunTask) SyncFieldsDuringCreateOrUpdate(plan RunTask) {
+func (toState *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunTask) {
+	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromPlan.ResolvedValues.IsNull() && !fromPlan.ResolvedValues.IsUnknown() {
+		if toStateResolvedValues, ok := toState.GetResolvedValues(ctx); ok {
+			if fromPlanResolvedValues, ok := fromPlan.GetResolvedValues(ctx); ok {
+				toStateResolvedValues.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResolvedValues)
+				toState.SetResolvedValues(ctx, toStateResolvedValues)
+			}
+		}
+	}
+	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
-func (newState *RunTask) SyncFieldsDuringRead(existingState RunTask) {
+func (toState *RunTask) SyncFieldsDuringRead(ctx context.Context, fromState RunTask) {
+	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
+		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
+			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
+				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
+				toState.SetClusterInstance(ctx, toStateClusterInstance)
+			}
+		}
+	}
+	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromState.ResolvedValues.IsNull() && !fromState.ResolvedValues.IsUnknown() {
+		if toStateResolvedValues, ok := toState.GetResolvedValues(ctx); ok {
+			if fromStateResolvedValues, ok := fromState.GetResolvedValues(ctx); ok {
+				toStateResolvedValues.SyncFieldsDuringRead(ctx, fromStateResolvedValues)
+				toState.SetResolvedValues(ctx, toStateResolvedValues)
+			}
+		}
+	}
+	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
 func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13784,7 +14979,7 @@ func (o *RunTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNote
 	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomsNotebookTask
+	var v CleanRoomsNotebookTask
 	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13792,10 +14987,7 @@ func (o *RunTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNote
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in RunTask.
@@ -13812,7 +15004,7 @@ func (o *RunTask) GetClusterInstance(ctx context.Context) (ClusterInstance, bool
 	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterInstance
+	var v ClusterInstance
 	d := o.ClusterInstance.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13820,10 +15012,7 @@ func (o *RunTask) GetClusterInstance(ctx context.Context) (ClusterInstance, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in RunTask.
@@ -13840,7 +15029,7 @@ func (o *RunTask) GetConditionTask(ctx context.Context) (RunConditionTask, bool)
 	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
 		return e, false
 	}
-	var v []RunConditionTask
+	var v RunConditionTask
 	d := o.ConditionTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13848,10 +15037,7 @@ func (o *RunTask) GetConditionTask(ctx context.Context) (RunConditionTask, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConditionTask sets the value of the ConditionTask field in RunTask.
@@ -13868,7 +15054,7 @@ func (o *RunTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
 	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
 		return e, false
 	}
-	var v []DashboardTask
+	var v DashboardTask
 	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13876,10 +15062,7 @@ func (o *RunTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in RunTask.
@@ -13896,7 +15079,7 @@ func (o *RunTask) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtCloudTask
+	var v DbtCloudTask
 	d := o.DbtCloudTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13904,10 +15087,7 @@ func (o *RunTask) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in RunTask.
@@ -13924,7 +15104,7 @@ func (o *RunTask) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, bool
 	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtPlatformTask
+	var v DbtPlatformTask
 	d := o.DbtPlatformTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13932,10 +15112,7 @@ func (o *RunTask) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in RunTask.
@@ -13952,7 +15129,7 @@ func (o *RunTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtTask
+	var v DbtTask
 	d := o.DbtTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13960,10 +15137,7 @@ func (o *RunTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtTask sets the value of the DbtTask field in RunTask.
@@ -14006,7 +15180,7 @@ func (o *RunTask) GetEmailNotifications(ctx context.Context) (JobEmailNotificati
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []JobEmailNotifications
+	var v JobEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14014,10 +15188,7 @@ func (o *RunTask) GetEmailNotifications(ctx context.Context) (JobEmailNotificati
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in RunTask.
@@ -14034,7 +15205,7 @@ func (o *RunTask) GetForEachTask(ctx context.Context) (RunForEachTask, bool) {
 	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
 		return e, false
 	}
-	var v []RunForEachTask
+	var v RunForEachTask
 	d := o.ForEachTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14042,10 +15213,7 @@ func (o *RunTask) GetForEachTask(ctx context.Context) (RunForEachTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetForEachTask sets the value of the ForEachTask field in RunTask.
@@ -14062,7 +15230,7 @@ func (o *RunTask) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask, bo
 	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
-	var v []GenAiComputeTask
+	var v GenAiComputeTask
 	d := o.GenAiComputeTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14070,10 +15238,7 @@ func (o *RunTask) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in RunTask.
@@ -14090,7 +15255,7 @@ func (o *RunTask) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14098,10 +15263,7 @@ func (o *RunTask) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in RunTask.
@@ -14144,7 +15306,7 @@ func (o *RunTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bo
 	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.ClusterSpec
+	var v compute_tf.ClusterSpec
 	d := o.NewCluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14152,10 +15314,7 @@ func (o *RunTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewCluster sets the value of the NewCluster field in RunTask.
@@ -14172,7 +15331,7 @@ func (o *RunTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []NotebookTask
+	var v NotebookTask
 	d := o.NotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14180,10 +15339,7 @@ func (o *RunTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in RunTask.
@@ -14200,7 +15356,7 @@ func (o *RunTask) GetNotificationSettings(ctx context.Context) (TaskNotification
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []TaskNotificationSettings
+	var v TaskNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14208,10 +15364,7 @@ func (o *RunTask) GetNotificationSettings(ctx context.Context) (TaskNotification
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in RunTask.
@@ -14228,7 +15381,7 @@ func (o *RunTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineTask
+	var v PipelineTask
 	d := o.PipelineTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14236,10 +15389,7 @@ func (o *RunTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in RunTask.
@@ -14256,7 +15406,7 @@ func (o *RunTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
 		return e, false
 	}
-	var v []PowerBiTask
+	var v PowerBiTask
 	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14264,10 +15414,7 @@ func (o *RunTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in RunTask.
@@ -14284,7 +15431,7 @@ func (o *RunTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool
 	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
-	var v []PythonWheelTask
+	var v PythonWheelTask
 	d := o.PythonWheelTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14292,10 +15439,7 @@ func (o *RunTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in RunTask.
@@ -14312,7 +15456,7 @@ func (o *RunTask) GetResolvedValues(ctx context.Context) (ResolvedValues, bool) 
 	if o.ResolvedValues.IsNull() || o.ResolvedValues.IsUnknown() {
 		return e, false
 	}
-	var v []ResolvedValues
+	var v ResolvedValues
 	d := o.ResolvedValues.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14320,10 +15464,7 @@ func (o *RunTask) GetResolvedValues(ctx context.Context) (ResolvedValues, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetResolvedValues sets the value of the ResolvedValues field in RunTask.
@@ -14340,7 +15481,7 @@ func (o *RunTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
 		return e, false
 	}
-	var v []RunJobTask
+	var v RunJobTask
 	d := o.RunJobTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14348,10 +15489,7 @@ func (o *RunTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in RunTask.
@@ -14368,7 +15506,7 @@ func (o *RunTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkJarTask
+	var v SparkJarTask
 	d := o.SparkJarTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14376,10 +15514,7 @@ func (o *RunTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in RunTask.
@@ -14396,7 +15531,7 @@ func (o *RunTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool
 	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkPythonTask
+	var v SparkPythonTask
 	d := o.SparkPythonTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14404,10 +15539,7 @@ func (o *RunTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in RunTask.
@@ -14424,7 +15556,7 @@ func (o *RunTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool
 	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkSubmitTask
+	var v SparkSubmitTask
 	d := o.SparkSubmitTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14432,10 +15564,7 @@ func (o *RunTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in RunTask.
@@ -14452,7 +15581,7 @@ func (o *RunTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTask
+	var v SqlTask
 	d := o.SqlTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14460,10 +15589,7 @@ func (o *RunTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlTask sets the value of the SqlTask field in RunTask.
@@ -14480,7 +15606,7 @@ func (o *RunTask) GetState(ctx context.Context) (RunState, bool) {
 	if o.State.IsNull() || o.State.IsUnknown() {
 		return e, false
 	}
-	var v []RunState
+	var v RunState
 	d := o.State.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14488,10 +15614,7 @@ func (o *RunTask) GetState(ctx context.Context) (RunState, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetState sets the value of the State field in RunTask.
@@ -14508,7 +15631,7 @@ func (o *RunTask) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []RunStatus
+	var v RunStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14516,10 +15639,7 @@ func (o *RunTask) GetStatus(ctx context.Context) (RunStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in RunTask.
@@ -14536,7 +15656,7 @@ func (o *RunTask) GetWebhookNotifications(ctx context.Context) (WebhookNotificat
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14544,10 +15664,7 @@ func (o *RunTask) GetWebhookNotifications(ctx context.Context) (WebhookNotificat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in RunTask.
@@ -14577,10 +15694,10 @@ type SparkJarTask struct {
 	RunAsRepl types.Bool `tfsdk:"run_as_repl"`
 }
 
-func (newState *SparkJarTask) SyncFieldsDuringCreateOrUpdate(plan SparkJarTask) {
+func (toState *SparkJarTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkJarTask) {
 }
 
-func (newState *SparkJarTask) SyncFieldsDuringRead(existingState SparkJarTask) {
+func (toState *SparkJarTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkJarTask) {
 }
 
 func (c SparkJarTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14685,10 +15802,10 @@ type SparkPythonTask struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (newState *SparkPythonTask) SyncFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
+func (toState *SparkPythonTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkPythonTask) {
 }
 
-func (newState *SparkPythonTask) SyncFieldsDuringRead(existingState SparkPythonTask) {
+func (toState *SparkPythonTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkPythonTask) {
 }
 
 func (c SparkPythonTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14774,10 +15891,10 @@ type SparkSubmitTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *SparkSubmitTask) SyncFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
+func (toState *SparkSubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkSubmitTask) {
 }
 
-func (newState *SparkSubmitTask) SyncFieldsDuringRead(existingState SparkSubmitTask) {
+func (toState *SparkSubmitTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkSubmitTask) {
 }
 
 func (c SparkSubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14860,10 +15977,10 @@ type SqlAlertOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
+func (toState *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlAlertOutput) {
 }
 
-func (newState *SqlAlertOutput) SyncFieldsDuringRead(existingState SqlAlertOutput) {
+func (toState *SqlAlertOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlAlertOutput) {
 }
 
 func (c SqlAlertOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14952,10 +16069,10 @@ type SqlDashboardOutput struct {
 	Widgets types.List `tfsdk:"widgets"`
 }
 
-func (newState *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
+func (toState *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlDashboardOutput) {
 }
 
-func (newState *SqlDashboardOutput) SyncFieldsDuringRead(existingState SqlDashboardOutput) {
+func (toState *SqlDashboardOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlDashboardOutput) {
 }
 
 func (c SqlDashboardOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15045,10 +16162,26 @@ type SqlDashboardWidgetOutput struct {
 	WidgetTitle types.String `tfsdk:"widget_title"`
 }
 
-func (newState *SqlDashboardWidgetOutput) SyncFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
+func (toState *SqlDashboardWidgetOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlDashboardWidgetOutput) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
 }
 
-func (newState *SqlDashboardWidgetOutput) SyncFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
+func (toState *SqlDashboardWidgetOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlDashboardWidgetOutput) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
 }
 
 func (c SqlDashboardWidgetOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15116,7 +16249,7 @@ func (o *SqlDashboardWidgetOutput) GetError(ctx context.Context) (SqlOutputError
 	if o.Error.IsNull() || o.Error.IsUnknown() {
 		return e, false
 	}
-	var v []SqlOutputError
+	var v SqlOutputError
 	d := o.Error.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15124,10 +16257,7 @@ func (o *SqlDashboardWidgetOutput) GetError(ctx context.Context) (SqlOutputError
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetError sets the value of the Error field in SqlDashboardWidgetOutput.
@@ -15145,10 +16275,58 @@ type SqlOutput struct {
 	QueryOutput types.Object `tfsdk:"query_output"`
 }
 
-func (newState *SqlOutput) SyncFieldsDuringCreateOrUpdate(plan SqlOutput) {
+func (toState *SqlOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlOutput) {
+	if !fromPlan.AlertOutput.IsNull() && !fromPlan.AlertOutput.IsUnknown() {
+		if toStateAlertOutput, ok := toState.GetAlertOutput(ctx); ok {
+			if fromPlanAlertOutput, ok := fromPlan.GetAlertOutput(ctx); ok {
+				toStateAlertOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAlertOutput)
+				toState.SetAlertOutput(ctx, toStateAlertOutput)
+			}
+		}
+	}
+	if !fromPlan.DashboardOutput.IsNull() && !fromPlan.DashboardOutput.IsUnknown() {
+		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
+			if fromPlanDashboardOutput, ok := fromPlan.GetDashboardOutput(ctx); ok {
+				toStateDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardOutput)
+				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+			}
+		}
+	}
+	if !fromPlan.QueryOutput.IsNull() && !fromPlan.QueryOutput.IsUnknown() {
+		if toStateQueryOutput, ok := toState.GetQueryOutput(ctx); ok {
+			if fromPlanQueryOutput, ok := fromPlan.GetQueryOutput(ctx); ok {
+				toStateQueryOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryOutput)
+				toState.SetQueryOutput(ctx, toStateQueryOutput)
+			}
+		}
+	}
 }
 
-func (newState *SqlOutput) SyncFieldsDuringRead(existingState SqlOutput) {
+func (toState *SqlOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlOutput) {
+	if !fromState.AlertOutput.IsNull() && !fromState.AlertOutput.IsUnknown() {
+		if toStateAlertOutput, ok := toState.GetAlertOutput(ctx); ok {
+			if fromStateAlertOutput, ok := fromState.GetAlertOutput(ctx); ok {
+				toStateAlertOutput.SyncFieldsDuringRead(ctx, fromStateAlertOutput)
+				toState.SetAlertOutput(ctx, toStateAlertOutput)
+			}
+		}
+	}
+	if !fromState.DashboardOutput.IsNull() && !fromState.DashboardOutput.IsUnknown() {
+		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
+			if fromStateDashboardOutput, ok := fromState.GetDashboardOutput(ctx); ok {
+				toStateDashboardOutput.SyncFieldsDuringRead(ctx, fromStateDashboardOutput)
+				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+			}
+		}
+	}
+	if !fromState.QueryOutput.IsNull() && !fromState.QueryOutput.IsUnknown() {
+		if toStateQueryOutput, ok := toState.GetQueryOutput(ctx); ok {
+			if fromStateQueryOutput, ok := fromState.GetQueryOutput(ctx); ok {
+				toStateQueryOutput.SyncFieldsDuringRead(ctx, fromStateQueryOutput)
+				toState.SetQueryOutput(ctx, toStateQueryOutput)
+			}
+		}
+	}
 }
 
 func (c SqlOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15206,7 +16384,7 @@ func (o *SqlOutput) GetAlertOutput(ctx context.Context) (SqlAlertOutput, bool) {
 	if o.AlertOutput.IsNull() || o.AlertOutput.IsUnknown() {
 		return e, false
 	}
-	var v []SqlAlertOutput
+	var v SqlAlertOutput
 	d := o.AlertOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15214,10 +16392,7 @@ func (o *SqlOutput) GetAlertOutput(ctx context.Context) (SqlAlertOutput, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAlertOutput sets the value of the AlertOutput field in SqlOutput.
@@ -15234,7 +16409,7 @@ func (o *SqlOutput) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput,
 	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
 		return e, false
 	}
-	var v []SqlDashboardOutput
+	var v SqlDashboardOutput
 	d := o.DashboardOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15242,10 +16417,7 @@ func (o *SqlOutput) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboardOutput sets the value of the DashboardOutput field in SqlOutput.
@@ -15262,7 +16434,7 @@ func (o *SqlOutput) GetQueryOutput(ctx context.Context) (SqlQueryOutput, bool) {
 	if o.QueryOutput.IsNull() || o.QueryOutput.IsUnknown() {
 		return e, false
 	}
-	var v []SqlQueryOutput
+	var v SqlQueryOutput
 	d := o.QueryOutput.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15270,10 +16442,7 @@ func (o *SqlOutput) GetQueryOutput(ctx context.Context) (SqlQueryOutput, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueryOutput sets the value of the QueryOutput field in SqlOutput.
@@ -15287,10 +16456,10 @@ type SqlOutputError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *SqlOutputError) SyncFieldsDuringCreateOrUpdate(plan SqlOutputError) {
+func (toState *SqlOutputError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlOutputError) {
 }
 
-func (newState *SqlOutputError) SyncFieldsDuringRead(existingState SqlOutputError) {
+func (toState *SqlOutputError) SyncFieldsDuringRead(ctx context.Context, fromState SqlOutputError) {
 }
 
 func (c SqlOutputError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15343,10 +16512,10 @@ type SqlQueryOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
+func (toState *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlQueryOutput) {
 }
 
-func (newState *SqlQueryOutput) SyncFieldsDuringRead(existingState SqlQueryOutput) {
+func (toState *SqlQueryOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlQueryOutput) {
 }
 
 func (c SqlQueryOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15433,10 +16602,10 @@ type SqlStatementOutput struct {
 	LookupKey types.String `tfsdk:"lookup_key"`
 }
 
-func (newState *SqlStatementOutput) SyncFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
+func (toState *SqlStatementOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlStatementOutput) {
 }
 
-func (newState *SqlStatementOutput) SyncFieldsDuringRead(existingState SqlStatementOutput) {
+func (toState *SqlStatementOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlStatementOutput) {
 }
 
 func (c SqlStatementOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15496,10 +16665,74 @@ type SqlTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *SqlTask) SyncFieldsDuringCreateOrUpdate(plan SqlTask) {
+func (toState *SqlTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTask) {
+	if !fromPlan.Alert.IsNull() && !fromPlan.Alert.IsUnknown() {
+		if toStateAlert, ok := toState.GetAlert(ctx); ok {
+			if fromPlanAlert, ok := fromPlan.GetAlert(ctx); ok {
+				toStateAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAlert)
+				toState.SetAlert(ctx, toStateAlert)
+			}
+		}
+	}
+	if !fromPlan.Dashboard.IsNull() && !fromPlan.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromPlanDashboard, ok := fromPlan.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+	if !fromPlan.File.IsNull() && !fromPlan.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromPlanFile, ok := fromPlan.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
 }
 
-func (newState *SqlTask) SyncFieldsDuringRead(existingState SqlTask) {
+func (toState *SqlTask) SyncFieldsDuringRead(ctx context.Context, fromState SqlTask) {
+	if !fromState.Alert.IsNull() && !fromState.Alert.IsUnknown() {
+		if toStateAlert, ok := toState.GetAlert(ctx); ok {
+			if fromStateAlert, ok := fromState.GetAlert(ctx); ok {
+				toStateAlert.SyncFieldsDuringRead(ctx, fromStateAlert)
+				toState.SetAlert(ctx, toStateAlert)
+			}
+		}
+	}
+	if !fromState.Dashboard.IsNull() && !fromState.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromStateDashboard, ok := fromState.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringRead(ctx, fromStateDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+	if !fromState.File.IsNull() && !fromState.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromStateFile, ok := fromState.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringRead(ctx, fromStateFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
 }
 
 func (c SqlTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15570,7 +16803,7 @@ func (o *SqlTask) GetAlert(ctx context.Context) (SqlTaskAlert, bool) {
 	if o.Alert.IsNull() || o.Alert.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTaskAlert
+	var v SqlTaskAlert
 	d := o.Alert.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15578,10 +16811,7 @@ func (o *SqlTask) GetAlert(ctx context.Context) (SqlTaskAlert, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAlert sets the value of the Alert field in SqlTask.
@@ -15598,7 +16828,7 @@ func (o *SqlTask) GetDashboard(ctx context.Context) (SqlTaskDashboard, bool) {
 	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTaskDashboard
+	var v SqlTaskDashboard
 	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15606,10 +16836,7 @@ func (o *SqlTask) GetDashboard(ctx context.Context) (SqlTaskDashboard, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboard sets the value of the Dashboard field in SqlTask.
@@ -15626,7 +16853,7 @@ func (o *SqlTask) GetFile(ctx context.Context) (SqlTaskFile, bool) {
 	if o.File.IsNull() || o.File.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTaskFile
+	var v SqlTaskFile
 	d := o.File.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15634,10 +16861,7 @@ func (o *SqlTask) GetFile(ctx context.Context) (SqlTaskFile, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFile sets the value of the File field in SqlTask.
@@ -15680,7 +16904,7 @@ func (o *SqlTask) GetQuery(ctx context.Context) (SqlTaskQuery, bool) {
 	if o.Query.IsNull() || o.Query.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTaskQuery
+	var v SqlTaskQuery
 	d := o.Query.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -15688,10 +16912,7 @@ func (o *SqlTask) GetQuery(ctx context.Context) (SqlTaskQuery, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQuery sets the value of the Query field in SqlTask.
@@ -15709,10 +16930,10 @@ type SqlTaskAlert struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
+func (toState *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskAlert) {
 }
 
-func (newState *SqlTaskAlert) SyncFieldsDuringRead(existingState SqlTaskAlert) {
+func (toState *SqlTaskAlert) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskAlert) {
 }
 
 func (c SqlTaskAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15800,10 +17021,10 @@ type SqlTaskDashboard struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
+func (toState *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskDashboard) {
 }
 
-func (newState *SqlTaskDashboard) SyncFieldsDuringRead(existingState SqlTaskDashboard) {
+func (toState *SqlTaskDashboard) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskDashboard) {
 }
 
 func (c SqlTaskDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15897,10 +17118,10 @@ type SqlTaskFile struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (newState *SqlTaskFile) SyncFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
+func (toState *SqlTaskFile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskFile) {
 }
 
-func (newState *SqlTaskFile) SyncFieldsDuringRead(existingState SqlTaskFile) {
+func (toState *SqlTaskFile) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskFile) {
 }
 
 func (c SqlTaskFile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15948,10 +17169,10 @@ type SqlTaskQuery struct {
 	QueryId types.String `tfsdk:"query_id"`
 }
 
-func (newState *SqlTaskQuery) SyncFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
+func (toState *SqlTaskQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskQuery) {
 }
 
-func (newState *SqlTaskQuery) SyncFieldsDuringRead(existingState SqlTaskQuery) {
+func (toState *SqlTaskQuery) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskQuery) {
 }
 
 func (c SqlTaskQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16003,10 +17224,10 @@ type SqlTaskSubscription struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *SqlTaskSubscription) SyncFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
+func (toState *SqlTaskSubscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskSubscription) {
 }
 
-func (newState *SqlTaskSubscription) SyncFieldsDuringRead(existingState SqlTaskSubscription) {
+func (toState *SqlTaskSubscription) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskSubscription) {
 }
 
 func (c SqlTaskSubscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16219,7 +17440,7 @@ func (o *SubmitRun) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []JobEmailNotifications
+	var v JobEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16227,10 +17448,7 @@ func (o *SubmitRun) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in SubmitRun.
@@ -16273,7 +17491,7 @@ func (o *SubmitRun) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
 		return e, false
 	}
-	var v []GitSource
+	var v GitSource
 	d := o.GitSource.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16281,10 +17499,7 @@ func (o *SubmitRun) GetGitSource(ctx context.Context) (GitSource, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGitSource sets the value of the GitSource field in SubmitRun.
@@ -16301,7 +17516,7 @@ func (o *SubmitRun) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if o.Health.IsNull() || o.Health.IsUnknown() {
 		return e, false
 	}
-	var v []JobsHealthRules
+	var v JobsHealthRules
 	d := o.Health.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16309,10 +17524,7 @@ func (o *SubmitRun) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetHealth sets the value of the Health field in SubmitRun.
@@ -16329,7 +17541,7 @@ func (o *SubmitRun) GetNotificationSettings(ctx context.Context) (JobNotificatio
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []JobNotificationSettings
+	var v JobNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16337,10 +17549,7 @@ func (o *SubmitRun) GetNotificationSettings(ctx context.Context) (JobNotificatio
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in SubmitRun.
@@ -16357,7 +17566,7 @@ func (o *SubmitRun) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if o.Queue.IsNull() || o.Queue.IsUnknown() {
 		return e, false
 	}
-	var v []QueueSettings
+	var v QueueSettings
 	d := o.Queue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16365,10 +17574,7 @@ func (o *SubmitRun) GetQueue(ctx context.Context) (QueueSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueue sets the value of the Queue field in SubmitRun.
@@ -16385,7 +17591,7 @@ func (o *SubmitRun) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
 		return e, false
 	}
-	var v []JobRunAs
+	var v JobRunAs
 	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16393,10 +17599,7 @@ func (o *SubmitRun) GetRunAs(ctx context.Context) (JobRunAs, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunAs sets the value of the RunAs field in SubmitRun.
@@ -16439,7 +17642,7 @@ func (o *SubmitRun) GetWebhookNotifications(ctx context.Context) (WebhookNotific
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16447,10 +17650,7 @@ func (o *SubmitRun) GetWebhookNotifications(ctx context.Context) (WebhookNotific
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitRun.
@@ -16465,10 +17665,10 @@ type SubmitRunResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *SubmitRunResponse) SyncFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
+func (toState *SubmitRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubmitRunResponse) {
 }
 
-func (newState *SubmitRunResponse) SyncFieldsDuringRead(existingState SubmitRunResponse) {
+func (toState *SubmitRunResponse) SyncFieldsDuringRead(ctx context.Context, fromState SubmitRunResponse) {
 }
 
 func (c SubmitRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16625,10 +17825,362 @@ type SubmitTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *SubmitTask) SyncFieldsDuringCreateOrUpdate(plan SubmitTask) {
+func (toState *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubmitTask) {
+	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
-func (newState *SubmitTask) SyncFieldsDuringRead(existingState SubmitTask) {
+func (toState *SubmitTask) SyncFieldsDuringRead(ctx context.Context, fromState SubmitTask) {
+	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
 func (c SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16792,7 +18344,7 @@ func (o *SubmitTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsN
 	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomsNotebookTask
+	var v CleanRoomsNotebookTask
 	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16800,10 +18352,7 @@ func (o *SubmitTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsN
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in SubmitTask.
@@ -16820,7 +18369,7 @@ func (o *SubmitTask) GetConditionTask(ctx context.Context) (ConditionTask, bool)
 	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
 		return e, false
 	}
-	var v []ConditionTask
+	var v ConditionTask
 	d := o.ConditionTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16828,10 +18377,7 @@ func (o *SubmitTask) GetConditionTask(ctx context.Context) (ConditionTask, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConditionTask sets the value of the ConditionTask field in SubmitTask.
@@ -16848,7 +18394,7 @@ func (o *SubmitTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool)
 	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
 		return e, false
 	}
-	var v []DashboardTask
+	var v DashboardTask
 	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16856,10 +18402,7 @@ func (o *SubmitTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in SubmitTask.
@@ -16876,7 +18419,7 @@ func (o *SubmitTask) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtCloudTask
+	var v DbtCloudTask
 	d := o.DbtCloudTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16884,10 +18427,7 @@ func (o *SubmitTask) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in SubmitTask.
@@ -16904,7 +18444,7 @@ func (o *SubmitTask) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, b
 	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtPlatformTask
+	var v DbtPlatformTask
 	d := o.DbtPlatformTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16912,10 +18452,7 @@ func (o *SubmitTask) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in SubmitTask.
@@ -16932,7 +18469,7 @@ func (o *SubmitTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtTask
+	var v DbtTask
 	d := o.DbtTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16940,10 +18477,7 @@ func (o *SubmitTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtTask sets the value of the DbtTask field in SubmitTask.
@@ -16986,7 +18520,7 @@ func (o *SubmitTask) GetEmailNotifications(ctx context.Context) (JobEmailNotific
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []JobEmailNotifications
+	var v JobEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -16994,10 +18528,7 @@ func (o *SubmitTask) GetEmailNotifications(ctx context.Context) (JobEmailNotific
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in SubmitTask.
@@ -17014,7 +18545,7 @@ func (o *SubmitTask) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
 	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
 		return e, false
 	}
-	var v []ForEachTask
+	var v ForEachTask
 	d := o.ForEachTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17022,10 +18553,7 @@ func (o *SubmitTask) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetForEachTask sets the value of the ForEachTask field in SubmitTask.
@@ -17042,7 +18570,7 @@ func (o *SubmitTask) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask,
 	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
-	var v []GenAiComputeTask
+	var v GenAiComputeTask
 	d := o.GenAiComputeTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17050,10 +18578,7 @@ func (o *SubmitTask) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in SubmitTask.
@@ -17070,7 +18595,7 @@ func (o *SubmitTask) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if o.Health.IsNull() || o.Health.IsUnknown() {
 		return e, false
 	}
-	var v []JobsHealthRules
+	var v JobsHealthRules
 	d := o.Health.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17078,10 +18603,7 @@ func (o *SubmitTask) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetHealth sets the value of the Health field in SubmitTask.
@@ -17124,7 +18646,7 @@ func (o *SubmitTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec,
 	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.ClusterSpec
+	var v compute_tf.ClusterSpec
 	d := o.NewCluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17132,10 +18654,7 @@ func (o *SubmitTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewCluster sets the value of the NewCluster field in SubmitTask.
@@ -17152,7 +18671,7 @@ func (o *SubmitTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []NotebookTask
+	var v NotebookTask
 	d := o.NotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17160,10 +18679,7 @@ func (o *SubmitTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in SubmitTask.
@@ -17180,7 +18696,7 @@ func (o *SubmitTask) GetNotificationSettings(ctx context.Context) (TaskNotificat
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []TaskNotificationSettings
+	var v TaskNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17188,10 +18704,7 @@ func (o *SubmitTask) GetNotificationSettings(ctx context.Context) (TaskNotificat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in SubmitTask.
@@ -17208,7 +18721,7 @@ func (o *SubmitTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineTask
+	var v PipelineTask
 	d := o.PipelineTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17216,10 +18729,7 @@ func (o *SubmitTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in SubmitTask.
@@ -17236,7 +18746,7 @@ func (o *SubmitTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
 		return e, false
 	}
-	var v []PowerBiTask
+	var v PowerBiTask
 	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17244,10 +18754,7 @@ func (o *SubmitTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in SubmitTask.
@@ -17264,7 +18771,7 @@ func (o *SubmitTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, b
 	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
-	var v []PythonWheelTask
+	var v PythonWheelTask
 	d := o.PythonWheelTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17272,10 +18779,7 @@ func (o *SubmitTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in SubmitTask.
@@ -17292,7 +18796,7 @@ func (o *SubmitTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
 		return e, false
 	}
-	var v []RunJobTask
+	var v RunJobTask
 	d := o.RunJobTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17300,10 +18804,7 @@ func (o *SubmitTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in SubmitTask.
@@ -17320,7 +18821,7 @@ func (o *SubmitTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkJarTask
+	var v SparkJarTask
 	d := o.SparkJarTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17328,10 +18829,7 @@ func (o *SubmitTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in SubmitTask.
@@ -17348,7 +18846,7 @@ func (o *SubmitTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, b
 	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkPythonTask
+	var v SparkPythonTask
 	d := o.SparkPythonTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17356,10 +18854,7 @@ func (o *SubmitTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in SubmitTask.
@@ -17376,7 +18871,7 @@ func (o *SubmitTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, b
 	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkSubmitTask
+	var v SparkSubmitTask
 	d := o.SparkSubmitTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17384,10 +18879,7 @@ func (o *SubmitTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in SubmitTask.
@@ -17404,7 +18896,7 @@ func (o *SubmitTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTask
+	var v SqlTask
 	d := o.SqlTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17412,10 +18904,7 @@ func (o *SubmitTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlTask sets the value of the SqlTask field in SubmitTask.
@@ -17432,7 +18921,7 @@ func (o *SubmitTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifi
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -17440,10 +18929,7 @@ func (o *SubmitTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitTask.
@@ -17462,10 +18948,10 @@ type Subscription struct {
 	Subscribers types.List `tfsdk:"subscribers"`
 }
 
-func (newState *Subscription) SyncFieldsDuringCreateOrUpdate(plan Subscription) {
+func (toState *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscription) {
 }
 
-func (newState *Subscription) SyncFieldsDuringRead(existingState Subscription) {
+func (toState *Subscription) SyncFieldsDuringRead(ctx context.Context, fromState Subscription) {
 }
 
 func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17550,10 +19036,10 @@ type SubscriptionSubscriber struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *SubscriptionSubscriber) SyncFieldsDuringCreateOrUpdate(plan SubscriptionSubscriber) {
+func (toState *SubscriptionSubscriber) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriber) {
 }
 
-func (newState *SubscriptionSubscriber) SyncFieldsDuringRead(existingState SubscriptionSubscriber) {
+func (toState *SubscriptionSubscriber) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriber) {
 }
 
 func (c SubscriptionSubscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17596,6 +19082,143 @@ func (o SubscriptionSubscriber) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type TableState struct {
+	// Whether or not the table has seen updates since either the creation of
+	// the trigger or the last successful evaluation of the trigger
+	HasSeenUpdates types.Bool `tfsdk:"has_seen_updates"`
+	// Full table name of the table to monitor, e.g.
+	// `mycatalog.myschema.mytable`
+	TableName types.String `tfsdk:"table_name"`
+}
+
+func (toState *TableState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableState) {
+}
+
+func (toState *TableState) SyncFieldsDuringRead(ctx context.Context, fromState TableState) {
+}
+
+func (c TableState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_seen_updates"] = attrs["has_seen_updates"].SetOptional()
+	attrs["table_name"] = attrs["table_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TableState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TableState
+// only implements ToObjectValue() and Type().
+func (o TableState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"has_seen_updates": o.HasSeenUpdates,
+			"table_name":       o.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TableState) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"has_seen_updates": types.BoolType,
+			"table_name":       types.StringType,
+		},
+	}
+}
+
+type TableTriggerState struct {
+	LastSeenTableStates types.List `tfsdk:"last_seen_table_states"`
+	// Indicates whether the trigger is using scalable monitoring.
+	UsingScalableMonitoring types.Bool `tfsdk:"using_scalable_monitoring"`
+}
+
+func (toState *TableTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableTriggerState) {
+}
+
+func (toState *TableTriggerState) SyncFieldsDuringRead(ctx context.Context, fromState TableTriggerState) {
+}
+
+func (c TableTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_seen_table_states"] = attrs["last_seen_table_states"].SetOptional()
+	attrs["using_scalable_monitoring"] = attrs["using_scalable_monitoring"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableTriggerState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TableTriggerState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"last_seen_table_states": reflect.TypeOf(TableState{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TableTriggerState
+// only implements ToObjectValue() and Type().
+func (o TableTriggerState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"last_seen_table_states":    o.LastSeenTableStates,
+			"using_scalable_monitoring": o.UsingScalableMonitoring,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TableTriggerState) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"last_seen_table_states": basetypes.ListType{
+				ElemType: TableState{}.Type(ctx),
+			},
+			"using_scalable_monitoring": types.BoolType,
+		},
+	}
+}
+
+// GetLastSeenTableStates returns the value of the LastSeenTableStates field in TableTriggerState as
+// a slice of TableState values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableTriggerState) GetLastSeenTableStates(ctx context.Context) ([]TableState, bool) {
+	if o.LastSeenTableStates.IsNull() || o.LastSeenTableStates.IsUnknown() {
+		return nil, false
+	}
+	var v []TableState
+	d := o.LastSeenTableStates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLastSeenTableStates sets the value of the LastSeenTableStates field in TableTriggerState.
+func (o *TableTriggerState) SetLastSeenTableStates(ctx context.Context, v []TableState) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["last_seen_table_states"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.LastSeenTableStates = types.ListValueMust(t, vs)
+}
+
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
 	Condition types.String `tfsdk:"condition"`
@@ -17613,10 +19236,10 @@ type TableUpdateTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (newState *TableUpdateTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
+func (toState *TableUpdateTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableUpdateTriggerConfiguration) {
 }
 
-func (newState *TableUpdateTriggerConfiguration) SyncFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
+func (toState *TableUpdateTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState TableUpdateTriggerConfiguration) {
 }
 
 func (c TableUpdateTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17726,9 +19349,6 @@ type Task struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
-	// An optional flag to disable the task. If set to true, the task will not
-	// run even if it is part of a job.
-	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
@@ -17838,10 +19458,362 @@ type Task struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (newState *Task) SyncFieldsDuringCreateOrUpdate(plan Task) {
+func (toState *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Task) {
+	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
-func (newState *Task) SyncFieldsDuringRead(existingState Task) {
+func (toState *Task) SyncFieldsDuringRead(ctx context.Context, fromState Task) {
+	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
+		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
+				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
+				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
+		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
+			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
+				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
+				toState.SetConditionTask(ctx, toStateConditionTask)
+			}
+		}
+	}
+	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
+		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
+			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
+				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
+				toState.SetDashboardTask(ctx, toStateDashboardTask)
+			}
+		}
+	}
+	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
+		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
+			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
+				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
+				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+			}
+		}
+	}
+	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
+		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
+			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
+				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
+				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+			}
+		}
+	}
+	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
+		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
+			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
+				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
+				toState.SetDbtTask(ctx, toStateDbtTask)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
+		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
+			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
+				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
+				toState.SetForEachTask(ctx, toStateForEachTask)
+			}
+		}
+	}
+	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
+		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
+			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
+				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
+				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
+		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
+			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
+				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
+				toState.SetNewCluster(ctx, toStateNewCluster)
+			}
+		}
+	}
+	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
+		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
+			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
+				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
+				toState.SetNotebookTask(ctx, toStateNotebookTask)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
+		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
+			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
+				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
+				toState.SetPipelineTask(ctx, toStatePipelineTask)
+			}
+		}
+	}
+	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
+		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
+			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
+				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
+				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+			}
+		}
+	}
+	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
+		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
+			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
+				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
+				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+			}
+		}
+	}
+	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
+		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
+			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
+				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
+				toState.SetRunJobTask(ctx, toStateRunJobTask)
+			}
+		}
+	}
+	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
+		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
+			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
+				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
+				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+			}
+		}
+	}
+	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
+		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
+			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
+				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
+				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+			}
+		}
+	}
+	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
+		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
+			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
+				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
+				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+			}
+		}
+	}
+	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
+		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
+			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
+				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
+				toState.SetSqlTask(ctx, toStateSqlTask)
+			}
+		}
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
 }
 
 func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17854,7 +19826,6 @@ func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
-	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
@@ -17937,7 +19908,6 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
 			"disable_auto_optimization": o.DisableAutoOptimization,
-			"disabled":                  o.Disabled,
 			"email_notifications":       o.EmailNotifications,
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
@@ -17982,7 +19952,6 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
-			"disabled":                  types.BoolType,
 			"email_notifications":       TaskEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
 			"existing_cluster_id":       types.StringType,
@@ -18023,7 +19992,7 @@ func (o *Task) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNoteboo
 	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomsNotebookTask
+	var v CleanRoomsNotebookTask
 	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18031,10 +20000,7 @@ func (o *Task) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNoteboo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in Task.
@@ -18051,7 +20017,7 @@ func (o *Task) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
 	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
 		return e, false
 	}
-	var v []ConditionTask
+	var v ConditionTask
 	d := o.ConditionTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18059,10 +20025,7 @@ func (o *Task) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConditionTask sets the value of the ConditionTask field in Task.
@@ -18079,7 +20042,7 @@ func (o *Task) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
 	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
 		return e, false
 	}
-	var v []DashboardTask
+	var v DashboardTask
 	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18087,10 +20050,7 @@ func (o *Task) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in Task.
@@ -18107,7 +20067,7 @@ func (o *Task) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtCloudTask
+	var v DbtCloudTask
 	d := o.DbtCloudTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18115,10 +20075,7 @@ func (o *Task) GetDbtCloudTask(ctx context.Context) (DbtCloudTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in Task.
@@ -18135,7 +20092,7 @@ func (o *Task) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, bool) {
 	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtPlatformTask
+	var v DbtPlatformTask
 	d := o.DbtPlatformTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18143,10 +20100,7 @@ func (o *Task) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in Task.
@@ -18163,7 +20117,7 @@ func (o *Task) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
 		return e, false
 	}
-	var v []DbtTask
+	var v DbtTask
 	d := o.DbtTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18171,10 +20125,7 @@ func (o *Task) GetDbtTask(ctx context.Context) (DbtTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDbtTask sets the value of the DbtTask field in Task.
@@ -18217,7 +20168,7 @@ func (o *Task) GetEmailNotifications(ctx context.Context) (TaskEmailNotification
 	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []TaskEmailNotifications
+	var v TaskEmailNotifications
 	d := o.EmailNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18225,10 +20176,7 @@ func (o *Task) GetEmailNotifications(ctx context.Context) (TaskEmailNotification
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in Task.
@@ -18245,7 +20193,7 @@ func (o *Task) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
 	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
 		return e, false
 	}
-	var v []ForEachTask
+	var v ForEachTask
 	d := o.ForEachTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18253,10 +20201,7 @@ func (o *Task) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetForEachTask sets the value of the ForEachTask field in Task.
@@ -18273,7 +20218,7 @@ func (o *Task) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask, bool)
 	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
-	var v []GenAiComputeTask
+	var v GenAiComputeTask
 	d := o.GenAiComputeTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18281,10 +20226,7 @@ func (o *Task) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in Task.
@@ -18301,7 +20243,7 @@ func (o *Task) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if o.Health.IsNull() || o.Health.IsUnknown() {
 		return e, false
 	}
-	var v []JobsHealthRules
+	var v JobsHealthRules
 	d := o.Health.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18309,10 +20251,7 @@ func (o *Task) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetHealth sets the value of the Health field in Task.
@@ -18355,7 +20294,7 @@ func (o *Task) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool)
 	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
 		return e, false
 	}
-	var v []compute_tf.ClusterSpec
+	var v compute_tf.ClusterSpec
 	d := o.NewCluster.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18363,10 +20302,7 @@ func (o *Task) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewCluster sets the value of the NewCluster field in Task.
@@ -18383,7 +20319,7 @@ func (o *Task) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
 		return e, false
 	}
-	var v []NotebookTask
+	var v NotebookTask
 	d := o.NotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18391,10 +20327,7 @@ func (o *Task) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in Task.
@@ -18411,7 +20344,7 @@ func (o *Task) GetNotificationSettings(ctx context.Context) (TaskNotificationSet
 	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
 		return e, false
 	}
-	var v []TaskNotificationSettings
+	var v TaskNotificationSettings
 	d := o.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18419,10 +20352,7 @@ func (o *Task) GetNotificationSettings(ctx context.Context) (TaskNotificationSet
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in Task.
@@ -18439,7 +20369,7 @@ func (o *Task) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
 		return e, false
 	}
-	var v []PipelineTask
+	var v PipelineTask
 	d := o.PipelineTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18447,10 +20377,7 @@ func (o *Task) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in Task.
@@ -18467,7 +20394,7 @@ func (o *Task) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
 		return e, false
 	}
-	var v []PowerBiTask
+	var v PowerBiTask
 	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18475,10 +20402,7 @@ func (o *Task) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in Task.
@@ -18495,7 +20419,7 @@ func (o *Task) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
 	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
-	var v []PythonWheelTask
+	var v PythonWheelTask
 	d := o.PythonWheelTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18503,10 +20427,7 @@ func (o *Task) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in Task.
@@ -18523,7 +20444,7 @@ func (o *Task) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
 		return e, false
 	}
-	var v []RunJobTask
+	var v RunJobTask
 	d := o.RunJobTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18531,10 +20452,7 @@ func (o *Task) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in Task.
@@ -18551,7 +20469,7 @@ func (o *Task) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkJarTask
+	var v SparkJarTask
 	d := o.SparkJarTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18559,10 +20477,7 @@ func (o *Task) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in Task.
@@ -18579,7 +20494,7 @@ func (o *Task) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
 	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkPythonTask
+	var v SparkPythonTask
 	d := o.SparkPythonTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18587,10 +20502,7 @@ func (o *Task) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in Task.
@@ -18607,7 +20519,7 @@ func (o *Task) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
 	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
-	var v []SparkSubmitTask
+	var v SparkSubmitTask
 	d := o.SparkSubmitTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18615,10 +20527,7 @@ func (o *Task) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in Task.
@@ -18635,7 +20544,7 @@ func (o *Task) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
 		return e, false
 	}
-	var v []SqlTask
+	var v SqlTask
 	d := o.SqlTask.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18643,10 +20552,7 @@ func (o *Task) GetSqlTask(ctx context.Context) (SqlTask, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlTask sets the value of the SqlTask field in Task.
@@ -18663,7 +20569,7 @@ func (o *Task) GetWebhookNotifications(ctx context.Context) (WebhookNotification
 	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
-	var v []WebhookNotifications
+	var v WebhookNotifications
 	d := o.WebhookNotifications.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -18671,10 +20577,7 @@ func (o *Task) GetWebhookNotifications(ctx context.Context) (WebhookNotification
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in Task.
@@ -18691,10 +20594,10 @@ type TaskDependency struct {
 	TaskKey types.String `tfsdk:"task_key"`
 }
 
-func (newState *TaskDependency) SyncFieldsDuringCreateOrUpdate(plan TaskDependency) {
+func (toState *TaskDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskDependency) {
 }
 
-func (newState *TaskDependency) SyncFieldsDuringRead(existingState TaskDependency) {
+func (toState *TaskDependency) SyncFieldsDuringRead(ctx context.Context, fromState TaskDependency) {
 }
 
 func (c TaskDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18773,10 +20676,10 @@ type TaskEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
+func (toState *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskEmailNotifications) {
 }
 
-func (newState *TaskEmailNotifications) SyncFieldsDuringRead(existingState TaskEmailNotifications) {
+func (toState *TaskEmailNotifications) SyncFieldsDuringRead(ctx context.Context, fromState TaskEmailNotifications) {
 }
 
 func (c TaskEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -18990,10 +20893,10 @@ type TaskNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (newState *TaskNotificationSettings) SyncFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
+func (toState *TaskNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskNotificationSettings) {
 }
 
-func (newState *TaskNotificationSettings) SyncFieldsDuringRead(existingState TaskNotificationSettings) {
+func (toState *TaskNotificationSettings) SyncFieldsDuringRead(ctx context.Context, fromState TaskNotificationSettings) {
 }
 
 func (c TaskNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19048,10 +20951,10 @@ type TerminationDetails struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *TerminationDetails) SyncFieldsDuringCreateOrUpdate(plan TerminationDetails) {
+func (toState *TerminationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TerminationDetails) {
 }
 
-func (newState *TerminationDetails) SyncFieldsDuringRead(existingState TerminationDetails) {
+func (toState *TerminationDetails) SyncFieldsDuringRead(ctx context.Context, fromState TerminationDetails) {
 }
 
 func (c TerminationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19103,10 +21006,10 @@ type TriggerInfo struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (newState *TriggerInfo) SyncFieldsDuringCreateOrUpdate(plan TriggerInfo) {
+func (toState *TriggerInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerInfo) {
 }
 
-func (newState *TriggerInfo) SyncFieldsDuringRead(existingState TriggerInfo) {
+func (toState *TriggerInfo) SyncFieldsDuringRead(ctx context.Context, fromState TriggerInfo) {
 }
 
 func (c TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19149,8 +21052,6 @@ func (o TriggerInfo) Type(ctx context.Context) attr.Type {
 type TriggerSettings struct {
 	// File arrival trigger settings.
 	FileArrival types.Object `tfsdk:"file_arrival"`
-
-	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
@@ -19161,15 +21062,78 @@ type TriggerSettings struct {
 	TableUpdate types.Object `tfsdk:"table_update"`
 }
 
-func (newState *TriggerSettings) SyncFieldsDuringCreateOrUpdate(plan TriggerSettings) {
+func (toState *TriggerSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerSettings) {
+	if !fromPlan.FileArrival.IsNull() && !fromPlan.FileArrival.IsUnknown() {
+		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
+			if fromPlanFileArrival, ok := fromPlan.GetFileArrival(ctx); ok {
+				toStateFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileArrival)
+				toState.SetFileArrival(ctx, toStateFileArrival)
+			}
+		}
+	}
+	if !fromPlan.Periodic.IsNull() && !fromPlan.Periodic.IsUnknown() {
+		if toStatePeriodic, ok := toState.GetPeriodic(ctx); ok {
+			if fromPlanPeriodic, ok := fromPlan.GetPeriodic(ctx); ok {
+				toStatePeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPeriodic)
+				toState.SetPeriodic(ctx, toStatePeriodic)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+	if !fromPlan.TableUpdate.IsNull() && !fromPlan.TableUpdate.IsUnknown() {
+		if toStateTableUpdate, ok := toState.GetTableUpdate(ctx); ok {
+			if fromPlanTableUpdate, ok := fromPlan.GetTableUpdate(ctx); ok {
+				toStateTableUpdate.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableUpdate)
+				toState.SetTableUpdate(ctx, toStateTableUpdate)
+			}
+		}
+	}
 }
 
-func (newState *TriggerSettings) SyncFieldsDuringRead(existingState TriggerSettings) {
+func (toState *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, fromState TriggerSettings) {
+	if !fromState.FileArrival.IsNull() && !fromState.FileArrival.IsUnknown() {
+		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
+			if fromStateFileArrival, ok := fromState.GetFileArrival(ctx); ok {
+				toStateFileArrival.SyncFieldsDuringRead(ctx, fromStateFileArrival)
+				toState.SetFileArrival(ctx, toStateFileArrival)
+			}
+		}
+	}
+	if !fromState.Periodic.IsNull() && !fromState.Periodic.IsUnknown() {
+		if toStatePeriodic, ok := toState.GetPeriodic(ctx); ok {
+			if fromStatePeriodic, ok := fromState.GetPeriodic(ctx); ok {
+				toStatePeriodic.SyncFieldsDuringRead(ctx, fromStatePeriodic)
+				toState.SetPeriodic(ctx, toStatePeriodic)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+	if !fromState.TableUpdate.IsNull() && !fromState.TableUpdate.IsUnknown() {
+		if toStateTableUpdate, ok := toState.GetTableUpdate(ctx); ok {
+			if fromStateTableUpdate, ok := fromState.GetTableUpdate(ctx); ok {
+				toStateTableUpdate.SyncFieldsDuringRead(ctx, fromStateTableUpdate)
+				toState.SetTableUpdate(ctx, toStateTableUpdate)
+			}
+		}
+	}
 }
 
 func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
-	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -19188,7 +21152,6 @@ func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
-		"model":        reflect.TypeOf(ModelTriggerConfiguration{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
 		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
@@ -19203,7 +21166,6 @@ func (o TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival": o.FileArrival,
-			"model":        o.Model,
 			"pause_status": o.PauseStatus,
 			"periodic":     o.Periodic,
 			"table":        o.Table,
@@ -19216,7 +21178,6 @@ func (o TriggerSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": FileArrivalTriggerConfiguration{}.Type(ctx),
-			"model":        ModelTriggerConfiguration{}.Type(ctx),
 			"pause_status": types.StringType,
 			"periodic":     PeriodicTriggerConfiguration{}.Type(ctx),
 			"table":        TableUpdateTriggerConfiguration{}.Type(ctx),
@@ -19233,7 +21194,7 @@ func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
 		return e, false
 	}
-	var v []FileArrivalTriggerConfiguration
+	var v FileArrivalTriggerConfiguration
 	d := o.FileArrival.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19241,44 +21202,13 @@ func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileArrival sets the value of the FileArrival field in TriggerSettings.
 func (o *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	o.FileArrival = vs
-}
-
-// GetModel returns the value of the Model field in TriggerSettings as
-// a ModelTriggerConfiguration value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *TriggerSettings) GetModel(ctx context.Context) (ModelTriggerConfiguration, bool) {
-	var e ModelTriggerConfiguration
-	if o.Model.IsNull() || o.Model.IsUnknown() {
-		return e, false
-	}
-	var v []ModelTriggerConfiguration
-	d := o.Model.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetModel sets the value of the Model field in TriggerSettings.
-func (o *TriggerSettings) SetModel(ctx context.Context, v ModelTriggerConfiguration) {
-	vs := v.ToObjectValue(ctx)
-	o.Model = vs
 }
 
 // GetPeriodic returns the value of the Periodic field in TriggerSettings as
@@ -19289,7 +21219,7 @@ func (o *TriggerSettings) GetPeriodic(ctx context.Context) (PeriodicTriggerConfi
 	if o.Periodic.IsNull() || o.Periodic.IsUnknown() {
 		return e, false
 	}
-	var v []PeriodicTriggerConfiguration
+	var v PeriodicTriggerConfiguration
 	d := o.Periodic.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19297,10 +21227,7 @@ func (o *TriggerSettings) GetPeriodic(ctx context.Context) (PeriodicTriggerConfi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPeriodic sets the value of the Periodic field in TriggerSettings.
@@ -19317,7 +21244,7 @@ func (o *TriggerSettings) GetTable(ctx context.Context) (TableUpdateTriggerConfi
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []TableUpdateTriggerConfiguration
+	var v TableUpdateTriggerConfiguration
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19325,10 +21252,7 @@ func (o *TriggerSettings) GetTable(ctx context.Context) (TableUpdateTriggerConfi
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in TriggerSettings.
@@ -19345,7 +21269,7 @@ func (o *TriggerSettings) GetTableUpdate(ctx context.Context) (TableUpdateTrigge
 	if o.TableUpdate.IsNull() || o.TableUpdate.IsUnknown() {
 		return e, false
 	}
-	var v []TableUpdateTriggerConfiguration
+	var v TableUpdateTriggerConfiguration
 	d := o.TableUpdate.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19353,10 +21277,7 @@ func (o *TriggerSettings) GetTableUpdate(ctx context.Context) (TableUpdateTrigge
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTableUpdate sets the value of the TableUpdate field in TriggerSettings.
@@ -19367,16 +21288,51 @@ func (o *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTrigg
 
 type TriggerStateProto struct {
 	FileArrival types.Object `tfsdk:"file_arrival"`
+
+	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(plan TriggerStateProto) {
+func (toState *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerStateProto) {
+	if !fromPlan.FileArrival.IsNull() && !fromPlan.FileArrival.IsUnknown() {
+		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
+			if fromPlanFileArrival, ok := fromPlan.GetFileArrival(ctx); ok {
+				toStateFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileArrival)
+				toState.SetFileArrival(ctx, toStateFileArrival)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *TriggerStateProto) SyncFieldsDuringRead(existingState TriggerStateProto) {
+func (toState *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, fromState TriggerStateProto) {
+	if !fromState.FileArrival.IsNull() && !fromState.FileArrival.IsUnknown() {
+		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
+			if fromStateFileArrival, ok := fromState.GetFileArrival(ctx); ok {
+				toStateFileArrival.SyncFieldsDuringRead(ctx, fromStateFileArrival)
+				toState.SetFileArrival(ctx, toStateFileArrival)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["table"] = attrs["table"].SetOptional()
 
 	return attrs
 }
@@ -19391,6 +21347,7 @@ func (c TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.A
 func (a TriggerStateProto) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerState{}),
+		"table":        reflect.TypeOf(TableTriggerState{}),
 	}
 }
 
@@ -19402,6 +21359,7 @@ func (o TriggerStateProto) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival": o.FileArrival,
+			"table":        o.Table,
 		})
 }
 
@@ -19410,6 +21368,7 @@ func (o TriggerStateProto) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": FileArrivalTriggerState{}.Type(ctx),
+			"table":        TableTriggerState{}.Type(ctx),
 		},
 	}
 }
@@ -19422,7 +21381,7 @@ func (o *TriggerStateProto) GetFileArrival(ctx context.Context) (FileArrivalTrig
 	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
 		return e, false
 	}
-	var v []FileArrivalTriggerState
+	var v FileArrivalTriggerState
 	d := o.FileArrival.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19430,16 +21389,38 @@ func (o *TriggerStateProto) GetFileArrival(ctx context.Context) (FileArrivalTrig
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFileArrival sets the value of the FileArrival field in TriggerStateProto.
 func (o *TriggerStateProto) SetFileArrival(ctx context.Context, v FileArrivalTriggerState) {
 	vs := v.ToObjectValue(ctx)
 	o.FileArrival = vs
+}
+
+// GetTable returns the value of the Table field in TriggerStateProto as
+// a TableTriggerState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerStateProto) GetTable(ctx context.Context) (TableTriggerState, bool) {
+	var e TableTriggerState
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v TableTriggerState
+	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTable sets the value of the Table field in TriggerStateProto.
+func (o *TriggerStateProto) SetTable(ctx context.Context, v TableTriggerState) {
+	vs := v.ToObjectValue(ctx)
+	o.Table = vs
 }
 
 type UpdateJob struct {
@@ -19537,7 +21518,7 @@ func (o *UpdateJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
 	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
 		return e, false
 	}
-	var v []JobSettings
+	var v JobSettings
 	d := o.NewSettings.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -19545,10 +21526,7 @@ func (o *UpdateJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNewSettings sets the value of the NewSettings field in UpdateJob.
@@ -19598,10 +21576,10 @@ type ViewItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *ViewItem) SyncFieldsDuringCreateOrUpdate(plan ViewItem) {
+func (toState *ViewItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ViewItem) {
 }
 
-func (newState *ViewItem) SyncFieldsDuringRead(existingState ViewItem) {
+func (toState *ViewItem) SyncFieldsDuringRead(ctx context.Context, fromState ViewItem) {
 }
 
 func (c ViewItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19651,10 +21629,10 @@ type Webhook struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *Webhook) SyncFieldsDuringCreateOrUpdate(plan Webhook) {
+func (toState *Webhook) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Webhook) {
 }
 
-func (newState *Webhook) SyncFieldsDuringRead(existingState Webhook) {
+func (toState *Webhook) SyncFieldsDuringRead(ctx context.Context, fromState Webhook) {
 }
 
 func (c Webhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19721,10 +21699,10 @@ type WebhookNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (newState *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
+func (toState *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WebhookNotifications) {
 }
 
-func (newState *WebhookNotifications) SyncFieldsDuringRead(existingState WebhookNotifications) {
+func (toState *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, fromState WebhookNotifications) {
 }
 
 func (c WebhookNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19926,10 +21904,10 @@ type WidgetErrorDetail struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *WidgetErrorDetail) SyncFieldsDuringCreateOrUpdate(plan WidgetErrorDetail) {
+func (toState *WidgetErrorDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetErrorDetail) {
 }
 
-func (newState *WidgetErrorDetail) SyncFieldsDuringRead(existingState WidgetErrorDetail) {
+func (toState *WidgetErrorDetail) SyncFieldsDuringRead(ctx context.Context, fromState WidgetErrorDetail) {
 }
 
 func (c WidgetErrorDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

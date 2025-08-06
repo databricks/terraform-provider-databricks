@@ -194,10 +194,10 @@ type CustomLlm struct {
 	OptimizationState types.String `tfsdk:"optimization_state"`
 }
 
-func (newState *CustomLlm) SyncFieldsDuringCreateOrUpdate(plan CustomLlm) {
+func (toState *CustomLlm) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomLlm) {
 }
 
-func (newState *CustomLlm) SyncFieldsDuringRead(existingState CustomLlm) {
+func (toState *CustomLlm) SyncFieldsDuringRead(ctx context.Context, fromState CustomLlm) {
 }
 
 func (c CustomLlm) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -329,10 +329,26 @@ type Dataset struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *Dataset) SyncFieldsDuringCreateOrUpdate(plan Dataset) {
+func (toState *Dataset) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dataset) {
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *Dataset) SyncFieldsDuringRead(existingState Dataset) {
+func (toState *Dataset) SyncFieldsDuringRead(ctx context.Context, fromState Dataset) {
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c Dataset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -382,7 +398,7 @@ func (o *Dataset) GetTable(ctx context.Context) (Table, bool) {
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []Table
+	var v Table
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -390,10 +406,7 @@ func (o *Dataset) GetTable(ctx context.Context) (Table, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in Dataset.
@@ -519,10 +532,10 @@ type Table struct {
 	TablePath types.String `tfsdk:"table_path"`
 }
 
-func (newState *Table) SyncFieldsDuringCreateOrUpdate(plan Table) {
+func (toState *Table) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Table) {
 }
 
-func (newState *Table) SyncFieldsDuringRead(existingState Table) {
+func (toState *Table) SyncFieldsDuringRead(ctx context.Context, fromState Table) {
 }
 
 func (c Table) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -635,7 +648,7 @@ func (o *UpdateCustomLlmRequest) GetCustomLlm(ctx context.Context) (CustomLlm, b
 	if o.CustomLlm.IsNull() || o.CustomLlm.IsUnknown() {
 		return e, false
 	}
-	var v []CustomLlm
+	var v CustomLlm
 	d := o.CustomLlm.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -643,10 +656,7 @@ func (o *UpdateCustomLlmRequest) GetCustomLlm(ctx context.Context) (CustomLlm, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCustomLlm sets the value of the CustomLlm field in UpdateCustomLlmRequest.

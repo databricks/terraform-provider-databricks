@@ -195,10 +195,10 @@ type CustomLlm_SdkV2 struct {
 	OptimizationState types.String `tfsdk:"optimization_state"`
 }
 
-func (newState *CustomLlm_SdkV2) SyncFieldsDuringCreateOrUpdate(plan CustomLlm_SdkV2) {
+func (toState *CustomLlm_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomLlm_SdkV2) {
 }
 
-func (newState *CustomLlm_SdkV2) SyncFieldsDuringRead(existingState CustomLlm_SdkV2) {
+func (toState *CustomLlm_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomLlm_SdkV2) {
 }
 
 func (c CustomLlm_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -330,10 +330,26 @@ type Dataset_SdkV2 struct {
 	Table types.List `tfsdk:"table"`
 }
 
-func (newState *Dataset_SdkV2) SyncFieldsDuringCreateOrUpdate(plan Dataset_SdkV2) {
+func (toState *Dataset_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dataset_SdkV2) {
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *Dataset_SdkV2) SyncFieldsDuringRead(existingState Dataset_SdkV2) {
+func (toState *Dataset_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Dataset_SdkV2) {
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c Dataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -521,10 +537,10 @@ type Table_SdkV2 struct {
 	TablePath types.String `tfsdk:"table_path"`
 }
 
-func (newState *Table_SdkV2) SyncFieldsDuringCreateOrUpdate(plan Table_SdkV2) {
+func (toState *Table_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Table_SdkV2) {
 }
 
-func (newState *Table_SdkV2) SyncFieldsDuringRead(existingState Table_SdkV2) {
+func (toState *Table_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Table_SdkV2) {
 }
 
 func (c Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

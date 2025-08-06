@@ -75,7 +75,7 @@ func (o *CreateFederationPolicyRequest) GetPolicy(ctx context.Context) (Federati
 	if o.Policy.IsNull() || o.Policy.IsUnknown() {
 		return e, false
 	}
-	var v []FederationPolicy
+	var v FederationPolicy
 	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -83,10 +83,7 @@ func (o *CreateFederationPolicyRequest) GetPolicy(ctx context.Context) (Federati
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPolicy sets the value of the Policy field in CreateFederationPolicyRequest.
@@ -228,7 +225,7 @@ func (o *CreateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
+	var v IpAccessList
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -236,10 +233,7 @@ func (o *CreateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in CreateRecipient.
@@ -256,7 +250,7 @@ func (o *CreateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
+	var v SecurablePropertiesKvPairs
 	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -264,10 +258,7 @@ func (o *CreateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in CreateRecipient.
@@ -506,10 +497,42 @@ type DeltaSharingDependency struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (newState *DeltaSharingDependency) SyncFieldsDuringCreateOrUpdate(plan DeltaSharingDependency) {
+func (toState *DeltaSharingDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSharingDependency) {
+	if !fromPlan.Function.IsNull() && !fromPlan.Function.IsUnknown() {
+		if toStateFunction, ok := toState.GetFunction(ctx); ok {
+			if fromPlanFunction, ok := fromPlan.GetFunction(ctx); ok {
+				toStateFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFunction)
+				toState.SetFunction(ctx, toStateFunction)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *DeltaSharingDependency) SyncFieldsDuringRead(existingState DeltaSharingDependency) {
+func (toState *DeltaSharingDependency) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSharingDependency) {
+	if !fromState.Function.IsNull() && !fromState.Function.IsUnknown() {
+		if toStateFunction, ok := toState.GetFunction(ctx); ok {
+			if fromStateFunction, ok := fromState.GetFunction(ctx); ok {
+				toStateFunction.SyncFieldsDuringRead(ctx, fromStateFunction)
+				toState.SetFunction(ctx, toStateFunction)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c DeltaSharingDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -563,7 +586,7 @@ func (o *DeltaSharingDependency) GetFunction(ctx context.Context) (DeltaSharingF
 	if o.Function.IsNull() || o.Function.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaSharingFunctionDependency
+	var v DeltaSharingFunctionDependency
 	d := o.Function.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -571,10 +594,7 @@ func (o *DeltaSharingDependency) GetFunction(ctx context.Context) (DeltaSharingF
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFunction sets the value of the Function field in DeltaSharingDependency.
@@ -591,7 +611,7 @@ func (o *DeltaSharingDependency) GetTable(ctx context.Context) (DeltaSharingTabl
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaSharingTableDependency
+	var v DeltaSharingTableDependency
 	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -599,10 +619,7 @@ func (o *DeltaSharingDependency) GetTable(ctx context.Context) (DeltaSharingTabl
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTable sets the value of the Table field in DeltaSharingDependency.
@@ -617,10 +634,10 @@ type DeltaSharingDependencyList struct {
 	Dependencies types.List `tfsdk:"dependencies"`
 }
 
-func (newState *DeltaSharingDependencyList) SyncFieldsDuringCreateOrUpdate(plan DeltaSharingDependencyList) {
+func (toState *DeltaSharingDependencyList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSharingDependencyList) {
 }
 
-func (newState *DeltaSharingDependencyList) SyncFieldsDuringRead(existingState DeltaSharingDependencyList) {
+func (toState *DeltaSharingDependencyList) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSharingDependencyList) {
 }
 
 func (c DeltaSharingDependencyList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -725,10 +742,42 @@ type DeltaSharingFunction struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *DeltaSharingFunction) SyncFieldsDuringCreateOrUpdate(plan DeltaSharingFunction) {
+func (toState *DeltaSharingFunction) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSharingFunction) {
+	if !fromPlan.DependencyList.IsNull() && !fromPlan.DependencyList.IsUnknown() {
+		if toStateDependencyList, ok := toState.GetDependencyList(ctx); ok {
+			if fromPlanDependencyList, ok := fromPlan.GetDependencyList(ctx); ok {
+				toStateDependencyList.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDependencyList)
+				toState.SetDependencyList(ctx, toStateDependencyList)
+			}
+		}
+	}
+	if !fromPlan.InputParams.IsNull() && !fromPlan.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromPlanInputParams, ok := fromPlan.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
 }
 
-func (newState *DeltaSharingFunction) SyncFieldsDuringRead(existingState DeltaSharingFunction) {
+func (toState *DeltaSharingFunction) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSharingFunction) {
+	if !fromState.DependencyList.IsNull() && !fromState.DependencyList.IsUnknown() {
+		if toStateDependencyList, ok := toState.GetDependencyList(ctx); ok {
+			if fromStateDependencyList, ok := fromState.GetDependencyList(ctx); ok {
+				toStateDependencyList.SyncFieldsDuringRead(ctx, fromStateDependencyList)
+				toState.SetDependencyList(ctx, toStateDependencyList)
+			}
+		}
+	}
+	if !fromState.InputParams.IsNull() && !fromState.InputParams.IsUnknown() {
+		if toStateInputParams, ok := toState.GetInputParams(ctx); ok {
+			if fromStateInputParams, ok := fromState.GetInputParams(ctx); ok {
+				toStateInputParams.SyncFieldsDuringRead(ctx, fromStateInputParams)
+				toState.SetInputParams(ctx, toStateInputParams)
+			}
+		}
+	}
 }
 
 func (c DeltaSharingFunction) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -856,7 +905,7 @@ func (o *DeltaSharingFunction) GetDependencyList(ctx context.Context) (DeltaShar
 	if o.DependencyList.IsNull() || o.DependencyList.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaSharingDependencyList
+	var v DeltaSharingDependencyList
 	d := o.DependencyList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -864,10 +913,7 @@ func (o *DeltaSharingFunction) GetDependencyList(ctx context.Context) (DeltaShar
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDependencyList sets the value of the DependencyList field in DeltaSharingFunction.
@@ -884,7 +930,7 @@ func (o *DeltaSharingFunction) GetInputParams(ctx context.Context) (FunctionPara
 	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
 		return e, false
 	}
-	var v []FunctionParameterInfos
+	var v FunctionParameterInfos
 	d := o.InputParams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -892,10 +938,7 @@ func (o *DeltaSharingFunction) GetInputParams(ctx context.Context) (FunctionPara
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInputParams sets the value of the InputParams field in DeltaSharingFunction.
@@ -937,10 +980,10 @@ type DeltaSharingFunctionDependency struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 }
 
-func (newState *DeltaSharingFunctionDependency) SyncFieldsDuringCreateOrUpdate(plan DeltaSharingFunctionDependency) {
+func (toState *DeltaSharingFunctionDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSharingFunctionDependency) {
 }
 
-func (newState *DeltaSharingFunctionDependency) SyncFieldsDuringRead(existingState DeltaSharingFunctionDependency) {
+func (toState *DeltaSharingFunctionDependency) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSharingFunctionDependency) {
 }
 
 func (c DeltaSharingFunctionDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -990,10 +1033,10 @@ type DeltaSharingTableDependency struct {
 	TableName types.String `tfsdk:"table_name"`
 }
 
-func (newState *DeltaSharingTableDependency) SyncFieldsDuringCreateOrUpdate(plan DeltaSharingTableDependency) {
+func (toState *DeltaSharingTableDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSharingTableDependency) {
 }
 
-func (newState *DeltaSharingTableDependency) SyncFieldsDuringRead(existingState DeltaSharingTableDependency) {
+func (toState *DeltaSharingTableDependency) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSharingTableDependency) {
 }
 
 func (c DeltaSharingTableDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1054,10 +1097,26 @@ type FederationPolicy struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *FederationPolicy) SyncFieldsDuringCreateOrUpdate(plan FederationPolicy) {
+func (toState *FederationPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FederationPolicy) {
+	if !fromPlan.OidcPolicy.IsNull() && !fromPlan.OidcPolicy.IsUnknown() {
+		if toStateOidcPolicy, ok := toState.GetOidcPolicy(ctx); ok {
+			if fromPlanOidcPolicy, ok := fromPlan.GetOidcPolicy(ctx); ok {
+				toStateOidcPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOidcPolicy)
+				toState.SetOidcPolicy(ctx, toStateOidcPolicy)
+			}
+		}
+	}
 }
 
-func (newState *FederationPolicy) SyncFieldsDuringRead(existingState FederationPolicy) {
+func (toState *FederationPolicy) SyncFieldsDuringRead(ctx context.Context, fromState FederationPolicy) {
+	if !fromState.OidcPolicy.IsNull() && !fromState.OidcPolicy.IsUnknown() {
+		if toStateOidcPolicy, ok := toState.GetOidcPolicy(ctx); ok {
+			if fromStateOidcPolicy, ok := fromState.GetOidcPolicy(ctx); ok {
+				toStateOidcPolicy.SyncFieldsDuringRead(ctx, fromStateOidcPolicy)
+				toState.SetOidcPolicy(ctx, toStateOidcPolicy)
+			}
+		}
+	}
 }
 
 func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1124,7 +1183,7 @@ func (o *FederationPolicy) GetOidcPolicy(ctx context.Context) (OidcFederationPol
 	if o.OidcPolicy.IsNull() || o.OidcPolicy.IsUnknown() {
 		return e, false
 	}
-	var v []OidcFederationPolicy
+	var v OidcFederationPolicy
 	d := o.OidcPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1132,10 +1191,7 @@ func (o *FederationPolicy) GetOidcPolicy(ctx context.Context) (OidcFederationPol
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetOidcPolicy sets the value of the OidcPolicy field in FederationPolicy.
@@ -1173,10 +1229,10 @@ type FunctionParameterInfo struct {
 	TypeText types.String `tfsdk:"type_text"`
 }
 
-func (newState *FunctionParameterInfo) SyncFieldsDuringCreateOrUpdate(plan FunctionParameterInfo) {
+func (toState *FunctionParameterInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionParameterInfo) {
 }
 
-func (newState *FunctionParameterInfo) SyncFieldsDuringRead(existingState FunctionParameterInfo) {
+func (toState *FunctionParameterInfo) SyncFieldsDuringRead(ctx context.Context, fromState FunctionParameterInfo) {
 }
 
 func (c FunctionParameterInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1254,10 +1310,10 @@ type FunctionParameterInfos struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (newState *FunctionParameterInfos) SyncFieldsDuringCreateOrUpdate(plan FunctionParameterInfos) {
+func (toState *FunctionParameterInfos) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionParameterInfos) {
 }
 
-func (newState *FunctionParameterInfos) SyncFieldsDuringRead(existingState FunctionParameterInfos) {
+func (toState *FunctionParameterInfos) SyncFieldsDuringRead(ctx context.Context, fromState FunctionParameterInfos) {
 }
 
 func (c FunctionParameterInfos) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1366,10 +1422,10 @@ func (o GetActivationUrlInfoRequest) Type(ctx context.Context) attr.Type {
 type GetActivationUrlInfoResponse struct {
 }
 
-func (newState *GetActivationUrlInfoResponse) SyncFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoResponse) {
+func (toState *GetActivationUrlInfoResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetActivationUrlInfoResponse) {
 }
 
-func (newState *GetActivationUrlInfoResponse) SyncFieldsDuringRead(existingState GetActivationUrlInfoResponse) {
+func (toState *GetActivationUrlInfoResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetActivationUrlInfoResponse) {
 }
 
 func (c GetActivationUrlInfoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1526,10 +1582,10 @@ type GetRecipientSharePermissionsResponse struct {
 	PermissionsOut types.List `tfsdk:"permissions_out"`
 }
 
-func (newState *GetRecipientSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan GetRecipientSharePermissionsResponse) {
+func (toState *GetRecipientSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRecipientSharePermissionsResponse) {
 }
 
-func (newState *GetRecipientSharePermissionsResponse) SyncFieldsDuringRead(existingState GetRecipientSharePermissionsResponse) {
+func (toState *GetRecipientSharePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetRecipientSharePermissionsResponse) {
 }
 
 func (c GetRecipientSharePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1611,10 +1667,10 @@ type GetSharePermissionsResponse struct {
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
-func (newState *GetSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan GetSharePermissionsResponse) {
+func (toState *GetSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetSharePermissionsResponse) {
 }
 
-func (newState *GetSharePermissionsResponse) SyncFieldsDuringRead(existingState GetSharePermissionsResponse) {
+func (toState *GetSharePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetSharePermissionsResponse) {
 }
 
 func (c GetSharePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1732,10 +1788,10 @@ type IpAccessList struct {
 	AllowedIpAddresses types.List `tfsdk:"allowed_ip_addresses"`
 }
 
-func (newState *IpAccessList) SyncFieldsDuringCreateOrUpdate(plan IpAccessList) {
+func (toState *IpAccessList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IpAccessList) {
 }
 
-func (newState *IpAccessList) SyncFieldsDuringRead(existingState IpAccessList) {
+func (toState *IpAccessList) SyncFieldsDuringRead(ctx context.Context, fromState IpAccessList) {
 }
 
 func (c IpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1855,10 +1911,10 @@ type ListFederationPoliciesResponse struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListFederationPoliciesResponse) SyncFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse) {
+func (toState *ListFederationPoliciesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListFederationPoliciesResponse) {
 }
 
-func (newState *ListFederationPoliciesResponse) SyncFieldsDuringRead(existingState ListFederationPoliciesResponse) {
+func (toState *ListFederationPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListFederationPoliciesResponse) {
 }
 
 func (c ListFederationPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2002,10 +2058,26 @@ type ListProviderShareAssetsResponse struct {
 	Volumes types.List `tfsdk:"volumes"`
 }
 
-func (newState *ListProviderShareAssetsResponse) SyncFieldsDuringCreateOrUpdate(plan ListProviderShareAssetsResponse) {
+func (toState *ListProviderShareAssetsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListProviderShareAssetsResponse) {
+	if !fromPlan.Share.IsNull() && !fromPlan.Share.IsUnknown() {
+		if toStateShare, ok := toState.GetShare(ctx); ok {
+			if fromPlanShare, ok := fromPlan.GetShare(ctx); ok {
+				toStateShare.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanShare)
+				toState.SetShare(ctx, toStateShare)
+			}
+		}
+	}
 }
 
-func (newState *ListProviderShareAssetsResponse) SyncFieldsDuringRead(existingState ListProviderShareAssetsResponse) {
+func (toState *ListProviderShareAssetsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListProviderShareAssetsResponse) {
+	if !fromState.Share.IsNull() && !fromState.Share.IsUnknown() {
+		if toStateShare, ok := toState.GetShare(ctx); ok {
+			if fromStateShare, ok := fromState.GetShare(ctx); ok {
+				toStateShare.SyncFieldsDuringRead(ctx, fromStateShare)
+				toState.SetShare(ctx, toStateShare)
+			}
+		}
+	}
 }
 
 func (c ListProviderShareAssetsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2131,7 +2203,7 @@ func (o *ListProviderShareAssetsResponse) GetShare(ctx context.Context) (Share, 
 	if o.Share.IsNull() || o.Share.IsUnknown() {
 		return e, false
 	}
-	var v []Share
+	var v Share
 	d := o.Share.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2139,10 +2211,7 @@ func (o *ListProviderShareAssetsResponse) GetShare(ctx context.Context) (Share, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetShare sets the value of the Share field in ListProviderShareAssetsResponse.
@@ -2212,10 +2281,10 @@ type ListProviderSharesResponse struct {
 	Shares types.List `tfsdk:"shares"`
 }
 
-func (newState *ListProviderSharesResponse) SyncFieldsDuringCreateOrUpdate(plan ListProviderSharesResponse) {
+func (toState *ListProviderSharesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListProviderSharesResponse) {
 }
 
-func (newState *ListProviderSharesResponse) SyncFieldsDuringRead(existingState ListProviderSharesResponse) {
+func (toState *ListProviderSharesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListProviderSharesResponse) {
 }
 
 func (c ListProviderSharesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2350,10 +2419,10 @@ type ListProvidersResponse struct {
 	Providers types.List `tfsdk:"providers"`
 }
 
-func (newState *ListProvidersResponse) SyncFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
+func (toState *ListProvidersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListProvidersResponse) {
 }
 
-func (newState *ListProvidersResponse) SyncFieldsDuringRead(existingState ListProvidersResponse) {
+func (toState *ListProvidersResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListProvidersResponse) {
 }
 
 func (c ListProvidersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2488,10 +2557,10 @@ type ListRecipientsResponse struct {
 	Recipients types.List `tfsdk:"recipients"`
 }
 
-func (newState *ListRecipientsResponse) SyncFieldsDuringCreateOrUpdate(plan ListRecipientsResponse) {
+func (toState *ListRecipientsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListRecipientsResponse) {
 }
 
-func (newState *ListRecipientsResponse) SyncFieldsDuringRead(existingState ListRecipientsResponse) {
+func (toState *ListRecipientsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListRecipientsResponse) {
 }
 
 func (c ListRecipientsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2625,10 +2694,10 @@ type ListSharesResponse struct {
 	Shares types.List `tfsdk:"shares"`
 }
 
-func (newState *ListSharesResponse) SyncFieldsDuringCreateOrUpdate(plan ListSharesResponse) {
+func (toState *ListSharesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSharesResponse) {
 }
 
-func (newState *ListSharesResponse) SyncFieldsDuringRead(existingState ListSharesResponse) {
+func (toState *ListSharesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSharesResponse) {
 }
 
 func (c ListSharesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2716,10 +2785,10 @@ type NotebookFile struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *NotebookFile) SyncFieldsDuringCreateOrUpdate(plan NotebookFile) {
+func (toState *NotebookFile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookFile) {
 }
 
-func (newState *NotebookFile) SyncFieldsDuringRead(existingState NotebookFile) {
+func (toState *NotebookFile) SyncFieldsDuringRead(ctx context.Context, fromState NotebookFile) {
 }
 
 func (c NotebookFile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2838,10 +2907,10 @@ type OidcFederationPolicy struct {
 	SubjectClaim types.String `tfsdk:"subject_claim"`
 }
 
-func (newState *OidcFederationPolicy) SyncFieldsDuringCreateOrUpdate(plan OidcFederationPolicy) {
+func (toState *OidcFederationPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OidcFederationPolicy) {
 }
 
-func (newState *OidcFederationPolicy) SyncFieldsDuringRead(existingState OidcFederationPolicy) {
+func (toState *OidcFederationPolicy) SyncFieldsDuringRead(ctx context.Context, fromState OidcFederationPolicy) {
 }
 
 func (c OidcFederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2925,10 +2994,10 @@ type Partition struct {
 	Values types.List `tfsdk:"value"`
 }
 
-func (newState *Partition) SyncFieldsDuringCreateOrUpdate(plan Partition) {
+func (toState *Partition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Partition) {
 }
 
-func (newState *Partition) SyncFieldsDuringRead(existingState Partition) {
+func (toState *Partition) SyncFieldsDuringRead(ctx context.Context, fromState Partition) {
 }
 
 func (c Partition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3013,10 +3082,10 @@ type PartitionValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *PartitionValue) SyncFieldsDuringCreateOrUpdate(plan PartitionValue) {
+func (toState *PartitionValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PartitionValue) {
 }
 
-func (newState *PartitionValue) SyncFieldsDuringRead(existingState PartitionValue) {
+func (toState *PartitionValue) SyncFieldsDuringRead(ctx context.Context, fromState PartitionValue) {
 }
 
 func (c PartitionValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3071,30 +3140,19 @@ type PermissionsChange struct {
 	// The principal whose privileges we are changing. Only one of principal or
 	// principal_id should be specified, never both at the same time.
 	Principal types.String `tfsdk:"principal"`
-	// An opaque internal ID that identifies the principal whose privileges
-	// should be removed.
-	//
-	// This field is intended for removing privileges associated with a deleted
-	// user. When set, only the entries specified in the remove field are
-	// processed; any entries in the add field will be rejected.
-	//
-	// Only one of principal or principal_id should be specified, never both at
-	// the same time.
-	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
 }
 
-func (newState *PermissionsChange) SyncFieldsDuringCreateOrUpdate(plan PermissionsChange) {
+func (toState *PermissionsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionsChange) {
 }
 
-func (newState *PermissionsChange) SyncFieldsDuringRead(existingState PermissionsChange) {
+func (toState *PermissionsChange) SyncFieldsDuringRead(ctx context.Context, fromState PermissionsChange) {
 }
 
 func (c PermissionsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["add"] = attrs["add"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["remove"] = attrs["remove"].SetOptional()
 
 	return attrs
@@ -3121,10 +3179,9 @@ func (o PermissionsChange) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"add":          o.Add,
-			"principal":    o.Principal,
-			"principal_id": o.PrincipalId,
-			"remove":       o.Remove,
+			"add":       o.Add,
+			"principal": o.Principal,
+			"remove":    o.Remove,
 		})
 }
 
@@ -3135,8 +3192,7 @@ func (o PermissionsChange) Type(ctx context.Context) attr.Type {
 			"add": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"principal":    types.StringType,
-			"principal_id": types.Int64Type,
+			"principal": types.StringType,
 			"remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -3200,22 +3256,18 @@ type PrivilegeAssignment struct {
 	// The principal (user email address or group name). For deleted principals,
 	// `principal` is empty while `principal_id` is populated.
 	Principal types.String `tfsdk:"principal"`
-	// Unique identifier of the principal. For active principals, both
-	// `principal` and `principal_id` are present.
-	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
 }
 
-func (newState *PrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
+func (toState *PrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrivilegeAssignment) {
 }
 
-func (newState *PrivilegeAssignment) SyncFieldsDuringRead(existingState PrivilegeAssignment) {
+func (toState *PrivilegeAssignment) SyncFieldsDuringRead(ctx context.Context, fromState PrivilegeAssignment) {
 }
 
 func (c PrivilegeAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principal"] = attrs["principal"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["privileges"] = attrs["privileges"].SetOptional()
 
 	return attrs
@@ -3241,9 +3293,8 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal":    o.Principal,
-			"principal_id": o.PrincipalId,
-			"privileges":   o.Privileges,
+			"principal":  o.Principal,
+			"privileges": o.Privileges,
 		})
 }
 
@@ -3251,8 +3302,7 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal":    types.StringType,
-			"principal_id": types.Int64Type,
+			"principal": types.StringType,
 			"privileges": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -3323,10 +3373,26 @@ type ProviderInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *ProviderInfo) SyncFieldsDuringCreateOrUpdate(plan ProviderInfo) {
+func (toState *ProviderInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ProviderInfo) {
+	if !fromPlan.RecipientProfile.IsNull() && !fromPlan.RecipientProfile.IsUnknown() {
+		if toStateRecipientProfile, ok := toState.GetRecipientProfile(ctx); ok {
+			if fromPlanRecipientProfile, ok := fromPlan.GetRecipientProfile(ctx); ok {
+				toStateRecipientProfile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRecipientProfile)
+				toState.SetRecipientProfile(ctx, toStateRecipientProfile)
+			}
+		}
+	}
 }
 
-func (newState *ProviderInfo) SyncFieldsDuringRead(existingState ProviderInfo) {
+func (toState *ProviderInfo) SyncFieldsDuringRead(ctx context.Context, fromState ProviderInfo) {
+	if !fromState.RecipientProfile.IsNull() && !fromState.RecipientProfile.IsUnknown() {
+		if toStateRecipientProfile, ok := toState.GetRecipientProfile(ctx); ok {
+			if fromStateRecipientProfile, ok := fromState.GetRecipientProfile(ctx); ok {
+				toStateRecipientProfile.SyncFieldsDuringRead(ctx, fromStateRecipientProfile)
+				toState.SetRecipientProfile(ctx, toStateRecipientProfile)
+			}
+		}
+	}
 }
 
 func (c ProviderInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3415,7 +3481,7 @@ func (o *ProviderInfo) GetRecipientProfile(ctx context.Context) (RecipientProfil
 	if o.RecipientProfile.IsNull() || o.RecipientProfile.IsUnknown() {
 		return e, false
 	}
-	var v []RecipientProfile
+	var v RecipientProfile
 	d := o.RecipientProfile.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3423,10 +3489,7 @@ func (o *ProviderInfo) GetRecipientProfile(ctx context.Context) (RecipientProfil
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRecipientProfile sets the value of the RecipientProfile field in ProviderInfo.
@@ -3440,10 +3503,10 @@ type ProviderShare struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ProviderShare) SyncFieldsDuringCreateOrUpdate(plan ProviderShare) {
+func (toState *ProviderShare) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ProviderShare) {
 }
 
-func (newState *ProviderShare) SyncFieldsDuringRead(existingState ProviderShare) {
+func (toState *ProviderShare) SyncFieldsDuringRead(ctx context.Context, fromState ProviderShare) {
 }
 
 func (c ProviderShare) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3536,10 +3599,42 @@ type RecipientInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *RecipientInfo) SyncFieldsDuringCreateOrUpdate(plan RecipientInfo) {
+func (toState *RecipientInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RecipientInfo) {
+	if !fromPlan.IpAccessList.IsNull() && !fromPlan.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromPlanIpAccessList, ok := fromPlan.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
+	if !fromPlan.PropertiesKvpairs.IsNull() && !fromPlan.PropertiesKvpairs.IsUnknown() {
+		if toStatePropertiesKvpairs, ok := toState.GetPropertiesKvpairs(ctx); ok {
+			if fromPlanPropertiesKvpairs, ok := fromPlan.GetPropertiesKvpairs(ctx); ok {
+				toStatePropertiesKvpairs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPropertiesKvpairs)
+				toState.SetPropertiesKvpairs(ctx, toStatePropertiesKvpairs)
+			}
+		}
+	}
 }
 
-func (newState *RecipientInfo) SyncFieldsDuringRead(existingState RecipientInfo) {
+func (toState *RecipientInfo) SyncFieldsDuringRead(ctx context.Context, fromState RecipientInfo) {
+	if !fromState.IpAccessList.IsNull() && !fromState.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromStateIpAccessList, ok := fromState.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringRead(ctx, fromStateIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
+	if !fromState.PropertiesKvpairs.IsNull() && !fromState.PropertiesKvpairs.IsUnknown() {
+		if toStatePropertiesKvpairs, ok := toState.GetPropertiesKvpairs(ctx); ok {
+			if fromStatePropertiesKvpairs, ok := fromState.GetPropertiesKvpairs(ctx); ok {
+				toStatePropertiesKvpairs.SyncFieldsDuringRead(ctx, fromStatePropertiesKvpairs)
+				toState.SetPropertiesKvpairs(ctx, toStatePropertiesKvpairs)
+			}
+		}
+	}
 }
 
 func (c RecipientInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3647,7 +3742,7 @@ func (o *RecipientInfo) GetIpAccessList(ctx context.Context) (IpAccessList, bool
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
+	var v IpAccessList
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3655,10 +3750,7 @@ func (o *RecipientInfo) GetIpAccessList(ctx context.Context) (IpAccessList, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in RecipientInfo.
@@ -3675,7 +3767,7 @@ func (o *RecipientInfo) GetPropertiesKvpairs(ctx context.Context) (SecurableProp
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
+	var v SecurablePropertiesKvPairs
 	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3683,10 +3775,7 @@ func (o *RecipientInfo) GetPropertiesKvpairs(ctx context.Context) (SecurableProp
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in RecipientInfo.
@@ -3730,10 +3819,10 @@ type RecipientProfile struct {
 	ShareCredentialsVersion types.Int64 `tfsdk:"share_credentials_version"`
 }
 
-func (newState *RecipientProfile) SyncFieldsDuringCreateOrUpdate(plan RecipientProfile) {
+func (toState *RecipientProfile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RecipientProfile) {
 }
 
-func (newState *RecipientProfile) SyncFieldsDuringRead(existingState RecipientProfile) {
+func (toState *RecipientProfile) SyncFieldsDuringRead(ctx context.Context, fromState RecipientProfile) {
 }
 
 func (c RecipientProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3797,10 +3886,10 @@ type RecipientTokenInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *RecipientTokenInfo) SyncFieldsDuringCreateOrUpdate(plan RecipientTokenInfo) {
+func (toState *RecipientTokenInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RecipientTokenInfo) {
 }
 
-func (newState *RecipientTokenInfo) SyncFieldsDuringRead(existingState RecipientTokenInfo) {
+func (toState *RecipientTokenInfo) SyncFieldsDuringRead(ctx context.Context, fromState RecipientTokenInfo) {
 }
 
 func (c RecipientTokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3865,10 +3954,10 @@ type RegisteredModelAlias struct {
 	VersionNum types.Int64 `tfsdk:"version_num"`
 }
 
-func (newState *RegisteredModelAlias) SyncFieldsDuringCreateOrUpdate(plan RegisteredModelAlias) {
+func (toState *RegisteredModelAlias) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RegisteredModelAlias) {
 }
 
-func (newState *RegisteredModelAlias) SyncFieldsDuringRead(existingState RegisteredModelAlias) {
+func (toState *RegisteredModelAlias) SyncFieldsDuringRead(ctx context.Context, fromState RegisteredModelAlias) {
 }
 
 func (c RegisteredModelAlias) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3958,10 +4047,10 @@ type RetrieveTokenResponse struct {
 	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion"`
 }
 
-func (newState *RetrieveTokenResponse) SyncFieldsDuringCreateOrUpdate(plan RetrieveTokenResponse) {
+func (toState *RetrieveTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RetrieveTokenResponse) {
 }
 
-func (newState *RetrieveTokenResponse) SyncFieldsDuringRead(existingState RetrieveTokenResponse) {
+func (toState *RetrieveTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState RetrieveTokenResponse) {
 }
 
 func (c RetrieveTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4060,10 +4149,10 @@ type SecurablePropertiesKvPairs struct {
 	Properties types.Map `tfsdk:"properties"`
 }
 
-func (newState *SecurablePropertiesKvPairs) SyncFieldsDuringCreateOrUpdate(plan SecurablePropertiesKvPairs) {
+func (toState *SecurablePropertiesKvPairs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SecurablePropertiesKvPairs) {
 }
 
-func (newState *SecurablePropertiesKvPairs) SyncFieldsDuringRead(existingState SecurablePropertiesKvPairs) {
+func (toState *SecurablePropertiesKvPairs) SyncFieldsDuringRead(ctx context.Context, fromState SecurablePropertiesKvPairs) {
 }
 
 func (c SecurablePropertiesKvPairs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4146,10 +4235,10 @@ type Share struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *Share) SyncFieldsDuringCreateOrUpdate(plan Share) {
+func (toState *Share) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Share) {
 }
 
-func (newState *Share) SyncFieldsDuringRead(existingState Share) {
+func (toState *Share) SyncFieldsDuringRead(ctx context.Context, fromState Share) {
 }
 
 func (c Share) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4255,15 +4344,15 @@ type ShareInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
-func (newState *ShareInfo) SyncFieldsDuringCreateOrUpdate(plan ShareInfo) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
+func (toState *ShareInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ShareInfo) {
+	toState.EffectiveOwner = toState.Owner
+	toState.Owner = fromPlan.Owner
 }
 
-func (newState *ShareInfo) SyncFieldsDuringRead(existingState ShareInfo) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
+func (toState *ShareInfo) SyncFieldsDuringRead(ctx context.Context, fromState ShareInfo) {
+	toState.EffectiveOwner = fromState.EffectiveOwner
+	if fromState.EffectiveOwner.ValueString() == toState.Owner.ValueString() {
+		toState.Owner = fromState.Owner
 	}
 }
 
@@ -4423,10 +4512,10 @@ type ShareToPrivilegeAssignment struct {
 	ShareName types.String `tfsdk:"share_name"`
 }
 
-func (newState *ShareToPrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(plan ShareToPrivilegeAssignment) {
+func (toState *ShareToPrivilegeAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ShareToPrivilegeAssignment) {
 }
 
-func (newState *ShareToPrivilegeAssignment) SyncFieldsDuringRead(existingState ShareToPrivilegeAssignment) {
+func (toState *ShareToPrivilegeAssignment) SyncFieldsDuringRead(ctx context.Context, fromState ShareToPrivilegeAssignment) {
 }
 
 func (c ShareToPrivilegeAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4548,36 +4637,43 @@ type SharedDataObject struct {
 	// the `string_shared_as` name. The `string_shared_as` name must be unique
 	// for objects of the same type within a Share. For notebooks, the new name
 	// should be the new notebook file name.
-	StringSharedAs types.String `tfsdk:"string_shared_as"`
+	StringSharedAs          types.String `tfsdk:"string_shared_as"`
+	EffectiveStringSharedAs types.String `tfsdk:"effective_string_shared_as"`
 }
 
-func (newState *SharedDataObject) SyncFieldsDuringCreateOrUpdate(plan SharedDataObject) {
-	newState.EffectiveCdfEnabled = newState.CdfEnabled
-	newState.CdfEnabled = plan.CdfEnabled
-	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
-	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
-	newState.EffectiveSharedAs = newState.SharedAs
-	newState.SharedAs = plan.SharedAs
-	newState.EffectiveStartVersion = newState.StartVersion
-	newState.StartVersion = plan.StartVersion
+func (toState *SharedDataObject) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SharedDataObject) {
+	toState.EffectiveCdfEnabled = toState.CdfEnabled
+	toState.CdfEnabled = fromPlan.CdfEnabled
+	toState.EffectiveHistoryDataSharingStatus = toState.HistoryDataSharingStatus
+	toState.HistoryDataSharingStatus = fromPlan.HistoryDataSharingStatus
+	toState.EffectiveSharedAs = toState.SharedAs
+	toState.SharedAs = fromPlan.SharedAs
+	toState.EffectiveStartVersion = toState.StartVersion
+	toState.StartVersion = fromPlan.StartVersion
+	toState.EffectiveStringSharedAs = toState.StringSharedAs
+	toState.StringSharedAs = fromPlan.StringSharedAs
 }
 
-func (newState *SharedDataObject) SyncFieldsDuringRead(existingState SharedDataObject) {
-	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
-	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
-		newState.CdfEnabled = existingState.CdfEnabled
+func (toState *SharedDataObject) SyncFieldsDuringRead(ctx context.Context, fromState SharedDataObject) {
+	toState.EffectiveCdfEnabled = fromState.EffectiveCdfEnabled
+	if fromState.EffectiveCdfEnabled.ValueBool() == toState.CdfEnabled.ValueBool() {
+		toState.CdfEnabled = fromState.CdfEnabled
 	}
-	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
-	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
-		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
+	toState.EffectiveHistoryDataSharingStatus = fromState.EffectiveHistoryDataSharingStatus
+	if fromState.EffectiveHistoryDataSharingStatus.ValueString() == toState.HistoryDataSharingStatus.ValueString() {
+		toState.HistoryDataSharingStatus = fromState.HistoryDataSharingStatus
 	}
-	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
-	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
-		newState.SharedAs = existingState.SharedAs
+	toState.EffectiveSharedAs = fromState.EffectiveSharedAs
+	if fromState.EffectiveSharedAs.ValueString() == toState.SharedAs.ValueString() {
+		toState.SharedAs = fromState.SharedAs
 	}
-	newState.EffectiveStartVersion = existingState.EffectiveStartVersion
-	if existingState.EffectiveStartVersion.ValueInt64() == newState.StartVersion.ValueInt64() {
-		newState.StartVersion = existingState.StartVersion
+	toState.EffectiveStartVersion = fromState.EffectiveStartVersion
+	if fromState.EffectiveStartVersion.ValueInt64() == toState.StartVersion.ValueInt64() {
+		toState.StartVersion = fromState.StartVersion
+	}
+	toState.EffectiveStringSharedAs = fromState.EffectiveStringSharedAs
+	if fromState.EffectiveStringSharedAs.ValueString() == toState.StringSharedAs.ValueString() {
+		toState.StringSharedAs = fromState.StringSharedAs
 	}
 }
 
@@ -4598,6 +4694,7 @@ func (c SharedDataObject) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["effective_start_version"] = attrs["effective_start_version"].SetComputed()
 	attrs["start_version"] = attrs["start_version"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["effective_string_shared_as"] = attrs["effective_string_shared_as"].SetComputed()
 	attrs["string_shared_as"] = attrs["string_shared_as"].SetOptional()
 
 	return attrs
@@ -4640,6 +4737,7 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"effective_start_version":               o.EffectiveStartVersion,
 			"status":                                o.Status,
 			"string_shared_as":                      o.StringSharedAs,
+			"effective_string_shared_as":            o.EffectiveStringSharedAs,
 		})
 }
 
@@ -4660,12 +4758,13 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 			"partition": basetypes.ListType{
 				ElemType: Partition{}.Type(ctx),
 			},
-			"shared_as":               types.StringType,
-			"effective_shared_as":     types.StringType,
-			"start_version":           types.Int64Type,
-			"effective_start_version": types.Int64Type,
-			"status":                  types.StringType,
-			"string_shared_as":        types.StringType,
+			"shared_as":                  types.StringType,
+			"effective_shared_as":        types.StringType,
+			"start_version":              types.Int64Type,
+			"effective_start_version":    types.Int64Type,
+			"status":                     types.StringType,
+			"string_shared_as":           types.StringType,
+			"effective_string_shared_as": types.StringType,
 		},
 	}
 }
@@ -4704,10 +4803,26 @@ type SharedDataObjectUpdate struct {
 	DataObject types.Object `tfsdk:"data_object"`
 }
 
-func (newState *SharedDataObjectUpdate) SyncFieldsDuringCreateOrUpdate(plan SharedDataObjectUpdate) {
+func (toState *SharedDataObjectUpdate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SharedDataObjectUpdate) {
+	if !fromPlan.DataObject.IsNull() && !fromPlan.DataObject.IsUnknown() {
+		if toStateDataObject, ok := toState.GetDataObject(ctx); ok {
+			if fromPlanDataObject, ok := fromPlan.GetDataObject(ctx); ok {
+				toStateDataObject.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataObject)
+				toState.SetDataObject(ctx, toStateDataObject)
+			}
+		}
+	}
 }
 
-func (newState *SharedDataObjectUpdate) SyncFieldsDuringRead(existingState SharedDataObjectUpdate) {
+func (toState *SharedDataObjectUpdate) SyncFieldsDuringRead(ctx context.Context, fromState SharedDataObjectUpdate) {
+	if !fromState.DataObject.IsNull() && !fromState.DataObject.IsUnknown() {
+		if toStateDataObject, ok := toState.GetDataObject(ctx); ok {
+			if fromStateDataObject, ok := fromState.GetDataObject(ctx); ok {
+				toStateDataObject.SyncFieldsDuringRead(ctx, fromStateDataObject)
+				toState.SetDataObject(ctx, toStateDataObject)
+			}
+		}
+	}
 }
 
 func (c SharedDataObjectUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4760,7 +4875,7 @@ func (o *SharedDataObjectUpdate) GetDataObject(ctx context.Context) (SharedDataO
 	if o.DataObject.IsNull() || o.DataObject.IsUnknown() {
 		return e, false
 	}
-	var v []SharedDataObject
+	var v SharedDataObject
 	d := o.DataObject.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4768,10 +4883,7 @@ func (o *SharedDataObjectUpdate) GetDataObject(ctx context.Context) (SharedDataO
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDataObject sets the value of the DataObject field in SharedDataObjectUpdate.
@@ -4804,10 +4916,26 @@ type Table struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *Table) SyncFieldsDuringCreateOrUpdate(plan Table) {
+func (toState *Table) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Table) {
+	if !fromPlan.InternalAttributes.IsNull() && !fromPlan.InternalAttributes.IsUnknown() {
+		if toStateInternalAttributes, ok := toState.GetInternalAttributes(ctx); ok {
+			if fromPlanInternalAttributes, ok := fromPlan.GetInternalAttributes(ctx); ok {
+				toStateInternalAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInternalAttributes)
+				toState.SetInternalAttributes(ctx, toStateInternalAttributes)
+			}
+		}
+	}
 }
 
-func (newState *Table) SyncFieldsDuringRead(existingState Table) {
+func (toState *Table) SyncFieldsDuringRead(ctx context.Context, fromState Table) {
+	if !fromState.InternalAttributes.IsNull() && !fromState.InternalAttributes.IsUnknown() {
+		if toStateInternalAttributes, ok := toState.GetInternalAttributes(ctx); ok {
+			if fromStateInternalAttributes, ok := fromState.GetInternalAttributes(ctx); ok {
+				toStateInternalAttributes.SyncFieldsDuringRead(ctx, fromStateInternalAttributes)
+				toState.SetInternalAttributes(ctx, toStateInternalAttributes)
+			}
+		}
+	}
 }
 
 func (c Table) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4887,7 +5015,7 @@ func (o *Table) GetInternalAttributes(ctx context.Context) (TableInternalAttribu
 	if o.InternalAttributes.IsNull() || o.InternalAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []TableInternalAttributes
+	var v TableInternalAttributes
 	d := o.InternalAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4895,10 +5023,7 @@ func (o *Table) GetInternalAttributes(ctx context.Context) (TableInternalAttribu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInternalAttributes sets the value of the InternalAttributes field in Table.
@@ -4954,10 +5079,10 @@ type TableInternalAttributes struct {
 	ViewDefinition types.String `tfsdk:"view_definition"`
 }
 
-func (newState *TableInternalAttributes) SyncFieldsDuringCreateOrUpdate(plan TableInternalAttributes) {
+func (toState *TableInternalAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableInternalAttributes) {
 }
 
-func (newState *TableInternalAttributes) SyncFieldsDuringRead(existingState TableInternalAttributes) {
+func (toState *TableInternalAttributes) SyncFieldsDuringRead(ctx context.Context, fromState TableInternalAttributes) {
 }
 
 func (c TableInternalAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5070,7 +5195,7 @@ func (o *UpdateFederationPolicyRequest) GetPolicy(ctx context.Context) (Federati
 	if o.Policy.IsNull() || o.Policy.IsUnknown() {
 		return e, false
 	}
-	var v []FederationPolicy
+	var v FederationPolicy
 	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5078,10 +5203,7 @@ func (o *UpdateFederationPolicyRequest) GetPolicy(ctx context.Context) (Federati
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPolicy sets the value of the Policy field in UpdateFederationPolicyRequest.
@@ -5217,7 +5339,7 @@ func (o *UpdateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
+	var v IpAccessList
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5225,10 +5347,7 @@ func (o *UpdateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in UpdateRecipient.
@@ -5245,7 +5364,7 @@ func (o *UpdateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
+	var v SecurablePropertiesKvPairs
 	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5253,10 +5372,7 @@ func (o *UpdateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in UpdateRecipient.
@@ -5434,10 +5550,10 @@ type UpdateSharePermissionsResponse struct {
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
-func (newState *UpdateSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(plan UpdateSharePermissionsResponse) {
+func (toState *UpdateSharePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateSharePermissionsResponse) {
 }
 
-func (newState *UpdateSharePermissionsResponse) SyncFieldsDuringRead(existingState UpdateSharePermissionsResponse) {
+func (toState *UpdateSharePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateSharePermissionsResponse) {
 }
 
 func (c UpdateSharePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5529,10 +5645,26 @@ type Volume struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *Volume) SyncFieldsDuringCreateOrUpdate(plan Volume) {
+func (toState *Volume) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Volume) {
+	if !fromPlan.InternalAttributes.IsNull() && !fromPlan.InternalAttributes.IsUnknown() {
+		if toStateInternalAttributes, ok := toState.GetInternalAttributes(ctx); ok {
+			if fromPlanInternalAttributes, ok := fromPlan.GetInternalAttributes(ctx); ok {
+				toStateInternalAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInternalAttributes)
+				toState.SetInternalAttributes(ctx, toStateInternalAttributes)
+			}
+		}
+	}
 }
 
-func (newState *Volume) SyncFieldsDuringRead(existingState Volume) {
+func (toState *Volume) SyncFieldsDuringRead(ctx context.Context, fromState Volume) {
+	if !fromState.InternalAttributes.IsNull() && !fromState.InternalAttributes.IsUnknown() {
+		if toStateInternalAttributes, ok := toState.GetInternalAttributes(ctx); ok {
+			if fromStateInternalAttributes, ok := fromState.GetInternalAttributes(ctx); ok {
+				toStateInternalAttributes.SyncFieldsDuringRead(ctx, fromStateInternalAttributes)
+				toState.SetInternalAttributes(ctx, toStateInternalAttributes)
+			}
+		}
+	}
 }
 
 func (c Volume) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5606,7 +5738,7 @@ func (o *Volume) GetInternalAttributes(ctx context.Context) (VolumeInternalAttri
 	if o.InternalAttributes.IsNull() || o.InternalAttributes.IsUnknown() {
 		return e, false
 	}
-	var v []VolumeInternalAttributes
+	var v VolumeInternalAttributes
 	d := o.InternalAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5614,10 +5746,7 @@ func (o *Volume) GetInternalAttributes(ctx context.Context) (VolumeInternalAttri
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInternalAttributes sets the value of the InternalAttributes field in Volume.
@@ -5661,10 +5790,10 @@ type VolumeInternalAttributes struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *VolumeInternalAttributes) SyncFieldsDuringCreateOrUpdate(plan VolumeInternalAttributes) {
+func (toState *VolumeInternalAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VolumeInternalAttributes) {
 }
 
-func (newState *VolumeInternalAttributes) SyncFieldsDuringRead(existingState VolumeInternalAttributes) {
+func (toState *VolumeInternalAttributes) SyncFieldsDuringRead(ctx context.Context, fromState VolumeInternalAttributes) {
 }
 
 func (c VolumeInternalAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

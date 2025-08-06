@@ -86,7 +86,7 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan settin
 		return
 	}
 
-	newState.SyncFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -135,13 +135,12 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 	}
 
 	var newState settings_tf.WorkspaceNetworkOption
-
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

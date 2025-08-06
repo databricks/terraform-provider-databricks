@@ -24,22 +24,19 @@ import (
 )
 
 type AnomalyDetectionConfig_SdkV2 struct {
-	// The type of the last run of the workflow.
-	JobType types.String `tfsdk:"job_type"`
 	// Run id of the last run of the workflow
 	LastRunId types.String `tfsdk:"last_run_id"`
 	// The status of the last run of the workflow.
 	LatestRunStatus types.String `tfsdk:"latest_run_status"`
 }
 
-func (newState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(plan AnomalyDetectionConfig_SdkV2) {
+func (toState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AnomalyDetectionConfig_SdkV2) {
 }
 
-func (newState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringRead(existingState AnomalyDetectionConfig_SdkV2) {
+func (toState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AnomalyDetectionConfig_SdkV2) {
 }
 
 func (c AnomalyDetectionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_type"] = attrs["job_type"].SetComputed()
 	attrs["last_run_id"] = attrs["last_run_id"].SetComputed()
 	attrs["latest_run_status"] = attrs["latest_run_status"].SetComputed()
 
@@ -64,7 +61,6 @@ func (o AnomalyDetectionConfig_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_type":          o.JobType,
 			"last_run_id":       o.LastRunId,
 			"latest_run_status": o.LatestRunStatus,
 		})
@@ -74,7 +70,6 @@ func (o AnomalyDetectionConfig_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (o AnomalyDetectionConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_type":          types.StringType,
 			"last_run_id":       types.StringType,
 			"latest_run_status": types.StringType,
 		},
@@ -271,10 +266,10 @@ type ListQualityMonitorResponse_SdkV2 struct {
 	QualityMonitors types.List `tfsdk:"quality_monitors"`
 }
 
-func (newState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(plan ListQualityMonitorResponse_SdkV2) {
+func (toState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQualityMonitorResponse_SdkV2) {
 }
 
-func (newState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringRead(existingState ListQualityMonitorResponse_SdkV2) {
+func (toState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListQualityMonitorResponse_SdkV2) {
 }
 
 func (c ListQualityMonitorResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -355,10 +350,26 @@ type QualityMonitor_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *QualityMonitor_SdkV2) SyncFieldsDuringCreateOrUpdate(plan QualityMonitor_SdkV2) {
+func (toState *QualityMonitor_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QualityMonitor_SdkV2) {
+	if !fromPlan.AnomalyDetectionConfig.IsNull() && !fromPlan.AnomalyDetectionConfig.IsUnknown() {
+		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
+			if fromPlanAnomalyDetectionConfig, ok := fromPlan.GetAnomalyDetectionConfig(ctx); ok {
+				toStateAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAnomalyDetectionConfig)
+				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+			}
+		}
+	}
 }
 
-func (newState *QualityMonitor_SdkV2) SyncFieldsDuringRead(existingState QualityMonitor_SdkV2) {
+func (toState *QualityMonitor_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QualityMonitor_SdkV2) {
+	if !fromState.AnomalyDetectionConfig.IsNull() && !fromState.AnomalyDetectionConfig.IsUnknown() {
+		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
+			if fromStateAnomalyDetectionConfig, ok := fromState.GetAnomalyDetectionConfig(ctx); ok {
+				toStateAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromStateAnomalyDetectionConfig)
+				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+			}
+		}
+	}
 }
 
 func (c QualityMonitor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

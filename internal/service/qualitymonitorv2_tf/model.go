@@ -23,22 +23,19 @@ import (
 )
 
 type AnomalyDetectionConfig struct {
-	// The type of the last run of the workflow.
-	JobType types.String `tfsdk:"job_type"`
 	// Run id of the last run of the workflow
 	LastRunId types.String `tfsdk:"last_run_id"`
 	// The status of the last run of the workflow.
 	LatestRunStatus types.String `tfsdk:"latest_run_status"`
 }
 
-func (newState *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(plan AnomalyDetectionConfig) {
+func (toState *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AnomalyDetectionConfig) {
 }
 
-func (newState *AnomalyDetectionConfig) SyncFieldsDuringRead(existingState AnomalyDetectionConfig) {
+func (toState *AnomalyDetectionConfig) SyncFieldsDuringRead(ctx context.Context, fromState AnomalyDetectionConfig) {
 }
 
 func (c AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["job_type"] = attrs["job_type"].SetComputed()
 	attrs["last_run_id"] = attrs["last_run_id"].SetComputed()
 	attrs["latest_run_status"] = attrs["latest_run_status"].SetComputed()
 
@@ -63,7 +60,6 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_type":          o.JobType,
 			"last_run_id":       o.LastRunId,
 			"latest_run_status": o.LatestRunStatus,
 		})
@@ -73,7 +69,6 @@ func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_type":          types.StringType,
 			"last_run_id":       types.StringType,
 			"latest_run_status": types.StringType,
 		},
@@ -125,7 +120,7 @@ func (o *CreateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 	if o.QualityMonitor.IsNull() || o.QualityMonitor.IsUnknown() {
 		return e, false
 	}
-	var v []QualityMonitor
+	var v QualityMonitor
 	d := o.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -133,10 +128,7 @@ func (o *CreateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQualityMonitor sets the value of the QualityMonitor field in CreateQualityMonitorRequest.
@@ -270,10 +262,10 @@ type ListQualityMonitorResponse struct {
 	QualityMonitors types.List `tfsdk:"quality_monitors"`
 }
 
-func (newState *ListQualityMonitorResponse) SyncFieldsDuringCreateOrUpdate(plan ListQualityMonitorResponse) {
+func (toState *ListQualityMonitorResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQualityMonitorResponse) {
 }
 
-func (newState *ListQualityMonitorResponse) SyncFieldsDuringRead(existingState ListQualityMonitorResponse) {
+func (toState *ListQualityMonitorResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListQualityMonitorResponse) {
 }
 
 func (c ListQualityMonitorResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -354,10 +346,26 @@ type QualityMonitor struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *QualityMonitor) SyncFieldsDuringCreateOrUpdate(plan QualityMonitor) {
+func (toState *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QualityMonitor) {
+	if !fromPlan.AnomalyDetectionConfig.IsNull() && !fromPlan.AnomalyDetectionConfig.IsUnknown() {
+		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
+			if fromPlanAnomalyDetectionConfig, ok := fromPlan.GetAnomalyDetectionConfig(ctx); ok {
+				toStateAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAnomalyDetectionConfig)
+				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+			}
+		}
+	}
 }
 
-func (newState *QualityMonitor) SyncFieldsDuringRead(existingState QualityMonitor) {
+func (toState *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, fromState QualityMonitor) {
+	if !fromState.AnomalyDetectionConfig.IsNull() && !fromState.AnomalyDetectionConfig.IsUnknown() {
+		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
+			if fromStateAnomalyDetectionConfig, ok := fromState.GetAnomalyDetectionConfig(ctx); ok {
+				toStateAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromStateAnomalyDetectionConfig)
+				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+			}
+		}
+	}
 }
 
 func (c QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -413,7 +421,7 @@ func (o *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (Anomaly
 	if o.AnomalyDetectionConfig.IsNull() || o.AnomalyDetectionConfig.IsUnknown() {
 		return e, false
 	}
-	var v []AnomalyDetectionConfig
+	var v AnomalyDetectionConfig
 	d := o.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -421,10 +429,7 @@ func (o *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (Anomaly
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAnomalyDetectionConfig sets the value of the AnomalyDetectionConfig field in QualityMonitor.
@@ -487,7 +492,7 @@ func (o *UpdateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 	if o.QualityMonitor.IsNull() || o.QualityMonitor.IsUnknown() {
 		return e, false
 	}
-	var v []QualityMonitor
+	var v QualityMonitor
 	d := o.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -495,10 +500,7 @@ func (o *UpdateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQualityMonitor sets the value of the QualityMonitor field in UpdateQualityMonitorRequest.

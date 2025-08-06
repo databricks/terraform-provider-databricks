@@ -19,6 +19,7 @@
 * Restricted create or replace statement to managed tables in `databricks_sql_table`([#4874](https://github.com/databricks/terraform-provider-databricks/pull/4874)).
 * Mitigate issue due to internal caching in `databricks_secret_acl` by retrying until ACL are applied with the right permission ([#4885](https://github.com/databricks/terraform-provider-databricks/pull/4885)).
 * Fix schema mismatch bug in `databricks_functions` data source ([#4902](https://github.com/databricks/terraform-provider-databricks/pull/4902)).
+* Set suppressDiff on string_shared_as in the Legacy databricks_share Resource ([#4904](https://github.com/databricks/terraform-provider-databricks/pull/4904)).
 
 ### Documentation
 

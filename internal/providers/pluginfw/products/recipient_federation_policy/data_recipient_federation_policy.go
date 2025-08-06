@@ -83,7 +83,7 @@ func (r *FederationPolicyDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

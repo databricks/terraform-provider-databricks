@@ -19,6 +19,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -365,14 +368,24 @@ type DatabaseCatalog_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseCatalog_SdkV2) {
+func (toState *DatabaseCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseCatalog_SdkV2) {
+	if !fromPlan.CreateDatabaseIfNotExists.IsUnknown() && !fromPlan.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.CreateDatabaseIfNotExists = fromPlan.CreateDatabaseIfNotExists
+	}
 }
 
-func (newState *DatabaseCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseCatalog_SdkV2) {
+func (toState *DatabaseCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseCatalog_SdkV2) {
+	if !fromState.CreateDatabaseIfNotExists.IsUnknown() && !fromState.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.CreateDatabaseIfNotExists = fromState.CreateDatabaseIfNotExists
+	}
 }
 
 func (c DatabaseCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetOptional()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetComputed()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetRequired()
 	attrs["database_name"] = attrs["database_name"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -426,10 +439,10 @@ type DatabaseCredential_SdkV2 struct {
 	Token types.String `tfsdk:"token"`
 }
 
-func (newState *DatabaseCredential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseCredential_SdkV2) {
+func (toState *DatabaseCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseCredential_SdkV2) {
 }
 
-func (newState *DatabaseCredential_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseCredential_SdkV2) {
+func (toState *DatabaseCredential_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseCredential_SdkV2) {
 }
 
 func (c DatabaseCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -542,10 +555,26 @@ type DatabaseInstance_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseInstance_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseInstance_SdkV2) {
+func (toState *DatabaseInstance_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstance_SdkV2) {
+	if !fromPlan.ParentInstanceRef.IsNull() && !fromPlan.ParentInstanceRef.IsUnknown() {
+		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
+			if fromPlanParentInstanceRef, ok := fromPlan.GetParentInstanceRef(ctx); ok {
+				toStateParentInstanceRef.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanParentInstanceRef)
+				toState.SetParentInstanceRef(ctx, toStateParentInstanceRef)
+			}
+		}
+	}
 }
 
-func (newState *DatabaseInstance_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseInstance_SdkV2) {
+func (toState *DatabaseInstance_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstance_SdkV2) {
+	if !fromState.ParentInstanceRef.IsNull() && !fromState.ParentInstanceRef.IsUnknown() {
+		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
+			if fromStateParentInstanceRef, ok := fromState.GetParentInstanceRef(ctx); ok {
+				toStateParentInstanceRef.SyncFieldsDuringRead(ctx, fromStateParentInstanceRef)
+				toState.SetParentInstanceRef(ctx, toStateParentInstanceRef)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -734,10 +763,10 @@ type DatabaseInstanceRef_SdkV2 struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-func (newState *DatabaseInstanceRef_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseInstanceRef_SdkV2) {
+func (toState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRef_SdkV2) {
 }
 
-func (newState *DatabaseInstanceRef_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseInstanceRef_SdkV2) {
+func (toState *DatabaseInstanceRef_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRef_SdkV2) {
 }
 
 func (c DatabaseInstanceRef_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -802,10 +831,26 @@ type DatabaseInstanceRole_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *DatabaseInstanceRole_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseInstanceRole_SdkV2) {
+func (toState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRole_SdkV2) {
+	if !fromPlan.Attributes.IsNull() && !fromPlan.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromPlanAttributes, ok := fromPlan.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
 }
 
-func (newState *DatabaseInstanceRole_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseInstanceRole_SdkV2) {
+func (toState *DatabaseInstanceRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRole_SdkV2) {
+	if !fromState.Attributes.IsNull() && !fromState.Attributes.IsUnknown() {
+		if toStateAttributes, ok := toState.GetAttributes(ctx); ok {
+			if fromStateAttributes, ok := fromState.GetAttributes(ctx); ok {
+				toStateAttributes.SyncFieldsDuringRead(ctx, fromStateAttributes)
+				toState.SetAttributes(ctx, toStateAttributes)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstanceRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -900,10 +945,10 @@ type DatabaseInstanceRoleAttributes_SdkV2 struct {
 	Createrole types.Bool `tfsdk:"createrole"`
 }
 
-func (newState *DatabaseInstanceRoleAttributes_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseInstanceRoleAttributes_SdkV2) {
+func (toState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstanceRoleAttributes_SdkV2) {
 }
 
-func (newState *DatabaseInstanceRoleAttributes_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseInstanceRoleAttributes_SdkV2) {
+func (toState *DatabaseInstanceRoleAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstanceRoleAttributes_SdkV2) {
 }
 
 func (c DatabaseInstanceRoleAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -974,10 +1019,10 @@ type DatabaseTable_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *DatabaseTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabaseTable_SdkV2) {
+func (toState *DatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseTable_SdkV2) {
 }
 
-func (newState *DatabaseTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabaseTable_SdkV2) {
+func (toState *DatabaseTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseTable_SdkV2) {
 }
 
 func (c DatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1239,15 +1284,15 @@ type DeltaTableSyncInfo_SdkV2 struct {
 	DeltaCommitVersion types.Int64 `tfsdk:"delta_commit_version"`
 }
 
-func (newState *DeltaTableSyncInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaTableSyncInfo_SdkV2) {
+func (toState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaTableSyncInfo_SdkV2) {
 }
 
-func (newState *DeltaTableSyncInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeltaTableSyncInfo_SdkV2) {
+func (toState *DeltaTableSyncInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeltaTableSyncInfo_SdkV2) {
 }
 
 func (c DeltaTableSyncInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_commit_timestamp"] = attrs["delta_commit_timestamp"].SetOptional()
-	attrs["delta_commit_version"] = attrs["delta_commit_version"].SetOptional()
+	attrs["delta_commit_timestamp"] = attrs["delta_commit_timestamp"].SetComputed()
+	attrs["delta_commit_version"] = attrs["delta_commit_version"].SetComputed()
 
 	return attrs
 }
@@ -1658,10 +1703,10 @@ type ListDatabaseInstanceRolesResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDatabaseInstanceRolesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDatabaseInstanceRolesResponse_SdkV2) {
+func (toState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstanceRolesResponse_SdkV2) {
 }
 
-func (newState *ListDatabaseInstanceRolesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDatabaseInstanceRolesResponse_SdkV2) {
+func (toState *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstanceRolesResponse_SdkV2) {
 }
 
 func (c ListDatabaseInstanceRolesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1782,10 +1827,10 @@ type ListDatabaseInstancesResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDatabaseInstancesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDatabaseInstancesResponse_SdkV2) {
+func (toState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstancesResponse_SdkV2) {
 }
 
-func (newState *ListDatabaseInstancesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDatabaseInstancesResponse_SdkV2) {
+func (toState *ListDatabaseInstancesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstancesResponse_SdkV2) {
 }
 
 func (c ListDatabaseInstancesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1862,20 +1907,26 @@ func (o *ListDatabaseInstancesResponse_SdkV2) SetDatabaseInstances(ctx context.C
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec_SdkV2 struct {
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC catalog for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be a standard catalog where the user has
 	// permissions to create Delta tables.
 	StorageCatalog types.String `tfsdk:"storage_catalog"`
+	// This field needs to be specified if the destination catalog is a managed
+	// postgres catalog.
+	//
 	// UC schema for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be in the standard catalog where the user
 	// has permissions to create Delta tables.
 	StorageSchema types.String `tfsdk:"storage_schema"`
 }
 
-func (newState *NewPipelineSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NewPipelineSpec_SdkV2) {
+func (toState *NewPipelineSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NewPipelineSpec_SdkV2) {
 }
 
-func (newState *NewPipelineSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState NewPipelineSpec_SdkV2) {
+func (toState *NewPipelineSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NewPipelineSpec_SdkV2) {
 }
 
 func (c NewPipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1924,10 +1975,10 @@ type RequestedClaims_SdkV2 struct {
 	Resources types.List `tfsdk:"resources"`
 }
 
-func (newState *RequestedClaims_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RequestedClaims_SdkV2) {
+func (toState *RequestedClaims_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RequestedClaims_SdkV2) {
 }
 
-func (newState *RequestedClaims_SdkV2) SyncEffectiveFieldsDuringRead(existingState RequestedClaims_SdkV2) {
+func (toState *RequestedClaims_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RequestedClaims_SdkV2) {
 }
 
 func (c RequestedClaims_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2006,10 +2057,10 @@ type RequestedResource_SdkV2 struct {
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
 }
 
-func (newState *RequestedResource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RequestedResource_SdkV2) {
+func (toState *RequestedResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RequestedResource_SdkV2) {
 }
 
-func (newState *RequestedResource_SdkV2) SyncEffectiveFieldsDuringRead(existingState RequestedResource_SdkV2) {
+func (toState *RequestedResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RequestedResource_SdkV2) {
 }
 
 func (c RequestedResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2052,7 +2103,7 @@ func (o RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next field marker: 12
+// Next field marker: 14
 type SyncedDatabaseTable_SdkV2 struct {
 	// Synced Table data synchronization status
 	DataSynchronizationStatus types.List `tfsdk:"data_synchronization_status"`
@@ -2063,6 +2114,12 @@ type SyncedDatabaseTable_SdkV2 struct {
 	// the database instance name MUST match that of the registered catalog (or
 	// the request will be rejected).
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
+	// The name of the database instance that this table is registered to. This
+	// field is always returned, and for tables inside database catalogs is
+	// inferred database instance associated with the catalog.
+	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
+	// The name of the logical database that this table is registered to.
+	EffectiveLogicalDatabaseName types.String `tfsdk:"effective_logical_database_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//
 	// When creating a synced table in a registered Postgres catalog, the target
@@ -2087,17 +2144,71 @@ type SyncedDatabaseTable_SdkV2 struct {
 	UnityCatalogProvisioningState types.String `tfsdk:"unity_catalog_provisioning_state"`
 }
 
-func (newState *SyncedDatabaseTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedDatabaseTable_SdkV2) {
+func (toState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedDatabaseTable_SdkV2) {
+	if !fromPlan.DataSynchronizationStatus.IsNull() && !fromPlan.DataSynchronizationStatus.IsUnknown() {
+		if toStateDataSynchronizationStatus, ok := toState.GetDataSynchronizationStatus(ctx); ok {
+			if fromPlanDataSynchronizationStatus, ok := fromPlan.GetDataSynchronizationStatus(ctx); ok {
+				toStateDataSynchronizationStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataSynchronizationStatus)
+				toState.SetDataSynchronizationStatus(ctx, toStateDataSynchronizationStatus)
+			}
+		}
+	}
+	if !fromPlan.DatabaseInstanceName.IsUnknown() && !fromPlan.DatabaseInstanceName.IsNull() {
+		// DatabaseInstanceName is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.DatabaseInstanceName = fromPlan.DatabaseInstanceName
+	}
+	if !fromPlan.LogicalDatabaseName.IsUnknown() && !fromPlan.LogicalDatabaseName.IsNull() {
+		// LogicalDatabaseName is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.LogicalDatabaseName = fromPlan.LogicalDatabaseName
+	}
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
-func (newState *SyncedDatabaseTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedDatabaseTable_SdkV2) {
+func (toState *SyncedDatabaseTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedDatabaseTable_SdkV2) {
+	if !fromState.DataSynchronizationStatus.IsNull() && !fromState.DataSynchronizationStatus.IsUnknown() {
+		if toStateDataSynchronizationStatus, ok := toState.GetDataSynchronizationStatus(ctx); ok {
+			if fromStateDataSynchronizationStatus, ok := fromState.GetDataSynchronizationStatus(ctx); ok {
+				toStateDataSynchronizationStatus.SyncFieldsDuringRead(ctx, fromStateDataSynchronizationStatus)
+				toState.SetDataSynchronizationStatus(ctx, toStateDataSynchronizationStatus)
+			}
+		}
+	}
+	if !fromState.DatabaseInstanceName.IsUnknown() && !fromState.DatabaseInstanceName.IsNull() {
+		// DatabaseInstanceName is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.DatabaseInstanceName = fromState.DatabaseInstanceName
+	}
+	if !fromState.LogicalDatabaseName.IsUnknown() && !fromState.LogicalDatabaseName.IsNull() {
+		// LogicalDatabaseName is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.LogicalDatabaseName = fromState.LogicalDatabaseName
+	}
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
 func (c SyncedDatabaseTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["data_synchronization_status"] = attrs["data_synchronization_status"].SetComputed()
 	attrs["data_synchronization_status"] = attrs["data_synchronization_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetComputed()
+	attrs["database_instance_name"] = attrs["database_instance_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["effective_database_instance_name"] = attrs["effective_database_instance_name"].SetComputed()
+	attrs["effective_logical_database_name"] = attrs["effective_logical_database_name"].SetComputed()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
+	attrs["logical_database_name"] = attrs["logical_database_name"].SetComputed()
+	attrs["logical_database_name"] = attrs["logical_database_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2129,6 +2240,8 @@ func (o SyncedDatabaseTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"data_synchronization_status":      o.DataSynchronizationStatus,
 			"database_instance_name":           o.DatabaseInstanceName,
+			"effective_database_instance_name": o.EffectiveDatabaseInstanceName,
+			"effective_logical_database_name":  o.EffectiveLogicalDatabaseName,
 			"logical_database_name":            o.LogicalDatabaseName,
 			"name":                             o.Name,
 			"spec":                             o.Spec,
@@ -2143,9 +2256,11 @@ func (o SyncedDatabaseTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_synchronization_status": basetypes.ListType{
 				ElemType: SyncedTableStatus_SdkV2{}.Type(ctx),
 			},
-			"database_instance_name": types.StringType,
-			"logical_database_name":  types.StringType,
-			"name":                   types.StringType,
+			"database_instance_name":           types.StringType,
+			"effective_database_instance_name": types.StringType,
+			"effective_logical_database_name":  types.StringType,
+			"logical_database_name":            types.StringType,
+			"name":                             types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: SyncedTableSpec_SdkV2{}.Type(ctx),
 			},
@@ -2220,17 +2335,33 @@ type SyncedTableContinuousUpdateStatus_SdkV2 struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *SyncedTableContinuousUpdateStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableContinuousUpdateStatus_SdkV2) {
+func (toState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableContinuousUpdateStatus_SdkV2) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableContinuousUpdateStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableContinuousUpdateStatus_SdkV2) {
+func (toState *SyncedTableContinuousUpdateStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableContinuousUpdateStatus_SdkV2) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableContinuousUpdateStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetOptional()
+	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetComputed()
 	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2314,15 +2445,15 @@ type SyncedTableFailedStatus_SdkV2 struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *SyncedTableFailedStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableFailedStatus_SdkV2) {
+func (toState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableFailedStatus_SdkV2) {
 }
 
-func (newState *SyncedTableFailedStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableFailedStatus_SdkV2) {
+func (toState *SyncedTableFailedStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableFailedStatus_SdkV2) {
 }
 
 func (c SyncedTableFailedStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2367,6 +2498,8 @@ type SyncedTablePipelineProgress_SdkV2 struct {
 	// The source table Delta version that was last processed by the pipeline.
 	// The pipeline may not have completely processed this version yet.
 	LatestVersionCurrentlyProcessing types.Int64 `tfsdk:"latest_version_currently_processing"`
+	// The current phase of the data synchronization pipeline.
+	ProvisioningPhase types.String `tfsdk:"provisioning_phase"`
 	// The completion ratio of this update. This is a number between 0 and 1.
 	SyncProgressCompletion types.Float64 `tfsdk:"sync_progress_completion"`
 	// The number of rows that have been synced in this update.
@@ -2376,18 +2509,19 @@ type SyncedTablePipelineProgress_SdkV2 struct {
 	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
 }
 
-func (newState *SyncedTablePipelineProgress_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTablePipelineProgress_SdkV2) {
+func (toState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTablePipelineProgress_SdkV2) {
 }
 
-func (newState *SyncedTablePipelineProgress_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTablePipelineProgress_SdkV2) {
+func (toState *SyncedTablePipelineProgress_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTablePipelineProgress_SdkV2) {
 }
 
 func (c SyncedTablePipelineProgress_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetOptional()
-	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetOptional()
-	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetOptional()
-	attrs["synced_row_count"] = attrs["synced_row_count"].SetOptional()
-	attrs["total_row_count"] = attrs["total_row_count"].SetOptional()
+	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetComputed()
+	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetComputed()
+	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetComputed()
+	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetComputed()
+	attrs["synced_row_count"] = attrs["synced_row_count"].SetComputed()
+	attrs["total_row_count"] = attrs["total_row_count"].SetComputed()
 
 	return attrs
 }
@@ -2412,6 +2546,7 @@ func (o SyncedTablePipelineProgress_SdkV2) ToObjectValue(ctx context.Context) ba
 		map[string]attr.Value{
 			"estimated_completion_time_seconds":   o.EstimatedCompletionTimeSeconds,
 			"latest_version_currently_processing": o.LatestVersionCurrentlyProcessing,
+			"provisioning_phase":                  o.ProvisioningPhase,
 			"sync_progress_completion":            o.SyncProgressCompletion,
 			"synced_row_count":                    o.SyncedRowCount,
 			"total_row_count":                     o.TotalRowCount,
@@ -2424,6 +2559,7 @@ func (o SyncedTablePipelineProgress_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"estimated_completion_time_seconds":   types.Float64Type,
 			"latest_version_currently_processing": types.Int64Type,
+			"provisioning_phase":                  types.StringType,
 			"sync_progress_completion":            types.Float64Type,
 			"synced_row_count":                    types.Int64Type,
 			"total_row_count":                     types.Int64Type,
@@ -2443,17 +2579,33 @@ type SyncedTablePosition_SdkV2 struct {
 	SyncStartTimestamp types.String `tfsdk:"sync_start_timestamp"`
 }
 
-func (newState *SyncedTablePosition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTablePosition_SdkV2) {
+func (toState *SyncedTablePosition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTablePosition_SdkV2) {
+	if !fromPlan.DeltaTableSyncInfo.IsNull() && !fromPlan.DeltaTableSyncInfo.IsUnknown() {
+		if toStateDeltaTableSyncInfo, ok := toState.GetDeltaTableSyncInfo(ctx); ok {
+			if fromPlanDeltaTableSyncInfo, ok := fromPlan.GetDeltaTableSyncInfo(ctx); ok {
+				toStateDeltaTableSyncInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaTableSyncInfo)
+				toState.SetDeltaTableSyncInfo(ctx, toStateDeltaTableSyncInfo)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTablePosition_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTablePosition_SdkV2) {
+func (toState *SyncedTablePosition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTablePosition_SdkV2) {
+	if !fromState.DeltaTableSyncInfo.IsNull() && !fromState.DeltaTableSyncInfo.IsUnknown() {
+		if toStateDeltaTableSyncInfo, ok := toState.GetDeltaTableSyncInfo(ctx); ok {
+			if fromStateDeltaTableSyncInfo, ok := fromState.GetDeltaTableSyncInfo(ctx); ok {
+				toStateDeltaTableSyncInfo.SyncFieldsDuringRead(ctx, fromStateDeltaTableSyncInfo)
+				toState.SetDeltaTableSyncInfo(ctx, toStateDeltaTableSyncInfo)
+			}
+		}
+	}
 }
 
 func (c SyncedTablePosition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].SetOptional()
+	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].SetComputed()
 	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["sync_end_timestamp"] = attrs["sync_end_timestamp"].SetOptional()
-	attrs["sync_start_timestamp"] = attrs["sync_start_timestamp"].SetOptional()
+	attrs["sync_end_timestamp"] = attrs["sync_end_timestamp"].SetComputed()
+	attrs["sync_start_timestamp"] = attrs["sync_start_timestamp"].SetComputed()
 
 	return attrs
 }
@@ -2531,14 +2683,30 @@ type SyncedTableProvisioningStatus_SdkV2 struct {
 	InitialPipelineSyncProgress types.List `tfsdk:"initial_pipeline_sync_progress"`
 }
 
-func (newState *SyncedTableProvisioningStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableProvisioningStatus_SdkV2) {
+func (toState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableProvisioningStatus_SdkV2) {
+	if !fromPlan.InitialPipelineSyncProgress.IsNull() && !fromPlan.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromPlanInitialPipelineSyncProgress, ok := fromPlan.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableProvisioningStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableProvisioningStatus_SdkV2) {
+func (toState *SyncedTableProvisioningStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableProvisioningStatus_SdkV2) {
+	if !fromState.InitialPipelineSyncProgress.IsNull() && !fromState.InitialPipelineSyncProgress.IsUnknown() {
+		if toStateInitialPipelineSyncProgress, ok := toState.GetInitialPipelineSyncProgress(ctx); ok {
+			if fromStateInitialPipelineSyncProgress, ok := fromState.GetInitialPipelineSyncProgress(ctx); ok {
+				toStateInitialPipelineSyncProgress.SyncFieldsDuringRead(ctx, fromStateInitialPipelineSyncProgress)
+				toState.SetInitialPipelineSyncProgress(ctx, toStateInitialPipelineSyncProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableProvisioningStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetOptional()
+	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].SetComputed()
 	attrs["initial_pipeline_sync_progress"] = attrs["initial_pipeline_sync_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -2610,15 +2778,24 @@ type SyncedTableSpec_SdkV2 struct {
 	// If true, the synced table's logical database and schema resources in PG
 	// will be created if they do not already exist.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
-	// User-specified ID of a pre-existing pipeline to bin pack. This field is
-	// optional, and should be empty if new_pipeline_spec is set. This field
-	// will only be set by the server in response messages if it is specified in
-	// the request. The SyncedTableStatus message will always contain the
-	// effective pipeline ID (either client provided or server generated),
-	// however.
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If existing_pipeline_id is defined, the synced table will be bin packed
+	// into the existing pipeline referenced. This avoids creating a new
+	// pipeline and allows sharing existing compute. In this case, the
+	// scheduling_policy of this synced table must match the scheduling policy
+	// of the existing pipeline.
 	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
-	// Spec of new pipeline. Should be empty if pipeline_id /
-	// existing_pipeline_id is set
+	// At most one of existing_pipeline_id and new_pipeline_spec should be
+	// defined.
+	//
+	// If new_pipeline_spec is defined, a new pipeline is created for this
+	// synced table. The location pointed to is used to store intermediate files
+	// (checkpoints, event logs etc). The caller must have write permissions to
+	// create Delta tables in the specified catalog and schema. Again, note this
+	// requires write permissions, whereas the source table only requires read
+	// permissions.
 	NewPipelineSpec types.List `tfsdk:"new_pipeline_spec"`
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
@@ -2631,16 +2808,62 @@ type SyncedTableSpec_SdkV2 struct {
 	TimeseriesKey types.String `tfsdk:"timeseries_key"`
 }
 
-func (newState *SyncedTableSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableSpec_SdkV2) {
+func (toState *SyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableSpec_SdkV2) {
+	if !fromPlan.CreateDatabaseObjectsIfMissing.IsUnknown() && !fromPlan.CreateDatabaseObjectsIfMissing.IsNull() {
+		// CreateDatabaseObjectsIfMissing is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.CreateDatabaseObjectsIfMissing = fromPlan.CreateDatabaseObjectsIfMissing
+	}
+	if !fromPlan.ExistingPipelineId.IsUnknown() && !fromPlan.ExistingPipelineId.IsNull() {
+		// ExistingPipelineId is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.ExistingPipelineId = fromPlan.ExistingPipelineId
+	}
+	if !fromPlan.NewPipelineSpec.IsUnknown() && !fromPlan.NewPipelineSpec.IsNull() {
+		// NewPipelineSpec is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.NewPipelineSpec = fromPlan.NewPipelineSpec
+	}
+	if !fromPlan.NewPipelineSpec.IsNull() && !fromPlan.NewPipelineSpec.IsUnknown() {
+		if toStateNewPipelineSpec, ok := toState.GetNewPipelineSpec(ctx); ok {
+			if fromPlanNewPipelineSpec, ok := fromPlan.GetNewPipelineSpec(ctx); ok {
+				toStateNewPipelineSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewPipelineSpec)
+				toState.SetNewPipelineSpec(ctx, toStateNewPipelineSpec)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableSpec_SdkV2) {
+func (toState *SyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableSpec_SdkV2) {
+	if !fromState.CreateDatabaseObjectsIfMissing.IsUnknown() && !fromState.CreateDatabaseObjectsIfMissing.IsNull() {
+		// CreateDatabaseObjectsIfMissing is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.CreateDatabaseObjectsIfMissing = fromState.CreateDatabaseObjectsIfMissing
+	}
+	if !fromState.ExistingPipelineId.IsUnknown() && !fromState.ExistingPipelineId.IsNull() {
+		// ExistingPipelineId is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.ExistingPipelineId = fromState.ExistingPipelineId
+	}
+	if !fromState.NewPipelineSpec.IsUnknown() && !fromState.NewPipelineSpec.IsNull() {
+		// NewPipelineSpec is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.NewPipelineSpec = fromState.NewPipelineSpec
+	}
+	if !fromState.NewPipelineSpec.IsNull() && !fromState.NewPipelineSpec.IsUnknown() {
+		if toStateNewPipelineSpec, ok := toState.GetNewPipelineSpec(ctx); ok {
+			if fromStateNewPipelineSpec, ok := fromState.GetNewPipelineSpec(ctx); ok {
+				toStateNewPipelineSpec.SyncFieldsDuringRead(ctx, fromStateNewPipelineSpec)
+				toState.SetNewPipelineSpec(ctx, toStateNewPipelineSpec)
+			}
+		}
+	}
 }
 
 func (c SyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetOptional()
+	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetComputed()
+	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetComputed()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetOptional()
+	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetComputed()
+	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["primary_key_columns"] = attrs["primary_key_columns"].SetOptional()
 	attrs["scheduling_policy"] = attrs["scheduling_policy"].SetOptional()
@@ -2785,22 +3008,102 @@ type SyncedTableStatus_SdkV2 struct {
 	TriggeredUpdateStatus types.List `tfsdk:"triggered_update_status"`
 }
 
-func (newState *SyncedTableStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableStatus_SdkV2) {
+func (toState *SyncedTableStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableStatus_SdkV2) {
+	if !fromPlan.ContinuousUpdateStatus.IsNull() && !fromPlan.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromPlanContinuousUpdateStatus, ok := fromPlan.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromPlan.FailedStatus.IsNull() && !fromPlan.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromPlanFailedStatus, ok := fromPlan.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromPlan.LastSync.IsNull() && !fromPlan.LastSync.IsUnknown() {
+		if toStateLastSync, ok := toState.GetLastSync(ctx); ok {
+			if fromPlanLastSync, ok := fromPlan.GetLastSync(ctx); ok {
+				toStateLastSync.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLastSync)
+				toState.SetLastSync(ctx, toStateLastSync)
+			}
+		}
+	}
+	if !fromPlan.ProvisioningStatus.IsNull() && !fromPlan.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromPlanProvisioningStatus, ok := fromPlan.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromPlan.TriggeredUpdateStatus.IsNull() && !fromPlan.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromPlanTriggeredUpdateStatus, ok := fromPlan.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableStatus_SdkV2) {
+func (toState *SyncedTableStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableStatus_SdkV2) {
+	if !fromState.ContinuousUpdateStatus.IsNull() && !fromState.ContinuousUpdateStatus.IsUnknown() {
+		if toStateContinuousUpdateStatus, ok := toState.GetContinuousUpdateStatus(ctx); ok {
+			if fromStateContinuousUpdateStatus, ok := fromState.GetContinuousUpdateStatus(ctx); ok {
+				toStateContinuousUpdateStatus.SyncFieldsDuringRead(ctx, fromStateContinuousUpdateStatus)
+				toState.SetContinuousUpdateStatus(ctx, toStateContinuousUpdateStatus)
+			}
+		}
+	}
+	if !fromState.FailedStatus.IsNull() && !fromState.FailedStatus.IsUnknown() {
+		if toStateFailedStatus, ok := toState.GetFailedStatus(ctx); ok {
+			if fromStateFailedStatus, ok := fromState.GetFailedStatus(ctx); ok {
+				toStateFailedStatus.SyncFieldsDuringRead(ctx, fromStateFailedStatus)
+				toState.SetFailedStatus(ctx, toStateFailedStatus)
+			}
+		}
+	}
+	if !fromState.LastSync.IsNull() && !fromState.LastSync.IsUnknown() {
+		if toStateLastSync, ok := toState.GetLastSync(ctx); ok {
+			if fromStateLastSync, ok := fromState.GetLastSync(ctx); ok {
+				toStateLastSync.SyncFieldsDuringRead(ctx, fromStateLastSync)
+				toState.SetLastSync(ctx, toStateLastSync)
+			}
+		}
+	}
+	if !fromState.ProvisioningStatus.IsNull() && !fromState.ProvisioningStatus.IsUnknown() {
+		if toStateProvisioningStatus, ok := toState.GetProvisioningStatus(ctx); ok {
+			if fromStateProvisioningStatus, ok := fromState.GetProvisioningStatus(ctx); ok {
+				toStateProvisioningStatus.SyncFieldsDuringRead(ctx, fromStateProvisioningStatus)
+				toState.SetProvisioningStatus(ctx, toStateProvisioningStatus)
+			}
+		}
+	}
+	if !fromState.TriggeredUpdateStatus.IsNull() && !fromState.TriggeredUpdateStatus.IsUnknown() {
+		if toStateTriggeredUpdateStatus, ok := toState.GetTriggeredUpdateStatus(ctx); ok {
+			if fromStateTriggeredUpdateStatus, ok := fromState.GetTriggeredUpdateStatus(ctx); ok {
+				toStateTriggeredUpdateStatus.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateStatus)
+				toState.SetTriggeredUpdateStatus(ctx, toStateTriggeredUpdateStatus)
+			}
+		}
+	}
 }
 
 func (c SyncedTableStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous_update_status"] = attrs["continuous_update_status"].SetOptional()
 	attrs["continuous_update_status"] = attrs["continuous_update_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["detailed_state"] = attrs["detailed_state"].SetOptional()
+	attrs["detailed_state"] = attrs["detailed_state"].SetComputed()
 	attrs["failed_status"] = attrs["failed_status"].SetOptional()
 	attrs["failed_status"] = attrs["failed_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["last_sync"] = attrs["last_sync"].SetOptional()
+	attrs["last_sync"] = attrs["last_sync"].SetComputed()
 	attrs["last_sync"] = attrs["last_sync"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
 	attrs["provisioning_status"] = attrs["provisioning_status"].SetOptional()
 	attrs["provisioning_status"] = attrs["provisioning_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["triggered_update_status"] = attrs["triggered_update_status"].SetOptional()
@@ -3014,16 +3317,32 @@ type SyncedTableTriggeredUpdateStatus_SdkV2 struct {
 	TriggeredUpdateProgress types.List `tfsdk:"triggered_update_progress"`
 }
 
-func (newState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncedTableTriggeredUpdateStatus_SdkV2) {
+func (toState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncedTableTriggeredUpdateStatus_SdkV2) {
+	if !fromPlan.TriggeredUpdateProgress.IsNull() && !fromPlan.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromPlanTriggeredUpdateProgress, ok := fromPlan.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
-func (newState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncedTableTriggeredUpdateStatus_SdkV2) {
+func (toState *SyncedTableTriggeredUpdateStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncedTableTriggeredUpdateStatus_SdkV2) {
+	if !fromState.TriggeredUpdateProgress.IsNull() && !fromState.TriggeredUpdateProgress.IsUnknown() {
+		if toStateTriggeredUpdateProgress, ok := toState.GetTriggeredUpdateProgress(ctx); ok {
+			if fromStateTriggeredUpdateProgress, ok := fromState.GetTriggeredUpdateProgress(ctx); ok {
+				toStateTriggeredUpdateProgress.SyncFieldsDuringRead(ctx, fromStateTriggeredUpdateProgress)
+				toState.SetTriggeredUpdateProgress(ctx, toStateTriggeredUpdateProgress)
+			}
+		}
+	}
 }
 
 func (c SyncedTableTriggeredUpdateStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
-	attrs["timestamp"] = attrs["timestamp"].SetOptional()
-	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["timestamp"] = attrs["timestamp"].SetComputed()
+	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].SetComputed()
 	attrs["triggered_update_progress"] = attrs["triggered_update_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -3098,7 +3417,8 @@ type UpdateDatabaseInstanceRequest_SdkV2 struct {
 	DatabaseInstance types.List `tfsdk:"database_instance"`
 	// The name of the instance. This is the unique identifier for the instance.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// The list of fields to update. This field is not yet supported, and is
+	// ignored by the server.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

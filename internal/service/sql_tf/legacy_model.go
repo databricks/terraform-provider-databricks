@@ -32,10 +32,10 @@ type AccessControl_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AccessControl_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControl_SdkV2) {
+func (toState *AccessControl_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccessControl_SdkV2) {
 }
 
-func (newState *AccessControl_SdkV2) SyncEffectiveFieldsDuringRead(existingState AccessControl_SdkV2) {
+func (toState *AccessControl_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AccessControl_SdkV2) {
 }
 
 func (c AccessControl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -127,10 +127,26 @@ type Alert_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *Alert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert_SdkV2) {
+func (toState *Alert_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Alert_SdkV2) {
+	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
-func (newState *Alert_SdkV2) SyncEffectiveFieldsDuringRead(existingState Alert_SdkV2) {
+func (toState *Alert_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Alert_SdkV2) {
+	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
 func (c Alert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -255,10 +271,42 @@ type AlertCondition_SdkV2 struct {
 	Threshold types.List `tfsdk:"threshold"`
 }
 
-func (newState *AlertCondition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertCondition_SdkV2) {
+func (toState *AlertCondition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertCondition_SdkV2) {
+	if !fromPlan.Operand.IsNull() && !fromPlan.Operand.IsUnknown() {
+		if toStateOperand, ok := toState.GetOperand(ctx); ok {
+			if fromPlanOperand, ok := fromPlan.GetOperand(ctx); ok {
+				toStateOperand.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOperand)
+				toState.SetOperand(ctx, toStateOperand)
+			}
+		}
+	}
+	if !fromPlan.Threshold.IsNull() && !fromPlan.Threshold.IsUnknown() {
+		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
+			if fromPlanThreshold, ok := fromPlan.GetThreshold(ctx); ok {
+				toStateThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanThreshold)
+				toState.SetThreshold(ctx, toStateThreshold)
+			}
+		}
+	}
 }
 
-func (newState *AlertCondition_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertCondition_SdkV2) {
+func (toState *AlertCondition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertCondition_SdkV2) {
+	if !fromState.Operand.IsNull() && !fromState.Operand.IsUnknown() {
+		if toStateOperand, ok := toState.GetOperand(ctx); ok {
+			if fromStateOperand, ok := fromState.GetOperand(ctx); ok {
+				toStateOperand.SyncFieldsDuringRead(ctx, fromStateOperand)
+				toState.SetOperand(ctx, toStateOperand)
+			}
+		}
+	}
+	if !fromState.Threshold.IsNull() && !fromState.Threshold.IsUnknown() {
+		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
+			if fromStateThreshold, ok := fromState.GetThreshold(ctx); ok {
+				toStateThreshold.SyncFieldsDuringRead(ctx, fromStateThreshold)
+				toState.SetThreshold(ctx, toStateThreshold)
+			}
+		}
+	}
 }
 
 func (c AlertCondition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -372,10 +420,26 @@ type AlertConditionOperand_SdkV2 struct {
 	Column types.List `tfsdk:"column"`
 }
 
-func (newState *AlertConditionOperand_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionOperand_SdkV2) {
+func (toState *AlertConditionOperand_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertConditionOperand_SdkV2) {
+	if !fromPlan.Column.IsNull() && !fromPlan.Column.IsUnknown() {
+		if toStateColumn, ok := toState.GetColumn(ctx); ok {
+			if fromPlanColumn, ok := fromPlan.GetColumn(ctx); ok {
+				toStateColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanColumn)
+				toState.SetColumn(ctx, toStateColumn)
+			}
+		}
+	}
 }
 
-func (newState *AlertConditionOperand_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertConditionOperand_SdkV2) {
+func (toState *AlertConditionOperand_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertConditionOperand_SdkV2) {
+	if !fromState.Column.IsNull() && !fromState.Column.IsUnknown() {
+		if toStateColumn, ok := toState.GetColumn(ctx); ok {
+			if fromStateColumn, ok := fromState.GetColumn(ctx); ok {
+				toStateColumn.SyncFieldsDuringRead(ctx, fromStateColumn)
+				toState.SetColumn(ctx, toStateColumn)
+			}
+		}
+	}
 }
 
 func (c AlertConditionOperand_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -450,10 +514,26 @@ type AlertConditionThreshold_SdkV2 struct {
 	Value types.List `tfsdk:"value"`
 }
 
-func (newState *AlertConditionThreshold_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionThreshold_SdkV2) {
+func (toState *AlertConditionThreshold_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertConditionThreshold_SdkV2) {
+	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
-func (newState *AlertConditionThreshold_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertConditionThreshold_SdkV2) {
+func (toState *AlertConditionThreshold_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertConditionThreshold_SdkV2) {
+	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromStateValue, ok := fromState.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
 func (c AlertConditionThreshold_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -528,10 +608,10 @@ type AlertOperandColumn_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *AlertOperandColumn_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOperandColumn_SdkV2) {
+func (toState *AlertOperandColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOperandColumn_SdkV2) {
 }
 
-func (newState *AlertOperandColumn_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertOperandColumn_SdkV2) {
+func (toState *AlertOperandColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertOperandColumn_SdkV2) {
 }
 
 func (c AlertOperandColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -579,10 +659,10 @@ type AlertOperandValue_SdkV2 struct {
 	StringValue types.String `tfsdk:"string_value"`
 }
 
-func (newState *AlertOperandValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOperandValue_SdkV2) {
+func (toState *AlertOperandValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOperandValue_SdkV2) {
 }
 
-func (newState *AlertOperandValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertOperandValue_SdkV2) {
+func (toState *AlertOperandValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertOperandValue_SdkV2) {
 }
 
 func (c AlertOperandValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -656,10 +736,10 @@ type AlertOptions_SdkV2 struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *AlertOptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOptions_SdkV2) {
+func (toState *AlertOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOptions_SdkV2) {
 }
 
-func (newState *AlertOptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertOptions_SdkV2) {
+func (toState *AlertOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertOptions_SdkV2) {
 }
 
 func (c AlertOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -759,10 +839,26 @@ type AlertQuery_SdkV2 struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *AlertQuery_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertQuery_SdkV2) {
+func (toState *AlertQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertQuery_SdkV2) {
+	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
 }
 
-func (newState *AlertQuery_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertQuery_SdkV2) {
+func (toState *AlertQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertQuery_SdkV2) {
+	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
 }
 
 func (c AlertQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -933,10 +1029,42 @@ type AlertV2_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *AlertV2_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2_SdkV2) {
+func (toState *AlertV2_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2_SdkV2) {
+	if !fromPlan.Evaluation.IsNull() && !fromPlan.Evaluation.IsUnknown() {
+		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
+			if fromPlanEvaluation, ok := fromPlan.GetEvaluation(ctx); ok {
+				toStateEvaluation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEvaluation)
+				toState.SetEvaluation(ctx, toStateEvaluation)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
 }
 
-func (newState *AlertV2_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2_SdkV2) {
+func (toState *AlertV2_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2_SdkV2) {
+	if !fromState.Evaluation.IsNull() && !fromState.Evaluation.IsUnknown() {
+		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
+			if fromStateEvaluation, ok := fromState.GetEvaluation(ctx); ok {
+				toStateEvaluation.SyncFieldsDuringRead(ctx, fromStateEvaluation)
+				toState.SetEvaluation(ctx, toStateEvaluation)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
 }
 
 func (c AlertV2_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1093,10 +1221,58 @@ type AlertV2Evaluation_SdkV2 struct {
 	Threshold types.List `tfsdk:"threshold"`
 }
 
-func (newState *AlertV2Evaluation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Evaluation_SdkV2) {
+func (toState *AlertV2Evaluation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Evaluation_SdkV2) {
+	if !fromPlan.Notification.IsNull() && !fromPlan.Notification.IsUnknown() {
+		if toStateNotification, ok := toState.GetNotification(ctx); ok {
+			if fromPlanNotification, ok := fromPlan.GetNotification(ctx); ok {
+				toStateNotification.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotification)
+				toState.SetNotification(ctx, toStateNotification)
+			}
+		}
+	}
+	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromPlan.Threshold.IsNull() && !fromPlan.Threshold.IsUnknown() {
+		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
+			if fromPlanThreshold, ok := fromPlan.GetThreshold(ctx); ok {
+				toStateThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanThreshold)
+				toState.SetThreshold(ctx, toStateThreshold)
+			}
+		}
+	}
 }
 
-func (newState *AlertV2Evaluation_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2Evaluation_SdkV2) {
+func (toState *AlertV2Evaluation_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Evaluation_SdkV2) {
+	if !fromState.Notification.IsNull() && !fromState.Notification.IsUnknown() {
+		if toStateNotification, ok := toState.GetNotification(ctx); ok {
+			if fromStateNotification, ok := fromState.GetNotification(ctx); ok {
+				toStateNotification.SyncFieldsDuringRead(ctx, fromStateNotification)
+				toState.SetNotification(ctx, toStateNotification)
+			}
+		}
+	}
+	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
+		if toStateSource, ok := toState.GetSource(ctx); ok {
+			if fromStateSource, ok := fromState.GetSource(ctx); ok {
+				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
+				toState.SetSource(ctx, toStateSource)
+			}
+		}
+	}
+	if !fromState.Threshold.IsNull() && !fromState.Threshold.IsUnknown() {
+		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
+			if fromStateThreshold, ok := fromState.GetThreshold(ctx); ok {
+				toStateThreshold.SyncFieldsDuringRead(ctx, fromStateThreshold)
+				toState.SetThreshold(ctx, toStateThreshold)
+			}
+		}
+	}
 }
 
 func (c AlertV2Evaluation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1256,10 +1432,10 @@ type AlertV2Notification_SdkV2 struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *AlertV2Notification_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Notification_SdkV2) {
+func (toState *AlertV2Notification_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Notification_SdkV2) {
 }
 
-func (newState *AlertV2Notification_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2Notification_SdkV2) {
+func (toState *AlertV2Notification_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Notification_SdkV2) {
 }
 
 func (c AlertV2Notification_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1341,10 +1517,42 @@ type AlertV2Operand_SdkV2 struct {
 	Value types.List `tfsdk:"value"`
 }
 
-func (newState *AlertV2Operand_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Operand_SdkV2) {
+func (toState *AlertV2Operand_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Operand_SdkV2) {
+	if !fromPlan.Column.IsNull() && !fromPlan.Column.IsUnknown() {
+		if toStateColumn, ok := toState.GetColumn(ctx); ok {
+			if fromPlanColumn, ok := fromPlan.GetColumn(ctx); ok {
+				toStateColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanColumn)
+				toState.SetColumn(ctx, toStateColumn)
+			}
+		}
+	}
+	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
-func (newState *AlertV2Operand_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2Operand_SdkV2) {
+func (toState *AlertV2Operand_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Operand_SdkV2) {
+	if !fromState.Column.IsNull() && !fromState.Column.IsUnknown() {
+		if toStateColumn, ok := toState.GetColumn(ctx); ok {
+			if fromStateColumn, ok := fromState.GetColumn(ctx); ok {
+				toStateColumn.SyncFieldsDuringRead(ctx, fromStateColumn)
+				toState.SetColumn(ctx, toStateColumn)
+			}
+		}
+	}
+	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromStateValue, ok := fromState.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
 func (c AlertV2Operand_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1456,10 +1664,10 @@ type AlertV2OperandColumn_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *AlertV2OperandColumn_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2OperandColumn_SdkV2) {
+func (toState *AlertV2OperandColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2OperandColumn_SdkV2) {
 }
 
-func (newState *AlertV2OperandColumn_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2OperandColumn_SdkV2) {
+func (toState *AlertV2OperandColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2OperandColumn_SdkV2) {
 }
 
 func (c AlertV2OperandColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1513,10 +1721,10 @@ type AlertV2OperandValue_SdkV2 struct {
 	StringValue types.String `tfsdk:"string_value"`
 }
 
-func (newState *AlertV2OperandValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2OperandValue_SdkV2) {
+func (toState *AlertV2OperandValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2OperandValue_SdkV2) {
 }
 
-func (newState *AlertV2OperandValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2OperandValue_SdkV2) {
+func (toState *AlertV2OperandValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2OperandValue_SdkV2) {
 }
 
 func (c AlertV2OperandValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1568,10 +1776,10 @@ type AlertV2Subscription_SdkV2 struct {
 	UserEmail types.String `tfsdk:"user_email"`
 }
 
-func (newState *AlertV2Subscription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Subscription_SdkV2) {
+func (toState *AlertV2Subscription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Subscription_SdkV2) {
 }
 
-func (newState *AlertV2Subscription_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertV2Subscription_SdkV2) {
+func (toState *AlertV2Subscription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Subscription_SdkV2) {
 }
 
 func (c AlertV2Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1629,10 +1837,10 @@ type BaseChunkInfo_SdkV2 struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (newState *BaseChunkInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseChunkInfo_SdkV2) {
+func (toState *BaseChunkInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseChunkInfo_SdkV2) {
 }
 
-func (newState *BaseChunkInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState BaseChunkInfo_SdkV2) {
+func (toState *BaseChunkInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState BaseChunkInfo_SdkV2) {
 }
 
 func (c BaseChunkInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1756,10 +1964,10 @@ type Channel_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *Channel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channel_SdkV2) {
+func (toState *Channel_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Channel_SdkV2) {
 }
 
-func (newState *Channel_SdkV2) SyncEffectiveFieldsDuringRead(existingState Channel_SdkV2) {
+func (toState *Channel_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Channel_SdkV2) {
 }
 
 func (c Channel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1810,10 +2018,10 @@ type ChannelInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ChannelInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChannelInfo_SdkV2) {
+func (toState *ChannelInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ChannelInfo_SdkV2) {
 }
 
-func (newState *ChannelInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ChannelInfo_SdkV2) {
+func (toState *ChannelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ChannelInfo_SdkV2) {
 }
 
 func (c ChannelInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1878,10 +2086,10 @@ type ClientConfig_SdkV2 struct {
 	HidePlotlyModeBar types.Bool `tfsdk:"hide_plotly_mode_bar"`
 }
 
-func (newState *ClientConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClientConfig_SdkV2) {
+func (toState *ClientConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClientConfig_SdkV2) {
 }
 
-func (newState *ClientConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClientConfig_SdkV2) {
+func (toState *ClientConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ClientConfig_SdkV2) {
 }
 
 func (c ClientConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1968,10 +2176,10 @@ type ColumnInfo_SdkV2 struct {
 	TypeText types.String `tfsdk:"type_text"`
 }
 
-func (newState *ColumnInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo_SdkV2) {
+func (toState *ColumnInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnInfo_SdkV2) {
 }
 
-func (newState *ColumnInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ColumnInfo_SdkV2) {
+func (toState *ColumnInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ColumnInfo_SdkV2) {
 }
 
 func (c ColumnInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2212,10 +2420,26 @@ type CreateAlertRequestAlert_SdkV2 struct {
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
-func (newState *CreateAlertRequestAlert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertRequestAlert_SdkV2) {
+func (toState *CreateAlertRequestAlert_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAlertRequestAlert_SdkV2) {
+	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
-func (newState *CreateAlertRequestAlert_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAlertRequestAlert_SdkV2) {
+func (toState *CreateAlertRequestAlert_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateAlertRequestAlert_SdkV2) {
+	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
 func (c CreateAlertRequestAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2471,10 +2695,10 @@ type CreateQueryRequestQuery_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *CreateQueryRequestQuery_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryRequestQuery_SdkV2) {
+func (toState *CreateQueryRequestQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateQueryRequestQuery_SdkV2) {
 }
 
-func (newState *CreateQueryRequestQuery_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateQueryRequestQuery_SdkV2) {
+func (toState *CreateQueryRequestQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateQueryRequestQuery_SdkV2) {
 }
 
 func (c CreateQueryRequestQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2742,10 +2966,10 @@ type CreateVisualizationRequestVisualization_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *CreateVisualizationRequestVisualization_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVisualizationRequestVisualization_SdkV2) {
+func (toState *CreateVisualizationRequestVisualization_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateVisualizationRequestVisualization_SdkV2) {
 }
 
-func (newState *CreateVisualizationRequestVisualization_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVisualizationRequestVisualization_SdkV2) {
+func (toState *CreateVisualizationRequestVisualization_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateVisualizationRequestVisualization_SdkV2) {
 }
 
 func (c CreateVisualizationRequestVisualization_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2978,10 +3202,10 @@ type CreateWarehouseResponse_SdkV2 struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *CreateWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWarehouseResponse_SdkV2) {
+func (toState *CreateWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateWarehouseResponse_SdkV2) {
 }
 
-func (newState *CreateWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateWarehouseResponse_SdkV2) {
+func (toState *CreateWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateWarehouseResponse_SdkV2) {
 }
 
 func (c CreateWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3120,10 +3344,10 @@ type CronSchedule_SdkV2 struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule_SdkV2) {
+func (toState *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule_SdkV2) {
 }
 
-func (newState *CronSchedule_SdkV2) SyncEffectiveFieldsDuringRead(existingState CronSchedule_SdkV2) {
+func (toState *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule_SdkV2) {
 }
 
 func (c CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3218,10 +3442,42 @@ type Dashboard_SdkV2 struct {
 	Widgets types.List `tfsdk:"widgets"`
 }
 
-func (newState *Dashboard_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard_SdkV2) {
+func (toState *Dashboard_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dashboard_SdkV2) {
+	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
-func (newState *Dashboard_SdkV2) SyncEffectiveFieldsDuringRead(existingState Dashboard_SdkV2) {
+func (toState *Dashboard_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Dashboard_SdkV2) {
+	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromStateUser, ok := fromState.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
 func (c Dashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3515,10 +3771,10 @@ type DashboardOptions_SdkV2 struct {
 	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at"`
 }
 
-func (newState *DashboardOptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardOptions_SdkV2) {
+func (toState *DashboardOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardOptions_SdkV2) {
 }
 
-func (newState *DashboardOptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState DashboardOptions_SdkV2) {
+func (toState *DashboardOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DashboardOptions_SdkV2) {
 }
 
 func (c DashboardOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3558,96 +3814,6 @@ func (o DashboardOptions_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DashboardPostContent_SdkV2 struct {
-	// Indicates whether the dashboard filters are enabled
-	DashboardFiltersEnabled types.Bool `tfsdk:"dashboard_filters_enabled"`
-	// Indicates whether this dashboard object should appear in the current
-	// user's favorites list.
-	IsFavorite types.Bool `tfsdk:"is_favorite"`
-	// The title of this dashboard that appears in list views and at the top of
-	// the dashboard page.
-	Name types.String `tfsdk:"name"`
-	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent"`
-	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
-	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
-	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role"`
-
-	Tags types.List `tfsdk:"tags"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardPostContent.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DashboardPostContent_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardPostContent_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DashboardPostContent_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"dashboard_filters_enabled": o.DashboardFiltersEnabled,
-			"is_favorite":               o.IsFavorite,
-			"name":                      o.Name,
-			"parent":                    o.Parent,
-			"run_as_role":               o.RunAsRole,
-			"tags":                      o.Tags,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DashboardPostContent_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"dashboard_filters_enabled": types.BoolType,
-			"is_favorite":               types.BoolType,
-			"name":                      types.StringType,
-			"parent":                    types.StringType,
-			"run_as_role":               types.StringType,
-			"tags": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
-}
-
-// GetTags returns the value of the Tags field in DashboardPostContent_SdkV2 as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *DashboardPostContent_SdkV2) GetTags(ctx context.Context) ([]types.String, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Tags.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTags sets the value of the Tags field in DashboardPostContent_SdkV2.
-func (o *DashboardPostContent_SdkV2) SetTags(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.ListValueMust(t, vs)
-}
-
 // A JSON object representing a DBSQL data source / SQL warehouse.
 type DataSource_SdkV2 struct {
 	// Data source ID maps to the ID of the data source used by the resource and
@@ -3676,10 +3842,10 @@ type DataSource_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *DataSource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataSource_SdkV2) {
+func (toState *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataSource_SdkV2) {
 }
 
-func (newState *DataSource_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataSource_SdkV2) {
+func (toState *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DataSource_SdkV2) {
 }
 
 func (c DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3749,10 +3915,10 @@ type DateRange_SdkV2 struct {
 	Start types.String `tfsdk:"start"`
 }
 
-func (newState *DateRange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRange_SdkV2) {
+func (toState *DateRange_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateRange_SdkV2) {
 }
 
-func (newState *DateRange_SdkV2) SyncEffectiveFieldsDuringRead(existingState DateRange_SdkV2) {
+func (toState *DateRange_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DateRange_SdkV2) {
 }
 
 func (c DateRange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3807,10 +3973,26 @@ type DateRangeValue_SdkV2 struct {
 	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week"`
 }
 
-func (newState *DateRangeValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRangeValue_SdkV2) {
+func (toState *DateRangeValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateRangeValue_SdkV2) {
+	if !fromPlan.DateRangeValue.IsNull() && !fromPlan.DateRangeValue.IsUnknown() {
+		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
+			if fromPlanDateRangeValue, ok := fromPlan.GetDateRangeValue(ctx); ok {
+				toStateDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateRangeValue)
+				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+			}
+		}
+	}
 }
 
-func (newState *DateRangeValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState DateRangeValue_SdkV2) {
+func (toState *DateRangeValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DateRangeValue_SdkV2) {
+	if !fromState.DateRangeValue.IsNull() && !fromState.DateRangeValue.IsUnknown() {
+		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
+			if fromStateDateRangeValue, ok := fromState.GetDateRangeValue(ctx); ok {
+				toStateDateRangeValue.SyncFieldsDuringRead(ctx, fromStateDateRangeValue)
+				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+			}
+		}
+	}
 }
 
 func (c DateRangeValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3900,10 +4082,10 @@ type DateValue_SdkV2 struct {
 	Precision types.String `tfsdk:"precision"`
 }
 
-func (newState *DateValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateValue_SdkV2) {
+func (toState *DateValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateValue_SdkV2) {
 }
 
-func (newState *DateValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState DateValue_SdkV2) {
+func (toState *DateValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DateValue_SdkV2) {
 }
 
 func (c DateValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4129,10 +4311,10 @@ func (o DeleteQueryVisualizationsLegacyRequest_SdkV2) Type(ctx context.Context) 
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
+func (toState *DeleteResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse_SdkV2) {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
+func (toState *DeleteResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse_SdkV2) {
 }
 
 func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4241,10 +4423,10 @@ func (o DeleteWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteWarehouseResponse_SdkV2 struct {
 }
 
-func (newState *DeleteWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWarehouseResponse_SdkV2) {
+func (toState *DeleteWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteWarehouseResponse_SdkV2) {
 }
 
-func (newState *DeleteWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteWarehouseResponse_SdkV2) {
+func (toState *DeleteWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteWarehouseResponse_SdkV2) {
 }
 
 func (c DeleteWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4543,10 +4725,10 @@ func (o *EditWarehouseRequest_SdkV2) SetTags(ctx context.Context, v EndpointTags
 type EditWarehouseResponse_SdkV2 struct {
 }
 
-func (newState *EditWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditWarehouseResponse_SdkV2) {
+func (toState *EditWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditWarehouseResponse_SdkV2) {
 }
 
-func (newState *EditWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditWarehouseResponse_SdkV2) {
+func (toState *EditWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EditWarehouseResponse_SdkV2) {
 }
 
 func (c EditWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4586,10 +4768,10 @@ func (o EditWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type Empty_SdkV2 struct {
 }
 
-func (newState *Empty_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty_SdkV2) {
+func (toState *Empty_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Empty_SdkV2) {
 }
 
-func (newState *Empty_SdkV2) SyncEffectiveFieldsDuringRead(existingState Empty_SdkV2) {
+func (toState *Empty_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Empty_SdkV2) {
 }
 
 func (c Empty_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4630,10 +4812,10 @@ type EndpointConfPair_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *EndpointConfPair_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointConfPair_SdkV2) {
+func (toState *EndpointConfPair_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointConfPair_SdkV2) {
 }
 
-func (newState *EndpointConfPair_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointConfPair_SdkV2) {
+func (toState *EndpointConfPair_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointConfPair_SdkV2) {
 }
 
 func (c EndpointConfPair_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4691,10 +4873,26 @@ type EndpointHealth_SdkV2 struct {
 	Summary types.String `tfsdk:"summary"`
 }
 
-func (newState *EndpointHealth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointHealth_SdkV2) {
+func (toState *EndpointHealth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointHealth_SdkV2) {
+	if !fromPlan.FailureReason.IsNull() && !fromPlan.FailureReason.IsUnknown() {
+		if toStateFailureReason, ok := toState.GetFailureReason(ctx); ok {
+			if fromPlanFailureReason, ok := fromPlan.GetFailureReason(ctx); ok {
+				toStateFailureReason.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFailureReason)
+				toState.SetFailureReason(ctx, toStateFailureReason)
+			}
+		}
+	}
 }
 
-func (newState *EndpointHealth_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointHealth_SdkV2) {
+func (toState *EndpointHealth_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointHealth_SdkV2) {
+	if !fromState.FailureReason.IsNull() && !fromState.FailureReason.IsUnknown() {
+		if toStateFailureReason, ok := toState.GetFailureReason(ctx); ok {
+			if fromStateFailureReason, ok := fromState.GetFailureReason(ctx); ok {
+				toStateFailureReason.SyncFieldsDuringRead(ctx, fromStateFailureReason)
+				toState.SetFailureReason(ctx, toStateFailureReason)
+			}
+		}
+	}
 }
 
 func (c EndpointHealth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4854,10 +5052,74 @@ type EndpointInfo_SdkV2 struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (newState *EndpointInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo_SdkV2) {
+func (toState *EndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointInfo_SdkV2) {
+	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.OdbcParams.IsNull() && !fromPlan.OdbcParams.IsUnknown() {
+		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
+			if fromPlanOdbcParams, ok := fromPlan.GetOdbcParams(ctx); ok {
+				toStateOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOdbcParams)
+				toState.SetOdbcParams(ctx, toStateOdbcParams)
+			}
+		}
+	}
+	if !fromPlan.Tags.IsNull() && !fromPlan.Tags.IsUnknown() {
+		if toStateTags, ok := toState.GetTags(ctx); ok {
+			if fromPlanTags, ok := fromPlan.GetTags(ctx); ok {
+				toStateTags.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTags)
+				toState.SetTags(ctx, toStateTags)
+			}
+		}
+	}
 }
 
-func (newState *EndpointInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointInfo_SdkV2) {
+func (toState *EndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointInfo_SdkV2) {
+	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.OdbcParams.IsNull() && !fromState.OdbcParams.IsUnknown() {
+		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
+			if fromStateOdbcParams, ok := fromState.GetOdbcParams(ctx); ok {
+				toStateOdbcParams.SyncFieldsDuringRead(ctx, fromStateOdbcParams)
+				toState.SetOdbcParams(ctx, toStateOdbcParams)
+			}
+		}
+	}
+	if !fromState.Tags.IsNull() && !fromState.Tags.IsUnknown() {
+		if toStateTags, ok := toState.GetTags(ctx); ok {
+			if fromStateTags, ok := fromState.GetTags(ctx); ok {
+				toStateTags.SyncFieldsDuringRead(ctx, fromStateTags)
+				toState.SetTags(ctx, toStateTags)
+			}
+		}
+	}
 }
 
 func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5081,10 +5343,10 @@ type EndpointTagPair_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *EndpointTagPair_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTagPair_SdkV2) {
+func (toState *EndpointTagPair_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTagPair_SdkV2) {
 }
 
-func (newState *EndpointTagPair_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTagPair_SdkV2) {
+func (toState *EndpointTagPair_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTagPair_SdkV2) {
 }
 
 func (c EndpointTagPair_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5131,10 +5393,10 @@ type EndpointTags_SdkV2 struct {
 	CustomTags types.List `tfsdk:"custom_tags"`
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags_SdkV2) {
+func (toState *EndpointTags_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTags_SdkV2) {
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTags_SdkV2) {
+func (toState *EndpointTags_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTags_SdkV2) {
 }
 
 func (c EndpointTags_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5213,10 +5475,26 @@ type EnumValue_SdkV2 struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *EnumValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnumValue_SdkV2) {
+func (toState *EnumValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnumValue_SdkV2) {
+	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
-func (newState *EnumValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnumValue_SdkV2) {
+func (toState *EnumValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EnumValue_SdkV2) {
+	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
 func (c EnumValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5562,10 +5840,10 @@ type ExternalLink_SdkV2 struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (newState *ExternalLink_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLink_SdkV2) {
+func (toState *ExternalLink_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLink_SdkV2) {
 }
 
-func (newState *ExternalLink_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalLink_SdkV2) {
+func (toState *ExternalLink_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLink_SdkV2) {
 }
 
 func (c ExternalLink_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5676,10 +5954,26 @@ type ExternalQuerySource_SdkV2 struct {
 	SqlQueryId types.String `tfsdk:"sql_query_id"`
 }
 
-func (newState *ExternalQuerySource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalQuerySource_SdkV2) {
+func (toState *ExternalQuerySource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalQuerySource_SdkV2) {
+	if !fromPlan.JobInfo.IsNull() && !fromPlan.JobInfo.IsUnknown() {
+		if toStateJobInfo, ok := toState.GetJobInfo(ctx); ok {
+			if fromPlanJobInfo, ok := fromPlan.GetJobInfo(ctx); ok {
+				toStateJobInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJobInfo)
+				toState.SetJobInfo(ctx, toStateJobInfo)
+			}
+		}
+	}
 }
 
-func (newState *ExternalQuerySource_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalQuerySource_SdkV2) {
+func (toState *ExternalQuerySource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalQuerySource_SdkV2) {
+	if !fromState.JobInfo.IsNull() && !fromState.JobInfo.IsUnknown() {
+		if toStateJobInfo, ok := toState.GetJobInfo(ctx); ok {
+			if fromStateJobInfo, ok := fromState.GetJobInfo(ctx); ok {
+				toStateJobInfo.SyncFieldsDuringRead(ctx, fromStateJobInfo)
+				toState.SetJobInfo(ctx, toStateJobInfo)
+			}
+		}
+	}
 }
 
 func (c ExternalQuerySource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5778,10 +6072,10 @@ type ExternalQuerySourceJobInfo_SdkV2 struct {
 	JobTaskRunId types.String `tfsdk:"job_task_run_id"`
 }
 
-func (newState *ExternalQuerySourceJobInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalQuerySourceJobInfo_SdkV2) {
+func (toState *ExternalQuerySourceJobInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalQuerySourceJobInfo_SdkV2) {
 }
 
-func (newState *ExternalQuerySourceJobInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalQuerySourceJobInfo_SdkV2) {
+func (toState *ExternalQuerySourceJobInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalQuerySourceJobInfo_SdkV2) {
 }
 
 func (c ExternalQuerySourceJobInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6115,10 +6409,10 @@ type GetResponse_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *GetResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetResponse_SdkV2) {
+func (toState *GetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetResponse_SdkV2) {
 }
 
-func (newState *GetResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetResponse_SdkV2) {
+func (toState *GetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetResponse_SdkV2) {
 }
 
 func (c GetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6312,10 +6606,10 @@ type GetWarehousePermissionLevelsResponse_SdkV2 struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetWarehousePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehousePermissionLevelsResponse_SdkV2) {
+func (toState *GetWarehousePermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWarehousePermissionLevelsResponse_SdkV2) {
 }
 
-func (newState *GetWarehousePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionLevelsResponse_SdkV2) {
+func (toState *GetWarehousePermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetWarehousePermissionLevelsResponse_SdkV2) {
 }
 
 func (c GetWarehousePermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6532,10 +6826,74 @@ type GetWarehouseResponse_SdkV2 struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (newState *GetWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehouseResponse_SdkV2) {
+func (toState *GetWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWarehouseResponse_SdkV2) {
+	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.OdbcParams.IsNull() && !fromPlan.OdbcParams.IsUnknown() {
+		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
+			if fromPlanOdbcParams, ok := fromPlan.GetOdbcParams(ctx); ok {
+				toStateOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOdbcParams)
+				toState.SetOdbcParams(ctx, toStateOdbcParams)
+			}
+		}
+	}
+	if !fromPlan.Tags.IsNull() && !fromPlan.Tags.IsUnknown() {
+		if toStateTags, ok := toState.GetTags(ctx); ok {
+			if fromPlanTags, ok := fromPlan.GetTags(ctx); ok {
+				toStateTags.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTags)
+				toState.SetTags(ctx, toStateTags)
+			}
+		}
+	}
 }
 
-func (newState *GetWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWarehouseResponse_SdkV2) {
+func (toState *GetWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetWarehouseResponse_SdkV2) {
+	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.OdbcParams.IsNull() && !fromState.OdbcParams.IsUnknown() {
+		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
+			if fromStateOdbcParams, ok := fromState.GetOdbcParams(ctx); ok {
+				toStateOdbcParams.SyncFieldsDuringRead(ctx, fromStateOdbcParams)
+				toState.SetOdbcParams(ctx, toStateOdbcParams)
+			}
+		}
+	}
+	if !fromState.Tags.IsNull() && !fromState.Tags.IsUnknown() {
+		if toStateTags, ok := toState.GetTags(ctx); ok {
+			if fromStateTags, ok := fromState.GetTags(ctx); ok {
+				toStateTags.SyncFieldsDuringRead(ctx, fromStateTags)
+				toState.SetTags(ctx, toStateTags)
+			}
+		}
+	}
 }
 
 func (c GetWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6811,10 +7169,74 @@ type GetWorkspaceWarehouseConfigResponse_SdkV2 struct {
 	SqlConfigurationParameters types.List `tfsdk:"sql_configuration_parameters"`
 }
 
-func (newState *GetWorkspaceWarehouseConfigResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceWarehouseConfigResponse_SdkV2) {
+func (toState *GetWorkspaceWarehouseConfigResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceWarehouseConfigResponse_SdkV2) {
+	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromPlan.ConfigParam.IsNull() && !fromPlan.ConfigParam.IsUnknown() {
+		if toStateConfigParam, ok := toState.GetConfigParam(ctx); ok {
+			if fromPlanConfigParam, ok := fromPlan.GetConfigParam(ctx); ok {
+				toStateConfigParam.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfigParam)
+				toState.SetConfigParam(ctx, toStateConfigParam)
+			}
+		}
+	}
+	if !fromPlan.GlobalParam.IsNull() && !fromPlan.GlobalParam.IsUnknown() {
+		if toStateGlobalParam, ok := toState.GetGlobalParam(ctx); ok {
+			if fromPlanGlobalParam, ok := fromPlan.GetGlobalParam(ctx); ok {
+				toStateGlobalParam.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGlobalParam)
+				toState.SetGlobalParam(ctx, toStateGlobalParam)
+			}
+		}
+	}
+	if !fromPlan.SqlConfigurationParameters.IsNull() && !fromPlan.SqlConfigurationParameters.IsUnknown() {
+		if toStateSqlConfigurationParameters, ok := toState.GetSqlConfigurationParameters(ctx); ok {
+			if fromPlanSqlConfigurationParameters, ok := fromPlan.GetSqlConfigurationParameters(ctx); ok {
+				toStateSqlConfigurationParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlConfigurationParameters)
+				toState.SetSqlConfigurationParameters(ctx, toStateSqlConfigurationParameters)
+			}
+		}
+	}
 }
 
-func (newState *GetWorkspaceWarehouseConfigResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceWarehouseConfigResponse_SdkV2) {
+func (toState *GetWorkspaceWarehouseConfigResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceWarehouseConfigResponse_SdkV2) {
+	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
+		if toStateChannel, ok := toState.GetChannel(ctx); ok {
+			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
+				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
+				toState.SetChannel(ctx, toStateChannel)
+			}
+		}
+	}
+	if !fromState.ConfigParam.IsNull() && !fromState.ConfigParam.IsUnknown() {
+		if toStateConfigParam, ok := toState.GetConfigParam(ctx); ok {
+			if fromStateConfigParam, ok := fromState.GetConfigParam(ctx); ok {
+				toStateConfigParam.SyncFieldsDuringRead(ctx, fromStateConfigParam)
+				toState.SetConfigParam(ctx, toStateConfigParam)
+			}
+		}
+	}
+	if !fromState.GlobalParam.IsNull() && !fromState.GlobalParam.IsUnknown() {
+		if toStateGlobalParam, ok := toState.GetGlobalParam(ctx); ok {
+			if fromStateGlobalParam, ok := fromState.GetGlobalParam(ctx); ok {
+				toStateGlobalParam.SyncFieldsDuringRead(ctx, fromStateGlobalParam)
+				toState.SetGlobalParam(ctx, toStateGlobalParam)
+			}
+		}
+	}
+	if !fromState.SqlConfigurationParameters.IsNull() && !fromState.SqlConfigurationParameters.IsUnknown() {
+		if toStateSqlConfigurationParameters, ok := toState.GetSqlConfigurationParameters(ctx); ok {
+			if fromStateSqlConfigurationParameters, ok := fromState.GetSqlConfigurationParameters(ctx); ok {
+				toStateSqlConfigurationParameters.SyncFieldsDuringRead(ctx, fromStateSqlConfigurationParameters)
+				toState.SetSqlConfigurationParameters(ctx, toStateSqlConfigurationParameters)
+			}
+		}
+	}
 }
 
 func (c GetWorkspaceWarehouseConfigResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7086,10 +7508,58 @@ type LegacyAlert_SdkV2 struct {
 	User types.List `tfsdk:"user"`
 }
 
-func (newState *LegacyAlert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyAlert_SdkV2) {
+func (toState *LegacyAlert_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyAlert_SdkV2) {
+	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
-func (newState *LegacyAlert_SdkV2) SyncEffectiveFieldsDuringRead(existingState LegacyAlert_SdkV2) {
+func (toState *LegacyAlert_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState LegacyAlert_SdkV2) {
+	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromStateUser, ok := fromState.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
 func (c LegacyAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7321,10 +7791,58 @@ type LegacyQuery_SdkV2 struct {
 	Visualizations types.List `tfsdk:"visualizations"`
 }
 
-func (newState *LegacyQuery_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyQuery_SdkV2) {
+func (toState *LegacyQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyQuery_SdkV2) {
+	if !fromPlan.LastModifiedBy.IsNull() && !fromPlan.LastModifiedBy.IsUnknown() {
+		if toStateLastModifiedBy, ok := toState.GetLastModifiedBy(ctx); ok {
+			if fromPlanLastModifiedBy, ok := fromPlan.GetLastModifiedBy(ctx); ok {
+				toStateLastModifiedBy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLastModifiedBy)
+				toState.SetLastModifiedBy(ctx, toStateLastModifiedBy)
+			}
+		}
+	}
+	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
-func (newState *LegacyQuery_SdkV2) SyncEffectiveFieldsDuringRead(existingState LegacyQuery_SdkV2) {
+func (toState *LegacyQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState LegacyQuery_SdkV2) {
+	if !fromState.LastModifiedBy.IsNull() && !fromState.LastModifiedBy.IsUnknown() {
+		if toStateLastModifiedBy, ok := toState.GetLastModifiedBy(ctx); ok {
+			if fromStateLastModifiedBy, ok := fromState.GetLastModifiedBy(ctx); ok {
+				toStateLastModifiedBy.SyncFieldsDuringRead(ctx, fromStateLastModifiedBy)
+				toState.SetLastModifiedBy(ctx, toStateLastModifiedBy)
+			}
+		}
+	}
+	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
+		if toStateUser, ok := toState.GetUser(ctx); ok {
+			if fromStateUser, ok := fromState.GetUser(ctx); ok {
+				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
+				toState.SetUser(ctx, toStateUser)
+			}
+		}
+	}
 }
 
 func (c LegacyQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7609,10 +8127,26 @@ type LegacyVisualization_SdkV2 struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
-func (newState *LegacyVisualization_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyVisualization_SdkV2) {
+func (toState *LegacyVisualization_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyVisualization_SdkV2) {
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
 }
 
-func (newState *LegacyVisualization_SdkV2) SyncEffectiveFieldsDuringRead(existingState LegacyVisualization_SdkV2) {
+func (toState *LegacyVisualization_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState LegacyVisualization_SdkV2) {
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
 }
 
 func (c LegacyVisualization_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7749,10 +8283,10 @@ type ListAlertsResponse_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListAlertsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsResponse_SdkV2) {
+func (toState *ListAlertsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsResponse_SdkV2) {
 }
 
-func (newState *ListAlertsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponse_SdkV2) {
+func (toState *ListAlertsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsResponse_SdkV2) {
 }
 
 func (c ListAlertsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7869,10 +8403,26 @@ type ListAlertsResponseAlert_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *ListAlertsResponseAlert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsResponseAlert_SdkV2) {
+func (toState *ListAlertsResponseAlert_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsResponseAlert_SdkV2) {
+	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
-func (newState *ListAlertsResponseAlert_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponseAlert_SdkV2) {
+func (toState *ListAlertsResponseAlert_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsResponseAlert_SdkV2) {
+	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
 func (c ListAlertsResponseAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8027,10 +8577,10 @@ type ListAlertsV2Response_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListAlertsV2Response_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsV2Response_SdkV2) {
+func (toState *ListAlertsV2Response_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsV2Response_SdkV2) {
 }
 
-func (newState *ListAlertsV2Response_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsV2Response_SdkV2) {
+func (toState *ListAlertsV2Response_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsV2Response_SdkV2) {
 }
 
 func (c ListAlertsV2Response_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8260,10 +8810,10 @@ type ListQueriesResponse_SdkV2 struct {
 	Res types.List `tfsdk:"res"`
 }
 
-func (newState *ListQueriesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueriesResponse_SdkV2) {
+func (toState *ListQueriesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueriesResponse_SdkV2) {
 }
 
-func (newState *ListQueriesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueriesResponse_SdkV2) {
+func (toState *ListQueriesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListQueriesResponse_SdkV2) {
 }
 
 func (c ListQueriesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8431,10 +8981,10 @@ type ListQueryObjectsResponse_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListQueryObjectsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryObjectsResponse_SdkV2) {
+func (toState *ListQueryObjectsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueryObjectsResponse_SdkV2) {
 }
 
-func (newState *ListQueryObjectsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponse_SdkV2) {
+func (toState *ListQueryObjectsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListQueryObjectsResponse_SdkV2) {
 }
 
 func (c ListQueryObjectsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8544,10 +9094,10 @@ type ListQueryObjectsResponseQuery_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *ListQueryObjectsResponseQuery_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryObjectsResponseQuery_SdkV2) {
+func (toState *ListQueryObjectsResponseQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueryObjectsResponseQuery_SdkV2) {
 }
 
-func (newState *ListQueryObjectsResponseQuery_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponseQuery_SdkV2) {
+func (toState *ListQueryObjectsResponseQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListQueryObjectsResponseQuery_SdkV2) {
 }
 
 func (c ListQueryObjectsResponseQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8732,10 +9282,10 @@ type ListResponse_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse_SdkV2) {
+func (toState *ListResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListResponse_SdkV2) {
 }
 
-func (newState *ListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListResponse_SdkV2) {
+func (toState *ListResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListResponse_SdkV2) {
 }
 
 func (c ListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8863,10 +9413,10 @@ type ListVisualizationsForQueryResponse_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListVisualizationsForQueryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVisualizationsForQueryResponse_SdkV2) {
+func (toState *ListVisualizationsForQueryResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListVisualizationsForQueryResponse_SdkV2) {
 }
 
-func (newState *ListVisualizationsForQueryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListVisualizationsForQueryResponse_SdkV2) {
+func (toState *ListVisualizationsForQueryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListVisualizationsForQueryResponse_SdkV2) {
 }
 
 func (c ListVisualizationsForQueryResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8981,10 +9531,10 @@ type ListWarehousesResponse_SdkV2 struct {
 	Warehouses types.List `tfsdk:"warehouses"`
 }
 
-func (newState *ListWarehousesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWarehousesResponse_SdkV2) {
+func (toState *ListWarehousesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListWarehousesResponse_SdkV2) {
 }
 
-func (newState *ListWarehousesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListWarehousesResponse_SdkV2) {
+func (toState *ListWarehousesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListWarehousesResponse_SdkV2) {
 }
 
 func (c ListWarehousesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9064,10 +9614,10 @@ type MultiValuesOptions_SdkV2 struct {
 	Suffix types.String `tfsdk:"suffix"`
 }
 
-func (newState *MultiValuesOptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MultiValuesOptions_SdkV2) {
+func (toState *MultiValuesOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MultiValuesOptions_SdkV2) {
 }
 
-func (newState *MultiValuesOptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState MultiValuesOptions_SdkV2) {
+func (toState *MultiValuesOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MultiValuesOptions_SdkV2) {
 }
 
 func (c MultiValuesOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9117,10 +9667,10 @@ type NumericValue_SdkV2 struct {
 	Value types.Float64 `tfsdk:"value"`
 }
 
-func (newState *NumericValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NumericValue_SdkV2) {
+func (toState *NumericValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NumericValue_SdkV2) {
 }
 
-func (newState *NumericValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState NumericValue_SdkV2) {
+func (toState *NumericValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NumericValue_SdkV2) {
 }
 
 func (c NumericValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9170,10 +9720,10 @@ type OdbcParams_SdkV2 struct {
 	Protocol types.String `tfsdk:"protocol"`
 }
 
-func (newState *OdbcParams_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OdbcParams_SdkV2) {
+func (toState *OdbcParams_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OdbcParams_SdkV2) {
 }
 
-func (newState *OdbcParams_SdkV2) SyncEffectiveFieldsDuringRead(existingState OdbcParams_SdkV2) {
+func (toState *OdbcParams_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState OdbcParams_SdkV2) {
 }
 
 func (c OdbcParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9243,10 +9793,26 @@ type Parameter_SdkV2 struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *Parameter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Parameter_SdkV2) {
+func (toState *Parameter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Parameter_SdkV2) {
+	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
-func (newState *Parameter_SdkV2) SyncEffectiveFieldsDuringRead(existingState Parameter_SdkV2) {
+func (toState *Parameter_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Parameter_SdkV2) {
+	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
 func (c Parameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9374,10 +9940,10 @@ type Query_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Query_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query_SdkV2) {
+func (toState *Query_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Query_SdkV2) {
 }
 
-func (newState *Query_SdkV2) SyncEffectiveFieldsDuringRead(existingState Query_SdkV2) {
+func (toState *Query_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Query_SdkV2) {
 }
 
 func (c Query_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9533,10 +10099,26 @@ type QueryBackedValue_SdkV2 struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *QueryBackedValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryBackedValue_SdkV2) {
+func (toState *QueryBackedValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryBackedValue_SdkV2) {
+	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
-func (newState *QueryBackedValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryBackedValue_SdkV2) {
+func (toState *QueryBackedValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryBackedValue_SdkV2) {
+	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
+		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
+			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
+				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
+				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+			}
+		}
+	}
 }
 
 func (c QueryBackedValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9762,10 +10344,26 @@ type QueryFilter_SdkV2 struct {
 	WarehouseIds types.List `tfsdk:"warehouse_ids"`
 }
 
-func (newState *QueryFilter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryFilter_SdkV2) {
+func (toState *QueryFilter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryFilter_SdkV2) {
+	if !fromPlan.QueryStartTimeRange.IsNull() && !fromPlan.QueryStartTimeRange.IsUnknown() {
+		if toStateQueryStartTimeRange, ok := toState.GetQueryStartTimeRange(ctx); ok {
+			if fromPlanQueryStartTimeRange, ok := fromPlan.GetQueryStartTimeRange(ctx); ok {
+				toStateQueryStartTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryStartTimeRange)
+				toState.SetQueryStartTimeRange(ctx, toStateQueryStartTimeRange)
+			}
+		}
+	}
 }
 
-func (newState *QueryFilter_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryFilter_SdkV2) {
+func (toState *QueryFilter_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryFilter_SdkV2) {
+	if !fromState.QueryStartTimeRange.IsNull() && !fromState.QueryStartTimeRange.IsUnknown() {
+		if toStateQueryStartTimeRange, ok := toState.GetQueryStartTimeRange(ctx); ok {
+			if fromStateQueryStartTimeRange, ok := fromState.GetQueryStartTimeRange(ctx); ok {
+				toStateQueryStartTimeRange.SyncFieldsDuringRead(ctx, fromStateQueryStartTimeRange)
+				toState.SetQueryStartTimeRange(ctx, toStateQueryStartTimeRange)
+			}
+		}
+	}
 }
 
 func (c QueryFilter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10027,10 +10625,58 @@ type QueryInfo_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *QueryInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryInfo_SdkV2) {
+func (toState *QueryInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryInfo_SdkV2) {
+	if !fromPlan.ChannelUsed.IsNull() && !fromPlan.ChannelUsed.IsUnknown() {
+		if toStateChannelUsed, ok := toState.GetChannelUsed(ctx); ok {
+			if fromPlanChannelUsed, ok := fromPlan.GetChannelUsed(ctx); ok {
+				toStateChannelUsed.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannelUsed)
+				toState.SetChannelUsed(ctx, toStateChannelUsed)
+			}
+		}
+	}
+	if !fromPlan.Metrics.IsNull() && !fromPlan.Metrics.IsUnknown() {
+		if toStateMetrics, ok := toState.GetMetrics(ctx); ok {
+			if fromPlanMetrics, ok := fromPlan.GetMetrics(ctx); ok {
+				toStateMetrics.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetrics)
+				toState.SetMetrics(ctx, toStateMetrics)
+			}
+		}
+	}
+	if !fromPlan.QuerySource.IsNull() && !fromPlan.QuerySource.IsUnknown() {
+		if toStateQuerySource, ok := toState.GetQuerySource(ctx); ok {
+			if fromPlanQuerySource, ok := fromPlan.GetQuerySource(ctx); ok {
+				toStateQuerySource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuerySource)
+				toState.SetQuerySource(ctx, toStateQuerySource)
+			}
+		}
+	}
 }
 
-func (newState *QueryInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryInfo_SdkV2) {
+func (toState *QueryInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryInfo_SdkV2) {
+	if !fromState.ChannelUsed.IsNull() && !fromState.ChannelUsed.IsUnknown() {
+		if toStateChannelUsed, ok := toState.GetChannelUsed(ctx); ok {
+			if fromStateChannelUsed, ok := fromState.GetChannelUsed(ctx); ok {
+				toStateChannelUsed.SyncFieldsDuringRead(ctx, fromStateChannelUsed)
+				toState.SetChannelUsed(ctx, toStateChannelUsed)
+			}
+		}
+	}
+	if !fromState.Metrics.IsNull() && !fromState.Metrics.IsUnknown() {
+		if toStateMetrics, ok := toState.GetMetrics(ctx); ok {
+			if fromStateMetrics, ok := fromState.GetMetrics(ctx); ok {
+				toStateMetrics.SyncFieldsDuringRead(ctx, fromStateMetrics)
+				toState.SetMetrics(ctx, toStateMetrics)
+			}
+		}
+	}
+	if !fromState.QuerySource.IsNull() && !fromState.QuerySource.IsUnknown() {
+		if toStateQuerySource, ok := toState.GetQuerySource(ctx); ok {
+			if fromStateQuerySource, ok := fromState.GetQuerySource(ctx); ok {
+				toStateQuerySource.SyncFieldsDuringRead(ctx, fromStateQuerySource)
+				toState.SetQuerySource(ctx, toStateQuerySource)
+			}
+		}
+	}
 }
 
 func (c QueryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10241,10 +10887,10 @@ type QueryList_SdkV2 struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *QueryList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryList_SdkV2) {
+func (toState *QueryList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryList_SdkV2) {
 }
 
-func (newState *QueryList_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryList_SdkV2) {
+func (toState *QueryList_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryList_SdkV2) {
 }
 
 func (c QueryList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10343,6 +10989,9 @@ type QueryMetrics_SdkV2 struct {
 	// projected remaining work to be done aggregated across all stages in the
 	// query, in milliseconds
 	ProjectedRemainingTaskTotalTimeMs types.Int64 `tfsdk:"projected_remaining_task_total_time_ms"`
+	// projected lower bound on remaining total task time based on
+	// projected_remaining_task_total_time_ms / maximum concurrency
+	ProjectedRemainingWallclockTimeMs types.Int64 `tfsdk:"projected_remaining_wallclock_time_ms"`
 	// Timestamp of when the query was enqueued waiting for a cluster to be
 	// provisioned for the warehouse. This field is optional and will not appear
 	// if the query skipped the provisioning queue.
@@ -10401,10 +11050,26 @@ type QueryMetrics_SdkV2 struct {
 	WriteRemoteBytes types.Int64 `tfsdk:"write_remote_bytes"`
 }
 
-func (newState *QueryMetrics_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryMetrics_SdkV2) {
+func (toState *QueryMetrics_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryMetrics_SdkV2) {
+	if !fromPlan.TaskTimeOverTimeRange.IsNull() && !fromPlan.TaskTimeOverTimeRange.IsUnknown() {
+		if toStateTaskTimeOverTimeRange, ok := toState.GetTaskTimeOverTimeRange(ctx); ok {
+			if fromPlanTaskTimeOverTimeRange, ok := fromPlan.GetTaskTimeOverTimeRange(ctx); ok {
+				toStateTaskTimeOverTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTaskTimeOverTimeRange)
+				toState.SetTaskTimeOverTimeRange(ctx, toStateTaskTimeOverTimeRange)
+			}
+		}
+	}
 }
 
-func (newState *QueryMetrics_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryMetrics_SdkV2) {
+func (toState *QueryMetrics_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryMetrics_SdkV2) {
+	if !fromState.TaskTimeOverTimeRange.IsNull() && !fromState.TaskTimeOverTimeRange.IsUnknown() {
+		if toStateTaskTimeOverTimeRange, ok := toState.GetTaskTimeOverTimeRange(ctx); ok {
+			if fromStateTaskTimeOverTimeRange, ok := fromState.GetTaskTimeOverTimeRange(ctx); ok {
+				toStateTaskTimeOverTimeRange.SyncFieldsDuringRead(ctx, fromStateTaskTimeOverTimeRange)
+				toState.SetTaskTimeOverTimeRange(ctx, toStateTaskTimeOverTimeRange)
+			}
+		}
+	}
 }
 
 func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10414,6 +11079,7 @@ func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["overloading_queue_start_timestamp"] = attrs["overloading_queue_start_timestamp"].SetOptional()
 	attrs["photon_total_time_ms"] = attrs["photon_total_time_ms"].SetOptional()
 	attrs["projected_remaining_task_total_time_ms"] = attrs["projected_remaining_task_total_time_ms"].SetOptional()
+	attrs["projected_remaining_wallclock_time_ms"] = attrs["projected_remaining_wallclock_time_ms"].SetOptional()
 	attrs["provisioning_queue_start_timestamp"] = attrs["provisioning_queue_start_timestamp"].SetOptional()
 	attrs["pruned_bytes"] = attrs["pruned_bytes"].SetOptional()
 	attrs["pruned_files_count"] = attrs["pruned_files_count"].SetOptional()
@@ -10466,6 +11132,7 @@ func (o QueryMetrics_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"overloading_queue_start_timestamp":      o.OverloadingQueueStartTimestamp,
 			"photon_total_time_ms":                   o.PhotonTotalTimeMs,
 			"projected_remaining_task_total_time_ms": o.ProjectedRemainingTaskTotalTimeMs,
+			"projected_remaining_wallclock_time_ms":  o.ProjectedRemainingWallclockTimeMs,
 			"provisioning_queue_start_timestamp":     o.ProvisioningQueueStartTimestamp,
 			"pruned_bytes":                           o.PrunedBytes,
 			"pruned_files_count":                     o.PrunedFilesCount,
@@ -10500,6 +11167,7 @@ func (o QueryMetrics_SdkV2) Type(ctx context.Context) attr.Type {
 			"overloading_queue_start_timestamp":      types.Int64Type,
 			"photon_total_time_ms":                   types.Int64Type,
 			"projected_remaining_task_total_time_ms": types.Int64Type,
+			"projected_remaining_wallclock_time_ms":  types.Int64Type,
 			"provisioning_queue_start_timestamp":     types.Int64Type,
 			"pruned_bytes":                           types.Int64Type,
 			"pruned_files_count":                     types.Int64Type,
@@ -10566,10 +11234,10 @@ type QueryOptions_SdkV2 struct {
 	Schema types.String `tfsdk:"schema"`
 }
 
-func (newState *QueryOptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryOptions_SdkV2) {
+func (toState *QueryOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryOptions_SdkV2) {
 }
 
-func (newState *QueryOptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryOptions_SdkV2) {
+func (toState *QueryOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryOptions_SdkV2) {
 }
 
 func (c QueryOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10670,10 +11338,106 @@ type QueryParameter_SdkV2 struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *QueryParameter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryParameter_SdkV2) {
+func (toState *QueryParameter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryParameter_SdkV2) {
+	if !fromPlan.DateRangeValue.IsNull() && !fromPlan.DateRangeValue.IsUnknown() {
+		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
+			if fromPlanDateRangeValue, ok := fromPlan.GetDateRangeValue(ctx); ok {
+				toStateDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateRangeValue)
+				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+			}
+		}
+	}
+	if !fromPlan.DateValue.IsNull() && !fromPlan.DateValue.IsUnknown() {
+		if toStateDateValue, ok := toState.GetDateValue(ctx); ok {
+			if fromPlanDateValue, ok := fromPlan.GetDateValue(ctx); ok {
+				toStateDateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateValue)
+				toState.SetDateValue(ctx, toStateDateValue)
+			}
+		}
+	}
+	if !fromPlan.EnumValue.IsNull() && !fromPlan.EnumValue.IsUnknown() {
+		if toStateEnumValue, ok := toState.GetEnumValue(ctx); ok {
+			if fromPlanEnumValue, ok := fromPlan.GetEnumValue(ctx); ok {
+				toStateEnumValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnumValue)
+				toState.SetEnumValue(ctx, toStateEnumValue)
+			}
+		}
+	}
+	if !fromPlan.NumericValue.IsNull() && !fromPlan.NumericValue.IsUnknown() {
+		if toStateNumericValue, ok := toState.GetNumericValue(ctx); ok {
+			if fromPlanNumericValue, ok := fromPlan.GetNumericValue(ctx); ok {
+				toStateNumericValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNumericValue)
+				toState.SetNumericValue(ctx, toStateNumericValue)
+			}
+		}
+	}
+	if !fromPlan.QueryBackedValue.IsNull() && !fromPlan.QueryBackedValue.IsUnknown() {
+		if toStateQueryBackedValue, ok := toState.GetQueryBackedValue(ctx); ok {
+			if fromPlanQueryBackedValue, ok := fromPlan.GetQueryBackedValue(ctx); ok {
+				toStateQueryBackedValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryBackedValue)
+				toState.SetQueryBackedValue(ctx, toStateQueryBackedValue)
+			}
+		}
+	}
+	if !fromPlan.TextValue.IsNull() && !fromPlan.TextValue.IsUnknown() {
+		if toStateTextValue, ok := toState.GetTextValue(ctx); ok {
+			if fromPlanTextValue, ok := fromPlan.GetTextValue(ctx); ok {
+				toStateTextValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTextValue)
+				toState.SetTextValue(ctx, toStateTextValue)
+			}
+		}
+	}
 }
 
-func (newState *QueryParameter_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryParameter_SdkV2) {
+func (toState *QueryParameter_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryParameter_SdkV2) {
+	if !fromState.DateRangeValue.IsNull() && !fromState.DateRangeValue.IsUnknown() {
+		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
+			if fromStateDateRangeValue, ok := fromState.GetDateRangeValue(ctx); ok {
+				toStateDateRangeValue.SyncFieldsDuringRead(ctx, fromStateDateRangeValue)
+				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+			}
+		}
+	}
+	if !fromState.DateValue.IsNull() && !fromState.DateValue.IsUnknown() {
+		if toStateDateValue, ok := toState.GetDateValue(ctx); ok {
+			if fromStateDateValue, ok := fromState.GetDateValue(ctx); ok {
+				toStateDateValue.SyncFieldsDuringRead(ctx, fromStateDateValue)
+				toState.SetDateValue(ctx, toStateDateValue)
+			}
+		}
+	}
+	if !fromState.EnumValue.IsNull() && !fromState.EnumValue.IsUnknown() {
+		if toStateEnumValue, ok := toState.GetEnumValue(ctx); ok {
+			if fromStateEnumValue, ok := fromState.GetEnumValue(ctx); ok {
+				toStateEnumValue.SyncFieldsDuringRead(ctx, fromStateEnumValue)
+				toState.SetEnumValue(ctx, toStateEnumValue)
+			}
+		}
+	}
+	if !fromState.NumericValue.IsNull() && !fromState.NumericValue.IsUnknown() {
+		if toStateNumericValue, ok := toState.GetNumericValue(ctx); ok {
+			if fromStateNumericValue, ok := fromState.GetNumericValue(ctx); ok {
+				toStateNumericValue.SyncFieldsDuringRead(ctx, fromStateNumericValue)
+				toState.SetNumericValue(ctx, toStateNumericValue)
+			}
+		}
+	}
+	if !fromState.QueryBackedValue.IsNull() && !fromState.QueryBackedValue.IsUnknown() {
+		if toStateQueryBackedValue, ok := toState.GetQueryBackedValue(ctx); ok {
+			if fromStateQueryBackedValue, ok := fromState.GetQueryBackedValue(ctx); ok {
+				toStateQueryBackedValue.SyncFieldsDuringRead(ctx, fromStateQueryBackedValue)
+				toState.SetQueryBackedValue(ctx, toStateQueryBackedValue)
+			}
+		}
+	}
+	if !fromState.TextValue.IsNull() && !fromState.TextValue.IsUnknown() {
+		if toStateTextValue, ok := toState.GetTextValue(ctx); ok {
+			if fromStateTextValue, ok := fromState.GetTextValue(ctx); ok {
+				toStateTextValue.SyncFieldsDuringRead(ctx, fromStateTextValue)
+				toState.SetTextValue(ctx, toStateTextValue)
+			}
+		}
+	}
 }
 
 func (c QueryParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11025,10 +11789,10 @@ type RepeatedEndpointConfPairs_SdkV2 struct {
 	ConfigurationPairs types.List `tfsdk:"configuration_pairs"`
 }
 
-func (newState *RepeatedEndpointConfPairs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepeatedEndpointConfPairs_SdkV2) {
+func (toState *RepeatedEndpointConfPairs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepeatedEndpointConfPairs_SdkV2) {
 }
 
-func (newState *RepeatedEndpointConfPairs_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepeatedEndpointConfPairs_SdkV2) {
+func (toState *RepeatedEndpointConfPairs_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RepeatedEndpointConfPairs_SdkV2) {
 }
 
 func (c RepeatedEndpointConfPairs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11203,10 +11967,10 @@ func (o RestoreQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type RestoreResponse_SdkV2 struct {
 }
 
-func (newState *RestoreResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreResponse_SdkV2) {
+func (toState *RestoreResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestoreResponse_SdkV2) {
 }
 
-func (newState *RestoreResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreResponse_SdkV2) {
+func (toState *RestoreResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RestoreResponse_SdkV2) {
 }
 
 func (c RestoreResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11268,10 +12032,10 @@ type ResultData_SdkV2 struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (newState *ResultData_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData_SdkV2) {
+func (toState *ResultData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultData_SdkV2) {
 }
 
-func (newState *ResultData_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResultData_SdkV2) {
+func (toState *ResultData_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResultData_SdkV2) {
 }
 
 func (c ResultData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11413,10 +12177,26 @@ type ResultManifest_SdkV2 struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (newState *ResultManifest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest_SdkV2) {
+func (toState *ResultManifest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultManifest_SdkV2) {
+	if !fromPlan.Schema.IsNull() && !fromPlan.Schema.IsUnknown() {
+		if toStateSchema, ok := toState.GetSchema(ctx); ok {
+			if fromPlanSchema, ok := fromPlan.GetSchema(ctx); ok {
+				toStateSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchema)
+				toState.SetSchema(ctx, toStateSchema)
+			}
+		}
+	}
 }
 
-func (newState *ResultManifest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResultManifest_SdkV2) {
+func (toState *ResultManifest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResultManifest_SdkV2) {
+	if !fromState.Schema.IsNull() && !fromState.Schema.IsUnknown() {
+		if toStateSchema, ok := toState.GetSchema(ctx); ok {
+			if fromStateSchema, ok := fromState.GetSchema(ctx); ok {
+				toStateSchema.SyncFieldsDuringRead(ctx, fromStateSchema)
+				toState.SetSchema(ctx, toStateSchema)
+			}
+		}
+	}
 }
 
 func (c ResultManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11541,10 +12321,10 @@ type ResultSchema_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *ResultSchema_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultSchema_SdkV2) {
+func (toState *ResultSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultSchema_SdkV2) {
 }
 
-func (newState *ResultSchema_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResultSchema_SdkV2) {
+func (toState *ResultSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResultSchema_SdkV2) {
 }
 
 func (c ResultSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11623,10 +12403,10 @@ type ServiceError_SdkV2 struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *ServiceError_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServiceError_SdkV2) {
+func (toState *ServiceError_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServiceError_SdkV2) {
 }
 
-func (newState *ServiceError_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServiceError_SdkV2) {
+func (toState *ServiceError_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServiceError_SdkV2) {
 }
 
 func (c ServiceError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11752,10 +12532,10 @@ type SetResponse_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *SetResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetResponse_SdkV2) {
+func (toState *SetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SetResponse_SdkV2) {
 }
 
-func (newState *SetResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetResponse_SdkV2) {
+func (toState *SetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SetResponse_SdkV2) {
 }
 
 func (c SetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12084,10 +12864,10 @@ func (o *SetWorkspaceWarehouseConfigRequest_SdkV2) SetSqlConfigurationParameters
 type SetWorkspaceWarehouseConfigResponse_SdkV2 struct {
 }
 
-func (newState *SetWorkspaceWarehouseConfigResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetWorkspaceWarehouseConfigResponse_SdkV2) {
+func (toState *SetWorkspaceWarehouseConfigResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SetWorkspaceWarehouseConfigResponse_SdkV2) {
 }
 
-func (newState *SetWorkspaceWarehouseConfigResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetWorkspaceWarehouseConfigResponse_SdkV2) {
+func (toState *SetWorkspaceWarehouseConfigResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SetWorkspaceWarehouseConfigResponse_SdkV2) {
 }
 
 func (c SetWorkspaceWarehouseConfigResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12161,10 +12941,10 @@ func (o StartRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type StartWarehouseResponse_SdkV2 struct {
 }
 
-func (newState *StartWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartWarehouseResponse_SdkV2) {
+func (toState *StartWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartWarehouseResponse_SdkV2) {
 }
 
-func (newState *StartWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartWarehouseResponse_SdkV2) {
+func (toState *StartWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StartWarehouseResponse_SdkV2) {
 }
 
 func (c StartWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12215,10 +12995,10 @@ type StatementParameterListItem_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *StatementParameterListItem_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementParameterListItem_SdkV2) {
+func (toState *StatementParameterListItem_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementParameterListItem_SdkV2) {
 }
 
-func (newState *StatementParameterListItem_SdkV2) SyncEffectiveFieldsDuringRead(existingState StatementParameterListItem_SdkV2) {
+func (toState *StatementParameterListItem_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StatementParameterListItem_SdkV2) {
 }
 
 func (c StatementParameterListItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12275,10 +13055,58 @@ type StatementResponse_SdkV2 struct {
 	Status types.List `tfsdk:"status"`
 }
 
-func (newState *StatementResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementResponse_SdkV2) {
+func (toState *StatementResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementResponse_SdkV2) {
+	if !fromPlan.Manifest.IsNull() && !fromPlan.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromPlanManifest, ok := fromPlan.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *StatementResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StatementResponse_SdkV2) {
+func (toState *StatementResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StatementResponse_SdkV2) {
+	if !fromState.Manifest.IsNull() && !fromState.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromStateManifest, ok := fromState.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringRead(ctx, fromStateManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromStateResult, ok := fromState.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c StatementResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12426,10 +13254,26 @@ type StatementStatus_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *StatementStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementStatus_SdkV2) {
+func (toState *StatementStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementStatus_SdkV2) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
 }
 
-func (newState *StatementStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState StatementStatus_SdkV2) {
+func (toState *StatementStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StatementStatus_SdkV2) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
 }
 
 func (c StatementStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12542,10 +13386,10 @@ func (o StopRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type StopWarehouseResponse_SdkV2 struct {
 }
 
-func (newState *StopWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopWarehouseResponse_SdkV2) {
+func (toState *StopWarehouseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StopWarehouseResponse_SdkV2) {
 }
 
-func (newState *StopWarehouseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopWarehouseResponse_SdkV2) {
+func (toState *StopWarehouseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StopWarehouseResponse_SdkV2) {
 }
 
 func (c StopWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12584,10 +13428,10 @@ type Success_SdkV2 struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (newState *Success_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Success_SdkV2) {
+func (toState *Success_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Success_SdkV2) {
 }
 
-func (newState *Success_SdkV2) SyncEffectiveFieldsDuringRead(existingState Success_SdkV2) {
+func (toState *Success_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Success_SdkV2) {
 }
 
 func (c Success_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12635,10 +13479,10 @@ type TaskTimeOverRange_SdkV2 struct {
 	Interval types.Int64 `tfsdk:"interval"`
 }
 
-func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRange_SdkV2) {
+func (toState *TaskTimeOverRange_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskTimeOverRange_SdkV2) {
 }
 
-func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRange_SdkV2) {
+func (toState *TaskTimeOverRange_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TaskTimeOverRange_SdkV2) {
 }
 
 func (c TaskTimeOverRange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12717,10 +13561,10 @@ type TaskTimeOverRangeEntry_SdkV2 struct {
 	TaskCompletedTimeMs types.Int64 `tfsdk:"task_completed_time_ms"`
 }
 
-func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRangeEntry_SdkV2) {
+func (toState *TaskTimeOverRangeEntry_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskTimeOverRangeEntry_SdkV2) {
 }
 
-func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRangeEntry_SdkV2) {
+func (toState *TaskTimeOverRangeEntry_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TaskTimeOverRangeEntry_SdkV2) {
 }
 
 func (c TaskTimeOverRangeEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12770,10 +13614,10 @@ type TerminationReason_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *TerminationReason_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationReason_SdkV2) {
+func (toState *TerminationReason_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TerminationReason_SdkV2) {
 }
 
-func (newState *TerminationReason_SdkV2) SyncEffectiveFieldsDuringRead(existingState TerminationReason_SdkV2) {
+func (toState *TerminationReason_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TerminationReason_SdkV2) {
 }
 
 func (c TerminationReason_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12853,10 +13697,10 @@ type TextValue_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *TextValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextValue_SdkV2) {
+func (toState *TextValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TextValue_SdkV2) {
 }
 
-func (newState *TextValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState TextValue_SdkV2) {
+func (toState *TextValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TextValue_SdkV2) {
 }
 
 func (c TextValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12903,10 +13747,10 @@ type TimeRange_SdkV2 struct {
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
 }
 
-func (newState *TimeRange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TimeRange_SdkV2) {
+func (toState *TimeRange_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TimeRange_SdkV2) {
 }
 
-func (newState *TimeRange_SdkV2) SyncEffectiveFieldsDuringRead(existingState TimeRange_SdkV2) {
+func (toState *TimeRange_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TimeRange_SdkV2) {
 }
 
 func (c TimeRange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12954,10 +13798,10 @@ type TransferOwnershipObjectId_SdkV2 struct {
 	NewOwner types.String `tfsdk:"new_owner"`
 }
 
-func (newState *TransferOwnershipObjectId_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransferOwnershipObjectId_SdkV2) {
+func (toState *TransferOwnershipObjectId_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TransferOwnershipObjectId_SdkV2) {
 }
 
-func (newState *TransferOwnershipObjectId_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipObjectId_SdkV2) {
+func (toState *TransferOwnershipObjectId_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TransferOwnershipObjectId_SdkV2) {
 }
 
 func (c TransferOwnershipObjectId_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13294,10 +14138,26 @@ type UpdateAlertRequestAlert_SdkV2 struct {
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
-func (newState *UpdateAlertRequestAlert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertRequestAlert_SdkV2) {
+func (toState *UpdateAlertRequestAlert_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateAlertRequestAlert_SdkV2) {
+	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
-func (newState *UpdateAlertRequestAlert_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAlertRequestAlert_SdkV2) {
+func (toState *UpdateAlertRequestAlert_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateAlertRequestAlert_SdkV2) {
+	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
+		if toStateCondition, ok := toState.GetCondition(ctx); ok {
+			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
+				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
+				toState.SetCondition(ctx, toStateCondition)
+			}
+		}
+	}
 }
 
 func (c UpdateAlertRequestAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13589,10 +14449,10 @@ type UpdateQueryRequestQuery_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *UpdateQueryRequestQuery_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateQueryRequestQuery_SdkV2) {
+func (toState *UpdateQueryRequestQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateQueryRequestQuery_SdkV2) {
 }
 
-func (newState *UpdateQueryRequestQuery_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateQueryRequestQuery_SdkV2) {
+func (toState *UpdateQueryRequestQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateQueryRequestQuery_SdkV2) {
 }
 
 func (c UpdateQueryRequestQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13724,10 +14584,10 @@ func (o *UpdateQueryRequestQuery_SdkV2) SetTags(ctx context.Context, v []types.S
 type UpdateResponse_SdkV2 struct {
 }
 
-func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse_SdkV2) {
+func (toState *UpdateResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateResponse_SdkV2) {
 }
 
-func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateResponse_SdkV2) {
+func (toState *UpdateResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateResponse_SdkV2) {
 }
 
 func (c UpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13860,10 +14720,10 @@ type UpdateVisualizationRequestVisualization_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *UpdateVisualizationRequestVisualization_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVisualizationRequestVisualization_SdkV2) {
+func (toState *UpdateVisualizationRequestVisualization_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateVisualizationRequestVisualization_SdkV2) {
 }
 
-func (newState *UpdateVisualizationRequestVisualization_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateVisualizationRequestVisualization_SdkV2) {
+func (toState *UpdateVisualizationRequestVisualization_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateVisualizationRequestVisualization_SdkV2) {
 }
 
 func (c UpdateVisualizationRequestVisualization_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14008,10 +14868,10 @@ type User_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *User_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan User_SdkV2) {
+func (toState *User_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan User_SdkV2) {
 }
 
-func (newState *User_SdkV2) SyncEffectiveFieldsDuringRead(existingState User_SdkV2) {
+func (toState *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState User_SdkV2) {
 }
 
 func (c User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14080,10 +14940,10 @@ type Visualization_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *Visualization_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Visualization_SdkV2) {
+func (toState *Visualization_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Visualization_SdkV2) {
 }
 
-func (newState *Visualization_SdkV2) SyncEffectiveFieldsDuringRead(existingState Visualization_SdkV2) {
+func (toState *Visualization_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Visualization_SdkV2) {
 }
 
 func (c Visualization_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14155,10 +15015,10 @@ type WarehouseAccessControlRequest_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *WarehouseAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseAccessControlRequest_SdkV2) {
+func (toState *WarehouseAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseAccessControlRequest_SdkV2) {
 }
 
-func (newState *WarehouseAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlRequest_SdkV2) {
+func (toState *WarehouseAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseAccessControlRequest_SdkV2) {
 }
 
 func (c WarehouseAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14220,10 +15080,10 @@ type WarehouseAccessControlResponse_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *WarehouseAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseAccessControlResponse_SdkV2) {
+func (toState *WarehouseAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseAccessControlResponse_SdkV2) {
 }
 
-func (newState *WarehouseAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlResponse_SdkV2) {
+func (toState *WarehouseAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseAccessControlResponse_SdkV2) {
 }
 
 func (c WarehouseAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14313,10 +15173,10 @@ type WarehousePermission_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *WarehousePermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermission_SdkV2) {
+func (toState *WarehousePermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermission_SdkV2) {
 }
 
-func (newState *WarehousePermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehousePermission_SdkV2) {
+func (toState *WarehousePermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermission_SdkV2) {
 }
 
 func (c WarehousePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14400,10 +15260,10 @@ type WarehousePermissions_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *WarehousePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermissions_SdkV2) {
+func (toState *WarehousePermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermissions_SdkV2) {
 }
 
-func (newState *WarehousePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehousePermissions_SdkV2) {
+func (toState *WarehousePermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermissions_SdkV2) {
 }
 
 func (c WarehousePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14485,10 +15345,10 @@ type WarehousePermissionsDescription_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *WarehousePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermissionsDescription_SdkV2) {
+func (toState *WarehousePermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermissionsDescription_SdkV2) {
 }
 
-func (newState *WarehousePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehousePermissionsDescription_SdkV2) {
+func (toState *WarehousePermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermissionsDescription_SdkV2) {
 }
 
 func (c WarehousePermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14608,10 +15468,10 @@ type WarehouseTypePair_SdkV2 struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (newState *WarehouseTypePair_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseTypePair_SdkV2) {
+func (toState *WarehouseTypePair_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseTypePair_SdkV2) {
 }
 
-func (newState *WarehouseTypePair_SdkV2) SyncEffectiveFieldsDuringRead(existingState WarehouseTypePair_SdkV2) {
+func (toState *WarehouseTypePair_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseTypePair_SdkV2) {
 }
 
 func (c WarehouseTypePair_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14669,10 +15529,42 @@ type Widget_SdkV2 struct {
 	Width types.Int64 `tfsdk:"width"`
 }
 
-func (newState *Widget_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widget_SdkV2) {
+func (toState *Widget_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Widget_SdkV2) {
+	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromPlan.Visualization.IsNull() && !fromPlan.Visualization.IsUnknown() {
+		if toStateVisualization, ok := toState.GetVisualization(ctx); ok {
+			if fromPlanVisualization, ok := fromPlan.GetVisualization(ctx); ok {
+				toStateVisualization.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVisualization)
+				toState.SetVisualization(ctx, toStateVisualization)
+			}
+		}
+	}
 }
 
-func (newState *Widget_SdkV2) SyncEffectiveFieldsDuringRead(existingState Widget_SdkV2) {
+func (toState *Widget_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Widget_SdkV2) {
+	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
+		if toStateOptions, ok := toState.GetOptions(ctx); ok {
+			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
+				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
+				toState.SetOptions(ctx, toStateOptions)
+			}
+		}
+	}
+	if !fromState.Visualization.IsNull() && !fromState.Visualization.IsUnknown() {
+		if toStateVisualization, ok := toState.GetVisualization(ctx); ok {
+			if fromStateVisualization, ok := fromState.GetVisualization(ctx); ok {
+				toStateVisualization.SyncFieldsDuringRead(ctx, fromStateVisualization)
+				toState.SetVisualization(ctx, toStateVisualization)
+			}
+		}
+	}
 }
 
 func (c Widget_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14802,10 +15694,26 @@ type WidgetOptions_SdkV2 struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
-func (newState *WidgetOptions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetOptions_SdkV2) {
+func (toState *WidgetOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetOptions_SdkV2) {
+	if !fromPlan.Position.IsNull() && !fromPlan.Position.IsUnknown() {
+		if toStatePosition, ok := toState.GetPosition(ctx); ok {
+			if fromPlanPosition, ok := fromPlan.GetPosition(ctx); ok {
+				toStatePosition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPosition)
+				toState.SetPosition(ctx, toStatePosition)
+			}
+		}
+	}
 }
 
-func (newState *WidgetOptions_SdkV2) SyncEffectiveFieldsDuringRead(existingState WidgetOptions_SdkV2) {
+func (toState *WidgetOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WidgetOptions_SdkV2) {
+	if !fromState.Position.IsNull() && !fromState.Position.IsUnknown() {
+		if toStatePosition, ok := toState.GetPosition(ctx); ok {
+			if fromStatePosition, ok := fromState.GetPosition(ctx); ok {
+				toStatePosition.SyncFieldsDuringRead(ctx, fromStatePosition)
+				toState.SetPosition(ctx, toStatePosition)
+			}
+		}
+	}
 }
 
 func (c WidgetOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14909,10 +15817,10 @@ type WidgetPosition_SdkV2 struct {
 	SizeY types.Int64 `tfsdk:"sizeY"`
 }
 
-func (newState *WidgetPosition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetPosition_SdkV2) {
+func (toState *WidgetPosition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetPosition_SdkV2) {
 }
 
-func (newState *WidgetPosition_SdkV2) SyncEffectiveFieldsDuringRead(existingState WidgetPosition_SdkV2) {
+func (toState *WidgetPosition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState WidgetPosition_SdkV2) {
 }
 
 func (c WidgetPosition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

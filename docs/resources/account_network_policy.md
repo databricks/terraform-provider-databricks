@@ -59,7 +59,7 @@ The following arguments are supported:
 * `internet_destination_type` (string, optional) - The type of internet destination. Currently only DNS_NAME is supported. Possible values are: `DNS_NAME`
 
 ### EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement
-* `dry_run_mode_product_filter` (list of , optional) - When empty, it means dry run for all products.
+* `dry_run_mode_product_filter` (list of string, optional) - When empty, it means dry run for all products.
   When non-empty, it means dry run for specific products and for the other products, they will run in enforced mode
 * `enforcement_mode` (string, optional) - The mode of policy enforcement. ENFORCED blocks traffic that violates policy,
   while DRY_RUN only logs violations without blocking. When not specified,
@@ -68,8 +68,8 @@ The following arguments are supported:
 ### EgressNetworkPolicyNetworkAccessPolicyStorageDestination
 * `azure_storage_account` (string, optional) - The Azure storage account name
 * `azure_storage_service` (string, optional) - The Azure storage service type (blob, dfs, etc.)
-* `bucket_name` (string, optional) - 
-* `region` (string, optional) - 
+* `bucket_name` (string, optional)
+* `region` (string, optional)
 * `storage_destination_type` (string, optional) - The type of storage destination. Possible values are: `AWS_S3`, `AZURE_STORAGE`, `GOOGLE_CLOUD_STORAGE`
 
 ### NetworkPolicyEgress

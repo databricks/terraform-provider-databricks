@@ -53,7 +53,7 @@ func getTestBudget() *billing.BudgetConfiguration {
 func TestResourceBudgetCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			api := a.GetMockbudgetsAPI().EXPECT()
+			api := a.GetMockBudgetsAPI().EXPECT()
 			api.Create(mock.Anything, billing.CreateBudgetConfigurationRequest{
 				Budget: billing.CreateBudgetConfigurationBudget{
 					AlertConfigurations: []billing.CreateBudgetConfigurationBudgetAlertConfigurations{
@@ -124,7 +124,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 func TestResourceBudgetRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockbudgetsAPI().EXPECT().
+			a.GetMockBudgetsAPI().EXPECT().
 				GetByBudgetId(mock.Anything, "budget_configuration_id").
 				Return(&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil)
 		},
@@ -154,7 +154,7 @@ func TestResourceBudgetRead_UnpackError(t *testing.T) {
 func TestResourceBudgetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			api := a.GetMockbudgetsAPI().EXPECT()
+			api := a.GetMockBudgetsAPI().EXPECT()
 			api.Update(mock.Anything, billing.UpdateBudgetConfigurationRequest{
 				Budget: billing.UpdateBudgetConfigurationBudget{
 					AccountId: getTestBudget().AccountId,
@@ -233,7 +233,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 func TestResourceBudgetDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockbudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
+			a.GetMockBudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
 		},
 		Resource:  ResourceBudget(),
 		AccountID: "account_id",

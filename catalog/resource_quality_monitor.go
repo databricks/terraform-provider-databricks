@@ -16,7 +16,9 @@ const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
 	return retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
+		endpoint, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
+			TableName: monitorName,
+		})
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -85,7 +87,9 @@ func ResourceQualityMonitor() common.Resource {
 			if err != nil {
 				return err
 			}
-			endpoint, err := w.QualityMonitors.GetByTableName(ctx, d.Id())
+			endpoint, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
+				TableName: d.Id(),
+			})
 			if err != nil {
 				return err
 
@@ -125,7 +129,10 @@ func ResourceQualityMonitor() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.QualityMonitors.DeleteByTableName(ctx, d.Id())
+			_, err = w.QualityMonitors.Delete(ctx, catalog.DeleteQualityMonitorRequest{
+				TableName: d.Id(),
+			})
+			return err
 		},
 		Schema: monitorSchema,
 		Timeouts: &schema.ResourceTimeout{

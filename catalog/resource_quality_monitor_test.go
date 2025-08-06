@@ -34,7 +34,7 @@ func TestQualityMonitorCreateTimeseries(t *testing.T) {
 				Status:                catalog.MonitorInfoStatusMonitorStatusPending,
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
-			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.Get(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:             "test_table",
 				Status:                catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:             "sample.dir",
@@ -82,7 +82,7 @@ func TestQualityMonitorCreateInference(t *testing.T) {
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 			}, nil)
-			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.Get(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "sample.dir",
@@ -128,7 +128,7 @@ func TestQualityMonitorCreateSnapshot(t *testing.T) {
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 			}, nil)
-			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.Get(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "sample.dir",
@@ -151,7 +151,7 @@ func TestQualityMonitorGet(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
-			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.Get(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "new_assets.dir",
@@ -197,7 +197,7 @@ func TestQualityMonitorUpdate(t *testing.T) {
 				},
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
-			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.Get(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "new_assets.dir",
@@ -236,7 +236,7 @@ func TestQualityMonitorDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
-			e.DeleteByTableName(mock.Anything, "test_table").Return(nil)
+			e.Delete(mock.Anything, "test_table").Return(nil, nil)
 		},
 		Resource: ResourceQualityMonitor(),
 		Delete:   true,

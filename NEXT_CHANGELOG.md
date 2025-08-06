@@ -8,6 +8,7 @@
 
 ### New Features and Improvements
 
+* Don't redeploy `databricks_sql_table` for tables with struct subcolumns ([#4001](https://github.com/databricks/terraform-provider-databricks/pull/4001)).
 * Added ability to add `comment` when defining a new `databricks_share` ([#4802](https://github.com/databricks/terraform-provider-databricks/pull/4802))
 * Added output attribute `endpoint_url` in `databricks_model_serving` ([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
 * Deprecate `egg` library type in `databricks_cluster`, `databricks_job`, and `databricks_library` ([#4881](https://github.com/databricks/terraform-provider-databricks/pull/4881)).

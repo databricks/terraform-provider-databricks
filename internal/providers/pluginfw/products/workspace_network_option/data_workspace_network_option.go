@@ -83,7 +83,7 @@ func (r *WorkspaceNetworkOptionDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

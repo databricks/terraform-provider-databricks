@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `anomaly_detection_config` (AnomalyDetectionConfig) - 
+* `anomaly_detection_config` (AnomalyDetectionConfig)
 * `object_id` (string) - The uuid of the request object. For example, schema id
 * `object_type` (string) - The type of the monitored object. Can be one of the following: schema
 

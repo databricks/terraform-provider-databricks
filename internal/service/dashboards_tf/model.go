@@ -39,10 +39,10 @@ type AuthorizationDetails struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetails) {
+func (toState *AuthorizationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetails) {
 }
 
-func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetails) {
+func (toState *AuthorizationDetails) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetails) {
 }
 
 func (c AuthorizationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -128,10 +128,10 @@ type AuthorizationDetailsGrantRule struct {
 	PermissionSet types.String `tfsdk:"permission_set"`
 }
 
-func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetailsGrantRule) {
+func (toState *AuthorizationDetailsGrantRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetailsGrantRule) {
 }
 
-func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetailsGrantRule) {
+func (toState *AuthorizationDetailsGrantRule) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetailsGrantRule) {
 }
 
 func (c AuthorizationDetailsGrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -216,7 +216,7 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
 		return e, false
 	}
-	var v []Dashboard
+	var v Dashboard
 	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -224,10 +224,7 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboard sets the value of the Dashboard field in CreateDashboardRequest.
@@ -286,7 +283,7 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []Schedule
+	var v Schedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -294,10 +291,7 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in CreateScheduleRequest.
@@ -360,7 +354,7 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
 		return e, false
 	}
-	var v []Subscription
+	var v Subscription
 	d := o.Subscription.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -368,10 +362,7 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSubscription sets the value of the Subscription field in CreateSubscriptionRequest.
@@ -393,10 +384,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule) {
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -475,10 +466,10 @@ type Dashboard struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
+func (toState *Dashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dashboard) {
 }
 
-func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
+func (toState *Dashboard) SyncFieldsDuringRead(ctx context.Context, fromState Dashboard) {
 }
 
 func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -650,10 +641,42 @@ type GenieAttachment struct {
 	Text types.Object `tfsdk:"text"`
 }
 
-func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment) {
+func (toState *GenieAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieAttachment) {
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromPlan.Text.IsNull() && !fromPlan.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromPlanText, ok := fromPlan.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
-func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
+func (toState *GenieAttachment) SyncFieldsDuringRead(ctx context.Context, fromState GenieAttachment) {
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromState.Text.IsNull() && !fromState.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromStateText, ok := fromState.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringRead(ctx, fromStateText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
 func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -710,7 +733,7 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (GenieQueryAttachment, b
 	if o.Query.IsNull() || o.Query.IsUnknown() {
 		return e, false
 	}
-	var v []GenieQueryAttachment
+	var v GenieQueryAttachment
 	d := o.Query.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -718,10 +741,7 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (GenieQueryAttachment, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQuery sets the value of the Query field in GenieAttachment.
@@ -738,7 +758,7 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 	if o.Text.IsNull() || o.Text.IsUnknown() {
 		return e, false
 	}
-	var v []TextAttachment
+	var v TextAttachment
 	d := o.Text.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -746,10 +766,7 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetText sets the value of the Text field in GenieAttachment.
@@ -775,10 +792,10 @@ type GenieConversation struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversation) {
+func (toState *GenieConversation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversation) {
 }
 
-func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
+func (toState *GenieConversation) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversation) {
 }
 
 func (c GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -844,10 +861,10 @@ type GenieConversationSummary struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieConversationSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversationSummary) {
+func (toState *GenieConversationSummary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversationSummary) {
 }
 
-func (newState *GenieConversationSummary) SyncEffectiveFieldsDuringRead(existingState GenieConversationSummary) {
+func (toState *GenieConversationSummary) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversationSummary) {
 }
 
 func (c GenieConversationSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1213,10 +1230,26 @@ type GenieGetMessageQueryResultResponse struct {
 	StatementResponse types.Object `tfsdk:"statement_response"`
 }
 
-func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultResponse) {
+func (toState *GenieGetMessageQueryResultResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetMessageQueryResultResponse) {
+	if !fromPlan.StatementResponse.IsNull() && !fromPlan.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromPlanStatementResponse, ok := fromPlan.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
-func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
+func (toState *GenieGetMessageQueryResultResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetMessageQueryResultResponse) {
+	if !fromState.StatementResponse.IsNull() && !fromState.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromStateStatementResponse, ok := fromState.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringRead(ctx, fromStateStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
 func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1266,7 +1299,7 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
 		return e, false
 	}
-	var v []sql_tf.StatementResponse
+	var v sql_tf.StatementResponse
 	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1274,10 +1307,7 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatementResponse sets the value of the StatementResponse field in GenieGetMessageQueryResultResponse.
@@ -1421,10 +1451,10 @@ type GenieListConversationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GenieListConversationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieListConversationsResponse) {
+func (toState *GenieListConversationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationsResponse) {
 }
 
-func (newState *GenieListConversationsResponse) SyncEffectiveFieldsDuringRead(existingState GenieListConversationsResponse) {
+func (toState *GenieListConversationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationsResponse) {
 }
 
 func (c GenieListConversationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1544,10 +1574,10 @@ type GenieListSpacesResponse struct {
 	Spaces types.List `tfsdk:"spaces"`
 }
 
-func (newState *GenieListSpacesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieListSpacesResponse) {
+func (toState *GenieListSpacesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListSpacesResponse) {
 }
 
-func (newState *GenieListSpacesResponse) SyncEffectiveFieldsDuringRead(existingState GenieListSpacesResponse) {
+func (toState *GenieListSpacesResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieListSpacesResponse) {
 }
 
 func (c GenieListSpacesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1649,10 +1679,42 @@ type GenieMessage struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieMessage) {
+func (toState *GenieMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieMessage) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromPlan.QueryResult.IsNull() && !fromPlan.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromPlanQueryResult, ok := fromPlan.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
-func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
+func (toState *GenieMessage) SyncFieldsDuringRead(ctx context.Context, fromState GenieMessage) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromState.QueryResult.IsNull() && !fromState.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromStateQueryResult, ok := fromState.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringRead(ctx, fromStateQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
 func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1765,7 +1827,7 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 	if o.Error.IsNull() || o.Error.IsUnknown() {
 		return e, false
 	}
-	var v []MessageError
+	var v MessageError
 	d := o.Error.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1773,10 +1835,7 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetError sets the value of the Error field in GenieMessage.
@@ -1793,7 +1852,7 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 	if o.QueryResult.IsNull() || o.QueryResult.IsUnknown() {
 		return e, false
 	}
-	var v []Result
+	var v Result
 	d := o.QueryResult.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1801,10 +1860,7 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueryResult sets the value of the QueryResult field in GenieMessage.
@@ -1832,10 +1888,26 @@ type GenieQueryAttachment struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieQueryAttachment) {
+func (toState *GenieQueryAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieQueryAttachment) {
+	if !fromPlan.QueryResultMetadata.IsNull() && !fromPlan.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromPlanQueryResultMetadata, ok := fromPlan.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
-func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringRead(existingState GenieQueryAttachment) {
+func (toState *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, fromState GenieQueryAttachment) {
+	if !fromState.QueryResultMetadata.IsNull() && !fromState.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromStateQueryResultMetadata, ok := fromState.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringRead(ctx, fromStateQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
 func (c GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1903,7 +1975,7 @@ func (o *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (Geni
 	if o.QueryResultMetadata.IsNull() || o.QueryResultMetadata.IsUnknown() {
 		return e, false
 	}
-	var v []GenieResultMetadata
+	var v GenieResultMetadata
 	d := o.QueryResultMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1911,10 +1983,7 @@ func (o *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (Geni
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueryResultMetadata sets the value of the QueryResultMetadata field in GenieQueryAttachment.
@@ -1930,10 +1999,10 @@ type GenieResultMetadata struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieResultMetadata) {
+func (toState *GenieResultMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieResultMetadata) {
 }
 
-func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringRead(existingState GenieResultMetadata) {
+func (toState *GenieResultMetadata) SyncFieldsDuringRead(ctx context.Context, fromState GenieResultMetadata) {
 }
 
 func (c GenieResultMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1985,10 +2054,10 @@ type GenieSpace struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieSpace) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieSpace) {
+func (toState *GenieSpace) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieSpace) {
 }
 
-func (newState *GenieSpace) SyncEffectiveFieldsDuringRead(existingState GenieSpace) {
+func (toState *GenieSpace) SyncFieldsDuringRead(ctx context.Context, fromState GenieSpace) {
 }
 
 func (c GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2085,10 +2154,42 @@ type GenieStartConversationResponse struct {
 	MessageId types.String `tfsdk:"message_id"`
 }
 
-func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationResponse) {
+func (toState *GenieStartConversationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieStartConversationResponse) {
+	if !fromPlan.Conversation.IsNull() && !fromPlan.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromPlanConversation, ok := fromPlan.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromPlan.Message.IsNull() && !fromPlan.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromPlanMessage, ok := fromPlan.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
-func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
+func (toState *GenieStartConversationResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieStartConversationResponse) {
+	if !fromState.Conversation.IsNull() && !fromState.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromStateConversation, ok := fromState.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringRead(ctx, fromStateConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromState.Message.IsNull() && !fromState.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromStateMessage, ok := fromState.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringRead(ctx, fromStateMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
 func (c GenieStartConversationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2148,7 +2249,7 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 	if o.Conversation.IsNull() || o.Conversation.IsUnknown() {
 		return e, false
 	}
-	var v []GenieConversation
+	var v GenieConversation
 	d := o.Conversation.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2156,10 +2257,7 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConversation sets the value of the Conversation field in GenieStartConversationResponse.
@@ -2176,7 +2274,7 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 	if o.Message.IsNull() || o.Message.IsUnknown() {
 		return e, false
 	}
-	var v []GenieMessage
+	var v GenieMessage
 	d := o.Message.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2184,10 +2282,7 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMessage sets the value of the Message field in GenieStartConversationResponse.
@@ -2361,10 +2456,10 @@ type GetPublishedDashboardTokenInfoResponse struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardTokenInfoResponse) {
+func (toState *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedDashboardTokenInfoResponse) {
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardTokenInfoResponse) {
+func (toState *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedDashboardTokenInfoResponse) {
 }
 
 func (c GetPublishedDashboardTokenInfoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2581,10 +2676,10 @@ type ListDashboardsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsResponse) {
+func (toState *ListDashboardsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDashboardsResponse) {
 }
 
-func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+func (toState *ListDashboardsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListDashboardsResponse) {
 }
 
 func (c ListDashboardsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2711,10 +2806,10 @@ type ListSchedulesResponse struct {
 	Schedules types.List `tfsdk:"schedules"`
 }
 
-func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse) {
+func (toState *ListSchedulesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSchedulesResponse) {
 }
 
-func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+func (toState *ListSchedulesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSchedulesResponse) {
 }
 
 func (c ListSchedulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2845,10 +2940,10 @@ type ListSubscriptionsResponse struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse) {
+func (toState *ListSubscriptionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSubscriptionsResponse) {
 }
 
-func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+func (toState *ListSubscriptionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSubscriptionsResponse) {
 }
 
 func (c ListSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2927,10 +3022,10 @@ type MessageError struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan MessageError) {
+func (toState *MessageError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MessageError) {
 }
 
-func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
+func (toState *MessageError) SyncFieldsDuringRead(ctx context.Context, fromState MessageError) {
 }
 
 func (c MessageError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3082,10 +3177,10 @@ type PublishedDashboard struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedDashboard) {
+func (toState *PublishedDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublishedDashboard) {
 }
 
-func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+func (toState *PublishedDashboard) SyncFieldsDuringRead(ctx context.Context, fromState PublishedDashboard) {
 }
 
 func (c PublishedDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3143,18 +3238,21 @@ type Result struct {
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
 	StatementId types.String `tfsdk:"statement_id"`
+	// JWT corresponding to the statement contained in this result
+	StatementIdSignature types.String `tfsdk:"statement_id_signature"`
 }
 
-func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
+func (toState *Result) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Result) {
 }
 
-func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
+func (toState *Result) SyncFieldsDuringRead(ctx context.Context, fromState Result) {
 }
 
 func (c Result) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
 	attrs["row_count"] = attrs["row_count"].SetOptional()
 	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["statement_id_signature"] = attrs["statement_id_signature"].SetOptional()
 
 	return attrs
 }
@@ -3177,9 +3275,10 @@ func (o Result) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_truncated": o.IsTruncated,
-			"row_count":    o.RowCount,
-			"statement_id": o.StatementId,
+			"is_truncated":           o.IsTruncated,
+			"row_count":              o.RowCount,
+			"statement_id":           o.StatementId,
+			"statement_id_signature": o.StatementIdSignature,
 		})
 }
 
@@ -3187,9 +3286,10 @@ func (o Result) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Result) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"is_truncated": types.BoolType,
-			"row_count":    types.Int64Type,
-			"statement_id": types.StringType,
+			"is_truncated":           types.BoolType,
+			"row_count":              types.Int64Type,
+			"statement_id":           types.StringType,
+			"statement_id_signature": types.StringType,
 		},
 	}
 }
@@ -3218,10 +3318,26 @@ type Schedule struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule) {
+func (toState *Schedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Schedule) {
+	if !fromPlan.CronSchedule.IsNull() && !fromPlan.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromPlanCronSchedule, ok := fromPlan.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
-func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
+func (toState *Schedule) SyncFieldsDuringRead(ctx context.Context, fromState Schedule) {
+	if !fromState.CronSchedule.IsNull() && !fromState.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromStateCronSchedule, ok := fromState.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringRead(ctx, fromStateCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
 func (c Schedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3295,7 +3411,7 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.CronSchedule.IsNull() || o.CronSchedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.CronSchedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3303,10 +3419,7 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCronSchedule sets the value of the CronSchedule field in Schedule.
@@ -3324,10 +3437,42 @@ type Subscriber struct {
 	UserSubscriber types.Object `tfsdk:"user_subscriber"`
 }
 
-func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber) {
+func (toState *Subscriber) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscriber) {
+	if !fromPlan.DestinationSubscriber.IsNull() && !fromPlan.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromPlanDestinationSubscriber, ok := fromPlan.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromPlan.UserSubscriber.IsNull() && !fromPlan.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromPlanUserSubscriber, ok := fromPlan.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
+func (toState *Subscriber) SyncFieldsDuringRead(ctx context.Context, fromState Subscriber) {
+	if !fromState.DestinationSubscriber.IsNull() && !fromState.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromStateDestinationSubscriber, ok := fromState.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringRead(ctx, fromStateDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromState.UserSubscriber.IsNull() && !fromState.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromStateUserSubscriber, ok := fromState.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringRead(ctx, fromStateUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3381,7 +3526,7 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 	if o.DestinationSubscriber.IsNull() || o.DestinationSubscriber.IsUnknown() {
 		return e, false
 	}
-	var v []SubscriptionSubscriberDestination
+	var v SubscriptionSubscriberDestination
 	d := o.DestinationSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3389,10 +3534,7 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDestinationSubscriber sets the value of the DestinationSubscriber field in Subscriber.
@@ -3409,7 +3551,7 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 	if o.UserSubscriber.IsNull() || o.UserSubscriber.IsUnknown() {
 		return e, false
 	}
-	var v []SubscriptionSubscriberUser
+	var v SubscriptionSubscriberUser
 	d := o.UserSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3417,10 +3559,7 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetUserSubscriber sets the value of the UserSubscriber field in Subscriber.
@@ -3452,10 +3591,26 @@ type Subscription struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
+func (toState *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscription) {
+	if !fromPlan.Subscriber.IsNull() && !fromPlan.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromPlanSubscriber, ok := fromPlan.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+func (toState *Subscription) SyncFieldsDuringRead(ctx context.Context, fromState Subscription) {
+	if !fromState.Subscriber.IsNull() && !fromState.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromStateSubscriber, ok := fromState.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringRead(ctx, fromStateSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3526,7 +3681,7 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 	if o.Subscriber.IsNull() || o.Subscriber.IsUnknown() {
 		return e, false
 	}
-	var v []Subscriber
+	var v Subscriber
 	d := o.Subscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3534,10 +3689,7 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSubscriber sets the value of the Subscriber field in Subscription.
@@ -3552,10 +3704,10 @@ type SubscriptionSubscriberDestination struct {
 	DestinationId types.String `tfsdk:"destination_id"`
 }
 
-func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberDestination) {
+func (toState *SubscriptionSubscriberDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberDestination) {
 }
 
-func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
+func (toState *SubscriptionSubscriberDestination) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberDestination) {
 }
 
 func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3600,10 +3752,10 @@ type SubscriptionSubscriberUser struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberUser) {
+func (toState *SubscriptionSubscriberUser) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberUser) {
 }
 
-func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+func (toState *SubscriptionSubscriberUser) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberUser) {
 }
 
 func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3650,10 +3802,10 @@ type TextAttachment struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextAttachment) {
+func (toState *TextAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TextAttachment) {
 }
 
-func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
+func (toState *TextAttachment) SyncFieldsDuringRead(ctx context.Context, fromState TextAttachment) {
 }
 
 func (c TextAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3735,10 +3887,10 @@ func (o TrashDashboardRequest) Type(ctx context.Context) attr.Type {
 type TrashDashboardResponse struct {
 }
 
-func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashDashboardResponse) {
+func (toState *TrashDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TrashDashboardResponse) {
 }
 
-func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
+func (toState *TrashDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState TrashDashboardResponse) {
 }
 
 func (c TrashDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3812,10 +3964,10 @@ func (o UnpublishDashboardRequest) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardResponse struct {
 }
 
-func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpublishDashboardResponse) {
+func (toState *UnpublishDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnpublishDashboardResponse) {
 }
 
-func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
+func (toState *UnpublishDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState UnpublishDashboardResponse) {
 }
 
 func (c UnpublishDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3899,7 +4051,7 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
 		return e, false
 	}
-	var v []Dashboard
+	var v Dashboard
 	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3907,10 +4059,7 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboard sets the value of the Dashboard field in UpdateDashboardRequest.
@@ -3973,7 +4122,7 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []Schedule
+	var v Schedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3981,10 +4130,7 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in UpdateScheduleRequest.

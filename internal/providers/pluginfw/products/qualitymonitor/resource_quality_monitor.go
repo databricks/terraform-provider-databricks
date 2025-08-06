@@ -35,7 +35,9 @@ func ResourceQualityMonitor() resource.Resource {
 
 func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
 	updatedMonitor, err := retries.Poll[catalog.MonitorInfo](ctx, qualityMonitorDefaultProvisionTimeout, func() (*catalog.MonitorInfo, *retries.Err) {
-		newMonitor, err := w.QualityMonitors.GetByTableName(ctx, monitor.TableName)
+		newMonitor, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
+			TableName: monitor.TableName,
+		})
 		if err != nil {
 			return nil, retries.Halt(fmt.Errorf("failed to get monitor: %s", err))
 		}
@@ -80,7 +82,6 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("assets_dir")
-		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")
 		c.SetReadOnly("drift_metrics_table_name")
 		c.SetReadOnly("profile_metrics_table_name")
@@ -166,7 +167,9 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	endpoint, err := w.QualityMonitors.GetByTableName(ctx, getMonitor.TableName.ValueString())
+	endpoint, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
+		TableName: getMonitor.TableName.ValueString(),
+	})
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
@@ -265,7 +268,9 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	err := w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName.ValueString())
+	_, err := w.QualityMonitors.Delete(ctx, catalog.DeleteQualityMonitorRequest{
+		TableName: deleteRequest.TableName.ValueString(),
+	})
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete monitor", err.Error())
 	}

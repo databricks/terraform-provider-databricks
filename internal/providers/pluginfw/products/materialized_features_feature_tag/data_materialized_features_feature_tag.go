@@ -83,7 +83,7 @@ func (r *FeatureTagDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

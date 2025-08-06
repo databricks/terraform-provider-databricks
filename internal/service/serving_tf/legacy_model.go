@@ -36,10 +36,10 @@ type Ai21LabsConfig_SdkV2 struct {
 	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext"`
 }
 
-func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai21LabsConfig_SdkV2) {
+func (toState *Ai21LabsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Ai21LabsConfig_SdkV2) {
 }
 
-func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState Ai21LabsConfig_SdkV2) {
+func (toState *Ai21LabsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Ai21LabsConfig_SdkV2) {
 }
 
 func (c Ai21LabsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -102,10 +102,74 @@ type AiGatewayConfig_SdkV2 struct {
 	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
-func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayConfig_SdkV2) {
+func (toState *AiGatewayConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayConfig_SdkV2) {
+	if !fromPlan.FallbackConfig.IsNull() && !fromPlan.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromPlanFallbackConfig, ok := fromPlan.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromPlan.Guardrails.IsNull() && !fromPlan.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromPlanGuardrails, ok := fromPlan.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromPlan.InferenceTableConfig.IsNull() && !fromPlan.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromPlanInferenceTableConfig, ok := fromPlan.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromPlan.UsageTrackingConfig.IsNull() && !fromPlan.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromPlanUsageTrackingConfig, ok := fromPlan.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
 }
 
-func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayConfig_SdkV2) {
+func (toState *AiGatewayConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayConfig_SdkV2) {
+	if !fromState.FallbackConfig.IsNull() && !fromState.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromStateFallbackConfig, ok := fromState.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringRead(ctx, fromStateFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromState.Guardrails.IsNull() && !fromState.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromStateGuardrails, ok := fromState.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringRead(ctx, fromStateGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromState.InferenceTableConfig.IsNull() && !fromState.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromStateInferenceTableConfig, ok := fromState.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringRead(ctx, fromStateInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromState.UsageTrackingConfig.IsNull() && !fromState.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromStateUsageTrackingConfig, ok := fromState.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringRead(ctx, fromStateUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
 }
 
 func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -320,10 +384,26 @@ type AiGatewayGuardrailParameters_SdkV2 struct {
 	ValidTopics types.List `tfsdk:"valid_topics"`
 }
 
-func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailParameters_SdkV2) {
+func (toState *AiGatewayGuardrailParameters_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayGuardrailParameters_SdkV2) {
+	if !fromPlan.Pii.IsNull() && !fromPlan.Pii.IsUnknown() {
+		if toStatePii, ok := toState.GetPii(ctx); ok {
+			if fromPlanPii, ok := fromPlan.GetPii(ctx); ok {
+				toStatePii.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPii)
+				toState.SetPii(ctx, toStatePii)
+			}
+		}
+	}
 }
 
-func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailParameters_SdkV2) {
+func (toState *AiGatewayGuardrailParameters_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayGuardrailParameters_SdkV2) {
+	if !fromState.Pii.IsNull() && !fromState.Pii.IsUnknown() {
+		if toStatePii, ok := toState.GetPii(ctx); ok {
+			if fromStatePii, ok := fromState.GetPii(ctx); ok {
+				toStatePii.SyncFieldsDuringRead(ctx, fromStatePii)
+				toState.SetPii(ctx, toStatePii)
+			}
+		}
+	}
 }
 
 func (c AiGatewayGuardrailParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -466,10 +546,10 @@ type AiGatewayGuardrailPiiBehavior_SdkV2 struct {
 	Behavior types.String `tfsdk:"behavior"`
 }
 
-func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailPiiBehavior_SdkV2) {
+func (toState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayGuardrailPiiBehavior_SdkV2) {
 }
 
-func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior_SdkV2) {
+func (toState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayGuardrailPiiBehavior_SdkV2) {
 }
 
 func (c AiGatewayGuardrailPiiBehavior_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -516,10 +596,42 @@ type AiGatewayGuardrails_SdkV2 struct {
 	Output types.List `tfsdk:"output"`
 }
 
-func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrails_SdkV2) {
+func (toState *AiGatewayGuardrails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayGuardrails_SdkV2) {
+	if !fromPlan.Input.IsNull() && !fromPlan.Input.IsUnknown() {
+		if toStateInput, ok := toState.GetInput(ctx); ok {
+			if fromPlanInput, ok := fromPlan.GetInput(ctx); ok {
+				toStateInput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInput)
+				toState.SetInput(ctx, toStateInput)
+			}
+		}
+	}
+	if !fromPlan.Output.IsNull() && !fromPlan.Output.IsUnknown() {
+		if toStateOutput, ok := toState.GetOutput(ctx); ok {
+			if fromPlanOutput, ok := fromPlan.GetOutput(ctx); ok {
+				toStateOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutput)
+				toState.SetOutput(ctx, toStateOutput)
+			}
+		}
+	}
 }
 
-func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrails_SdkV2) {
+func (toState *AiGatewayGuardrails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayGuardrails_SdkV2) {
+	if !fromState.Input.IsNull() && !fromState.Input.IsUnknown() {
+		if toStateInput, ok := toState.GetInput(ctx); ok {
+			if fromStateInput, ok := fromState.GetInput(ctx); ok {
+				toStateInput.SyncFieldsDuringRead(ctx, fromStateInput)
+				toState.SetInput(ctx, toStateInput)
+			}
+		}
+	}
+	if !fromState.Output.IsNull() && !fromState.Output.IsUnknown() {
+		if toStateOutput, ok := toState.GetOutput(ctx); ok {
+			if fromStateOutput, ok := fromState.GetOutput(ctx); ok {
+				toStateOutput.SyncFieldsDuringRead(ctx, fromStateOutput)
+				toState.SetOutput(ctx, toStateOutput)
+			}
+		}
+	}
 }
 
 func (c AiGatewayGuardrails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -639,10 +751,10 @@ type AiGatewayInferenceTableConfig_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayInferenceTableConfig_SdkV2) {
+func (toState *AiGatewayInferenceTableConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayInferenceTableConfig_SdkV2) {
 }
 
-func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayInferenceTableConfig_SdkV2) {
+func (toState *AiGatewayInferenceTableConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayInferenceTableConfig_SdkV2) {
 }
 
 func (c AiGatewayInferenceTableConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -708,10 +820,10 @@ type AiGatewayRateLimit_SdkV2 struct {
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
 }
 
-func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit_SdkV2) {
+func (toState *AiGatewayRateLimit_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayRateLimit_SdkV2) {
 }
 
-func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayRateLimit_SdkV2) {
+func (toState *AiGatewayRateLimit_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayRateLimit_SdkV2) {
 }
 
 func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -765,10 +877,10 @@ type AiGatewayUsageTrackingConfig_SdkV2 struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayUsageTrackingConfig_SdkV2) {
+func (toState *AiGatewayUsageTrackingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayUsageTrackingConfig_SdkV2) {
 }
 
-func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayUsageTrackingConfig_SdkV2) {
+func (toState *AiGatewayUsageTrackingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AiGatewayUsageTrackingConfig_SdkV2) {
 }
 
 func (c AiGatewayUsageTrackingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -848,10 +960,10 @@ type AmazonBedrockConfig_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
-func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig_SdkV2) {
+func (toState *AmazonBedrockConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AmazonBedrockConfig_SdkV2) {
 }
 
-func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AmazonBedrockConfig_SdkV2) {
+func (toState *AmazonBedrockConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AmazonBedrockConfig_SdkV2) {
 }
 
 func (c AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -922,10 +1034,10 @@ type AnthropicConfig_SdkV2 struct {
 	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext"`
 }
 
-func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AnthropicConfig_SdkV2) {
+func (toState *AnthropicConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AnthropicConfig_SdkV2) {
 }
 
-func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AnthropicConfig_SdkV2) {
+func (toState *AnthropicConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AnthropicConfig_SdkV2) {
 }
 
 func (c AnthropicConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -979,10 +1091,10 @@ type ApiKeyAuth_SdkV2 struct {
 	ValuePlaintext types.String `tfsdk:"value_plaintext"`
 }
 
-func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApiKeyAuth_SdkV2) {
+func (toState *ApiKeyAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ApiKeyAuth_SdkV2) {
 }
 
-func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApiKeyAuth_SdkV2) {
+func (toState *ApiKeyAuth_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ApiKeyAuth_SdkV2) {
 }
 
 func (c ApiKeyAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1042,10 +1154,10 @@ type AutoCaptureConfigInput_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigInput_SdkV2) {
+func (toState *AutoCaptureConfigInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AutoCaptureConfigInput_SdkV2) {
 }
 
-func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigInput_SdkV2) {
+func (toState *AutoCaptureConfigInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AutoCaptureConfigInput_SdkV2) {
 }
 
 func (c AutoCaptureConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1110,10 +1222,26 @@ type AutoCaptureConfigOutput_SdkV2 struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
-func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigOutput_SdkV2) {
+func (toState *AutoCaptureConfigOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AutoCaptureConfigOutput_SdkV2) {
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
-func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigOutput_SdkV2) {
+func (toState *AutoCaptureConfigOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AutoCaptureConfigOutput_SdkV2) {
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
 func (c AutoCaptureConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1200,10 +1328,26 @@ type AutoCaptureState_SdkV2 struct {
 	PayloadTable types.List `tfsdk:"payload_table"`
 }
 
-func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureState_SdkV2) {
+func (toState *AutoCaptureState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AutoCaptureState_SdkV2) {
+	if !fromPlan.PayloadTable.IsNull() && !fromPlan.PayloadTable.IsUnknown() {
+		if toStatePayloadTable, ok := toState.GetPayloadTable(ctx); ok {
+			if fromPlanPayloadTable, ok := fromPlan.GetPayloadTable(ctx); ok {
+				toStatePayloadTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPayloadTable)
+				toState.SetPayloadTable(ctx, toStatePayloadTable)
+			}
+		}
+	}
 }
 
-func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureState_SdkV2) {
+func (toState *AutoCaptureState_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AutoCaptureState_SdkV2) {
+	if !fromState.PayloadTable.IsNull() && !fromState.PayloadTable.IsUnknown() {
+		if toStatePayloadTable, ok := toState.GetPayloadTable(ctx); ok {
+			if fromStatePayloadTable, ok := fromState.GetPayloadTable(ctx); ok {
+				toStatePayloadTable.SyncFieldsDuringRead(ctx, fromStatePayloadTable)
+				toState.SetPayloadTable(ctx, toStatePayloadTable)
+			}
+		}
+	}
 }
 
 func (c AutoCaptureState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1283,10 +1427,10 @@ type BearerTokenAuth_SdkV2 struct {
 	TokenPlaintext types.String `tfsdk:"token_plaintext"`
 }
 
-func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BearerTokenAuth_SdkV2) {
+func (toState *BearerTokenAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BearerTokenAuth_SdkV2) {
 }
 
-func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState BearerTokenAuth_SdkV2) {
+func (toState *BearerTokenAuth_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState BearerTokenAuth_SdkV2) {
 }
 
 func (c BearerTokenAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1376,10 +1520,10 @@ type BuildLogsResponse_SdkV2 struct {
 	Logs types.String `tfsdk:"logs"`
 }
 
-func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsResponse_SdkV2) {
+func (toState *BuildLogsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BuildLogsResponse_SdkV2) {
 }
 
-func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState BuildLogsResponse_SdkV2) {
+func (toState *BuildLogsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState BuildLogsResponse_SdkV2) {
 }
 
 func (c BuildLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1426,10 +1570,10 @@ type ChatMessage_SdkV2 struct {
 	Role types.String `tfsdk:"role"`
 }
 
-func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChatMessage_SdkV2) {
+func (toState *ChatMessage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ChatMessage_SdkV2) {
 }
 
-func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState ChatMessage_SdkV2) {
+func (toState *ChatMessage_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ChatMessage_SdkV2) {
 }
 
 func (c ChatMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1488,10 +1632,10 @@ type CohereConfig_SdkV2 struct {
 	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext"`
 }
 
-func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CohereConfig_SdkV2) {
+func (toState *CohereConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CohereConfig_SdkV2) {
 }
 
-func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CohereConfig_SdkV2) {
+func (toState *CohereConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CohereConfig_SdkV2) {
 }
 
 func (c CohereConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1544,6 +1688,8 @@ type CreatePtEndpointRequest_SdkV2 struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The core config of the serving endpoint.
 	Config types.List `tfsdk:"config"`
+	// Email notification settings.
+	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
@@ -1562,9 +1708,10 @@ type CreatePtEndpointRequest_SdkV2 struct {
 // SDK values.
 func (a CreatePtEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ai_gateway": reflect.TypeOf(AiGatewayConfig_SdkV2{}),
-		"config":     reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
-		"tags":       reflect.TypeOf(EndpointTag_SdkV2{}),
+		"ai_gateway":          reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":              reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
+		"tags":                reflect.TypeOf(EndpointTag_SdkV2{}),
 	}
 }
 
@@ -1575,11 +1722,12 @@ func (o CreatePtEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_gateway":       o.AiGateway,
-			"budget_policy_id": o.BudgetPolicyId,
-			"config":           o.Config,
-			"name":             o.Name,
-			"tags":             o.Tags,
+			"ai_gateway":          o.AiGateway,
+			"budget_policy_id":    o.BudgetPolicyId,
+			"config":              o.Config,
+			"email_notifications": o.EmailNotifications,
+			"name":                o.Name,
+			"tags":                o.Tags,
 		})
 }
 
@@ -1593,6 +1741,9 @@ func (o CreatePtEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"budget_policy_id": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"email_notifications": basetypes.ListType{
+				ElemType: EmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"tags": basetypes.ListType{
@@ -1654,6 +1805,32 @@ func (o *CreatePtEndpointRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpo
 	o.Config = types.ListValueMust(t, vs)
 }
 
+// GetEmailNotifications returns the value of the EmailNotifications field in CreatePtEndpointRequest_SdkV2 as
+// a EmailNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetEmailNotifications(ctx context.Context) (EmailNotifications_SdkV2, bool) {
+	var e EmailNotifications_SdkV2
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []EmailNotifications_SdkV2
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetEmailNotifications(ctx context.Context, v EmailNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
 // GetTags returns the value of the Tags field in CreatePtEndpointRequest_SdkV2 as
 // a slice of EndpointTag_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
@@ -1691,6 +1868,8 @@ type CreateServingEndpoint_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 
 	Description types.String `tfsdk:"description"`
+	// Email notification settings.
+	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
@@ -1714,10 +1893,11 @@ type CreateServingEndpoint_SdkV2 struct {
 // SDK values.
 func (a CreateServingEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ai_gateway":  reflect.TypeOf(AiGatewayConfig_SdkV2{}),
-		"config":      reflect.TypeOf(EndpointCoreConfigInput_SdkV2{}),
-		"rate_limits": reflect.TypeOf(RateLimit_SdkV2{}),
-		"tags":        reflect.TypeOf(EndpointTag_SdkV2{}),
+		"ai_gateway":          reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":              reflect.TypeOf(EndpointCoreConfigInput_SdkV2{}),
+		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
+		"rate_limits":         reflect.TypeOf(RateLimit_SdkV2{}),
+		"tags":                reflect.TypeOf(EndpointTag_SdkV2{}),
 	}
 }
 
@@ -1728,14 +1908,15 @@ func (o CreateServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_gateway":       o.AiGateway,
-			"budget_policy_id": o.BudgetPolicyId,
-			"config":           o.Config,
-			"description":      o.Description,
-			"name":             o.Name,
-			"rate_limits":      o.RateLimits,
-			"route_optimized":  o.RouteOptimized,
-			"tags":             o.Tags,
+			"ai_gateway":          o.AiGateway,
+			"budget_policy_id":    o.BudgetPolicyId,
+			"config":              o.Config,
+			"description":         o.Description,
+			"email_notifications": o.EmailNotifications,
+			"name":                o.Name,
+			"rate_limits":         o.RateLimits,
+			"route_optimized":     o.RouteOptimized,
+			"tags":                o.Tags,
 		})
 }
 
@@ -1751,7 +1932,10 @@ func (o CreateServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: EndpointCoreConfigInput_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
-			"name":        types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: EmailNotifications_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit_SdkV2{}.Type(ctx),
 			},
@@ -1813,6 +1997,32 @@ func (o *CreateServingEndpoint_SdkV2) SetConfig(ctx context.Context, v EndpointC
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
 	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in CreateServingEndpoint_SdkV2 as
+// a EmailNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateServingEndpoint_SdkV2) GetEmailNotifications(ctx context.Context) (EmailNotifications_SdkV2, bool) {
+	var e EmailNotifications_SdkV2
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []EmailNotifications_SdkV2
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in CreateServingEndpoint_SdkV2.
+func (o *CreateServingEndpoint_SdkV2) SetEmailNotifications(ctx context.Context, v EmailNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetRateLimits returns the value of the RateLimits field in CreateServingEndpoint_SdkV2 as
@@ -1879,10 +2089,42 @@ type CustomProviderConfig_SdkV2 struct {
 	CustomProviderUrl types.String `tfsdk:"custom_provider_url"`
 }
 
-func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomProviderConfig_SdkV2) {
+func (toState *CustomProviderConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomProviderConfig_SdkV2) {
+	if !fromPlan.ApiKeyAuth.IsNull() && !fromPlan.ApiKeyAuth.IsUnknown() {
+		if toStateApiKeyAuth, ok := toState.GetApiKeyAuth(ctx); ok {
+			if fromPlanApiKeyAuth, ok := fromPlan.GetApiKeyAuth(ctx); ok {
+				toStateApiKeyAuth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanApiKeyAuth)
+				toState.SetApiKeyAuth(ctx, toStateApiKeyAuth)
+			}
+		}
+	}
+	if !fromPlan.BearerTokenAuth.IsNull() && !fromPlan.BearerTokenAuth.IsUnknown() {
+		if toStateBearerTokenAuth, ok := toState.GetBearerTokenAuth(ctx); ok {
+			if fromPlanBearerTokenAuth, ok := fromPlan.GetBearerTokenAuth(ctx); ok {
+				toStateBearerTokenAuth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBearerTokenAuth)
+				toState.SetBearerTokenAuth(ctx, toStateBearerTokenAuth)
+			}
+		}
+	}
 }
 
-func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomProviderConfig_SdkV2) {
+func (toState *CustomProviderConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomProviderConfig_SdkV2) {
+	if !fromState.ApiKeyAuth.IsNull() && !fromState.ApiKeyAuth.IsUnknown() {
+		if toStateApiKeyAuth, ok := toState.GetApiKeyAuth(ctx); ok {
+			if fromStateApiKeyAuth, ok := fromState.GetApiKeyAuth(ctx); ok {
+				toStateApiKeyAuth.SyncFieldsDuringRead(ctx, fromStateApiKeyAuth)
+				toState.SetApiKeyAuth(ctx, toStateApiKeyAuth)
+			}
+		}
+	}
+	if !fromState.BearerTokenAuth.IsNull() && !fromState.BearerTokenAuth.IsUnknown() {
+		if toStateBearerTokenAuth, ok := toState.GetBearerTokenAuth(ctx); ok {
+			if fromStateBearerTokenAuth, ok := fromState.GetBearerTokenAuth(ctx); ok {
+				toStateBearerTokenAuth.SyncFieldsDuringRead(ctx, fromStateBearerTokenAuth)
+				toState.SetBearerTokenAuth(ctx, toStateBearerTokenAuth)
+			}
+		}
+	}
 }
 
 func (c CustomProviderConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1997,10 +2239,10 @@ type DataPlaneInfo_SdkV2 struct {
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 }
 
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneInfo_SdkV2) {
+func (toState *DataPlaneInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataPlaneInfo_SdkV2) {
 }
 
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo_SdkV2) {
+func (toState *DataPlaneInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DataPlaneInfo_SdkV2) {
 }
 
 func (c DataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2063,10 +2305,10 @@ type DatabricksModelServingConfig_SdkV2 struct {
 	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url"`
 }
 
-func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksModelServingConfig_SdkV2) {
+func (toState *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabricksModelServingConfig_SdkV2) {
 }
 
-func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabricksModelServingConfig_SdkV2) {
+func (toState *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DatabricksModelServingConfig_SdkV2) {
 }
 
 func (c DatabricksModelServingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2113,17 +2355,18 @@ func (o DatabricksModelServingConfig_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type DataframeSplitInput_SdkV2 struct {
+	// Columns array for the dataframe
 	Columns types.List `tfsdk:"columns"`
-
+	// Data array for the dataframe
 	Data types.List `tfsdk:"data"`
-
+	// Index array for the dataframe
 	Index types.List `tfsdk:"index"`
 }
 
-func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataframeSplitInput_SdkV2) {
+func (toState *DataframeSplitInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataframeSplitInput_SdkV2) {
 }
 
-func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataframeSplitInput_SdkV2) {
+func (toState *DataframeSplitInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DataframeSplitInput_SdkV2) {
 }
 
 func (c DataframeSplitInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2322,7 +2565,122 @@ func (o DeleteServingEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+type EmailNotifications_SdkV2 struct {
+	// A list of email addresses to be notified when an endpoint fails to update
+	// its configuration or state.
+	OnUpdateFailure types.List `tfsdk:"on_update_failure"`
+	// A list of email addresses to be notified when an endpoint successfully
+	// updates its configuration or state.
+	OnUpdateSuccess types.List `tfsdk:"on_update_success"`
+}
+
+func (toState *EmailNotifications_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmailNotifications_SdkV2) {
+}
+
+func (toState *EmailNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EmailNotifications_SdkV2) {
+}
+
+func (c EmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["on_update_failure"] = attrs["on_update_failure"].SetOptional()
+	attrs["on_update_success"] = attrs["on_update_success"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EmailNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"on_update_failure": reflect.TypeOf(types.String{}),
+		"on_update_success": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EmailNotifications_SdkV2
+// only implements ToObjectValue() and Type().
+func (o EmailNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"on_update_failure": o.OnUpdateFailure,
+			"on_update_success": o.OnUpdateSuccess,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"on_update_failure": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_update_success": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetOnUpdateFailure returns the value of the OnUpdateFailure field in EmailNotifications_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EmailNotifications_SdkV2) GetOnUpdateFailure(ctx context.Context) ([]types.String, bool) {
+	if o.OnUpdateFailure.IsNull() || o.OnUpdateFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnUpdateFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnUpdateFailure sets the value of the OnUpdateFailure field in EmailNotifications_SdkV2.
+func (o *EmailNotifications_SdkV2) SetOnUpdateFailure(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_update_failure"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OnUpdateFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnUpdateSuccess returns the value of the OnUpdateSuccess field in EmailNotifications_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EmailNotifications_SdkV2) GetOnUpdateSuccess(ctx context.Context) ([]types.String, bool) {
+	if o.OnUpdateSuccess.IsNull() || o.OnUpdateSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnUpdateSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnUpdateSuccess sets the value of the OnUpdateSuccess field in EmailNotifications_SdkV2.
+func (o *EmailNotifications_SdkV2) SetOnUpdateSuccess(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_update_success"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.OnUpdateSuccess = types.ListValueMust(t, vs)
+}
+
 type EmbeddingsV1ResponseEmbeddingElement_SdkV2 struct {
+	// The embedding vector
 	Embedding types.List `tfsdk:"embedding"`
 	// The index of the embedding in the response.
 	Index types.Int64 `tfsdk:"index"`
@@ -2330,10 +2688,10 @@ type EmbeddingsV1ResponseEmbeddingElement_SdkV2 struct {
 	Object types.String `tfsdk:"object"`
 }
 
-func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
+func (toState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
 }
 
-func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
+func (toState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
 }
 
 func (c EmbeddingsV1ResponseEmbeddingElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2427,10 +2785,42 @@ type EndpointCoreConfigInput_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput_SdkV2) {
+func (toState *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointCoreConfigInput_SdkV2) {
+	if !fromPlan.AutoCaptureConfig.IsNull() && !fromPlan.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromPlanAutoCaptureConfig, ok := fromPlan.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromPlan.TrafficConfig.IsNull() && !fromPlan.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromPlanTrafficConfig, ok := fromPlan.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
-func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput_SdkV2) {
+func (toState *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointCoreConfigInput_SdkV2) {
+	if !fromState.AutoCaptureConfig.IsNull() && !fromState.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromStateAutoCaptureConfig, ok := fromState.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringRead(ctx, fromStateAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromState.TrafficConfig.IsNull() && !fromState.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromStateTrafficConfig, ok := fromState.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringRead(ctx, fromStateTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
 func (c EndpointCoreConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2619,10 +3009,42 @@ type EndpointCoreConfigOutput_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigOutput_SdkV2) {
+func (toState *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointCoreConfigOutput_SdkV2) {
+	if !fromPlan.AutoCaptureConfig.IsNull() && !fromPlan.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromPlanAutoCaptureConfig, ok := fromPlan.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromPlan.TrafficConfig.IsNull() && !fromPlan.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromPlanTrafficConfig, ok := fromPlan.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
-func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigOutput_SdkV2) {
+func (toState *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointCoreConfigOutput_SdkV2) {
+	if !fromState.AutoCaptureConfig.IsNull() && !fromState.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromStateAutoCaptureConfig, ok := fromState.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringRead(ctx, fromStateAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromState.TrafficConfig.IsNull() && !fromState.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromStateTrafficConfig, ok := fromState.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringRead(ctx, fromStateTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
 func (c EndpointCoreConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2801,10 +3223,10 @@ type EndpointCoreConfigSummary_SdkV2 struct {
 	ServedModels types.List `tfsdk:"served_models"`
 }
 
-func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigSummary_SdkV2) {
+func (toState *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointCoreConfigSummary_SdkV2) {
 }
 
-func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigSummary_SdkV2) {
+func (toState *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointCoreConfigSummary_SdkV2) {
 }
 
 func (c EndpointCoreConfigSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2928,10 +3350,42 @@ type EndpointPendingConfig_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointPendingConfig_SdkV2) {
+func (toState *EndpointPendingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointPendingConfig_SdkV2) {
+	if !fromPlan.AutoCaptureConfig.IsNull() && !fromPlan.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromPlanAutoCaptureConfig, ok := fromPlan.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromPlan.TrafficConfig.IsNull() && !fromPlan.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromPlanTrafficConfig, ok := fromPlan.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
-func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointPendingConfig_SdkV2) {
+func (toState *EndpointPendingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointPendingConfig_SdkV2) {
+	if !fromState.AutoCaptureConfig.IsNull() && !fromState.AutoCaptureConfig.IsUnknown() {
+		if toStateAutoCaptureConfig, ok := toState.GetAutoCaptureConfig(ctx); ok {
+			if fromStateAutoCaptureConfig, ok := fromState.GetAutoCaptureConfig(ctx); ok {
+				toStateAutoCaptureConfig.SyncFieldsDuringRead(ctx, fromStateAutoCaptureConfig)
+				toState.SetAutoCaptureConfig(ctx, toStateAutoCaptureConfig)
+			}
+		}
+	}
+	if !fromState.TrafficConfig.IsNull() && !fromState.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromStateTrafficConfig, ok := fromState.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringRead(ctx, fromStateTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
 func (c EndpointPendingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3119,10 +3573,10 @@ type EndpointState_SdkV2 struct {
 	Ready types.String `tfsdk:"ready"`
 }
 
-func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointState_SdkV2) {
+func (toState *EndpointState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointState_SdkV2) {
 }
 
-func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointState_SdkV2) {
+func (toState *EndpointState_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointState_SdkV2) {
 }
 
 func (c EndpointState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3172,10 +3626,10 @@ type EndpointTag_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTag_SdkV2) {
+func (toState *EndpointTag_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTag_SdkV2) {
 }
 
-func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTag_SdkV2) {
+func (toState *EndpointTag_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTag_SdkV2) {
 }
 
 func (c EndpointTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3222,10 +3676,10 @@ type EndpointTags_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags_SdkV2) {
+func (toState *EndpointTags_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTags_SdkV2) {
 }
 
-func (newState *EndpointTags_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTags_SdkV2) {
+func (toState *EndpointTags_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTags_SdkV2) {
 }
 
 func (c EndpointTags_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3458,10 +3912,154 @@ type ExternalModel_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModel_SdkV2) {
+func (toState *ExternalModel_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalModel_SdkV2) {
+	if !fromPlan.Ai21labsConfig.IsNull() && !fromPlan.Ai21labsConfig.IsUnknown() {
+		if toStateAi21labsConfig, ok := toState.GetAi21labsConfig(ctx); ok {
+			if fromPlanAi21labsConfig, ok := fromPlan.GetAi21labsConfig(ctx); ok {
+				toStateAi21labsConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAi21labsConfig)
+				toState.SetAi21labsConfig(ctx, toStateAi21labsConfig)
+			}
+		}
+	}
+	if !fromPlan.AmazonBedrockConfig.IsNull() && !fromPlan.AmazonBedrockConfig.IsUnknown() {
+		if toStateAmazonBedrockConfig, ok := toState.GetAmazonBedrockConfig(ctx); ok {
+			if fromPlanAmazonBedrockConfig, ok := fromPlan.GetAmazonBedrockConfig(ctx); ok {
+				toStateAmazonBedrockConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAmazonBedrockConfig)
+				toState.SetAmazonBedrockConfig(ctx, toStateAmazonBedrockConfig)
+			}
+		}
+	}
+	if !fromPlan.AnthropicConfig.IsNull() && !fromPlan.AnthropicConfig.IsUnknown() {
+		if toStateAnthropicConfig, ok := toState.GetAnthropicConfig(ctx); ok {
+			if fromPlanAnthropicConfig, ok := fromPlan.GetAnthropicConfig(ctx); ok {
+				toStateAnthropicConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAnthropicConfig)
+				toState.SetAnthropicConfig(ctx, toStateAnthropicConfig)
+			}
+		}
+	}
+	if !fromPlan.CohereConfig.IsNull() && !fromPlan.CohereConfig.IsUnknown() {
+		if toStateCohereConfig, ok := toState.GetCohereConfig(ctx); ok {
+			if fromPlanCohereConfig, ok := fromPlan.GetCohereConfig(ctx); ok {
+				toStateCohereConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCohereConfig)
+				toState.SetCohereConfig(ctx, toStateCohereConfig)
+			}
+		}
+	}
+	if !fromPlan.CustomProviderConfig.IsNull() && !fromPlan.CustomProviderConfig.IsUnknown() {
+		if toStateCustomProviderConfig, ok := toState.GetCustomProviderConfig(ctx); ok {
+			if fromPlanCustomProviderConfig, ok := fromPlan.GetCustomProviderConfig(ctx); ok {
+				toStateCustomProviderConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCustomProviderConfig)
+				toState.SetCustomProviderConfig(ctx, toStateCustomProviderConfig)
+			}
+		}
+	}
+	if !fromPlan.DatabricksModelServingConfig.IsNull() && !fromPlan.DatabricksModelServingConfig.IsUnknown() {
+		if toStateDatabricksModelServingConfig, ok := toState.GetDatabricksModelServingConfig(ctx); ok {
+			if fromPlanDatabricksModelServingConfig, ok := fromPlan.GetDatabricksModelServingConfig(ctx); ok {
+				toStateDatabricksModelServingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabricksModelServingConfig)
+				toState.SetDatabricksModelServingConfig(ctx, toStateDatabricksModelServingConfig)
+			}
+		}
+	}
+	if !fromPlan.GoogleCloudVertexAiConfig.IsNull() && !fromPlan.GoogleCloudVertexAiConfig.IsUnknown() {
+		if toStateGoogleCloudVertexAiConfig, ok := toState.GetGoogleCloudVertexAiConfig(ctx); ok {
+			if fromPlanGoogleCloudVertexAiConfig, ok := fromPlan.GetGoogleCloudVertexAiConfig(ctx); ok {
+				toStateGoogleCloudVertexAiConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGoogleCloudVertexAiConfig)
+				toState.SetGoogleCloudVertexAiConfig(ctx, toStateGoogleCloudVertexAiConfig)
+			}
+		}
+	}
+	if !fromPlan.OpenaiConfig.IsNull() && !fromPlan.OpenaiConfig.IsUnknown() {
+		if toStateOpenaiConfig, ok := toState.GetOpenaiConfig(ctx); ok {
+			if fromPlanOpenaiConfig, ok := fromPlan.GetOpenaiConfig(ctx); ok {
+				toStateOpenaiConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOpenaiConfig)
+				toState.SetOpenaiConfig(ctx, toStateOpenaiConfig)
+			}
+		}
+	}
+	if !fromPlan.PalmConfig.IsNull() && !fromPlan.PalmConfig.IsUnknown() {
+		if toStatePalmConfig, ok := toState.GetPalmConfig(ctx); ok {
+			if fromPlanPalmConfig, ok := fromPlan.GetPalmConfig(ctx); ok {
+				toStatePalmConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPalmConfig)
+				toState.SetPalmConfig(ctx, toStatePalmConfig)
+			}
+		}
+	}
 }
 
-func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModel_SdkV2) {
+func (toState *ExternalModel_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalModel_SdkV2) {
+	if !fromState.Ai21labsConfig.IsNull() && !fromState.Ai21labsConfig.IsUnknown() {
+		if toStateAi21labsConfig, ok := toState.GetAi21labsConfig(ctx); ok {
+			if fromStateAi21labsConfig, ok := fromState.GetAi21labsConfig(ctx); ok {
+				toStateAi21labsConfig.SyncFieldsDuringRead(ctx, fromStateAi21labsConfig)
+				toState.SetAi21labsConfig(ctx, toStateAi21labsConfig)
+			}
+		}
+	}
+	if !fromState.AmazonBedrockConfig.IsNull() && !fromState.AmazonBedrockConfig.IsUnknown() {
+		if toStateAmazonBedrockConfig, ok := toState.GetAmazonBedrockConfig(ctx); ok {
+			if fromStateAmazonBedrockConfig, ok := fromState.GetAmazonBedrockConfig(ctx); ok {
+				toStateAmazonBedrockConfig.SyncFieldsDuringRead(ctx, fromStateAmazonBedrockConfig)
+				toState.SetAmazonBedrockConfig(ctx, toStateAmazonBedrockConfig)
+			}
+		}
+	}
+	if !fromState.AnthropicConfig.IsNull() && !fromState.AnthropicConfig.IsUnknown() {
+		if toStateAnthropicConfig, ok := toState.GetAnthropicConfig(ctx); ok {
+			if fromStateAnthropicConfig, ok := fromState.GetAnthropicConfig(ctx); ok {
+				toStateAnthropicConfig.SyncFieldsDuringRead(ctx, fromStateAnthropicConfig)
+				toState.SetAnthropicConfig(ctx, toStateAnthropicConfig)
+			}
+		}
+	}
+	if !fromState.CohereConfig.IsNull() && !fromState.CohereConfig.IsUnknown() {
+		if toStateCohereConfig, ok := toState.GetCohereConfig(ctx); ok {
+			if fromStateCohereConfig, ok := fromState.GetCohereConfig(ctx); ok {
+				toStateCohereConfig.SyncFieldsDuringRead(ctx, fromStateCohereConfig)
+				toState.SetCohereConfig(ctx, toStateCohereConfig)
+			}
+		}
+	}
+	if !fromState.CustomProviderConfig.IsNull() && !fromState.CustomProviderConfig.IsUnknown() {
+		if toStateCustomProviderConfig, ok := toState.GetCustomProviderConfig(ctx); ok {
+			if fromStateCustomProviderConfig, ok := fromState.GetCustomProviderConfig(ctx); ok {
+				toStateCustomProviderConfig.SyncFieldsDuringRead(ctx, fromStateCustomProviderConfig)
+				toState.SetCustomProviderConfig(ctx, toStateCustomProviderConfig)
+			}
+		}
+	}
+	if !fromState.DatabricksModelServingConfig.IsNull() && !fromState.DatabricksModelServingConfig.IsUnknown() {
+		if toStateDatabricksModelServingConfig, ok := toState.GetDatabricksModelServingConfig(ctx); ok {
+			if fromStateDatabricksModelServingConfig, ok := fromState.GetDatabricksModelServingConfig(ctx); ok {
+				toStateDatabricksModelServingConfig.SyncFieldsDuringRead(ctx, fromStateDatabricksModelServingConfig)
+				toState.SetDatabricksModelServingConfig(ctx, toStateDatabricksModelServingConfig)
+			}
+		}
+	}
+	if !fromState.GoogleCloudVertexAiConfig.IsNull() && !fromState.GoogleCloudVertexAiConfig.IsUnknown() {
+		if toStateGoogleCloudVertexAiConfig, ok := toState.GetGoogleCloudVertexAiConfig(ctx); ok {
+			if fromStateGoogleCloudVertexAiConfig, ok := fromState.GetGoogleCloudVertexAiConfig(ctx); ok {
+				toStateGoogleCloudVertexAiConfig.SyncFieldsDuringRead(ctx, fromStateGoogleCloudVertexAiConfig)
+				toState.SetGoogleCloudVertexAiConfig(ctx, toStateGoogleCloudVertexAiConfig)
+			}
+		}
+	}
+	if !fromState.OpenaiConfig.IsNull() && !fromState.OpenaiConfig.IsUnknown() {
+		if toStateOpenaiConfig, ok := toState.GetOpenaiConfig(ctx); ok {
+			if fromStateOpenaiConfig, ok := fromState.GetOpenaiConfig(ctx); ok {
+				toStateOpenaiConfig.SyncFieldsDuringRead(ctx, fromStateOpenaiConfig)
+				toState.SetOpenaiConfig(ctx, toStateOpenaiConfig)
+			}
+		}
+	}
+	if !fromState.PalmConfig.IsNull() && !fromState.PalmConfig.IsUnknown() {
+		if toStatePalmConfig, ok := toState.GetPalmConfig(ctx); ok {
+			if fromStatePalmConfig, ok := fromState.GetPalmConfig(ctx); ok {
+				toStatePalmConfig.SyncFieldsDuringRead(ctx, fromStatePalmConfig)
+				toState.SetPalmConfig(ctx, toStatePalmConfig)
+			}
+		}
+	}
 }
 
 func (c ExternalModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3814,10 +4412,10 @@ type ExternalModelUsageElement_SdkV2 struct {
 	TotalTokens types.Int64 `tfsdk:"total_tokens"`
 }
 
-func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModelUsageElement_SdkV2) {
+func (toState *ExternalModelUsageElement_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalModelUsageElement_SdkV2) {
 }
 
-func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModelUsageElement_SdkV2) {
+func (toState *ExternalModelUsageElement_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalModelUsageElement_SdkV2) {
 }
 
 func (c ExternalModelUsageElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3873,10 +4471,10 @@ type FallbackConfig_SdkV2 struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FallbackConfig_SdkV2) {
+func (toState *FallbackConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FallbackConfig_SdkV2) {
 }
 
-func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState FallbackConfig_SdkV2) {
+func (toState *FallbackConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState FallbackConfig_SdkV2) {
 }
 
 func (c FallbackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3928,10 +4526,10 @@ type FoundationModel_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FoundationModel_SdkV2) {
+func (toState *FoundationModel_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FoundationModel_SdkV2) {
 }
 
-func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState FoundationModel_SdkV2) {
+func (toState *FoundationModel_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState FoundationModel_SdkV2) {
 }
 
 func (c FoundationModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4093,10 +4691,10 @@ type GetServingEndpointPermissionLevelsResponse_SdkV2 struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsResponse_SdkV2) {
+func (toState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServingEndpointPermissionLevelsResponse_SdkV2) {
 }
 
-func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse_SdkV2) {
+func (toState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetServingEndpointPermissionLevelsResponse_SdkV2) {
 }
 
 func (c GetServingEndpointPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4271,10 +4869,10 @@ type GoogleCloudVertexAiConfig_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GoogleCloudVertexAiConfig_SdkV2) {
+func (toState *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GoogleCloudVertexAiConfig_SdkV2) {
 }
 
-func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GoogleCloudVertexAiConfig_SdkV2) {
+func (toState *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GoogleCloudVertexAiConfig_SdkV2) {
 }
 
 func (c GoogleCloudVertexAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4363,10 +4961,10 @@ type ListEndpointsResponse_SdkV2 struct {
 	Endpoints types.List `tfsdk:"endpoints"`
 }
 
-func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsResponse_SdkV2) {
+func (toState *ListEndpointsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListEndpointsResponse_SdkV2) {
 }
 
-func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointsResponse_SdkV2) {
+func (toState *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListEndpointsResponse_SdkV2) {
 }
 
 func (c ListEndpointsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4515,10 +5113,26 @@ type ModelDataPlaneInfo_SdkV2 struct {
 	QueryInfo types.List `tfsdk:"query_info"`
 }
 
-func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDataPlaneInfo_SdkV2) {
+func (toState *ModelDataPlaneInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ModelDataPlaneInfo_SdkV2) {
+	if !fromPlan.QueryInfo.IsNull() && !fromPlan.QueryInfo.IsUnknown() {
+		if toStateQueryInfo, ok := toState.GetQueryInfo(ctx); ok {
+			if fromPlanQueryInfo, ok := fromPlan.GetQueryInfo(ctx); ok {
+				toStateQueryInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryInfo)
+				toState.SetQueryInfo(ctx, toStateQueryInfo)
+			}
+		}
+	}
 }
 
-func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelDataPlaneInfo_SdkV2) {
+func (toState *ModelDataPlaneInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ModelDataPlaneInfo_SdkV2) {
+	if !fromState.QueryInfo.IsNull() && !fromState.QueryInfo.IsUnknown() {
+		if toStateQueryInfo, ok := toState.GetQueryInfo(ctx); ok {
+			if fromStateQueryInfo, ok := fromState.GetQueryInfo(ctx); ok {
+				toStateQueryInfo.SyncFieldsDuringRead(ctx, fromStateQueryInfo)
+				toState.SetQueryInfo(ctx, toStateQueryInfo)
+			}
+		}
+	}
 }
 
 func (c ModelDataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4644,10 +5258,10 @@ type OpenAiConfig_SdkV2 struct {
 	OpenaiOrganization types.String `tfsdk:"openai_organization"`
 }
 
-func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OpenAiConfig_SdkV2) {
+func (toState *OpenAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OpenAiConfig_SdkV2) {
 }
 
-func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState OpenAiConfig_SdkV2) {
+func (toState *OpenAiConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState OpenAiConfig_SdkV2) {
 }
 
 func (c OpenAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4730,10 +5344,10 @@ type PaLmConfig_SdkV2 struct {
 	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext"`
 }
 
-func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PaLmConfig_SdkV2) {
+func (toState *PaLmConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PaLmConfig_SdkV2) {
 }
 
-func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PaLmConfig_SdkV2) {
+func (toState *PaLmConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PaLmConfig_SdkV2) {
 }
 
 func (c PaLmConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4888,10 +5502,10 @@ type PayloadTable_SdkV2 struct {
 	StatusMessage types.String `tfsdk:"status_message"`
 }
 
-func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PayloadTable_SdkV2) {
+func (toState *PayloadTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PayloadTable_SdkV2) {
 }
 
-func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState PayloadTable_SdkV2) {
+func (toState *PayloadTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PayloadTable_SdkV2) {
 }
 
 func (c PayloadTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4944,10 +5558,26 @@ type PtEndpointCoreConfig_SdkV2 struct {
 	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
-func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
+func (toState *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PtEndpointCoreConfig_SdkV2) {
+	if !fromPlan.TrafficConfig.IsNull() && !fromPlan.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromPlanTrafficConfig, ok := fromPlan.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
-func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
+func (toState *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PtEndpointCoreConfig_SdkV2) {
+	if !fromState.TrafficConfig.IsNull() && !fromState.TrafficConfig.IsUnknown() {
+		if toStateTrafficConfig, ok := toState.GetTrafficConfig(ctx); ok {
+			if fromStateTrafficConfig, ok := fromState.GetTrafficConfig(ctx); ok {
+				toStateTrafficConfig.SyncFieldsDuringRead(ctx, fromStateTrafficConfig)
+				toState.SetTrafficConfig(ctx, toStateTrafficConfig)
+			}
+		}
+	}
 }
 
 func (c PtEndpointCoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5069,10 +5699,10 @@ type PtServedModel_SdkV2 struct {
 	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 }
 
-func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
+func (toState *PtServedModel_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PtServedModel_SdkV2) {
 }
 
-func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtServedModel_SdkV2) {
+func (toState *PtServedModel_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PtServedModel_SdkV2) {
 }
 
 func (c PtServedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5351,10 +5981,74 @@ type PutAiGatewayResponse_SdkV2 struct {
 	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
-func (newState *PutAiGatewayResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayResponse_SdkV2) {
+func (toState *PutAiGatewayResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutAiGatewayResponse_SdkV2) {
+	if !fromPlan.FallbackConfig.IsNull() && !fromPlan.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromPlanFallbackConfig, ok := fromPlan.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromPlan.Guardrails.IsNull() && !fromPlan.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromPlanGuardrails, ok := fromPlan.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromPlan.InferenceTableConfig.IsNull() && !fromPlan.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromPlanInferenceTableConfig, ok := fromPlan.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromPlan.UsageTrackingConfig.IsNull() && !fromPlan.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromPlanUsageTrackingConfig, ok := fromPlan.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
 }
 
-func (newState *PutAiGatewayResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayResponse_SdkV2) {
+func (toState *PutAiGatewayResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PutAiGatewayResponse_SdkV2) {
+	if !fromState.FallbackConfig.IsNull() && !fromState.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromStateFallbackConfig, ok := fromState.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringRead(ctx, fromStateFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromState.Guardrails.IsNull() && !fromState.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromStateGuardrails, ok := fromState.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringRead(ctx, fromStateGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromState.InferenceTableConfig.IsNull() && !fromState.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromStateInferenceTableConfig, ok := fromState.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringRead(ctx, fromStateInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromState.UsageTrackingConfig.IsNull() && !fromState.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromStateUsageTrackingConfig, ok := fromState.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringRead(ctx, fromStateUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
 }
 
 func (c PutAiGatewayResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5632,10 +6326,10 @@ type PutResponse_SdkV2 struct {
 	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse_SdkV2) {
+func (toState *PutResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutResponse_SdkV2) {
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutResponse_SdkV2) {
+func (toState *PutResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PutResponse_SdkV2) {
 }
 
 func (c PutResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5728,15 +6422,16 @@ type QueryEndpointInput_SdkV2 struct {
 	// be used with other chat/completions query fields.
 	MaxTokens types.Int64 `tfsdk:"max_tokens"`
 	// The messages field used ONLY for __chat external & foundation model__
-	// serving endpoints. This is a map of strings and should only be used with
-	// other chat query fields.
+	// serving endpoints. This is an array of ChatMessage objects and should
+	// only be used with other chat query fields.
 	Messages types.List `tfsdk:"messages"`
 	// The n (number of candidates) field used ONLY for __completions__ and
 	// __chat external & foundation model__ serving endpoints. This is an
 	// integer between 1 and 5 with a default of 1 and should only be used with
 	// other chat/completions query fields.
 	N types.Int64 `tfsdk:"n"`
-	// The name of the serving endpoint. This field is required.
+	// The name of the serving endpoint. This field is required and is provided
+	// via the path parameter.
 	Name types.String `tfsdk:"-"`
 	// The prompt string (or array of strings) field used ONLY for __completions
 	// external & foundation model__ serving endpoints and should only be used
@@ -6020,10 +6715,26 @@ type QueryEndpointResponse_SdkV2 struct {
 	Usage types.List `tfsdk:"usage"`
 }
 
-func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointResponse_SdkV2) {
+func (toState *QueryEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryEndpointResponse_SdkV2) {
+	if !fromPlan.Usage.IsNull() && !fromPlan.Usage.IsUnknown() {
+		if toStateUsage, ok := toState.GetUsage(ctx); ok {
+			if fromPlanUsage, ok := fromPlan.GetUsage(ctx); ok {
+				toStateUsage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUsage)
+				toState.SetUsage(ctx, toStateUsage)
+			}
+		}
+	}
 }
 
-func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryEndpointResponse_SdkV2) {
+func (toState *QueryEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryEndpointResponse_SdkV2) {
+	if !fromState.Usage.IsNull() && !fromState.Usage.IsUnknown() {
+		if toStateUsage, ok := toState.GetUsage(ctx); ok {
+			if fromStateUsage, ok := fromState.GetUsage(ctx); ok {
+				toStateUsage.SyncFieldsDuringRead(ctx, fromStateUsage)
+				toState.SetUsage(ctx, toStateUsage)
+			}
+		}
+	}
 }
 
 func (c QueryEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6218,10 +6929,10 @@ type RateLimit_SdkV2 struct {
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
 }
 
-func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RateLimit_SdkV2) {
+func (toState *RateLimit_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RateLimit_SdkV2) {
 }
 
-func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState RateLimit_SdkV2) {
+func (toState *RateLimit_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RateLimit_SdkV2) {
 }
 
 func (c RateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6276,10 +6987,10 @@ type Route_SdkV2 struct {
 	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage"`
 }
 
-func (newState *Route_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route_SdkV2) {
+func (toState *Route_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Route_SdkV2) {
 }
 
-func (newState *Route_SdkV2) SyncEffectiveFieldsDuringRead(existingState Route_SdkV2) {
+func (toState *Route_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Route_SdkV2) {
 }
 
 func (c Route_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6395,10 +7106,26 @@ type ServedEntityInput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityInput_SdkV2) {
+func (toState *ServedEntityInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedEntityInput_SdkV2) {
+	if !fromPlan.ExternalModel.IsNull() && !fromPlan.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromPlanExternalModel, ok := fromPlan.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
 }
 
-func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityInput_SdkV2) {
+func (toState *ServedEntityInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedEntityInput_SdkV2) {
+	if !fromState.ExternalModel.IsNull() && !fromState.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromStateExternalModel, ok := fromState.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringRead(ctx, fromStateExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
 }
 
 func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6614,10 +7341,58 @@ type ServedEntityOutput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityOutput_SdkV2) {
+func (toState *ServedEntityOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedEntityOutput_SdkV2) {
+	if !fromPlan.ExternalModel.IsNull() && !fromPlan.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromPlanExternalModel, ok := fromPlan.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
+	if !fromPlan.FoundationModel.IsNull() && !fromPlan.FoundationModel.IsUnknown() {
+		if toStateFoundationModel, ok := toState.GetFoundationModel(ctx); ok {
+			if fromPlanFoundationModel, ok := fromPlan.GetFoundationModel(ctx); ok {
+				toStateFoundationModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFoundationModel)
+				toState.SetFoundationModel(ctx, toStateFoundationModel)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
-func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityOutput_SdkV2) {
+func (toState *ServedEntityOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedEntityOutput_SdkV2) {
+	if !fromState.ExternalModel.IsNull() && !fromState.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromStateExternalModel, ok := fromState.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringRead(ctx, fromStateExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
+	if !fromState.FoundationModel.IsNull() && !fromState.FoundationModel.IsUnknown() {
+		if toStateFoundationModel, ok := toState.GetFoundationModel(ctx); ok {
+			if fromStateFoundationModel, ok := fromState.GetFoundationModel(ctx); ok {
+				toStateFoundationModel.SyncFieldsDuringRead(ctx, fromStateFoundationModel)
+				toState.SetFoundationModel(ctx, toStateFoundationModel)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
 func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6840,10 +7615,42 @@ type ServedEntitySpec_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntitySpec_SdkV2) {
+func (toState *ServedEntitySpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedEntitySpec_SdkV2) {
+	if !fromPlan.ExternalModel.IsNull() && !fromPlan.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromPlanExternalModel, ok := fromPlan.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
+	if !fromPlan.FoundationModel.IsNull() && !fromPlan.FoundationModel.IsUnknown() {
+		if toStateFoundationModel, ok := toState.GetFoundationModel(ctx); ok {
+			if fromPlanFoundationModel, ok := fromPlan.GetFoundationModel(ctx); ok {
+				toStateFoundationModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFoundationModel)
+				toState.SetFoundationModel(ctx, toStateFoundationModel)
+			}
+		}
+	}
 }
 
-func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntitySpec_SdkV2) {
+func (toState *ServedEntitySpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedEntitySpec_SdkV2) {
+	if !fromState.ExternalModel.IsNull() && !fromState.ExternalModel.IsUnknown() {
+		if toStateExternalModel, ok := toState.GetExternalModel(ctx); ok {
+			if fromStateExternalModel, ok := fromState.GetExternalModel(ctx); ok {
+				toStateExternalModel.SyncFieldsDuringRead(ctx, fromStateExternalModel)
+				toState.SetExternalModel(ctx, toStateExternalModel)
+			}
+		}
+	}
+	if !fromState.FoundationModel.IsNull() && !fromState.FoundationModel.IsUnknown() {
+		if toStateFoundationModel, ok := toState.GetFoundationModel(ctx); ok {
+			if fromStateFoundationModel, ok := fromState.GetFoundationModel(ctx); ok {
+				toStateFoundationModel.SyncFieldsDuringRead(ctx, fromStateFoundationModel)
+				toState.SetFoundationModel(ctx, toStateFoundationModel)
+			}
+		}
+	}
 }
 
 func (c ServedEntitySpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7013,10 +7820,10 @@ type ServedModelInput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelInput_SdkV2) {
+func (toState *ServedModelInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedModelInput_SdkV2) {
 }
 
-func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelInput_SdkV2) {
+func (toState *ServedModelInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedModelInput_SdkV2) {
 }
 
 func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7180,10 +7987,26 @@ type ServedModelOutput_SdkV2 struct {
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
-func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelOutput_SdkV2) {
+func (toState *ServedModelOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedModelOutput_SdkV2) {
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
-func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelOutput_SdkV2) {
+func (toState *ServedModelOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedModelOutput_SdkV2) {
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
 func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7331,10 +8154,10 @@ type ServedModelSpec_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelSpec_SdkV2) {
+func (toState *ServedModelSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedModelSpec_SdkV2) {
 }
 
-func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelSpec_SdkV2) {
+func (toState *ServedModelSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedModelSpec_SdkV2) {
 }
 
 func (c ServedModelSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7386,10 +8209,10 @@ type ServedModelState_SdkV2 struct {
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
 }
 
-func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelState_SdkV2) {
+func (toState *ServedModelState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServedModelState_SdkV2) {
 }
 
-func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelState_SdkV2) {
+func (toState *ServedModelState_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServedModelState_SdkV2) {
 }
 
 func (c ServedModelState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7438,10 +8261,10 @@ type ServerLogsResponse_SdkV2 struct {
 	Logs types.String `tfsdk:"logs"`
 }
 
-func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServerLogsResponse_SdkV2) {
+func (toState *ServerLogsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServerLogsResponse_SdkV2) {
 }
 
-func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServerLogsResponse_SdkV2) {
+func (toState *ServerLogsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServerLogsResponse_SdkV2) {
 }
 
 func (c ServerLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7511,10 +8334,58 @@ type ServingEndpoint_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpoint_SdkV2) {
+func (toState *ServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpoint_SdkV2) {
+	if !fromPlan.AiGateway.IsNull() && !fromPlan.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromPlanAiGateway, ok := fromPlan.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
-func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpoint_SdkV2) {
+func (toState *ServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpoint_SdkV2) {
+	if !fromState.AiGateway.IsNull() && !fromState.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromStateAiGateway, ok := fromState.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringRead(ctx, fromStateAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
 func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7718,10 +8589,10 @@ type ServingEndpointAccessControlRequest_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlRequest_SdkV2) {
+func (toState *ServingEndpointAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointAccessControlRequest_SdkV2) {
 }
 
-func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlRequest_SdkV2) {
+func (toState *ServingEndpointAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointAccessControlRequest_SdkV2) {
 }
 
 func (c ServingEndpointAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7783,10 +8654,10 @@ type ServingEndpointAccessControlResponse_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlResponse_SdkV2) {
+func (toState *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointAccessControlResponse_SdkV2) {
 }
 
-func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlResponse_SdkV2) {
+func (toState *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointAccessControlResponse_SdkV2) {
 }
 
 func (c ServingEndpointAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7885,6 +8756,8 @@ type ServingEndpointDetailed_SdkV2 struct {
 	DataPlaneInfo types.List `tfsdk:"data_plane_info"`
 	// Description of the serving model
 	Description types.String `tfsdk:"description"`
+	// Email notification settings.
+	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -7909,10 +8782,106 @@ type ServingEndpointDetailed_SdkV2 struct {
 	Task types.String `tfsdk:"task"`
 }
 
-func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointDetailed_SdkV2) {
+func (toState *ServingEndpointDetailed_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointDetailed_SdkV2) {
+	if !fromPlan.AiGateway.IsNull() && !fromPlan.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromPlanAiGateway, ok := fromPlan.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromPlan.DataPlaneInfo.IsNull() && !fromPlan.DataPlaneInfo.IsUnknown() {
+		if toStateDataPlaneInfo, ok := toState.GetDataPlaneInfo(ctx); ok {
+			if fromPlanDataPlaneInfo, ok := fromPlan.GetDataPlaneInfo(ctx); ok {
+				toStateDataPlaneInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataPlaneInfo)
+				toState.SetDataPlaneInfo(ctx, toStateDataPlaneInfo)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.PendingConfig.IsNull() && !fromPlan.PendingConfig.IsUnknown() {
+		if toStatePendingConfig, ok := toState.GetPendingConfig(ctx); ok {
+			if fromPlanPendingConfig, ok := fromPlan.GetPendingConfig(ctx); ok {
+				toStatePendingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPendingConfig)
+				toState.SetPendingConfig(ctx, toStatePendingConfig)
+			}
+		}
+	}
+	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
-func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointDetailed_SdkV2) {
+func (toState *ServingEndpointDetailed_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointDetailed_SdkV2) {
+	if !fromState.AiGateway.IsNull() && !fromState.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromStateAiGateway, ok := fromState.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringRead(ctx, fromStateAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromState.DataPlaneInfo.IsNull() && !fromState.DataPlaneInfo.IsUnknown() {
+		if toStateDataPlaneInfo, ok := toState.GetDataPlaneInfo(ctx); ok {
+			if fromStateDataPlaneInfo, ok := fromState.GetDataPlaneInfo(ctx); ok {
+				toStateDataPlaneInfo.SyncFieldsDuringRead(ctx, fromStateDataPlaneInfo)
+				toState.SetDataPlaneInfo(ctx, toStateDataPlaneInfo)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.PendingConfig.IsNull() && !fromState.PendingConfig.IsUnknown() {
+		if toStatePendingConfig, ok := toState.GetPendingConfig(ctx); ok {
+			if fromStatePendingConfig, ok := fromState.GetPendingConfig(ctx); ok {
+				toStatePendingConfig.SyncFieldsDuringRead(ctx, fromStatePendingConfig)
+				toState.SetPendingConfig(ctx, toStatePendingConfig)
+			}
+		}
+	}
+	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
+		if toStateState, ok := toState.GetState(ctx); ok {
+			if fromStateState, ok := fromState.GetState(ctx); ok {
+				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
+				toState.SetState(ctx, toStateState)
+			}
+		}
+	}
 }
 
 func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7926,6 +8895,8 @@ func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
 	attrs["data_plane_info"] = attrs["data_plane_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -7951,12 +8922,13 @@ func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // SDK values.
 func (a ServingEndpointDetailed_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ai_gateway":      reflect.TypeOf(AiGatewayConfig_SdkV2{}),
-		"config":          reflect.TypeOf(EndpointCoreConfigOutput_SdkV2{}),
-		"data_plane_info": reflect.TypeOf(ModelDataPlaneInfo_SdkV2{}),
-		"pending_config":  reflect.TypeOf(EndpointPendingConfig_SdkV2{}),
-		"state":           reflect.TypeOf(EndpointState_SdkV2{}),
-		"tags":            reflect.TypeOf(EndpointTag_SdkV2{}),
+		"ai_gateway":          reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":              reflect.TypeOf(EndpointCoreConfigOutput_SdkV2{}),
+		"data_plane_info":     reflect.TypeOf(ModelDataPlaneInfo_SdkV2{}),
+		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
+		"pending_config":      reflect.TypeOf(EndpointPendingConfig_SdkV2{}),
+		"state":               reflect.TypeOf(EndpointState_SdkV2{}),
+		"tags":                reflect.TypeOf(EndpointTag_SdkV2{}),
 	}
 }
 
@@ -7974,6 +8946,7 @@ func (o ServingEndpointDetailed_SdkV2) ToObjectValue(ctx context.Context) basety
 			"creator":                o.Creator,
 			"data_plane_info":        o.DataPlaneInfo,
 			"description":            o.Description,
+			"email_notifications":    o.EmailNotifications,
 			"endpoint_url":           o.EndpointUrl,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -8003,7 +8976,10 @@ func (o ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_plane_info": basetypes.ListType{
 				ElemType: ModelDataPlaneInfo_SdkV2{}.Type(ctx),
 			},
-			"description":            types.StringType,
+			"description": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: EmailNotifications_SdkV2{}.Type(ctx),
+			},
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
@@ -8102,6 +9078,32 @@ func (o *ServingEndpointDetailed_SdkV2) SetDataPlaneInfo(ctx context.Context, v 
 	o.DataPlaneInfo = types.ListValueMust(t, vs)
 }
 
+// GetEmailNotifications returns the value of the EmailNotifications field in ServingEndpointDetailed_SdkV2 as
+// a EmailNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed_SdkV2) GetEmailNotifications(ctx context.Context) (EmailNotifications_SdkV2, bool) {
+	var e EmailNotifications_SdkV2
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []EmailNotifications_SdkV2
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in ServingEndpointDetailed_SdkV2.
+func (o *ServingEndpointDetailed_SdkV2) SetEmailNotifications(ctx context.Context, v EmailNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
 // GetPendingConfig returns the value of the PendingConfig field in ServingEndpointDetailed_SdkV2 as
 // a EndpointPendingConfig_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -8188,10 +9190,10 @@ type ServingEndpointPermission_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermission_SdkV2) {
+func (toState *ServingEndpointPermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointPermission_SdkV2) {
 }
 
-func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermission_SdkV2) {
+func (toState *ServingEndpointPermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointPermission_SdkV2) {
 }
 
 func (c ServingEndpointPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8275,10 +9277,10 @@ type ServingEndpointPermissions_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissions_SdkV2) {
+func (toState *ServingEndpointPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointPermissions_SdkV2) {
 }
 
-func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissions_SdkV2) {
+func (toState *ServingEndpointPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointPermissions_SdkV2) {
 }
 
 func (c ServingEndpointPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8360,10 +9362,10 @@ type ServingEndpointPermissionsDescription_SdkV2 struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsDescription_SdkV2) {
+func (toState *ServingEndpointPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointPermissionsDescription_SdkV2) {
 }
 
-func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsDescription_SdkV2) {
+func (toState *ServingEndpointPermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointPermissionsDescription_SdkV2) {
 }
 
 func (c ServingEndpointPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8480,10 +9482,10 @@ type TrafficConfig_SdkV2 struct {
 	Routes types.List `tfsdk:"routes"`
 }
 
-func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrafficConfig_SdkV2) {
+func (toState *TrafficConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TrafficConfig_SdkV2) {
 }
 
-func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrafficConfig_SdkV2) {
+func (toState *TrafficConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TrafficConfig_SdkV2) {
 }
 
 func (c TrafficConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8635,10 +9637,26 @@ type V1ResponseChoiceElement_SdkV2 struct {
 	Text types.String `tfsdk:"text"`
 }
 
-func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan V1ResponseChoiceElement_SdkV2) {
+func (toState *V1ResponseChoiceElement_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan V1ResponseChoiceElement_SdkV2) {
+	if !fromPlan.Message.IsNull() && !fromPlan.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromPlanMessage, ok := fromPlan.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
-func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState V1ResponseChoiceElement_SdkV2) {
+func (toState *V1ResponseChoiceElement_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState V1ResponseChoiceElement_SdkV2) {
+	if !fromState.Message.IsNull() && !fromState.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromStateMessage, ok := fromState.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringRead(ctx, fromStateMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
 func (c V1ResponseChoiceElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

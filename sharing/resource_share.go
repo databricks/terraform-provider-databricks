@@ -28,6 +28,7 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("object").SetMinItems(1)
 	s.SchemaPath("object", "data_object_type").SetRequired()
 	s.SchemaPath("object", "shared_as").SetSuppressDiff()
+	s.SchemaPath("object", "string_shared_as").SetSuppressDiff()
 	s.SchemaPath("object", "cdf_enabled").SetSuppressDiff()
 	s.SchemaPath("object", "start_version").SetSuppressDiff()
 	s.SchemaPath("object", "history_data_sharing_status").SetSuppressDiff()
@@ -98,6 +99,9 @@ func (si ShareInfo) resourceShareMap() map[string]sharing.SharedDataObject {
 func Equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	if other.SharedAs == "" {
 		other.SharedAs = this.SharedAs
+	}
+	if other.StringSharedAs == "" {
+		other.StringSharedAs = this.StringSharedAs
 	}
 	// don't compare computed fields
 	other.AddedAt = this.AddedAt

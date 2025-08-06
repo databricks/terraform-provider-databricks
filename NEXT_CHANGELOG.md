@@ -3,6 +3,7 @@
 ## Release v1.86.0
 
 ### Breaking Changes
+
 * Do not set `run_as from run_as_user_name in DLT pipelines. This fixes an issue where the value for run_as was unintentionally cached in the terraform state. More details and the workaround are specified in the PR: ([#4886](https://github.com/databricks/terraform-provider-databricks/pull/4886))
 
 ### New Features and Improvements
@@ -20,6 +21,7 @@
 * Restricted create or replace statement to managed tables in `databricks_sql_table`([#4874](https://github.com/databricks/terraform-provider-databricks/pull/4874)).
 * Mitigate issue due to internal caching in `databricks_secret_acl` by retrying until ACL are applied with the right permission ([#4885](https://github.com/databricks/terraform-provider-databricks/pull/4885)).
 * Fix schema mismatch bug in `databricks_functions` data source ([#4902](https://github.com/databricks/terraform-provider-databricks/pull/4902)).
+* Set suppressDiff on string_shared_as in the Legacy databricks_share Resource ([#4904](https://github.com/databricks/terraform-provider-databricks/pull/4904)).
 
 ### Documentation
 
@@ -33,6 +35,7 @@
 * Improve instructions for the Terraform Exporter ([#4892](https://github.com/databricks/terraform-provider-databricks/pull/4892)).
 * Improve documentation for service principal data sources ([#4900](https://github.com/databricks/terraform-provider-databricks/pull/4900)).
 * Add warning about disabling legacy features and default catalog ([#4905](https://github.com/databricks/terraform-provider-databricks/pull/4905)).
+* Improve documentation for grants resources ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4906))
 
 ### Exporter
 

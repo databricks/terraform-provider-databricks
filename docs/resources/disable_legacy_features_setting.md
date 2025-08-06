@@ -20,6 +20,14 @@ When this setting is on, the following applies to new workspaces:
 ## Example Usage
 
 ```hcl
+# Change default catalog to anything than `hive_metastore`
+resource "databricks_default_namespace_setting" "this" {
+  namespace {
+    value = "default_catalog"
+  }
+}
+
+# Disable legacy features
 resource "databricks_disable_legacy_features_setting" "this" {
   disable_legacy_features {
     value = true

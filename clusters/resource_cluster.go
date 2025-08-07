@@ -105,7 +105,8 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 // These are aliases which is the reason why we suppress these changes
 func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
-	return (old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED") ||
+	return (old != "" && new == "") ||
+		(old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED") ||
 		(old == "USER_ISOLATION" && new == "DATA_SECURITY_MODE_STANDARD") ||
 		((old == "SINGLE_USER" || old == "USER_ISOLATION") && new == "DATA_SECURITY_MODE_AUTO")
 }
@@ -344,12 +345,11 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 		Optional: true,
 		ForceNew: true,
 	})
-	s.SchemaPath("data_security_mode").SetSuppressDiff()
+	s.SchemaPath("data_security_mode").SetCustomSuppressDiff(DataSecurityModeDiffSuppressFunc)
 	s.SchemaPath("docker_image", "url").SetRequired()
 	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
 	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
-	s.SchemaPath("data_security_mode").SetCustomSuppressDiff(DataSecurityModeDiffSuppressFunc)
 	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
 	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})

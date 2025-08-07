@@ -133,6 +133,7 @@ The following arguments are supported:
 * `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. *Note: only available for custom models.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 * `description` - (Optional) The description of the model serving endpoint.
+* `email_notifications` - (Optional) A block with Email notification setting.
 
 ### served_entities Configuration Block
 
@@ -258,6 +259,11 @@ The following arguments are supported:
 * `usage_tracking_config` - (Optional) Block with configuration for payload logging using inference tables. For details see the description of `auto_capture_config` block above.
 * `inference_table_config` - (Optional) Block describing the configuration of usage tracking. Consists of the following attributes:
   * `enabled` - boolean flag specifying if usage tracking is enabled.
+
+### email_notifications Block
+
+* `on_update_failure` - (Optional) a list of email addresses to be notified when an endpoint fails to update its configuration or state.
+* `on_update_success` - (Optional) a list of email addresses to be notified when an endpoint successfully updates its configuration or state.
 
 ## Attribute Reference
 

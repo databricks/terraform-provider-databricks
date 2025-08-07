@@ -53,6 +53,7 @@ var (
 	dltClusterRegex                  = regexp.MustCompile(`^(cluster\.\d+\.)`)
 	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
+	requirementsFileRegexp           = regexp.MustCompile(`-r\s+(/.*)$`)
 	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
@@ -1306,10 +1307,13 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.emitNotebookOrRepo(lib.Notebook.Path)
 					}
 					if lib.File != nil {
-						ic.emitNotebookOrRepo(lib.File.Path)
+						ic.emitWorkspaceFileOrRepo(lib.File.Path)
 					}
 					ic.emitIfDbfsFile(lib.Jar)
 					ic.emitIfDbfsFile(lib.Whl)
+				}
+				if pipeline.RootPath != "" {
+					ic.emitDirectoryOrRepo(pipeline.RootPath)
 				}
 			}
 			// Emit clusters
@@ -1349,6 +1353,46 @@ var resourcesMap map[string]importable = map[string]importable{
 			if pipeline.Notifications != nil {
 				for _, n := range pipeline.Notifications {
 					ic.emitListOfUsers(n.EmailRecipients)
+				}
+			}
+			if pipeline.EventLog != nil {
+				var catalogName, schemaName string
+				if pipeline.EventLog.Catalog != "" {
+					catalogName = pipeline.EventLog.Catalog
+				} else {
+					catalogName = pipeline.Catalog
+				}
+				if pipeline.EventLog.Schema != "" {
+					schemaName = pipeline.EventLog.Schema
+				} else {
+					schemaName = pipeline.Schema
+				}
+				if catalogName != "" && schemaName != "" && pipeline.EventLog.Name != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_sql_table",
+						ID:       catalogName + "." + schemaName + "." + pipeline.EventLog.Name,
+					})
+				}
+			}
+			if pipeline.RunAs != nil {
+				if pipeline.RunAs.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     pipeline.RunAs.UserName,
+					})
+				}
+				if pipeline.RunAs.ServicePrincipalName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_service_principal",
+						Attribute: "application_id",
+						Value:     pipeline.RunAs.ServicePrincipalName,
+					})
+				}
+			}
+			if pipeline.Environment != nil {
+				for _, dep := range pipeline.Environment.Dependencies {
+					emitEnvironmentDependency(ic, dep)
 				}
 			}
 			return nil
@@ -1407,7 +1451,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.file.path", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "root_path", Resource: "databricks_directory"},
+			{Path: "root_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "environment.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "environment.dependencies", Resource: "databricks_file"},
+			{Path: "environment.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+				MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+			{Path: "environment.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+				Regexp: requirementsFileRegexp},
 			{Path: "notification.email_recipients", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "event_log.catalog", Resource: "databricks_catalog"},
+			{Path: "event_log.schema", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema")},
+			{Path: "event_log.name", Resource: "databricks_sql_table", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchemaAndTable("catalog", "schema", "name")},
+			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "configuration", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path",
@@ -1567,6 +1626,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       mse.AiGateway.InferenceTableConfig.CatalogName + "." + mse.AiGateway.InferenceTableConfig.SchemaName,
 				})
 			}
+			if mse.EmailNotifications != nil {
+				ic.emitListOfUsers(mse.EmailNotifications.OnUpdateFailure)
+				ic.emitListOfUsers(mse.EmailNotifications.OnUpdateSuccess)
+			}
 			return nil
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
@@ -1621,6 +1684,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "ai_gateway.inference_table_config.schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
 				SkipDirectLookup:     true},
+			{Path: "email_notifications.on_update_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_update_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_mlflow_webhook": {

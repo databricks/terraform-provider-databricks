@@ -1309,7 +1309,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					if lib.File != nil {
 						ic.emitWorkspaceFileOrRepo(lib.File.Path)
 					}
-					}
 					ic.emitIfDbfsFile(lib.Jar)
 					ic.emitIfDbfsFile(lib.Whl)
 				}

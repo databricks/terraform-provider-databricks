@@ -1926,7 +1926,7 @@ func TestResourceClusterAliasDedicatedNoDrift_DataSecurityMode(t *testing.T) {
 				&compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
-					ClusterName:            "Non Autoscaling Cluster",
+					ClusterName:            "Dedicated Cluster",
 					DataSecurityMode:       compute.DataSecurityModeSingleUser,
 					SparkVersion:           "7.1-scala12",
 					NodeTypeId:             "i3.xlarge",
@@ -1943,7 +1943,7 @@ func TestResourceClusterAliasDedicatedNoDrift_DataSecurityMode(t *testing.T) {
 		Resource: ResourceCluster(),
 		InstanceState: map[string]string{
 			"autotermination_minutes": "15",
-			"cluster_name":            "Shared Autoscaling",
+			"cluster_name":            "Dedicated Cluster",
 			"data_security_mode":      "SINGLE_USER",
 			"spark_version":           "7.1-scala12",
 			"node_type_id":            "i3.xlarge",
@@ -1983,7 +1983,7 @@ func TestResourceClusterAliasStandardNoDrift_DataSecurityMode(t *testing.T) {
 				&compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
-					ClusterName:            "Non Autoscaling Cluster",
+					ClusterName:            "Standard Cluster",
 					DataSecurityMode:       compute.DataSecurityModeUserIsolation,
 					SparkVersion:           "7.1-scala12",
 					NodeTypeId:             "i3.xlarge",
@@ -2000,7 +2000,7 @@ func TestResourceClusterAliasStandardNoDrift_DataSecurityMode(t *testing.T) {
 		Resource: ResourceCluster(),
 		InstanceState: map[string]string{
 			"autotermination_minutes": "15",
-			"cluster_name":            "Shared Autoscaling",
+			"cluster_name":            "Standard Cluster",
 			"data_security_mode":      "USER_ISOLATION",
 			"spark_version":           "7.1-scala12",
 			"node_type_id":            "i3.xlarge",
@@ -2011,7 +2011,7 @@ func TestResourceClusterAliasStandardNoDrift_DataSecurityMode(t *testing.T) {
 		},
 		HCL: `
 		autotermination_minutes = 15,
-		cluster_name =            "Dedicated Cluster"
+		cluster_name =            "Standard Cluster"
 		data_security_mode =      "DATA_SECURITY_MODE_STANDARD"
 		spark_version =           "7.1-scala12"
 		node_type_id =            "i3.xlarge"
@@ -2040,7 +2040,7 @@ func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
 				&compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
-					ClusterName:            "Non Autoscaling Cluster",
+					ClusterName:            "Auto Cluster",
 					DataSecurityMode:       compute.DataSecurityModeUserIsolation,
 					SparkVersion:           "7.1-scala12",
 					NodeTypeId:             "i3.xlarge",
@@ -2057,7 +2057,7 @@ func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
 		Resource: ResourceCluster(),
 		InstanceState: map[string]string{
 			"autotermination_minutes": "15",
-			"cluster_name":            "Shared Autoscaling",
+			"cluster_name":            "Auto Cluster",
 			"data_security_mode":      "USER_ISOLATION",
 			"spark_version":           "7.1-scala12",
 			"node_type_id":            "i3.xlarge",
@@ -2068,7 +2068,7 @@ func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
 		},
 		HCL: `
 		autotermination_minutes = 15,
-		cluster_name =            "Dedicated Cluster"
+		cluster_name =            "Auto Cluster"
 		data_security_mode =      "DATA_SECURITY_MODE_AUTO"
 		spark_version =           "7.1-scala12"
 		node_type_id =            "i3.xlarge"

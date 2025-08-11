@@ -25,7 +25,7 @@ func TestUcAccDataSourceVolume(t *testing.T) {
 				purpose = "testing"
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.RANDOM}"
@@ -39,12 +39,12 @@ func TestUcAccDataSourceVolume(t *testing.T) {
 			name         = "volume_data_source_test"
 			catalog_name = databricks_catalog.sandbox.name
 			schema_name  = databricks_schema.things.name
-			volume_type  = "MANAGED"      
+			volume_type  = "MANAGED"
 		}
 
 		data "databricks_volume" "this" {
 			name = databricks_volume.this.id
-			depends_on = [ databricks_volume.this ] 
+			depends_on = [ databricks_volume.this ]
 		}
 		`,
 		Check: checkDataSourceVolume(t),

@@ -6,12 +6,12 @@ import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
@@ -33,7 +33,7 @@ func (r *DatabaseInstanceDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *DatabaseInstanceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, catalog_tf.DatabaseInstance{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, database_tf.DatabaseInstance{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseInstance",
 		Attributes:  attrs,
@@ -54,19 +54,19 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var config catalog_tf.DatabaseInstance
+	var config database_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest catalog.GetDatabaseInstanceRequest
+	var readRequest database.GetDatabaseInstanceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.DatabaseInstances.GetDatabaseInstance(ctx, readRequest)
+	response, err := client.Database.GetDatabaseInstance(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
@@ -77,13 +77,13 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var newState catalog_tf.DatabaseInstance
+	var newState database_tf.DatabaseInstance
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

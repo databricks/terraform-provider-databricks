@@ -98,16 +98,7 @@ When you [create a Databricks cluster](https://docs.databricks.com/clusters/conf
 * `min_workers` - (Optional) The minimum number of workers to which the cluster can scale down when underutilized. It is also the initial number of workers the cluster will have after creation.
 * `max_workers` - (Optional) The maximum number of workers to which the cluster can scale up when overloaded. max_workers must be strictly greater than min_workers.
 
-When using a [Single Node cluster](https://docs.databricks.com/clusters/single-node.html), `num_workers` needs to be `0`. It can be set to `0` explicitly, or simply not specified, as it defaults to `0`.  When `num_workers` is `0`, provider checks for presence of the required Spark configurations:
-
-* `spark.master` must have prefix `local`, like `local[*]`
-* `spark.databricks.cluster.profile` must have value `singleNode`
-
-and also `custom_tag` entry:
-
-* `"ResourceClass" = "SingleNode"`
-
-The following example demonstrates how to create an single node cluster:
+To create a [single node cluster](https://docs.databricks.com/clusters/single-node.html), set `is_single_node = true` and `kind = "CLASSIC_PREVIEW"` for the cluster. Single-node clusters are suitable for small, non-distributed workloads like single-node machine learning use-cases.
 
 ```hcl
 data "databricks_node_type" "smallest" {
@@ -123,16 +114,8 @@ resource "databricks_cluster" "single_node" {
   spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
-
-  spark_conf = {
-    # Single-node
-    "spark.databricks.cluster.profile" : "singleNode"
-    "spark.master" : "local[*]"
-  }
-
-  custom_tags = {
-    "ResourceClass" = "SingleNode"
-  }
+  is_single_node          = true
+  kind                    = "CLASSIC_PREVIEW"
 }
 ```
 
@@ -173,15 +156,15 @@ To install libraries, one must specify each library in a separate configuration 
 
 -> Please consider using [databricks_library](library.md) resource for a more flexible setup.
 
-Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+Installing JAR artifacts on a cluster. Location can be a workspace file, Unity Catalog volume or cloud object storage location (s3, ADLS, ...)
 
 ```hcl
 library {
-  jar = "dbfs:/FileStore/app-0.0.1.jar"
+  jar = "/Volumes/catalog/schema/volume/app-0.0.1.jar"
 }
 ```
 
-Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+Installing Python EGG artifacts (Deprecated)
 
 ```hcl
 library {
@@ -189,11 +172,11 @@ library {
 }
 ```
 
-Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+Installing Python Wheel artifacts. Location can be a workspace file, Unity Catalog volume or cloud object storage location (s3, ADLS, ...)
 
 ```hcl
 library {
-  whl = "dbfs:/FileStore/baz.whl"
+  whl = "/Volumes/catalog/schema/volume/baz.whl"
 }
 ```
 
@@ -222,7 +205,7 @@ Installing artifacts from Maven repository. You can also optionally specify a `r
 library {
   maven {
     coordinates = "com.amazon.deequ:deequ:1.0.4"
-    // exlusions block is optional
+    // exclusions block is optional
     exclusions = ["org.apache.avro:avro"]
   }
 }
@@ -239,16 +222,6 @@ library {
 ```
 
 ### cluster_log_conf
-
-Example of pushing all cluster logs to DBFS:
-
-```hcl
-cluster_log_conf {
-  dbfs {
-    destination = "dbfs:/cluster-logs"
-  }
-}
-```
 
 Example of pushing all cluster logs to S3:
 
@@ -285,7 +258,7 @@ There are a few more advanced attributes for S3 log delivery:
 
 To run a particular init script on all clusters within the same workspace, both automated/job and interactive/all-purpose cluster types, please consider the [databricks_global_init_script](global_init_script.md) resource.
 
-It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Init scripts support DBFS, cloud storage locations, and workspace files.
+It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Init scripts support volumes, cloud storage locations, and workspace files.
 
 Example of using a Databricks workspace file as init script:
 
@@ -303,16 +276,6 @@ Example of using a file from Unity Catalog Volume as init script:
 init_scripts {
   volumes {
     destination = "/Volumes/Catalog/default/init-scripts/init-script.sh"
-  }
-}
-```
-
-Example of taking init script from DBFS (deprecated):
-
-```hcl
-init_scripts {
-  dbfs {
-    destination = "dbfs:/init-scripts/install-elk.sh"
   }
 }
 ```
@@ -590,8 +553,7 @@ The following resources are often used in the same context:
 * [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
-* [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
+* [databricks_pipeline](pipeline.md) to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 * [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
 * [databricks_zones](../data-sources/zones.md) data to fetch all available AWS availability zones on your workspace on AWS.

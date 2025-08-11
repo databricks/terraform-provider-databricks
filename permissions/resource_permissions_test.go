@@ -623,7 +623,7 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: app_name, authorization, cluster_id, cluster_policy_id, dashboard_id, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
+	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: alert_v2_id, app_name, authorization, cluster_id, cluster_policy_id, dashboard_id, database_instance_name, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
@@ -1839,7 +1839,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 		access_control {
 			group_name       = "admins"
 			permission_level = "CAN_USE"
-		}		
+		}
 		`,
 		Create: true,
 	}.Apply(t)
@@ -1894,7 +1894,7 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 		access_control {
 			user_name        = "ben"
 			permission_level = "CAN_READ"
-		}	
+		}
 		`,
 		Create: true,
 	}.Apply(t)

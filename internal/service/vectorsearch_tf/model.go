@@ -27,10 +27,10 @@ type ColumnInfo struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+func (toState *ColumnInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnInfo) {
 }
 
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+func (toState *ColumnInfo) SyncFieldsDuringRead(ctx context.Context, fromState ColumnInfo) {
 }
 
 func (c ColumnInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -79,20 +79,6 @@ type CreateEndpoint struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *CreateEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateEndpoint) {
-}
-
-func (newState *CreateEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateEndpoint) {
-}
-
-func (c CreateEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateEndpoint.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -137,34 +123,12 @@ type CreateVectorIndexRequest struct {
 	DirectAccessIndexSpec types.Object `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
-	// automatically syncs with a source Delta Table, automatically and
-	// incrementally updating the index as the underlying data in the Delta
-	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
-	// write of vectors and metadata through our REST and SDK APIs. With this
-	// model, the user manages index updates.
+
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key"`
-}
-
-func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexRequest) {
-}
-
-func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexRequest) {
-}
-
-func (c CreateVectorIndexRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].SetOptional()
-	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-	attrs["index_type"] = attrs["index_type"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["primary_key"] = attrs["primary_key"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexRequest.
@@ -219,7 +183,7 @@ func (o *CreateVectorIndexRequest) GetDeltaSyncIndexSpec(ctx context.Context) (D
 	if o.DeltaSyncIndexSpec.IsNull() || o.DeltaSyncIndexSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaSyncVectorIndexSpecRequest
+	var v DeltaSyncVectorIndexSpecRequest
 	d := o.DeltaSyncIndexSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -227,10 +191,7 @@ func (o *CreateVectorIndexRequest) GetDeltaSyncIndexSpec(ctx context.Context) (D
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeltaSyncIndexSpec sets the value of the DeltaSyncIndexSpec field in CreateVectorIndexRequest.
@@ -247,7 +208,7 @@ func (o *CreateVectorIndexRequest) GetDirectAccessIndexSpec(ctx context.Context)
 	if o.DirectAccessIndexSpec.IsNull() || o.DirectAccessIndexSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DirectAccessVectorIndexSpec
+	var v DirectAccessVectorIndexSpec
 	d := o.DirectAccessIndexSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -255,10 +216,7 @@ func (o *CreateVectorIndexRequest) GetDirectAccessIndexSpec(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDirectAccessIndexSpec sets the value of the DirectAccessIndexSpec field in CreateVectorIndexRequest.
@@ -274,10 +232,10 @@ type CustomTag struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *CustomTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomTag) {
+func (toState *CustomTag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomTag) {
 }
 
-func (newState *CustomTag) SyncEffectiveFieldsDuringRead(existingState CustomTag) {
+func (toState *CustomTag) SyncFieldsDuringRead(ctx context.Context, fromState CustomTag) {
 }
 
 func (c CustomTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -327,10 +285,10 @@ type DeleteDataResult struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (newState *DeleteDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataResult) {
+func (toState *DeleteDataResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDataResult) {
 }
 
-func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult) {
+func (toState *DeleteDataResult) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDataResult) {
 }
 
 func (c DeleteDataResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -403,7 +361,6 @@ func (o *DeleteDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.S
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
-// Delete data from index
 type DeleteDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
@@ -482,10 +439,26 @@ type DeleteDataVectorIndexResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexResponse) {
+func (toState *DeleteDataVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDataVectorIndexResponse) {
+	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
-func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
+func (toState *DeleteDataVectorIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDataVectorIndexResponse) {
+	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromStateResult, ok := fromState.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
 func (c DeleteDataVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -538,7 +511,7 @@ func (o *DeleteDataVectorIndexResponse) GetResult(ctx context.Context) (DeleteDa
 	if o.Result.IsNull() || o.Result.IsUnknown() {
 		return e, false
 	}
-	var v []DeleteDataResult
+	var v DeleteDataResult
 	d := o.Result.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -546,10 +519,7 @@ func (o *DeleteDataVectorIndexResponse) GetResult(ctx context.Context) (DeleteDa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetResult sets the value of the Result field in DeleteDataVectorIndexResponse.
@@ -558,7 +528,6 @@ func (o *DeleteDataVectorIndexResponse) SetResult(ctx context.Context, v DeleteD
 	o.Result = vs
 }
 
-// Delete an endpoint
 type DeleteEndpointRequest struct {
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -598,10 +567,10 @@ func (o DeleteEndpointRequest) Type(ctx context.Context) attr.Type {
 type DeleteEndpointResponse struct {
 }
 
-func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse) {
+func (toState *DeleteEndpointResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteEndpointResponse) {
 }
 
-func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse) {
+func (toState *DeleteEndpointResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteEndpointResponse) {
 }
 
 func (c DeleteEndpointResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -636,7 +605,6 @@ func (o DeleteEndpointResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete an index
 type DeleteIndexRequest struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -676,10 +644,10 @@ func (o DeleteIndexRequest) Type(ctx context.Context) attr.Type {
 type DeleteIndexResponse struct {
 }
 
-func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexResponse) {
+func (toState *DeleteIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteIndexResponse) {
 }
 
-func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse) {
+func (toState *DeleteIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteIndexResponse) {
 }
 
 func (c DeleteIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -739,10 +707,10 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecRequest) {
+func (toState *DeltaSyncVectorIndexSpecRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSyncVectorIndexSpecRequest) {
 }
 
-func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
+func (toState *DeltaSyncVectorIndexSpecRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSyncVectorIndexSpecRequest) {
 }
 
 func (c DeltaSyncVectorIndexSpecRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -907,10 +875,10 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecResponse) {
+func (toState *DeltaSyncVectorIndexSpecResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSyncVectorIndexSpecResponse) {
 }
 
-func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
+func (toState *DeltaSyncVectorIndexSpecResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSyncVectorIndexSpecResponse) {
 }
 
 func (c DeltaSyncVectorIndexSpecResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1037,10 +1005,10 @@ type DirectAccessVectorIndexSpec struct {
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
-func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectAccessVectorIndexSpec) {
+func (toState *DirectAccessVectorIndexSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DirectAccessVectorIndexSpec) {
 }
 
-func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
+func (toState *DirectAccessVectorIndexSpec) SyncFieldsDuringRead(ctx context.Context, fromState DirectAccessVectorIndexSpec) {
 }
 
 func (c DirectAccessVectorIndexSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1152,10 +1120,10 @@ type EmbeddingSourceColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingSourceColumn) {
+func (toState *EmbeddingSourceColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmbeddingSourceColumn) {
 }
 
-func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn) {
+func (toState *EmbeddingSourceColumn) SyncFieldsDuringRead(ctx context.Context, fromState EmbeddingSourceColumn) {
 }
 
 func (c EmbeddingSourceColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1205,10 +1173,10 @@ type EmbeddingVectorColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingVectorColumn) {
+func (toState *EmbeddingVectorColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmbeddingVectorColumn) {
 }
 
-func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn) {
+func (toState *EmbeddingVectorColumn) SyncFieldsDuringRead(ctx context.Context, fromState EmbeddingVectorColumn) {
 }
 
 func (c EmbeddingVectorColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1276,10 +1244,26 @@ type EndpointInfo struct {
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
 }
 
-func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo) {
+func (toState *EndpointInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointInfo) {
+	if !fromPlan.EndpointStatus.IsNull() && !fromPlan.EndpointStatus.IsUnknown() {
+		if toStateEndpointStatus, ok := toState.GetEndpointStatus(ctx); ok {
+			if fromPlanEndpointStatus, ok := fromPlan.GetEndpointStatus(ctx); ok {
+				toStateEndpointStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEndpointStatus)
+				toState.SetEndpointStatus(ctx, toStateEndpointStatus)
+			}
+		}
+	}
 }
 
-func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
+func (toState *EndpointInfo) SyncFieldsDuringRead(ctx context.Context, fromState EndpointInfo) {
+	if !fromState.EndpointStatus.IsNull() && !fromState.EndpointStatus.IsUnknown() {
+		if toStateEndpointStatus, ok := toState.GetEndpointStatus(ctx); ok {
+			if fromStateEndpointStatus, ok := fromState.GetEndpointStatus(ctx); ok {
+				toStateEndpointStatus.SyncFieldsDuringRead(ctx, fromStateEndpointStatus)
+				toState.SetEndpointStatus(ctx, toStateEndpointStatus)
+			}
+		}
+	}
 }
 
 func (c EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1388,7 +1372,7 @@ func (o *EndpointInfo) GetEndpointStatus(ctx context.Context) (EndpointStatus, b
 	if o.EndpointStatus.IsNull() || o.EndpointStatus.IsUnknown() {
 		return e, false
 	}
-	var v []EndpointStatus
+	var v EndpointStatus
 	d := o.EndpointStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1396,10 +1380,7 @@ func (o *EndpointInfo) GetEndpointStatus(ctx context.Context) (EndpointStatus, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEndpointStatus sets the value of the EndpointStatus field in EndpointInfo.
@@ -1416,10 +1397,10 @@ type EndpointStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *EndpointStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointStatus) {
+func (toState *EndpointStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointStatus) {
 }
 
-func (newState *EndpointStatus) SyncEffectiveFieldsDuringRead(existingState EndpointStatus) {
+func (toState *EndpointStatus) SyncFieldsDuringRead(ctx context.Context, fromState EndpointStatus) {
 }
 
 func (c EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1462,7 +1443,6 @@ func (o EndpointStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an endpoint
 type GetEndpointRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1499,7 +1479,6 @@ func (o GetEndpointRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an index
 type GetIndexRequest struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
@@ -1544,10 +1523,10 @@ type ListEndpointResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointResponse) {
+func (toState *ListEndpointResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListEndpointResponse) {
 }
 
-func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse) {
+func (toState *ListEndpointResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListEndpointResponse) {
 }
 
 func (c ListEndpointResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1620,7 +1599,6 @@ func (o *ListEndpointResponse) SetEndpoints(ctx context.Context, v []EndpointInf
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
-// List all endpoints
 type ListEndpointsRequest struct {
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
@@ -1657,7 +1635,6 @@ func (o ListEndpointsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List indexes
 type ListIndexesRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -1703,10 +1680,10 @@ type ListValue struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValue) {
+func (toState *ListValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListValue) {
 }
 
-func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue) {
+func (toState *ListValue) SyncFieldsDuringRead(ctx context.Context, fromState ListValue) {
 }
 
 func (c ListValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1784,10 +1761,10 @@ type ListVectorIndexesResponse struct {
 	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
-func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse) {
+func (toState *ListVectorIndexesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListVectorIndexesResponse) {
 }
 
-func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse) {
+func (toState *ListVectorIndexesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListVectorIndexesResponse) {
 }
 
 func (c ListVectorIndexesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1868,10 +1845,26 @@ type MapStringValueEntry struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan MapStringValueEntry) {
+func (toState *MapStringValueEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MapStringValueEntry) {
+	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
-func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry) {
+func (toState *MapStringValueEntry) SyncFieldsDuringRead(ctx context.Context, fromState MapStringValueEntry) {
+	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromStateValue, ok := fromState.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
 func (c MapStringValueEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1924,7 +1917,7 @@ func (o *MapStringValueEntry) GetValue(ctx context.Context) (Value, bool) {
 	if o.Value.IsNull() || o.Value.IsUnknown() {
 		return e, false
 	}
-	var v []Value
+	var v Value
 	d := o.Value.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1932,10 +1925,7 @@ func (o *MapStringValueEntry) GetValue(ctx context.Context) (Value, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetValue sets the value of the Value field in MapStringValueEntry.
@@ -1949,12 +1939,7 @@ type MiniVectorIndex struct {
 	Creator types.String `tfsdk:"creator"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
-	// automatically syncs with a source Delta Table, automatically and
-	// incrementally updating the index as the underlying data in the Delta
-	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
-	// write of vectors and metadata through our REST and SDK APIs. With this
-	// model, the user manages index updates.
+
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`
@@ -1962,10 +1947,10 @@ type MiniVectorIndex struct {
 	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
-func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan MiniVectorIndex) {
+func (toState *MiniVectorIndex) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MiniVectorIndex) {
 }
 
-func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex) {
+func (toState *MiniVectorIndex) SyncFieldsDuringRead(ctx context.Context, fromState MiniVectorIndex) {
 }
 
 func (c MiniVectorIndex) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2024,19 +2009,6 @@ type PatchEndpointBudgetPolicyRequest struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
-func (newState *PatchEndpointBudgetPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyRequest) {
-}
-
-func (newState *PatchEndpointBudgetPolicyRequest) SyncEffectiveFieldsDuringRead(existingState PatchEndpointBudgetPolicyRequest) {
-}
-
-func (c PatchEndpointBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetRequired()
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointBudgetPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2075,10 +2047,10 @@ type PatchEndpointBudgetPolicyResponse struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 }
 
-func (newState *PatchEndpointBudgetPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchEndpointBudgetPolicyResponse) {
+func (toState *PatchEndpointBudgetPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchEndpointBudgetPolicyResponse) {
 }
 
-func (newState *PatchEndpointBudgetPolicyResponse) SyncEffectiveFieldsDuringRead(existingState PatchEndpointBudgetPolicyResponse) {
+func (toState *PatchEndpointBudgetPolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState PatchEndpointBudgetPolicyResponse) {
 }
 
 func (c PatchEndpointBudgetPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2127,20 +2099,6 @@ type QueryVectorIndexNextPageRequest struct {
 	// Page token returned from previous `QueryVectorIndex` or
 	// `QueryVectorIndexNextPage` API.
 	PageToken types.String `tfsdk:"page_token"`
-}
-
-func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexNextPageRequest) {
-}
-
-func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexNextPageRequest) {
-}
-
-func (c QueryVectorIndexNextPageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexNextPageRequest.
@@ -2205,26 +2163,6 @@ type QueryVectorIndexRequest struct {
 	QueryVector types.List `tfsdk:"query_vector"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
-}
-
-func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexRequest) {
-}
-
-func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexRequest) {
-}
-
-func (c QueryVectorIndexRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["columns"] = attrs["columns"].SetRequired()
-	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
-	attrs["filters_json"] = attrs["filters_json"].SetOptional()
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["num_results"] = attrs["num_results"].SetOptional()
-	attrs["query_text"] = attrs["query_text"].SetOptional()
-	attrs["query_type"] = attrs["query_type"].SetOptional()
-	attrs["query_vector"] = attrs["query_vector"].SetOptional()
-	attrs["score_threshold"] = attrs["score_threshold"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexRequest.
@@ -2374,10 +2312,42 @@ type QueryVectorIndexResponse struct {
 	Result types.Object `tfsdk:"result"`
 }
 
-func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse) {
+func (toState *QueryVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryVectorIndexResponse) {
+	if !fromPlan.Manifest.IsNull() && !fromPlan.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromPlanManifest, ok := fromPlan.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
-func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse) {
+func (toState *QueryVectorIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState QueryVectorIndexResponse) {
+	if !fromState.Manifest.IsNull() && !fromState.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromStateManifest, ok := fromState.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringRead(ctx, fromStateManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromStateResult, ok := fromState.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
 func (c QueryVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2434,7 +2404,7 @@ func (o *QueryVectorIndexResponse) GetManifest(ctx context.Context) (ResultManif
 	if o.Manifest.IsNull() || o.Manifest.IsUnknown() {
 		return e, false
 	}
-	var v []ResultManifest
+	var v ResultManifest
 	d := o.Manifest.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2442,10 +2412,7 @@ func (o *QueryVectorIndexResponse) GetManifest(ctx context.Context) (ResultManif
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetManifest sets the value of the Manifest field in QueryVectorIndexResponse.
@@ -2462,7 +2429,7 @@ func (o *QueryVectorIndexResponse) GetResult(ctx context.Context) (ResultData, b
 	if o.Result.IsNull() || o.Result.IsUnknown() {
 		return e, false
 	}
-	var v []ResultData
+	var v ResultData
 	d := o.Result.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2470,10 +2437,7 @@ func (o *QueryVectorIndexResponse) GetResult(ctx context.Context) (ResultData, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetResult sets the value of the Result field in QueryVectorIndexResponse.
@@ -2490,10 +2454,10 @@ type ResultData struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData) {
+func (toState *ResultData) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultData) {
 }
 
-func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
+func (toState *ResultData) SyncFieldsDuringRead(ctx context.Context, fromState ResultData) {
 }
 
 func (c ResultData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2576,10 +2540,10 @@ type ResultManifest struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest) {
+func (toState *ResultManifest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultManifest) {
 }
 
-func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
+func (toState *ResultManifest) SyncFieldsDuringRead(ctx context.Context, fromState ResultManifest) {
 }
 
 func (c ResultManifest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2661,20 +2625,6 @@ type ScanVectorIndexRequest struct {
 	NumResults types.Int64 `tfsdk:"num_results"`
 }
 
-func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexRequest) {
-}
-
-func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexRequest) {
-}
-
-func (c ScanVectorIndexRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["last_primary_key"] = attrs["last_primary_key"].SetOptional()
-	attrs["num_results"] = attrs["num_results"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ScanVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2718,10 +2668,10 @@ type ScanVectorIndexResponse struct {
 	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 }
 
-func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexResponse) {
+func (toState *ScanVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ScanVectorIndexResponse) {
 }
 
-func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse) {
+func (toState *ScanVectorIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState ScanVectorIndexResponse) {
 }
 
 func (c ScanVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2799,10 +2749,10 @@ type Struct struct {
 	Fields types.List `tfsdk:"fields"`
 }
 
-func (newState *Struct) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct) {
+func (toState *Struct) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Struct) {
 }
 
-func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
+func (toState *Struct) SyncFieldsDuringRead(ctx context.Context, fromState Struct) {
 }
 
 func (c Struct) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2872,7 +2822,6 @@ func (o *Struct) SetFields(ctx context.Context, v []MapStringValueEntry) {
 	o.Fields = types.ListValueMust(t, vs)
 }
 
-// Synchronize an index
 type SyncIndexRequest struct {
 	// Name of the vector index to synchronize. Must be a Delta Sync Index.
 	IndexName types.String `tfsdk:"-"`
@@ -2912,10 +2861,10 @@ func (o SyncIndexRequest) Type(ctx context.Context) attr.Type {
 type SyncIndexResponse struct {
 }
 
-func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexResponse) {
+func (toState *SyncIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncIndexResponse) {
 }
 
-func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse) {
+func (toState *SyncIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState SyncIndexResponse) {
 }
 
 func (c SyncIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2955,19 +2904,6 @@ type UpdateEndpointCustomTagsRequest struct {
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateEndpointCustomTagsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsRequest) {
-}
-
-func (newState *UpdateEndpointCustomTagsRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEndpointCustomTagsRequest) {
-}
-
-func (c UpdateEndpointCustomTagsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_tags"] = attrs["custom_tags"].SetRequired()
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEndpointCustomTagsRequest.
@@ -3040,10 +2976,10 @@ type UpdateEndpointCustomTagsResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *UpdateEndpointCustomTagsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEndpointCustomTagsResponse) {
+func (toState *UpdateEndpointCustomTagsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateEndpointCustomTagsResponse) {
 }
 
-func (newState *UpdateEndpointCustomTagsResponse) SyncEffectiveFieldsDuringRead(existingState UpdateEndpointCustomTagsResponse) {
+func (toState *UpdateEndpointCustomTagsResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateEndpointCustomTagsResponse) {
 }
 
 func (c UpdateEndpointCustomTagsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3123,10 +3059,10 @@ type UpsertDataResult struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (newState *UpsertDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataResult) {
+func (toState *UpsertDataResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpsertDataResult) {
 }
 
-func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult) {
+func (toState *UpsertDataResult) SyncFieldsDuringRead(ctx context.Context, fromState UpsertDataResult) {
 }
 
 func (c UpsertDataResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3207,19 +3143,6 @@ type UpsertDataVectorIndexRequest struct {
 	InputsJson types.String `tfsdk:"inputs_json"`
 }
 
-func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexRequest) {
-}
-
-func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexRequest) {
-}
-
-func (c UpsertDataVectorIndexRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["inputs_json"] = attrs["inputs_json"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3260,10 +3183,26 @@ type UpsertDataVectorIndexResponse struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexResponse) {
+func (toState *UpsertDataVectorIndexResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpsertDataVectorIndexResponse) {
+	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
-func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
+func (toState *UpsertDataVectorIndexResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpsertDataVectorIndexResponse) {
+	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
+		if toStateResult, ok := toState.GetResult(ctx); ok {
+			if fromStateResult, ok := fromState.GetResult(ctx); ok {
+				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
+				toState.SetResult(ctx, toStateResult)
+			}
+		}
+	}
 }
 
 func (c UpsertDataVectorIndexResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3316,7 +3255,7 @@ func (o *UpsertDataVectorIndexResponse) GetResult(ctx context.Context) (UpsertDa
 	if o.Result.IsNull() || o.Result.IsUnknown() {
 		return e, false
 	}
-	var v []UpsertDataResult
+	var v UpsertDataResult
 	d := o.Result.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3324,10 +3263,7 @@ func (o *UpsertDataVectorIndexResponse) GetResult(ctx context.Context) (UpsertDa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetResult sets the value of the Result field in UpsertDataVectorIndexResponse.
@@ -3348,10 +3284,42 @@ type Value struct {
 	StructValue types.Object `tfsdk:"struct_value"`
 }
 
-func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
+func (toState *Value) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Value) {
+	if !fromPlan.ListValue.IsNull() && !fromPlan.ListValue.IsUnknown() {
+		if toStateListValue, ok := toState.GetListValue(ctx); ok {
+			if fromPlanListValue, ok := fromPlan.GetListValue(ctx); ok {
+				toStateListValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanListValue)
+				toState.SetListValue(ctx, toStateListValue)
+			}
+		}
+	}
+	if !fromPlan.StructValue.IsNull() && !fromPlan.StructValue.IsUnknown() {
+		if toStateStructValue, ok := toState.GetStructValue(ctx); ok {
+			if fromPlanStructValue, ok := fromPlan.GetStructValue(ctx); ok {
+				toStateStructValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStructValue)
+				toState.SetStructValue(ctx, toStateStructValue)
+			}
+		}
+	}
 }
 
-func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
+func (toState *Value) SyncFieldsDuringRead(ctx context.Context, fromState Value) {
+	if !fromState.ListValue.IsNull() && !fromState.ListValue.IsUnknown() {
+		if toStateListValue, ok := toState.GetListValue(ctx); ok {
+			if fromStateListValue, ok := fromState.GetListValue(ctx); ok {
+				toStateListValue.SyncFieldsDuringRead(ctx, fromStateListValue)
+				toState.SetListValue(ctx, toStateListValue)
+			}
+		}
+	}
+	if !fromState.StructValue.IsNull() && !fromState.StructValue.IsUnknown() {
+		if toStateStructValue, ok := toState.GetStructValue(ctx); ok {
+			if fromStateStructValue, ok := fromState.GetStructValue(ctx); ok {
+				toStateStructValue.SyncFieldsDuringRead(ctx, fromStateStructValue)
+				toState.SetStructValue(ctx, toStateStructValue)
+			}
+		}
+	}
 }
 
 func (c Value) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3414,7 +3382,7 @@ func (o *Value) GetListValue(ctx context.Context) (ListValue, bool) {
 	if o.ListValue.IsNull() || o.ListValue.IsUnknown() {
 		return e, false
 	}
-	var v []ListValue
+	var v ListValue
 	d := o.ListValue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3422,10 +3390,7 @@ func (o *Value) GetListValue(ctx context.Context) (ListValue, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetListValue sets the value of the ListValue field in Value.
@@ -3442,7 +3407,7 @@ func (o *Value) GetStructValue(ctx context.Context) (Struct, bool) {
 	if o.StructValue.IsNull() || o.StructValue.IsUnknown() {
 		return e, false
 	}
-	var v []Struct
+	var v Struct
 	d := o.StructValue.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3450,10 +3415,7 @@ func (o *Value) GetStructValue(ctx context.Context) (Struct, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStructValue sets the value of the StructValue field in Value.
@@ -3471,12 +3433,7 @@ type VectorIndex struct {
 	DirectAccessIndexSpec types.Object `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// There are 2 types of Vector Search indexes: - `DELTA_SYNC`: An index that
-	// automatically syncs with a source Delta Table, automatically and
-	// incrementally updating the index as the underlying data in the Delta
-	// Table changes. - `DIRECT_ACCESS`: An index that supports direct read and
-	// write of vectors and metadata through our REST and SDK APIs. With this
-	// model, the user manages index updates.
+
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
 	Name types.String `tfsdk:"name"`
@@ -3486,10 +3443,58 @@ type VectorIndex struct {
 	Status types.Object `tfsdk:"status"`
 }
 
-func (newState *VectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndex) {
+func (toState *VectorIndex) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VectorIndex) {
+	if !fromPlan.DeltaSyncIndexSpec.IsNull() && !fromPlan.DeltaSyncIndexSpec.IsUnknown() {
+		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromPlanDeltaSyncIndexSpec, ok := fromPlan.GetDeltaSyncIndexSpec(ctx); ok {
+				toStateDeltaSyncIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaSyncIndexSpec)
+				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !fromPlan.DirectAccessIndexSpec.IsNull() && !fromPlan.DirectAccessIndexSpec.IsUnknown() {
+		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
+			if fromPlanDirectAccessIndexSpec, ok := fromPlan.GetDirectAccessIndexSpec(ctx); ok {
+				toStateDirectAccessIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDirectAccessIndexSpec)
+				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorIndex) {
+func (toState *VectorIndex) SyncFieldsDuringRead(ctx context.Context, fromState VectorIndex) {
+	if !fromState.DeltaSyncIndexSpec.IsNull() && !fromState.DeltaSyncIndexSpec.IsUnknown() {
+		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromStateDeltaSyncIndexSpec, ok := fromState.GetDeltaSyncIndexSpec(ctx); ok {
+				toStateDeltaSyncIndexSpec.SyncFieldsDuringRead(ctx, fromStateDeltaSyncIndexSpec)
+				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !fromState.DirectAccessIndexSpec.IsNull() && !fromState.DirectAccessIndexSpec.IsUnknown() {
+		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
+			if fromStateDirectAccessIndexSpec, ok := fromState.GetDirectAccessIndexSpec(ctx); ok {
+				toStateDirectAccessIndexSpec.SyncFieldsDuringRead(ctx, fromStateDirectAccessIndexSpec)
+				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c VectorIndex) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3562,7 +3567,7 @@ func (o *VectorIndex) GetDeltaSyncIndexSpec(ctx context.Context) (DeltaSyncVecto
 	if o.DeltaSyncIndexSpec.IsNull() || o.DeltaSyncIndexSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DeltaSyncVectorIndexSpecResponse
+	var v DeltaSyncVectorIndexSpecResponse
 	d := o.DeltaSyncIndexSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3570,10 +3575,7 @@ func (o *VectorIndex) GetDeltaSyncIndexSpec(ctx context.Context) (DeltaSyncVecto
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeltaSyncIndexSpec sets the value of the DeltaSyncIndexSpec field in VectorIndex.
@@ -3590,7 +3592,7 @@ func (o *VectorIndex) GetDirectAccessIndexSpec(ctx context.Context) (DirectAcces
 	if o.DirectAccessIndexSpec.IsNull() || o.DirectAccessIndexSpec.IsUnknown() {
 		return e, false
 	}
-	var v []DirectAccessVectorIndexSpec
+	var v DirectAccessVectorIndexSpec
 	d := o.DirectAccessIndexSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3598,10 +3600,7 @@ func (o *VectorIndex) GetDirectAccessIndexSpec(ctx context.Context) (DirectAcces
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDirectAccessIndexSpec sets the value of the DirectAccessIndexSpec field in VectorIndex.
@@ -3618,7 +3617,7 @@ func (o *VectorIndex) GetStatus(ctx context.Context) (VectorIndexStatus, bool) {
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []VectorIndexStatus
+	var v VectorIndexStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3626,10 +3625,7 @@ func (o *VectorIndex) GetStatus(ctx context.Context) (VectorIndexStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in VectorIndex.
@@ -3649,10 +3645,10 @@ type VectorIndexStatus struct {
 	Ready types.Bool `tfsdk:"ready"`
 }
 
-func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndexStatus) {
+func (toState *VectorIndexStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VectorIndexStatus) {
 }
 
-func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus) {
+func (toState *VectorIndexStatus) SyncFieldsDuringRead(ctx context.Context, fromState VectorIndexStatus) {
 }
 
 func (c VectorIndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

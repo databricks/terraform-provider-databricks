@@ -30,19 +30,6 @@ type AddBlock_SdkV2 struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *AddBlock_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock_SdkV2) {
-}
-
-func (newState *AddBlock_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddBlock_SdkV2) {
-}
-
-func (c AddBlock_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data"] = attrs["data"].SetRequired()
-	attrs["handle"] = attrs["handle"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -79,10 +66,10 @@ func (o AddBlock_SdkV2) Type(ctx context.Context) attr.Type {
 type AddBlockResponse_SdkV2 struct {
 }
 
-func (newState *AddBlockResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlockResponse_SdkV2) {
+func (toState *AddBlockResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AddBlockResponse_SdkV2) {
 }
 
-func (newState *AddBlockResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse_SdkV2) {
+func (toState *AddBlockResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AddBlockResponse_SdkV2) {
 }
 
 func (c AddBlockResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -122,18 +109,6 @@ type Close_SdkV2 struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *Close_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close_SdkV2) {
-}
-
-func (newState *Close_SdkV2) SyncEffectiveFieldsDuringRead(existingState Close_SdkV2) {
-}
-
-func (c Close_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["handle"] = attrs["handle"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -168,10 +143,10 @@ func (o Close_SdkV2) Type(ctx context.Context) attr.Type {
 type CloseResponse_SdkV2 struct {
 }
 
-func (newState *CloseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloseResponse_SdkV2) {
+func (toState *CloseResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloseResponse_SdkV2) {
 }
 
-func (newState *CloseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CloseResponse_SdkV2) {
+func (toState *CloseResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CloseResponse_SdkV2) {
 }
 
 func (c CloseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -213,19 +188,6 @@ type Create_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *Create_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create_SdkV2) {
-}
-
-func (newState *Create_SdkV2) SyncEffectiveFieldsDuringRead(existingState Create_SdkV2) {
-}
-
-func (c Create_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -259,7 +221,6 @@ func (o Create_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create a directory
 type CreateDirectoryRequest_SdkV2 struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -332,10 +293,10 @@ type CreateResponse_SdkV2 struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse_SdkV2) {
+func (toState *CreateResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse_SdkV2) {
 }
 
-func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateResponse_SdkV2) {
+func (toState *CreateResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse_SdkV2) {
 }
 
 func (c CreateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -384,19 +345,6 @@ type Delete_SdkV2 struct {
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
-func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete_SdkV2) {
-}
-
-func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringRead(existingState Delete_SdkV2) {
-}
-
-func (c Delete_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-	attrs["recursive"] = attrs["recursive"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -430,7 +378,6 @@ func (o Delete_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a directory
 type DeleteDirectoryRequest_SdkV2 struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -497,7 +444,6 @@ func (o DeleteDirectoryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a file
 type DeleteFileRequest_SdkV2 struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -537,10 +483,10 @@ func (o DeleteFileRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
+func (toState *DeleteResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse_SdkV2) {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
+func (toState *DeleteResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse_SdkV2) {
 }
 
 func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -589,10 +535,10 @@ type DirectoryEntry_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *DirectoryEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectoryEntry_SdkV2) {
+func (toState *DirectoryEntry_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DirectoryEntry_SdkV2) {
 }
 
-func (newState *DirectoryEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry_SdkV2) {
+func (toState *DirectoryEntry_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DirectoryEntry_SdkV2) {
 }
 
 func (c DirectoryEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -644,7 +590,6 @@ func (o DirectoryEntry_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Download a file
 type DownloadRequest_SdkV2 struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -740,10 +685,10 @@ type FileInfo_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo_SdkV2) {
+func (toState *FileInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileInfo_SdkV2) {
 }
 
-func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileInfo_SdkV2) {
+func (toState *FileInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState FileInfo_SdkV2) {
 }
 
 func (c FileInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -792,7 +737,6 @@ func (o FileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get directory metadata
 type GetDirectoryMetadataRequest_SdkV2 struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -859,7 +803,6 @@ func (o GetDirectoryMetadataResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Get file metadata
 type GetMetadataRequest_SdkV2 struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
@@ -940,7 +883,6 @@ func (o GetMetadataResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the information of a file or directory
 type GetStatusRequest_SdkV2 struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
@@ -978,7 +920,6 @@ func (o GetStatusRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List directory contents or file details
 type ListDbfsRequest_SdkV2 struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
@@ -1016,7 +957,6 @@ func (o ListDbfsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List directory contents
 type ListDirectoryContentsRequest_SdkV2 struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
@@ -1084,10 +1024,10 @@ type ListDirectoryResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryResponse_SdkV2) {
+func (toState *ListDirectoryResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDirectoryResponse_SdkV2) {
 }
 
-func (newState *ListDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse_SdkV2) {
+func (toState *ListDirectoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDirectoryResponse_SdkV2) {
 }
 
 func (c ListDirectoryResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1166,10 +1106,10 @@ type ListStatusResponse_SdkV2 struct {
 	Files types.List `tfsdk:"files"`
 }
 
-func (newState *ListStatusResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStatusResponse_SdkV2) {
+func (toState *ListStatusResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListStatusResponse_SdkV2) {
 }
 
-func (newState *ListStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse_SdkV2) {
+func (toState *ListStatusResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListStatusResponse_SdkV2) {
 }
 
 func (c ListStatusResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1244,18 +1184,6 @@ type MkDirs_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *MkDirs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs_SdkV2) {
-}
-
-func (newState *MkDirs_SdkV2) SyncEffectiveFieldsDuringRead(existingState MkDirs_SdkV2) {
-}
-
-func (c MkDirs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1290,10 +1218,10 @@ func (o MkDirs_SdkV2) Type(ctx context.Context) attr.Type {
 type MkDirsResponse_SdkV2 struct {
 }
 
-func (newState *MkDirsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirsResponse_SdkV2) {
+func (toState *MkDirsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MkDirsResponse_SdkV2) {
 }
 
-func (newState *MkDirsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse_SdkV2) {
+func (toState *MkDirsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MkDirsResponse_SdkV2) {
 }
 
 func (c MkDirsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1337,19 +1265,6 @@ type Move_SdkV2 struct {
 	SourcePath types.String `tfsdk:"source_path"`
 }
 
-func (newState *Move_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move_SdkV2) {
-}
-
-func (newState *Move_SdkV2) SyncEffectiveFieldsDuringRead(existingState Move_SdkV2) {
-}
-
-func (c Move_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_path"] = attrs["destination_path"].SetRequired()
-	attrs["source_path"] = attrs["source_path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1386,10 +1301,10 @@ func (o Move_SdkV2) Type(ctx context.Context) attr.Type {
 type MoveResponse_SdkV2 struct {
 }
 
-func (newState *MoveResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveResponse_SdkV2) {
+func (toState *MoveResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MoveResponse_SdkV2) {
 }
 
-func (newState *MoveResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState MoveResponse_SdkV2) {
+func (toState *MoveResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MoveResponse_SdkV2) {
 }
 
 func (c MoveResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1433,20 +1348,6 @@ type Put_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *Put_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put_SdkV2) {
-}
-
-func (newState *Put_SdkV2) SyncEffectiveFieldsDuringRead(existingState Put_SdkV2) {
-}
-
-func (c Put_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1485,10 +1386,10 @@ func (o Put_SdkV2) Type(ctx context.Context) attr.Type {
 type PutResponse_SdkV2 struct {
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse_SdkV2) {
+func (toState *PutResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutResponse_SdkV2) {
 }
 
-func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutResponse_SdkV2) {
+func (toState *PutResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PutResponse_SdkV2) {
 }
 
 func (c PutResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1523,7 +1424,6 @@ func (o PutResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get the contents of a file
 type ReadDbfsRequest_SdkV2 struct {
 	// The number of bytes to read starting from the offset. This has a limit of
 	// 1 MB, and a default value of 0.5 MB.
@@ -1578,10 +1478,10 @@ type ReadResponse_SdkV2 struct {
 	Data types.String `tfsdk:"data"`
 }
 
-func (newState *ReadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadResponse_SdkV2) {
+func (toState *ReadResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ReadResponse_SdkV2) {
 }
 
-func (newState *ReadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReadResponse_SdkV2) {
+func (toState *ReadResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ReadResponse_SdkV2) {
 }
 
 func (c ReadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1624,7 +1524,6 @@ func (o ReadResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Upload a file
 type UploadRequest_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 	// The absolute path of the file.

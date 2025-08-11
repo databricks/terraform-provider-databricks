@@ -27,10 +27,26 @@ type AwsCredentials_SdkV2 struct {
 	StsRole types.List `tfsdk:"sts_role"`
 }
 
-func (newState *AwsCredentials_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsCredentials_SdkV2) {
+func (toState *AwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsCredentials_SdkV2) {
+	if !fromPlan.StsRole.IsNull() && !fromPlan.StsRole.IsUnknown() {
+		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
+			if fromPlanStsRole, ok := fromPlan.GetStsRole(ctx); ok {
+				toStateStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStsRole)
+				toState.SetStsRole(ctx, toStateStsRole)
+			}
+		}
+	}
 }
 
-func (newState *AwsCredentials_SdkV2) SyncEffectiveFieldsDuringRead(existingState AwsCredentials_SdkV2) {
+func (toState *AwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AwsCredentials_SdkV2) {
+	if !fromState.StsRole.IsNull() && !fromState.StsRole.IsUnknown() {
+		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
+			if fromStateStsRole, ok := fromState.GetStsRole(ctx); ok {
+				toStateStsRole.SyncFieldsDuringRead(ctx, fromStateStsRole)
+				toState.SetStsRole(ctx, toStateStsRole)
+			}
+		}
+	}
 }
 
 func (c AwsCredentials_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -115,10 +131,10 @@ type AwsKeyInfo_SdkV2 struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (newState *AwsKeyInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsKeyInfo_SdkV2) {
+func (toState *AwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsKeyInfo_SdkV2) {
 }
 
-func (newState *AwsKeyInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState AwsKeyInfo_SdkV2) {
+func (toState *AwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AwsKeyInfo_SdkV2) {
 }
 
 func (c AwsKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -174,10 +190,10 @@ type AzureWorkspaceInfo_SdkV2 struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (newState *AzureWorkspaceInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureWorkspaceInfo_SdkV2) {
+func (toState *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureWorkspaceInfo_SdkV2) {
 }
 
-func (newState *AzureWorkspaceInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState AzureWorkspaceInfo_SdkV2) {
+func (toState *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AzureWorkspaceInfo_SdkV2) {
 }
 
 func (c AzureWorkspaceInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -222,14 +238,29 @@ func (o AzureWorkspaceInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 // The general workspace configurations that are specific to cloud providers.
 type CloudResourceContainer_SdkV2 struct {
-	// The general workspace configurations that are specific to Google Cloud.
 	Gcp types.List `tfsdk:"gcp"`
 }
 
-func (newState *CloudResourceContainer_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudResourceContainer_SdkV2) {
+func (toState *CloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloudResourceContainer_SdkV2) {
+	if !fromPlan.Gcp.IsNull() && !fromPlan.Gcp.IsUnknown() {
+		if toStateGcp, ok := toState.GetGcp(ctx); ok {
+			if fromPlanGcp, ok := fromPlan.GetGcp(ctx); ok {
+				toStateGcp.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcp)
+				toState.SetGcp(ctx, toStateGcp)
+			}
+		}
+	}
 }
 
-func (newState *CloudResourceContainer_SdkV2) SyncEffectiveFieldsDuringRead(existingState CloudResourceContainer_SdkV2) {
+func (toState *CloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CloudResourceContainer_SdkV2) {
+	if !fromState.Gcp.IsNull() && !fromState.Gcp.IsUnknown() {
+		if toStateGcp, ok := toState.GetGcp(ctx); ok {
+			if fromStateGcp, ok := fromState.GetGcp(ctx); ok {
+				toStateGcp.SyncFieldsDuringRead(ctx, fromStateGcp)
+				toState.SetGcp(ctx, toStateGcp)
+			}
+		}
+	}
 }
 
 func (c CloudResourceContainer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -313,10 +344,10 @@ type CreateAwsKeyInfo_SdkV2 struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (newState *CreateAwsKeyInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAwsKeyInfo_SdkV2) {
+func (toState *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAwsKeyInfo_SdkV2) {
 }
 
-func (newState *CreateAwsKeyInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAwsKeyInfo_SdkV2) {
+func (toState *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateAwsKeyInfo_SdkV2) {
 }
 
 func (c CreateAwsKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -366,10 +397,26 @@ type CreateCredentialAwsCredentials_SdkV2 struct {
 	StsRole types.List `tfsdk:"sts_role"`
 }
 
-func (newState *CreateCredentialAwsCredentials_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialAwsCredentials_SdkV2) {
+func (toState *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCredentialAwsCredentials_SdkV2) {
+	if !fromPlan.StsRole.IsNull() && !fromPlan.StsRole.IsUnknown() {
+		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
+			if fromPlanStsRole, ok := fromPlan.GetStsRole(ctx); ok {
+				toStateStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStsRole)
+				toState.SetStsRole(ctx, toStateStsRole)
+			}
+		}
+	}
 }
 
-func (newState *CreateCredentialAwsCredentials_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialAwsCredentials_SdkV2) {
+func (toState *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCredentialAwsCredentials_SdkV2) {
+	if !fromState.StsRole.IsNull() && !fromState.StsRole.IsUnknown() {
+		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
+			if fromStateStsRole, ok := fromState.GetStsRole(ctx); ok {
+				toStateStsRole.SyncFieldsDuringRead(ctx, fromStateStsRole)
+				toState.SetStsRole(ctx, toStateStsRole)
+			}
+		}
+	}
 }
 
 func (c CreateCredentialAwsCredentials_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -446,20 +493,6 @@ type CreateCredentialRequest_SdkV2 struct {
 	CredentialsName types.String `tfsdk:"credentials_name"`
 }
 
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialRequest_SdkV2) {
-}
-
-func (newState *CreateCredentialRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest_SdkV2) {
-}
-
-func (c CreateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_credentials"] = attrs["aws_credentials"].SetRequired()
-	attrs["aws_credentials"] = attrs["aws_credentials"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credentials_name"] = attrs["credentials_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -528,10 +561,10 @@ type CreateCredentialStsRole_SdkV2 struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (newState *CreateCredentialStsRole_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialStsRole_SdkV2) {
+func (toState *CreateCredentialStsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCredentialStsRole_SdkV2) {
 }
 
-func (newState *CreateCredentialStsRole_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialStsRole_SdkV2) {
+func (toState *CreateCredentialStsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCredentialStsRole_SdkV2) {
 }
 
 func (c CreateCredentialStsRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -577,22 +610,6 @@ type CreateCustomerManagedKeyRequest_SdkV2 struct {
 	GcpKeyInfo types.List `tfsdk:"gcp_key_info"`
 	// The cases that the key can be used for.
 	UseCases types.List `tfsdk:"use_cases"`
-}
-
-func (newState *CreateCustomerManagedKeyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomerManagedKeyRequest_SdkV2) {
-}
-
-func (newState *CreateCustomerManagedKeyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCustomerManagedKeyRequest_SdkV2) {
-}
-
-func (c CreateCustomerManagedKeyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_key_info"] = attrs["aws_key_info"].SetOptional()
-	attrs["aws_key_info"] = attrs["aws_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gcp_key_info"] = attrs["gcp_key_info"].SetOptional()
-	attrs["gcp_key_info"] = attrs["gcp_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["use_cases"] = attrs["use_cases"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomerManagedKeyRequest.
@@ -723,10 +740,10 @@ type CreateGcpKeyInfo_SdkV2 struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (newState *CreateGcpKeyInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateGcpKeyInfo_SdkV2) {
+func (toState *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateGcpKeyInfo_SdkV2) {
 }
 
-func (newState *CreateGcpKeyInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateGcpKeyInfo_SdkV2) {
+func (toState *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateGcpKeyInfo_SdkV2) {
 }
 
 func (c CreateGcpKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -767,8 +784,6 @@ func (o CreateGcpKeyInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateNetworkRequest_SdkV2 struct {
-	// The Google Cloud specific information for this network (for example, the
-	// VPC ID, subnet ID, and secondary IP ranges).
 	GcpNetworkInfo types.List `tfsdk:"gcp_network_info"`
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name"`
@@ -778,33 +793,11 @@ type CreateNetworkRequest_SdkV2 struct {
 	// IDs of at least two subnets associated with this network. Subnet IDs
 	// **cannot** be used in multiple network configurations.
 	SubnetIds types.List `tfsdk:"subnet_ids"`
-	// If specified, contains the VPC endpoints used to allow cluster
-	// communication from this VPC over [AWS PrivateLink].
-	//
-	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
+
 	VpcEndpoints types.List `tfsdk:"vpc_endpoints"`
 	// The ID of the VPC associated with this network. VPC IDs can be used in
 	// multiple network configurations.
 	VpcId types.String `tfsdk:"vpc_id"`
-}
-
-func (newState *CreateNetworkRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNetworkRequest_SdkV2) {
-}
-
-func (newState *CreateNetworkRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateNetworkRequest_SdkV2) {
-}
-
-func (c CreateNetworkRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["gcp_network_info"] = attrs["gcp_network_info"].SetOptional()
-	attrs["gcp_network_info"] = attrs["gcp_network_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["network_name"] = attrs["network_name"].SetRequired()
-	attrs["security_group_ids"] = attrs["security_group_ids"].SetOptional()
-	attrs["subnet_ids"] = attrs["subnet_ids"].SetOptional()
-	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetOptional()
-	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNetworkRequest.
@@ -965,25 +958,110 @@ func (o *CreateNetworkRequest_SdkV2) SetVpcEndpoints(ctx context.Context, v Netw
 	o.VpcEndpoints = types.ListValueMust(t, vs)
 }
 
+type CreatePrivateAccessSettingsRequest_SdkV2 struct {
+	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
+	// is returned when registering the VPC endpoint configuration in your
+	// Databricks account. This is not the ID of the VPC endpoint in AWS.
+	//
+	// Only used when `private_access_level` is set to `ENDPOINT`. This is an
+	// allow list of VPC endpoints that in your account that can connect to your
+	// workspace over AWS PrivateLink.
+	//
+	// If hybrid access to your workspace is enabled by setting
+	// `public_access_enabled` to `true`, this control only works for
+	// PrivateLink connections. To control how your workspace is accessed via
+	// public internet, see [IP access lists].
+	//
+	// [IP access lists]: https://docs.databricks.com/security/network/ip-access-list.html
+	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
+
+	PrivateAccessLevel types.String `tfsdk:"private_access_level"`
+	// The human-readable name of the private access settings object.
+	PrivateAccessSettingsName types.String `tfsdk:"private_access_settings_name"`
+	// Determines if the workspace can be accessed over public internet. For
+	// fully private workspaces, you can optionally specify `false`, but only if
+	// you implement both the front-end and the back-end PrivateLink
+	// connections. Otherwise, specify `true`, which means that public access is
+	// enabled.
+	PublicAccessEnabled types.Bool `tfsdk:"public_access_enabled"`
+	// The cloud region for workspaces associated with this private access
+	// settings object.
+	Region types.String `tfsdk:"region"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePrivateAccessSettingsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreatePrivateAccessSettingsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreatePrivateAccessSettingsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreatePrivateAccessSettingsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_vpc_endpoint_ids":     o.AllowedVpcEndpointIds,
+			"private_access_level":         o.PrivateAccessLevel,
+			"private_access_settings_name": o.PrivateAccessSettingsName,
+			"public_access_enabled":        o.PublicAccessEnabled,
+			"region":                       o.Region,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreatePrivateAccessSettingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_vpc_endpoint_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"private_access_level":         types.StringType,
+			"private_access_settings_name": types.StringType,
+			"public_access_enabled":        types.BoolType,
+			"region":                       types.StringType,
+		},
+	}
+}
+
+// GetAllowedVpcEndpointIds returns the value of the AllowedVpcEndpointIds field in CreatePrivateAccessSettingsRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePrivateAccessSettingsRequest_SdkV2) GetAllowedVpcEndpointIds(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedVpcEndpointIds.IsNull() || o.AllowedVpcEndpointIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedVpcEndpointIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedVpcEndpointIds sets the value of the AllowedVpcEndpointIds field in CreatePrivateAccessSettingsRequest_SdkV2.
+func (o *CreatePrivateAccessSettingsRequest_SdkV2) SetAllowedVpcEndpointIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
+}
+
 type CreateStorageConfigurationRequest_SdkV2 struct {
-	// Root S3 bucket information.
 	RootBucketInfo types.List `tfsdk:"root_bucket_info"`
 	// The human-readable name of the storage configuration.
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name"`
-}
-
-func (newState *CreateStorageConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateStorageConfigurationRequest_SdkV2) {
-}
-
-func (newState *CreateStorageConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateStorageConfigurationRequest_SdkV2) {
-}
-
-func (c CreateStorageConfigurationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["root_bucket_info"] = attrs["root_bucket_info"].SetRequired()
-	attrs["root_bucket_info"] = attrs["root_bucket_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["storage_configuration_name"] = attrs["storage_configuration_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateStorageConfigurationRequest.
@@ -1052,29 +1130,12 @@ func (o *CreateStorageConfigurationRequest_SdkV2) SetRootBucketInfo(ctx context.
 type CreateVpcEndpointRequest_SdkV2 struct {
 	// The ID of the VPC endpoint object in AWS.
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id"`
-	// The Google Cloud specific information for this Private Service Connect
-	// endpoint.
+
 	GcpVpcEndpointInfo types.List `tfsdk:"gcp_vpc_endpoint_info"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region"`
 	// The human-readable name of the storage configuration.
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name"`
-}
-
-func (newState *CreateVpcEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVpcEndpointRequest_SdkV2) {
-}
-
-func (newState *CreateVpcEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVpcEndpointRequest_SdkV2) {
-}
-
-func (c CreateVpcEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_vpc_endpoint_id"] = attrs["aws_vpc_endpoint_id"].SetOptional()
-	attrs["gcp_vpc_endpoint_info"] = attrs["gcp_vpc_endpoint_info"].SetOptional()
-	attrs["gcp_vpc_endpoint_info"] = attrs["gcp_vpc_endpoint_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["region"] = attrs["region"].SetOptional()
-	attrs["vpc_endpoint_name"] = attrs["vpc_endpoint_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVpcEndpointRequest.
@@ -1150,8 +1211,7 @@ type CreateWorkspaceRequest_SdkV2 struct {
 	// The cloud provider which the workspace uses. For Google Cloud workspaces,
 	// always set this field to `gcp`.
 	Cloud types.String `tfsdk:"cloud"`
-	// The general workspace configurations that are specific to cloud
-	// providers.
+
 	CloudResourceContainer types.List `tfsdk:"cloud_resource_container"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id"`
@@ -1190,31 +1250,9 @@ type CreateWorkspaceRequest_SdkV2 struct {
 	// If a new workspace omits this property, the server generates a unique
 	// deployment name for you with the pattern `dbc-xxxxxxxx-xxxx`.
 	DeploymentName types.String `tfsdk:"deployment_name"`
-	// The network settings for the workspace. The configurations are only for
-	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
-	// VPC in the `network_id` field.", All the IP range configurations must be
-	// mutually exclusive. An attempt to create a workspace fails if Databricks
-	// detects an IP range overlap.
-	//
-	// Specify custom IP ranges in CIDR format. The IP ranges for these fields
-	// must not overlap, and all IP addresses must be entirely within the
-	// following ranges: `10.0.0.0/8`, `100.64.0.0/10`, `172.16.0.0/12`,
-	// `192.168.0.0/16`, and `240.0.0.0/4`.
-	//
-	// The sizes of these IP ranges affect the maximum number of nodes for the
-	// workspace.
-	//
-	// **Important**: Confirm the IP ranges used by your Databricks workspace
-	// before creating the workspace. You cannot change them after your
-	// workspace is deployed. If the IP address ranges for your Databricks are
-	// too small, IP exhaustion can occur, causing your Databricks jobs to fail.
-	// To determine the address range sizes that you need, Databricks provides a
-	// calculator as a Microsoft Excel spreadsheet. See [calculate subnet sizes
-	// for a new workspace].
-	//
-	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
+
 	GcpManagedNetworkConfig types.List `tfsdk:"gcp_managed_network_config"`
-	// The configurations for the GKE cluster of a Databricks workspace.
+
 	GkeConfig types.List `tfsdk:"gke_config"`
 	// Whether no public IP is enabled for the workspace.
 	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled"`
@@ -1229,10 +1267,7 @@ type CreateWorkspaceRequest_SdkV2 struct {
 	ManagedServicesCustomerManagedKeyId types.String `tfsdk:"managed_services_customer_managed_key_id"`
 
 	NetworkId types.String `tfsdk:"network_id"`
-	// The pricing tier of the workspace. For pricing tier information, see [AWS
-	// Pricing].
-	//
-	// [AWS Pricing]: https://databricks.com/product/aws-pricing
+
 	PricingTier types.String `tfsdk:"pricing_tier"`
 	// ID of the workspace's private access settings object. Only used for
 	// PrivateLink. This ID must be specified for customers using [AWS
@@ -1255,37 +1290,6 @@ type CreateWorkspaceRequest_SdkV2 struct {
 	StorageCustomerManagedKeyId types.String `tfsdk:"storage_customer_managed_key_id"`
 	// The workspace's human-readable name.
 	WorkspaceName types.String `tfsdk:"workspace_name"`
-}
-
-func (newState *CreateWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWorkspaceRequest_SdkV2) {
-}
-
-func (newState *CreateWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateWorkspaceRequest_SdkV2) {
-}
-
-func (c CreateWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_region"] = attrs["aws_region"].SetOptional()
-	attrs["cloud"] = attrs["cloud"].SetOptional()
-	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].SetOptional()
-	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["deployment_name"] = attrs["deployment_name"].SetOptional()
-	attrs["gcp_managed_network_config"] = attrs["gcp_managed_network_config"].SetOptional()
-	attrs["gcp_managed_network_config"] = attrs["gcp_managed_network_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gke_config"] = attrs["gke_config"].SetOptional()
-	attrs["gke_config"] = attrs["gke_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["is_no_public_ip_enabled"] = attrs["is_no_public_ip_enabled"].SetOptional()
-	attrs["location"] = attrs["location"].SetOptional()
-	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
-	attrs["network_id"] = attrs["network_id"].SetOptional()
-	attrs["pricing_tier"] = attrs["pricing_tier"].SetOptional()
-	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
-	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
-	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
-	attrs["workspace_name"] = attrs["workspace_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWorkspaceRequest.
@@ -1481,10 +1485,26 @@ type Credential_SdkV2 struct {
 	CredentialsName types.String `tfsdk:"credentials_name"`
 }
 
-func (newState *Credential_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credential_SdkV2) {
+func (toState *Credential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Credential_SdkV2) {
+	if !fromPlan.AwsCredentials.IsNull() && !fromPlan.AwsCredentials.IsUnknown() {
+		if toStateAwsCredentials, ok := toState.GetAwsCredentials(ctx); ok {
+			if fromPlanAwsCredentials, ok := fromPlan.GetAwsCredentials(ctx); ok {
+				toStateAwsCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsCredentials)
+				toState.SetAwsCredentials(ctx, toStateAwsCredentials)
+			}
+		}
+	}
 }
 
-func (newState *Credential_SdkV2) SyncEffectiveFieldsDuringRead(existingState Credential_SdkV2) {
+func (toState *Credential_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Credential_SdkV2) {
+	if !fromState.AwsCredentials.IsNull() && !fromState.AwsCredentials.IsUnknown() {
+		if toStateAwsCredentials, ok := toState.GetAwsCredentials(ctx); ok {
+			if fromStateAwsCredentials, ok := fromState.GetAwsCredentials(ctx); ok {
+				toStateAwsCredentials.SyncFieldsDuringRead(ctx, fromStateAwsCredentials)
+				toState.SetAwsCredentials(ctx, toStateAwsCredentials)
+			}
+		}
+	}
 }
 
 func (c Credential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1574,10 +1594,10 @@ type CustomerFacingGcpCloudResourceContainer_SdkV2 struct {
 	ProjectId types.String `tfsdk:"project_id"`
 }
 
-func (newState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingGcpCloudResourceContainer_SdkV2) {
+func (toState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomerFacingGcpCloudResourceContainer_SdkV2) {
 }
 
-func (newState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer_SdkV2) {
+func (toState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomerFacingGcpCloudResourceContainer_SdkV2) {
 }
 
 func (c CustomerFacingGcpCloudResourceContainer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1632,10 +1652,42 @@ type CustomerManagedKey_SdkV2 struct {
 	UseCases types.List `tfsdk:"use_cases"`
 }
 
-func (newState *CustomerManagedKey_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerManagedKey_SdkV2) {
+func (toState *CustomerManagedKey_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomerManagedKey_SdkV2) {
+	if !fromPlan.AwsKeyInfo.IsNull() && !fromPlan.AwsKeyInfo.IsUnknown() {
+		if toStateAwsKeyInfo, ok := toState.GetAwsKeyInfo(ctx); ok {
+			if fromPlanAwsKeyInfo, ok := fromPlan.GetAwsKeyInfo(ctx); ok {
+				toStateAwsKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsKeyInfo)
+				toState.SetAwsKeyInfo(ctx, toStateAwsKeyInfo)
+			}
+		}
+	}
+	if !fromPlan.GcpKeyInfo.IsNull() && !fromPlan.GcpKeyInfo.IsUnknown() {
+		if toStateGcpKeyInfo, ok := toState.GetGcpKeyInfo(ctx); ok {
+			if fromPlanGcpKeyInfo, ok := fromPlan.GetGcpKeyInfo(ctx); ok {
+				toStateGcpKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpKeyInfo)
+				toState.SetGcpKeyInfo(ctx, toStateGcpKeyInfo)
+			}
+		}
+	}
 }
 
-func (newState *CustomerManagedKey_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey_SdkV2) {
+func (toState *CustomerManagedKey_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomerManagedKey_SdkV2) {
+	if !fromState.AwsKeyInfo.IsNull() && !fromState.AwsKeyInfo.IsUnknown() {
+		if toStateAwsKeyInfo, ok := toState.GetAwsKeyInfo(ctx); ok {
+			if fromStateAwsKeyInfo, ok := fromState.GetAwsKeyInfo(ctx); ok {
+				toStateAwsKeyInfo.SyncFieldsDuringRead(ctx, fromStateAwsKeyInfo)
+				toState.SetAwsKeyInfo(ctx, toStateAwsKeyInfo)
+			}
+		}
+	}
+	if !fromState.GcpKeyInfo.IsNull() && !fromState.GcpKeyInfo.IsUnknown() {
+		if toStateGcpKeyInfo, ok := toState.GetGcpKeyInfo(ctx); ok {
+			if fromStateGcpKeyInfo, ok := fromState.GetGcpKeyInfo(ctx); ok {
+				toStateGcpKeyInfo.SyncFieldsDuringRead(ctx, fromStateGcpKeyInfo)
+				toState.SetGcpKeyInfo(ctx, toStateGcpKeyInfo)
+			}
+		}
+	}
 }
 
 func (c CustomerManagedKey_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1780,7 +1832,6 @@ func (o *CustomerManagedKey_SdkV2) SetUseCases(ctx context.Context, v []types.St
 	o.UseCases = types.ListValueMust(t, vs)
 }
 
-// Delete credential configuration
 type DeleteCredentialRequest_SdkV2 struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -1817,7 +1868,6 @@ func (o DeleteCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete encryption key configuration
 type DeleteEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -1854,7 +1904,6 @@ func (o DeleteEncryptionKeyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a network configuration
 type DeleteNetworkRequest_SdkV2 struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -1891,7 +1940,6 @@ func (o DeleteNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a private access settings object
 type DeletePrivateAccesRequest_SdkV2 struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -1958,7 +2006,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete storage configuration
 type DeleteStorageRequest_SdkV2 struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -1995,7 +2042,6 @@ func (o DeleteStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete VPC endpoint configuration
 type DeleteVpcEndpointRequest_SdkV2 struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2032,7 +2078,6 @@ func (o DeleteVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a workspace
 type DeleteWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2078,10 +2123,10 @@ type ExternalCustomerInfo_SdkV2 struct {
 	CustomerName types.String `tfsdk:"customer_name"`
 }
 
-func (newState *ExternalCustomerInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo_SdkV2) {
+func (toState *ExternalCustomerInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalCustomerInfo_SdkV2) {
 }
 
-func (newState *ExternalCustomerInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo_SdkV2) {
+func (toState *ExternalCustomerInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalCustomerInfo_SdkV2) {
 }
 
 func (c ExternalCustomerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2132,10 +2177,10 @@ type GcpKeyInfo_SdkV2 struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (newState *GcpKeyInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpKeyInfo_SdkV2) {
+func (toState *GcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpKeyInfo_SdkV2) {
 }
 
-func (newState *GcpKeyInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState GcpKeyInfo_SdkV2) {
+func (toState *GcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpKeyInfo_SdkV2) {
 }
 
 func (c GcpKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2210,10 +2255,10 @@ type GcpManagedNetworkConfig_SdkV2 struct {
 	SubnetCidr types.String `tfsdk:"subnet_cidr"`
 }
 
-func (newState *GcpManagedNetworkConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpManagedNetworkConfig_SdkV2) {
+func (toState *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpManagedNetworkConfig_SdkV2) {
 }
 
-func (newState *GcpManagedNetworkConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GcpManagedNetworkConfig_SdkV2) {
+func (toState *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpManagedNetworkConfig_SdkV2) {
 }
 
 func (c GcpManagedNetworkConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2282,10 +2327,10 @@ type GcpNetworkInfo_SdkV2 struct {
 	VpcId types.String `tfsdk:"vpc_id"`
 }
 
-func (newState *GcpNetworkInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpNetworkInfo_SdkV2) {
+func (toState *GcpNetworkInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpNetworkInfo_SdkV2) {
 }
 
-func (newState *GcpNetworkInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState GcpNetworkInfo_SdkV2) {
+func (toState *GcpNetworkInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpNetworkInfo_SdkV2) {
 }
 
 func (c GcpNetworkInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2356,10 +2401,10 @@ type GcpVpcEndpointInfo_SdkV2 struct {
 	ServiceAttachmentId types.String `tfsdk:"service_attachment_id"`
 }
 
-func (newState *GcpVpcEndpointInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpVpcEndpointInfo_SdkV2) {
+func (toState *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpVpcEndpointInfo_SdkV2) {
 }
 
-func (newState *GcpVpcEndpointInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState GcpVpcEndpointInfo_SdkV2) {
+func (toState *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpVpcEndpointInfo_SdkV2) {
 }
 
 func (c GcpVpcEndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2411,7 +2456,6 @@ func (o GcpVpcEndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get credential configuration
 type GetCredentialRequest_SdkV2 struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
@@ -2448,7 +2492,6 @@ func (o GetCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get encryption key configuration
 type GetEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
@@ -2485,7 +2528,6 @@ func (o GetEncryptionKeyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a network configuration
 type GetNetworkRequest_SdkV2 struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
@@ -2522,7 +2564,6 @@ func (o GetNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a private access settings object
 type GetPrivateAccesRequest_SdkV2 struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
@@ -2559,7 +2600,6 @@ func (o GetPrivateAccesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get storage configuration
 type GetStorageRequest_SdkV2 struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
@@ -2596,7 +2636,6 @@ func (o GetStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a VPC endpoint configuration
 type GetVpcEndpointRequest_SdkV2 struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
@@ -2633,7 +2672,6 @@ func (o GetVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a workspace
 type GetWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2688,10 +2726,10 @@ type GkeConfig_SdkV2 struct {
 	MasterIpRange types.String `tfsdk:"master_ip_range"`
 }
 
-func (newState *GkeConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GkeConfig_SdkV2) {
+func (toState *GkeConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GkeConfig_SdkV2) {
 }
 
-func (newState *GkeConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GkeConfig_SdkV2) {
+func (toState *GkeConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GkeConfig_SdkV2) {
 }
 
 func (c GkeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2734,6 +2772,216 @@ func (o GkeConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListCredentialsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCredentialsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCredentialsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCredentialsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListCredentialsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCredentialsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListEncryptionKeysRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEncryptionKeysRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListEncryptionKeysRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListEncryptionKeysRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListEncryptionKeysRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListEncryptionKeysRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListNetworksRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNetworksRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListNetworksRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListNetworksRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListNetworksRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListNetworksRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListPrivateAccessRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPrivateAccessRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListPrivateAccessRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPrivateAccessRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListPrivateAccessRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListPrivateAccessRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListStorageRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStorageRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListStorageRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListStorageRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListStorageRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListVpcEndpointsRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVpcEndpointsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListVpcEndpointsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListVpcEndpointsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListVpcEndpointsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListVpcEndpointsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type ListWorkspacesRequest_SdkV2 struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspacesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListWorkspacesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspacesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListWorkspacesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListWorkspacesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type Network_SdkV2 struct {
 	// The Databricks account ID associated with this network configuration.
 	AccountId types.String `tfsdk:"account_id"`
@@ -2741,8 +2989,7 @@ type Network_SdkV2 struct {
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Array of error messages about the network configuration.
 	ErrorMessages types.List `tfsdk:"error_messages"`
-	// The Google Cloud specific information for this network (for example, the
-	// VPC ID, subnet ID, and secondary IP ranges).
+
 	GcpNetworkInfo types.List `tfsdk:"gcp_network_info"`
 	// The Databricks network configuration ID.
 	NetworkId types.String `tfsdk:"network_id"`
@@ -2752,17 +2999,12 @@ type Network_SdkV2 struct {
 	SecurityGroupIds types.List `tfsdk:"security_group_ids"`
 
 	SubnetIds types.List `tfsdk:"subnet_ids"`
-	// If specified, contains the VPC endpoints used to allow cluster
-	// communication from this VPC over [AWS PrivateLink].
-	//
-	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
+
 	VpcEndpoints types.List `tfsdk:"vpc_endpoints"`
 	// The ID of the VPC associated with this network configuration. VPC IDs can
 	// be used in multiple networks.
 	VpcId types.String `tfsdk:"vpc_id"`
-	// The status of this network configuration object in terms of its use in a
-	// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`:
-	// Broken. * `WARNED`: Warned.
+
 	VpcStatus types.String `tfsdk:"vpc_status"`
 	// Array of warning messages about the network configuration.
 	WarningMessages types.List `tfsdk:"warning_messages"`
@@ -2770,10 +3012,42 @@ type Network_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *Network_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network_SdkV2) {
+func (toState *Network_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Network_SdkV2) {
+	if !fromPlan.GcpNetworkInfo.IsNull() && !fromPlan.GcpNetworkInfo.IsUnknown() {
+		if toStateGcpNetworkInfo, ok := toState.GetGcpNetworkInfo(ctx); ok {
+			if fromPlanGcpNetworkInfo, ok := fromPlan.GetGcpNetworkInfo(ctx); ok {
+				toStateGcpNetworkInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpNetworkInfo)
+				toState.SetGcpNetworkInfo(ctx, toStateGcpNetworkInfo)
+			}
+		}
+	}
+	if !fromPlan.VpcEndpoints.IsNull() && !fromPlan.VpcEndpoints.IsUnknown() {
+		if toStateVpcEndpoints, ok := toState.GetVpcEndpoints(ctx); ok {
+			if fromPlanVpcEndpoints, ok := fromPlan.GetVpcEndpoints(ctx); ok {
+				toStateVpcEndpoints.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVpcEndpoints)
+				toState.SetVpcEndpoints(ctx, toStateVpcEndpoints)
+			}
+		}
+	}
 }
 
-func (newState *Network_SdkV2) SyncEffectiveFieldsDuringRead(existingState Network_SdkV2) {
+func (toState *Network_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Network_SdkV2) {
+	if !fromState.GcpNetworkInfo.IsNull() && !fromState.GcpNetworkInfo.IsUnknown() {
+		if toStateGcpNetworkInfo, ok := toState.GetGcpNetworkInfo(ctx); ok {
+			if fromStateGcpNetworkInfo, ok := fromState.GetGcpNetworkInfo(ctx); ok {
+				toStateGcpNetworkInfo.SyncFieldsDuringRead(ctx, fromStateGcpNetworkInfo)
+				toState.SetGcpNetworkInfo(ctx, toStateGcpNetworkInfo)
+			}
+		}
+	}
+	if !fromState.VpcEndpoints.IsNull() && !fromState.VpcEndpoints.IsUnknown() {
+		if toStateVpcEndpoints, ok := toState.GetVpcEndpoints(ctx); ok {
+			if fromStateVpcEndpoints, ok := fromState.GetVpcEndpoints(ctx); ok {
+				toStateVpcEndpoints.SyncFieldsDuringRead(ctx, fromStateVpcEndpoints)
+				toState.SetVpcEndpoints(ctx, toStateVpcEndpoints)
+			}
+		}
+	}
 }
 
 func (c Network_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3029,15 +3303,14 @@ func (o *Network_SdkV2) SetWarningMessages(ctx context.Context, v []NetworkWarni
 type NetworkHealth_SdkV2 struct {
 	// Details of the error.
 	ErrorMessage types.String `tfsdk:"error_message"`
-	// The AWS resource associated with this error: credentials, VPC, subnet,
-	// security group, or network ACL.
+
 	ErrorType types.String `tfsdk:"error_type"`
 }
 
-func (newState *NetworkHealth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkHealth_SdkV2) {
+func (toState *NetworkHealth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkHealth_SdkV2) {
 }
 
-func (newState *NetworkHealth_SdkV2) SyncEffectiveFieldsDuringRead(existingState NetworkHealth_SdkV2) {
+func (toState *NetworkHealth_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkHealth_SdkV2) {
 }
 
 func (c NetworkHealth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3093,10 +3366,10 @@ type NetworkVpcEndpoints_SdkV2 struct {
 	RestApi types.List `tfsdk:"rest_api"`
 }
 
-func (newState *NetworkVpcEndpoints_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkVpcEndpoints_SdkV2) {
+func (toState *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkVpcEndpoints_SdkV2) {
 }
 
-func (newState *NetworkVpcEndpoints_SdkV2) SyncEffectiveFieldsDuringRead(existingState NetworkVpcEndpoints_SdkV2) {
+func (toState *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkVpcEndpoints_SdkV2) {
 }
 
 func (c NetworkVpcEndpoints_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3201,15 +3474,14 @@ func (o *NetworkVpcEndpoints_SdkV2) SetRestApi(ctx context.Context, v []types.St
 type NetworkWarning_SdkV2 struct {
 	// Details of the warning.
 	WarningMessage types.String `tfsdk:"warning_message"`
-	// The AWS resource associated with this warning: a subnet or a security
-	// group.
+
 	WarningType types.String `tfsdk:"warning_type"`
 }
 
-func (newState *NetworkWarning_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkWarning_SdkV2) {
+func (toState *NetworkWarning_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkWarning_SdkV2) {
 }
 
-func (newState *NetworkWarning_SdkV2) SyncEffectiveFieldsDuringRead(existingState NetworkWarning_SdkV2) {
+func (toState *NetworkWarning_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkWarning_SdkV2) {
 }
 
 func (c NetworkWarning_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3257,12 +3529,7 @@ type PrivateAccessSettings_SdkV2 struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// An array of Databricks VPC endpoint IDs.
 	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
-	// The private access level controls which VPC endpoints can connect to the
-	// UI or API of any workspace that attaches this private access settings
-	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
-	// that are registered in your Databricks account connect to your workspace.
-	// * `ENDPOINT` level access allows only specified VPC endpoints connect to
-	// your workspace. For details, see `allowed_vpc_endpoint_ids`.
+
 	PrivateAccessLevel types.String `tfsdk:"private_access_level"`
 	// Databricks private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"private_access_settings_id"`
@@ -3279,10 +3546,10 @@ type PrivateAccessSettings_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *PrivateAccessSettings_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivateAccessSettings_SdkV2) {
+func (toState *PrivateAccessSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrivateAccessSettings_SdkV2) {
 }
 
-func (newState *PrivateAccessSettings_SdkV2) SyncEffectiveFieldsDuringRead(existingState PrivateAccessSettings_SdkV2) {
+func (toState *PrivateAccessSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PrivateAccessSettings_SdkV2) {
 }
 
 func (c PrivateAccessSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3370,6 +3637,110 @@ func (o *PrivateAccessSettings_SdkV2) SetAllowedVpcEndpointIds(ctx context.Conte
 	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
+type ReplacePrivateAccessSettingsRequest_SdkV2 struct {
+	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
+	// is returned when registering the VPC endpoint configuration in your
+	// Databricks account. This is not the ID of the VPC endpoint in AWS.
+	//
+	// Only used when `private_access_level` is set to `ENDPOINT`. This is an
+	// allow list of VPC endpoints that in your account that can connect to your
+	// workspace over AWS PrivateLink.
+	//
+	// If hybrid access to your workspace is enabled by setting
+	// `public_access_enabled` to `true`, this control only works for
+	// PrivateLink connections. To control how your workspace is accessed via
+	// public internet, see [IP access lists].
+	//
+	// [IP access lists]: https://docs.databricks.com/security/network/ip-access-list.html
+	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
+
+	PrivateAccessLevel types.String `tfsdk:"private_access_level"`
+	// Databricks Account API private access settings ID.
+	PrivateAccessSettingsId types.String `tfsdk:"-"`
+	// The human-readable name of the private access settings object.
+	PrivateAccessSettingsName types.String `tfsdk:"private_access_settings_name"`
+	// Determines if the workspace can be accessed over public internet. For
+	// fully private workspaces, you can optionally specify `false`, but only if
+	// you implement both the front-end and the back-end PrivateLink
+	// connections. Otherwise, specify `true`, which means that public access is
+	// enabled.
+	PublicAccessEnabled types.Bool `tfsdk:"public_access_enabled"`
+	// The cloud region for workspaces associated with this private access
+	// settings object.
+	Region types.String `tfsdk:"region"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplacePrivateAccessSettingsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ReplacePrivateAccessSettingsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ReplacePrivateAccessSettingsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ReplacePrivateAccessSettingsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_vpc_endpoint_ids":     o.AllowedVpcEndpointIds,
+			"private_access_level":         o.PrivateAccessLevel,
+			"private_access_settings_id":   o.PrivateAccessSettingsId,
+			"private_access_settings_name": o.PrivateAccessSettingsName,
+			"public_access_enabled":        o.PublicAccessEnabled,
+			"region":                       o.Region,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ReplacePrivateAccessSettingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_vpc_endpoint_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"private_access_level":         types.StringType,
+			"private_access_settings_id":   types.StringType,
+			"private_access_settings_name": types.StringType,
+			"public_access_enabled":        types.BoolType,
+			"region":                       types.StringType,
+		},
+	}
+}
+
+// GetAllowedVpcEndpointIds returns the value of the AllowedVpcEndpointIds field in ReplacePrivateAccessSettingsRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ReplacePrivateAccessSettingsRequest_SdkV2) GetAllowedVpcEndpointIds(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedVpcEndpointIds.IsNull() || o.AllowedVpcEndpointIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedVpcEndpointIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedVpcEndpointIds sets the value of the AllowedVpcEndpointIds field in ReplacePrivateAccessSettingsRequest_SdkV2.
+func (o *ReplacePrivateAccessSettingsRequest_SdkV2) SetAllowedVpcEndpointIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
+}
+
 type ReplaceResponse_SdkV2 struct {
 }
 
@@ -3406,10 +3777,10 @@ type RootBucketInfo_SdkV2 struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 }
 
-func (newState *RootBucketInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RootBucketInfo_SdkV2) {
+func (toState *RootBucketInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RootBucketInfo_SdkV2) {
 }
 
-func (newState *RootBucketInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RootBucketInfo_SdkV2) {
+func (toState *RootBucketInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RootBucketInfo_SdkV2) {
 }
 
 func (c RootBucketInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3454,7 +3825,7 @@ type StorageConfiguration_SdkV2 struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when the storage configuration was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
-	// Root S3 bucket information.
+
 	RootBucketInfo types.List `tfsdk:"root_bucket_info"`
 	// Databricks storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id"`
@@ -3462,10 +3833,26 @@ type StorageConfiguration_SdkV2 struct {
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name"`
 }
 
-func (newState *StorageConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StorageConfiguration_SdkV2) {
+func (toState *StorageConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StorageConfiguration_SdkV2) {
+	if !fromPlan.RootBucketInfo.IsNull() && !fromPlan.RootBucketInfo.IsUnknown() {
+		if toStateRootBucketInfo, ok := toState.GetRootBucketInfo(ctx); ok {
+			if fromPlanRootBucketInfo, ok := fromPlan.GetRootBucketInfo(ctx); ok {
+				toStateRootBucketInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRootBucketInfo)
+				toState.SetRootBucketInfo(ctx, toStateRootBucketInfo)
+			}
+		}
+	}
 }
 
-func (newState *StorageConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration_SdkV2) {
+func (toState *StorageConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StorageConfiguration_SdkV2) {
+	if !fromState.RootBucketInfo.IsNull() && !fromState.RootBucketInfo.IsUnknown() {
+		if toStateRootBucketInfo, ok := toState.GetRootBucketInfo(ctx); ok {
+			if fromStateRootBucketInfo, ok := fromState.GetRootBucketInfo(ctx); ok {
+				toStateRootBucketInfo.SyncFieldsDuringRead(ctx, fromStateRootBucketInfo)
+				toState.SetRootBucketInfo(ctx, toStateRootBucketInfo)
+			}
+		}
+	}
 }
 
 func (c StorageConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3556,10 +3943,10 @@ type StsRole_SdkV2 struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (newState *StsRole_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StsRole_SdkV2) {
+func (toState *StsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StsRole_SdkV2) {
 }
 
-func (newState *StsRole_SdkV2) SyncEffectiveFieldsDuringRead(existingState StsRole_SdkV2) {
+func (toState *StsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StsRole_SdkV2) {
 }
 
 func (c StsRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3667,27 +4054,6 @@ type UpdateWorkspaceRequest_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-func (newState *UpdateWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceRequest_SdkV2) {
-}
-
-func (newState *UpdateWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceRequest_SdkV2) {
-}
-
-func (c UpdateWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_region"] = attrs["aws_region"].SetOptional()
-	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
-	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
-	attrs["network_id"] = attrs["network_id"].SetOptional()
-	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
-	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
-	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3767,132 +4133,6 @@ func (o *UpdateWorkspaceRequest_SdkV2) SetCustomTags(ctx context.Context, v map[
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
-type UpsertPrivateAccessSettingsRequest_SdkV2 struct {
-	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
-	// is returned when registering the VPC endpoint configuration in your
-	// Databricks account. This is not the ID of the VPC endpoint in AWS.
-	//
-	// Only used when `private_access_level` is set to `ENDPOINT`. This is an
-	// allow list of VPC endpoints that in your account that can connect to your
-	// workspace over AWS PrivateLink.
-	//
-	// If hybrid access to your workspace is enabled by setting
-	// `public_access_enabled` to `true`, this control only works for
-	// PrivateLink connections. To control how your workspace is accessed via
-	// public internet, see [IP access lists].
-	//
-	// [IP access lists]: https://docs.databricks.com/security/network/ip-access-list.html
-	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
-	// The private access level controls which VPC endpoints can connect to the
-	// UI or API of any workspace that attaches this private access settings
-	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
-	// that are registered in your Databricks account connect to your workspace.
-	// * `ENDPOINT` level access allows only specified VPC endpoints connect to
-	// your workspace. For details, see `allowed_vpc_endpoint_ids`.
-	PrivateAccessLevel types.String `tfsdk:"private_access_level"`
-	// Databricks Account API private access settings ID.
-	PrivateAccessSettingsId types.String `tfsdk:"-"`
-	// The human-readable name of the private access settings object.
-	PrivateAccessSettingsName types.String `tfsdk:"private_access_settings_name"`
-	// Determines if the workspace can be accessed over public internet. For
-	// fully private workspaces, you can optionally specify `false`, but only if
-	// you implement both the front-end and the back-end PrivateLink
-	// connections. Otherwise, specify `true`, which means that public access is
-	// enabled.
-	PublicAccessEnabled types.Bool `tfsdk:"public_access_enabled"`
-	// The cloud region for workspaces associated with this private access
-	// settings object.
-	Region types.String `tfsdk:"region"`
-}
-
-func (newState *UpsertPrivateAccessSettingsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertPrivateAccessSettingsRequest_SdkV2) {
-}
-
-func (newState *UpsertPrivateAccessSettingsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpsertPrivateAccessSettingsRequest_SdkV2) {
-}
-
-func (c UpsertPrivateAccessSettingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
-	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
-	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
-	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetRequired()
-	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
-	attrs["region"] = attrs["region"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertPrivateAccessSettingsRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpsertPrivateAccessSettingsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpsertPrivateAccessSettingsRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpsertPrivateAccessSettingsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"allowed_vpc_endpoint_ids":     o.AllowedVpcEndpointIds,
-			"private_access_level":         o.PrivateAccessLevel,
-			"private_access_settings_id":   o.PrivateAccessSettingsId,
-			"private_access_settings_name": o.PrivateAccessSettingsName,
-			"public_access_enabled":        o.PublicAccessEnabled,
-			"region":                       o.Region,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpsertPrivateAccessSettingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"allowed_vpc_endpoint_ids": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"private_access_level":         types.StringType,
-			"private_access_settings_id":   types.StringType,
-			"private_access_settings_name": types.StringType,
-			"public_access_enabled":        types.BoolType,
-			"region":                       types.StringType,
-		},
-	}
-}
-
-// GetAllowedVpcEndpointIds returns the value of the AllowedVpcEndpointIds field in UpsertPrivateAccessSettingsRequest_SdkV2 as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *UpsertPrivateAccessSettingsRequest_SdkV2) GetAllowedVpcEndpointIds(ctx context.Context) ([]types.String, bool) {
-	if o.AllowedVpcEndpointIds.IsNull() || o.AllowedVpcEndpointIds.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.AllowedVpcEndpointIds.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetAllowedVpcEndpointIds sets the value of the AllowedVpcEndpointIds field in UpsertPrivateAccessSettingsRequest_SdkV2.
-func (o *UpsertPrivateAccessSettingsRequest_SdkV2) SetAllowedVpcEndpointIds(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
-}
-
 type VpcEndpoint_SdkV2 struct {
 	// The Databricks account ID that hosts the VPC endpoint configuration.
 	AccountId types.String `tfsdk:"account_id"`
@@ -3907,8 +4147,7 @@ type VpcEndpoint_SdkV2 struct {
 	AwsEndpointServiceId types.String `tfsdk:"aws_endpoint_service_id"`
 	// The ID of the VPC endpoint object in AWS.
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id"`
-	// The Google Cloud specific information for this Private Service Connect
-	// endpoint.
+
 	GcpVpcEndpointInfo types.List `tfsdk:"gcp_vpc_endpoint_info"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region"`
@@ -3918,10 +4157,7 @@ type VpcEndpoint_SdkV2 struct {
 	//
 	// [AWS DescribeVpcEndpoint documentation]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpc-endpoints.html
 	State types.String `tfsdk:"state"`
-	// This enumeration represents the type of Databricks VPC [endpoint service]
-	// that was used when creating this VPC endpoint.
-	//
-	// [endpoint service]: https://docs.aws.amazon.com/vpc/latest/privatelink/endpoint-service.html
+
 	UseCase types.String `tfsdk:"use_case"`
 	// Databricks VPC endpoint ID. This is the Databricks-specific name of the
 	// VPC endpoint. Do not confuse this with the `aws_vpc_endpoint_id`, which
@@ -3931,10 +4167,26 @@ type VpcEndpoint_SdkV2 struct {
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name"`
 }
 
-func (newState *VpcEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan VpcEndpoint_SdkV2) {
+func (toState *VpcEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VpcEndpoint_SdkV2) {
+	if !fromPlan.GcpVpcEndpointInfo.IsNull() && !fromPlan.GcpVpcEndpointInfo.IsUnknown() {
+		if toStateGcpVpcEndpointInfo, ok := toState.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromPlanGcpVpcEndpointInfo, ok := fromPlan.GetGcpVpcEndpointInfo(ctx); ok {
+				toStateGcpVpcEndpointInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpVpcEndpointInfo)
+				toState.SetGcpVpcEndpointInfo(ctx, toStateGcpVpcEndpointInfo)
+			}
+		}
+	}
 }
 
-func (newState *VpcEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState VpcEndpoint_SdkV2) {
+func (toState *VpcEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState VpcEndpoint_SdkV2) {
+	if !fromState.GcpVpcEndpointInfo.IsNull() && !fromState.GcpVpcEndpointInfo.IsUnknown() {
+		if toStateGcpVpcEndpointInfo, ok := toState.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromStateGcpVpcEndpointInfo, ok := fromState.GetGcpVpcEndpointInfo(ctx); ok {
+				toStateGcpVpcEndpointInfo.SyncFieldsDuringRead(ctx, fromStateGcpVpcEndpointInfo)
+				toState.SetGcpVpcEndpointInfo(ctx, toStateGcpVpcEndpointInfo)
+			}
+		}
+	}
 }
 
 func (c VpcEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4041,8 +4293,7 @@ type Workspace_SdkV2 struct {
 	AzureWorkspaceInfo types.List `tfsdk:"azure_workspace_info"`
 	// The cloud name. This field always has the value `gcp`.
 	Cloud types.String `tfsdk:"cloud"`
-	// The general workspace configurations that are specific to cloud
-	// providers.
+
 	CloudResourceContainer types.List `tfsdk:"cloud_resource_container"`
 	// Time in epoch milliseconds when the workspace was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
@@ -4064,31 +4315,9 @@ type Workspace_SdkV2 struct {
 	// is populated. If this workspace is not for a external customer, then
 	// external_customer_info is empty.
 	ExternalCustomerInfo types.List `tfsdk:"external_customer_info"`
-	// The network settings for the workspace. The configurations are only for
-	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
-	// VPC in the `network_id` field.", All the IP range configurations must be
-	// mutually exclusive. An attempt to create a workspace fails if Databricks
-	// detects an IP range overlap.
-	//
-	// Specify custom IP ranges in CIDR format. The IP ranges for these fields
-	// must not overlap, and all IP addresses must be entirely within the
-	// following ranges: `10.0.0.0/8`, `100.64.0.0/10`, `172.16.0.0/12`,
-	// `192.168.0.0/16`, and `240.0.0.0/4`.
-	//
-	// The sizes of these IP ranges affect the maximum number of nodes for the
-	// workspace.
-	//
-	// **Important**: Confirm the IP ranges used by your Databricks workspace
-	// before creating the workspace. You cannot change them after your
-	// workspace is deployed. If the IP address ranges for your Databricks are
-	// too small, IP exhaustion can occur, causing your Databricks jobs to fail.
-	// To determine the address range sizes that you need, Databricks provides a
-	// calculator as a Microsoft Excel spreadsheet. See [calculate subnet sizes
-	// for a new workspace].
-	//
-	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
+
 	GcpManagedNetworkConfig types.List `tfsdk:"gcp_managed_network_config"`
-	// The configurations for the GKE cluster of a Databricks workspace.
+
 	GkeConfig types.List `tfsdk:"gke_config"`
 	// Whether no public IP is enabled for the workspace.
 	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled"`
@@ -4100,10 +4329,7 @@ type Workspace_SdkV2 struct {
 	// The network configuration ID that is attached to the workspace. This
 	// field is available only if the network is a customer-managed network.
 	NetworkId types.String `tfsdk:"network_id"`
-	// The pricing tier of the workspace. For pricing tier information, see [AWS
-	// Pricing].
-	//
-	// [AWS Pricing]: https://databricks.com/product/aws-pricing
+
 	PricingTier types.String `tfsdk:"pricing_tier"`
 	// ID of the workspace's private access settings object. Only used for
 	// PrivateLink. You must specify this ID if you are using [AWS PrivateLink]
@@ -4124,18 +4350,96 @@ type Workspace_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 	// The human-readable name of the workspace.
 	WorkspaceName types.String `tfsdk:"workspace_name"`
-	// The status of the workspace. For workspace creation, usually it is set to
-	// `PROVISIONING` initially. Continue to check the status until the status
-	// is `RUNNING`.
+
 	WorkspaceStatus types.String `tfsdk:"workspace_status"`
 	// Message describing the current workspace status.
 	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message"`
 }
 
-func (newState *Workspace_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspace_SdkV2) {
+func (toState *Workspace_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Workspace_SdkV2) {
+	if !fromPlan.AzureWorkspaceInfo.IsNull() && !fromPlan.AzureWorkspaceInfo.IsUnknown() {
+		if toStateAzureWorkspaceInfo, ok := toState.GetAzureWorkspaceInfo(ctx); ok {
+			if fromPlanAzureWorkspaceInfo, ok := fromPlan.GetAzureWorkspaceInfo(ctx); ok {
+				toStateAzureWorkspaceInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureWorkspaceInfo)
+				toState.SetAzureWorkspaceInfo(ctx, toStateAzureWorkspaceInfo)
+			}
+		}
+	}
+	if !fromPlan.CloudResourceContainer.IsNull() && !fromPlan.CloudResourceContainer.IsUnknown() {
+		if toStateCloudResourceContainer, ok := toState.GetCloudResourceContainer(ctx); ok {
+			if fromPlanCloudResourceContainer, ok := fromPlan.GetCloudResourceContainer(ctx); ok {
+				toStateCloudResourceContainer.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCloudResourceContainer)
+				toState.SetCloudResourceContainer(ctx, toStateCloudResourceContainer)
+			}
+		}
+	}
+	if !fromPlan.ExternalCustomerInfo.IsNull() && !fromPlan.ExternalCustomerInfo.IsUnknown() {
+		if toStateExternalCustomerInfo, ok := toState.GetExternalCustomerInfo(ctx); ok {
+			if fromPlanExternalCustomerInfo, ok := fromPlan.GetExternalCustomerInfo(ctx); ok {
+				toStateExternalCustomerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalCustomerInfo)
+				toState.SetExternalCustomerInfo(ctx, toStateExternalCustomerInfo)
+			}
+		}
+	}
+	if !fromPlan.GcpManagedNetworkConfig.IsNull() && !fromPlan.GcpManagedNetworkConfig.IsUnknown() {
+		if toStateGcpManagedNetworkConfig, ok := toState.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromPlanGcpManagedNetworkConfig, ok := fromPlan.GetGcpManagedNetworkConfig(ctx); ok {
+				toStateGcpManagedNetworkConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpManagedNetworkConfig)
+				toState.SetGcpManagedNetworkConfig(ctx, toStateGcpManagedNetworkConfig)
+			}
+		}
+	}
+	if !fromPlan.GkeConfig.IsNull() && !fromPlan.GkeConfig.IsUnknown() {
+		if toStateGkeConfig, ok := toState.GetGkeConfig(ctx); ok {
+			if fromPlanGkeConfig, ok := fromPlan.GetGkeConfig(ctx); ok {
+				toStateGkeConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGkeConfig)
+				toState.SetGkeConfig(ctx, toStateGkeConfig)
+			}
+		}
+	}
 }
 
-func (newState *Workspace_SdkV2) SyncEffectiveFieldsDuringRead(existingState Workspace_SdkV2) {
+func (toState *Workspace_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Workspace_SdkV2) {
+	if !fromState.AzureWorkspaceInfo.IsNull() && !fromState.AzureWorkspaceInfo.IsUnknown() {
+		if toStateAzureWorkspaceInfo, ok := toState.GetAzureWorkspaceInfo(ctx); ok {
+			if fromStateAzureWorkspaceInfo, ok := fromState.GetAzureWorkspaceInfo(ctx); ok {
+				toStateAzureWorkspaceInfo.SyncFieldsDuringRead(ctx, fromStateAzureWorkspaceInfo)
+				toState.SetAzureWorkspaceInfo(ctx, toStateAzureWorkspaceInfo)
+			}
+		}
+	}
+	if !fromState.CloudResourceContainer.IsNull() && !fromState.CloudResourceContainer.IsUnknown() {
+		if toStateCloudResourceContainer, ok := toState.GetCloudResourceContainer(ctx); ok {
+			if fromStateCloudResourceContainer, ok := fromState.GetCloudResourceContainer(ctx); ok {
+				toStateCloudResourceContainer.SyncFieldsDuringRead(ctx, fromStateCloudResourceContainer)
+				toState.SetCloudResourceContainer(ctx, toStateCloudResourceContainer)
+			}
+		}
+	}
+	if !fromState.ExternalCustomerInfo.IsNull() && !fromState.ExternalCustomerInfo.IsUnknown() {
+		if toStateExternalCustomerInfo, ok := toState.GetExternalCustomerInfo(ctx); ok {
+			if fromStateExternalCustomerInfo, ok := fromState.GetExternalCustomerInfo(ctx); ok {
+				toStateExternalCustomerInfo.SyncFieldsDuringRead(ctx, fromStateExternalCustomerInfo)
+				toState.SetExternalCustomerInfo(ctx, toStateExternalCustomerInfo)
+			}
+		}
+	}
+	if !fromState.GcpManagedNetworkConfig.IsNull() && !fromState.GcpManagedNetworkConfig.IsUnknown() {
+		if toStateGcpManagedNetworkConfig, ok := toState.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromStateGcpManagedNetworkConfig, ok := fromState.GetGcpManagedNetworkConfig(ctx); ok {
+				toStateGcpManagedNetworkConfig.SyncFieldsDuringRead(ctx, fromStateGcpManagedNetworkConfig)
+				toState.SetGcpManagedNetworkConfig(ctx, toStateGcpManagedNetworkConfig)
+			}
+		}
+	}
+	if !fromState.GkeConfig.IsNull() && !fromState.GkeConfig.IsUnknown() {
+		if toStateGkeConfig, ok := toState.GetGkeConfig(ctx); ok {
+			if fromStateGkeConfig, ok := fromState.GetGkeConfig(ctx); ok {
+				toStateGkeConfig.SyncFieldsDuringRead(ctx, fromStateGkeConfig)
+				toState.SetGkeConfig(ctx, toStateGkeConfig)
+			}
+		}
+	}
 }
 
 func (c Workspace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

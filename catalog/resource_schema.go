@@ -19,6 +19,7 @@ type SchemaInfo struct {
 	Owner                        string            `json:"owner,omitempty" tf:"computed"`
 	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
 	FullName                     string            `json:"full_name,omitempty" tf:"computed"`
+	SchemaID                     string            `json:"schema_id" tf:"computed"`
 }
 
 func ResourceSchema() common.Resource {

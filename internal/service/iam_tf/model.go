@@ -25,7 +25,7 @@ import (
 type AccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -33,10 +33,10 @@ type AccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlRequest) {
+func (toState *AccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccessControlRequest) {
 }
 
-func (newState *AccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AccessControlRequest) {
+func (toState *AccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState AccessControlRequest) {
 }
 
 func (c AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -98,10 +98,10 @@ type AccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlResponse) {
+func (toState *AccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccessControlResponse) {
 }
 
-func (newState *AccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AccessControlResponse) {
+func (toState *AccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState AccessControlResponse) {
 }
 
 func (c AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -190,10 +190,10 @@ type Actor struct {
 	ActorId types.Int64 `tfsdk:"actor_id"`
 }
 
-func (newState *Actor) SyncEffectiveFieldsDuringCreateOrUpdate(plan Actor) {
+func (toState *Actor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Actor) {
 }
 
-func (newState *Actor) SyncEffectiveFieldsDuringRead(existingState Actor) {
+func (toState *Actor) SyncFieldsDuringRead(ctx context.Context, fromState Actor) {
 }
 
 func (c Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -239,10 +239,26 @@ type CheckPolicyResponse struct {
 	IsPermitted types.Bool `tfsdk:"is_permitted"`
 }
 
-func (newState *CheckPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CheckPolicyResponse) {
+func (toState *CheckPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CheckPolicyResponse) {
+	if !fromPlan.ConsistencyToken.IsNull() && !fromPlan.ConsistencyToken.IsUnknown() {
+		if toStateConsistencyToken, ok := toState.GetConsistencyToken(ctx); ok {
+			if fromPlanConsistencyToken, ok := fromPlan.GetConsistencyToken(ctx); ok {
+				toStateConsistencyToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConsistencyToken)
+				toState.SetConsistencyToken(ctx, toStateConsistencyToken)
+			}
+		}
+	}
 }
 
-func (newState *CheckPolicyResponse) SyncEffectiveFieldsDuringRead(existingState CheckPolicyResponse) {
+func (toState *CheckPolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState CheckPolicyResponse) {
+	if !fromState.ConsistencyToken.IsNull() && !fromState.ConsistencyToken.IsUnknown() {
+		if toStateConsistencyToken, ok := toState.GetConsistencyToken(ctx); ok {
+			if fromStateConsistencyToken, ok := fromState.GetConsistencyToken(ctx); ok {
+				toStateConsistencyToken.SyncFieldsDuringRead(ctx, fromStateConsistencyToken)
+				toState.SetConsistencyToken(ctx, toStateConsistencyToken)
+			}
+		}
+	}
 }
 
 func (c CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -295,7 +311,7 @@ func (o *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (Consiste
 	if o.ConsistencyToken.IsNull() || o.ConsistencyToken.IsUnknown() {
 		return e, false
 	}
-	var v []ConsistencyToken
+	var v ConsistencyToken
 	d := o.ConsistencyToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -303,10 +319,7 @@ func (o *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (Consiste
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConsistencyToken sets the value of the ConsistencyToken field in CheckPolicyResponse.
@@ -327,10 +340,10 @@ type ComplexValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *ComplexValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplexValue) {
+func (toState *ComplexValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComplexValue) {
 }
 
-func (newState *ComplexValue) SyncEffectiveFieldsDuringRead(existingState ComplexValue) {
+func (toState *ComplexValue) SyncFieldsDuringRead(ctx context.Context, fromState ComplexValue) {
 }
 
 func (c ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -386,10 +399,10 @@ type ConsistencyToken struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *ConsistencyToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsistencyToken) {
+func (toState *ConsistencyToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ConsistencyToken) {
 }
 
-func (newState *ConsistencyToken) SyncEffectiveFieldsDuringRead(existingState ConsistencyToken) {
+func (toState *ConsistencyToken) SyncFieldsDuringRead(ctx context.Context, fromState ConsistencyToken) {
 }
 
 func (c ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -429,7 +442,6 @@ func (o ConsistencyToken) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group.
 type DeleteAccountGroupRequest struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -466,7 +478,6 @@ func (o DeleteAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal.
 type DeleteAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -503,7 +514,6 @@ func (o DeleteAccountServicePrincipalRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Delete a user.
 type DeleteAccountUserRequest struct {
 	// Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -540,7 +550,6 @@ func (o DeleteAccountUserRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a group.
 type DeleteGroupRequest struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -607,7 +616,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a service principal.
 type DeleteServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -644,7 +652,6 @@ func (o DeleteServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a user.
 type DeleteUserRequest struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -681,7 +688,6 @@ func (o DeleteUserRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete permissions assignment
 type DeleteWorkspaceAssignmentRequest struct {
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
@@ -725,10 +731,10 @@ func (o DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 type DeleteWorkspacePermissionAssignmentResponse struct {
 }
 
-func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspacePermissionAssignmentResponse) {
+func (toState *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteWorkspacePermissionAssignmentResponse) {
 }
 
-func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspacePermissionAssignmentResponse) {
+func (toState *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteWorkspacePermissionAssignmentResponse) {
 }
 
 func (c DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -763,7 +769,6 @@ func (o DeleteWorkspacePermissionAssignmentResponse) Type(ctx context.Context) a
 	}
 }
 
-// Get group details.
 type GetAccountGroupRequest struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -800,7 +805,6 @@ func (o GetAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details.
 type GetAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
@@ -837,7 +841,6 @@ func (o GetAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get user details.
 type GetAccountUserRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -909,7 +912,6 @@ func (o GetAccountUserRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest struct {
 	// The resource name for which assignable roles will be listed.
 	//
@@ -956,10 +958,10 @@ type GetAssignableRolesForResourceResponse struct {
 	Roles types.List `tfsdk:"roles"`
 }
 
-func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceResponse) {
+func (toState *GetAssignableRolesForResourceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAssignableRolesForResourceResponse) {
 }
 
-func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceResponse) {
+func (toState *GetAssignableRolesForResourceResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetAssignableRolesForResourceResponse) {
 }
 
 func (c GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1029,7 +1031,6 @@ func (o *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v 
 	o.Roles = types.ListValueMust(t, vs)
 }
 
-// Get group details.
 type GetGroupRequest struct {
 	// Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1066,15 +1067,45 @@ func (o GetGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetPasswordPermissionLevelsRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPasswordPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetPasswordPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPasswordPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetPasswordPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPasswordPermissionLevelsResponse) {
+func (toState *GetPasswordPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPasswordPermissionLevelsResponse) {
 }
 
-func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPasswordPermissionLevelsResponse) {
+func (toState *GetPasswordPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPasswordPermissionLevelsResponse) {
 }
 
 func (c GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1144,14 +1175,43 @@ func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permission levels
+type GetPasswordPermissionsRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o GetPasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type GetPermissionLevelsRequest struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
+	// alertsv2, authorization, clusters, cluster-policies, dashboards,
+	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
+	// notebooks, pipelines, queries, registered-models, repos,
+	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -1193,10 +1253,10 @@ type GetPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionLevelsResponse) {
+func (toState *GetPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPermissionLevelsResponse) {
 }
 
-func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsResponse) {
+func (toState *GetPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPermissionLevelsResponse) {
 }
 
 func (c GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1266,15 +1326,14 @@ func (o *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get object permissions
 type GetPermissionRequest struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
+	// alertsv2, authorization, clusters, cluster-policies, dashboards,
+	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
+	// notebooks, pipelines, queries, registered-models, repos,
+	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -1311,7 +1370,6 @@ func (o GetPermissionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get a rule set
 type GetRuleSetRequest struct {
 	// Etag used for versioning. The response is at least as fresh as the eTag
 	// provided. Etag is used for optimistic concurrency control as a way to
@@ -1372,7 +1430,6 @@ func (o GetRuleSetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get service principal details.
 type GetServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -1409,7 +1466,6 @@ func (o GetServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get user details.
 type GetUserRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1481,7 +1537,6 @@ func (o GetUserRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List workspace permissions
 type GetWorkspaceAssignmentRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -1529,10 +1584,10 @@ type GrantRule struct {
 	Role types.String `tfsdk:"role"`
 }
 
-func (newState *GrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan GrantRule) {
+func (toState *GrantRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GrantRule) {
 }
 
-func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule) {
+func (toState *GrantRule) SyncFieldsDuringRead(ctx context.Context, fromState GrantRule) {
 }
 
 func (c GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1629,10 +1684,26 @@ type Group struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *Group) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group) {
+func (toState *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Group) {
+	if !fromPlan.Meta.IsNull() && !fromPlan.Meta.IsUnknown() {
+		if toStateMeta, ok := toState.GetMeta(ctx); ok {
+			if fromPlanMeta, ok := fromPlan.GetMeta(ctx); ok {
+				toStateMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMeta)
+				toState.SetMeta(ctx, toStateMeta)
+			}
+		}
+	}
 }
 
-func (newState *Group) SyncEffectiveFieldsDuringRead(existingState Group) {
+func (toState *Group) SyncFieldsDuringRead(ctx context.Context, fromState Group) {
+	if !fromState.Meta.IsNull() && !fromState.Meta.IsUnknown() {
+		if toStateMeta, ok := toState.GetMeta(ctx); ok {
+			if fromStateMeta, ok := fromState.GetMeta(ctx); ok {
+				toStateMeta.SyncFieldsDuringRead(ctx, fromStateMeta)
+				toState.SetMeta(ctx, toStateMeta)
+			}
+		}
+	}
 }
 
 func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1799,7 +1870,7 @@ func (o *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	if o.Meta.IsNull() || o.Meta.IsUnknown() {
 		return e, false
 	}
-	var v []ResourceMeta
+	var v ResourceMeta
 	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1807,10 +1878,7 @@ func (o *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMeta sets the value of the Meta field in Group.
@@ -1871,7 +1939,6 @@ func (o *Group) SetSchemas(ctx context.Context, v []types.String) {
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List group details.
 type ListAccountGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -1938,7 +2005,6 @@ func (o ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List service principals.
 type ListAccountServicePrincipalsRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2005,7 +2071,6 @@ func (o ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type
 	}
 }
 
-// List users.
 type ListAccountUsersRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2073,7 +2138,6 @@ func (o ListAccountUsersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List group details.
 type ListGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2154,10 +2218,10 @@ type ListGroupsResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGroupsResponse) {
+func (toState *ListGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListGroupsResponse) {
 }
 
-func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState ListGroupsResponse) {
+func (toState *ListGroupsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListGroupsResponse) {
 }
 
 func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2282,10 +2346,10 @@ type ListServicePrincipalResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalResponse) {
+func (toState *ListServicePrincipalResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalResponse) {
 }
 
-func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalResponse) {
+func (toState *ListServicePrincipalResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListServicePrincipalResponse) {
 }
 
 func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2396,7 +2460,6 @@ func (o *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// List service principals.
 type ListServicePrincipalsRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2463,7 +2526,6 @@ func (o ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List users.
 type ListUsersRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
@@ -2545,10 +2607,10 @@ type ListUsersResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults"`
 }
 
-func (newState *ListUsersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUsersResponse) {
+func (toState *ListUsersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListUsersResponse) {
 }
 
-func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState ListUsersResponse) {
+func (toState *ListUsersResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListUsersResponse) {
 }
 
 func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2659,7 +2721,6 @@ func (o *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
-// Get permission assignments
 type ListWorkspaceAssignmentRequest struct {
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
@@ -2696,6 +2757,36 @@ func (o ListWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type MeRequest struct {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MeRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MeRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MeRequest
+// only implements ToObjectValue() and Type().
+func (o MeRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MeRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type MigratePermissionsRequest struct {
 	// The name of the workspace group that permissions will be migrated from.
 	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name"`
@@ -2706,21 +2797,6 @@ type MigratePermissionsRequest struct {
 	// WorkspaceId of the associated workspace where the permission migration
 	// will occur.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
-}
-
-func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsRequest) {
-}
-
-func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsRequest) {
-}
-
-func (c MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
-	attrs["size"] = attrs["size"].SetOptional()
-	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsRequest.
@@ -2765,10 +2841,10 @@ type MigratePermissionsResponse struct {
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated"`
 }
 
-func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsResponse) {
+func (toState *MigratePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MigratePermissionsResponse) {
 }
 
-func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsResponse) {
+func (toState *MigratePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState MigratePermissionsResponse) {
 }
 
 func (c MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2815,10 +2891,10 @@ type Name struct {
 	GivenName types.String `tfsdk:"givenName"`
 }
 
-func (newState *Name) SyncEffectiveFieldsDuringCreateOrUpdate(plan Name) {
+func (toState *Name) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Name) {
 }
 
-func (newState *Name) SyncEffectiveFieldsDuringRead(existingState Name) {
+func (toState *Name) SyncFieldsDuringRead(ctx context.Context, fromState Name) {
 }
 
 func (c Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2869,10 +2945,10 @@ type ObjectPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *ObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectPermissions) {
+func (toState *ObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ObjectPermissions) {
 }
 
-func (newState *ObjectPermissions) SyncEffectiveFieldsDuringRead(existingState ObjectPermissions) {
+func (toState *ObjectPermissions) SyncFieldsDuringRead(ctx context.Context, fromState ObjectPermissions) {
 }
 
 func (c ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2956,20 +3032,6 @@ type PartialUpdate struct {
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
-}
-
-func (newState *PartialUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartialUpdate) {
-}
-
-func (newState *PartialUpdate) SyncEffectiveFieldsDuringRead(existingState PartialUpdate) {
-}
-
-func (c PartialUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["Operations"] = attrs["Operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartialUpdate.
@@ -3077,10 +3139,10 @@ type PasswordAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlRequest) {
+func (toState *PasswordAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordAccessControlRequest) {
 }
 
-func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlRequest) {
+func (toState *PasswordAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState PasswordAccessControlRequest) {
 }
 
 func (c PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3142,10 +3204,10 @@ type PasswordAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlResponse) {
+func (toState *PasswordAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordAccessControlResponse) {
 }
 
-func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlResponse) {
+func (toState *PasswordAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState PasswordAccessControlResponse) {
 }
 
 func (c PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3235,10 +3297,10 @@ type PasswordPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PasswordPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermission) {
+func (toState *PasswordPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordPermission) {
 }
 
-func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState PasswordPermission) {
+func (toState *PasswordPermission) SyncFieldsDuringRead(ctx context.Context, fromState PasswordPermission) {
 }
 
 func (c PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3322,10 +3384,10 @@ type PasswordPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *PasswordPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissions) {
+func (toState *PasswordPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordPermissions) {
 }
 
-func (newState *PasswordPermissions) SyncEffectiveFieldsDuringRead(existingState PasswordPermissions) {
+func (toState *PasswordPermissions) SyncFieldsDuringRead(ctx context.Context, fromState PasswordPermissions) {
 }
 
 func (c PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3407,10 +3469,10 @@ type PasswordPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsDescription) {
+func (toState *PasswordPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordPermissionsDescription) {
 }
 
-func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsDescription) {
+func (toState *PasswordPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState PasswordPermissionsDescription) {
 }
 
 func (c PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3455,18 +3517,6 @@ func (o PasswordPermissionsDescription) Type(ctx context.Context) attr.Type {
 
 type PasswordPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
-}
-
-func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsRequest) {
-}
-
-func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsRequest) {
-}
-
-func (c PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsRequest.
@@ -3539,10 +3589,10 @@ type Patch struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *Patch) SyncEffectiveFieldsDuringCreateOrUpdate(plan Patch) {
+func (toState *Patch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Patch) {
 }
 
-func (newState *Patch) SyncEffectiveFieldsDuringRead(existingState Patch) {
+func (toState *Patch) SyncFieldsDuringRead(ctx context.Context, fromState Patch) {
 }
 
 func (c Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3622,14 +3672,14 @@ type Permission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *Permission) SyncEffectiveFieldsDuringCreateOrUpdate(plan Permission) {
+func (toState *Permission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Permission) {
 }
 
-func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permission) {
+func (toState *Permission) SyncFieldsDuringRead(ctx context.Context, fromState Permission) {
 }
 
 func (c Permission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3716,10 +3766,26 @@ type PermissionAssignment struct {
 	Principal types.Object `tfsdk:"principal"`
 }
 
-func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
+func (toState *PermissionAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionAssignment) {
+	if !fromPlan.Principal.IsNull() && !fromPlan.Principal.IsUnknown() {
+		if toStatePrincipal, ok := toState.GetPrincipal(ctx); ok {
+			if fromPlanPrincipal, ok := fromPlan.GetPrincipal(ctx); ok {
+				toStatePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPrincipal)
+				toState.SetPrincipal(ctx, toStatePrincipal)
+			}
+		}
+	}
 }
 
-func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingState PermissionAssignment) {
+func (toState *PermissionAssignment) SyncFieldsDuringRead(ctx context.Context, fromState PermissionAssignment) {
+	if !fromState.Principal.IsNull() && !fromState.Principal.IsUnknown() {
+		if toStatePrincipal, ok := toState.GetPrincipal(ctx); ok {
+			if fromStatePrincipal, ok := fromState.GetPrincipal(ctx); ok {
+				toStatePrincipal.SyncFieldsDuringRead(ctx, fromStatePrincipal)
+				toState.SetPrincipal(ctx, toStatePrincipal)
+			}
+		}
+	}
 }
 
 func (c PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3804,7 +3870,7 @@ func (o *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutpu
 	if o.Principal.IsNull() || o.Principal.IsUnknown() {
 		return e, false
 	}
-	var v []PrincipalOutput
+	var v PrincipalOutput
 	d := o.Principal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3812,10 +3878,7 @@ func (o *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutpu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPrincipal sets the value of the Principal field in PermissionAssignment.
@@ -3829,10 +3892,10 @@ type PermissionAssignments struct {
 	PermissionAssignments types.List `tfsdk:"permission_assignments"`
 }
 
-func (newState *PermissionAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignments) {
+func (toState *PermissionAssignments) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionAssignments) {
 }
 
-func (newState *PermissionAssignments) SyncEffectiveFieldsDuringRead(existingState PermissionAssignments) {
+func (toState *PermissionAssignments) SyncFieldsDuringRead(ctx context.Context, fromState PermissionAssignments) {
 }
 
 func (c PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3909,10 +3972,10 @@ type PermissionOutput struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PermissionOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionOutput) {
+func (toState *PermissionOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionOutput) {
 }
 
-func (newState *PermissionOutput) SyncEffectiveFieldsDuringRead(existingState PermissionOutput) {
+func (toState *PermissionOutput) SyncFieldsDuringRead(ctx context.Context, fromState PermissionOutput) {
 }
 
 func (c PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3957,14 +4020,14 @@ func (o PermissionOutput) Type(ctx context.Context) attr.Type {
 
 type PermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsDescription) {
+func (toState *PermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PermissionsDescription) {
 }
 
-func (newState *PermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PermissionsDescription) {
+func (toState *PermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState PermissionsDescription) {
 }
 
 func (c PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4022,10 +4085,10 @@ type PrincipalOutput struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PrincipalOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrincipalOutput) {
+func (toState *PrincipalOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrincipalOutput) {
 }
 
-func (newState *PrincipalOutput) SyncEffectiveFieldsDuringRead(existingState PrincipalOutput) {
+func (toState *PrincipalOutput) SyncFieldsDuringRead(ctx context.Context, fromState PrincipalOutput) {
 }
 
 func (c PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4083,10 +4146,10 @@ type ResourceMeta struct {
 	ResourceType types.String `tfsdk:"resourceType"`
 }
 
-func (newState *ResourceMeta) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResourceMeta) {
+func (toState *ResourceMeta) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResourceMeta) {
 }
 
-func (newState *ResourceMeta) SyncEffectiveFieldsDuringRead(existingState ResourceMeta) {
+func (toState *ResourceMeta) SyncFieldsDuringRead(ctx context.Context, fromState ResourceMeta) {
 }
 
 func (c ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4131,10 +4194,10 @@ type Role struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *Role) SyncEffectiveFieldsDuringCreateOrUpdate(plan Role) {
+func (toState *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Role) {
 }
 
-func (newState *Role) SyncEffectiveFieldsDuringRead(existingState Role) {
+func (toState *Role) SyncFieldsDuringRead(ctx context.Context, fromState Role) {
 }
 
 func (c Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4191,10 +4254,10 @@ type RuleSetResponse struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *RuleSetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetResponse) {
+func (toState *RuleSetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RuleSetResponse) {
 }
 
-func (newState *RuleSetResponse) SyncEffectiveFieldsDuringRead(existingState RuleSetResponse) {
+func (toState *RuleSetResponse) SyncFieldsDuringRead(ctx context.Context, fromState RuleSetResponse) {
 }
 
 func (c RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4287,10 +4350,10 @@ type RuleSetUpdateRequest struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetUpdateRequest) {
+func (toState *RuleSetUpdateRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RuleSetUpdateRequest) {
 }
 
-func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState RuleSetUpdateRequest) {
+func (toState *RuleSetUpdateRequest) SyncFieldsDuringRead(ctx context.Context, fromState RuleSetUpdateRequest) {
 }
 
 func (c RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4390,10 +4453,10 @@ type ServicePrincipal struct {
 	Schemas types.List `tfsdk:"schemas"`
 }
 
-func (newState *ServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
+func (toState *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServicePrincipal) {
 }
 
-func (newState *ServicePrincipal) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal) {
+func (toState *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, fromState ServicePrincipal) {
 }
 
 func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4579,25 +4642,11 @@ type SetObjectPermissions struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
+	// alertsv2, authorization, clusters, cluster-policies, dashboards,
+	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
+	// notebooks, pipelines, queries, registered-models, repos,
+	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *SetObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetObjectPermissions) {
-}
-
-func (newState *SetObjectPermissions) SyncEffectiveFieldsDuringRead(existingState SetObjectPermissions) {
-}
-
-func (c SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
@@ -4670,25 +4719,11 @@ type UpdateObjectPermissions struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
-	// directories, experiments, files, instance-pools, jobs, notebooks,
-	// pipelines, queries, registered-models, repos, serving-endpoints, or
-	// warehouses.
+	// alertsv2, authorization, clusters, cluster-policies, dashboards,
+	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
+	// notebooks, pipelines, queries, registered-models, repos,
+	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateObjectPermissions) {
-}
-
-func (newState *UpdateObjectPermissions) SyncEffectiveFieldsDuringRead(existingState UpdateObjectPermissions) {
-}
-
-func (c UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
@@ -4793,19 +4828,6 @@ type UpdateRuleSetRequest struct {
 	RuleSet types.Object `tfsdk:"rule_set"`
 }
 
-func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest) {
-}
-
-func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRuleSetRequest) {
-}
-
-func (c UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRuleSetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4849,7 +4871,7 @@ func (o *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateReq
 	if o.RuleSet.IsNull() || o.RuleSet.IsUnknown() {
 		return e, false
 	}
-	var v []RuleSetUpdateRequest
+	var v RuleSetUpdateRequest
 	d := o.RuleSet.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4857,10 +4879,7 @@ func (o *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateReq
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRuleSet sets the value of the RuleSet field in UpdateRuleSetRequest.
@@ -4881,20 +4900,6 @@ type UpdateWorkspaceAssignments struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceAssignments) {
-}
-
-func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceAssignments) {
-}
-
-func (c UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignments.
@@ -4995,10 +5000,26 @@ type User struct {
 	UserName types.String `tfsdk:"userName"`
 }
 
-func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
+func (toState *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan User) {
+	if !fromPlan.Name.IsNull() && !fromPlan.Name.IsUnknown() {
+		if toStateName, ok := toState.GetName(ctx); ok {
+			if fromPlanName, ok := fromPlan.GetName(ctx); ok {
+				toStateName.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanName)
+				toState.SetName(ctx, toStateName)
+			}
+		}
+	}
 }
 
-func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
+func (toState *User) SyncFieldsDuringRead(ctx context.Context, fromState User) {
+	if !fromState.Name.IsNull() && !fromState.Name.IsUnknown() {
+		if toStateName, ok := toState.GetName(ctx); ok {
+			if fromStateName, ok := fromState.GetName(ctx); ok {
+				toStateName.SyncFieldsDuringRead(ctx, fromStateName)
+				toState.SetName(ctx, toStateName)
+			}
+		}
+	}
 }
 
 func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5171,7 +5192,7 @@ func (o *User) GetName(ctx context.Context) (Name, bool) {
 	if o.Name.IsNull() || o.Name.IsUnknown() {
 		return e, false
 	}
-	var v []Name
+	var v Name
 	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5179,10 +5200,7 @@ func (o *User) GetName(ctx context.Context) (Name, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetName sets the value of the Name field in User.
@@ -5248,10 +5266,10 @@ type WorkspacePermissions struct {
 	Permissions types.List `tfsdk:"permissions"`
 }
 
-func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspacePermissions) {
+func (toState *WorkspacePermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkspacePermissions) {
 }
 
-func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringRead(existingState WorkspacePermissions) {
+func (toState *WorkspacePermissions) SyncFieldsDuringRead(ctx context.Context, fromState WorkspacePermissions) {
 }
 
 func (c WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

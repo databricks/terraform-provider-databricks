@@ -119,7 +119,7 @@ func grantTemplateForNamePermissionChange(suffix string, permission string) stri
 		}
 		comment = "Managed by TF"
 	}
-	
+
 	resource "databricks_grant" "cred" {
 		storage_credential = databricks_storage_credential.external.id
 		principal  = "{env.TEST_DATA_ENG_GROUP}"

@@ -19,11 +19,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// Create account federation policy
 type CreateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -112,24 +113,6 @@ type CreateCustomAppIntegration_SdkV2 struct {
 	// token. If the user does not authorize the access token will not be
 	// minted. Must be a subset of scopes.
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
-}
-
-func (newState *CreateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration_SdkV2) {
-}
-
-func (newState *CreateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration_SdkV2) {
-}
-
-func (c CreateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["confidential"] = attrs["confidential"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomAppIntegration.
@@ -300,10 +283,10 @@ type CreateCustomAppIntegrationOutput_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput_SdkV2) {
+func (toState *CreateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *CreateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput_SdkV2) {
+func (toState *CreateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c CreateCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -355,20 +338,6 @@ type CreatePublishedAppIntegration_SdkV2 struct {
 	AppId types.String `tfsdk:"app_id"`
 	// Token access policy
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
-}
-
-func (newState *CreatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration_SdkV2) {
-}
-
-func (newState *CreatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration_SdkV2) {
-}
-
-func (c CreatePublishedAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["app_id"] = attrs["app_id"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePublishedAppIntegration.
@@ -439,10 +408,10 @@ type CreatePublishedAppIntegrationOutput_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
-func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput_SdkV2) {
+func (toState *CreatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *CreatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput_SdkV2) {
+func (toState *CreatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreatePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c CreatePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -482,7 +451,6 @@ func (o CreatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Create service principal federation policy
 type CreateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
 	// The identifier for the federation policy. The identifier must contain
@@ -563,20 +531,7 @@ type CreateServicePrincipalSecretRequest_SdkV2 struct {
 	// the secret will have a default lifetime of 730 days (63072000s).
 	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
-	ServicePrincipalId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest_SdkV2) {
-}
-
-func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest_SdkV2) {
-}
-
-func (c CreateServicePrincipalSecretRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["lifetime"] = attrs["lifetime"].SetOptional()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
-
-	return attrs
+	ServicePrincipalId types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -607,7 +562,7 @@ func (o CreateServicePrincipalSecretRequest_SdkV2) Type(ctx context.Context) att
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"lifetime":             types.StringType,
-			"service_principal_id": types.Int64Type,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -630,10 +585,10 @@ type CreateServicePrincipalSecretResponse_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse_SdkV2) {
+func (toState *CreateServicePrincipalSecretResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateServicePrincipalSecretResponse_SdkV2) {
 }
 
-func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse_SdkV2) {
+func (toState *CreateServicePrincipalSecretResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateServicePrincipalSecretResponse_SdkV2) {
 }
 
 func (c CreateServicePrincipalSecretResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -691,7 +646,6 @@ func (o CreateServicePrincipalSecretResponse_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Delete account federation policy
 type DeleteAccountFederationPolicyRequest_SdkV2 struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -731,10 +685,10 @@ func (o DeleteAccountFederationPolicyRequest_SdkV2) Type(ctx context.Context) at
 type DeleteCustomAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput_SdkV2) {
+func (toState *DeleteCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *DeleteCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput_SdkV2) {
+func (toState *DeleteCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c DeleteCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -769,7 +723,6 @@ func (o DeleteCustomAppIntegrationOutput_SdkV2) Type(ctx context.Context) attr.T
 	}
 }
 
-// Delete Custom OAuth App Integration
 type DeleteCustomAppIntegrationRequest_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -808,10 +761,10 @@ func (o DeleteCustomAppIntegrationRequest_SdkV2) Type(ctx context.Context) attr.
 type DeletePublishedAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput_SdkV2) {
+func (toState *DeletePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *DeletePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput_SdkV2) {
+func (toState *DeletePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeletePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c DeletePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -846,7 +799,6 @@ func (o DeletePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Delete Published OAuth App Integration
 type DeletePublishedAppIntegrationRequest_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -912,7 +864,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete service principal federation policy
 type DeleteServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -953,12 +904,11 @@ func (o DeleteServicePrincipalFederationPolicyRequest_SdkV2) Type(ctx context.Co
 	}
 }
 
-// Delete service principal secret
 type DeleteServicePrincipalSecretRequest_SdkV2 struct {
 	// The secret ID.
 	SecretId types.String `tfsdk:"-"`
 	// The service principal ID.
-	ServicePrincipalId types.Int64 `tfsdk:"-"`
+	ServicePrincipalId types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServicePrincipalSecretRequest.
@@ -989,7 +939,7 @@ func (o DeleteServicePrincipalSecretRequest_SdkV2) Type(ctx context.Context) att
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"secret_id":            types.StringType,
-			"service_principal_id": types.Int64Type,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -1007,8 +957,7 @@ type FederationPolicy_SdkV2 struct {
 	// which does not need to be specified in create or update requests. If
 	// specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name"`
-	// Specifies the policy to use for validating OIDC claims in your federated
-	// tokens.
+
 	OidcPolicy types.List `tfsdk:"oidc_policy"`
 	// The ID of the federation policy.
 	PolicyId types.String `tfsdk:"policy_id"`
@@ -1021,21 +970,41 @@ type FederationPolicy_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FederationPolicy_SdkV2) {
+func (toState *FederationPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FederationPolicy_SdkV2) {
+	if !fromPlan.OidcPolicy.IsNull() && !fromPlan.OidcPolicy.IsUnknown() {
+		if toStateOidcPolicy, ok := toState.GetOidcPolicy(ctx); ok {
+			if fromPlanOidcPolicy, ok := fromPlan.GetOidcPolicy(ctx); ok {
+				toStateOidcPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOidcPolicy)
+				toState.SetOidcPolicy(ctx, toStateOidcPolicy)
+			}
+		}
+	}
 }
 
-func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState FederationPolicy_SdkV2) {
+func (toState *FederationPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState FederationPolicy_SdkV2) {
+	if !fromState.OidcPolicy.IsNull() && !fromState.OidcPolicy.IsUnknown() {
+		if toStateOidcPolicy, ok := toState.GetOidcPolicy(ctx); ok {
+			if fromStateOidcPolicy, ok := fromState.GetOidcPolicy(ctx); ok {
+				toStateOidcPolicy.SyncFieldsDuringRead(ctx, fromStateOidcPolicy)
+				toState.SetOidcPolicy(ctx, toStateOidcPolicy)
+			}
+		}
+	}
 }
 
 func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["oidc_policy"] = attrs["oidc_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -1116,7 +1085,6 @@ func (o *FederationPolicy_SdkV2) SetOidcPolicy(ctx context.Context, v OidcFedera
 	o.OidcPolicy = types.ListValueMust(t, vs)
 }
 
-// Get account federation policy
 type GetAccountFederationPolicyRequest_SdkV2 struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1181,10 +1149,26 @@ type GetCustomAppIntegrationOutput_SdkV2 struct {
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
-func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput_SdkV2) {
+func (toState *GetCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCustomAppIntegrationOutput_SdkV2) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
 }
 
-func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput_SdkV2) {
+func (toState *GetCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCustomAppIntegrationOutput_SdkV2) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
 }
 
 func (c GetCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1372,7 +1356,6 @@ func (o *GetCustomAppIntegrationOutput_SdkV2) SetUserAuthorizedScopes(ctx contex
 	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
-// Get OAuth Custom App Integration
 type GetCustomAppIntegrationRequest_SdkV2 struct {
 	// The OAuth app integration ID.
 	IntegrationId types.String `tfsdk:"-"`
@@ -1416,10 +1399,10 @@ type GetCustomAppIntegrationsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput_SdkV2) {
+func (toState *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCustomAppIntegrationsOutput_SdkV2) {
 }
 
-func (newState *GetCustomAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput_SdkV2) {
+func (toState *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCustomAppIntegrationsOutput_SdkV2) {
 }
 
 func (c GetCustomAppIntegrationsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1507,10 +1490,26 @@ type GetPublishedAppIntegrationOutput_SdkV2 struct {
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
 }
 
-func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput_SdkV2) {
+func (toState *GetPublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedAppIntegrationOutput_SdkV2) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
 }
 
-func (newState *GetPublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput_SdkV2) {
+func (toState *GetPublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedAppIntegrationOutput_SdkV2) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
 }
 
 func (c GetPublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1596,7 +1595,6 @@ func (o *GetPublishedAppIntegrationOutput_SdkV2) SetTokenAccessPolicy(ctx contex
 	o.TokenAccessPolicy = types.ListValueMust(t, vs)
 }
 
-// Get OAuth Published App Integration
 type GetPublishedAppIntegrationRequest_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
@@ -1639,10 +1637,10 @@ type GetPublishedAppIntegrationsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput_SdkV2) {
+func (toState *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedAppIntegrationsOutput_SdkV2) {
 }
 
-func (newState *GetPublishedAppIntegrationsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput_SdkV2) {
+func (toState *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedAppIntegrationsOutput_SdkV2) {
 }
 
 func (c GetPublishedAppIntegrationsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1723,10 +1721,10 @@ type GetPublishedAppsOutput_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GetPublishedAppsOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput_SdkV2) {
+func (toState *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedAppsOutput_SdkV2) {
 }
 
-func (newState *GetPublishedAppsOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput_SdkV2) {
+func (toState *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedAppsOutput_SdkV2) {
 }
 
 func (c GetPublishedAppsOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1799,7 +1797,6 @@ func (o *GetPublishedAppsOutput_SdkV2) SetApps(ctx context.Context, v []Publishe
 	o.Apps = types.ListValueMust(t, vs)
 }
 
-// Get service principal federation policy
 type GetServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1840,7 +1837,6 @@ func (o GetServicePrincipalFederationPolicyRequest_SdkV2) Type(ctx context.Conte
 	}
 }
 
-// List account federation policies
 type ListAccountFederationPoliciesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -1880,7 +1876,6 @@ func (o ListAccountFederationPoliciesRequest_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-// Get custom oauth app integrations
 type ListCustomAppIntegrationsRequest_SdkV2 struct {
 	IncludeCreatorUsername types.Bool `tfsdk:"-"`
 
@@ -1930,10 +1925,10 @@ type ListFederationPoliciesResponse_SdkV2 struct {
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse_SdkV2) {
+func (toState *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListFederationPoliciesResponse_SdkV2) {
 }
 
-func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFederationPoliciesResponse_SdkV2) {
+func (toState *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListFederationPoliciesResponse_SdkV2) {
 }
 
 func (c ListFederationPoliciesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2006,7 +2001,6 @@ func (o *ListFederationPoliciesResponse_SdkV2) SetPolicies(ctx context.Context, 
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// Get all the published OAuth apps
 type ListOAuthPublishedAppsRequest_SdkV2 struct {
 	// The max number of OAuth published apps to return in one page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2047,7 +2041,6 @@ func (o ListOAuthPublishedAppsRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Get published oauth app integrations
 type ListPublishedAppIntegrationsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -2087,7 +2080,6 @@ func (o ListPublishedAppIntegrationsRequest_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// List service principal federation policies
 type ListServicePrincipalFederationPoliciesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -2131,8 +2123,8 @@ func (o ListServicePrincipalFederationPoliciesRequest_SdkV2) Type(ctx context.Co
 	}
 }
 
-// List service principal secrets
 type ListServicePrincipalSecretsRequest_SdkV2 struct {
+	PageSize types.Int64 `tfsdk:"-"`
 	// An opaque page token which was the `next_page_token` in the response of
 	// the previous request to list the secrets for this service principal.
 	// Provide this token to retrieve the next page of secret entries. When
@@ -2144,7 +2136,7 @@ type ListServicePrincipalSecretsRequest_SdkV2 struct {
 	// complete.
 	PageToken types.String `tfsdk:"-"`
 	// The service principal ID.
-	ServicePrincipalId types.Int64 `tfsdk:"-"`
+	ServicePrincipalId types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalSecretsRequest.
@@ -2165,6 +2157,7 @@ func (o ListServicePrincipalSecretsRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"page_size":            o.PageSize,
 			"page_token":           o.PageToken,
 			"service_principal_id": o.ServicePrincipalId,
 		})
@@ -2174,8 +2167,9 @@ func (o ListServicePrincipalSecretsRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (o ListServicePrincipalSecretsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"page_size":            types.Int64Type,
 			"page_token":           types.StringType,
-			"service_principal_id": types.Int64Type,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -2187,10 +2181,10 @@ type ListServicePrincipalSecretsResponse_SdkV2 struct {
 	Secrets types.List `tfsdk:"secrets"`
 }
 
-func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse_SdkV2) {
+func (toState *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalSecretsResponse_SdkV2) {
 }
 
-func (newState *ListServicePrincipalSecretsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse_SdkV2) {
+func (toState *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListServicePrincipalSecretsResponse_SdkV2) {
 }
 
 func (c ListServicePrincipalSecretsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2299,10 +2293,10 @@ type OidcFederationPolicy_SdkV2 struct {
 	SubjectClaim types.String `tfsdk:"subject_claim"`
 }
 
-func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OidcFederationPolicy_SdkV2) {
+func (toState *OidcFederationPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OidcFederationPolicy_SdkV2) {
 }
 
-func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState OidcFederationPolicy_SdkV2) {
+func (toState *OidcFederationPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState OidcFederationPolicy_SdkV2) {
 }
 
 func (c OidcFederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2406,10 +2400,10 @@ type PublishedAppOutput_SdkV2 struct {
 	Scopes types.List `tfsdk:"scopes"`
 }
 
-func (newState *PublishedAppOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedAppOutput_SdkV2) {
+func (toState *PublishedAppOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublishedAppOutput_SdkV2) {
 }
 
-func (newState *PublishedAppOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput_SdkV2) {
+func (toState *PublishedAppOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PublishedAppOutput_SdkV2) {
 }
 
 func (c PublishedAppOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2542,10 +2536,10 @@ type SecretInfo_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *SecretInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretInfo_SdkV2) {
+func (toState *SecretInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SecretInfo_SdkV2) {
 }
 
-func (newState *SecretInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecretInfo_SdkV2) {
+func (toState *SecretInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SecretInfo_SdkV2) {
 }
 
 func (c SecretInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2607,10 +2601,10 @@ type TokenAccessPolicy_SdkV2 struct {
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes"`
 }
 
-func (newState *TokenAccessPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessPolicy_SdkV2) {
+func (toState *TokenAccessPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenAccessPolicy_SdkV2) {
 }
 
-func (newState *TokenAccessPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy_SdkV2) {
+func (toState *TokenAccessPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TokenAccessPolicy_SdkV2) {
 }
 
 func (c TokenAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2653,7 +2647,6 @@ func (o TokenAccessPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update account federation policy
 type UpdateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
 	// The identifier for the federation policy.
@@ -2747,23 +2740,6 @@ type UpdateCustomAppIntegration_SdkV2 struct {
 	// token. If the user does not authorize the access token will not be
 	// minted. Must be a subset of scopes.
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
-}
-
-func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration_SdkV2) {
-}
-
-func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration_SdkV2) {
-}
-
-func (c UpdateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
-	attrs["scopes"] = attrs["scopes"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomAppIntegration.
@@ -2925,10 +2901,10 @@ func (o *UpdateCustomAppIntegration_SdkV2) SetUserAuthorizedScopes(ctx context.C
 type UpdateCustomAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput_SdkV2) {
+func (toState *UpdateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCustomAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *UpdateCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput_SdkV2) {
+func (toState *UpdateCustomAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCustomAppIntegrationOutput_SdkV2) {
 }
 
 func (c UpdateCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2967,20 +2943,6 @@ type UpdatePublishedAppIntegration_SdkV2 struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
-}
-
-func (newState *UpdatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration_SdkV2) {
-}
-
-func (newState *UpdatePublishedAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration_SdkV2) {
-}
-
-func (c UpdatePublishedAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["integration_id"] = attrs["integration_id"].SetRequired()
-	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePublishedAppIntegration.
@@ -3049,10 +3011,10 @@ func (o *UpdatePublishedAppIntegration_SdkV2) SetTokenAccessPolicy(ctx context.C
 type UpdatePublishedAppIntegrationOutput_SdkV2 struct {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput_SdkV2) {
+func (toState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdatePublishedAppIntegrationOutput_SdkV2) {
 }
 
-func (newState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput_SdkV2) {
+func (toState *UpdatePublishedAppIntegrationOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdatePublishedAppIntegrationOutput_SdkV2) {
 }
 
 func (c UpdatePublishedAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3087,7 +3049,6 @@ func (o UpdatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 	}
 }
 
-// Update service principal federation policy
 type UpdateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
 	// The identifier for the federation policy.

@@ -90,17 +90,17 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var policies = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var budget_policy billing_tf.BudgetPolicy
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &budget_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		policies = append(policies, budget_policy.ToObjectValue(ctx))
+		results = append(results, budget_policy.ToObjectValue(ctx))
 	}
 
 	var newState BudgetPoliciesList
-	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), policies)
+	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -22,9 +22,9 @@ resource "databricks_model_serving_provisioned_throughput" "llama" {
   }
   config {
     served_entities {
-      entity_name                = "system.ai.llama-4-maverick"
-      entity_version             = "1"
-      provisioned_model_units    = 100
+      entity_name             = "system.ai.llama-4-maverick"
+      entity_version          = "1"
+      provisioned_model_units = 100
     }
   }
 }
@@ -41,6 +41,7 @@ The following arguments are supported:
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
+* `email_notifications` - (Optional) A block with Email notification setting.
 
 ### served_entities Configuration Block
 
@@ -75,6 +76,11 @@ The following arguments are supported:
 * `usage_tracking_config` - (Optional) Block with configuration for payload logging using inference tables. For details see the description of `auto_capture_config` block above.
 * `inference_table_config` - (Optional) Block describing the configuration of usage tracking. Consists of the following attributes:
   * `enabled` - boolean flag specifying if usage tracking is enabled.
+
+### email_notifications Block
+
+* `on_update_failure` - (Optional) a list of email addresses to be notified when an endpoint fails to update its configuration or state.
+* `on_update_success` - (Optional) a list of email addresses to be notified when an endpoint successfully updates its configuration or state.
 
 ## Attribute Reference
 

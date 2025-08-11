@@ -48,7 +48,7 @@ func TestTableCreate(t *testing.T) {
 		table_type = "EXTERNAL"
 		data_source_format = "JSON"
 		storage_location = "s3://ext-main/foo/bar"
-		
+
 		column {
 			name = "id"
 			type_text = "int"
@@ -210,7 +210,7 @@ func TestTableUpdate(t *testing.T) {
 		table_type = "EXTERNAL"
 		data_source_format = "JSON"
 		storage_location = "s3://ext-main/foo/bar1"
-		
+
 		column {
 			name = "id"
 			type_text = "string"
@@ -295,7 +295,7 @@ func TestManagedTableUpdate(t *testing.T) {
 		name = "bar"
 		table_type = "MANAGED"
 		data_source_format = "JSON"
-		
+
 		column {
 			name = "id"
 			type_text = "string"

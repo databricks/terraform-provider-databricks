@@ -204,7 +204,7 @@ func TestArtifactAllowlistUpdate(t *testing.T) {
 		artifact_matcher {
 			artifact = "/Volumes/inits"
 			match_type = "PREFIX_MATCH"
-		}		
+		}
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -244,7 +244,7 @@ func TestArtifactAllowlistUpdate_Error(t *testing.T) {
 		artifact_matcher {
 			artifact = "/Volumes/inits"
 			match_type = "PREFIX_MATCH"
-		}	
+		}
 		`,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Something unexpected")

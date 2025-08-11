@@ -49,7 +49,7 @@ func (FunctionsData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 
 func (FunctionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"functions": reflect.TypeOf(catalog_tf.FunctionInfo_SdkV2{}),
+		"functions": reflect.TypeOf(catalog_tf.FunctionInfo{}),
 	}
 }
 

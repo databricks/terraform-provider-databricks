@@ -32,10 +32,10 @@ type ActionConfiguration struct {
 	Target types.String `tfsdk:"target"`
 }
 
-func (newState *ActionConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan ActionConfiguration) {
+func (toState *ActionConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ActionConfiguration) {
 }
 
-func (newState *ActionConfiguration) SyncEffectiveFieldsDuringRead(existingState ActionConfiguration) {
+func (toState *ActionConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState ActionConfiguration) {
 }
 
 func (c ActionConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -100,10 +100,10 @@ type AlertConfiguration struct {
 	TriggerType types.String `tfsdk:"trigger_type"`
 }
 
-func (newState *AlertConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConfiguration) {
+func (toState *AlertConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertConfiguration) {
 }
 
-func (newState *AlertConfiguration) SyncEffectiveFieldsDuringRead(existingState AlertConfiguration) {
+func (toState *AlertConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState AlertConfiguration) {
 }
 
 func (c AlertConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -209,10 +209,26 @@ type BudgetConfiguration struct {
 	UpdateTime types.Int64 `tfsdk:"update_time"`
 }
 
-func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfiguration) {
+func (toState *BudgetConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetConfiguration) {
+	if !fromPlan.Filter.IsNull() && !fromPlan.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromPlanFilter, ok := fromPlan.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
-func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringRead(existingState BudgetConfiguration) {
+func (toState *BudgetConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState BudgetConfiguration) {
+	if !fromState.Filter.IsNull() && !fromState.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromStateFilter, ok := fromState.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringRead(ctx, fromStateFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
 func (c BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -309,7 +325,7 @@ func (o *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfiguratio
 	if o.Filter.IsNull() || o.Filter.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfigurationFilter
+	var v BudgetConfigurationFilter
 	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -317,10 +333,7 @@ func (o *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfiguratio
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFilter sets the value of the Filter field in BudgetConfiguration.
@@ -338,10 +351,26 @@ type BudgetConfigurationFilter struct {
 	WorkspaceId types.Object `tfsdk:"workspace_id"`
 }
 
-func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilter) {
+func (toState *BudgetConfigurationFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetConfigurationFilter) {
+	if !fromPlan.WorkspaceId.IsNull() && !fromPlan.WorkspaceId.IsUnknown() {
+		if toStateWorkspaceId, ok := toState.GetWorkspaceId(ctx); ok {
+			if fromPlanWorkspaceId, ok := fromPlan.GetWorkspaceId(ctx); ok {
+				toStateWorkspaceId.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWorkspaceId)
+				toState.SetWorkspaceId(ctx, toStateWorkspaceId)
+			}
+		}
+	}
 }
 
-func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilter) {
+func (toState *BudgetConfigurationFilter) SyncFieldsDuringRead(ctx context.Context, fromState BudgetConfigurationFilter) {
+	if !fromState.WorkspaceId.IsNull() && !fromState.WorkspaceId.IsUnknown() {
+		if toStateWorkspaceId, ok := toState.GetWorkspaceId(ctx); ok {
+			if fromStateWorkspaceId, ok := fromState.GetWorkspaceId(ctx); ok {
+				toStateWorkspaceId.SyncFieldsDuringRead(ctx, fromStateWorkspaceId)
+				toState.SetWorkspaceId(ctx, toStateWorkspaceId)
+			}
+		}
+	}
 }
 
 func (c BudgetConfigurationFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -423,7 +452,7 @@ func (o *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetC
 	if o.WorkspaceId.IsNull() || o.WorkspaceId.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfigurationFilterWorkspaceIdClause
+	var v BudgetConfigurationFilterWorkspaceIdClause
 	d := o.WorkspaceId.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -431,10 +460,7 @@ func (o *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetC
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkspaceId sets the value of the WorkspaceId field in BudgetConfigurationFilter.
@@ -449,10 +475,10 @@ type BudgetConfigurationFilterClause struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterClause) {
+func (toState *BudgetConfigurationFilterClause) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetConfigurationFilterClause) {
 }
 
-func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterClause) {
+func (toState *BudgetConfigurationFilterClause) SyncFieldsDuringRead(ctx context.Context, fromState BudgetConfigurationFilterClause) {
 }
 
 func (c BudgetConfigurationFilterClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -531,10 +557,26 @@ type BudgetConfigurationFilterTagClause struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterTagClause) {
+func (toState *BudgetConfigurationFilterTagClause) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetConfigurationFilterTagClause) {
+	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
-func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterTagClause) {
+func (toState *BudgetConfigurationFilterTagClause) SyncFieldsDuringRead(ctx context.Context, fromState BudgetConfigurationFilterTagClause) {
+	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
+		if toStateValue, ok := toState.GetValue(ctx); ok {
+			if fromStateValue, ok := fromState.GetValue(ctx); ok {
+				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
+				toState.SetValue(ctx, toStateValue)
+			}
+		}
+	}
 }
 
 func (c BudgetConfigurationFilterTagClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -587,7 +629,7 @@ func (o *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (Budg
 	if o.Value.IsNull() || o.Value.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfigurationFilterClause
+	var v BudgetConfigurationFilterClause
 	d := o.Value.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -595,10 +637,7 @@ func (o *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (Budg
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetValue sets the value of the Value field in BudgetConfigurationFilterTagClause.
@@ -613,10 +652,10 @@ type BudgetConfigurationFilterWorkspaceIdClause struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterWorkspaceIdClause) {
+func (toState *BudgetConfigurationFilterWorkspaceIdClause) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
-func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause) {
+func (toState *BudgetConfigurationFilterWorkspaceIdClause) SyncFieldsDuringRead(ctx context.Context, fromState BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
 func (c BudgetConfigurationFilterWorkspaceIdClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -707,10 +746,10 @@ type BudgetPolicy struct {
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
-func (newState *BudgetPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetPolicy) {
+func (toState *BudgetPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BudgetPolicy) {
 }
 
-func (newState *BudgetPolicy) SyncEffectiveFieldsDuringRead(existingState BudgetPolicy) {
+func (toState *BudgetPolicy) SyncFieldsDuringRead(ctx context.Context, fromState BudgetPolicy) {
 }
 
 func (c BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -828,19 +867,6 @@ type CreateBillingUsageDashboardRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardRequest) {
-}
-
-func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardRequest) {
-}
-
-func (c CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBillingUsageDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -879,10 +905,10 @@ type CreateBillingUsageDashboardResponse struct {
 	DashboardId types.String `tfsdk:"dashboard_id"`
 }
 
-func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardResponse) {
+func (toState *CreateBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateBillingUsageDashboardResponse) {
 }
 
-func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardResponse) {
+func (toState *CreateBillingUsageDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateBillingUsageDashboardResponse) {
 }
 
 func (c CreateBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -937,10 +963,26 @@ type CreateBudgetConfigurationBudget struct {
 	Filter types.Object `tfsdk:"filter"`
 }
 
-func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudget) {
+func (toState *CreateBudgetConfigurationBudget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateBudgetConfigurationBudget) {
+	if !fromPlan.Filter.IsNull() && !fromPlan.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromPlanFilter, ok := fromPlan.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
-func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudget) {
+func (toState *CreateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Context, fromState CreateBudgetConfigurationBudget) {
+	if !fromState.Filter.IsNull() && !fromState.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromStateFilter, ok := fromState.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringRead(ctx, fromStateFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
 func (c CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1028,7 +1070,7 @@ func (o *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 	if o.Filter.IsNull() || o.Filter.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfigurationFilter
+	var v BudgetConfigurationFilter
 	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1036,10 +1078,7 @@ func (o *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFilter sets the value of the Filter field in CreateBudgetConfigurationBudget.
@@ -1055,10 +1094,10 @@ type CreateBudgetConfigurationBudgetActionConfigurations struct {
 	Target types.String `tfsdk:"target"`
 }
 
-func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetActionConfigurations) {
+func (toState *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
-func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations) {
+func (toState *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringRead(ctx context.Context, fromState CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
 func (c CreateBudgetConfigurationBudgetActionConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1118,10 +1157,10 @@ type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 	TriggerType types.String `tfsdk:"trigger_type"`
 }
 
-func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetAlertConfigurations) {
+func (toState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateBudgetConfigurationBudgetAlertConfigurations) {
 }
 
-func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations) {
+func (toState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncFieldsDuringRead(ctx context.Context, fromState CreateBudgetConfigurationBudgetAlertConfigurations) {
 }
 
 func (c CreateBudgetConfigurationBudgetAlertConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1208,18 +1247,6 @@ type CreateBudgetConfigurationRequest struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationRequest) {
-}
-
-func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationRequest) {
-}
-
-func (c CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget"] = attrs["budget"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1261,7 +1288,7 @@ func (o *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Creat
 	if o.Budget.IsNull() || o.Budget.IsUnknown() {
 		return e, false
 	}
-	var v []CreateBudgetConfigurationBudget
+	var v CreateBudgetConfigurationBudget
 	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1269,10 +1296,7 @@ func (o *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Creat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBudget sets the value of the Budget field in CreateBudgetConfigurationRequest.
@@ -1286,10 +1310,26 @@ type CreateBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationResponse) {
+func (toState *CreateBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateBudgetConfigurationResponse) {
+	if !fromPlan.Budget.IsNull() && !fromPlan.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromPlanBudget, ok := fromPlan.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
-func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationResponse) {
+func (toState *CreateBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateBudgetConfigurationResponse) {
+	if !fromState.Budget.IsNull() && !fromState.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromStateBudget, ok := fromState.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringRead(ctx, fromStateBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
 func (c CreateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1339,7 +1379,7 @@ func (o *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 	if o.Budget.IsNull() || o.Budget.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfiguration
+	var v BudgetConfiguration
 	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1347,10 +1387,7 @@ func (o *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBudget sets the value of the Budget field in CreateBudgetConfigurationResponse.
@@ -1369,19 +1406,6 @@ type CreateBudgetPolicyRequest struct {
 	// A random UUID is recommended. This request is only idempotent if a
 	// `request_id` is provided.
 	RequestId types.String `tfsdk:"request_id"`
-}
-
-func (newState *CreateBudgetPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetPolicyRequest) {
-}
-
-func (newState *CreateBudgetPolicyRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetPolicyRequest) {
-}
-
-func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy"] = attrs["policy"].SetOptional()
-	attrs["request_id"] = attrs["request_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetPolicyRequest.
@@ -1427,7 +1451,7 @@ func (o *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 	if o.Policy.IsNull() || o.Policy.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetPolicy
+	var v BudgetPolicy
 	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1435,10 +1459,7 @@ func (o *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPolicy sets the value of the Policy field in CreateBudgetPolicyRequest.
@@ -1447,6 +1468,7 @@ func (o *CreateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolic
 	o.Policy = vs
 }
 
+// * Log Delivery Configuration
 type CreateLogDeliveryConfigurationParams struct {
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
@@ -1462,31 +1484,27 @@ type CreateLogDeliveryConfigurationParams struct {
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
 	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix"`
-	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
-	// optional start month and year for delivery, specified in `YYYY-MM`
-	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
-	// available for usage before March 2019 (`2019-03`).
+	// This field applies only if log_type is BILLABLE_USAGE. This is the
+	// optional start month and year for delivery, specified in YYYY-MM format.
+	// Defaults to current year and month. BILLABLE_USAGE logs are not available
+	// for usage before March 2019 (2019-03).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time"`
-	// Log delivery type. Supported values are:
-	//
-	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
-	// CSV schema, see the [View billable usage].
-	//
-	// * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON schema,
-	// see [Configure audit logging]
+	// Log delivery type. Supported values are: * `BILLABLE_USAGE` — Configure
+	// [billable usage log delivery]. For the CSV schema, see the [View billable
+	// usage]. * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON
+	// schema, see [Configure audit logging]
 	//
 	// [Configure audit logging]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
 	LogType types.String `tfsdk:"log_type"`
-	// The file type of log delivery.
-	//
-	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
-	// CSV (comma-separated values) format is supported. For the schema, see the
-	// [View billable usage] * If `log_type` is `AUDIT_LOGS`, this value must be
-	// `JSON`. Only the JSON (JavaScript Object Notation) format is supported.
-	// For the schema, see the [Configuring audit logs].
+	// The file type of log delivery. * If `log_type` is `BILLABLE_USAGE`, this
+	// value must be `CSV`. Only the CSV (comma-separated values) format is
+	// supported. For the schema, see the [View billable usage] * If `log_type`
+	// is `AUDIT_LOGS`, this value must be `JSON`. Only the JSON (JavaScript
+	// Object Notation) format is supported. For the schema, see the
+	// [Configuring audit logs].
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
@@ -1519,10 +1537,10 @@ type CreateLogDeliveryConfigurationParams struct {
 	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
-func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLogDeliveryConfigurationParams) {
+func (toState *CreateLogDeliveryConfigurationParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateLogDeliveryConfigurationParams) {
 }
 
-func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams) {
+func (toState *CreateLogDeliveryConfigurationParams) SyncFieldsDuringRead(ctx context.Context, fromState CreateLogDeliveryConfigurationParams) {
 }
 
 func (c CreateLogDeliveryConfigurationParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1616,7 +1634,6 @@ func (o *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
-// Delete budget
 type DeleteBudgetConfigurationRequest struct {
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
@@ -1656,10 +1673,10 @@ func (o DeleteBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 type DeleteBudgetConfigurationResponse struct {
 }
 
-func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationResponse) {
+func (toState *DeleteBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteBudgetConfigurationResponse) {
 }
 
-func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationResponse) {
+func (toState *DeleteBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteBudgetConfigurationResponse) {
 }
 
 func (c DeleteBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1694,7 +1711,6 @@ func (o DeleteBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a budget policy
 type DeleteBudgetPolicyRequest struct {
 	// The Id of the policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -1731,37 +1747,6 @@ func (o DeleteBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-// Return billable usage logs
 type DownloadRequest struct {
 	// Format: `YYYY-MM`. Last month to return billable usage logs for. This
 	// field is required.
@@ -1770,8 +1755,10 @@ type DownloadRequest struct {
 	// billable usage logs, for example the email addresses of cluster creators.
 	// Handle this information with care. Defaults to false.
 	PersonalData types.Bool `tfsdk:"-"`
-	// Format: `YYYY-MM`. First month to return billable usage logs for. This
-	// field is required.
+	// Format specification for month in the format `YYYY-MM`. This is used to
+	// specify billable usage `start_month` and `end_month` properties.
+	// **Note**: Billable usage logs are unavailable before March 2019
+	// (`2019-03`).
 	StartMonth types.String `tfsdk:"-"`
 }
 
@@ -1859,10 +1846,10 @@ type Filter struct {
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
-func (newState *Filter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filter) {
+func (toState *Filter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Filter) {
 }
 
-func (newState *Filter) SyncEffectiveFieldsDuringRead(existingState Filter) {
+func (toState *Filter) SyncFieldsDuringRead(ctx context.Context, fromState Filter) {
 }
 
 func (c Filter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1908,7 +1895,6 @@ func (o Filter) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get usage dashboard
 type GetBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
@@ -1959,10 +1945,10 @@ type GetBillingUsageDashboardResponse struct {
 	DashboardUrl types.String `tfsdk:"dashboard_url"`
 }
 
-func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardResponse) {
+func (toState *GetBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetBillingUsageDashboardResponse) {
 }
 
-func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardResponse) {
+func (toState *GetBillingUsageDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetBillingUsageDashboardResponse) {
 }
 
 func (c GetBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2005,7 +1991,6 @@ func (o GetBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get budget
 type GetBudgetConfigurationRequest struct {
 	// The budget configuration ID
 	BudgetId types.String `tfsdk:"-"`
@@ -2046,10 +2031,26 @@ type GetBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationResponse) {
+func (toState *GetBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetBudgetConfigurationResponse) {
+	if !fromPlan.Budget.IsNull() && !fromPlan.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromPlanBudget, ok := fromPlan.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
-func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationResponse) {
+func (toState *GetBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetBudgetConfigurationResponse) {
+	if !fromState.Budget.IsNull() && !fromState.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromStateBudget, ok := fromState.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringRead(ctx, fromStateBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
 func (c GetBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2099,7 +2100,7 @@ func (o *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetC
 	if o.Budget.IsNull() || o.Budget.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfiguration
+	var v BudgetConfiguration
 	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2107,10 +2108,7 @@ func (o *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetC
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBudget sets the value of the Budget field in GetBudgetConfigurationResponse.
@@ -2119,7 +2117,6 @@ func (o *GetBudgetConfigurationResponse) SetBudget(ctx context.Context, v Budget
 	o.Budget = vs
 }
 
-// Get a budget policy
 type GetBudgetPolicyRequest struct {
 	// The Id of the policy.
 	PolicyId types.String `tfsdk:"-"`
@@ -2156,9 +2153,99 @@ func (o GetBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get log delivery configuration
+type GetLogDeliveryConfigurationResponse struct {
+	// The fetched log delivery configuration
+	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
+}
+
+func (toState *GetLogDeliveryConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetLogDeliveryConfigurationResponse) {
+	if !fromPlan.LogDeliveryConfiguration.IsNull() && !fromPlan.LogDeliveryConfiguration.IsUnknown() {
+		if toStateLogDeliveryConfiguration, ok := toState.GetLogDeliveryConfiguration(ctx); ok {
+			if fromPlanLogDeliveryConfiguration, ok := fromPlan.GetLogDeliveryConfiguration(ctx); ok {
+				toStateLogDeliveryConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLogDeliveryConfiguration)
+				toState.SetLogDeliveryConfiguration(ctx, toStateLogDeliveryConfiguration)
+			}
+		}
+	}
+}
+
+func (toState *GetLogDeliveryConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetLogDeliveryConfigurationResponse) {
+	if !fromState.LogDeliveryConfiguration.IsNull() && !fromState.LogDeliveryConfiguration.IsUnknown() {
+		if toStateLogDeliveryConfiguration, ok := toState.GetLogDeliveryConfiguration(ctx); ok {
+			if fromStateLogDeliveryConfiguration, ok := fromState.GetLogDeliveryConfiguration(ctx); ok {
+				toStateLogDeliveryConfiguration.SyncFieldsDuringRead(ctx, fromStateLogDeliveryConfiguration)
+				toState.SetLogDeliveryConfiguration(ctx, toStateLogDeliveryConfiguration)
+			}
+		}
+	}
+}
+
+func (c GetLogDeliveryConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLogDeliveryConfigurationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLogDeliveryConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"log_delivery_configuration": reflect.TypeOf(LogDeliveryConfiguration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLogDeliveryConfigurationResponse
+// only implements ToObjectValue() and Type().
+func (o GetLogDeliveryConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"log_delivery_configuration": o.LogDeliveryConfiguration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLogDeliveryConfigurationResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"log_delivery_configuration": LogDeliveryConfiguration{}.Type(ctx),
+		},
+	}
+}
+
+// GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse as
+// a LogDeliveryConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLogDeliveryConfigurationResponse) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
+	var e LogDeliveryConfiguration
+	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v LogDeliveryConfiguration
+	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse.
+func (o *GetLogDeliveryConfigurationResponse) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	o.LogDeliveryConfiguration = vs
+}
+
 type GetLogDeliveryRequest struct {
-	// Databricks log delivery configuration ID
+	// The log delivery configuration id of customer
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
 }
 
@@ -2198,10 +2285,10 @@ func (o GetLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 type LimitConfig struct {
 }
 
-func (newState *LimitConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan LimitConfig) {
+func (toState *LimitConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LimitConfig) {
 }
 
-func (newState *LimitConfig) SyncEffectiveFieldsDuringRead(existingState LimitConfig) {
+func (toState *LimitConfig) SyncFieldsDuringRead(ctx context.Context, fromState LimitConfig) {
 }
 
 func (c LimitConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2236,7 +2323,6 @@ func (o LimitConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get all budgets
 type ListBudgetConfigurationsRequest struct {
 	// A page token received from a previous get all budget configurations call.
 	// This token can be used to retrieve the subsequent page. Requests first
@@ -2282,10 +2368,10 @@ type ListBudgetConfigurationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsResponse) {
+func (toState *ListBudgetConfigurationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListBudgetConfigurationsResponse) {
 }
 
-func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsResponse) {
+func (toState *ListBudgetConfigurationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListBudgetConfigurationsResponse) {
 }
 
 func (c ListBudgetConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2358,7 +2444,6 @@ func (o *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []B
 	o.Budgets = types.ListValueMust(t, vs)
 }
 
-// List policies
 type ListBudgetPoliciesRequest struct {
 	// A filter to apply to the list of policies.
 	FilterBy types.Object `tfsdk:"-"`
@@ -2426,7 +2511,7 @@ func (o *ListBudgetPoliciesRequest) GetFilterBy(ctx context.Context) (Filter, bo
 	if o.FilterBy.IsNull() || o.FilterBy.IsUnknown() {
 		return e, false
 	}
-	var v []Filter
+	var v Filter
 	d := o.FilterBy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2434,10 +2519,7 @@ func (o *ListBudgetPoliciesRequest) GetFilterBy(ctx context.Context) (Filter, bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFilterBy sets the value of the FilterBy field in ListBudgetPoliciesRequest.
@@ -2454,7 +2536,7 @@ func (o *ListBudgetPoliciesRequest) GetSortSpec(ctx context.Context) (SortSpec, 
 	if o.SortSpec.IsNull() || o.SortSpec.IsUnknown() {
 		return e, false
 	}
-	var v []SortSpec
+	var v SortSpec
 	d := o.SortSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2462,10 +2544,7 @@ func (o *ListBudgetPoliciesRequest) GetSortSpec(ctx context.Context) (SortSpec, 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSortSpec sets the value of the SortSpec field in ListBudgetPoliciesRequest.
@@ -2486,10 +2565,10 @@ type ListBudgetPoliciesResponse struct {
 	PreviousPageToken types.String `tfsdk:"previous_page_token"`
 }
 
-func (newState *ListBudgetPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetPoliciesResponse) {
+func (toState *ListBudgetPoliciesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListBudgetPoliciesResponse) {
 }
 
-func (newState *ListBudgetPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetPoliciesResponse) {
+func (toState *ListBudgetPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListBudgetPoliciesResponse) {
 }
 
 func (c ListBudgetPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2565,13 +2644,16 @@ func (o *ListBudgetPoliciesResponse) SetPolicies(ctx context.Context, v []Budget
 	o.Policies = types.ListValueMust(t, vs)
 }
 
-// Get all log delivery configurations
 type ListLogDeliveryRequest struct {
-	// Filter by credential configuration ID.
+	// The Credentials id to filter the search results with
 	CredentialsId types.String `tfsdk:"-"`
-	// Filter by status `ENABLED` or `DISABLED`.
+	// A page token received from a previous get all budget configurations call.
+	// This token can be used to retrieve the subsequent page. Requests first
+	// page if absent.
+	PageToken types.String `tfsdk:"-"`
+	// The log delivery status to filter the search results with
 	Status types.String `tfsdk:"-"`
-	// Filter by storage configuration ID.
+	// The Storage Configuration id to filter the search results with
 	StorageConfigurationId types.String `tfsdk:"-"`
 }
 
@@ -2594,6 +2676,7 @@ func (o ListLogDeliveryRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"credentials_id":           o.CredentialsId,
+			"page_token":               o.PageToken,
 			"status":                   o.Status,
 			"storage_configuration_id": o.StorageConfigurationId,
 		})
@@ -2604,16 +2687,18 @@ func (o ListLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credentials_id":           types.StringType,
+			"page_token":               types.StringType,
 			"status":                   types.StringType,
 			"storage_configuration_id": types.StringType,
 		},
 	}
 }
 
+// * Log Delivery Configuration
 type LogDeliveryConfiguration struct {
-	// The Databricks account ID that hosts the log delivery configuration.
+	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
-	// Databricks log delivery configuration ID.
+	// The unique UUID of log delivery configuration
 	ConfigId types.String `tfsdk:"config_id"`
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
@@ -2632,33 +2717,29 @@ type LogDeliveryConfiguration struct {
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
 	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix"`
-	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
-	// optional start month and year for delivery, specified in `YYYY-MM`
-	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
-	// available for usage before March 2019 (`2019-03`).
+	// This field applies only if log_type is BILLABLE_USAGE. This is the
+	// optional start month and year for delivery, specified in YYYY-MM format.
+	// Defaults to current year and month. BILLABLE_USAGE logs are not available
+	// for usage before March 2019 (2019-03).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time"`
-	// Databricks log delivery status.
+	// The LogDeliveryStatus of this log delivery configuration
 	LogDeliveryStatus types.Object `tfsdk:"log_delivery_status"`
-	// Log delivery type. Supported values are:
-	//
-	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
-	// CSV schema, see the [View billable usage].
-	//
-	// * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON schema,
-	// see [Configure audit logging]
+	// Log delivery type. Supported values are: * `BILLABLE_USAGE` — Configure
+	// [billable usage log delivery]. For the CSV schema, see the [View billable
+	// usage]. * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON
+	// schema, see [Configure audit logging]
 	//
 	// [Configure audit logging]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
 	LogType types.String `tfsdk:"log_type"`
-	// The file type of log delivery.
-	//
-	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
-	// CSV (comma-separated values) format is supported. For the schema, see the
-	// [View billable usage] * If `log_type` is `AUDIT_LOGS`, this value must be
-	// `JSON`. Only the JSON (JavaScript Object Notation) format is supported.
-	// For the schema, see the [Configuring audit logs].
+	// The file type of log delivery. * If `log_type` is `BILLABLE_USAGE`, this
+	// value must be `CSV`. Only the CSV (comma-separated values) format is
+	// supported. For the schema, see the [View billable usage] * If `log_type`
+	// is `AUDIT_LOGS`, this value must be `JSON`. Only the JSON (JavaScript
+	// Object Notation) format is supported. For the schema, see the
+	// [Configuring audit logs].
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
@@ -2694,25 +2775,41 @@ type LogDeliveryConfiguration struct {
 	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
-func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryConfiguration) {
+func (toState *LogDeliveryConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LogDeliveryConfiguration) {
+	if !fromPlan.LogDeliveryStatus.IsNull() && !fromPlan.LogDeliveryStatus.IsUnknown() {
+		if toStateLogDeliveryStatus, ok := toState.GetLogDeliveryStatus(ctx); ok {
+			if fromPlanLogDeliveryStatus, ok := fromPlan.GetLogDeliveryStatus(ctx); ok {
+				toStateLogDeliveryStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLogDeliveryStatus)
+				toState.SetLogDeliveryStatus(ctx, toStateLogDeliveryStatus)
+			}
+		}
+	}
 }
 
-func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState LogDeliveryConfiguration) {
+func (toState *LogDeliveryConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState LogDeliveryConfiguration) {
+	if !fromState.LogDeliveryStatus.IsNull() && !fromState.LogDeliveryStatus.IsUnknown() {
+		if toStateLogDeliveryStatus, ok := toState.GetLogDeliveryStatus(ctx); ok {
+			if fromStateLogDeliveryStatus, ok := fromState.GetLogDeliveryStatus(ctx); ok {
+				toStateLogDeliveryStatus.SyncFieldsDuringRead(ctx, fromStateLogDeliveryStatus)
+				toState.SetLogDeliveryStatus(ctx, toStateLogDeliveryStatus)
+			}
+		}
+	}
 }
 
 func (c LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["config_id"] = attrs["config_id"].SetOptional()
 	attrs["config_name"] = attrs["config_name"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
-	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
+	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
 	attrs["delivery_path_prefix"] = attrs["delivery_path_prefix"].SetOptional()
 	attrs["delivery_start_time"] = attrs["delivery_start_time"].SetOptional()
 	attrs["log_delivery_status"] = attrs["log_delivery_status"].SetOptional()
-	attrs["log_type"] = attrs["log_type"].SetOptional()
-	attrs["output_format"] = attrs["output_format"].SetOptional()
+	attrs["log_type"] = attrs["log_type"].SetRequired()
+	attrs["output_format"] = attrs["output_format"].SetRequired()
 	attrs["status"] = attrs["status"].SetOptional()
-	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 	attrs["workspace_ids_filter"] = attrs["workspace_ids_filter"].SetOptional()
 
@@ -2789,7 +2886,7 @@ func (o *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (Lo
 	if o.LogDeliveryStatus.IsNull() || o.LogDeliveryStatus.IsUnknown() {
 		return e, false
 	}
-	var v []LogDeliveryStatus
+	var v LogDeliveryStatus
 	d := o.LogDeliveryStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2797,10 +2894,7 @@ func (o *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (Lo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLogDeliveryStatus sets the value of the LogDeliveryStatus field in LogDeliveryConfiguration.
@@ -2835,7 +2929,6 @@ func (o *LogDeliveryConfiguration) SetWorkspaceIdsFilter(ctx context.Context, v 
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
-// Databricks log delivery status.
 type LogDeliveryStatus struct {
 	// The UTC time for the latest log delivery attempt.
 	LastAttemptTime types.String `tfsdk:"last_attempt_time"`
@@ -2845,8 +2938,8 @@ type LogDeliveryStatus struct {
 	// delivery fails with USER_FAILURE, error details will be provided for
 	// fixing misconfigurations in cloud permissions.
 	Message types.String `tfsdk:"message"`
-	// The status string for log delivery. Possible values are: * `CREATED`:
-	// There were no log delivery attempts since the config was created. *
+	// Enum that describes the status. Possible values are: * `CREATED`: There
+	// were no log delivery attempts since the config was created. *
 	// `SUCCEEDED`: The latest attempt of log delivery has succeeded completely.
 	// * `USER_FAILURE`: The latest attempt of log delivery failed because of
 	// misconfiguration of customer provided permissions on role or storage. *
@@ -2858,17 +2951,17 @@ type LogDeliveryStatus struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryStatus) {
+func (toState *LogDeliveryStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LogDeliveryStatus) {
 }
 
-func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringRead(existingState LogDeliveryStatus) {
+func (toState *LogDeliveryStatus) SyncFieldsDuringRead(ctx context.Context, fromState LogDeliveryStatus) {
 }
 
 func (c LogDeliveryStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["last_attempt_time"] = attrs["last_attempt_time"].SetOptional()
 	attrs["last_successful_attempt_time"] = attrs["last_successful_attempt_time"].SetOptional()
-	attrs["message"] = attrs["message"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
+	attrs["message"] = attrs["message"].SetRequired()
+	attrs["status"] = attrs["status"].SetRequired()
 
 	return attrs
 }
@@ -2913,6 +3006,17 @@ func (o LogDeliveryStatus) Type(ctx context.Context) attr.Type {
 type PatchStatusResponse struct {
 }
 
+func (toState *PatchStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchStatusResponse) {
+}
+
+func (toState *PatchStatusResponse) SyncFieldsDuringRead(ctx context.Context, fromState PatchStatusResponse) {
+}
+
+func (c PatchStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchStatusResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2947,10 +3051,10 @@ type SortSpec struct {
 	Field types.String `tfsdk:"field"`
 }
 
-func (newState *SortSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SortSpec) {
+func (toState *SortSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SortSpec) {
 }
 
-func (newState *SortSpec) SyncEffectiveFieldsDuringRead(existingState SortSpec) {
+func (toState *SortSpec) SyncFieldsDuringRead(ctx context.Context, fromState SortSpec) {
 }
 
 func (c SortSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3010,10 +3114,26 @@ type UpdateBudgetConfigurationBudget struct {
 	Filter types.Object `tfsdk:"filter"`
 }
 
-func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationBudget) {
+func (toState *UpdateBudgetConfigurationBudget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateBudgetConfigurationBudget) {
+	if !fromPlan.Filter.IsNull() && !fromPlan.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromPlanFilter, ok := fromPlan.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
-func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationBudget) {
+func (toState *UpdateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Context, fromState UpdateBudgetConfigurationBudget) {
+	if !fromState.Filter.IsNull() && !fromState.Filter.IsUnknown() {
+		if toStateFilter, ok := toState.GetFilter(ctx); ok {
+			if fromStateFilter, ok := fromState.GetFilter(ctx); ok {
+				toStateFilter.SyncFieldsDuringRead(ctx, fromStateFilter)
+				toState.SetFilter(ctx, toStateFilter)
+			}
+		}
+	}
 }
 
 func (c UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3104,7 +3224,7 @@ func (o *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 	if o.Filter.IsNull() || o.Filter.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfigurationFilter
+	var v BudgetConfigurationFilter
 	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3112,10 +3232,7 @@ func (o *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetFilter sets the value of the Filter field in UpdateBudgetConfigurationBudget.
@@ -3130,19 +3247,6 @@ type UpdateBudgetConfigurationRequest struct {
 	Budget types.Object `tfsdk:"budget"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationRequest) {
-}
-
-func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationRequest) {
-}
-
-func (c UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget"] = attrs["budget"].SetRequired()
-	attrs["budget_id"] = attrs["budget_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetConfigurationRequest.
@@ -3188,7 +3292,7 @@ func (o *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Updat
 	if o.Budget.IsNull() || o.Budget.IsUnknown() {
 		return e, false
 	}
-	var v []UpdateBudgetConfigurationBudget
+	var v UpdateBudgetConfigurationBudget
 	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3196,10 +3300,7 @@ func (o *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Updat
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBudget sets the value of the Budget field in UpdateBudgetConfigurationRequest.
@@ -3213,10 +3314,26 @@ type UpdateBudgetConfigurationResponse struct {
 	Budget types.Object `tfsdk:"budget"`
 }
 
-func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationResponse) {
+func (toState *UpdateBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateBudgetConfigurationResponse) {
+	if !fromPlan.Budget.IsNull() && !fromPlan.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromPlanBudget, ok := fromPlan.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
-func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationResponse) {
+func (toState *UpdateBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateBudgetConfigurationResponse) {
+	if !fromState.Budget.IsNull() && !fromState.Budget.IsUnknown() {
+		if toStateBudget, ok := toState.GetBudget(ctx); ok {
+			if fromStateBudget, ok := fromState.GetBudget(ctx); ok {
+				toStateBudget.SyncFieldsDuringRead(ctx, fromStateBudget)
+				toState.SetBudget(ctx, toStateBudget)
+			}
+		}
+	}
 }
 
 func (c UpdateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3266,7 +3383,7 @@ func (o *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 	if o.Budget.IsNull() || o.Budget.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetConfiguration
+	var v BudgetConfiguration
 	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3274,10 +3391,7 @@ func (o *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBudget sets the value of the Budget field in UpdateBudgetConfigurationResponse.
@@ -3286,12 +3400,13 @@ func (o *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v Bud
 	o.Budget = vs
 }
 
-// Update a budget policy
 type UpdateBudgetPolicyRequest struct {
 	// DEPRECATED. This is redundant field as LimitConfig is part of the
 	// BudgetPolicy
 	LimitConfig types.Object `tfsdk:"-"`
-	// Contains the BudgetPolicy details.
+	// The policy to update. `creator_user_id` cannot be specified in the
+	// request. All other fields must be specified even if not changed. The
+	// `policy_id` is used to identify the policy to update.
 	Policy types.Object `tfsdk:"policy"`
 	// The Id of the policy. This field is generated by Databricks and globally
 	// unique.
@@ -3344,7 +3459,7 @@ func (o *UpdateBudgetPolicyRequest) GetLimitConfig(ctx context.Context) (LimitCo
 	if o.LimitConfig.IsNull() || o.LimitConfig.IsUnknown() {
 		return e, false
 	}
-	var v []LimitConfig
+	var v LimitConfig
 	d := o.LimitConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3352,10 +3467,7 @@ func (o *UpdateBudgetPolicyRequest) GetLimitConfig(ctx context.Context) (LimitCo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLimitConfig sets the value of the LimitConfig field in UpdateBudgetPolicyRequest.
@@ -3372,7 +3484,7 @@ func (o *UpdateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 	if o.Policy.IsNull() || o.Policy.IsUnknown() {
 		return e, false
 	}
-	var v []BudgetPolicy
+	var v BudgetPolicy
 	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3380,10 +3492,7 @@ func (o *UpdateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPolicy sets the value of the Policy field in UpdateBudgetPolicyRequest.
@@ -3392,8 +3501,9 @@ func (o *UpdateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolic
 	o.Policy = vs
 }
 
+// * Update Log Delivery Configuration
 type UpdateLogDeliveryConfigurationStatusRequest struct {
-	// Databricks log delivery configuration ID
+	// The log delivery configuration id of customer
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
 	// Status of log delivery configuration. Set to `ENABLED` (enabled) or
 	// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable
@@ -3401,19 +3511,6 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
 	Status types.String `tfsdk:"status"`
-}
-
-func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLogDeliveryConfigurationStatusRequest) {
-}
-
-func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLogDeliveryConfigurationStatusRequest) {
-}
-
-func (c UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
-	attrs["status"] = attrs["status"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLogDeliveryConfigurationStatusRequest.
@@ -3449,20 +3546,9 @@ func (o UpdateLogDeliveryConfigurationStatusRequest) Type(ctx context.Context) a
 	}
 }
 
+// * Properties of the new log delivery configuration.
 type WrappedCreateLogDeliveryConfiguration struct {
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
-}
-
-func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedCreateLogDeliveryConfiguration) {
-}
-
-func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedCreateLogDeliveryConfiguration) {
-}
-
-func (c WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WrappedCreateLogDeliveryConfiguration.
@@ -3506,7 +3592,7 @@ func (o *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx 
 	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
 		return e, false
 	}
-	var v []CreateLogDeliveryConfigurationParams
+	var v CreateLogDeliveryConfigurationParams
 	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3514,10 +3600,7 @@ func (o *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedCreateLogDeliveryConfiguration.
@@ -3527,13 +3610,30 @@ func (o *WrappedCreateLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx 
 }
 
 type WrappedLogDeliveryConfiguration struct {
+	// The created log delivery configuration
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
 }
 
-func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfiguration) {
+func (toState *WrappedLogDeliveryConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WrappedLogDeliveryConfiguration) {
+	if !fromPlan.LogDeliveryConfiguration.IsNull() && !fromPlan.LogDeliveryConfiguration.IsUnknown() {
+		if toStateLogDeliveryConfiguration, ok := toState.GetLogDeliveryConfiguration(ctx); ok {
+			if fromPlanLogDeliveryConfiguration, ok := fromPlan.GetLogDeliveryConfiguration(ctx); ok {
+				toStateLogDeliveryConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLogDeliveryConfiguration)
+				toState.SetLogDeliveryConfiguration(ctx, toStateLogDeliveryConfiguration)
+			}
+		}
+	}
 }
 
-func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfiguration) {
+func (toState *WrappedLogDeliveryConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState WrappedLogDeliveryConfiguration) {
+	if !fromState.LogDeliveryConfiguration.IsNull() && !fromState.LogDeliveryConfiguration.IsUnknown() {
+		if toStateLogDeliveryConfiguration, ok := toState.GetLogDeliveryConfiguration(ctx); ok {
+			if fromStateLogDeliveryConfiguration, ok := fromState.GetLogDeliveryConfiguration(ctx); ok {
+				toStateLogDeliveryConfiguration.SyncFieldsDuringRead(ctx, fromStateLogDeliveryConfiguration)
+				toState.SetLogDeliveryConfiguration(ctx, toStateLogDeliveryConfiguration)
+			}
+		}
+	}
 }
 
 func (c WrappedLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3583,7 +3683,7 @@ func (o *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx contex
 	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
 		return e, false
 	}
-	var v []LogDeliveryConfiguration
+	var v LogDeliveryConfiguration
 	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3591,10 +3691,7 @@ func (o *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedLogDeliveryConfiguration.
@@ -3604,17 +3701,22 @@ func (o *WrappedLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx contex
 }
 
 type WrappedLogDeliveryConfigurations struct {
+	// Log delivery configurations were returned successfully.
 	LogDeliveryConfigurations types.List `tfsdk:"log_delivery_configurations"`
+	// Token which can be sent as `page_token` to retrieve the next page of
+	// results. If this field is omitted, there are no subsequent budgets.
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfigurations) {
+func (toState *WrappedLogDeliveryConfigurations) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WrappedLogDeliveryConfigurations) {
 }
 
-func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfigurations) {
+func (toState *WrappedLogDeliveryConfigurations) SyncFieldsDuringRead(ctx context.Context, fromState WrappedLogDeliveryConfigurations) {
 }
 
 func (c WrappedLogDeliveryConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configurations"] = attrs["log_delivery_configurations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
 	return attrs
 }
@@ -3640,6 +3742,7 @@ func (o WrappedLogDeliveryConfigurations) ToObjectValue(ctx context.Context) bas
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"log_delivery_configurations": o.LogDeliveryConfigurations,
+			"next_page_token":             o.NextPageToken,
 		})
 }
 
@@ -3650,6 +3753,7 @@ func (o WrappedLogDeliveryConfigurations) Type(ctx context.Context) attr.Type {
 			"log_delivery_configurations": basetypes.ListType{
 				ElemType: LogDeliveryConfiguration{}.Type(ctx),
 			},
+			"next_page_token": types.StringType,
 		},
 	}
 }

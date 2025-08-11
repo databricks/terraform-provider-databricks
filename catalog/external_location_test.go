@@ -55,7 +55,7 @@ func TestUcAccExternalLocation(t *testing.T) {
 			}
 			comment = "Managed by TF"
 		}
-		
+
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
@@ -75,7 +75,7 @@ func TestUcAccExternalLocationForceDestroy(t *testing.T) {
 			}
 			comment = "Managed by TF"
 		}
-		
+
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"

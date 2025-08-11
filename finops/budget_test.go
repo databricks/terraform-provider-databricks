@@ -10,19 +10,19 @@ import (
 var (
 	budgetTemplate = `resource "databricks_budget" "this" {
 			display_name = "tf-{var.RANDOM}"
-		
+
 			alert_configurations {
 				time_period         = "MONTH"
-				trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
+				trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED"
 				quantity_type       = "LIST_PRICE_DOLLARS_USD"
 				quantity_threshold  = "%s"
-		
+
 				action_configurations {
 					action_type = "EMAIL_NOTIFICATION"
 					target      = "me@databricks.com"
 				}
 			}
-	
+
 			filter {
 				tags {
 					key   = "Environment"
@@ -31,12 +31,12 @@ var (
 						values = ["Testing"]
 					}
 				}
-	
+
 				workspace_id {
 					operator = "IN"
 					values   = [
 						1234567890098765
-					]                              
+					]
 				}
 			}
 		}`

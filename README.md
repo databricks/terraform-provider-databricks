@@ -86,7 +86,7 @@ To make Databricks Terraform Provider generally available, we've moved it from [
 You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
 
 ```text
-Warning: Additional provider information from registry 
+Warning: Additional provider information from registry
 
 The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
 - For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.
@@ -99,3 +99,43 @@ If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language
 ## Use of Terraform exporter
 
 The exporter functionality is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.
+
+## Well-Known Types
+
+### Duration Fields
+
+Duration fields accept Go-style duration strings. Use standard time units like `s` (seconds), `m` (minutes), `h` (hours).
+
+```hcl
+resource "databricks_example" "this" {
+  timeout_duration = "30m"   # 30 minutes
+  retry_delay      = "10s"   # 10 seconds
+  max_lifetime     = "24h"   # 24 hours
+  short_timeout    = "500ms" # 500 milliseconds
+}
+```
+
+### Timestamp Fields
+
+Timestamp fields require RFC3339 formatted datetime strings. Include timezone information for best results.
+
+```hcl
+resource "databricks_example" "this" {
+  start_time = "2023-10-15T14:30:00Z"      # UTC timezone
+  end_time   = "2023-10-15T14:30:00-07:00" # Pacific timezone
+  created_at = "2023-10-15T14:30:00.123Z"  # With milliseconds
+}
+```
+
+### JSON Value Fields
+
+JSON value fields accept JSON-encoded strings. The provider will normalize and validate the JSON structure.
+
+```hcl
+resource "databricks_example" "this" {
+  settings = jsonencode({
+    enabled = true
+    options = ["option1", "option2"]
+  })
+}
+```

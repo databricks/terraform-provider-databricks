@@ -2,6 +2,9 @@ package clusters
 
 import (
 	"fmt"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/listing"
+	"github.com/stretchr/testify/mock"
 	"strings"
 	"testing"
 
@@ -1907,4 +1910,175 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err)
+}
+
+func TestResourceClusterAliasDedicatedNoDrift_DataSecurityMode(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
+			api := a.GetMockClustersAPI().EXPECT()
+			api.List(mock.Anything, compute.ListClustersRequest{
+				FilterBy: &compute.ListClustersFilterBy{
+					IsPinned: true,
+				},
+				PageSize: 100,
+			}).Return(&listing.SliceIterator[compute.ClusterDetails]{})
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Dedicated Cluster",
+					DataSecurityMode:       compute.DataSecurityModeSingleUser,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 2,
+					},
+				}, nil,
+			)
+		},
+		ID:       "abc",
+		Read:     true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Dedicated Cluster",
+			"data_security_mode":      "SINGLE_USER",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+			"gcp_attributes": `"{
+				local_ssd_count = 2
+			}"`,
+		},
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Dedicated Cluster"
+		data_security_mode =      "DATA_SECURITY_MODE_DEDICATED"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers =             100
+		gcp_attributes = {
+			local_ssd_count = 0
+		},
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.False(t, d.HasChanges("data_security_mode"))
+}
+
+func TestResourceClusterAliasStandardNoDrift_DataSecurityMode(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
+			api := a.GetMockClustersAPI().EXPECT()
+			api.List(mock.Anything, compute.ListClustersRequest{
+				FilterBy: &compute.ListClustersFilterBy{
+					IsPinned: true,
+				},
+				PageSize: 100,
+			}).Return(&listing.SliceIterator[compute.ClusterDetails]{})
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Standard Cluster",
+					DataSecurityMode:       compute.DataSecurityModeUserIsolation,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 2,
+					},
+				}, nil,
+			)
+		},
+		ID:       "abc",
+		Read:     true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Standard Cluster",
+			"data_security_mode":      "USER_ISOLATION",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+			"gcp_attributes": `"{
+				local_ssd_count = 2
+			}"`,
+		},
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Standard Cluster"
+		data_security_mode =      "DATA_SECURITY_MODE_STANDARD"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers =             100
+		gcp_attributes = {
+			local_ssd_count = 0
+		},
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.False(t, d.HasChanges("data_security_mode"))
+}
+
+func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
+			api := a.GetMockClustersAPI().EXPECT()
+			api.List(mock.Anything, compute.ListClustersRequest{
+				FilterBy: &compute.ListClustersFilterBy{
+					IsPinned: true,
+				},
+				PageSize: 100,
+			}).Return(&listing.SliceIterator[compute.ClusterDetails]{})
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Auto Cluster",
+					DataSecurityMode:       compute.DataSecurityModeUserIsolation,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 2,
+					},
+				}, nil,
+			)
+		},
+		ID:       "abc",
+		Read:     true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Auto Cluster",
+			"data_security_mode":      "USER_ISOLATION",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+			"gcp_attributes": `"{
+				local_ssd_count = 2
+			}"`,
+		},
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Auto Cluster"
+		data_security_mode =      "DATA_SECURITY_MODE_AUTO"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers =             100
+		gcp_attributes = {
+			local_ssd_count = 0
+		},
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.False(t, d.HasChanges("data_security_mode"))
 }

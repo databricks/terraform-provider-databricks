@@ -43,6 +43,22 @@ resource "databricks_table" "mytable" {
 	}
 }
 
+resource "databricks_table" "my_table_metric_view" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name = databricks_schema.things.name
+	name = "bar"
+	table_type = "METRIC_VIEW"
+	data_source_format = ""
+
+	column {
+		name      = "id"
+		position  = 0
+		type_name = "INT"
+		type_text = "int"
+		type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+	}
+}
+
 resource "databricks_storage_credential" "external" {
 	name = "cred-{var.STICKY_RANDOM}"
 	aws_iam_role {
@@ -82,6 +98,12 @@ resource "databricks_grant" "schema" {
 resource "databricks_grant" "table" {
 	table = databricks_table.mytable.id
 
+	principal  = "%s"
+	privileges = ["ALL_PRIVILEGES"]
+}
+
+resource "databricks_grant" "my_table_metric_view" {
+	table = databricks_table.my_table_metric_view.id
 	principal  = "%s"
 	privileges = ["ALL_PRIVILEGES"]
 }

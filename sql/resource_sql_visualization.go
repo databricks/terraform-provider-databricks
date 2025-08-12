@@ -160,7 +160,7 @@ func ResourceSqlVisualization() common.Resource {
 		})
 
 	return common.Resource{
-		DeprecationMessage: "This resource is deprecated and will be removed in future.",
+		DeprecationMessage: "This resource is deprecated and will be removed in future. Please switch to databricks_dashboard to author new AI/BI dashboards using the latest tooling.",
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var v VisualizationEntity
 			av, err := v.toAPIObject(s, data)

@@ -43,7 +43,7 @@ resource "databricks_table" "mytable" {
 	}
 }
 
-resource "databricks_table" "my_table_metric_view" {
+resource "databricks_table" "metric_view_grant" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
 	name = "bar"
@@ -102,8 +102,8 @@ resource "databricks_grant" "table" {
 	privileges = ["ALL_PRIVILEGES"]
 }
 
-resource "databricks_grant" "my_table_metric_view" {
-	table = databricks_table.my_table_metric_view.id
+resource "databricks_grant" "metric_view_grant" {
+	table = databricks_table.metric_view_grant.id
 	principal  = "%s"
 	privileges = ["ALL_PRIVILEGES"]
 }

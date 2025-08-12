@@ -13,7 +13,7 @@
 ### Documentation
 
 * Document `email_notifications` block in model serving resources ([#4910](https://github.com/databricks/terraform-provider-databricks/pull/4910))
-* Deprecate `sql_visualization` resource.
+* Deprecate `databricks_sql_visualization` resource.
 
 ### Exporter
 

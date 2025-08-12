@@ -9,7 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-var grantsTemplate = `
+var catalogAndSchemaTemplate = `
 resource "databricks_catalog" "sandbox" {
 	name         = "sandbox{var.STICKY_RANDOM}"
 	comment      = "this catalog is managed by terraform"
@@ -26,7 +26,9 @@ resource "databricks_schema" "things" {
 		kind = "various"
 	}
 }
+`
 
+var grantsTemplate = catalogAndSchemaTemplate + `
 resource "databricks_table" "mytable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
@@ -144,5 +146,40 @@ func TestUcAccGrantsForIdChange(t *testing.T) {
 	}, acceptance.Step{
 		Template:    grantsTemplateForNamePermissionChange("-fail", "abc"),
 		ExpectError: regexp.MustCompile(`Error: cannot create grants: Privilege ABC is not applicable to this entity`),
+	})
+}
+
+func metricViewGrantUpdate(principal string) string {
+	return catalogAndSchemaTemplate + fmt.Sprintf(`
+	resource "databricks_table" "metric_view" {
+		catalog_name = databricks_catalog.sandbox.id
+		schema_name = databricks_schema.things.name
+		name = "table-{var.STICKY_RANDOM}"
+		table_type = "METRIC_VIEW"
+		data_source_format = ""
+
+		column {
+			name      = "id"
+			position  = 0
+			type_name = "INT"
+			type_text = "int"
+			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+		}
+	}
+	resource "databricks_grants" "table" {
+		table = databricks_table.metric_view.id
+		grant {
+			principal  = "%s"
+			privileges = ["ALL_PRIVILEGES"]
+		}
+	}
+	`, principal)
+}
+
+func TestUcAccGrantsMetricView(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: metricViewGrantUpdate("{env.TEST_DATA_ENG_GROUP}"),
+	}, acceptance.Step{
+		Template: metricViewGrantUpdate("{env.TEST_DATA_SCI_GROUP}"),
 	})
 }

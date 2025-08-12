@@ -30,7 +30,7 @@ resource "databricks_schema" "things" {
 resource "databricks_table" "mytable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "managed-{var.STICKY_RANDOM}""
+	name = "managed-{var.STICKY_RANDOM}"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
 

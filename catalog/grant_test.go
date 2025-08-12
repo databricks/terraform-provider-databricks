@@ -30,7 +30,7 @@ resource "databricks_schema" "things" {
 resource "databricks_table" "mytable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "bar"
+	name = "managed-{var.STICKY_RANDOM}""
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
 
@@ -46,7 +46,7 @@ resource "databricks_table" "mytable" {
 resource "databricks_table" "metric_view_grant" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "bar"
+	name = "metric-view-{var.STICKY_RANDOM}"
 	table_type = "METRIC_VIEW"
 	data_source_format = ""
 

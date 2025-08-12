@@ -17,3 +17,4 @@
 ### Exporter
 
 ### Internal Changes
+* Added integration test for METRIC_VIEW table type in databricks_grants

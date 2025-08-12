@@ -17,4 +17,4 @@
 ### Exporter
 
 ### Internal Changes
-* Added integration test for METRIC_VIEW table type in databricks_grants ([#4926](https://github.com/databricks/terraform-provider-databricks/pull/4926))
+* Added integration test for METRIC_VIEW table type in `databricks_grant` and `databricks_grants` ([#4927](https://github.com/databricks/terraform-provider-databricks/pull/4927))

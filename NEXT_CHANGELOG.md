@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+ * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
+
 ### Bug Fixes
 
 * Suppress `data_security_mode` aliases for `databricks_cluster` resource ([#4911](https://github.com/databricks/terraform-provider-databricks/pull/4911)).

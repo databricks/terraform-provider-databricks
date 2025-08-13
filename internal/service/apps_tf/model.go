@@ -28,9 +28,7 @@ type App struct {
 	ActiveDeployment types.Object `tfsdk:"active_deployment"`
 
 	AppStatus types.Object `tfsdk:"app_status"`
-	// TODO: Deprecate this field after serverless entitlements are released to
-	// all prod stages and the new usage_policy_id is properly populated and
-	// used.
+
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 
 	ComputeStatus types.Object `tfsdk:"compute_status"`
@@ -44,9 +42,7 @@ type App struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
-	// TODO: Deprecate this field after serverless entitlements are released to
-	// all prod stages and the new usage_policy_id is properly populated and
-	// used.
+
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`

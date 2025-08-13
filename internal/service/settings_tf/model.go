@@ -12317,6 +12317,14 @@ func (o SetStatusResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SlackConfig struct {
+	// [Input-Only] Slack channel ID for notifications.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] OAuth token for Slack authentication.
+	OauthToken types.String `tfsdk:"oauth_token"`
+	// [Output-Only] Whether OAuth token is set.
+	OauthTokenSet types.Bool `tfsdk:"oauth_token_set"`
 	// [Input-Only] URL for Slack destination.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
@@ -12330,6 +12338,10 @@ func (toState *SlackConfig) SyncFieldsDuringRead(ctx context.Context, fromState 
 }
 
 func (c SlackConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["oauth_token"] = attrs["oauth_token"].SetOptional()
+	attrs["oauth_token_set"] = attrs["oauth_token_set"].SetOptional()
 	attrs["url"] = attrs["url"].SetOptional()
 	attrs["url_set"] = attrs["url_set"].SetOptional()
 
@@ -12354,8 +12366,12 @@ func (o SlackConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"url":     o.Url,
-			"url_set": o.UrlSet,
+			"channel_id":      o.ChannelId,
+			"channel_id_set":  o.ChannelIdSet,
+			"oauth_token":     o.OauthToken,
+			"oauth_token_set": o.OauthTokenSet,
+			"url":             o.Url,
+			"url_set":         o.UrlSet,
 		})
 }
 
@@ -12363,8 +12379,12 @@ func (o SlackConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SlackConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"url":     types.StringType,
-			"url_set": types.BoolType,
+			"channel_id":      types.StringType,
+			"channel_id_set":  types.BoolType,
+			"oauth_token":     types.StringType,
+			"oauth_token_set": types.BoolType,
+			"url":             types.StringType,
+			"url_set":         types.BoolType,
 		},
 	}
 }

@@ -248,7 +248,8 @@ type CleanRoomAsset_SdkV2 struct {
 	// For UC securable assets (tables, volumes, etc.), the format is
 	// *shared_catalog*.*shared_schema*.*asset_name*
 	//
-	// For notebooks, the name is the notebook file name.
+	// For notebooks, the name is the notebook file name. For jar analyses, the
+	// name is the jar analysis name.
 	Name types.String `tfsdk:"name"`
 	// Notebook details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **NOTEBOOK_FILE**
@@ -858,7 +859,7 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
 	NotebookContent types.String `tfsdk:"notebook_content"`
-	// top-level status derived from all reviews
+	// Top-level status derived from all reviews
 	ReviewState types.String `tfsdk:"review_state"`
 	// All existing approvals or rejections
 	Reviews types.List `tfsdk:"reviews"`
@@ -1319,8 +1320,11 @@ func (o CleanRoomAssetVolumeLocalDetails_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type CleanRoomAutoApprovalRule_SdkV2 struct {
+	// Collaborator alias of the author covered by the rule. Only one of
+	// `author_collaborator_alias` and `author_scope` can be set.
 	AuthorCollaboratorAlias types.String `tfsdk:"author_collaborator_alias"`
-
+	// Scope of authors covered by the rule. Only one of
+	// `author_collaborator_alias` and `author_scope` can be set.
 	AuthorScope types.String `tfsdk:"author_scope"`
 	// The name of the clean room this auto-approval rule belongs to.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
@@ -1330,7 +1334,7 @@ type CleanRoomAutoApprovalRule_SdkV2 struct {
 	RuleId types.String `tfsdk:"rule_id"`
 	// The owner of the rule to whom the rule applies.
 	RuleOwnerCollaboratorAlias types.String `tfsdk:"rule_owner_collaborator_alias"`
-
+	// Collaborator alias of the runner covered by the rule.
 	RunnerCollaboratorAlias types.String `tfsdk:"runner_collaborator_alias"`
 }
 
@@ -1499,15 +1503,15 @@ func (o CleanRoomCollaborator_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CleanRoomNotebookReview_SdkV2 struct {
-	// review comment
+	// Review comment
 	Comment types.String `tfsdk:"comment"`
-	// timestamp of when the review was submitted
+	// When the review was submitted, in epoch milliseconds
 	CreatedAtMillis types.Int64 `tfsdk:"created_at_millis"`
-	// review outcome
+	// Review outcome
 	ReviewState types.String `tfsdk:"review_state"`
-	// specified when the review was not explicitly made by a user
+	// Specified when the review was not explicitly made by a user
 	ReviewSubReason types.String `tfsdk:"review_sub_reason"`
-	// collaborator alias of the reviewer
+	// Collaborator alias of the reviewer
 	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
 }
 
@@ -2292,7 +2296,7 @@ func (o *CreateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v Clea
 }
 
 type CreateCleanRoomAssetReviewRequest_SdkV2 struct {
-	// can only be NOTEBOOK_FILE for now
+	// Asset type. Can only be NOTEBOOK_FILE.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2370,7 +2374,7 @@ func (o *CreateCleanRoomAssetReviewRequest_SdkV2) SetNotebookReview(ctx context.
 }
 
 type CreateCleanRoomAssetReviewResponse_SdkV2 struct {
-	// top-level status derived from all reviews
+	// Top-level status derived from all reviews
 	NotebookReviewState types.String `tfsdk:"notebook_review_state"`
 	// All existing notebook approvals or rejections
 	NotebookReviews types.List `tfsdk:"notebook_reviews"`
@@ -3728,11 +3732,11 @@ func (o *ListCleanRoomsResponse_SdkV2) SetCleanRooms(ctx context.Context, v []Cl
 }
 
 type NotebookVersionReview_SdkV2 struct {
-	// review comment
+	// Review comment
 	Comment types.String `tfsdk:"comment"`
-	// etag that identifies the notebook version
+	// Etag identifying the notebook version
 	Etag types.String `tfsdk:"etag"`
-	// review outcome
+	// Review outcome
 	ReviewState types.String `tfsdk:"review_state"`
 }
 
@@ -3799,7 +3803,8 @@ type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	// For UC securable assets (tables, volumes, etc.), the format is
 	// *shared_catalog*.*shared_schema*.*asset_name*
 	//
-	// For notebooks, the name is the notebook file name.
+	// For notebooks, the name is the notebook file name. For jar analyses, the
+	// name is the jar analysis name.
 	Name types.String `tfsdk:"-"`
 }
 

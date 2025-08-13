@@ -9104,6 +9104,16 @@ type GcpAttributes struct {
 	Availability types.String `tfsdk:"availability"`
 	// Boot disk size in GB
 	BootDiskSize types.Int64 `tfsdk:"boot_disk_size"`
+	// The first `first_on_demand` nodes of the cluster will be placed on
+	// on-demand instances. This value should be greater than 0, to make sure
+	// the cluster driver node is placed on an on-demand instance. If this value
+	// is greater than or equal to the current cluster size, all nodes will be
+	// placed on on-demand instances. If this value is less than the current
+	// cluster size, `first_on_demand` nodes will be placed on on-demand
+	// instances and the remainder will be placed on `availability` instances.
+	// Note that this value does not affect cluster size and cannot currently be
+	// mutated over the lifetime of a cluster.
+	FirstOnDemand types.Int64 `tfsdk:"first_on_demand"`
 	// If provided, the cluster will impersonate the google service account when
 	// accessing gcloud services (like GCS). The google service account must
 	// have previously been added to the Databricks environment by an account
@@ -9140,6 +9150,7 @@ func (toState *GcpAttributes) SyncFieldsDuringRead(ctx context.Context, fromStat
 func (c GcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
 	attrs["boot_disk_size"] = attrs["boot_disk_size"].SetOptional()
+	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
 	attrs["use_preemptible_executors"] = attrs["use_preemptible_executors"].SetOptional()
@@ -9168,6 +9179,7 @@ func (o GcpAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		map[string]attr.Value{
 			"availability":              o.Availability,
 			"boot_disk_size":            o.BootDiskSize,
+			"first_on_demand":           o.FirstOnDemand,
 			"google_service_account":    o.GoogleServiceAccount,
 			"local_ssd_count":           o.LocalSsdCount,
 			"use_preemptible_executors": o.UsePreemptibleExecutors,
@@ -9181,6 +9193,7 @@ func (o GcpAttributes) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"availability":              types.StringType,
 			"boot_disk_size":            types.Int64Type,
+			"first_on_demand":           types.Int64Type,
 			"google_service_account":    types.StringType,
 			"local_ssd_count":           types.Int64Type,
 			"use_preemptible_executors": types.BoolType,

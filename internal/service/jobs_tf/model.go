@@ -1895,6 +1895,11 @@ type CreateJob struct {
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
 	Trigger types.Object `tfsdk:"trigger"`
+	// The id of the user specified usage policy to use for this job. If not
+	// specified, a default usage policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
@@ -1960,6 +1965,7 @@ func (o CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"task":                  o.Tasks,
 			"timeout_seconds":       o.TimeoutSeconds,
 			"trigger":               o.Trigger,
+			"usage_policy_id":       o.UsagePolicyId,
 			"webhook_notifications": o.WebhookNotifications,
 		})
 }
@@ -2004,6 +2010,7 @@ func (o CreateJob) Type(ctx context.Context) attr.Type {
 			},
 			"timeout_seconds":       types.Int64Type,
 			"trigger":               TriggerSettings{}.Type(ctx),
+			"usage_policy_id":       types.StringType,
 			"webhook_notifications": WebhookNotifications{}.Type(ctx),
 		},
 	}
@@ -6782,6 +6789,11 @@ type JobSettings struct {
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
 	Trigger types.Object `tfsdk:"trigger"`
+	// The id of the user specified usage policy to use for this job. If not
+	// specified, a default usage policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
@@ -6993,6 +7005,7 @@ func (c JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["task"] = attrs["task"].SetOptional()
 	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
 	return attrs
@@ -7056,6 +7069,7 @@ func (o JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"task":                  o.Tasks,
 			"timeout_seconds":       o.TimeoutSeconds,
 			"trigger":               o.Trigger,
+			"usage_policy_id":       o.UsagePolicyId,
 			"webhook_notifications": o.WebhookNotifications,
 		})
 }
@@ -7097,6 +7111,7 @@ func (o JobSettings) Type(ctx context.Context) attr.Type {
 			},
 			"timeout_seconds":       types.Int64Type,
 			"trigger":               TriggerSettings{}.Type(ctx),
+			"usage_policy_id":       types.StringType,
 			"webhook_notifications": WebhookNotifications{}.Type(ctx),
 		},
 	}
@@ -17327,6 +17342,10 @@ type SubmitRun struct {
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
+	// The user specified id of the usage policy to use for this one-time run.
+	// If not specified, a default usage policy may be applied when creating or
+	// modifying the job.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
@@ -17374,6 +17393,7 @@ func (o SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"run_name":              o.RunName,
 			"tasks":                 o.Tasks,
 			"timeout_seconds":       o.TimeoutSeconds,
+			"usage_policy_id":       o.UsagePolicyId,
 			"webhook_notifications": o.WebhookNotifications,
 		})
 }
@@ -17401,6 +17421,7 @@ func (o SubmitRun) Type(ctx context.Context) attr.Type {
 				ElemType: SubmitTask{}.Type(ctx),
 			},
 			"timeout_seconds":       types.Int64Type,
+			"usage_policy_id":       types.StringType,
 			"webhook_notifications": WebhookNotifications{}.Type(ctx),
 		},
 	}

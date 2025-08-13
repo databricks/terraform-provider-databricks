@@ -35,7 +35,8 @@ This data source exports a single attribute, `assets`. It is a list of resources
   
   For UC securable assets (tables, volumes, etc.), the format is *shared_catalog*.*shared_schema*.*asset_name*
   
-  For notebooks, the name is the notebook file name
+  For notebooks, the name is the notebook file name.
+  For jar analyses, the name is the jar analysis name
 * `notebook` (CleanRoomAssetNotebook) - Notebook details available to all collaborators of the clean room.
   Present if and only if **asset_type** is **NOTEBOOK_FILE**
 * `owner_collaborator_alias` (string) - The alias of the collaborator who owns this asset
@@ -62,7 +63,7 @@ This data source exports a single attribute, `assets`. It is a list of resources
 * `etag` (string) - Server generated etag that represents the notebook version
 * `notebook_content` (string) - Base 64 representation of the notebook contents.
   This is the same format as returned by :method:workspace/export with the format of **HTML**
-* `review_state` (string) - top-level status derived from all reviews. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
+* `review_state` (string) - Top-level status derived from all reviews. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
 * `reviews` (list of CleanRoomNotebookReview) - All existing approvals or rejections
 * `runner_collaborator_aliases` (list of string) - collaborators that can run the notebook
 
@@ -86,11 +87,11 @@ This data source exports a single attribute, `assets`. It is a list of resources
   in the format of *catalog*.*schema*.*volume_name*
 
 ### CleanRoomNotebookReview
-* `comment` (string) - review comment
-* `created_at_millis` (integer) - timestamp of when the review was submitted
-* `review_state` (string) - review outcome. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
-* `review_sub_reason` (string) - specified when the review was not explicitly made by a user. Possible values are: `AUTO_APPROVED`, `BACKFILLED`
-* `reviewer_collaborator_alias` (string) - collaborator alias of the reviewer
+* `comment` (string) - Review comment
+* `created_at_millis` (integer) - When the review was submitted, in epoch milliseconds
+* `review_state` (string) - Review outcome. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
+* `review_sub_reason` (string) - Specified when the review was not explicitly made by a user. Possible values are: `AUTO_APPROVED`, `BACKFILLED`
+* `reviewer_collaborator_alias` (string) - Collaborator alias of the reviewer
 
 ### ColumnInfo
 * `comment` (string) - User-provided free-form text description

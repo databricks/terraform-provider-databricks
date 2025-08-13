@@ -9,10 +9,12 @@ subcategory: "Clean Rooms"
 
 ## Arguments
 The following arguments are supported:
-* `author_collaborator_alias` (string, optional)
-* `author_scope` (string, optional) - . Possible values are: `ANY_AUTHOR`
+* `author_collaborator_alias` (string, optional) - Collaborator alias of the author covered by the rule.
+  Only one of `author_collaborator_alias` and `author_scope` can be set
+* `author_scope` (string, optional) - Scope of authors covered by the rule.
+  Only one of `author_collaborator_alias` and `author_scope` can be set. Possible values are: `ANY_AUTHOR`
 * `clean_room_name` (string, optional) - The name of the clean room this auto-approval rule belongs to
-* `runner_collaborator_alias` (string, optional)
+* `runner_collaborator_alias` (string, optional) - Collaborator alias of the runner covered by the rule
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

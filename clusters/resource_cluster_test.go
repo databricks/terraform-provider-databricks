@@ -2,11 +2,12 @@ package clusters
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/stretchr/testify/mock"
-	"strings"
-	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"

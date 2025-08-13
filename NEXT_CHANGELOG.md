@@ -14,5 +14,4 @@ Terraform databricks provider version 1.86.0 introduced changes to databricks_sh
 ### Exporter
 
 ### Internal Changes
-* Added integration test for METRIC_VIEW table type in `databricks_grant` and `databricks_grants` ([#4927](https://github.com/databricks/terraform-provider-databricks/pull/4927))
 * Use SDKv2 Implementation for databricks_share resource as default ([#4931](https://github.com/databricks/terraform-provider-databricks/pull/4931))

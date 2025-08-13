@@ -13,6 +13,7 @@
 ### Documentation
 
 * Document `email_notifications` block in model serving resources ([#4910](https://github.com/databricks/terraform-provider-databricks/pull/4910))
+* Deprecate `data_source_id` attribute in `databricks_sql_endpoint` resource ([#4929](https://github.com/databricks/terraform-provider-databricks/pull/4929))
 * Deprecate `databricks_sql_visualization` and `databricks_sql_widget` resource. ([#4924](https://github.com/databricks/terraform-provider-databricks/pull/4924))
 
 ### Exporter

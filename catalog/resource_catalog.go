@@ -41,6 +41,7 @@ type CatalogInfo struct {
 	Owner                        string            `json:"owner,omitempty" tf:"computed"`
 	IsolationMode                string            `json:"isolation_mode,omitempty" tf:"computed"`
 	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
+	CatalogID                    string            `json:"catalog_id" tf:"computed"`
 }
 
 func ResourceCatalog() common.Resource {

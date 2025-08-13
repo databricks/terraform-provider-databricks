@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add `catalog_id` to the output of `databricks_catalog` resource.
 
 ### Bug Fixes
 

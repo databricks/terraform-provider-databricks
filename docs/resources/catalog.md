@@ -43,6 +43,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this catalog - same as the `name`.
+* `catalog_id` - The unique identifier of the catalog.
 * `metastore_id` - ID of the parent metastore.
 
 ## Import

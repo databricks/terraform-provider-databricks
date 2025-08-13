@@ -40,10 +40,10 @@ type AuthorizationDetails_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *AuthorizationDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetails_SdkV2) {
+func (toState *AuthorizationDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetails_SdkV2) {
 }
 
-func (newState *AuthorizationDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetails_SdkV2) {
+func (toState *AuthorizationDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetails_SdkV2) {
 }
 
 func (c AuthorizationDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -129,10 +129,10 @@ type AuthorizationDetailsGrantRule_SdkV2 struct {
 	PermissionSet types.String `tfsdk:"permission_set"`
 }
 
-func (newState *AuthorizationDetailsGrantRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetailsGrantRule_SdkV2) {
+func (toState *AuthorizationDetailsGrantRule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetailsGrantRule_SdkV2) {
 }
 
-func (newState *AuthorizationDetailsGrantRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetailsGrantRule_SdkV2) {
+func (toState *AuthorizationDetailsGrantRule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetailsGrantRule_SdkV2) {
 }
 
 func (c AuthorizationDetailsGrantRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -394,10 +394,10 @@ type CronSchedule_SdkV2 struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule_SdkV2) {
+func (toState *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule_SdkV2) {
 }
 
-func (newState *CronSchedule_SdkV2) SyncEffectiveFieldsDuringRead(existingState CronSchedule_SdkV2) {
+func (toState *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule_SdkV2) {
 }
 
 func (c CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -476,10 +476,10 @@ type Dashboard_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Dashboard_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard_SdkV2) {
+func (toState *Dashboard_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dashboard_SdkV2) {
 }
 
-func (newState *Dashboard_SdkV2) SyncEffectiveFieldsDuringRead(existingState Dashboard_SdkV2) {
+func (toState *Dashboard_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Dashboard_SdkV2) {
 }
 
 func (c Dashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -651,10 +651,42 @@ type GenieAttachment_SdkV2 struct {
 	Text types.List `tfsdk:"text"`
 }
 
-func (newState *GenieAttachment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment_SdkV2) {
+func (toState *GenieAttachment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieAttachment_SdkV2) {
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromPlan.Text.IsNull() && !fromPlan.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromPlanText, ok := fromPlan.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
-func (newState *GenieAttachment_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieAttachment_SdkV2) {
+func (toState *GenieAttachment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieAttachment_SdkV2) {
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromState.Text.IsNull() && !fromState.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromStateText, ok := fromState.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringRead(ctx, fromStateText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
 func (c GenieAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -778,10 +810,10 @@ type GenieConversation_SdkV2 struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieConversation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversation_SdkV2) {
+func (toState *GenieConversation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversation_SdkV2) {
 }
 
-func (newState *GenieConversation_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieConversation_SdkV2) {
+func (toState *GenieConversation_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversation_SdkV2) {
 }
 
 func (c GenieConversation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -847,10 +879,10 @@ type GenieConversationSummary_SdkV2 struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieConversationSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversationSummary_SdkV2) {
+func (toState *GenieConversationSummary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversationSummary_SdkV2) {
 }
 
-func (newState *GenieConversationSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieConversationSummary_SdkV2) {
+func (toState *GenieConversationSummary_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversationSummary_SdkV2) {
 }
 
 func (c GenieConversationSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1216,10 +1248,26 @@ type GenieGetMessageQueryResultResponse_SdkV2 struct {
 	StatementResponse types.List `tfsdk:"statement_response"`
 }
 
-func (newState *GenieGetMessageQueryResultResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultResponse_SdkV2) {
+func (toState *GenieGetMessageQueryResultResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetMessageQueryResultResponse_SdkV2) {
+	if !fromPlan.StatementResponse.IsNull() && !fromPlan.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromPlanStatementResponse, ok := fromPlan.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
-func (newState *GenieGetMessageQueryResultResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse_SdkV2) {
+func (toState *GenieGetMessageQueryResultResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetMessageQueryResultResponse_SdkV2) {
+	if !fromState.StatementResponse.IsNull() && !fromState.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromStateStatementResponse, ok := fromState.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringRead(ctx, fromStateStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
 func (c GenieGetMessageQueryResultResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1425,10 +1473,10 @@ type GenieListConversationsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *GenieListConversationsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieListConversationsResponse_SdkV2) {
+func (toState *GenieListConversationsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationsResponse_SdkV2) {
 }
 
-func (newState *GenieListConversationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieListConversationsResponse_SdkV2) {
+func (toState *GenieListConversationsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationsResponse_SdkV2) {
 }
 
 func (c GenieListConversationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1548,10 +1596,10 @@ type GenieListSpacesResponse_SdkV2 struct {
 	Spaces types.List `tfsdk:"spaces"`
 }
 
-func (newState *GenieListSpacesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieListSpacesResponse_SdkV2) {
+func (toState *GenieListSpacesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListSpacesResponse_SdkV2) {
 }
 
-func (newState *GenieListSpacesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieListSpacesResponse_SdkV2) {
+func (toState *GenieListSpacesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieListSpacesResponse_SdkV2) {
 }
 
 func (c GenieListSpacesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1653,10 +1701,42 @@ type GenieMessage_SdkV2 struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieMessage_SdkV2) {
+func (toState *GenieMessage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieMessage_SdkV2) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromPlan.QueryResult.IsNull() && !fromPlan.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromPlanQueryResult, ok := fromPlan.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
-func (newState *GenieMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieMessage_SdkV2) {
+func (toState *GenieMessage_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieMessage_SdkV2) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromState.QueryResult.IsNull() && !fromState.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromStateQueryResult, ok := fromState.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringRead(ctx, fromStateQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
 func (c GenieMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1838,10 +1918,26 @@ type GenieQueryAttachment_SdkV2 struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieQueryAttachment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieQueryAttachment_SdkV2) {
+func (toState *GenieQueryAttachment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieQueryAttachment_SdkV2) {
+	if !fromPlan.QueryResultMetadata.IsNull() && !fromPlan.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromPlanQueryResultMetadata, ok := fromPlan.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
-func (newState *GenieQueryAttachment_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieQueryAttachment_SdkV2) {
+func (toState *GenieQueryAttachment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieQueryAttachment_SdkV2) {
+	if !fromState.QueryResultMetadata.IsNull() && !fromState.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromStateQueryResultMetadata, ok := fromState.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringRead(ctx, fromStateQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
 func (c GenieQueryAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1937,10 +2033,10 @@ type GenieResultMetadata_SdkV2 struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (newState *GenieResultMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieResultMetadata_SdkV2) {
+func (toState *GenieResultMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieResultMetadata_SdkV2) {
 }
 
-func (newState *GenieResultMetadata_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieResultMetadata_SdkV2) {
+func (toState *GenieResultMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieResultMetadata_SdkV2) {
 }
 
 func (c GenieResultMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1992,10 +2088,10 @@ type GenieSpace_SdkV2 struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieSpace_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieSpace_SdkV2) {
+func (toState *GenieSpace_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieSpace_SdkV2) {
 }
 
-func (newState *GenieSpace_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieSpace_SdkV2) {
+func (toState *GenieSpace_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieSpace_SdkV2) {
 }
 
 func (c GenieSpace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2092,10 +2188,42 @@ type GenieStartConversationResponse_SdkV2 struct {
 	MessageId types.String `tfsdk:"message_id"`
 }
 
-func (newState *GenieStartConversationResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationResponse_SdkV2) {
+func (toState *GenieStartConversationResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieStartConversationResponse_SdkV2) {
+	if !fromPlan.Conversation.IsNull() && !fromPlan.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromPlanConversation, ok := fromPlan.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromPlan.Message.IsNull() && !fromPlan.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromPlanMessage, ok := fromPlan.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
-func (newState *GenieStartConversationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse_SdkV2) {
+func (toState *GenieStartConversationResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieStartConversationResponse_SdkV2) {
+	if !fromState.Conversation.IsNull() && !fromState.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromStateConversation, ok := fromState.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringRead(ctx, fromStateConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromState.Message.IsNull() && !fromState.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromStateMessage, ok := fromState.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringRead(ctx, fromStateMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
 func (c GenieStartConversationResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2370,10 +2498,10 @@ type GetPublishedDashboardTokenInfoResponse_SdkV2 struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardTokenInfoResponse_SdkV2) {
+func (toState *GetPublishedDashboardTokenInfoResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedDashboardTokenInfoResponse_SdkV2) {
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardTokenInfoResponse_SdkV2) {
+func (toState *GetPublishedDashboardTokenInfoResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedDashboardTokenInfoResponse_SdkV2) {
 }
 
 func (c GetPublishedDashboardTokenInfoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2590,10 +2718,10 @@ type ListDashboardsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDashboardsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsResponse_SdkV2) {
+func (toState *ListDashboardsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDashboardsResponse_SdkV2) {
 }
 
-func (newState *ListDashboardsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse_SdkV2) {
+func (toState *ListDashboardsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListDashboardsResponse_SdkV2) {
 }
 
 func (c ListDashboardsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2720,10 +2848,10 @@ type ListSchedulesResponse_SdkV2 struct {
 	Schedules types.List `tfsdk:"schedules"`
 }
 
-func (newState *ListSchedulesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse_SdkV2) {
+func (toState *ListSchedulesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSchedulesResponse_SdkV2) {
 }
 
-func (newState *ListSchedulesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse_SdkV2) {
+func (toState *ListSchedulesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListSchedulesResponse_SdkV2) {
 }
 
 func (c ListSchedulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2854,10 +2982,10 @@ type ListSubscriptionsResponse_SdkV2 struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *ListSubscriptionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse_SdkV2) {
+func (toState *ListSubscriptionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSubscriptionsResponse_SdkV2) {
 }
 
-func (newState *ListSubscriptionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse_SdkV2) {
+func (toState *ListSubscriptionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListSubscriptionsResponse_SdkV2) {
 }
 
 func (c ListSubscriptionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2936,10 +3064,10 @@ type MessageError_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *MessageError_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MessageError_SdkV2) {
+func (toState *MessageError_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MessageError_SdkV2) {
 }
 
-func (newState *MessageError_SdkV2) SyncEffectiveFieldsDuringRead(existingState MessageError_SdkV2) {
+func (toState *MessageError_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MessageError_SdkV2) {
 }
 
 func (c MessageError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3091,10 +3219,10 @@ type PublishedDashboard_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *PublishedDashboard_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedDashboard_SdkV2) {
+func (toState *PublishedDashboard_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublishedDashboard_SdkV2) {
 }
 
-func (newState *PublishedDashboard_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard_SdkV2) {
+func (toState *PublishedDashboard_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PublishedDashboard_SdkV2) {
 }
 
 func (c PublishedDashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3152,18 +3280,21 @@ type Result_SdkV2 struct {
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
 	StatementId types.String `tfsdk:"statement_id"`
+	// JWT corresponding to the statement contained in this result
+	StatementIdSignature types.String `tfsdk:"statement_id_signature"`
 }
 
-func (newState *Result_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result_SdkV2) {
+func (toState *Result_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Result_SdkV2) {
 }
 
-func (newState *Result_SdkV2) SyncEffectiveFieldsDuringRead(existingState Result_SdkV2) {
+func (toState *Result_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Result_SdkV2) {
 }
 
 func (c Result_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
 	attrs["row_count"] = attrs["row_count"].SetOptional()
 	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["statement_id_signature"] = attrs["statement_id_signature"].SetOptional()
 
 	return attrs
 }
@@ -3186,9 +3317,10 @@ func (o Result_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_truncated": o.IsTruncated,
-			"row_count":    o.RowCount,
-			"statement_id": o.StatementId,
+			"is_truncated":           o.IsTruncated,
+			"row_count":              o.RowCount,
+			"statement_id":           o.StatementId,
+			"statement_id_signature": o.StatementIdSignature,
 		})
 }
 
@@ -3196,9 +3328,10 @@ func (o Result_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Result_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"is_truncated": types.BoolType,
-			"row_count":    types.Int64Type,
-			"statement_id": types.StringType,
+			"is_truncated":           types.BoolType,
+			"row_count":              types.Int64Type,
+			"statement_id":           types.StringType,
+			"statement_id_signature": types.StringType,
 		},
 	}
 }
@@ -3227,10 +3360,26 @@ type Schedule_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Schedule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule_SdkV2) {
+func (toState *Schedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Schedule_SdkV2) {
+	if !fromPlan.CronSchedule.IsNull() && !fromPlan.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromPlanCronSchedule, ok := fromPlan.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
-func (newState *Schedule_SdkV2) SyncEffectiveFieldsDuringRead(existingState Schedule_SdkV2) {
+func (toState *Schedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Schedule_SdkV2) {
+	if !fromState.CronSchedule.IsNull() && !fromState.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromStateCronSchedule, ok := fromState.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringRead(ctx, fromStateCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
 func (c Schedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3334,10 +3483,42 @@ type Subscriber_SdkV2 struct {
 	UserSubscriber types.List `tfsdk:"user_subscriber"`
 }
 
-func (newState *Subscriber_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber_SdkV2) {
+func (toState *Subscriber_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscriber_SdkV2) {
+	if !fromPlan.DestinationSubscriber.IsNull() && !fromPlan.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromPlanDestinationSubscriber, ok := fromPlan.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromPlan.UserSubscriber.IsNull() && !fromPlan.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromPlanUserSubscriber, ok := fromPlan.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscriber_SdkV2) SyncEffectiveFieldsDuringRead(existingState Subscriber_SdkV2) {
+func (toState *Subscriber_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Subscriber_SdkV2) {
+	if !fromState.DestinationSubscriber.IsNull() && !fromState.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromStateDestinationSubscriber, ok := fromState.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringRead(ctx, fromStateDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromState.UserSubscriber.IsNull() && !fromState.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromStateUserSubscriber, ok := fromState.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringRead(ctx, fromStateUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscriber_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3464,10 +3645,26 @@ type Subscription_SdkV2 struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *Subscription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription_SdkV2) {
+func (toState *Subscription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscription_SdkV2) {
+	if !fromPlan.Subscriber.IsNull() && !fromPlan.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromPlanSubscriber, ok := fromPlan.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscription_SdkV2) SyncEffectiveFieldsDuringRead(existingState Subscription_SdkV2) {
+func (toState *Subscription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Subscription_SdkV2) {
+	if !fromState.Subscriber.IsNull() && !fromState.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromStateSubscriber, ok := fromState.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringRead(ctx, fromStateSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3565,10 +3762,10 @@ type SubscriptionSubscriberDestination_SdkV2 struct {
 	DestinationId types.String `tfsdk:"destination_id"`
 }
 
-func (newState *SubscriptionSubscriberDestination_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberDestination_SdkV2) {
+func (toState *SubscriptionSubscriberDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberDestination_SdkV2) {
 }
 
-func (newState *SubscriptionSubscriberDestination_SdkV2) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination_SdkV2) {
+func (toState *SubscriptionSubscriberDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberDestination_SdkV2) {
 }
 
 func (c SubscriptionSubscriberDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3613,10 +3810,10 @@ type SubscriptionSubscriberUser_SdkV2 struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *SubscriptionSubscriberUser_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberUser_SdkV2) {
+func (toState *SubscriptionSubscriberUser_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberUser_SdkV2) {
 }
 
-func (newState *SubscriptionSubscriberUser_SdkV2) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser_SdkV2) {
+func (toState *SubscriptionSubscriberUser_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberUser_SdkV2) {
 }
 
 func (c SubscriptionSubscriberUser_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3663,10 +3860,10 @@ type TextAttachment_SdkV2 struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *TextAttachment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextAttachment_SdkV2) {
+func (toState *TextAttachment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TextAttachment_SdkV2) {
 }
 
-func (newState *TextAttachment_SdkV2) SyncEffectiveFieldsDuringRead(existingState TextAttachment_SdkV2) {
+func (toState *TextAttachment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TextAttachment_SdkV2) {
 }
 
 func (c TextAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3748,10 +3945,10 @@ func (o TrashDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type TrashDashboardResponse_SdkV2 struct {
 }
 
-func (newState *TrashDashboardResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashDashboardResponse_SdkV2) {
+func (toState *TrashDashboardResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TrashDashboardResponse_SdkV2) {
 }
 
-func (newState *TrashDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse_SdkV2) {
+func (toState *TrashDashboardResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TrashDashboardResponse_SdkV2) {
 }
 
 func (c TrashDashboardResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3825,10 +4022,10 @@ func (o UnpublishDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardResponse_SdkV2 struct {
 }
 
-func (newState *UnpublishDashboardResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpublishDashboardResponse_SdkV2) {
+func (toState *UnpublishDashboardResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnpublishDashboardResponse_SdkV2) {
 }
 
-func (newState *UnpublishDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse_SdkV2) {
+func (toState *UnpublishDashboardResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UnpublishDashboardResponse_SdkV2) {
 }
 
 func (c UnpublishDashboardResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

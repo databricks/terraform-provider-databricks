@@ -83,7 +83,7 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(config)
+	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

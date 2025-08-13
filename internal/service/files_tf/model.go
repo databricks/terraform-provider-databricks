@@ -66,10 +66,10 @@ func (o AddBlock) Type(ctx context.Context) attr.Type {
 type AddBlockResponse struct {
 }
 
-func (newState *AddBlockResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlockResponse) {
+func (toState *AddBlockResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AddBlockResponse) {
 }
 
-func (newState *AddBlockResponse) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse) {
+func (toState *AddBlockResponse) SyncFieldsDuringRead(ctx context.Context, fromState AddBlockResponse) {
 }
 
 func (c AddBlockResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -143,10 +143,10 @@ func (o Close) Type(ctx context.Context) attr.Type {
 type CloseResponse struct {
 }
 
-func (newState *CloseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloseResponse) {
+func (toState *CloseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloseResponse) {
 }
 
-func (newState *CloseResponse) SyncEffectiveFieldsDuringRead(existingState CloseResponse) {
+func (toState *CloseResponse) SyncFieldsDuringRead(ctx context.Context, fromState CloseResponse) {
 }
 
 func (c CloseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -293,10 +293,10 @@ type CreateResponse struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse) {
 }
 
-func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+func (toState *CreateResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -483,10 +483,10 @@ func (o DeleteFileRequest) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse) {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+func (toState *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -535,10 +535,10 @@ type DirectoryEntry struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectoryEntry) {
+func (toState *DirectoryEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DirectoryEntry) {
 }
 
-func (newState *DirectoryEntry) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry) {
+func (toState *DirectoryEntry) SyncFieldsDuringRead(ctx context.Context, fromState DirectoryEntry) {
 }
 
 func (c DirectoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -685,10 +685,10 @@ type FileInfo struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
+func (toState *FileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileInfo) {
 }
 
-func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
+func (toState *FileInfo) SyncFieldsDuringRead(ctx context.Context, fromState FileInfo) {
 }
 
 func (c FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1024,10 +1024,10 @@ type ListDirectoryResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryResponse) {
+func (toState *ListDirectoryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDirectoryResponse) {
 }
 
-func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse) {
+func (toState *ListDirectoryResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListDirectoryResponse) {
 }
 
 func (c ListDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1106,10 +1106,10 @@ type ListStatusResponse struct {
 	Files types.List `tfsdk:"files"`
 }
 
-func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStatusResponse) {
+func (toState *ListStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListStatusResponse) {
 }
 
-func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse) {
+func (toState *ListStatusResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListStatusResponse) {
 }
 
 func (c ListStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1218,10 +1218,10 @@ func (o MkDirs) Type(ctx context.Context) attr.Type {
 type MkDirsResponse struct {
 }
 
-func (newState *MkDirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirsResponse) {
+func (toState *MkDirsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MkDirsResponse) {
 }
 
-func (newState *MkDirsResponse) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse) {
+func (toState *MkDirsResponse) SyncFieldsDuringRead(ctx context.Context, fromState MkDirsResponse) {
 }
 
 func (c MkDirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1301,10 +1301,10 @@ func (o Move) Type(ctx context.Context) attr.Type {
 type MoveResponse struct {
 }
 
-func (newState *MoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveResponse) {
+func (toState *MoveResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MoveResponse) {
 }
 
-func (newState *MoveResponse) SyncEffectiveFieldsDuringRead(existingState MoveResponse) {
+func (toState *MoveResponse) SyncFieldsDuringRead(ctx context.Context, fromState MoveResponse) {
 }
 
 func (c MoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1386,10 +1386,10 @@ func (o Put) Type(ctx context.Context) attr.Type {
 type PutResponse struct {
 }
 
-func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse) {
+func (toState *PutResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutResponse) {
 }
 
-func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
+func (toState *PutResponse) SyncFieldsDuringRead(ctx context.Context, fromState PutResponse) {
 }
 
 func (c PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1478,10 +1478,10 @@ type ReadResponse struct {
 	Data types.String `tfsdk:"data"`
 }
 
-func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadResponse) {
+func (toState *ReadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ReadResponse) {
 }
 
-func (newState *ReadResponse) SyncEffectiveFieldsDuringRead(existingState ReadResponse) {
+func (toState *ReadResponse) SyncFieldsDuringRead(ctx context.Context, fromState ReadResponse) {
 }
 
 func (c ReadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

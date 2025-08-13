@@ -3,6 +3,10 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_visualization Resource
 
+!> This resource is deprecated and will be removed in future.
+
+-> Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling
+
 To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 -> documentation for this resource is a work in progress.
@@ -61,7 +65,7 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
     ```
 
 - resource definitions
-  
+
     ```hcl
     ##q1vx.tf
 

@@ -83,6 +83,7 @@ The following arguments are supported:
   for which the historical data is retained. The default value is 7 days.
   Valid values are 2 to 35 days
 * `stopped` (boolean, optional) - Whether the instance is stopped
+* `purge_on_delete` (boolean, optional) - Purge the resource on delete
 
 ### DatabaseInstanceRef
 * `branch_time` (string, optional) - Branch time of the ref database instance.

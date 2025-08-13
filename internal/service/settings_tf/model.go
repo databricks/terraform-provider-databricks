@@ -40,10 +40,26 @@ type AccountIpAccessEnable struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AccountIpAccessEnable) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountIpAccessEnable) {
+func (toState *AccountIpAccessEnable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccountIpAccessEnable) {
+	if !fromPlan.AcctIpAclEnable.IsNull() && !fromPlan.AcctIpAclEnable.IsUnknown() {
+		if toStateAcctIpAclEnable, ok := toState.GetAcctIpAclEnable(ctx); ok {
+			if fromPlanAcctIpAclEnable, ok := fromPlan.GetAcctIpAclEnable(ctx); ok {
+				toStateAcctIpAclEnable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAcctIpAclEnable)
+				toState.SetAcctIpAclEnable(ctx, toStateAcctIpAclEnable)
+			}
+		}
+	}
 }
 
-func (newState *AccountIpAccessEnable) SyncEffectiveFieldsDuringRead(existingState AccountIpAccessEnable) {
+func (toState *AccountIpAccessEnable) SyncFieldsDuringRead(ctx context.Context, fromState AccountIpAccessEnable) {
+	if !fromState.AcctIpAclEnable.IsNull() && !fromState.AcctIpAclEnable.IsUnknown() {
+		if toStateAcctIpAclEnable, ok := toState.GetAcctIpAclEnable(ctx); ok {
+			if fromStateAcctIpAclEnable, ok := fromState.GetAcctIpAclEnable(ctx); ok {
+				toStateAcctIpAclEnable.SyncFieldsDuringRead(ctx, fromStateAcctIpAclEnable)
+				toState.SetAcctIpAclEnable(ctx, toStateAcctIpAclEnable)
+			}
+		}
+	}
 }
 
 func (c AccountIpAccessEnable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -99,7 +115,7 @@ func (o *AccountIpAccessEnable) GetAcctIpAclEnable(ctx context.Context) (Boolean
 	if o.AcctIpAclEnable.IsNull() || o.AcctIpAclEnable.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.AcctIpAclEnable.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -107,10 +123,7 @@ func (o *AccountIpAccessEnable) GetAcctIpAclEnable(ctx context.Context) (Boolean
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAcctIpAclEnable sets the value of the AcctIpAclEnable field in AccountIpAccessEnable.
@@ -128,10 +141,26 @@ type AccountNetworkPolicy struct {
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
 }
 
-func (newState *AccountNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountNetworkPolicy) {
+func (toState *AccountNetworkPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccountNetworkPolicy) {
+	if !fromPlan.Egress.IsNull() && !fromPlan.Egress.IsUnknown() {
+		if toStateEgress, ok := toState.GetEgress(ctx); ok {
+			if fromPlanEgress, ok := fromPlan.GetEgress(ctx); ok {
+				toStateEgress.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEgress)
+				toState.SetEgress(ctx, toStateEgress)
+			}
+		}
+	}
 }
 
-func (newState *AccountNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState AccountNetworkPolicy) {
+func (toState *AccountNetworkPolicy) SyncFieldsDuringRead(ctx context.Context, fromState AccountNetworkPolicy) {
+	if !fromState.Egress.IsNull() && !fromState.Egress.IsUnknown() {
+		if toStateEgress, ok := toState.GetEgress(ctx); ok {
+			if fromStateEgress, ok := fromState.GetEgress(ctx); ok {
+				toStateEgress.SyncFieldsDuringRead(ctx, fromStateEgress)
+				toState.SetEgress(ctx, toStateEgress)
+			}
+		}
+	}
 }
 
 func (c AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -187,7 +216,7 @@ func (o *AccountNetworkPolicy) GetEgress(ctx context.Context) (NetworkPolicyEgre
 	if o.Egress.IsNull() || o.Egress.IsUnknown() {
 		return e, false
 	}
-	var v []NetworkPolicyEgress
+	var v NetworkPolicyEgress
 	d := o.Egress.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -195,10 +224,7 @@ func (o *AccountNetworkPolicy) GetEgress(ctx context.Context) (NetworkPolicyEgre
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEgress sets the value of the Egress field in AccountNetworkPolicy.
@@ -211,10 +237,10 @@ type AibiDashboardEmbeddingAccessPolicy struct {
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicy) {
+func (toState *AibiDashboardEmbeddingAccessPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AibiDashboardEmbeddingAccessPolicy) {
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicy) {
+func (toState *AibiDashboardEmbeddingAccessPolicy) SyncFieldsDuringRead(ctx context.Context, fromState AibiDashboardEmbeddingAccessPolicy) {
 }
 
 func (c AibiDashboardEmbeddingAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -272,10 +298,26 @@ type AibiDashboardEmbeddingAccessPolicySetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicySetting) {
+func (toState *AibiDashboardEmbeddingAccessPolicySetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AibiDashboardEmbeddingAccessPolicySetting) {
+	if !fromPlan.AibiDashboardEmbeddingAccessPolicy.IsNull() && !fromPlan.AibiDashboardEmbeddingAccessPolicy.IsUnknown() {
+		if toStateAibiDashboardEmbeddingAccessPolicy, ok := toState.GetAibiDashboardEmbeddingAccessPolicy(ctx); ok {
+			if fromPlanAibiDashboardEmbeddingAccessPolicy, ok := fromPlan.GetAibiDashboardEmbeddingAccessPolicy(ctx); ok {
+				toStateAibiDashboardEmbeddingAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAibiDashboardEmbeddingAccessPolicy)
+				toState.SetAibiDashboardEmbeddingAccessPolicy(ctx, toStateAibiDashboardEmbeddingAccessPolicy)
+			}
+		}
+	}
 }
 
-func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicySetting) {
+func (toState *AibiDashboardEmbeddingAccessPolicySetting) SyncFieldsDuringRead(ctx context.Context, fromState AibiDashboardEmbeddingAccessPolicySetting) {
+	if !fromState.AibiDashboardEmbeddingAccessPolicy.IsNull() && !fromState.AibiDashboardEmbeddingAccessPolicy.IsUnknown() {
+		if toStateAibiDashboardEmbeddingAccessPolicy, ok := toState.GetAibiDashboardEmbeddingAccessPolicy(ctx); ok {
+			if fromStateAibiDashboardEmbeddingAccessPolicy, ok := fromState.GetAibiDashboardEmbeddingAccessPolicy(ctx); ok {
+				toStateAibiDashboardEmbeddingAccessPolicy.SyncFieldsDuringRead(ctx, fromStateAibiDashboardEmbeddingAccessPolicy)
+				toState.SetAibiDashboardEmbeddingAccessPolicy(ctx, toStateAibiDashboardEmbeddingAccessPolicy)
+			}
+		}
+	}
 }
 
 func (c AibiDashboardEmbeddingAccessPolicySetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -331,7 +373,7 @@ func (o *AibiDashboardEmbeddingAccessPolicySetting) GetAibiDashboardEmbeddingAcc
 	if o.AibiDashboardEmbeddingAccessPolicy.IsNull() || o.AibiDashboardEmbeddingAccessPolicy.IsUnknown() {
 		return e, false
 	}
-	var v []AibiDashboardEmbeddingAccessPolicy
+	var v AibiDashboardEmbeddingAccessPolicy
 	d := o.AibiDashboardEmbeddingAccessPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -339,10 +381,7 @@ func (o *AibiDashboardEmbeddingAccessPolicySetting) GetAibiDashboardEmbeddingAcc
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAibiDashboardEmbeddingAccessPolicy sets the value of the AibiDashboardEmbeddingAccessPolicy field in AibiDashboardEmbeddingAccessPolicySetting.
@@ -355,10 +394,10 @@ type AibiDashboardEmbeddingApprovedDomains struct {
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomains) {
+func (toState *AibiDashboardEmbeddingApprovedDomains) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AibiDashboardEmbeddingApprovedDomains) {
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomains) {
+func (toState *AibiDashboardEmbeddingApprovedDomains) SyncFieldsDuringRead(ctx context.Context, fromState AibiDashboardEmbeddingApprovedDomains) {
 }
 
 func (c AibiDashboardEmbeddingApprovedDomains) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -446,10 +485,26 @@ type AibiDashboardEmbeddingApprovedDomainsSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomainsSetting) {
+func (toState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AibiDashboardEmbeddingApprovedDomainsSetting) {
+	if !fromPlan.AibiDashboardEmbeddingApprovedDomains.IsNull() && !fromPlan.AibiDashboardEmbeddingApprovedDomains.IsUnknown() {
+		if toStateAibiDashboardEmbeddingApprovedDomains, ok := toState.GetAibiDashboardEmbeddingApprovedDomains(ctx); ok {
+			if fromPlanAibiDashboardEmbeddingApprovedDomains, ok := fromPlan.GetAibiDashboardEmbeddingApprovedDomains(ctx); ok {
+				toStateAibiDashboardEmbeddingApprovedDomains.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAibiDashboardEmbeddingApprovedDomains)
+				toState.SetAibiDashboardEmbeddingApprovedDomains(ctx, toStateAibiDashboardEmbeddingApprovedDomains)
+			}
+		}
+	}
 }
 
-func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomainsSetting) {
+func (toState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncFieldsDuringRead(ctx context.Context, fromState AibiDashboardEmbeddingApprovedDomainsSetting) {
+	if !fromState.AibiDashboardEmbeddingApprovedDomains.IsNull() && !fromState.AibiDashboardEmbeddingApprovedDomains.IsUnknown() {
+		if toStateAibiDashboardEmbeddingApprovedDomains, ok := toState.GetAibiDashboardEmbeddingApprovedDomains(ctx); ok {
+			if fromStateAibiDashboardEmbeddingApprovedDomains, ok := fromState.GetAibiDashboardEmbeddingApprovedDomains(ctx); ok {
+				toStateAibiDashboardEmbeddingApprovedDomains.SyncFieldsDuringRead(ctx, fromStateAibiDashboardEmbeddingApprovedDomains)
+				toState.SetAibiDashboardEmbeddingApprovedDomains(ctx, toStateAibiDashboardEmbeddingApprovedDomains)
+			}
+		}
+	}
 }
 
 func (c AibiDashboardEmbeddingApprovedDomainsSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -505,7 +560,7 @@ func (o *AibiDashboardEmbeddingApprovedDomainsSetting) GetAibiDashboardEmbedding
 	if o.AibiDashboardEmbeddingApprovedDomains.IsNull() || o.AibiDashboardEmbeddingApprovedDomains.IsUnknown() {
 		return e, false
 	}
-	var v []AibiDashboardEmbeddingApprovedDomains
+	var v AibiDashboardEmbeddingApprovedDomains
 	d := o.AibiDashboardEmbeddingApprovedDomains.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -513,10 +568,7 @@ func (o *AibiDashboardEmbeddingApprovedDomainsSetting) GetAibiDashboardEmbedding
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAibiDashboardEmbeddingApprovedDomains sets the value of the AibiDashboardEmbeddingApprovedDomains field in AibiDashboardEmbeddingApprovedDomainsSetting.
@@ -543,10 +595,26 @@ type AutomaticClusterUpdateSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *AutomaticClusterUpdateSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutomaticClusterUpdateSetting) {
+func (toState *AutomaticClusterUpdateSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AutomaticClusterUpdateSetting) {
+	if !fromPlan.AutomaticClusterUpdateWorkspace.IsNull() && !fromPlan.AutomaticClusterUpdateWorkspace.IsUnknown() {
+		if toStateAutomaticClusterUpdateWorkspace, ok := toState.GetAutomaticClusterUpdateWorkspace(ctx); ok {
+			if fromPlanAutomaticClusterUpdateWorkspace, ok := fromPlan.GetAutomaticClusterUpdateWorkspace(ctx); ok {
+				toStateAutomaticClusterUpdateWorkspace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutomaticClusterUpdateWorkspace)
+				toState.SetAutomaticClusterUpdateWorkspace(ctx, toStateAutomaticClusterUpdateWorkspace)
+			}
+		}
+	}
 }
 
-func (newState *AutomaticClusterUpdateSetting) SyncEffectiveFieldsDuringRead(existingState AutomaticClusterUpdateSetting) {
+func (toState *AutomaticClusterUpdateSetting) SyncFieldsDuringRead(ctx context.Context, fromState AutomaticClusterUpdateSetting) {
+	if !fromState.AutomaticClusterUpdateWorkspace.IsNull() && !fromState.AutomaticClusterUpdateWorkspace.IsUnknown() {
+		if toStateAutomaticClusterUpdateWorkspace, ok := toState.GetAutomaticClusterUpdateWorkspace(ctx); ok {
+			if fromStateAutomaticClusterUpdateWorkspace, ok := fromState.GetAutomaticClusterUpdateWorkspace(ctx); ok {
+				toStateAutomaticClusterUpdateWorkspace.SyncFieldsDuringRead(ctx, fromStateAutomaticClusterUpdateWorkspace)
+				toState.SetAutomaticClusterUpdateWorkspace(ctx, toStateAutomaticClusterUpdateWorkspace)
+			}
+		}
+	}
 }
 
 func (c AutomaticClusterUpdateSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -602,7 +670,7 @@ func (o *AutomaticClusterUpdateSetting) GetAutomaticClusterUpdateWorkspace(ctx c
 	if o.AutomaticClusterUpdateWorkspace.IsNull() || o.AutomaticClusterUpdateWorkspace.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAutoRestartMessage
+	var v ClusterAutoRestartMessage
 	d := o.AutomaticClusterUpdateWorkspace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -610,10 +678,7 @@ func (o *AutomaticClusterUpdateSetting) GetAutomaticClusterUpdateWorkspace(ctx c
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAutomaticClusterUpdateWorkspace sets the value of the AutomaticClusterUpdateWorkspace field in AutomaticClusterUpdateSetting.
@@ -626,10 +691,10 @@ type BooleanMessage struct {
 	Value types.Bool `tfsdk:"value"`
 }
 
-func (newState *BooleanMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan BooleanMessage) {
+func (toState *BooleanMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BooleanMessage) {
 }
 
-func (newState *BooleanMessage) SyncEffectiveFieldsDuringRead(existingState BooleanMessage) {
+func (toState *BooleanMessage) SyncFieldsDuringRead(ctx context.Context, fromState BooleanMessage) {
 }
 
 func (c BooleanMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -681,10 +746,42 @@ type ClusterAutoRestartMessage struct {
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
-func (newState *ClusterAutoRestartMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessage) {
+func (toState *ClusterAutoRestartMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAutoRestartMessage) {
+	if !fromPlan.EnablementDetails.IsNull() && !fromPlan.EnablementDetails.IsUnknown() {
+		if toStateEnablementDetails, ok := toState.GetEnablementDetails(ctx); ok {
+			if fromPlanEnablementDetails, ok := fromPlan.GetEnablementDetails(ctx); ok {
+				toStateEnablementDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnablementDetails)
+				toState.SetEnablementDetails(ctx, toStateEnablementDetails)
+			}
+		}
+	}
+	if !fromPlan.MaintenanceWindow.IsNull() && !fromPlan.MaintenanceWindow.IsUnknown() {
+		if toStateMaintenanceWindow, ok := toState.GetMaintenanceWindow(ctx); ok {
+			if fromPlanMaintenanceWindow, ok := fromPlan.GetMaintenanceWindow(ctx); ok {
+				toStateMaintenanceWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMaintenanceWindow)
+				toState.SetMaintenanceWindow(ctx, toStateMaintenanceWindow)
+			}
+		}
+	}
 }
 
-func (newState *ClusterAutoRestartMessage) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessage) {
+func (toState *ClusterAutoRestartMessage) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAutoRestartMessage) {
+	if !fromState.EnablementDetails.IsNull() && !fromState.EnablementDetails.IsUnknown() {
+		if toStateEnablementDetails, ok := toState.GetEnablementDetails(ctx); ok {
+			if fromStateEnablementDetails, ok := fromState.GetEnablementDetails(ctx); ok {
+				toStateEnablementDetails.SyncFieldsDuringRead(ctx, fromStateEnablementDetails)
+				toState.SetEnablementDetails(ctx, toStateEnablementDetails)
+			}
+		}
+	}
+	if !fromState.MaintenanceWindow.IsNull() && !fromState.MaintenanceWindow.IsUnknown() {
+		if toStateMaintenanceWindow, ok := toState.GetMaintenanceWindow(ctx); ok {
+			if fromStateMaintenanceWindow, ok := fromState.GetMaintenanceWindow(ctx); ok {
+				toStateMaintenanceWindow.SyncFieldsDuringRead(ctx, fromStateMaintenanceWindow)
+				toState.SetMaintenanceWindow(ctx, toStateMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (c ClusterAutoRestartMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -747,7 +844,7 @@ func (o *ClusterAutoRestartMessage) GetEnablementDetails(ctx context.Context) (C
 	if o.EnablementDetails.IsNull() || o.EnablementDetails.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAutoRestartMessageEnablementDetails
+	var v ClusterAutoRestartMessageEnablementDetails
 	d := o.EnablementDetails.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -755,10 +852,7 @@ func (o *ClusterAutoRestartMessage) GetEnablementDetails(ctx context.Context) (C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEnablementDetails sets the value of the EnablementDetails field in ClusterAutoRestartMessage.
@@ -775,7 +869,7 @@ func (o *ClusterAutoRestartMessage) GetMaintenanceWindow(ctx context.Context) (C
 	if o.MaintenanceWindow.IsNull() || o.MaintenanceWindow.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAutoRestartMessageMaintenanceWindow
+	var v ClusterAutoRestartMessageMaintenanceWindow
 	d := o.MaintenanceWindow.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -783,10 +877,7 @@ func (o *ClusterAutoRestartMessage) GetMaintenanceWindow(ctx context.Context) (C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMaintenanceWindow sets the value of the MaintenanceWindow field in ClusterAutoRestartMessage.
@@ -811,10 +902,10 @@ type ClusterAutoRestartMessageEnablementDetails struct {
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
 }
 
-func (newState *ClusterAutoRestartMessageEnablementDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageEnablementDetails) {
+func (toState *ClusterAutoRestartMessageEnablementDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAutoRestartMessageEnablementDetails) {
 }
 
-func (newState *ClusterAutoRestartMessageEnablementDetails) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageEnablementDetails) {
+func (toState *ClusterAutoRestartMessageEnablementDetails) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAutoRestartMessageEnablementDetails) {
 }
 
 func (c ClusterAutoRestartMessageEnablementDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -864,10 +955,26 @@ type ClusterAutoRestartMessageMaintenanceWindow struct {
 	WeekDayBasedSchedule types.Object `tfsdk:"week_day_based_schedule"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindow) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAutoRestartMessageMaintenanceWindow) {
+	if !fromPlan.WeekDayBasedSchedule.IsNull() && !fromPlan.WeekDayBasedSchedule.IsUnknown() {
+		if toStateWeekDayBasedSchedule, ok := toState.GetWeekDayBasedSchedule(ctx); ok {
+			if fromPlanWeekDayBasedSchedule, ok := fromPlan.GetWeekDayBasedSchedule(ctx); ok {
+				toStateWeekDayBasedSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWeekDayBasedSchedule)
+				toState.SetWeekDayBasedSchedule(ctx, toStateWeekDayBasedSchedule)
+			}
+		}
+	}
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindow) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindow) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAutoRestartMessageMaintenanceWindow) {
+	if !fromState.WeekDayBasedSchedule.IsNull() && !fromState.WeekDayBasedSchedule.IsUnknown() {
+		if toStateWeekDayBasedSchedule, ok := toState.GetWeekDayBasedSchedule(ctx); ok {
+			if fromStateWeekDayBasedSchedule, ok := fromState.GetWeekDayBasedSchedule(ctx); ok {
+				toStateWeekDayBasedSchedule.SyncFieldsDuringRead(ctx, fromStateWeekDayBasedSchedule)
+				toState.SetWeekDayBasedSchedule(ctx, toStateWeekDayBasedSchedule)
+			}
+		}
+	}
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -917,7 +1024,7 @@ func (o *ClusterAutoRestartMessageMaintenanceWindow) GetWeekDayBasedSchedule(ctx
 	if o.WeekDayBasedSchedule.IsNull() || o.WeekDayBasedSchedule.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
+	var v ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
 	d := o.WeekDayBasedSchedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -925,10 +1032,7 @@ func (o *ClusterAutoRestartMessageMaintenanceWindow) GetWeekDayBasedSchedule(ctx
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWeekDayBasedSchedule sets the value of the WeekDayBasedSchedule field in ClusterAutoRestartMessageMaintenanceWindow.
@@ -945,10 +1049,26 @@ type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
 	WindowStartTime types.Object `tfsdk:"window_start_time"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+	if !fromPlan.WindowStartTime.IsNull() && !fromPlan.WindowStartTime.IsUnknown() {
+		if toStateWindowStartTime, ok := toState.GetWindowStartTime(ctx); ok {
+			if fromPlanWindowStartTime, ok := fromPlan.GetWindowStartTime(ctx); ok {
+				toStateWindowStartTime.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWindowStartTime)
+				toState.SetWindowStartTime(ctx, toStateWindowStartTime)
+			}
+		}
+	}
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+	if !fromState.WindowStartTime.IsNull() && !fromState.WindowStartTime.IsUnknown() {
+		if toStateWindowStartTime, ok := toState.GetWindowStartTime(ctx); ok {
+			if fromStateWindowStartTime, ok := fromState.GetWindowStartTime(ctx); ok {
+				toStateWindowStartTime.SyncFieldsDuringRead(ctx, fromStateWindowStartTime)
+				toState.SetWindowStartTime(ctx, toStateWindowStartTime)
+			}
+		}
+	}
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1004,7 +1124,7 @@ func (o *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) GetWind
 	if o.WindowStartTime.IsNull() || o.WindowStartTime.IsUnknown() {
 		return e, false
 	}
-	var v []ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
+	var v ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
 	d := o.WindowStartTime.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1012,10 +1132,7 @@ func (o *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) GetWind
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWindowStartTime sets the value of the WindowStartTime field in ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule.
@@ -1030,10 +1147,10 @@ type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
 }
 
-func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
+func (toState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) SyncFieldsDuringRead(ctx context.Context, fromState ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
 }
 
 func (c ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1084,10 +1201,10 @@ type ComplianceSecurityProfile struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
+func (toState *ComplianceSecurityProfile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComplianceSecurityProfile) {
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+func (toState *ComplianceSecurityProfile) SyncFieldsDuringRead(ctx context.Context, fromState ComplianceSecurityProfile) {
 }
 
 func (c ComplianceSecurityProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1178,10 +1295,26 @@ type ComplianceSecurityProfileSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *ComplianceSecurityProfileSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfileSetting) {
+func (toState *ComplianceSecurityProfileSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComplianceSecurityProfileSetting) {
+	if !fromPlan.ComplianceSecurityProfileWorkspace.IsNull() && !fromPlan.ComplianceSecurityProfileWorkspace.IsUnknown() {
+		if toStateComplianceSecurityProfileWorkspace, ok := toState.GetComplianceSecurityProfileWorkspace(ctx); ok {
+			if fromPlanComplianceSecurityProfileWorkspace, ok := fromPlan.GetComplianceSecurityProfileWorkspace(ctx); ok {
+				toStateComplianceSecurityProfileWorkspace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanComplianceSecurityProfileWorkspace)
+				toState.SetComplianceSecurityProfileWorkspace(ctx, toStateComplianceSecurityProfileWorkspace)
+			}
+		}
+	}
 }
 
-func (newState *ComplianceSecurityProfileSetting) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfileSetting) {
+func (toState *ComplianceSecurityProfileSetting) SyncFieldsDuringRead(ctx context.Context, fromState ComplianceSecurityProfileSetting) {
+	if !fromState.ComplianceSecurityProfileWorkspace.IsNull() && !fromState.ComplianceSecurityProfileWorkspace.IsUnknown() {
+		if toStateComplianceSecurityProfileWorkspace, ok := toState.GetComplianceSecurityProfileWorkspace(ctx); ok {
+			if fromStateComplianceSecurityProfileWorkspace, ok := fromState.GetComplianceSecurityProfileWorkspace(ctx); ok {
+				toStateComplianceSecurityProfileWorkspace.SyncFieldsDuringRead(ctx, fromStateComplianceSecurityProfileWorkspace)
+				toState.SetComplianceSecurityProfileWorkspace(ctx, toStateComplianceSecurityProfileWorkspace)
+			}
+		}
+	}
 }
 
 func (c ComplianceSecurityProfileSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1237,7 +1370,7 @@ func (o *ComplianceSecurityProfileSetting) GetComplianceSecurityProfileWorkspace
 	if o.ComplianceSecurityProfileWorkspace.IsNull() || o.ComplianceSecurityProfileWorkspace.IsUnknown() {
 		return e, false
 	}
-	var v []ComplianceSecurityProfile
+	var v ComplianceSecurityProfile
 	d := o.ComplianceSecurityProfileWorkspace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1245,10 +1378,7 @@ func (o *ComplianceSecurityProfileSetting) GetComplianceSecurityProfileWorkspace
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetComplianceSecurityProfileWorkspace sets the value of the ComplianceSecurityProfileWorkspace field in ComplianceSecurityProfileSetting.
@@ -1269,10 +1399,90 @@ type Config struct {
 	Slack types.Object `tfsdk:"slack"`
 }
 
-func (newState *Config) SyncEffectiveFieldsDuringCreateOrUpdate(plan Config) {
+func (toState *Config) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Config) {
+	if !fromPlan.Email.IsNull() && !fromPlan.Email.IsUnknown() {
+		if toStateEmail, ok := toState.GetEmail(ctx); ok {
+			if fromPlanEmail, ok := fromPlan.GetEmail(ctx); ok {
+				toStateEmail.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmail)
+				toState.SetEmail(ctx, toStateEmail)
+			}
+		}
+	}
+	if !fromPlan.GenericWebhook.IsNull() && !fromPlan.GenericWebhook.IsUnknown() {
+		if toStateGenericWebhook, ok := toState.GetGenericWebhook(ctx); ok {
+			if fromPlanGenericWebhook, ok := fromPlan.GetGenericWebhook(ctx); ok {
+				toStateGenericWebhook.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenericWebhook)
+				toState.SetGenericWebhook(ctx, toStateGenericWebhook)
+			}
+		}
+	}
+	if !fromPlan.MicrosoftTeams.IsNull() && !fromPlan.MicrosoftTeams.IsUnknown() {
+		if toStateMicrosoftTeams, ok := toState.GetMicrosoftTeams(ctx); ok {
+			if fromPlanMicrosoftTeams, ok := fromPlan.GetMicrosoftTeams(ctx); ok {
+				toStateMicrosoftTeams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMicrosoftTeams)
+				toState.SetMicrosoftTeams(ctx, toStateMicrosoftTeams)
+			}
+		}
+	}
+	if !fromPlan.Pagerduty.IsNull() && !fromPlan.Pagerduty.IsUnknown() {
+		if toStatePagerduty, ok := toState.GetPagerduty(ctx); ok {
+			if fromPlanPagerduty, ok := fromPlan.GetPagerduty(ctx); ok {
+				toStatePagerduty.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPagerduty)
+				toState.SetPagerduty(ctx, toStatePagerduty)
+			}
+		}
+	}
+	if !fromPlan.Slack.IsNull() && !fromPlan.Slack.IsUnknown() {
+		if toStateSlack, ok := toState.GetSlack(ctx); ok {
+			if fromPlanSlack, ok := fromPlan.GetSlack(ctx); ok {
+				toStateSlack.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSlack)
+				toState.SetSlack(ctx, toStateSlack)
+			}
+		}
+	}
 }
 
-func (newState *Config) SyncEffectiveFieldsDuringRead(existingState Config) {
+func (toState *Config) SyncFieldsDuringRead(ctx context.Context, fromState Config) {
+	if !fromState.Email.IsNull() && !fromState.Email.IsUnknown() {
+		if toStateEmail, ok := toState.GetEmail(ctx); ok {
+			if fromStateEmail, ok := fromState.GetEmail(ctx); ok {
+				toStateEmail.SyncFieldsDuringRead(ctx, fromStateEmail)
+				toState.SetEmail(ctx, toStateEmail)
+			}
+		}
+	}
+	if !fromState.GenericWebhook.IsNull() && !fromState.GenericWebhook.IsUnknown() {
+		if toStateGenericWebhook, ok := toState.GetGenericWebhook(ctx); ok {
+			if fromStateGenericWebhook, ok := fromState.GetGenericWebhook(ctx); ok {
+				toStateGenericWebhook.SyncFieldsDuringRead(ctx, fromStateGenericWebhook)
+				toState.SetGenericWebhook(ctx, toStateGenericWebhook)
+			}
+		}
+	}
+	if !fromState.MicrosoftTeams.IsNull() && !fromState.MicrosoftTeams.IsUnknown() {
+		if toStateMicrosoftTeams, ok := toState.GetMicrosoftTeams(ctx); ok {
+			if fromStateMicrosoftTeams, ok := fromState.GetMicrosoftTeams(ctx); ok {
+				toStateMicrosoftTeams.SyncFieldsDuringRead(ctx, fromStateMicrosoftTeams)
+				toState.SetMicrosoftTeams(ctx, toStateMicrosoftTeams)
+			}
+		}
+	}
+	if !fromState.Pagerduty.IsNull() && !fromState.Pagerduty.IsUnknown() {
+		if toStatePagerduty, ok := toState.GetPagerduty(ctx); ok {
+			if fromStatePagerduty, ok := fromState.GetPagerduty(ctx); ok {
+				toStatePagerduty.SyncFieldsDuringRead(ctx, fromStatePagerduty)
+				toState.SetPagerduty(ctx, toStatePagerduty)
+			}
+		}
+	}
+	if !fromState.Slack.IsNull() && !fromState.Slack.IsUnknown() {
+		if toStateSlack, ok := toState.GetSlack(ctx); ok {
+			if fromStateSlack, ok := fromState.GetSlack(ctx); ok {
+				toStateSlack.SyncFieldsDuringRead(ctx, fromStateSlack)
+				toState.SetSlack(ctx, toStateSlack)
+			}
+		}
+	}
 }
 
 func (c Config) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1338,7 +1548,7 @@ func (o *Config) GetEmail(ctx context.Context) (EmailConfig, bool) {
 	if o.Email.IsNull() || o.Email.IsUnknown() {
 		return e, false
 	}
-	var v []EmailConfig
+	var v EmailConfig
 	d := o.Email.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1346,10 +1556,7 @@ func (o *Config) GetEmail(ctx context.Context) (EmailConfig, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEmail sets the value of the Email field in Config.
@@ -1366,7 +1573,7 @@ func (o *Config) GetGenericWebhook(ctx context.Context) (GenericWebhookConfig, b
 	if o.GenericWebhook.IsNull() || o.GenericWebhook.IsUnknown() {
 		return e, false
 	}
-	var v []GenericWebhookConfig
+	var v GenericWebhookConfig
 	d := o.GenericWebhook.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1374,10 +1581,7 @@ func (o *Config) GetGenericWebhook(ctx context.Context) (GenericWebhookConfig, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetGenericWebhook sets the value of the GenericWebhook field in Config.
@@ -1394,7 +1598,7 @@ func (o *Config) GetMicrosoftTeams(ctx context.Context) (MicrosoftTeamsConfig, b
 	if o.MicrosoftTeams.IsNull() || o.MicrosoftTeams.IsUnknown() {
 		return e, false
 	}
-	var v []MicrosoftTeamsConfig
+	var v MicrosoftTeamsConfig
 	d := o.MicrosoftTeams.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1402,10 +1606,7 @@ func (o *Config) GetMicrosoftTeams(ctx context.Context) (MicrosoftTeamsConfig, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMicrosoftTeams sets the value of the MicrosoftTeams field in Config.
@@ -1422,7 +1623,7 @@ func (o *Config) GetPagerduty(ctx context.Context) (PagerdutyConfig, bool) {
 	if o.Pagerduty.IsNull() || o.Pagerduty.IsUnknown() {
 		return e, false
 	}
-	var v []PagerdutyConfig
+	var v PagerdutyConfig
 	d := o.Pagerduty.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1430,10 +1631,7 @@ func (o *Config) GetPagerduty(ctx context.Context) (PagerdutyConfig, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPagerduty sets the value of the Pagerduty field in Config.
@@ -1450,7 +1648,7 @@ func (o *Config) GetSlack(ctx context.Context) (SlackConfig, bool) {
 	if o.Slack.IsNull() || o.Slack.IsUnknown() {
 		return e, false
 	}
-	var v []SlackConfig
+	var v SlackConfig
 	d := o.Slack.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1458,10 +1656,7 @@ func (o *Config) GetSlack(ctx context.Context) (SlackConfig, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSlack sets the value of the Slack field in Config.
@@ -1549,10 +1744,26 @@ type CreateIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessListResponse) {
+func (toState *CreateIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateIpAccessListResponse) {
+	if !fromPlan.IpAccessList.IsNull() && !fromPlan.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromPlanIpAccessList, ok := fromPlan.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
-func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState CreateIpAccessListResponse) {
+func (toState *CreateIpAccessListResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateIpAccessListResponse) {
+	if !fromState.IpAccessList.IsNull() && !fromState.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromStateIpAccessList, ok := fromState.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringRead(ctx, fromStateIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
 func (c CreateIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1602,7 +1813,7 @@ func (o *CreateIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAcc
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessListInfo
+	var v IpAccessListInfo
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1610,10 +1821,7 @@ func (o *CreateIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAcc
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in CreateIpAccessListResponse.
@@ -1667,7 +1875,7 @@ func (o *CreateNetworkConnectivityConfigRequest) GetNetworkConnectivityConfig(ct
 	if o.NetworkConnectivityConfig.IsNull() || o.NetworkConnectivityConfig.IsUnknown() {
 		return e, false
 	}
-	var v []CreateNetworkConnectivityConfiguration
+	var v CreateNetworkConnectivityConfiguration
 	d := o.NetworkConnectivityConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1675,10 +1883,7 @@ func (o *CreateNetworkConnectivityConfigRequest) GetNetworkConnectivityConfig(ct
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNetworkConnectivityConfig sets the value of the NetworkConnectivityConfig field in CreateNetworkConnectivityConfigRequest.
@@ -1700,10 +1905,10 @@ type CreateNetworkConnectivityConfiguration struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (newState *CreateNetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNetworkConnectivityConfiguration) {
+func (toState *CreateNetworkConnectivityConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateNetworkConnectivityConfiguration) {
 }
 
-func (newState *CreateNetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState CreateNetworkConnectivityConfiguration) {
+func (toState *CreateNetworkConnectivityConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState CreateNetworkConnectivityConfiguration) {
 }
 
 func (c CreateNetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1792,7 +1997,7 @@ func (o *CreateNetworkPolicyRequest) GetNetworkPolicy(ctx context.Context) (Acco
 	if o.NetworkPolicy.IsNull() || o.NetworkPolicy.IsUnknown() {
 		return e, false
 	}
-	var v []AccountNetworkPolicy
+	var v AccountNetworkPolicy
 	d := o.NetworkPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1800,10 +2005,7 @@ func (o *CreateNetworkPolicyRequest) GetNetworkPolicy(ctx context.Context) (Acco
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNetworkPolicy sets the value of the NetworkPolicy field in CreateNetworkPolicyRequest.
@@ -1863,7 +2065,7 @@ func (o *CreateNotificationDestinationRequest) GetConfig(ctx context.Context) (C
 	if o.Config.IsNull() || o.Config.IsUnknown() {
 		return e, false
 	}
-	var v []Config
+	var v Config
 	d := o.Config.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1871,10 +2073,7 @@ func (o *CreateNotificationDestinationRequest) GetConfig(ctx context.Context) (C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConfig sets the value of the Config field in CreateNotificationDestinationRequest.
@@ -1935,10 +2134,26 @@ type CreateOboTokenResponse struct {
 	TokenValue types.String `tfsdk:"token_value"`
 }
 
-func (newState *CreateOboTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOboTokenResponse) {
+func (toState *CreateOboTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateOboTokenResponse) {
+	if !fromPlan.TokenInfo.IsNull() && !fromPlan.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromPlanTokenInfo, ok := fromPlan.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
-func (newState *CreateOboTokenResponse) SyncEffectiveFieldsDuringRead(existingState CreateOboTokenResponse) {
+func (toState *CreateOboTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateOboTokenResponse) {
+	if !fromState.TokenInfo.IsNull() && !fromState.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromStateTokenInfo, ok := fromState.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringRead(ctx, fromStateTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
 func (c CreateOboTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1991,7 +2206,7 @@ func (o *CreateOboTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, b
 	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
 		return e, false
 	}
-	var v []TokenInfo
+	var v TokenInfo
 	d := o.TokenInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1999,10 +2214,7 @@ func (o *CreateOboTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTokenInfo sets the value of the TokenInfo field in CreateOboTokenResponse.
@@ -2040,10 +2252,10 @@ type CreatePrivateEndpointRule struct {
 	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
-func (newState *CreatePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePrivateEndpointRule) {
+func (toState *CreatePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePrivateEndpointRule) {
 }
 
-func (newState *CreatePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState CreatePrivateEndpointRule) {
+func (toState *CreatePrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState CreatePrivateEndpointRule) {
 }
 
 func (c CreatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2204,7 +2416,7 @@ func (o *CreatePrivateEndpointRuleRequest) GetPrivateEndpointRule(ctx context.Co
 	if o.PrivateEndpointRule.IsNull() || o.PrivateEndpointRule.IsUnknown() {
 		return e, false
 	}
-	var v []CreatePrivateEndpointRule
+	var v CreatePrivateEndpointRule
 	d := o.PrivateEndpointRule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2212,10 +2424,7 @@ func (o *CreatePrivateEndpointRuleRequest) GetPrivateEndpointRule(ctx context.Co
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPrivateEndpointRule sets the value of the PrivateEndpointRule field in CreatePrivateEndpointRuleRequest.
@@ -2273,10 +2482,26 @@ type CreateTokenResponse struct {
 	TokenValue types.String `tfsdk:"token_value"`
 }
 
-func (newState *CreateTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTokenResponse) {
+func (toState *CreateTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateTokenResponse) {
+	if !fromPlan.TokenInfo.IsNull() && !fromPlan.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromPlanTokenInfo, ok := fromPlan.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
-func (newState *CreateTokenResponse) SyncEffectiveFieldsDuringRead(existingState CreateTokenResponse) {
+func (toState *CreateTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateTokenResponse) {
+	if !fromState.TokenInfo.IsNull() && !fromState.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromStateTokenInfo, ok := fromState.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringRead(ctx, fromStateTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
 func (c CreateTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2329,7 +2554,7 @@ func (o *CreateTokenResponse) GetTokenInfo(ctx context.Context) (PublicTokenInfo
 	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
 		return e, false
 	}
-	var v []PublicTokenInfo
+	var v PublicTokenInfo
 	d := o.TokenInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2337,10 +2562,7 @@ func (o *CreateTokenResponse) GetTokenInfo(ctx context.Context) (PublicTokenInfo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTokenInfo sets the value of the TokenInfo field in CreateTokenResponse.
@@ -2358,10 +2580,10 @@ type CspEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
-func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccount) {
+func (toState *CspEnablementAccount) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CspEnablementAccount) {
 }
 
-func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccount) {
+func (toState *CspEnablementAccount) SyncFieldsDuringRead(ctx context.Context, fromState CspEnablementAccount) {
 }
 
 func (c CspEnablementAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2452,10 +2674,26 @@ type CspEnablementAccountSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *CspEnablementAccountSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccountSetting) {
+func (toState *CspEnablementAccountSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CspEnablementAccountSetting) {
+	if !fromPlan.CspEnablementAccount.IsNull() && !fromPlan.CspEnablementAccount.IsUnknown() {
+		if toStateCspEnablementAccount, ok := toState.GetCspEnablementAccount(ctx); ok {
+			if fromPlanCspEnablementAccount, ok := fromPlan.GetCspEnablementAccount(ctx); ok {
+				toStateCspEnablementAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCspEnablementAccount)
+				toState.SetCspEnablementAccount(ctx, toStateCspEnablementAccount)
+			}
+		}
+	}
 }
 
-func (newState *CspEnablementAccountSetting) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccountSetting) {
+func (toState *CspEnablementAccountSetting) SyncFieldsDuringRead(ctx context.Context, fromState CspEnablementAccountSetting) {
+	if !fromState.CspEnablementAccount.IsNull() && !fromState.CspEnablementAccount.IsUnknown() {
+		if toStateCspEnablementAccount, ok := toState.GetCspEnablementAccount(ctx); ok {
+			if fromStateCspEnablementAccount, ok := fromState.GetCspEnablementAccount(ctx); ok {
+				toStateCspEnablementAccount.SyncFieldsDuringRead(ctx, fromStateCspEnablementAccount)
+				toState.SetCspEnablementAccount(ctx, toStateCspEnablementAccount)
+			}
+		}
+	}
 }
 
 func (c CspEnablementAccountSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2511,7 +2749,7 @@ func (o *CspEnablementAccountSetting) GetCspEnablementAccount(ctx context.Contex
 	if o.CspEnablementAccount.IsNull() || o.CspEnablementAccount.IsUnknown() {
 		return e, false
 	}
-	var v []CspEnablementAccount
+	var v CspEnablementAccount
 	d := o.CspEnablementAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2519,10 +2757,7 @@ func (o *CspEnablementAccountSetting) GetCspEnablementAccount(ctx context.Contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCspEnablementAccount sets the value of the CspEnablementAccount field in CspEnablementAccountSetting.
@@ -2590,10 +2825,10 @@ type CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule struct {
 	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
 }
 
-func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
+func (toState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
 }
 
-func (newState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
+func (toState *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) {
 }
 
 func (c CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2746,10 +2981,26 @@ type DashboardEmailSubscriptions struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DashboardEmailSubscriptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardEmailSubscriptions) {
+func (toState *DashboardEmailSubscriptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardEmailSubscriptions) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *DashboardEmailSubscriptions) SyncEffectiveFieldsDuringRead(existingState DashboardEmailSubscriptions) {
+func (toState *DashboardEmailSubscriptions) SyncFieldsDuringRead(ctx context.Context, fromState DashboardEmailSubscriptions) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c DashboardEmailSubscriptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2805,7 +3056,7 @@ func (o *DashboardEmailSubscriptions) GetBooleanVal(ctx context.Context) (Boolea
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2813,10 +3064,7 @@ func (o *DashboardEmailSubscriptions) GetBooleanVal(ctx context.Context) (Boolea
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in DashboardEmailSubscriptions.
@@ -2853,10 +3101,26 @@ type DefaultNamespaceSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DefaultNamespaceSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultNamespaceSetting) {
+func (toState *DefaultNamespaceSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DefaultNamespaceSetting) {
+	if !fromPlan.Namespace.IsNull() && !fromPlan.Namespace.IsUnknown() {
+		if toStateNamespace, ok := toState.GetNamespace(ctx); ok {
+			if fromPlanNamespace, ok := fromPlan.GetNamespace(ctx); ok {
+				toStateNamespace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNamespace)
+				toState.SetNamespace(ctx, toStateNamespace)
+			}
+		}
+	}
 }
 
-func (newState *DefaultNamespaceSetting) SyncEffectiveFieldsDuringRead(existingState DefaultNamespaceSetting) {
+func (toState *DefaultNamespaceSetting) SyncFieldsDuringRead(ctx context.Context, fromState DefaultNamespaceSetting) {
+	if !fromState.Namespace.IsNull() && !fromState.Namespace.IsUnknown() {
+		if toStateNamespace, ok := toState.GetNamespace(ctx); ok {
+			if fromStateNamespace, ok := fromState.GetNamespace(ctx); ok {
+				toStateNamespace.SyncFieldsDuringRead(ctx, fromStateNamespace)
+				toState.SetNamespace(ctx, toStateNamespace)
+			}
+		}
+	}
 }
 
 func (c DefaultNamespaceSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2912,7 +3176,7 @@ func (o *DefaultNamespaceSetting) GetNamespace(ctx context.Context) (StringMessa
 	if o.Namespace.IsNull() || o.Namespace.IsUnknown() {
 		return e, false
 	}
-	var v []StringMessage
+	var v StringMessage
 	d := o.Namespace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2920,10 +3184,7 @@ func (o *DefaultNamespaceSetting) GetNamespace(ctx context.Context) (StringMessa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNamespace sets the value of the Namespace field in DefaultNamespaceSetting.
@@ -2951,10 +3212,26 @@ type DefaultWarehouseId struct {
 	StringVal types.Object `tfsdk:"string_val"`
 }
 
-func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultWarehouseId) {
+func (toState *DefaultWarehouseId) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DefaultWarehouseId) {
+	if !fromPlan.StringVal.IsNull() && !fromPlan.StringVal.IsUnknown() {
+		if toStateStringVal, ok := toState.GetStringVal(ctx); ok {
+			if fromPlanStringVal, ok := fromPlan.GetStringVal(ctx); ok {
+				toStateStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStringVal)
+				toState.SetStringVal(ctx, toStateStringVal)
+			}
+		}
+	}
 }
 
-func (newState *DefaultWarehouseId) SyncEffectiveFieldsDuringRead(existingState DefaultWarehouseId) {
+func (toState *DefaultWarehouseId) SyncFieldsDuringRead(ctx context.Context, fromState DefaultWarehouseId) {
+	if !fromState.StringVal.IsNull() && !fromState.StringVal.IsUnknown() {
+		if toStateStringVal, ok := toState.GetStringVal(ctx); ok {
+			if fromStateStringVal, ok := fromState.GetStringVal(ctx); ok {
+				toStateStringVal.SyncFieldsDuringRead(ctx, fromStateStringVal)
+				toState.SetStringVal(ctx, toStateStringVal)
+			}
+		}
+	}
 }
 
 func (c DefaultWarehouseId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3010,7 +3287,7 @@ func (o *DefaultWarehouseId) GetStringVal(ctx context.Context) (StringMessage, b
 	if o.StringVal.IsNull() || o.StringVal.IsUnknown() {
 		return e, false
 	}
-	var v []StringMessage
+	var v StringMessage
 	d := o.StringVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -3018,10 +3295,7 @@ func (o *DefaultWarehouseId) GetStringVal(ctx context.Context) (StringMessage, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStringVal sets the value of the StringVal field in DefaultWarehouseId.
@@ -3084,10 +3358,10 @@ type DeleteAccountIpAccessEnableResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAccountIpAccessEnableResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountIpAccessEnableResponse) {
+func (toState *DeleteAccountIpAccessEnableResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAccountIpAccessEnableResponse) {
 }
 
-func (newState *DeleteAccountIpAccessEnableResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAccountIpAccessEnableResponse) {
+func (toState *DeleteAccountIpAccessEnableResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAccountIpAccessEnableResponse) {
 }
 
 func (c DeleteAccountIpAccessEnableResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3217,10 +3491,10 @@ type DeleteAibiDashboardEmbeddingAccessPolicySettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+func (toState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
 }
 
-func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+func (toState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
 }
 
 func (c DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3314,10 +3588,10 @@ type DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+func (toState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
 }
 
-func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+func (toState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
 }
 
 func (c DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3411,10 +3685,10 @@ type DeleteDashboardEmailSubscriptionsResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDashboardEmailSubscriptionsResponse) {
+func (toState *DeleteDashboardEmailSubscriptionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDashboardEmailSubscriptionsResponse) {
 }
 
-func (newState *DeleteDashboardEmailSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardEmailSubscriptionsResponse) {
+func (toState *DeleteDashboardEmailSubscriptionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDashboardEmailSubscriptionsResponse) {
 }
 
 func (c DeleteDashboardEmailSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3508,10 +3782,10 @@ type DeleteDefaultNamespaceSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDefaultNamespaceSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultNamespaceSettingResponse) {
+func (toState *DeleteDefaultNamespaceSettingResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDefaultNamespaceSettingResponse) {
 }
 
-func (newState *DeleteDefaultNamespaceSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultNamespaceSettingResponse) {
+func (toState *DeleteDefaultNamespaceSettingResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDefaultNamespaceSettingResponse) {
 }
 
 func (c DeleteDefaultNamespaceSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3605,10 +3879,10 @@ type DeleteDefaultWarehouseIdResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultWarehouseIdResponse) {
+func (toState *DeleteDefaultWarehouseIdResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDefaultWarehouseIdResponse) {
 }
 
-func (newState *DeleteDefaultWarehouseIdResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultWarehouseIdResponse) {
+func (toState *DeleteDefaultWarehouseIdResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDefaultWarehouseIdResponse) {
 }
 
 func (c DeleteDefaultWarehouseIdResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3702,10 +3976,10 @@ type DeleteDisableLegacyAccessResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyAccessResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyAccessResponse) {
+func (toState *DeleteDisableLegacyAccessResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDisableLegacyAccessResponse) {
 }
 
-func (newState *DeleteDisableLegacyAccessResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyAccessResponse) {
+func (toState *DeleteDisableLegacyAccessResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDisableLegacyAccessResponse) {
 }
 
 func (c DeleteDisableLegacyAccessResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3799,10 +4073,10 @@ type DeleteDisableLegacyDbfsResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyDbfsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyDbfsResponse) {
+func (toState *DeleteDisableLegacyDbfsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDisableLegacyDbfsResponse) {
 }
 
-func (newState *DeleteDisableLegacyDbfsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyDbfsResponse) {
+func (toState *DeleteDisableLegacyDbfsResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDisableLegacyDbfsResponse) {
 }
 
 func (c DeleteDisableLegacyDbfsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3896,10 +4170,10 @@ type DeleteDisableLegacyFeaturesResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteDisableLegacyFeaturesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyFeaturesResponse) {
+func (toState *DeleteDisableLegacyFeaturesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDisableLegacyFeaturesResponse) {
 }
 
-func (newState *DeleteDisableLegacyFeaturesResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyFeaturesResponse) {
+func (toState *DeleteDisableLegacyFeaturesResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDisableLegacyFeaturesResponse) {
 }
 
 func (c DeleteDisableLegacyFeaturesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4029,10 +4303,10 @@ type DeleteLlmProxyPartnerPoweredWorkspaceResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
+func (toState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
 }
 
-func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncEffectiveFieldsDuringRead(existingState DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
+func (toState *DeleteLlmProxyPartnerPoweredWorkspaceResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteLlmProxyPartnerPoweredWorkspaceResponse) {
 }
 
 func (c DeleteLlmProxyPartnerPoweredWorkspaceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4233,10 +4507,10 @@ type DeletePersonalComputeSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeletePersonalComputeSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePersonalComputeSettingResponse) {
+func (toState *DeletePersonalComputeSettingResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePersonalComputeSettingResponse) {
 }
 
-func (newState *DeletePersonalComputeSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeletePersonalComputeSettingResponse) {
+func (toState *DeletePersonalComputeSettingResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeletePersonalComputeSettingResponse) {
 }
 
 func (c DeletePersonalComputeSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4400,10 +4674,10 @@ type DeleteRestrictWorkspaceAdminsSettingResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRestrictWorkspaceAdminsSettingResponse) {
+func (toState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteRestrictWorkspaceAdminsSettingResponse) {
 }
 
-func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRestrictWorkspaceAdminsSettingResponse) {
+func (toState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteRestrictWorkspaceAdminsSettingResponse) {
 }
 
 func (c DeleteRestrictWorkspaceAdminsSettingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4497,10 +4771,10 @@ type DeleteSqlResultsDownloadResponse struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func (newState *DeleteSqlResultsDownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSqlResultsDownloadResponse) {
+func (toState *DeleteSqlResultsDownloadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteSqlResultsDownloadResponse) {
 }
 
-func (newState *DeleteSqlResultsDownloadResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSqlResultsDownloadResponse) {
+func (toState *DeleteSqlResultsDownloadResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteSqlResultsDownloadResponse) {
 }
 
 func (c DeleteSqlResultsDownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4594,10 +4868,26 @@ type DisableLegacyAccess struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyAccess) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyAccess) {
+func (toState *DisableLegacyAccess) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DisableLegacyAccess) {
+	if !fromPlan.DisableLegacyAccess.IsNull() && !fromPlan.DisableLegacyAccess.IsUnknown() {
+		if toStateDisableLegacyAccess, ok := toState.GetDisableLegacyAccess(ctx); ok {
+			if fromPlanDisableLegacyAccess, ok := fromPlan.GetDisableLegacyAccess(ctx); ok {
+				toStateDisableLegacyAccess.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDisableLegacyAccess)
+				toState.SetDisableLegacyAccess(ctx, toStateDisableLegacyAccess)
+			}
+		}
+	}
 }
 
-func (newState *DisableLegacyAccess) SyncEffectiveFieldsDuringRead(existingState DisableLegacyAccess) {
+func (toState *DisableLegacyAccess) SyncFieldsDuringRead(ctx context.Context, fromState DisableLegacyAccess) {
+	if !fromState.DisableLegacyAccess.IsNull() && !fromState.DisableLegacyAccess.IsUnknown() {
+		if toStateDisableLegacyAccess, ok := toState.GetDisableLegacyAccess(ctx); ok {
+			if fromStateDisableLegacyAccess, ok := fromState.GetDisableLegacyAccess(ctx); ok {
+				toStateDisableLegacyAccess.SyncFieldsDuringRead(ctx, fromStateDisableLegacyAccess)
+				toState.SetDisableLegacyAccess(ctx, toStateDisableLegacyAccess)
+			}
+		}
+	}
 }
 
 func (c DisableLegacyAccess) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4653,7 +4943,7 @@ func (o *DisableLegacyAccess) GetDisableLegacyAccess(ctx context.Context) (Boole
 	if o.DisableLegacyAccess.IsNull() || o.DisableLegacyAccess.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.DisableLegacyAccess.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4661,10 +4951,7 @@ func (o *DisableLegacyAccess) GetDisableLegacyAccess(ctx context.Context) (Boole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDisableLegacyAccess sets the value of the DisableLegacyAccess field in DisableLegacyAccess.
@@ -4691,10 +4978,26 @@ type DisableLegacyDbfs struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyDbfs) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyDbfs) {
+func (toState *DisableLegacyDbfs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DisableLegacyDbfs) {
+	if !fromPlan.DisableLegacyDbfs.IsNull() && !fromPlan.DisableLegacyDbfs.IsUnknown() {
+		if toStateDisableLegacyDbfs, ok := toState.GetDisableLegacyDbfs(ctx); ok {
+			if fromPlanDisableLegacyDbfs, ok := fromPlan.GetDisableLegacyDbfs(ctx); ok {
+				toStateDisableLegacyDbfs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDisableLegacyDbfs)
+				toState.SetDisableLegacyDbfs(ctx, toStateDisableLegacyDbfs)
+			}
+		}
+	}
 }
 
-func (newState *DisableLegacyDbfs) SyncEffectiveFieldsDuringRead(existingState DisableLegacyDbfs) {
+func (toState *DisableLegacyDbfs) SyncFieldsDuringRead(ctx context.Context, fromState DisableLegacyDbfs) {
+	if !fromState.DisableLegacyDbfs.IsNull() && !fromState.DisableLegacyDbfs.IsUnknown() {
+		if toStateDisableLegacyDbfs, ok := toState.GetDisableLegacyDbfs(ctx); ok {
+			if fromStateDisableLegacyDbfs, ok := fromState.GetDisableLegacyDbfs(ctx); ok {
+				toStateDisableLegacyDbfs.SyncFieldsDuringRead(ctx, fromStateDisableLegacyDbfs)
+				toState.SetDisableLegacyDbfs(ctx, toStateDisableLegacyDbfs)
+			}
+		}
+	}
 }
 
 func (c DisableLegacyDbfs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4750,7 +5053,7 @@ func (o *DisableLegacyDbfs) GetDisableLegacyDbfs(ctx context.Context) (BooleanMe
 	if o.DisableLegacyDbfs.IsNull() || o.DisableLegacyDbfs.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.DisableLegacyDbfs.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4758,10 +5061,7 @@ func (o *DisableLegacyDbfs) GetDisableLegacyDbfs(ctx context.Context) (BooleanMe
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDisableLegacyDbfs sets the value of the DisableLegacyDbfs field in DisableLegacyDbfs.
@@ -4788,10 +5088,26 @@ type DisableLegacyFeatures struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyFeatures) {
+func (toState *DisableLegacyFeatures) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DisableLegacyFeatures) {
+	if !fromPlan.DisableLegacyFeatures.IsNull() && !fromPlan.DisableLegacyFeatures.IsUnknown() {
+		if toStateDisableLegacyFeatures, ok := toState.GetDisableLegacyFeatures(ctx); ok {
+			if fromPlanDisableLegacyFeatures, ok := fromPlan.GetDisableLegacyFeatures(ctx); ok {
+				toStateDisableLegacyFeatures.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDisableLegacyFeatures)
+				toState.SetDisableLegacyFeatures(ctx, toStateDisableLegacyFeatures)
+			}
+		}
+	}
 }
 
-func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringRead(existingState DisableLegacyFeatures) {
+func (toState *DisableLegacyFeatures) SyncFieldsDuringRead(ctx context.Context, fromState DisableLegacyFeatures) {
+	if !fromState.DisableLegacyFeatures.IsNull() && !fromState.DisableLegacyFeatures.IsUnknown() {
+		if toStateDisableLegacyFeatures, ok := toState.GetDisableLegacyFeatures(ctx); ok {
+			if fromStateDisableLegacyFeatures, ok := fromState.GetDisableLegacyFeatures(ctx); ok {
+				toStateDisableLegacyFeatures.SyncFieldsDuringRead(ctx, fromStateDisableLegacyFeatures)
+				toState.SetDisableLegacyFeatures(ctx, toStateDisableLegacyFeatures)
+			}
+		}
+	}
 }
 
 func (c DisableLegacyFeatures) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4847,7 +5163,7 @@ func (o *DisableLegacyFeatures) GetDisableLegacyFeatures(ctx context.Context) (B
 	if o.DisableLegacyFeatures.IsNull() || o.DisableLegacyFeatures.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.DisableLegacyFeatures.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4855,10 +5171,7 @@ func (o *DisableLegacyFeatures) GetDisableLegacyFeatures(ctx context.Context) (B
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDisableLegacyFeatures sets the value of the DisableLegacyFeatures field in DisableLegacyFeatures.
@@ -4876,10 +5189,26 @@ type EgressNetworkPolicy struct {
 	InternetAccess types.Object `tfsdk:"internet_access"`
 }
 
-func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy) {
+func (toState *EgressNetworkPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicy) {
+	if !fromPlan.InternetAccess.IsNull() && !fromPlan.InternetAccess.IsUnknown() {
+		if toStateInternetAccess, ok := toState.GetInternetAccess(ctx); ok {
+			if fromPlanInternetAccess, ok := fromPlan.GetInternetAccess(ctx); ok {
+				toStateInternetAccess.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInternetAccess)
+				toState.SetInternetAccess(ctx, toStateInternetAccess)
+			}
+		}
+	}
 }
 
-func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicy) {
+func (toState *EgressNetworkPolicy) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicy) {
+	if !fromState.InternetAccess.IsNull() && !fromState.InternetAccess.IsUnknown() {
+		if toStateInternetAccess, ok := toState.GetInternetAccess(ctx); ok {
+			if fromStateInternetAccess, ok := fromState.GetInternetAccess(ctx); ok {
+				toStateInternetAccess.SyncFieldsDuringRead(ctx, fromStateInternetAccess)
+				toState.SetInternetAccess(ctx, toStateInternetAccess)
+			}
+		}
+	}
 }
 
 func (c EgressNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4929,7 +5258,7 @@ func (o *EgressNetworkPolicy) GetInternetAccess(ctx context.Context) (EgressNetw
 	if o.InternetAccess.IsNull() || o.InternetAccess.IsUnknown() {
 		return e, false
 	}
-	var v []EgressNetworkPolicyInternetAccessPolicy
+	var v EgressNetworkPolicyInternetAccessPolicy
 	d := o.InternetAccess.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4937,10 +5266,7 @@ func (o *EgressNetworkPolicy) GetInternetAccess(ctx context.Context) (EgressNetw
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetInternetAccess sets the value of the InternetAccess field in EgressNetworkPolicy.
@@ -4960,10 +5286,26 @@ type EgressNetworkPolicyInternetAccessPolicy struct {
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy) {
+func (toState *EgressNetworkPolicyInternetAccessPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyInternetAccessPolicy) {
+	if !fromPlan.LogOnlyMode.IsNull() && !fromPlan.LogOnlyMode.IsUnknown() {
+		if toStateLogOnlyMode, ok := toState.GetLogOnlyMode(ctx); ok {
+			if fromPlanLogOnlyMode, ok := fromPlan.GetLogOnlyMode(ctx); ok {
+				toStateLogOnlyMode.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLogOnlyMode)
+				toState.SetLogOnlyMode(ctx, toStateLogOnlyMode)
+			}
+		}
+	}
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy) {
+func (toState *EgressNetworkPolicyInternetAccessPolicy) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyInternetAccessPolicy) {
+	if !fromState.LogOnlyMode.IsNull() && !fromState.LogOnlyMode.IsUnknown() {
+		if toStateLogOnlyMode, ok := toState.GetLogOnlyMode(ctx); ok {
+			if fromStateLogOnlyMode, ok := fromState.GetLogOnlyMode(ctx); ok {
+				toStateLogOnlyMode.SyncFieldsDuringRead(ctx, fromStateLogOnlyMode)
+				toState.SetLogOnlyMode(ctx, toStateLogOnlyMode)
+			}
+		}
+	}
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5080,7 +5422,7 @@ func (o *EgressNetworkPolicyInternetAccessPolicy) GetLogOnlyMode(ctx context.Con
 	if o.LogOnlyMode.IsNull() || o.LogOnlyMode.IsUnknown() {
 		return e, false
 	}
-	var v []EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
+	var v EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
 	d := o.LogOnlyMode.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5088,10 +5430,7 @@ func (o *EgressNetworkPolicyInternetAccessPolicy) GetLogOnlyMode(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetLogOnlyMode sets the value of the LogOnlyMode field in EgressNetworkPolicyInternetAccessPolicy.
@@ -5111,10 +5450,10 @@ type EgressNetworkPolicyInternetAccessPolicyInternetDestination struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyInternetDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5166,10 +5505,10 @@ type EgressNetworkPolicyInternetAccessPolicyLogOnlyMode struct {
 	Workloads types.List `tfsdk:"workloads"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5261,10 +5600,10 @@ type EgressNetworkPolicyInternetAccessPolicyStorageDestination struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
 }
 
-func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+func (toState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
 }
 
 func (c EgressNetworkPolicyInternetAccessPolicyStorageDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5370,10 +5709,26 @@ type EgressNetworkPolicyNetworkAccessPolicy struct {
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicy) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyNetworkAccessPolicy) {
+	if !fromPlan.PolicyEnforcement.IsNull() && !fromPlan.PolicyEnforcement.IsUnknown() {
+		if toStatePolicyEnforcement, ok := toState.GetPolicyEnforcement(ctx); ok {
+			if fromPlanPolicyEnforcement, ok := fromPlan.GetPolicyEnforcement(ctx); ok {
+				toStatePolicyEnforcement.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPolicyEnforcement)
+				toState.SetPolicyEnforcement(ctx, toStatePolicyEnforcement)
+			}
+		}
+	}
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicy) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicy) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyNetworkAccessPolicy) {
+	if !fromState.PolicyEnforcement.IsNull() && !fromState.PolicyEnforcement.IsUnknown() {
+		if toStatePolicyEnforcement, ok := toState.GetPolicyEnforcement(ctx); ok {
+			if fromStatePolicyEnforcement, ok := fromState.GetPolicyEnforcement(ctx); ok {
+				toStatePolicyEnforcement.SyncFieldsDuringRead(ctx, fromStatePolicyEnforcement)
+				toState.SetPolicyEnforcement(ctx, toStatePolicyEnforcement)
+			}
+		}
+	}
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5490,7 +5845,7 @@ func (o *EgressNetworkPolicyNetworkAccessPolicy) GetPolicyEnforcement(ctx contex
 	if o.PolicyEnforcement.IsNull() || o.PolicyEnforcement.IsUnknown() {
 		return e, false
 	}
-	var v []EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement
+	var v EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement
 	d := o.PolicyEnforcement.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5498,10 +5853,7 @@ func (o *EgressNetworkPolicyNetworkAccessPolicy) GetPolicyEnforcement(ctx contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPolicyEnforcement sets the value of the PolicyEnforcement field in EgressNetworkPolicyNetworkAccessPolicy.
@@ -5521,10 +5873,10 @@ type EgressNetworkPolicyNetworkAccessPolicyInternetDestination struct {
 	InternetDestinationType types.String `tfsdk:"internet_destination_type"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyInternetDestination) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyNetworkAccessPolicyInternetDestination) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyInternetDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5578,10 +5930,10 @@ type EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement struct {
 	EnforcementMode types.String `tfsdk:"enforcement_mode"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5668,10 +6020,10 @@ type EgressNetworkPolicyNetworkAccessPolicyStorageDestination struct {
 	StorageDestinationType types.String `tfsdk:"storage_destination_type"`
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
 }
 
-func (newState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
+func (toState *EgressNetworkPolicyNetworkAccessPolicyStorageDestination) SyncFieldsDuringRead(ctx context.Context, fromState EgressNetworkPolicyNetworkAccessPolicyStorageDestination) {
 }
 
 func (c EgressNetworkPolicyNetworkAccessPolicyStorageDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5728,10 +6080,10 @@ type EmailConfig struct {
 	Addresses types.List `tfsdk:"addresses"`
 }
 
-func (newState *EmailConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmailConfig) {
+func (toState *EmailConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmailConfig) {
 }
 
-func (newState *EmailConfig) SyncEffectiveFieldsDuringRead(existingState EmailConfig) {
+func (toState *EmailConfig) SyncFieldsDuringRead(ctx context.Context, fromState EmailConfig) {
 }
 
 func (c EmailConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5804,10 +6156,10 @@ func (o *EmailConfig) SetAddresses(ctx context.Context, v []types.String) {
 type Empty struct {
 }
 
-func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
+func (toState *Empty) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Empty) {
 }
 
-func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
+func (toState *Empty) SyncFieldsDuringRead(ctx context.Context, fromState Empty) {
 }
 
 func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5852,10 +6204,26 @@ type EnableExportNotebook struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableExportNotebook) {
+func (toState *EnableExportNotebook) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnableExportNotebook) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringRead(existingState EnableExportNotebook) {
+func (toState *EnableExportNotebook) SyncFieldsDuringRead(ctx context.Context, fromState EnableExportNotebook) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c EnableExportNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5908,7 +6276,7 @@ func (o *EnableExportNotebook) GetBooleanVal(ctx context.Context) (BooleanMessag
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5916,10 +6284,7 @@ func (o *EnableExportNotebook) GetBooleanVal(ctx context.Context) (BooleanMessag
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in EnableExportNotebook.
@@ -5938,10 +6303,26 @@ type EnableNotebookTableClipboard struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableNotebookTableClipboard) {
+func (toState *EnableNotebookTableClipboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnableNotebookTableClipboard) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringRead(existingState EnableNotebookTableClipboard) {
+func (toState *EnableNotebookTableClipboard) SyncFieldsDuringRead(ctx context.Context, fromState EnableNotebookTableClipboard) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c EnableNotebookTableClipboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5994,7 +6375,7 @@ func (o *EnableNotebookTableClipboard) GetBooleanVal(ctx context.Context) (Boole
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6002,10 +6383,7 @@ func (o *EnableNotebookTableClipboard) GetBooleanVal(ctx context.Context) (Boole
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in EnableNotebookTableClipboard.
@@ -6024,10 +6402,26 @@ type EnableResultsDownloading struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableResultsDownloading) {
+func (toState *EnableResultsDownloading) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnableResultsDownloading) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringRead(existingState EnableResultsDownloading) {
+func (toState *EnableResultsDownloading) SyncFieldsDuringRead(ctx context.Context, fromState EnableResultsDownloading) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c EnableResultsDownloading) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6080,7 +6474,7 @@ func (o *EnableResultsDownloading) GetBooleanVal(ctx context.Context) (BooleanMe
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6088,10 +6482,7 @@ func (o *EnableResultsDownloading) GetBooleanVal(ctx context.Context) (BooleanMe
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in EnableResultsDownloading.
@@ -6105,10 +6496,10 @@ type EnhancedSecurityMonitoring struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (newState *EnhancedSecurityMonitoring) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoring) {
+func (toState *EnhancedSecurityMonitoring) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnhancedSecurityMonitoring) {
 }
 
-func (newState *EnhancedSecurityMonitoring) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoring) {
+func (toState *EnhancedSecurityMonitoring) SyncFieldsDuringRead(ctx context.Context, fromState EnhancedSecurityMonitoring) {
 }
 
 func (c EnhancedSecurityMonitoring) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6166,10 +6557,26 @@ type EnhancedSecurityMonitoringSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EnhancedSecurityMonitoringSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoringSetting) {
+func (toState *EnhancedSecurityMonitoringSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnhancedSecurityMonitoringSetting) {
+	if !fromPlan.EnhancedSecurityMonitoringWorkspace.IsNull() && !fromPlan.EnhancedSecurityMonitoringWorkspace.IsUnknown() {
+		if toStateEnhancedSecurityMonitoringWorkspace, ok := toState.GetEnhancedSecurityMonitoringWorkspace(ctx); ok {
+			if fromPlanEnhancedSecurityMonitoringWorkspace, ok := fromPlan.GetEnhancedSecurityMonitoringWorkspace(ctx); ok {
+				toStateEnhancedSecurityMonitoringWorkspace.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnhancedSecurityMonitoringWorkspace)
+				toState.SetEnhancedSecurityMonitoringWorkspace(ctx, toStateEnhancedSecurityMonitoringWorkspace)
+			}
+		}
+	}
 }
 
-func (newState *EnhancedSecurityMonitoringSetting) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoringSetting) {
+func (toState *EnhancedSecurityMonitoringSetting) SyncFieldsDuringRead(ctx context.Context, fromState EnhancedSecurityMonitoringSetting) {
+	if !fromState.EnhancedSecurityMonitoringWorkspace.IsNull() && !fromState.EnhancedSecurityMonitoringWorkspace.IsUnknown() {
+		if toStateEnhancedSecurityMonitoringWorkspace, ok := toState.GetEnhancedSecurityMonitoringWorkspace(ctx); ok {
+			if fromStateEnhancedSecurityMonitoringWorkspace, ok := fromState.GetEnhancedSecurityMonitoringWorkspace(ctx); ok {
+				toStateEnhancedSecurityMonitoringWorkspace.SyncFieldsDuringRead(ctx, fromStateEnhancedSecurityMonitoringWorkspace)
+				toState.SetEnhancedSecurityMonitoringWorkspace(ctx, toStateEnhancedSecurityMonitoringWorkspace)
+			}
+		}
+	}
 }
 
 func (c EnhancedSecurityMonitoringSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6225,7 +6632,7 @@ func (o *EnhancedSecurityMonitoringSetting) GetEnhancedSecurityMonitoringWorkspa
 	if o.EnhancedSecurityMonitoringWorkspace.IsNull() || o.EnhancedSecurityMonitoringWorkspace.IsUnknown() {
 		return e, false
 	}
-	var v []EnhancedSecurityMonitoring
+	var v EnhancedSecurityMonitoring
 	d := o.EnhancedSecurityMonitoringWorkspace.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6233,10 +6640,7 @@ func (o *EnhancedSecurityMonitoringSetting) GetEnhancedSecurityMonitoringWorkspa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEnhancedSecurityMonitoringWorkspace sets the value of the EnhancedSecurityMonitoringWorkspace field in EnhancedSecurityMonitoringSetting.
@@ -6250,10 +6654,10 @@ type EsmEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
-func (newState *EsmEnablementAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccount) {
+func (toState *EsmEnablementAccount) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EsmEnablementAccount) {
 }
 
-func (newState *EsmEnablementAccount) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccount) {
+func (toState *EsmEnablementAccount) SyncFieldsDuringRead(ctx context.Context, fromState EsmEnablementAccount) {
 }
 
 func (c EsmEnablementAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6311,10 +6715,26 @@ type EsmEnablementAccountSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *EsmEnablementAccountSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccountSetting) {
+func (toState *EsmEnablementAccountSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EsmEnablementAccountSetting) {
+	if !fromPlan.EsmEnablementAccount.IsNull() && !fromPlan.EsmEnablementAccount.IsUnknown() {
+		if toStateEsmEnablementAccount, ok := toState.GetEsmEnablementAccount(ctx); ok {
+			if fromPlanEsmEnablementAccount, ok := fromPlan.GetEsmEnablementAccount(ctx); ok {
+				toStateEsmEnablementAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEsmEnablementAccount)
+				toState.SetEsmEnablementAccount(ctx, toStateEsmEnablementAccount)
+			}
+		}
+	}
 }
 
-func (newState *EsmEnablementAccountSetting) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccountSetting) {
+func (toState *EsmEnablementAccountSetting) SyncFieldsDuringRead(ctx context.Context, fromState EsmEnablementAccountSetting) {
+	if !fromState.EsmEnablementAccount.IsNull() && !fromState.EsmEnablementAccount.IsUnknown() {
+		if toStateEsmEnablementAccount, ok := toState.GetEsmEnablementAccount(ctx); ok {
+			if fromStateEsmEnablementAccount, ok := fromState.GetEsmEnablementAccount(ctx); ok {
+				toStateEsmEnablementAccount.SyncFieldsDuringRead(ctx, fromStateEsmEnablementAccount)
+				toState.SetEsmEnablementAccount(ctx, toStateEsmEnablementAccount)
+			}
+		}
+	}
 }
 
 func (c EsmEnablementAccountSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6370,7 +6790,7 @@ func (o *EsmEnablementAccountSetting) GetEsmEnablementAccount(ctx context.Contex
 	if o.EsmEnablementAccount.IsNull() || o.EsmEnablementAccount.IsUnknown() {
 		return e, false
 	}
-	var v []EsmEnablementAccount
+	var v EsmEnablementAccount
 	d := o.EsmEnablementAccount.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6378,10 +6798,7 @@ func (o *EsmEnablementAccountSetting) GetEsmEnablementAccount(ctx context.Contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEsmEnablementAccount sets the value of the EsmEnablementAccount field in EsmEnablementAccountSetting.
@@ -6405,10 +6822,10 @@ type ExchangeToken struct {
 	TokenType types.String `tfsdk:"tokenType"`
 }
 
-func (newState *ExchangeToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeToken) {
+func (toState *ExchangeToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExchangeToken) {
 }
 
-func (newState *ExchangeToken) SyncEffectiveFieldsDuringRead(existingState ExchangeToken) {
+func (toState *ExchangeToken) SyncFieldsDuringRead(ctx context.Context, fromState ExchangeToken) {
 }
 
 func (c ExchangeToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6551,7 +6968,7 @@ func (o *ExchangeTokenRequest) GetPartitionId(ctx context.Context) (PartitionId,
 	if o.PartitionId.IsNull() || o.PartitionId.IsUnknown() {
 		return e, false
 	}
-	var v []PartitionId
+	var v PartitionId
 	d := o.PartitionId.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6559,10 +6976,7 @@ func (o *ExchangeTokenRequest) GetPartitionId(ctx context.Context) (PartitionId,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPartitionId sets the value of the PartitionId field in ExchangeTokenRequest.
@@ -6628,10 +7042,10 @@ type ExchangeTokenResponse struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (newState *ExchangeTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeTokenResponse) {
+func (toState *ExchangeTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExchangeTokenResponse) {
 }
 
-func (newState *ExchangeTokenResponse) SyncEffectiveFieldsDuringRead(existingState ExchangeTokenResponse) {
+func (toState *ExchangeTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState ExchangeTokenResponse) {
 }
 
 func (c ExchangeTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6706,10 +7120,26 @@ type FetchIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan FetchIpAccessListResponse) {
+func (toState *FetchIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FetchIpAccessListResponse) {
+	if !fromPlan.IpAccessList.IsNull() && !fromPlan.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromPlanIpAccessList, ok := fromPlan.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
-func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState FetchIpAccessListResponse) {
+func (toState *FetchIpAccessListResponse) SyncFieldsDuringRead(ctx context.Context, fromState FetchIpAccessListResponse) {
+	if !fromState.IpAccessList.IsNull() && !fromState.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromStateIpAccessList, ok := fromState.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringRead(ctx, fromStateIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
 func (c FetchIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6759,7 +7189,7 @@ func (o *FetchIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAcce
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessListInfo
+	var v IpAccessListInfo
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -6767,10 +7197,7 @@ func (o *FetchIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAcce
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in FetchIpAccessListResponse.
@@ -6794,10 +7221,10 @@ type GenericWebhookConfig struct {
 	UsernameSet types.Bool `tfsdk:"username_set"`
 }
 
-func (newState *GenericWebhookConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenericWebhookConfig) {
+func (toState *GenericWebhookConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenericWebhookConfig) {
 }
 
-func (newState *GenericWebhookConfig) SyncEffectiveFieldsDuringRead(existingState GenericWebhookConfig) {
+func (toState *GenericWebhookConfig) SyncFieldsDuringRead(ctx context.Context, fromState GenericWebhookConfig) {
 }
 
 func (c GenericWebhookConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7606,10 +8033,26 @@ type GetIpAccessListResponse struct {
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 }
 
-func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListResponse) {
+func (toState *GetIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetIpAccessListResponse) {
+	if !fromPlan.IpAccessList.IsNull() && !fromPlan.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromPlanIpAccessList, ok := fromPlan.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
-func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListResponse) {
+func (toState *GetIpAccessListResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetIpAccessListResponse) {
+	if !fromState.IpAccessList.IsNull() && !fromState.IpAccessList.IsUnknown() {
+		if toStateIpAccessList, ok := toState.GetIpAccessList(ctx); ok {
+			if fromStateIpAccessList, ok := fromState.GetIpAccessList(ctx); ok {
+				toStateIpAccessList.SyncFieldsDuringRead(ctx, fromStateIpAccessList)
+				toState.SetIpAccessList(ctx, toStateIpAccessList)
+			}
+		}
+	}
 }
 
 func (c GetIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7659,7 +8102,7 @@ func (o *GetIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAccess
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessListInfo
+	var v IpAccessListInfo
 	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -7667,10 +8110,7 @@ func (o *GetIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAccess
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetIpAccessList sets the value of the IpAccessList field in GetIpAccessListResponse.
@@ -7684,10 +8124,10 @@ type GetIpAccessListsResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
-func (newState *GetIpAccessListsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListsResponse) {
+func (toState *GetIpAccessListsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetIpAccessListsResponse) {
 }
 
-func (newState *GetIpAccessListsResponse) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListsResponse) {
+func (toState *GetIpAccessListsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetIpAccessListsResponse) {
 }
 
 func (c GetIpAccessListsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8262,10 +8702,10 @@ type GetTokenPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetTokenPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenPermissionLevelsResponse) {
+func (toState *GetTokenPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetTokenPermissionLevelsResponse) {
 }
 
-func (newState *GetTokenPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetTokenPermissionLevelsResponse) {
+func (toState *GetTokenPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetTokenPermissionLevelsResponse) {
 }
 
 func (c GetTokenPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8370,10 +8810,26 @@ type GetTokenResponse struct {
 	TokenInfo types.Object `tfsdk:"token_info"`
 }
 
-func (newState *GetTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenResponse) {
+func (toState *GetTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetTokenResponse) {
+	if !fromPlan.TokenInfo.IsNull() && !fromPlan.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromPlanTokenInfo, ok := fromPlan.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
-func (newState *GetTokenResponse) SyncEffectiveFieldsDuringRead(existingState GetTokenResponse) {
+func (toState *GetTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetTokenResponse) {
+	if !fromState.TokenInfo.IsNull() && !fromState.TokenInfo.IsUnknown() {
+		if toStateTokenInfo, ok := toState.GetTokenInfo(ctx); ok {
+			if fromStateTokenInfo, ok := fromState.GetTokenInfo(ctx); ok {
+				toStateTokenInfo.SyncFieldsDuringRead(ctx, fromStateTokenInfo)
+				toState.SetTokenInfo(ctx, toStateTokenInfo)
+			}
+		}
+	}
 }
 
 func (c GetTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8423,7 +8879,7 @@ func (o *GetTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, bool) {
 	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
 		return e, false
 	}
-	var v []TokenInfo
+	var v TokenInfo
 	d := o.TokenInfo.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -8431,10 +8887,7 @@ func (o *GetTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTokenInfo sets the value of the TokenInfo field in GetTokenResponse.
@@ -8503,10 +8956,10 @@ type IpAccessListInfo struct {
 	UpdatedBy types.Int64 `tfsdk:"updated_by"`
 }
 
-func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessListInfo) {
+func (toState *IpAccessListInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IpAccessListInfo) {
 }
 
-func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringRead(existingState IpAccessListInfo) {
+func (toState *IpAccessListInfo) SyncFieldsDuringRead(ctx context.Context, fromState IpAccessListInfo) {
 }
 
 func (c IpAccessListInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8608,10 +9061,10 @@ type ListIpAccessListResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
-func (newState *ListIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIpAccessListResponse) {
+func (toState *ListIpAccessListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListIpAccessListResponse) {
 }
 
-func (newState *ListIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingState ListIpAccessListResponse) {
+func (toState *ListIpAccessListResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListIpAccessListResponse) {
 }
 
 func (c ListIpAccessListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8755,10 +9208,10 @@ type ListNetworkConnectivityConfigurationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListNetworkConnectivityConfigurationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNetworkConnectivityConfigurationsResponse) {
+func (toState *ListNetworkConnectivityConfigurationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListNetworkConnectivityConfigurationsResponse) {
 }
 
-func (newState *ListNetworkConnectivityConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListNetworkConnectivityConfigurationsResponse) {
+func (toState *ListNetworkConnectivityConfigurationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListNetworkConnectivityConfigurationsResponse) {
 }
 
 func (c ListNetworkConnectivityConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8875,10 +9328,10 @@ type ListNetworkPoliciesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListNetworkPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNetworkPoliciesResponse) {
+func (toState *ListNetworkPoliciesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListNetworkPoliciesResponse) {
 }
 
-func (newState *ListNetworkPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListNetworkPoliciesResponse) {
+func (toState *ListNetworkPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListNetworkPoliciesResponse) {
 }
 
 func (c ListNetworkPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8997,10 +9450,10 @@ type ListNotificationDestinationsResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (newState *ListNotificationDestinationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResponse) {
+func (toState *ListNotificationDestinationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListNotificationDestinationsResponse) {
 }
 
-func (newState *ListNotificationDestinationsResponse) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResponse) {
+func (toState *ListNotificationDestinationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListNotificationDestinationsResponse) {
 }
 
 func (c ListNotificationDestinationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9083,10 +9536,10 @@ type ListNotificationDestinationsResult struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *ListNotificationDestinationsResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResult) {
+func (toState *ListNotificationDestinationsResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListNotificationDestinationsResult) {
 }
 
-func (newState *ListNotificationDestinationsResult) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResult) {
+func (toState *ListNotificationDestinationsResult) SyncFieldsDuringRead(ctx context.Context, fromState ListNotificationDestinationsResult) {
 }
 
 func (c ListNotificationDestinationsResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9180,10 +9633,10 @@ type ListPrivateEndpointRulesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListPrivateEndpointRulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPrivateEndpointRulesResponse) {
+func (toState *ListPrivateEndpointRulesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPrivateEndpointRulesResponse) {
 }
 
-func (newState *ListPrivateEndpointRulesResponse) SyncEffectiveFieldsDuringRead(existingState ListPrivateEndpointRulesResponse) {
+func (toState *ListPrivateEndpointRulesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListPrivateEndpointRulesResponse) {
 }
 
 func (c ListPrivateEndpointRulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9261,10 +9714,10 @@ type ListPublicTokensResponse struct {
 	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
-func (newState *ListPublicTokensResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPublicTokensResponse) {
+func (toState *ListPublicTokensResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPublicTokensResponse) {
 }
 
-func (newState *ListPublicTokensResponse) SyncEffectiveFieldsDuringRead(existingState ListPublicTokensResponse) {
+func (toState *ListPublicTokensResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListPublicTokensResponse) {
 }
 
 func (c ListPublicTokensResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9410,10 +9863,10 @@ type ListTokensResponse struct {
 	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
-func (newState *ListTokensResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTokensResponse) {
+func (toState *ListTokensResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListTokensResponse) {
 }
 
-func (newState *ListTokensResponse) SyncEffectiveFieldsDuringRead(existingState ListTokensResponse) {
+func (toState *ListTokensResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListTokensResponse) {
 }
 
 func (c ListTokensResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9501,10 +9954,26 @@ type LlmProxyPartnerPoweredAccount struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredAccount) {
+func (toState *LlmProxyPartnerPoweredAccount) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LlmProxyPartnerPoweredAccount) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *LlmProxyPartnerPoweredAccount) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredAccount) {
+func (toState *LlmProxyPartnerPoweredAccount) SyncFieldsDuringRead(ctx context.Context, fromState LlmProxyPartnerPoweredAccount) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c LlmProxyPartnerPoweredAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9560,7 +10029,7 @@ func (o *LlmProxyPartnerPoweredAccount) GetBooleanVal(ctx context.Context) (Bool
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9568,10 +10037,7 @@ func (o *LlmProxyPartnerPoweredAccount) GetBooleanVal(ctx context.Context) (Bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredAccount.
@@ -9598,10 +10064,26 @@ type LlmProxyPartnerPoweredEnforce struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredEnforce) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredEnforce) {
+func (toState *LlmProxyPartnerPoweredEnforce) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LlmProxyPartnerPoweredEnforce) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *LlmProxyPartnerPoweredEnforce) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredEnforce) {
+func (toState *LlmProxyPartnerPoweredEnforce) SyncFieldsDuringRead(ctx context.Context, fromState LlmProxyPartnerPoweredEnforce) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c LlmProxyPartnerPoweredEnforce) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9657,7 +10139,7 @@ func (o *LlmProxyPartnerPoweredEnforce) GetBooleanVal(ctx context.Context) (Bool
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9665,10 +10147,7 @@ func (o *LlmProxyPartnerPoweredEnforce) GetBooleanVal(ctx context.Context) (Bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredEnforce.
@@ -9695,10 +10174,26 @@ type LlmProxyPartnerPoweredWorkspace struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *LlmProxyPartnerPoweredWorkspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredWorkspace) {
+func (toState *LlmProxyPartnerPoweredWorkspace) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LlmProxyPartnerPoweredWorkspace) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *LlmProxyPartnerPoweredWorkspace) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredWorkspace) {
+func (toState *LlmProxyPartnerPoweredWorkspace) SyncFieldsDuringRead(ctx context.Context, fromState LlmProxyPartnerPoweredWorkspace) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c LlmProxyPartnerPoweredWorkspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9754,7 +10249,7 @@ func (o *LlmProxyPartnerPoweredWorkspace) GetBooleanVal(ctx context.Context) (Bo
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -9762,10 +10257,7 @@ func (o *LlmProxyPartnerPoweredWorkspace) GetBooleanVal(ctx context.Context) (Bo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredWorkspace.
@@ -9781,10 +10273,10 @@ type MicrosoftTeamsConfig struct {
 	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
-func (newState *MicrosoftTeamsConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan MicrosoftTeamsConfig) {
+func (toState *MicrosoftTeamsConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MicrosoftTeamsConfig) {
 }
 
-func (newState *MicrosoftTeamsConfig) SyncEffectiveFieldsDuringRead(existingState MicrosoftTeamsConfig) {
+func (toState *MicrosoftTeamsConfig) SyncFieldsDuringRead(ctx context.Context, fromState MicrosoftTeamsConfig) {
 }
 
 func (c MicrosoftTeamsConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9835,10 +10327,10 @@ type NccAwsStableIpRule struct {
 	CidrBlocks types.List `tfsdk:"cidr_blocks"`
 }
 
-func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAwsStableIpRule) {
+func (toState *NccAwsStableIpRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccAwsStableIpRule) {
 }
 
-func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringRead(existingState NccAwsStableIpRule) {
+func (toState *NccAwsStableIpRule) SyncFieldsDuringRead(ctx context.Context, fromState NccAwsStableIpRule) {
 }
 
 func (c NccAwsStableIpRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9954,10 +10446,10 @@ type NccAzurePrivateEndpointRule struct {
 	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
-func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule) {
+func (toState *NccAzurePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccAzurePrivateEndpointRule) {
 }
 
-func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
+func (toState *NccAzurePrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState NccAzurePrivateEndpointRule) {
 }
 
 func (c NccAzurePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10070,10 +10562,10 @@ type NccAzureServiceEndpointRule struct {
 	TargetServices types.List `tfsdk:"target_services"`
 }
 
-func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzureServiceEndpointRule) {
+func (toState *NccAzureServiceEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccAzureServiceEndpointRule) {
 }
 
-func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzureServiceEndpointRule) {
+func (toState *NccAzureServiceEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState NccAzureServiceEndpointRule) {
 }
 
 func (c NccAzureServiceEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10188,10 +10680,42 @@ type NccEgressConfig struct {
 	TargetRules types.Object `tfsdk:"target_rules"`
 }
 
-func (newState *NccEgressConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressConfig) {
+func (toState *NccEgressConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccEgressConfig) {
+	if !fromPlan.DefaultRules.IsNull() && !fromPlan.DefaultRules.IsUnknown() {
+		if toStateDefaultRules, ok := toState.GetDefaultRules(ctx); ok {
+			if fromPlanDefaultRules, ok := fromPlan.GetDefaultRules(ctx); ok {
+				toStateDefaultRules.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDefaultRules)
+				toState.SetDefaultRules(ctx, toStateDefaultRules)
+			}
+		}
+	}
+	if !fromPlan.TargetRules.IsNull() && !fromPlan.TargetRules.IsUnknown() {
+		if toStateTargetRules, ok := toState.GetTargetRules(ctx); ok {
+			if fromPlanTargetRules, ok := fromPlan.GetTargetRules(ctx); ok {
+				toStateTargetRules.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTargetRules)
+				toState.SetTargetRules(ctx, toStateTargetRules)
+			}
+		}
+	}
 }
 
-func (newState *NccEgressConfig) SyncEffectiveFieldsDuringRead(existingState NccEgressConfig) {
+func (toState *NccEgressConfig) SyncFieldsDuringRead(ctx context.Context, fromState NccEgressConfig) {
+	if !fromState.DefaultRules.IsNull() && !fromState.DefaultRules.IsUnknown() {
+		if toStateDefaultRules, ok := toState.GetDefaultRules(ctx); ok {
+			if fromStateDefaultRules, ok := fromState.GetDefaultRules(ctx); ok {
+				toStateDefaultRules.SyncFieldsDuringRead(ctx, fromStateDefaultRules)
+				toState.SetDefaultRules(ctx, toStateDefaultRules)
+			}
+		}
+	}
+	if !fromState.TargetRules.IsNull() && !fromState.TargetRules.IsUnknown() {
+		if toStateTargetRules, ok := toState.GetTargetRules(ctx); ok {
+			if fromStateTargetRules, ok := fromState.GetTargetRules(ctx); ok {
+				toStateTargetRules.SyncFieldsDuringRead(ctx, fromStateTargetRules)
+				toState.SetTargetRules(ctx, toStateTargetRules)
+			}
+		}
+	}
 }
 
 func (c NccEgressConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10245,7 +10769,7 @@ func (o *NccEgressConfig) GetDefaultRules(ctx context.Context) (NccEgressDefault
 	if o.DefaultRules.IsNull() || o.DefaultRules.IsUnknown() {
 		return e, false
 	}
-	var v []NccEgressDefaultRules
+	var v NccEgressDefaultRules
 	d := o.DefaultRules.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10253,10 +10777,7 @@ func (o *NccEgressConfig) GetDefaultRules(ctx context.Context) (NccEgressDefault
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDefaultRules sets the value of the DefaultRules field in NccEgressConfig.
@@ -10273,7 +10794,7 @@ func (o *NccEgressConfig) GetTargetRules(ctx context.Context) (NccEgressTargetRu
 	if o.TargetRules.IsNull() || o.TargetRules.IsUnknown() {
 		return e, false
 	}
-	var v []NccEgressTargetRules
+	var v NccEgressTargetRules
 	d := o.TargetRules.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10281,10 +10802,7 @@ func (o *NccEgressConfig) GetTargetRules(ctx context.Context) (NccEgressTargetRu
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetTargetRules sets the value of the TargetRules field in NccEgressConfig.
@@ -10300,10 +10818,42 @@ type NccEgressDefaultRules struct {
 	AzureServiceEndpointRule types.Object `tfsdk:"azure_service_endpoint_rule"`
 }
 
-func (newState *NccEgressDefaultRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressDefaultRules) {
+func (toState *NccEgressDefaultRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccEgressDefaultRules) {
+	if !fromPlan.AwsStableIpRule.IsNull() && !fromPlan.AwsStableIpRule.IsUnknown() {
+		if toStateAwsStableIpRule, ok := toState.GetAwsStableIpRule(ctx); ok {
+			if fromPlanAwsStableIpRule, ok := fromPlan.GetAwsStableIpRule(ctx); ok {
+				toStateAwsStableIpRule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsStableIpRule)
+				toState.SetAwsStableIpRule(ctx, toStateAwsStableIpRule)
+			}
+		}
+	}
+	if !fromPlan.AzureServiceEndpointRule.IsNull() && !fromPlan.AzureServiceEndpointRule.IsUnknown() {
+		if toStateAzureServiceEndpointRule, ok := toState.GetAzureServiceEndpointRule(ctx); ok {
+			if fromPlanAzureServiceEndpointRule, ok := fromPlan.GetAzureServiceEndpointRule(ctx); ok {
+				toStateAzureServiceEndpointRule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureServiceEndpointRule)
+				toState.SetAzureServiceEndpointRule(ctx, toStateAzureServiceEndpointRule)
+			}
+		}
+	}
 }
 
-func (newState *NccEgressDefaultRules) SyncEffectiveFieldsDuringRead(existingState NccEgressDefaultRules) {
+func (toState *NccEgressDefaultRules) SyncFieldsDuringRead(ctx context.Context, fromState NccEgressDefaultRules) {
+	if !fromState.AwsStableIpRule.IsNull() && !fromState.AwsStableIpRule.IsUnknown() {
+		if toStateAwsStableIpRule, ok := toState.GetAwsStableIpRule(ctx); ok {
+			if fromStateAwsStableIpRule, ok := fromState.GetAwsStableIpRule(ctx); ok {
+				toStateAwsStableIpRule.SyncFieldsDuringRead(ctx, fromStateAwsStableIpRule)
+				toState.SetAwsStableIpRule(ctx, toStateAwsStableIpRule)
+			}
+		}
+	}
+	if !fromState.AzureServiceEndpointRule.IsNull() && !fromState.AzureServiceEndpointRule.IsUnknown() {
+		if toStateAzureServiceEndpointRule, ok := toState.GetAzureServiceEndpointRule(ctx); ok {
+			if fromStateAzureServiceEndpointRule, ok := fromState.GetAzureServiceEndpointRule(ctx); ok {
+				toStateAzureServiceEndpointRule.SyncFieldsDuringRead(ctx, fromStateAzureServiceEndpointRule)
+				toState.SetAzureServiceEndpointRule(ctx, toStateAzureServiceEndpointRule)
+			}
+		}
+	}
 }
 
 func (c NccEgressDefaultRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10357,7 +10907,7 @@ func (o *NccEgressDefaultRules) GetAwsStableIpRule(ctx context.Context) (NccAwsS
 	if o.AwsStableIpRule.IsNull() || o.AwsStableIpRule.IsUnknown() {
 		return e, false
 	}
-	var v []NccAwsStableIpRule
+	var v NccAwsStableIpRule
 	d := o.AwsStableIpRule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10365,10 +10915,7 @@ func (o *NccEgressDefaultRules) GetAwsStableIpRule(ctx context.Context) (NccAwsS
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAwsStableIpRule sets the value of the AwsStableIpRule field in NccEgressDefaultRules.
@@ -10385,7 +10932,7 @@ func (o *NccEgressDefaultRules) GetAzureServiceEndpointRule(ctx context.Context)
 	if o.AzureServiceEndpointRule.IsNull() || o.AzureServiceEndpointRule.IsUnknown() {
 		return e, false
 	}
-	var v []NccAzureServiceEndpointRule
+	var v NccAzureServiceEndpointRule
 	d := o.AzureServiceEndpointRule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10393,10 +10940,7 @@ func (o *NccEgressDefaultRules) GetAzureServiceEndpointRule(ctx context.Context)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAzureServiceEndpointRule sets the value of the AzureServiceEndpointRule field in NccEgressDefaultRules.
@@ -10415,10 +10959,10 @@ type NccEgressTargetRules struct {
 	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
-func (newState *NccEgressTargetRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressTargetRules) {
+func (toState *NccEgressTargetRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccEgressTargetRules) {
 }
 
-func (newState *NccEgressTargetRules) SyncEffectiveFieldsDuringRead(existingState NccEgressTargetRules) {
+func (toState *NccEgressTargetRules) SyncFieldsDuringRead(ctx context.Context, fromState NccEgressTargetRules) {
 }
 
 func (c NccEgressTargetRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10587,10 +11131,10 @@ type NccPrivateEndpointRule struct {
 	VpcEndpointId types.String `tfsdk:"vpc_endpoint_id"`
 }
 
-func (newState *NccPrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccPrivateEndpointRule) {
+func (toState *NccPrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NccPrivateEndpointRule) {
 }
 
-func (newState *NccPrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccPrivateEndpointRule) {
+func (toState *NccPrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState NccPrivateEndpointRule) {
 }
 
 func (c NccPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10759,10 +11303,26 @@ type NetworkConnectivityConfiguration struct {
 	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
-func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkConnectivityConfiguration) {
+func (toState *NetworkConnectivityConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkConnectivityConfiguration) {
+	if !fromPlan.EgressConfig.IsNull() && !fromPlan.EgressConfig.IsUnknown() {
+		if toStateEgressConfig, ok := toState.GetEgressConfig(ctx); ok {
+			if fromPlanEgressConfig, ok := fromPlan.GetEgressConfig(ctx); ok {
+				toStateEgressConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEgressConfig)
+				toState.SetEgressConfig(ctx, toStateEgressConfig)
+			}
+		}
+	}
 }
 
-func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
+func (toState *NetworkConnectivityConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState NetworkConnectivityConfiguration) {
+	if !fromState.EgressConfig.IsNull() && !fromState.EgressConfig.IsUnknown() {
+		if toStateEgressConfig, ok := toState.GetEgressConfig(ctx); ok {
+			if fromStateEgressConfig, ok := fromState.GetEgressConfig(ctx); ok {
+				toStateEgressConfig.SyncFieldsDuringRead(ctx, fromStateEgressConfig)
+				toState.SetEgressConfig(ctx, toStateEgressConfig)
+			}
+		}
+	}
 }
 
 func (c NetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10830,7 +11390,7 @@ func (o *NetworkConnectivityConfiguration) GetEgressConfig(ctx context.Context) 
 	if o.EgressConfig.IsNull() || o.EgressConfig.IsUnknown() {
 		return e, false
 	}
-	var v []NccEgressConfig
+	var v NccEgressConfig
 	d := o.EgressConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10838,10 +11398,7 @@ func (o *NetworkConnectivityConfiguration) GetEgressConfig(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetEgressConfig sets the value of the EgressConfig field in NetworkConnectivityConfiguration.
@@ -10862,10 +11419,26 @@ type NetworkPolicyEgress struct {
 	NetworkAccess types.Object `tfsdk:"network_access"`
 }
 
-func (newState *NetworkPolicyEgress) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkPolicyEgress) {
+func (toState *NetworkPolicyEgress) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkPolicyEgress) {
+	if !fromPlan.NetworkAccess.IsNull() && !fromPlan.NetworkAccess.IsUnknown() {
+		if toStateNetworkAccess, ok := toState.GetNetworkAccess(ctx); ok {
+			if fromPlanNetworkAccess, ok := fromPlan.GetNetworkAccess(ctx); ok {
+				toStateNetworkAccess.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNetworkAccess)
+				toState.SetNetworkAccess(ctx, toStateNetworkAccess)
+			}
+		}
+	}
 }
 
-func (newState *NetworkPolicyEgress) SyncEffectiveFieldsDuringRead(existingState NetworkPolicyEgress) {
+func (toState *NetworkPolicyEgress) SyncFieldsDuringRead(ctx context.Context, fromState NetworkPolicyEgress) {
+	if !fromState.NetworkAccess.IsNull() && !fromState.NetworkAccess.IsUnknown() {
+		if toStateNetworkAccess, ok := toState.GetNetworkAccess(ctx); ok {
+			if fromStateNetworkAccess, ok := fromState.GetNetworkAccess(ctx); ok {
+				toStateNetworkAccess.SyncFieldsDuringRead(ctx, fromStateNetworkAccess)
+				toState.SetNetworkAccess(ctx, toStateNetworkAccess)
+			}
+		}
+	}
 }
 
 func (c NetworkPolicyEgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10915,7 +11488,7 @@ func (o *NetworkPolicyEgress) GetNetworkAccess(ctx context.Context) (EgressNetwo
 	if o.NetworkAccess.IsNull() || o.NetworkAccess.IsUnknown() {
 		return e, false
 	}
-	var v []EgressNetworkPolicyNetworkAccessPolicy
+	var v EgressNetworkPolicyNetworkAccessPolicy
 	d := o.NetworkAccess.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -10923,10 +11496,7 @@ func (o *NetworkPolicyEgress) GetNetworkAccess(ctx context.Context) (EgressNetwo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNetworkAccess sets the value of the NetworkAccess field in NetworkPolicyEgress.
@@ -10949,10 +11519,26 @@ type NotificationDestination struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *NotificationDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotificationDestination) {
+func (toState *NotificationDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotificationDestination) {
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
 }
 
-func (newState *NotificationDestination) SyncEffectiveFieldsDuringRead(existingState NotificationDestination) {
+func (toState *NotificationDestination) SyncFieldsDuringRead(ctx context.Context, fromState NotificationDestination) {
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
 }
 
 func (c NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11011,7 +11597,7 @@ func (o *NotificationDestination) GetConfig(ctx context.Context) (Config, bool) 
 	if o.Config.IsNull() || o.Config.IsUnknown() {
 		return e, false
 	}
-	var v []Config
+	var v Config
 	d := o.Config.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11019,10 +11605,7 @@ func (o *NotificationDestination) GetConfig(ctx context.Context) (Config, bool) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConfig sets the value of the Config field in NotificationDestination.
@@ -11038,10 +11621,10 @@ type PagerdutyConfig struct {
 	IntegrationKeySet types.Bool `tfsdk:"integration_key_set"`
 }
 
-func (newState *PagerdutyConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PagerdutyConfig) {
+func (toState *PagerdutyConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PagerdutyConfig) {
 }
 
-func (newState *PagerdutyConfig) SyncEffectiveFieldsDuringRead(existingState PagerdutyConfig) {
+func (toState *PagerdutyConfig) SyncFieldsDuringRead(ctx context.Context, fromState PagerdutyConfig) {
 }
 
 func (c PagerdutyConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11090,10 +11673,10 @@ type PartitionId struct {
 	WorkspaceId types.Int64 `tfsdk:"workspaceId"`
 }
 
-func (newState *PartitionId) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionId) {
+func (toState *PartitionId) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PartitionId) {
 }
 
-func (newState *PartitionId) SyncEffectiveFieldsDuringRead(existingState PartitionId) {
+func (toState *PartitionId) SyncFieldsDuringRead(ctx context.Context, fromState PartitionId) {
 }
 
 func (c PartitionId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11137,10 +11720,10 @@ type PersonalComputeMessage struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *PersonalComputeMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeMessage) {
+func (toState *PersonalComputeMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PersonalComputeMessage) {
 }
 
-func (newState *PersonalComputeMessage) SyncEffectiveFieldsDuringRead(existingState PersonalComputeMessage) {
+func (toState *PersonalComputeMessage) SyncFieldsDuringRead(ctx context.Context, fromState PersonalComputeMessage) {
 }
 
 func (c PersonalComputeMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11199,10 +11782,26 @@ type PersonalComputeSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *PersonalComputeSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeSetting) {
+func (toState *PersonalComputeSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PersonalComputeSetting) {
+	if !fromPlan.PersonalCompute.IsNull() && !fromPlan.PersonalCompute.IsUnknown() {
+		if toStatePersonalCompute, ok := toState.GetPersonalCompute(ctx); ok {
+			if fromPlanPersonalCompute, ok := fromPlan.GetPersonalCompute(ctx); ok {
+				toStatePersonalCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPersonalCompute)
+				toState.SetPersonalCompute(ctx, toStatePersonalCompute)
+			}
+		}
+	}
 }
 
-func (newState *PersonalComputeSetting) SyncEffectiveFieldsDuringRead(existingState PersonalComputeSetting) {
+func (toState *PersonalComputeSetting) SyncFieldsDuringRead(ctx context.Context, fromState PersonalComputeSetting) {
+	if !fromState.PersonalCompute.IsNull() && !fromState.PersonalCompute.IsUnknown() {
+		if toStatePersonalCompute, ok := toState.GetPersonalCompute(ctx); ok {
+			if fromStatePersonalCompute, ok := fromState.GetPersonalCompute(ctx); ok {
+				toStatePersonalCompute.SyncFieldsDuringRead(ctx, fromStatePersonalCompute)
+				toState.SetPersonalCompute(ctx, toStatePersonalCompute)
+			}
+		}
+	}
 }
 
 func (c PersonalComputeSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11258,7 +11857,7 @@ func (o *PersonalComputeSetting) GetPersonalCompute(ctx context.Context) (Person
 	if o.PersonalCompute.IsNull() || o.PersonalCompute.IsUnknown() {
 		return e, false
 	}
-	var v []PersonalComputeMessage
+	var v PersonalComputeMessage
 	d := o.PersonalCompute.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11266,10 +11865,7 @@ func (o *PersonalComputeSetting) GetPersonalCompute(ctx context.Context) (Person
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPersonalCompute sets the value of the PersonalCompute field in PersonalComputeSetting.
@@ -11290,10 +11886,10 @@ type PublicTokenInfo struct {
 	TokenId types.String `tfsdk:"token_id"`
 }
 
-func (newState *PublicTokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublicTokenInfo) {
+func (toState *PublicTokenInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublicTokenInfo) {
 }
 
-func (newState *PublicTokenInfo) SyncEffectiveFieldsDuringRead(existingState PublicTokenInfo) {
+func (toState *PublicTokenInfo) SyncFieldsDuringRead(ctx context.Context, fromState PublicTokenInfo) {
 }
 
 func (c PublicTokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11459,10 +12055,10 @@ type RestrictWorkspaceAdminsMessage struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (newState *RestrictWorkspaceAdminsMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsMessage) {
+func (toState *RestrictWorkspaceAdminsMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestrictWorkspaceAdminsMessage) {
 }
 
-func (newState *RestrictWorkspaceAdminsMessage) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsMessage) {
+func (toState *RestrictWorkspaceAdminsMessage) SyncFieldsDuringRead(ctx context.Context, fromState RestrictWorkspaceAdminsMessage) {
 }
 
 func (c RestrictWorkspaceAdminsMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11521,10 +12117,26 @@ type RestrictWorkspaceAdminsSetting struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *RestrictWorkspaceAdminsSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsSetting) {
+func (toState *RestrictWorkspaceAdminsSetting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestrictWorkspaceAdminsSetting) {
+	if !fromPlan.RestrictWorkspaceAdmins.IsNull() && !fromPlan.RestrictWorkspaceAdmins.IsUnknown() {
+		if toStateRestrictWorkspaceAdmins, ok := toState.GetRestrictWorkspaceAdmins(ctx); ok {
+			if fromPlanRestrictWorkspaceAdmins, ok := fromPlan.GetRestrictWorkspaceAdmins(ctx); ok {
+				toStateRestrictWorkspaceAdmins.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRestrictWorkspaceAdmins)
+				toState.SetRestrictWorkspaceAdmins(ctx, toStateRestrictWorkspaceAdmins)
+			}
+		}
+	}
 }
 
-func (newState *RestrictWorkspaceAdminsSetting) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsSetting) {
+func (toState *RestrictWorkspaceAdminsSetting) SyncFieldsDuringRead(ctx context.Context, fromState RestrictWorkspaceAdminsSetting) {
+	if !fromState.RestrictWorkspaceAdmins.IsNull() && !fromState.RestrictWorkspaceAdmins.IsUnknown() {
+		if toStateRestrictWorkspaceAdmins, ok := toState.GetRestrictWorkspaceAdmins(ctx); ok {
+			if fromStateRestrictWorkspaceAdmins, ok := fromState.GetRestrictWorkspaceAdmins(ctx); ok {
+				toStateRestrictWorkspaceAdmins.SyncFieldsDuringRead(ctx, fromStateRestrictWorkspaceAdmins)
+				toState.SetRestrictWorkspaceAdmins(ctx, toStateRestrictWorkspaceAdmins)
+			}
+		}
+	}
 }
 
 func (c RestrictWorkspaceAdminsSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11580,7 +12192,7 @@ func (o *RestrictWorkspaceAdminsSetting) GetRestrictWorkspaceAdmins(ctx context.
 	if o.RestrictWorkspaceAdmins.IsNull() || o.RestrictWorkspaceAdmins.IsUnknown() {
 		return e, false
 	}
-	var v []RestrictWorkspaceAdminsMessage
+	var v RestrictWorkspaceAdminsMessage
 	d := o.RestrictWorkspaceAdmins.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11588,10 +12200,7 @@ func (o *RestrictWorkspaceAdminsSetting) GetRestrictWorkspaceAdmins(ctx context.
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetRestrictWorkspaceAdmins sets the value of the RestrictWorkspaceAdmins field in RestrictWorkspaceAdminsSetting.
@@ -11639,10 +12248,10 @@ func (o RevokeTokenRequest) Type(ctx context.Context) attr.Type {
 type RevokeTokenResponse struct {
 }
 
-func (newState *RevokeTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RevokeTokenResponse) {
+func (toState *RevokeTokenResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RevokeTokenResponse) {
 }
 
-func (newState *RevokeTokenResponse) SyncEffectiveFieldsDuringRead(existingState RevokeTokenResponse) {
+func (toState *RevokeTokenResponse) SyncFieldsDuringRead(ctx context.Context, fromState RevokeTokenResponse) {
 }
 
 func (c RevokeTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11708,19 +12317,31 @@ func (o SetStatusResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SlackConfig struct {
+	// [Input-Only] Slack channel ID for notifications.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] OAuth token for Slack authentication.
+	OauthToken types.String `tfsdk:"oauth_token"`
+	// [Output-Only] Whether OAuth token is set.
+	OauthTokenSet types.Bool `tfsdk:"oauth_token_set"`
 	// [Input-Only] URL for Slack destination.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
-func (newState *SlackConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan SlackConfig) {
+func (toState *SlackConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SlackConfig) {
 }
 
-func (newState *SlackConfig) SyncEffectiveFieldsDuringRead(existingState SlackConfig) {
+func (toState *SlackConfig) SyncFieldsDuringRead(ctx context.Context, fromState SlackConfig) {
 }
 
 func (c SlackConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["oauth_token"] = attrs["oauth_token"].SetOptional()
+	attrs["oauth_token_set"] = attrs["oauth_token_set"].SetOptional()
 	attrs["url"] = attrs["url"].SetOptional()
 	attrs["url_set"] = attrs["url_set"].SetOptional()
 
@@ -11745,8 +12366,12 @@ func (o SlackConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"url":     o.Url,
-			"url_set": o.UrlSet,
+			"channel_id":      o.ChannelId,
+			"channel_id_set":  o.ChannelIdSet,
+			"oauth_token":     o.OauthToken,
+			"oauth_token_set": o.OauthTokenSet,
+			"url":             o.Url,
+			"url_set":         o.UrlSet,
 		})
 }
 
@@ -11754,8 +12379,12 @@ func (o SlackConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SlackConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"url":     types.StringType,
-			"url_set": types.BoolType,
+			"channel_id":      types.StringType,
+			"channel_id_set":  types.BoolType,
+			"oauth_token":     types.StringType,
+			"oauth_token_set": types.BoolType,
+			"url":             types.StringType,
+			"url_set":         types.BoolType,
 		},
 	}
 }
@@ -11778,10 +12407,26 @@ type SqlResultsDownload struct {
 	SettingName types.String `tfsdk:"setting_name"`
 }
 
-func (newState *SqlResultsDownload) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlResultsDownload) {
+func (toState *SqlResultsDownload) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlResultsDownload) {
+	if !fromPlan.BooleanVal.IsNull() && !fromPlan.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromPlanBooleanVal, ok := fromPlan.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
-func (newState *SqlResultsDownload) SyncEffectiveFieldsDuringRead(existingState SqlResultsDownload) {
+func (toState *SqlResultsDownload) SyncFieldsDuringRead(ctx context.Context, fromState SqlResultsDownload) {
+	if !fromState.BooleanVal.IsNull() && !fromState.BooleanVal.IsUnknown() {
+		if toStateBooleanVal, ok := toState.GetBooleanVal(ctx); ok {
+			if fromStateBooleanVal, ok := fromState.GetBooleanVal(ctx); ok {
+				toStateBooleanVal.SyncFieldsDuringRead(ctx, fromStateBooleanVal)
+				toState.SetBooleanVal(ctx, toStateBooleanVal)
+			}
+		}
+	}
 }
 
 func (c SqlResultsDownload) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11837,7 +12482,7 @@ func (o *SqlResultsDownload) GetBooleanVal(ctx context.Context) (BooleanMessage,
 	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
 		return e, false
 	}
-	var v []BooleanMessage
+	var v BooleanMessage
 	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -11845,10 +12490,7 @@ func (o *SqlResultsDownload) GetBooleanVal(ctx context.Context) (BooleanMessage,
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetBooleanVal sets the value of the BooleanVal field in SqlResultsDownload.
@@ -11862,10 +12504,10 @@ type StringMessage struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (newState *StringMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan StringMessage) {
+func (toState *StringMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StringMessage) {
 }
 
-func (newState *StringMessage) SyncEffectiveFieldsDuringRead(existingState StringMessage) {
+func (toState *StringMessage) SyncFieldsDuringRead(ctx context.Context, fromState StringMessage) {
 }
 
 func (c StringMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11916,10 +12558,10 @@ type TokenAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *TokenAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlRequest) {
+func (toState *TokenAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenAccessControlRequest) {
 }
 
-func (newState *TokenAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlRequest) {
+func (toState *TokenAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState TokenAccessControlRequest) {
 }
 
 func (c TokenAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11981,10 +12623,10 @@ type TokenAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *TokenAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlResponse) {
+func (toState *TokenAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenAccessControlResponse) {
 }
 
-func (newState *TokenAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlResponse) {
+func (toState *TokenAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState TokenAccessControlResponse) {
 }
 
 func (c TokenAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12089,10 +12731,10 @@ type TokenInfo struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *TokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo) {
+func (toState *TokenInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenInfo) {
 }
 
-func (newState *TokenInfo) SyncEffectiveFieldsDuringRead(existingState TokenInfo) {
+func (toState *TokenInfo) SyncFieldsDuringRead(ctx context.Context, fromState TokenInfo) {
 }
 
 func (c TokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12164,10 +12806,10 @@ type TokenPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *TokenPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermission) {
+func (toState *TokenPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenPermission) {
 }
 
-func (newState *TokenPermission) SyncEffectiveFieldsDuringRead(existingState TokenPermission) {
+func (toState *TokenPermission) SyncFieldsDuringRead(ctx context.Context, fromState TokenPermission) {
 }
 
 func (c TokenPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12251,10 +12893,10 @@ type TokenPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *TokenPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissions) {
+func (toState *TokenPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenPermissions) {
 }
 
-func (newState *TokenPermissions) SyncEffectiveFieldsDuringRead(existingState TokenPermissions) {
+func (toState *TokenPermissions) SyncFieldsDuringRead(ctx context.Context, fromState TokenPermissions) {
 }
 
 func (c TokenPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12336,10 +12978,10 @@ type TokenPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *TokenPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissionsDescription) {
+func (toState *TokenPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TokenPermissionsDescription) {
 }
 
-func (newState *TokenPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsDescription) {
+func (toState *TokenPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState TokenPermissionsDescription) {
 }
 
 func (c TokenPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12513,7 +13155,7 @@ func (o *UpdateAccountIpAccessEnableRequest) GetSetting(ctx context.Context) (Ac
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []AccountIpAccessEnable
+	var v AccountIpAccessEnable
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12521,10 +13163,7 @@ func (o *UpdateAccountIpAccessEnableRequest) GetSetting(ctx context.Context) (Ac
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateAccountIpAccessEnableRequest.
@@ -12599,7 +13238,7 @@ func (o *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) GetSetting(ctx 
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []AibiDashboardEmbeddingAccessPolicySetting
+	var v AibiDashboardEmbeddingAccessPolicySetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12607,10 +13246,7 @@ func (o *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) GetSetting(ctx 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateAibiDashboardEmbeddingAccessPolicySettingRequest.
@@ -12685,7 +13321,7 @@ func (o *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetSetting(c
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []AibiDashboardEmbeddingApprovedDomainsSetting
+	var v AibiDashboardEmbeddingApprovedDomainsSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12693,10 +13329,7 @@ func (o *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetSetting(c
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest.
@@ -12771,7 +13404,7 @@ func (o *UpdateAutomaticClusterUpdateSettingRequest) GetSetting(ctx context.Cont
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []AutomaticClusterUpdateSetting
+	var v AutomaticClusterUpdateSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12779,10 +13412,7 @@ func (o *UpdateAutomaticClusterUpdateSettingRequest) GetSetting(ctx context.Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateAutomaticClusterUpdateSettingRequest.
@@ -12857,7 +13487,7 @@ func (o *UpdateComplianceSecurityProfileSettingRequest) GetSetting(ctx context.C
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []ComplianceSecurityProfileSetting
+	var v ComplianceSecurityProfileSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12865,10 +13495,7 @@ func (o *UpdateComplianceSecurityProfileSettingRequest) GetSetting(ctx context.C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateComplianceSecurityProfileSettingRequest.
@@ -12943,7 +13570,7 @@ func (o *UpdateCspEnablementAccountSettingRequest) GetSetting(ctx context.Contex
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []CspEnablementAccountSetting
+	var v CspEnablementAccountSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12951,10 +13578,7 @@ func (o *UpdateCspEnablementAccountSettingRequest) GetSetting(ctx context.Contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateCspEnablementAccountSettingRequest.
@@ -13029,7 +13653,7 @@ func (o *UpdateDashboardEmailSubscriptionsRequest) GetSetting(ctx context.Contex
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DashboardEmailSubscriptions
+	var v DashboardEmailSubscriptions
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13037,10 +13661,7 @@ func (o *UpdateDashboardEmailSubscriptionsRequest) GetSetting(ctx context.Contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDashboardEmailSubscriptionsRequest.
@@ -13115,7 +13736,7 @@ func (o *UpdateDefaultNamespaceSettingRequest) GetSetting(ctx context.Context) (
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DefaultNamespaceSetting
+	var v DefaultNamespaceSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13123,10 +13744,7 @@ func (o *UpdateDefaultNamespaceSettingRequest) GetSetting(ctx context.Context) (
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDefaultNamespaceSettingRequest.
@@ -13201,7 +13819,7 @@ func (o *UpdateDefaultWarehouseIdRequest) GetSetting(ctx context.Context) (Defau
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DefaultWarehouseId
+	var v DefaultWarehouseId
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13209,10 +13827,7 @@ func (o *UpdateDefaultWarehouseIdRequest) GetSetting(ctx context.Context) (Defau
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDefaultWarehouseIdRequest.
@@ -13287,7 +13902,7 @@ func (o *UpdateDisableLegacyAccessRequest) GetSetting(ctx context.Context) (Disa
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DisableLegacyAccess
+	var v DisableLegacyAccess
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13295,10 +13910,7 @@ func (o *UpdateDisableLegacyAccessRequest) GetSetting(ctx context.Context) (Disa
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDisableLegacyAccessRequest.
@@ -13373,7 +13985,7 @@ func (o *UpdateDisableLegacyDbfsRequest) GetSetting(ctx context.Context) (Disabl
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DisableLegacyDbfs
+	var v DisableLegacyDbfs
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13381,10 +13993,7 @@ func (o *UpdateDisableLegacyDbfsRequest) GetSetting(ctx context.Context) (Disabl
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDisableLegacyDbfsRequest.
@@ -13459,7 +14068,7 @@ func (o *UpdateDisableLegacyFeaturesRequest) GetSetting(ctx context.Context) (Di
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []DisableLegacyFeatures
+	var v DisableLegacyFeatures
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13467,10 +14076,7 @@ func (o *UpdateDisableLegacyFeaturesRequest) GetSetting(ctx context.Context) (Di
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateDisableLegacyFeaturesRequest.
@@ -13545,7 +14151,7 @@ func (o *UpdateEnableExportNotebookRequest) GetSetting(ctx context.Context) (Ena
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []EnableExportNotebook
+	var v EnableExportNotebook
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13553,10 +14159,7 @@ func (o *UpdateEnableExportNotebookRequest) GetSetting(ctx context.Context) (Ena
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateEnableExportNotebookRequest.
@@ -13631,7 +14234,7 @@ func (o *UpdateEnableNotebookTableClipboardRequest) GetSetting(ctx context.Conte
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []EnableNotebookTableClipboard
+	var v EnableNotebookTableClipboard
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13639,10 +14242,7 @@ func (o *UpdateEnableNotebookTableClipboardRequest) GetSetting(ctx context.Conte
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateEnableNotebookTableClipboardRequest.
@@ -13717,7 +14317,7 @@ func (o *UpdateEnableResultsDownloadingRequest) GetSetting(ctx context.Context) 
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []EnableResultsDownloading
+	var v EnableResultsDownloading
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13725,10 +14325,7 @@ func (o *UpdateEnableResultsDownloadingRequest) GetSetting(ctx context.Context) 
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateEnableResultsDownloadingRequest.
@@ -13803,7 +14400,7 @@ func (o *UpdateEnhancedSecurityMonitoringSettingRequest) GetSetting(ctx context.
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []EnhancedSecurityMonitoringSetting
+	var v EnhancedSecurityMonitoringSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13811,10 +14408,7 @@ func (o *UpdateEnhancedSecurityMonitoringSettingRequest) GetSetting(ctx context.
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateEnhancedSecurityMonitoringSettingRequest.
@@ -13889,7 +14483,7 @@ func (o *UpdateEsmEnablementAccountSettingRequest) GetSetting(ctx context.Contex
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []EsmEnablementAccountSetting
+	var v EsmEnablementAccountSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -13897,10 +14491,7 @@ func (o *UpdateEsmEnablementAccountSettingRequest) GetSetting(ctx context.Contex
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateEsmEnablementAccountSettingRequest.
@@ -14058,7 +14649,7 @@ func (o *UpdateLlmProxyPartnerPoweredAccountRequest) GetSetting(ctx context.Cont
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []LlmProxyPartnerPoweredAccount
+	var v LlmProxyPartnerPoweredAccount
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14066,10 +14657,7 @@ func (o *UpdateLlmProxyPartnerPoweredAccountRequest) GetSetting(ctx context.Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredAccountRequest.
@@ -14144,7 +14732,7 @@ func (o *UpdateLlmProxyPartnerPoweredEnforceRequest) GetSetting(ctx context.Cont
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []LlmProxyPartnerPoweredEnforce
+	var v LlmProxyPartnerPoweredEnforce
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14152,10 +14740,7 @@ func (o *UpdateLlmProxyPartnerPoweredEnforceRequest) GetSetting(ctx context.Cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredEnforceRequest.
@@ -14230,7 +14815,7 @@ func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest) GetSetting(ctx context.Co
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []LlmProxyPartnerPoweredWorkspace
+	var v LlmProxyPartnerPoweredWorkspace
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14238,10 +14823,7 @@ func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest) GetSetting(ctx context.Co
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredWorkspaceRequest.
@@ -14314,7 +14896,7 @@ func (o *UpdateNccPrivateEndpointRuleRequest) GetPrivateEndpointRule(ctx context
 	if o.PrivateEndpointRule.IsNull() || o.PrivateEndpointRule.IsUnknown() {
 		return e, false
 	}
-	var v []UpdatePrivateEndpointRule
+	var v UpdatePrivateEndpointRule
 	d := o.PrivateEndpointRule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14322,10 +14904,7 @@ func (o *UpdateNccPrivateEndpointRuleRequest) GetPrivateEndpointRule(ctx context
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPrivateEndpointRule sets the value of the PrivateEndpointRule field in UpdateNccPrivateEndpointRuleRequest.
@@ -14384,7 +14963,7 @@ func (o *UpdateNetworkPolicyRequest) GetNetworkPolicy(ctx context.Context) (Acco
 	if o.NetworkPolicy.IsNull() || o.NetworkPolicy.IsUnknown() {
 		return e, false
 	}
-	var v []AccountNetworkPolicy
+	var v AccountNetworkPolicy
 	d := o.NetworkPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14392,10 +14971,7 @@ func (o *UpdateNetworkPolicyRequest) GetNetworkPolicy(ctx context.Context) (Acco
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetNetworkPolicy sets the value of the NetworkPolicy field in UpdateNetworkPolicyRequest.
@@ -14459,7 +15035,7 @@ func (o *UpdateNotificationDestinationRequest) GetConfig(ctx context.Context) (C
 	if o.Config.IsNull() || o.Config.IsUnknown() {
 		return e, false
 	}
-	var v []Config
+	var v Config
 	d := o.Config.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14467,10 +15043,7 @@ func (o *UpdateNotificationDestinationRequest) GetConfig(ctx context.Context) (C
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConfig sets the value of the Config field in UpdateNotificationDestinationRequest.
@@ -14545,7 +15118,7 @@ func (o *UpdatePersonalComputeSettingRequest) GetSetting(ctx context.Context) (P
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []PersonalComputeSetting
+	var v PersonalComputeSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14553,10 +15126,7 @@ func (o *UpdatePersonalComputeSettingRequest) GetSetting(ctx context.Context) (P
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdatePersonalComputeSettingRequest.
@@ -14588,10 +15158,10 @@ type UpdatePrivateEndpointRule struct {
 	ResourceNames types.List `tfsdk:"resource_names"`
 }
 
-func (newState *UpdatePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePrivateEndpointRule) {
+func (toState *UpdatePrivateEndpointRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdatePrivateEndpointRule) {
 }
 
-func (newState *UpdatePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState UpdatePrivateEndpointRule) {
+func (toState *UpdatePrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, fromState UpdatePrivateEndpointRule) {
 }
 
 func (c UpdatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14792,7 +15362,7 @@ func (o *UpdateRestrictWorkspaceAdminsSettingRequest) GetSetting(ctx context.Con
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []RestrictWorkspaceAdminsSetting
+	var v RestrictWorkspaceAdminsSetting
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14800,10 +15370,7 @@ func (o *UpdateRestrictWorkspaceAdminsSettingRequest) GetSetting(ctx context.Con
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateRestrictWorkspaceAdminsSettingRequest.
@@ -14878,7 +15445,7 @@ func (o *UpdateSqlResultsDownloadRequest) GetSetting(ctx context.Context) (SqlRe
 	if o.Setting.IsNull() || o.Setting.IsUnknown() {
 		return e, false
 	}
-	var v []SqlResultsDownload
+	var v SqlResultsDownload
 	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14886,10 +15453,7 @@ func (o *UpdateSqlResultsDownloadRequest) GetSetting(ctx context.Context) (SqlRe
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSetting sets the value of the Setting field in UpdateSqlResultsDownloadRequest.
@@ -14948,7 +15512,7 @@ func (o *UpdateWorkspaceNetworkOptionRequest) GetWorkspaceNetworkOption(ctx cont
 	if o.WorkspaceNetworkOption.IsNull() || o.WorkspaceNetworkOption.IsUnknown() {
 		return e, false
 	}
-	var v []WorkspaceNetworkOption
+	var v WorkspaceNetworkOption
 	d := o.WorkspaceNetworkOption.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -14956,10 +15520,7 @@ func (o *UpdateWorkspaceNetworkOptionRequest) GetWorkspaceNetworkOption(ctx cont
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetWorkspaceNetworkOption sets the value of the WorkspaceNetworkOption field in UpdateWorkspaceNetworkOptionRequest.
@@ -14979,10 +15540,10 @@ type WorkspaceNetworkOption struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (newState *WorkspaceNetworkOption) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceNetworkOption) {
+func (toState *WorkspaceNetworkOption) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkspaceNetworkOption) {
 }
 
-func (newState *WorkspaceNetworkOption) SyncEffectiveFieldsDuringRead(existingState WorkspaceNetworkOption) {
+func (toState *WorkspaceNetworkOption) SyncFieldsDuringRead(ctx context.Context, fromState WorkspaceNetworkOption) {
 }
 
 func (c WorkspaceNetworkOption) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

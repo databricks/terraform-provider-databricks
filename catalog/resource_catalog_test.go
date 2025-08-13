@@ -769,6 +769,7 @@ func TestCatalogSuppressCaseSensitivity(t *testing.T) {
 			"comment":      "c",
 		},
 		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"catalog_id":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"force_destroy":                  {Old: "", New: "false", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"isolation_mode":                 {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"owner":                          {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},

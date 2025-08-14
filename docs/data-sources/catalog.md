@@ -36,8 +36,9 @@ This data source exports the following attributes:
 * `catalog_info` - the [CatalogInfo](https://pkg.go.dev/github.com/databricks/databricks-sdk-go/service/catalog#CatalogInfo) object for a Unity Catalog catalog. This contains the following attributes (see ):
   * `name` - Name of the catalog
   * `full_name` The full name of the catalog. Corresponds with the name field.
-  * `catalog_type` - Type of the catalog, e.g. `MANAGED_CATALOG`, `DELTASHARING_CATALOG`, `SYSTEM_CATALOG`, 
+  * `catalog_type` - Type of the catalog, e.g. `MANAGED_CATALOG`, `DELTASHARING_CATALOG`, `SYSTEM_CATALOG`,
   * `owner` - Current owner of the catalog
+  * `catalog_id` - The unique identifier of the catalog.
   * `comment` - Free-form text description
   * `storage_location` -  Storage Location URL (full path) for managed tables within catalog.
   * `storage_root` - Storage root URL for managed tables within catalog.

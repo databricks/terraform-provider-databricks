@@ -17,6 +17,7 @@
 
 ### Exporter
 
+* Add match by name to more exported resources ([#4939](https://github.com/databricks/terraform-provider-databricks/pull/4939))
 * Improve handling of new dependencies in jobs, pipelines, model serving ([#4914](https://github.com/databricks/terraform-provider-databricks/pull/4914))
 
 ### Internal Changes

@@ -33,6 +33,7 @@ import (
 	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
+	tf_workspace "github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -58,6 +59,7 @@ var (
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
 	uc3LevelIdRegex                  = regexp.MustCompile(`^([^.]+\.[^.]+\.[^.]+)$`)
+	globIncludeDirectoryRegex        = regexp.MustCompile(`^(/.+)/\*\*$`)
 	fileExtensionLanguageMapping     = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
@@ -306,6 +308,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_file"},
 			{Path: "library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "library.whl", Resource: "databricks_workspace_file"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
@@ -1302,12 +1305,46 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			if pipeline.Deployment == nil || pipeline.Deployment.Kind != "BUNDLE" {
+				nbAPI := tf_workspace.NewNotebooksAPI(ic.Context, ic.Client)
 				for _, lib := range pipeline.Libraries {
 					if lib.Notebook != nil {
 						ic.emitNotebookOrRepo(lib.Notebook.Path)
 					}
 					if lib.File != nil {
 						ic.emitWorkspaceFileOrRepo(lib.File.Path)
+					}
+					if lib.Glob != nil {
+						if strings.HasSuffix(lib.Glob.Include, "/**") {
+							// Emit all files and notebooks under the directory
+							dirPath := strings.TrimSuffix(lib.Glob.Include, "/**")
+							ic.emitDirectoryOrRepo(dirPath)
+							objects, err := nbAPI.List(dirPath, false, true)
+							if err == nil {
+								for _, object := range objects {
+									switch object.ObjectType {
+									case tf_workspace.File:
+										ic.emitWorkspaceFileOrRepo(object.Path)
+									case tf_workspace.Notebook:
+										ic.emitNotebookOrRepo(object.Path)
+									}
+								}
+							} else {
+								log.Printf("[WARN] Can't list directory %s for DLT pipeline %s", lib.Glob.Include, pipeline.Name)
+							}
+						} else {
+							// Perform get-status call to check what is the object type
+							object, err := nbAPI.GetStatus(lib.Glob.Include, false)
+							if err == nil {
+								switch object.ObjectType {
+								case tf_workspace.File:
+									ic.emitWorkspaceFileOrRepo(lib.Glob.Include)
+								case tf_workspace.Notebook:
+									ic.emitNotebookOrRepo(lib.Glob.Include)
+								}
+							} else {
+								log.Printf("[WARN] Can't get status of %s for DLT pipeline %s", lib.Glob.Include, pipeline.Name)
+							}
+						}
 					}
 					ic.emitIfDbfsFile(lib.Jar)
 					ic.emitIfDbfsFile(lib.Whl)
@@ -1459,7 +1496,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
 			{Path: "environment.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
 				Regexp: requirementsFileRegexp},
-			{Path: "notification.email_recipients", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "notification.email_recipients", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "event_log.catalog", Resource: "databricks_catalog"},
 			{Path: "event_log.schema", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema")},
@@ -1480,6 +1518,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_directory", MatchType: MatchRegexp,
+				Regexp: globIncludeDirectoryRegex},
+			{Path: "library.glob.include", Resource: "databricks_directory", Match: "workspace_path",
+				MatchType: MatchRegexp, Regexp: globIncludeDirectoryRegex},
+			{Path: "library.glob.include", Resource: "databricks_notebook", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_workspace_file", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_repo", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_notebook", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_workspace_file", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "library.glob.include", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "root_path", Resource: "databricks_repo", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},

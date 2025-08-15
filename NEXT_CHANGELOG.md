@@ -18,6 +18,7 @@
 ### Exporter
 
 * Improve handling of new dependencies in jobs, pipelines, model serving ([#4914](https://github.com/databricks/terraform-provider-databricks/pull/4914))
+* Correct support for `library.glob` in `databricks_pipeline` ([#4937](https://github.com/databricks/terraform-provider-databricks/pull/4937))
 
 ### Internal Changes
 

@@ -3,8 +3,10 @@ package policies
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,7 +45,7 @@ func TestResourceClusterPolicyRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -63,7 +65,7 @@ func TestResourceClusterPolicyRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -244,7 +246,7 @@ func TestResourceClusterPolicyCreateOverrideBuiltin_ErrorListingFamilies(t *test
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policy-families?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -282,7 +284,7 @@ func TestResourceClusterPolicyCreateOverrideBuiltin_ErrorListingPolicies(t *test
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/list?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -322,7 +324,7 @@ func TestResourceClusterPolicyCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -420,7 +422,7 @@ func TestResourceClusterPolicyUpdate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -502,7 +504,7 @@ func TestResourceClusterPolicyDeletePolicyOverride_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policy-families?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -526,7 +528,7 @@ func TestResourceClusterPolicyDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

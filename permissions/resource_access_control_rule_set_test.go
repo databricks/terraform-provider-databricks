@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
-
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -284,9 +282,9 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_CONFLICT",
-					Message:   "Conflict with another RuleSet operation",
+				Response: map[string]string{
+					"error_code": "RESOURCE_CONFLICT",
+					"message":    "Conflict with another RuleSet operation",
 				},
 				Status: 409,
 			},

@@ -60,9 +60,9 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...",
-					Response: common.APIErrorBody{
-						ErrorCode: "NOT_FOUND",
-						Message:   "Item not found",
+					Response: apierr.APIError{
+						ErrorCode:  "NOT_FOUND",
+						Message:    "Item not found",
 					},
 					Status: 404,
 				},
@@ -80,9 +80,9 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...",
-					Response: common.APIErrorBody{
-						ErrorCode: "INVALID_REQUEST",
-						Message:   "Internal error happened",
+					Response: apierr.APIError{
+						ErrorCode:  "INVALID_REQUEST",
+						Message:    "Internal error happened",
 					},
 					Status: 400,
 				},
@@ -121,9 +121,9 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/...",
-					Response: common.APIErrorBody{
-						ErrorCode: "INVALID_REQUEST",
-						Message:   "Internal error happened",
+					Response: apierr.APIError{
+						ErrorCode:  "INVALID_REQUEST",
+						Message:    "Internal error happened",
 					},
 					Status: 400,
 				},
@@ -166,9 +166,9 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/.../edit",
-					Response: common.APIErrorBody{
-						ErrorCode: "INVALID_REQUEST",
-						Message:   "Internal error happened",
+					Response: apierr.APIError{
+						ErrorCode:  "INVALID_REQUEST",
+						Message:    "Internal error happened",
 					},
 					Status: 400,
 				},
@@ -213,9 +213,9 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 				{
 					Method:   "POST",
 					Resource: "/api/2.0/.../delete",
-					Response: common.APIErrorBody{
-						ErrorCode: "INVALID_REQUEST",
-						Message:   "Internal error happened",
+					Response: apierr.APIError{
+						ErrorCode:  "INVALID_REQUEST",
+						Message:    "Internal error happened",
 					},
 					Status: 400,
 				},

@@ -3,7 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +62,7 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -143,7 +143,7 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -163,7 +163,7 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -224,7 +224,7 @@ func TestResourceGroupMemberDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -83,6 +83,8 @@ The following arguments are supported:
     * `addresses` - (Required) The list of email addresses to send notifications to.
   * `slack` - The Slack configuration of the Notification Destination. It must contain the following:
     * `url` - (Required) The Slack webhook URL.
+    * `channel_id`  - (Optional) Slack channel ID for notifications.
+    * `oauth_token` - (Optional) OAuth token for Slack authentication.
   * `pagerduty` - The PagerDuty configuration of the Notification Destination. It must contain the following:
     * `integration_key` - (Required) The PagerDuty integration key.
   * `microsoft_teams` - The Microsoft Teams configuration of the Notification Destination. It must contain the following:

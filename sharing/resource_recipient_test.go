@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -329,7 +331,7 @@ func TestUpdateRecipientRollback(t *testing.T) {
 				ExpectedRequest: sharing.UpdateRecipient{
 					Comment: "e",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -402,7 +404,7 @@ func TestDeleteRecipientError(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/recipients/testRecipient?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},

@@ -237,11 +237,7 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, &apierr.APIError{
-		ErrorCode:  "NOT_FOUND",
-		StatusCode: 404,
-		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
-	}
+	return nil, apierr.ErrNotFound
 }
 
 // Update ...

@@ -3,7 +3,7 @@ package mws
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -192,7 +192,7 @@ func TestResourceNetworkCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/networks",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -249,7 +249,7 @@ func TestResourceNetworkRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -269,7 +269,7 @@ func TestResourceNetworkRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -305,7 +305,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Yes, it's not found",
 				},
@@ -326,7 +326,7 @@ func TestResourceNetworkDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

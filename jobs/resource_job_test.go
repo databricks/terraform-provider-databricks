@@ -1786,7 +1786,7 @@ func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t 
 					JobID: 789,
 				},
 				Status: 409,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "CONFLICT",
 					Message:   "A concurrent request to run the continuous job is already in progress. Please wait for it to complete before issuing a new request.",
 				},
@@ -2355,7 +2355,7 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -2376,7 +2376,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

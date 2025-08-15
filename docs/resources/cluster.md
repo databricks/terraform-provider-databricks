@@ -424,6 +424,7 @@ The following options are available:
 
 * `use_preemptible_executors` - (Optional, bool) if we should use preemptible executors ([GCP documentation](https://cloud.google.com/compute/docs/instances/preemptible)). *Warning: this field is deprecated in favor of `availability`, and will be removed soon.*
 * `google_service_account` - (Optional, string) Google Service Account email address that the cluster uses to authenticate with Google Identity. This field is used for authentication with the GCS and BigQuery data sources.
+* `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
 * `boot_disk_size` (optional, int) Boot disk size in GB
 * `local_ssd_count` (optional, int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster.

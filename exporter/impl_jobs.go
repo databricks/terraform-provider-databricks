@@ -503,7 +503,7 @@ var (
 		{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
-		{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
+		{Path: "parameter.default", Resource: "databricks_file"},
 		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "environments.spec.dependencies", Resource: "databricks_file"},
 		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",

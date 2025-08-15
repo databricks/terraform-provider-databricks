@@ -202,7 +202,8 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
-			Method: "GET",
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Response: apierr.APIError{
 				Message: "I am a teapot",
 			},
@@ -676,6 +677,9 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/permanent-delete",
+			ExpectedRequest: ClusterID{
+				ClusterID: "abc",
+			},
 			Response: apierr.APIError{
 				Message: "unpin the cluster first",
 			},

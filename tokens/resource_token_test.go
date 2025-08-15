@@ -6,7 +6,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -134,7 +133,7 @@ func TestResourceTokenRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/token/list",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -202,7 +201,7 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

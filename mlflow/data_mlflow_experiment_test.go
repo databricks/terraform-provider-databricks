@@ -49,8 +49,9 @@ func TestDataSourceExperimentByIdNotFound(t *testing.T) {
 			api.EXPECT().GetExperiment(mock.Anything, ml.GetExperimentRequest{
 				ExperimentId: "0987654321",
 			}).Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-				Message:   "Node ID 0987654321 does not exist.",
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    "Node ID 0987654321 does not exist.",
+				StatusCode: 404,
 			})
 		},
 		Read:        true,
@@ -103,8 +104,9 @@ func TestDataSourceExperimentByNameNotFound(t *testing.T) {
 			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
 				ExperimentName: experimentName,
 			}).Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-				Message:   "Node /Users/databricks/non-existent-experiment does not exist.",
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    "Node /Users/databricks/non-existent-experiment does not exist.",
+				StatusCode: 404,
 			})
 		},
 		Read:        true,
@@ -124,8 +126,9 @@ func TestDataSourceExperimentByNameInvalidPath(t *testing.T) {
 			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
 				ExperimentName: experimentName,
 			}).Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-				Message:   "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
+				StatusCode: 404,
 			})
 		},
 		Read:        true,

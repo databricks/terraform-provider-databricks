@@ -15,6 +15,8 @@
 
 * Document `gcp_attributes.first_on_demand` attribute in `databricks_cluster` ([#4934](https://github.com/databricks/terraform-provider-databricks/pull/4934))
 
+* Document additional custom configuration properties for resource `workspace_conf` ([#4859](https://github.com/databricks/terraform-provider-databricks/pull/4859))
+
 ### Exporter
 
 * Improve handling of new dependencies in jobs, pipelines, model serving ([#4914](https://github.com/databricks/terraform-provider-databricks/pull/4914))

@@ -15,6 +15,8 @@
 
 * Document `gcp_attributes.first_on_demand` attribute in `databricks_cluster` ([#4934](https://github.com/databricks/terraform-provider-databricks/pull/4934))
 
+* Docs fix in job `environment_version` example ([#4942](https://github.com/databricks/terraform-provider-databricks/pull/4942))
+
 ### Exporter
 
 * Improve handling of new dependencies in jobs, pipelines, model serving ([#4914](https://github.com/databricks/terraform-provider-databricks/pull/4914))

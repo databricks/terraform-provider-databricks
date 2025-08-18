@@ -74,7 +74,7 @@ The following arguments are required:
 * `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources.
 * `permissions` - The list of workspace permissions to assign to the principal:
   * `"USER"` - Adds principal to the workspace `users` group. This gives basic workspace access.
-  * `"ADMIN"` - Adds principal to the workspace `admin` group. This gives workspace admin privileges to manage users and groups, workspace configurations, and more.
+  * `"ADMIN"` - Adds principal to the workspace `admins` group. This gives workspace admin privileges to manage users and groups, workspace configurations, and more.
 
 ## Attribute Reference
 

@@ -2757,10 +2757,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for _, kms := range kms {
-				if !ic.MatchesName(kms.CustomerManagedKeyId) {
-					log.Printf("[INFO] Skipping mws_customer_managed_keys %s because it doesn't match %s", kms.CustomerManagedKeyId, ic.match)
-					continue
-				}
 				if ic.incremental && kms.CreationTime < updatedSinceMs {
 					log.Printf("[DEBUG] skipping mws_customer_managed_keys '%s' that was created at %d (last active=%d)",
 						kms.CustomerManagedKeyId, kms.CreationTime, updatedSinceMs)

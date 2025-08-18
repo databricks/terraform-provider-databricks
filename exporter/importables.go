@@ -881,6 +881,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				if err != nil {
 					return err
 				}
+				if !ic.MatchesName(repo.Path) {
+					log.Printf("[INFO] Repo %s doesn't match %s filter", repo.Path, ic.match)
+					continue
+				}
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
@@ -1594,6 +1598,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				endpoint, err := it.Next(ic.Context)
 				if err != nil {
 					return err
+				}
+				if !ic.MatchesName(endpoint.Name) {
+					log.Printf("[INFO] Skipping serving endpoint %s because it doesn't match %s", endpoint.Name, ic.match)
+					continue
 				}
 				if endpoint.Config != nil && endpoint.Config.ServedEntities != nil && len(endpoint.Config.ServedEntities) > 0 {
 					if endpoint.Config.ServedEntities[0].FoundationModel != nil {
@@ -2534,11 +2542,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, ep := range endpoints {
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_vector_search_endpoint",
 					ID:       ep.Name,
-				}, ep.LastUpdatedTimestamp, fmt.Sprintf("vector search endpoint '%s'", ep.Name))
-
+				}, ep.Name, ep.LastUpdatedTimestamp, fmt.Sprintf("vector search endpoint '%s'", ep.Name))
 			}
 			return nil
 		},
@@ -2624,6 +2631,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				if err != nil {
 					return err
 				}
+				if !ic.MatchesName(nc.Name) {
+					log.Printf("[INFO] Skipping mws_network_connectivity_config %s because it doesn't match %s", nc.Name, ic.match)
+					continue
+				}
 				if ic.incremental && nc.UpdatedTime < updatedSinceMs {
 					log.Printf("[DEBUG] skipping mws_network_connectivity_config '%s' that was modified at %d (last active=%d)",
 						nc.Name, nc.UpdatedTime, updatedSinceMs)
@@ -2673,6 +2684,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, cred := range creds {
+				if !ic.MatchesName(cred.CredentialsName) {
+					log.Printf("[INFO] Skipping mws_credentials %s because it doesn't match %s", cred.CredentialsName, ic.match)
+					continue
+				}
 				if ic.incremental && cred.CreationTime < updatedSinceMs {
 					log.Printf("[DEBUG] skipping mws_credentials '%s' that was created at %d (last active=%d)",
 						cred.CredentialsName, cred.CreationTime, updatedSinceMs)
@@ -2700,6 +2715,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, sc := range scs {
+				if !ic.MatchesName(sc.StorageConfigurationName) {
+					log.Printf("[INFO] Skipping mws_storage_configurations %s because it doesn't match %s", sc.StorageConfigurationName, ic.match)
+					continue
+				}
 				if ic.incremental && sc.CreationTime < updatedSinceMs {
 					log.Printf("[DEBUG] skipping mws_storage_configurations '%s' that was created at %d (last active=%d)",
 						sc.StorageConfigurationName, sc.CreationTime, updatedSinceMs)
@@ -2729,6 +2748,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, ep := range eps {
+				if !ic.MatchesName(ep.VpcEndpointName) {
+					log.Printf("[INFO] Skipping mws_vpc_endpoint %s because it doesn't match %s", ep.VpcEndpointName, ic.match)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_mws_vpc_endpoint",
 					ID:       ic.accountClient.Config.AccountID + "/" + ep.VpcEndpointId,
@@ -2749,6 +2772,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, ps := range pss {
+				if !ic.MatchesName(ps.PrivateAccessSettingsName) {
+					log.Printf("[INFO] Skipping mws_private_access_settings %s because it doesn't match %s", ps.PrivateAccessSettingsName, ic.match)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_mws_private_access_settings",
 					ID:       ic.accountClient.Config.AccountID + "/" + ps.PrivateAccessSettingsId,
@@ -2812,6 +2839,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, network := range networks {
+				if !ic.MatchesName(network.NetworkName) {
+					log.Printf("[INFO] Skipping mws_networks %s because it doesn't match %s", network.NetworkName, ic.match)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_mws_networks",
 					ID:       ic.accountClient.Config.AccountID + "/" + network.NetworkId,
@@ -2866,6 +2897,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for _, workspace := range workspaces {
+				if !ic.MatchesName(workspace.WorkspaceName) {
+					log.Printf("[INFO] Skipping mws_workspaces %s because it doesn't match %s", workspace.WorkspaceName, ic.match)
+					continue
+				}
 				if ic.incremental && workspace.CreationTime < updatedSinceMs {
 					log.Printf("[DEBUG] skipping mws_workspaces '%s' that was created at %d (last active=%d)",
 						workspace.WorkspaceName, workspace.CreationTime, updatedSinceMs)

@@ -15,7 +15,7 @@
 
 * Document `gcp_attributes.first_on_demand` attribute in `databricks_cluster` ([#4934](https://github.com/databricks/terraform-provider-databricks/pull/4934))
 
-* Docs fix in job `environment_version` example ([#4942](https://github.com/databricks/terraform-provider-databricks/pull/4942))
+* Update `databricks_job` to use `environment_version` ([#4942](https://github.com/databricks/terraform-provider-databricks/pull/4942))
 
 ### Exporter
 

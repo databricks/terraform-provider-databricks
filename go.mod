@@ -3,19 +3,19 @@ module github.com/databricks/terraform-provider-databricks
 go 1.24.0
 
 require (
-	github.com/databricks/databricks-sdk-go v0.75.0
+	github.com/databricks/databricks-sdk-go v0.80.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/hcl/v2 v2.24.0
-	github.com/hashicorp/terraform-json v0.25.0
+	github.com/hashicorp/terraform-json v0.26.0
 	github.com/hashicorp/terraform-plugin-framework v1.15.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0
 	github.com/hashicorp/terraform-plugin-go v0.28.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.20.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
-	github.com/hashicorp/terraform-plugin-testing v1.13.2
+	github.com/hashicorp/terraform-plugin-testing v1.13.3
 	github.com/stretchr/testify v1.10.0
 	github.com/zclconf/go-cty v1.16.3
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6

@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - the unique ID of the SQL warehouse.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
-* `data_source_id` - ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
+* `data_source_id` - (Deprecated) ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
 * `creator_name` - The username of the user who created the endpoint.
 * `num_active_sessions` - The current number of clusters used by the endpoint.
 * `num_clusters` - The current number of clusters used by the endpoint.

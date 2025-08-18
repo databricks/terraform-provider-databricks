@@ -370,8 +370,8 @@ This block describes [an Environment](https://docs.databricks.com/en/compute/ser
 ```hcl
 environment {
   spec {
-    dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-    client       = "1"
+    dependencies        = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+    environment_version = "1"
   }
   environment_key = "Default"
 }

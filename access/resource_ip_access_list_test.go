@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -91,7 +93,7 @@ func TestAPIACLCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/ip-access-lists",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_ALREADY_EXISTS",
 					Message:   "IP access list with type (" + TestingListTypeString + ") and label (" + TestingLabel + ") already exists",
 				},
@@ -183,7 +185,7 @@ func TestIPACLUpdate_Error(t *testing.T) {
 				ExpectedRequest: settings.UpdateIpAccessList{
 					Enabled: TestingEnabled,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -238,7 +240,7 @@ func TestIPACLRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Can't find an IP access list with id: " + TestingId + ".",
 				},
@@ -258,7 +260,7 @@ func TestIPACLRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -296,7 +298,7 @@ func TestIPACLDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: fmt.Sprintf("/api/2.0/ip-access-lists/%s?", TestingId),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},

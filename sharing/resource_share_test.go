@@ -3,10 +3,12 @@ package sharing
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -460,7 +462,7 @@ func TestUpdateShareRollback(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -609,7 +611,7 @@ func TestCreateShare_ThrowError(t *testing.T) {
 						Name: "a",
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -676,7 +678,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

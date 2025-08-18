@@ -18,7 +18,7 @@ func TestResourcePASCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
-			e.Create(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+			e.Create(mock.Anything, provisioning.CreatePrivateAccessSettingsRequest{
 				Region:                    "ar",
 				PrivateAccessSettingsName: "pas_name",
 				PrivateAccessLevel:        "ACCOUNT",
@@ -48,7 +48,7 @@ func TestResourcePASCreateWithoutAccountId(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
-			e.Create(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+			e.Create(mock.Anything, provisioning.CreatePrivateAccessSettingsRequest{
 				Region:                    "ar",
 				PrivateAccessSettingsName: "pas_name",
 				PrivateAccessLevel:        "ACCOUNT",
@@ -78,7 +78,7 @@ func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
-			e.Create(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+			e.Create(mock.Anything, provisioning.CreatePrivateAccessSettingsRequest{
 				Region:                    "ar",
 				PrivateAccessSettingsName: "pas_name",
 				PrivateAccessLevel:        "ACCOUNT",
@@ -189,7 +189,7 @@ func TestResourcePAS_Update(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
-			e.Replace(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       true,
 				PrivateAccessLevel:        "ENDPOINT",
@@ -224,7 +224,7 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(mac *mocks.MockAccountClient) {
 			e := mac.GetMockPrivateAccessAPI().EXPECT()
-			e.Replace(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       false,
 				PrivateAccessLevel:        "ENDPOINT",

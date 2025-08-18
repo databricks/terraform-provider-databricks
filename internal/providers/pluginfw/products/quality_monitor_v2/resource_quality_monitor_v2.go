@@ -63,6 +63,7 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan qualitymonitor
 	}
 
 	var quality_monitor qualitymonitorv2.QualityMonitor
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
 	if diags.HasError() {
 		return
@@ -86,7 +87,7 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan qualitymonitor
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -98,14 +99,13 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan qualitymonitorv2_tf.QualityMonitor
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var quality_monitor qualitymonitorv2.QualityMonitor
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,7 +129,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
@@ -175,7 +175,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

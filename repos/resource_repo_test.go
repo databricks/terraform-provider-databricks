@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestGetGitProviderFromUrl(t *testing.T) {
@@ -61,7 +61,7 @@ func TestResourceRepoRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: fmt.Sprintf("/api/2.0/repos/%s", repoID),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Repo could not be found",
 				},
@@ -182,7 +182,7 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"path": "/Repos/Production",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

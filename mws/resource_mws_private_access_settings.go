@@ -34,7 +34,7 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			if err != nil {
 				return err
 			}
-			var pas provisioning.UpsertPrivateAccessSettingsRequest
+			var pas provisioning.CreatePrivateAccessSettingsRequest
 			common.DataToStructPointer(d, pasSchema, &pas)
 			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
 			res, err := a.PrivateAccess.Create(ctx, pas)
@@ -62,7 +62,7 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			if err != nil {
 				return err
 			}
-			var pas provisioning.UpsertPrivateAccessSettingsRequest
+			var pas provisioning.ReplacePrivateAccessSettingsRequest
 			common.DataToStructPointer(d, pasSchema, &pas)
 			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
 			pas.PrivateAccessSettingsId = pasID

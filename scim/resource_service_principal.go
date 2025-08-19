@@ -147,17 +147,17 @@ func ResourceServicePrincipal() common.Resource {
 				return err
 			}
 			spResource := servicePrincipalResource{
-				entitlements:   newEntitlements(ctx, sp.Entitlements),
-				ApplicationID:  sp.ApplicationID,
-				DisplayName:    sp.DisplayName,
-				Active:         sp.Active,
-				ExternalID:     sp.ExternalID,
-				Home:           getUserHomeDir(sp.ApplicationID),
-				Repos:          getUserReposDir(sp.ApplicationID),
-				AclPrincipalID: fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
-				Force:          d.Get("force").(bool),
-				ForceDeleteRepos: d.Get("force_delete_repos").(bool),
-				ForceDeleteHomeDir: d.Get("force_delete_home_dir").(bool),
+				entitlements:          newEntitlements(ctx, sp.Entitlements),
+				ApplicationID:         sp.ApplicationID,
+				DisplayName:           sp.DisplayName,
+				Active:                sp.Active,
+				ExternalID:            sp.ExternalID,
+				Home:                  getUserHomeDir(sp.ApplicationID),
+				Repos:                 getUserReposDir(sp.ApplicationID),
+				AclPrincipalID:        fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
+				Force:                 d.Get("force").(bool),
+				ForceDeleteRepos:      d.Get("force_delete_repos").(bool),
+				ForceDeleteHomeDir:    d.Get("force_delete_home_dir").(bool),
 				DisableAsUserDeletion: d.Get("disable_as_user_deletion").(bool),
 			}
 			return common.StructToData(spResource, servicePrincipalSchema, d)

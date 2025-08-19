@@ -38,8 +38,7 @@ type DatabaseInstanceResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// DatabaseInstanceExtended is the extended schema struct for resources with resource Behavior fields.
-// It embeds the main model struct and adds a types.Object for resource Behavior.
+// DatabaseInstanceExtended extends the main model with additional fields.
 type DatabaseInstanceExtended struct {
 	database_tf.DatabaseInstance
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
@@ -57,7 +56,7 @@ func (m DatabaseInstanceExtended) GetComplexFieldTypes(ctx context.Context) map[
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
-// embedded TFSDK model with resource behavior fields.
+// embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceExtended
@@ -74,7 +73,7 @@ func (m DatabaseInstanceExtended) ToObjectValue(ctx context.Context) basetypes.O
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
-// and resource behavior fields.
+// and contains additional fields.
 func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
@@ -84,7 +83,7 @@ func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
-// including both embedded model fields and resource behavior fields. This method is called
+// including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstanceExtended) {
 	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseInstance)
@@ -92,7 +91,7 @@ func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and resource behavior fields. This method is called
+// including both embedded model fields and additional fields. This method is called
 // during read.
 func (m *DatabaseInstanceExtended) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceExtended) {
 	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
@@ -129,7 +128,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 
 	var database_instance database.DatabaseInstance
 
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan.DatabaseInstance, &database_instance)...)
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if diags.HasError() {
 		return
 	}
@@ -147,7 +146,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 	}
 
 	var newState DatabaseInstanceExtended
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState.DatabaseInstance)...)
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
 	}
@@ -171,7 +170,7 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 	}
 	var database_instance database.DatabaseInstance
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan.DatabaseInstance, &database_instance)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -188,7 +187,7 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 
 	var newState DatabaseInstanceExtended
 
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response.Response, &newState.DatabaseInstance)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response.Response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -204,7 +203,7 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState.DatabaseInstance)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -234,7 +233,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	var readRequest database.GetDatabaseInstanceRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState.DatabaseInstance, &readRequest)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -251,7 +250,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	var newState DatabaseInstanceExtended
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState.DatabaseInstance)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -289,7 +288,7 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	var deleteRequest database.DeleteDatabaseInstanceRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state.DatabaseInstance, &deleteRequest)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

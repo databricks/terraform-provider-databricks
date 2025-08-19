@@ -5,6 +5,7 @@ package account_network_policy
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "account_network_policy"
@@ -34,12 +38,67 @@ type AccountNetworkPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// AccountNetworkPolicyExtended extends the main model with additional fields.
+type AccountNetworkPolicyExtended struct {
+	settings_tf.AccountNetworkPolicy
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// AccountNetworkPolicyExtended struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m AccountNetworkPolicyExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.AccountNetworkPolicy.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AccountNetworkPolicyExtended
+// only implements ToObjectValue() and Type().
+func (m AccountNetworkPolicyExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.AccountNetworkPolicy.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m AccountNetworkPolicyExtended) Type(ctx context.Context) attr.Type {
+	embeddedType := m.AccountNetworkPolicy.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *AccountNetworkPolicyExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AccountNetworkPolicyExtended) {
+	m.AccountNetworkPolicy.SyncFieldsDuringCreateOrUpdate(ctx, plan.AccountNetworkPolicy)
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *AccountNetworkPolicyExtended) SyncFieldsDuringRead(ctx context.Context, existingState AccountNetworkPolicyExtended) {
+	m.AccountNetworkPolicy.SyncFieldsDuringRead(ctx, existingState.AccountNetworkPolicy)
+}
+
 func (r *AccountNetworkPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *AccountNetworkPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, settings_tf.AccountNetworkPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AccountNetworkPolicyExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "network_policy_id")
 		return c
 	})
@@ -54,7 +113,7 @@ func (r *AccountNetworkPolicyResource) Configure(ctx context.Context, req resour
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan settings_tf.AccountNetworkPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan AccountNetworkPolicyExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetAccountClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -79,7 +138,7 @@ func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan settings
 		return
 	}
 
-	var newState settings_tf.AccountNetworkPolicy
+	var newState AccountNetworkPolicyExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -97,7 +156,7 @@ func (r *AccountNetworkPolicyResource) Create(ctx context.Context, req resource.
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan settings_tf.AccountNetworkPolicy
+	var plan AccountNetworkPolicyExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +178,7 @@ func (r *AccountNetworkPolicyResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	var newState settings_tf.AccountNetworkPolicy
+	var newState AccountNetworkPolicyExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -144,7 +203,7 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	var existingState settings_tf.AccountNetworkPolicy
+	var existingState AccountNetworkPolicyExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,7 +226,7 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	var newState settings_tf.AccountNetworkPolicy
+	var newState AccountNetworkPolicyExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -181,7 +240,7 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 func (r *AccountNetworkPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan settings_tf.AccountNetworkPolicy
+	var plan AccountNetworkPolicyExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -199,7 +258,7 @@ func (r *AccountNetworkPolicyResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	var state settings_tf.AccountNetworkPolicy
+	var state AccountNetworkPolicyExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

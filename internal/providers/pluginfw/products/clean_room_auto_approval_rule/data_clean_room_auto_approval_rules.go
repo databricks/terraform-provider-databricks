@@ -26,17 +26,18 @@ func DataSourceCleanRoomAutoApprovalRules() datasource.DataSource {
 	return &CleanRoomAutoApprovalRulesDataSource{}
 }
 
-type CleanRoomAutoApprovalRulesList struct {
+// CleanRoomAutoApprovalRulesDataExtended extends the main model with additional fields.
+type CleanRoomAutoApprovalRulesDataExtended struct {
 	cleanrooms_tf.ListCleanRoomAutoApprovalRulesRequest
 	CleanRoomAutoApprovalRules types.List `tfsdk:"rules"`
 }
 
-func (c CleanRoomAutoApprovalRulesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (c CleanRoomAutoApprovalRulesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["rules"] = attrs["rules"].SetComputed()
 	return attrs
 }
 
-func (CleanRoomAutoApprovalRulesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (CleanRoomAutoApprovalRulesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"rules": reflect.TypeOf(cleanrooms_tf.CleanRoomAutoApprovalRule{}),
 	}
@@ -51,7 +52,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Metadata(ctx context.Context, req
 }
 
 func (r *CleanRoomAutoApprovalRulesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRulesList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRulesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoomAutoApprovalRule",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	var config CleanRoomAutoApprovalRulesList
+	var config CleanRoomAutoApprovalRulesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +101,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Read(ctx context.Context, req dat
 		results = append(results, clean_room_auto_approval_rule.ToObjectValue(ctx))
 	}
 
-	var newState CleanRoomAutoApprovalRulesList
+	var newState CleanRoomAutoApprovalRulesDataExtended
 	newState.CleanRoomAutoApprovalRules = types.ListValueMust(cleanrooms_tf.CleanRoomAutoApprovalRule{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

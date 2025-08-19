@@ -5,6 +5,7 @@ package quality_monitor_v2
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "quality_monitor_v2"
@@ -34,12 +38,67 @@ type QualityMonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// QualityMonitorExtended extends the main model with additional fields.
+type QualityMonitorExtended struct {
+	qualitymonitorv2_tf.QualityMonitor
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// QualityMonitorExtended struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m QualityMonitorExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.QualityMonitor.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitorExtended
+// only implements ToObjectValue() and Type().
+func (m QualityMonitorExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.QualityMonitor.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m QualityMonitorExtended) Type(ctx context.Context) attr.Type {
+	embeddedType := m.QualityMonitor.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *QualityMonitorExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan QualityMonitorExtended) {
+	m.QualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, plan.QualityMonitor)
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *QualityMonitorExtended) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitorExtended) {
+	m.QualityMonitor.SyncFieldsDuringRead(ctx, existingState.QualityMonitor)
+}
+
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, qualitymonitorv2_tf.QualityMonitor{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitorExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_id")
 		return c
@@ -55,7 +114,7 @@ func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *QualityMonitorResource) update(ctx context.Context, plan qualitymonitorv2_tf.QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitorExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -81,7 +140,7 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan qualitymonitor
 		return
 	}
 
-	var newState qualitymonitorv2_tf.QualityMonitor
+	var newState QualityMonitorExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -99,7 +158,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan qualitymonitorv2_tf.QualityMonitor
+	var plan QualityMonitorExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,7 +180,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	var newState qualitymonitorv2_tf.QualityMonitor
+	var newState QualityMonitorExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -146,7 +205,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var existingState qualitymonitorv2_tf.QualityMonitor
+	var existingState QualityMonitorExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,7 +228,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var newState qualitymonitorv2_tf.QualityMonitor
+	var newState QualityMonitorExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,7 +242,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan qualitymonitorv2_tf.QualityMonitor
+	var plan QualityMonitorExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -201,7 +260,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var state qualitymonitorv2_tf.QualityMonitor
+	var state QualityMonitorExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

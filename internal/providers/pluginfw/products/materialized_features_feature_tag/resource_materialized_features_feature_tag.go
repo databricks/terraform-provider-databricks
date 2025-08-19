@@ -5,6 +5,7 @@ package materialized_features_feature_tag
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "materialized_features_feature_tag"
@@ -34,12 +38,67 @@ type FeatureTagResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// FeatureTagExtended extends the main model with additional fields.
+type FeatureTagExtended struct {
+	ml_tf.FeatureTag
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// FeatureTagExtended struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m FeatureTagExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.FeatureTag.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureTagExtended
+// only implements ToObjectValue() and Type().
+func (m FeatureTagExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m FeatureTagExtended) Type(ctx context.Context) attr.Type {
+	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *FeatureTagExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan FeatureTagExtended) {
+	m.FeatureTag.SyncFieldsDuringCreateOrUpdate(ctx, plan.FeatureTag)
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *FeatureTagExtended) SyncFieldsDuringRead(ctx context.Context, existingState FeatureTagExtended) {
+	m.FeatureTag.SyncFieldsDuringRead(ctx, existingState.FeatureTag)
+}
+
 func (r *FeatureTagResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *FeatureTagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ml_tf.FeatureTag{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, FeatureTagExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "key")
 		return c
 	})
@@ -54,7 +113,7 @@ func (r *FeatureTagResource) Configure(ctx context.Context, req resource.Configu
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FeatureTagResource) update(ctx context.Context, plan ml_tf.FeatureTag, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *FeatureTagResource) update(ctx context.Context, plan FeatureTagExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -80,7 +139,7 @@ func (r *FeatureTagResource) update(ctx context.Context, plan ml_tf.FeatureTag, 
 		return
 	}
 
-	var newState ml_tf.FeatureTag
+	var newState FeatureTagExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -98,7 +157,7 @@ func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan ml_tf.FeatureTag
+	var plan FeatureTagExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,7 +179,7 @@ func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var newState ml_tf.FeatureTag
+	var newState FeatureTagExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -145,7 +204,7 @@ func (r *FeatureTagResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var existingState ml_tf.FeatureTag
+	var existingState FeatureTagExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,7 +227,7 @@ func (r *FeatureTagResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var newState ml_tf.FeatureTag
+	var newState FeatureTagExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +241,7 @@ func (r *FeatureTagResource) Read(ctx context.Context, req resource.ReadRequest,
 func (r *FeatureTagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan ml_tf.FeatureTag
+	var plan FeatureTagExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,7 +259,7 @@ func (r *FeatureTagResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	var state ml_tf.FeatureTag
+	var state FeatureTagExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

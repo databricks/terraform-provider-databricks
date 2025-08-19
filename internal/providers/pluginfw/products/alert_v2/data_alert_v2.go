@@ -4,6 +4,7 @@ package alert_v2
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -12,8 +13,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "alert_v2"
@@ -28,12 +31,51 @@ type AlertV2DataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+// AlertV2DataExtended extends the main model with additional fields.
+type AlertV2DataExtended struct {
+	sql_tf.AlertV2
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// AlertV2DataExtended struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m AlertV2DataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.AlertV2.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2DataExtended
+// only implements ToObjectValue() and Type().
+func (m AlertV2DataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return m.AlertV2.ToObjectValue(ctx)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m AlertV2DataExtended) Type(ctx context.Context) attr.Type {
+	return m.AlertV2.Type(ctx)
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *AlertV2DataExtended) SyncFieldsDuringRead(ctx context.Context, existingState AlertV2DataExtended) {
+	m.AlertV2.SyncFieldsDuringRead(ctx, existingState.AlertV2)
+}
+
 func (r *AlertV2DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
 func (r *AlertV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sql_tf.AlertV2{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertV2DataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -54,7 +96,7 @@ func (r *AlertV2DataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var config sql_tf.AlertV2
+	var config AlertV2DataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -77,7 +119,7 @@ func (r *AlertV2DataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var newState sql_tf.AlertV2
+	var newState AlertV2DataExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

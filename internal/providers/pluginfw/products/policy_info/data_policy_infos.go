@@ -26,17 +26,18 @@ func DataSourcePolicyInfos() datasource.DataSource {
 	return &PolicyInfosDataSource{}
 }
 
-type PolicyInfosList struct {
+// PolicyInfosDataExtended extends the main model with additional fields.
+type PolicyInfosDataExtended struct {
 	catalog_tf.ListPoliciesRequest
 	Policies types.List `tfsdk:"policies"`
 }
 
-func (c PolicyInfosList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (c PolicyInfosDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
 }
 
-func (PolicyInfosList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (PolicyInfosDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policies": reflect.TypeOf(catalog_tf.PolicyInfo{}),
 	}
@@ -51,7 +52,7 @@ func (r *PolicyInfosDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *PolicyInfosDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfosList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfosDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks PolicyInfo",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var config PolicyInfosList
+	var config PolicyInfosDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +101,7 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, policy_info.ToObjectValue(ctx))
 	}
 
-	var newState PolicyInfosList
+	var newState PolicyInfosDataExtended
 	newState.Policies = types.ListValueMust(catalog_tf.PolicyInfo{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -26,17 +26,18 @@ func DataSourceCleanRooms() datasource.DataSource {
 	return &CleanRoomsDataSource{}
 }
 
-type CleanRoomsList struct {
+// CleanRoomsDataExtended extends the main model with additional fields.
+type CleanRoomsDataExtended struct {
 	cleanrooms_tf.ListCleanRoomsRequest
 	CleanRooms types.List `tfsdk:"clean_rooms"`
 }
 
-func (c CleanRoomsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (c CleanRoomsDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms"] = attrs["clean_rooms"].SetComputed()
 	return attrs
 }
 
-func (CleanRoomsList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (CleanRoomsDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms": reflect.TypeOf(cleanrooms_tf.CleanRoom{}),
 	}
@@ -51,7 +52,7 @@ func (r *CleanRoomsDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *CleanRoomsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomsList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomsDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoom",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *CleanRoomsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var config CleanRoomsList
+	var config CleanRoomsDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +101,7 @@ func (r *CleanRoomsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		results = append(results, clean_room.ToObjectValue(ctx))
 	}
 
-	var newState CleanRoomsList
+	var newState CleanRoomsDataExtended
 	newState.CleanRooms = types.ListValueMust(cleanrooms_tf.CleanRoom{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -10,7 +10,7 @@
 
 ### Bug Fixes
 
-* Correct which file even fields should be reset in `databricks_external_location` ([#4945](https://github.com/databricks/terraform-provider-databricks/pull/4945))
+* Correct which file event fields should be reset in `databricks_external_location` ([#4945](https://github.com/databricks/terraform-provider-databricks/pull/4945))
 
 ### Documentation
 

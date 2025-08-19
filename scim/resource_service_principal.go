@@ -116,7 +116,7 @@ func ResourceServicePrincipal() common.Resource {
 			m["active"].Default = true
 			m["application_id"].AtLeastOneOf = []string{"application_id", "display_name"}
 			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
-			return m
+			return customizeEntitlementsSchema(m)
 		})
 	return common.Resource{
 		Schema: servicePrincipalSchema,
@@ -152,8 +152,8 @@ func ResourceServicePrincipal() common.Resource {
 				DisplayName:    sp.DisplayName,
 				Active:         sp.Active,
 				ExternalID:     sp.ExternalID,
-				Home:           fmt.Sprintf("/Users/%s", sp.ApplicationID),
-				Repos:          fmt.Sprintf("/Repos/%s", sp.ApplicationID),
+				Home:           getUserHomeDir(sp.ApplicationID),
+				Repos:          getUserReposDir(sp.ApplicationID),
 				AclPrincipalID: fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
 			}
 			return common.StructToData(spResource, servicePrincipalSchema, d)
@@ -208,13 +208,13 @@ func ResourceServicePrincipal() common.Resource {
 			// Handle force delete flags
 			if !isAccount && !isDisable {
 				if isForceDeleteRepos {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(u.Repos, true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(getUserReposDir(u.ApplicationID), true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(u.Home, true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(getUserHomeDir(u.ApplicationID), true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}

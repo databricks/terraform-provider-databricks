@@ -38,13 +38,21 @@ type userResource struct {
 	AclPrincipalID        string `json:"acl_principal_id,omitempty" tf:"computed"`
 }
 
+func getUserHomeDir(userName string) string {
+	return fmt.Sprintf("/Users/%s", userName)
+}
+
+func getUserReposDir(userName string) string {
+	return fmt.Sprintf("/Repos/%s", userName)
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() common.Resource {
 	userSchema := common.StructToSchema(userResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
-			return m
+			return customizeEntitlementsSchema(m)
 		})
 	return common.Resource{
 		Schema: userSchema,
@@ -78,8 +86,8 @@ func ResourceUser() common.Resource {
 				DisplayName:    user.DisplayName,
 				Active:         user.Active,
 				ExternalID:     user.ExternalID,
-				Home:           fmt.Sprintf("/Users/%s", user.UserName),
-				Repos:          fmt.Sprintf("/Repos/%s", user.UserName),
+				Home:           getUserHomeDir(user.UserName),
+				Repos:          getUserReposDir(user.UserName),
 				UserName:       user.UserName,
 				AclPrincipalID: fmt.Sprintf("users/%s", user.UserName),
 				entitlements:   newEntitlements(ctx, user.Entitlements),
@@ -134,13 +142,13 @@ func ResourceUser() common.Resource {
 			// Handle force delete flags
 			if !isAccount && !isDisable {
 				if isForceDeleteRepos {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(userResource.Repos, true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(getUserReposDir(userResource.UserName), true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(userResource.Home, true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(getUserHomeDir(userResource.UserName), true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}

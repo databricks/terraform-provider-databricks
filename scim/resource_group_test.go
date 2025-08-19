@@ -123,6 +123,7 @@ func TestResourceGroupRead(t *testing.T) {
 		},
 		Resource: ResourceGroup(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -147,6 +148,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroup(),
+		New:      true,
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)

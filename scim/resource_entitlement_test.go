@@ -61,11 +61,7 @@ var addRequest = PatchRequestComplexValue([]patchOperation{
 
 var emptyAddRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		"replace", "entitlements", []ComplexValue{
-			{
-				Value: "",
-			},
-		},
+		"replace", "entitlements", []ComplexValue{},
 	},
 })
 

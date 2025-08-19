@@ -24,7 +24,7 @@ func ResourceEntitlements() common.Resource {
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
-			return m
+			return customizeEntitlementsSchema(m)
 		})
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

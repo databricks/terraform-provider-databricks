@@ -67,7 +67,7 @@ func DataSourceGroup() common.Resource {
 				for _, x := range current.Roles {
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
-				this.entitlements = newEntitlements(ctx, current.Entitlements)
+				this.entitlements = mergeEntitlements(this.entitlements, newEntitlements(ctx, current.Entitlements))
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {
@@ -87,11 +87,7 @@ func DataSourceGroup() common.Resource {
 			sort.Strings(this.ChildGroups)
 			sort.Strings(this.ServicePrincipals)
 			sort.Strings(this.InstanceProfiles)
-			err = common.StructToData(this, s, d)
-			if err != nil {
-				return err
-			}
-			return nil
+			return common.StructToData(this, s, d)
 		},
 	}
 }

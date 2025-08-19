@@ -156,6 +156,9 @@ func ResourceServicePrincipal() common.Resource {
 				Repos:          getUserReposDir(sp.ApplicationID),
 				AclPrincipalID: fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
 				Force:          d.Get("force").(bool),
+				ForceDeleteRepos: d.Get("force_delete_repos").(bool),
+				ForceDeleteHomeDir: d.Get("force_delete_home_dir").(bool),
+				DisableAsUserDeletion: d.Get("disable_as_user_deletion").(bool),
 			}
 			return common.StructToData(spResource, servicePrincipalSchema, d)
 		},

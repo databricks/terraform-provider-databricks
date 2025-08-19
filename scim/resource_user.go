@@ -83,15 +83,18 @@ func ResourceUser() common.Resource {
 				return err
 			}
 			userResource := userResource{
-				DisplayName:    user.DisplayName,
-				Active:         user.Active,
-				ExternalID:     user.ExternalID,
-				Home:           getUserHomeDir(user.UserName),
-				Repos:          getUserReposDir(user.UserName),
-				UserName:       user.UserName,
-				AclPrincipalID: fmt.Sprintf("users/%s", user.UserName),
-				entitlements:   newEntitlements(ctx, user.Entitlements),
-				Force:          d.Get("force").(bool),
+				DisplayName:           user.DisplayName,
+				Active:                user.Active,
+				ExternalID:            user.ExternalID,
+				Home:                  getUserHomeDir(user.UserName),
+				Repos:                 getUserReposDir(user.UserName),
+				UserName:              user.UserName,
+				AclPrincipalID:        fmt.Sprintf("users/%s", user.UserName),
+				entitlements:          newEntitlements(ctx, user.Entitlements),
+				Force:                 d.Get("force").(bool),
+				ForceDeleteRepos:      d.Get("force_delete_repos").(bool),
+				ForceDeleteHomeDir:    d.Get("force_delete_home_dir").(bool),
+				DisableAsUserDeletion: d.Get("disable_as_user_deletion").(bool),
 			}
 			return common.StructToData(userResource, userSchema, d)
 		},

@@ -27,3 +27,4 @@
 ### Internal Changes
 
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Make `databricks_entitlements` forward-compatible with new entitlements ([#4763](https://github.com/databricks/terraform-provider-databricks/pull/4763))

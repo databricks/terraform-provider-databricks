@@ -55,6 +55,7 @@ func ResourceGroup() common.Resource {
 				DisplayName:    group.DisplayName,
 				ExternalID:     group.ExternalID,
 				AclPrincipalID: fmt.Sprintf("groups/%s", group.DisplayName),
+				Force:          d.Get("force").(bool),
 			}
 			if c.Config.IsAccountClient() {
 				groupResource.URL = c.FormatURL("users/groups/", d.Id(), "/information")

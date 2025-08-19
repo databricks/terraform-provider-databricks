@@ -155,6 +155,7 @@ func ResourceServicePrincipal() common.Resource {
 				Home:           getUserHomeDir(sp.ApplicationID),
 				Repos:          getUserReposDir(sp.ApplicationID),
 				AclPrincipalID: fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
+				Force:          d.Get("force").(bool),
 			}
 			return common.StructToData(spResource, servicePrincipalSchema, d)
 		},

@@ -91,6 +91,7 @@ func ResourceUser() common.Resource {
 				UserName:       user.UserName,
 				AclPrincipalID: fmt.Sprintf("users/%s", user.UserName),
 				entitlements:   newEntitlements(ctx, user.Entitlements),
+				Force:          d.Get("force").(bool),
 			}
 			return common.StructToData(userResource, userSchema, d)
 		},

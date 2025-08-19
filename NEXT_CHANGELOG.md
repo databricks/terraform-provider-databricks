@@ -27,3 +27,4 @@
 ### Internal Changes
 
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Reimplement `databricks_group` data source to use combination of List + Get API ([#4947](https://github.com/databricks/terraform-provider-databricks/pull/4947))

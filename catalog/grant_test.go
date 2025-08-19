@@ -30,9 +30,25 @@ resource "databricks_schema" "things" {
 resource "databricks_table" "mytable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "bar"
+	name = "managed-{var.STICKY_RANDOM}"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
+
+	column {
+		name      = "id"
+		position  = 0
+		type_name = "INT"
+		type_text = "int"
+		type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+	}
+}
+
+resource "databricks_table" "metric_view_grant" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name = databricks_schema.things.name
+	name = "metric-view-{var.STICKY_RANDOM}"
+	table_type = "METRIC_VIEW"
+	data_source_format = ""
 
 	column {
 		name      = "id"
@@ -86,6 +102,12 @@ resource "databricks_grant" "table" {
 	privileges = ["ALL_PRIVILEGES"]
 }
 
+resource "databricks_grant" "metric_view_grant" {
+	table = databricks_table.metric_view_grant.id
+	principal  = "%s"
+	privileges = ["ALL_PRIVILEGES"]
+}
+
 resource "databricks_grant" "cred" {
 	storage_credential = databricks_storage_credential.external.id
 
@@ -119,7 +141,7 @@ func grantTemplateForNamePermissionChange(suffix string, permission string) stri
 		}
 		comment = "Managed by TF"
 	}
-	
+
 	resource "databricks_grant" "cred" {
 		storage_credential = databricks_storage_credential.external.id
 		principal  = "{env.TEST_DATA_ENG_GROUP}"

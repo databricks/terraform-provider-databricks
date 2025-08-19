@@ -53,7 +53,7 @@ func getTestBudget() *billing.BudgetConfiguration {
 func TestResourceBudgetCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			api := a.GetMockbudgetsAPI().EXPECT()
+			api := a.GetMockBudgetsAPI().EXPECT()
 			api.Create(mock.Anything, billing.CreateBudgetConfigurationRequest{
 				Budget: billing.CreateBudgetConfigurationBudget{
 					AlertConfigurations: []billing.CreateBudgetConfigurationBudgetAlertConfigurations{
@@ -82,13 +82,13 @@ func TestResourceBudgetCreate(t *testing.T) {
 		AccountID: "account_id",
 		HCL: `
 		display_name = "budget_name"
-	
+
 		alert_configurations {
 			time_period         = "MONTH"
-			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
+			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED"
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
 			quantity_threshold  = "840.84"
-	
+
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"
 				target      = "me@databricks.com"
@@ -108,7 +108,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 				operator = "IN"
 				values   = [
 					1234567890098765
-				]                              
+				]
 			}
 		}
 		`,
@@ -124,7 +124,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 func TestResourceBudgetRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockbudgetsAPI().EXPECT().
+			a.GetMockBudgetsAPI().EXPECT().
 				GetByBudgetId(mock.Anything, "budget_configuration_id").
 				Return(&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil)
 		},
@@ -154,7 +154,7 @@ func TestResourceBudgetRead_UnpackError(t *testing.T) {
 func TestResourceBudgetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			api := a.GetMockbudgetsAPI().EXPECT()
+			api := a.GetMockBudgetsAPI().EXPECT()
 			api.Update(mock.Anything, billing.UpdateBudgetConfigurationRequest{
 				Budget: billing.UpdateBudgetConfigurationBudget{
 					AccountId: getTestBudget().AccountId,
@@ -192,13 +192,13 @@ func TestResourceBudgetUpdate(t *testing.T) {
 		Update:   true,
 		HCL: `
 		display_name = "budget_name_update"
-	
+
 		alert_configurations {
 			time_period         = "MONTH"
-			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
+			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED"
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
 			quantity_threshold  = "840.84"
-	
+
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"
 				target      = "me@databricks.com"
@@ -218,7 +218,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 				operator = "IN"
 				values   = [
 					1234567890098765
-				]                              
+				]
 			}
 		}
 		`,
@@ -233,7 +233,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 func TestResourceBudgetDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockbudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
+			a.GetMockBudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
 		},
 		Resource:  ResourceBudget(),
 		AccountID: "account_id",

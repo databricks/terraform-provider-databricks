@@ -65,7 +65,7 @@ resource "databricks_job" "this" {
       notebook_path = databricks_notebook.this.path
     }
   }
-  //this task starts a Delta Live Tables pipline update
+  //this task starts a Lakeflow Declarative Pipeline update
   task {
     task_key = "d"
 
@@ -89,7 +89,7 @@ The resource supports the following arguments:
 * `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block).
 * `queue` - (Optional) The queue status for the job. See [queue Configuration Block](#queue-configuration-block) below.
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
-* `run_as` - (Optional) The user or the service prinicipal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
+* `run_as` - (Optional) The user or the service principal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.
 
   When migrating from `always_running` to `control_run_state`, set `continuous` as follows:
@@ -99,8 +99,8 @@ The resource supports the following arguments:
   ```
 
 * `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. See [library Configuration Block](#library-configuration-block) below.
-* `git_source` - (Optional) Specifices the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
-* `parameter` - (Optional) Specifices job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)
+* `git_source` - (Optional) Specifies the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
+* `parameter` - (Optional) Specifies job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
@@ -258,7 +258,7 @@ The `power_bi_task` triggers a Power BI semantic model update.
 
 #### spark_python_task Configuration Block
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/`. For files stored in a remote repository, the path must be relative. This field is required.
+* `python_file` - (Required) The URI of the Python file to be executed. Cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/`. For files stored in a remote repository, the path must be relative. This field is required.
 * `source` - (Optional) Location type of the Python file. When set to `WORKSPACE` or not specified, the file will be retrieved from the local Databricks workspace or cloud location (if the python_file has a URI format). When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
   * `WORKSPACE`: The Python file is located in a Databricks workspace or at a cloud filesystem URI.
   * `GIT`: The Python file is located in a remote Git repository.
@@ -333,7 +333,7 @@ resource "databricks_job" "sql_aggregation_job" {
 
 #### library Configuration Block
 
-This block descripes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+This block describes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -358,20 +358,20 @@ This block describes upstream dependencies of a given task. For multiple upstrea
 
 -> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
-### environment Confaguration Block
+### environment Configuration Block
 
 This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
 
 * `environment_key` - an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task.
 * `spec` - block describing the Environment. Consists of following attributes:
-  * `client` - (Required, string) client version used by the environment.
+  * `environment_version` - (Required, string) client version used by the environment. Each version comes with a specific Python version and a set of Python packages.
   * `dependencies` - (list of strings) List of pip dependencies, as supported by the version of pip in this environment. Each dependency is a pip requirement file line.  See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies) for more information.
 
 ```hcl
 environment {
   spec {
-    dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-    client       = "1"
+    dependencies        = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+    environment_version = "1"
   }
   environment_key = "Default"
 }
@@ -632,17 +632,13 @@ The following resources are often used in the same context:
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_cluster_policy](cluster_policy.md) to create a [databricks_cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules.
 * [databricks_current_user](../data-sources/current_user.md) data to retrieve information about [databricks_user](user.md) or [databricks_service_principal](service_principal.md), that is calling Databricks REST API.
-* [databricks_dbfs_file](../data-sources/dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
-* [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
-* [databricks_dbfs_file](dbfs_file.md) to manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_instance_pool](instance_pool.md) to manage [instance pools](https://docs.databricks.com/clusters/instance-pools/index.html) to reduce [cluster](cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use instances.
-* [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
 * [databricks_jobs](../data-sources/jobs.md) data to get all jobs and their names from a workspace.
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
+* [databricks_pipeline](pipeline.md) to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
 * [databricks_workspace_conf](workspace_conf.md) to manage workspace configuration for expert usage.

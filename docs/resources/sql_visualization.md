@@ -3,6 +3,10 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_visualization Resource
 
+!> This resource is deprecated and will be removed in future.
+
+-> Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling
+
 To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 -> documentation for this resource is a work in progress.
@@ -61,7 +65,7 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
     ```
 
 - resource definitions
-  
+
     ```hcl
     ##q1vx.tf
 
@@ -114,4 +118,4 @@ The following resources are often used in the same context:
 - [databricks_sql_dashboard](sql_dashboard.md) to manage Databricks SQL [Dashboards](https://docs.databricks.com/sql/user/dashboards/index.html).
 - [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
 - [databricks_sql_global_config](sql_global_config.md) to configure the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace.
-- [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
+- [databricks_grants](grant.md) to manage data access in Unity Catalog.

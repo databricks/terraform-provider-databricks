@@ -76,10 +76,74 @@ type App struct {
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
-func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
+func (toState *App) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan App) {
+	if !fromPlan.ActiveDeployment.IsNull() && !fromPlan.ActiveDeployment.IsUnknown() {
+		if toStateActiveDeployment, ok := toState.GetActiveDeployment(ctx); ok {
+			if fromPlanActiveDeployment, ok := fromPlan.GetActiveDeployment(ctx); ok {
+				toStateActiveDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanActiveDeployment)
+				toState.SetActiveDeployment(ctx, toStateActiveDeployment)
+			}
+		}
+	}
+	if !fromPlan.AppStatus.IsNull() && !fromPlan.AppStatus.IsUnknown() {
+		if toStateAppStatus, ok := toState.GetAppStatus(ctx); ok {
+			if fromPlanAppStatus, ok := fromPlan.GetAppStatus(ctx); ok {
+				toStateAppStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAppStatus)
+				toState.SetAppStatus(ctx, toStateAppStatus)
+			}
+		}
+	}
+	if !fromPlan.ComputeStatus.IsNull() && !fromPlan.ComputeStatus.IsUnknown() {
+		if toStateComputeStatus, ok := toState.GetComputeStatus(ctx); ok {
+			if fromPlanComputeStatus, ok := fromPlan.GetComputeStatus(ctx); ok {
+				toStateComputeStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanComputeStatus)
+				toState.SetComputeStatus(ctx, toStateComputeStatus)
+			}
+		}
+	}
+	if !fromPlan.PendingDeployment.IsNull() && !fromPlan.PendingDeployment.IsUnknown() {
+		if toStatePendingDeployment, ok := toState.GetPendingDeployment(ctx); ok {
+			if fromPlanPendingDeployment, ok := fromPlan.GetPendingDeployment(ctx); ok {
+				toStatePendingDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPendingDeployment)
+				toState.SetPendingDeployment(ctx, toStatePendingDeployment)
+			}
+		}
+	}
 }
 
-func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
+func (toState *App) SyncFieldsDuringRead(ctx context.Context, fromState App) {
+	if !fromState.ActiveDeployment.IsNull() && !fromState.ActiveDeployment.IsUnknown() {
+		if toStateActiveDeployment, ok := toState.GetActiveDeployment(ctx); ok {
+			if fromStateActiveDeployment, ok := fromState.GetActiveDeployment(ctx); ok {
+				toStateActiveDeployment.SyncFieldsDuringRead(ctx, fromStateActiveDeployment)
+				toState.SetActiveDeployment(ctx, toStateActiveDeployment)
+			}
+		}
+	}
+	if !fromState.AppStatus.IsNull() && !fromState.AppStatus.IsUnknown() {
+		if toStateAppStatus, ok := toState.GetAppStatus(ctx); ok {
+			if fromStateAppStatus, ok := fromState.GetAppStatus(ctx); ok {
+				toStateAppStatus.SyncFieldsDuringRead(ctx, fromStateAppStatus)
+				toState.SetAppStatus(ctx, toStateAppStatus)
+			}
+		}
+	}
+	if !fromState.ComputeStatus.IsNull() && !fromState.ComputeStatus.IsUnknown() {
+		if toStateComputeStatus, ok := toState.GetComputeStatus(ctx); ok {
+			if fromStateComputeStatus, ok := fromState.GetComputeStatus(ctx); ok {
+				toStateComputeStatus.SyncFieldsDuringRead(ctx, fromStateComputeStatus)
+				toState.SetComputeStatus(ctx, toStateComputeStatus)
+			}
+		}
+	}
+	if !fromState.PendingDeployment.IsNull() && !fromState.PendingDeployment.IsUnknown() {
+		if toStatePendingDeployment, ok := toState.GetPendingDeployment(ctx); ok {
+			if fromStatePendingDeployment, ok := fromState.GetPendingDeployment(ctx); ok {
+				toStatePendingDeployment.SyncFieldsDuringRead(ctx, fromStatePendingDeployment)
+				toState.SetPendingDeployment(ctx, toStatePendingDeployment)
+			}
+		}
+	}
 }
 
 func (c App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -207,7 +271,7 @@ func (o *App) GetActiveDeployment(ctx context.Context) (AppDeployment, bool) {
 	if o.ActiveDeployment.IsNull() || o.ActiveDeployment.IsUnknown() {
 		return e, false
 	}
-	var v []AppDeployment
+	var v AppDeployment
 	d := o.ActiveDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -215,10 +279,7 @@ func (o *App) GetActiveDeployment(ctx context.Context) (AppDeployment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetActiveDeployment sets the value of the ActiveDeployment field in App.
@@ -235,7 +296,7 @@ func (o *App) GetAppStatus(ctx context.Context) (ApplicationStatus, bool) {
 	if o.AppStatus.IsNull() || o.AppStatus.IsUnknown() {
 		return e, false
 	}
-	var v []ApplicationStatus
+	var v ApplicationStatus
 	d := o.AppStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -243,10 +304,7 @@ func (o *App) GetAppStatus(ctx context.Context) (ApplicationStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAppStatus sets the value of the AppStatus field in App.
@@ -263,7 +321,7 @@ func (o *App) GetComputeStatus(ctx context.Context) (ComputeStatus, bool) {
 	if o.ComputeStatus.IsNull() || o.ComputeStatus.IsUnknown() {
 		return e, false
 	}
-	var v []ComputeStatus
+	var v ComputeStatus
 	d := o.ComputeStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -271,10 +329,7 @@ func (o *App) GetComputeStatus(ctx context.Context) (ComputeStatus, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetComputeStatus sets the value of the ComputeStatus field in App.
@@ -317,7 +372,7 @@ func (o *App) GetPendingDeployment(ctx context.Context) (AppDeployment, bool) {
 	if o.PendingDeployment.IsNull() || o.PendingDeployment.IsUnknown() {
 		return e, false
 	}
-	var v []AppDeployment
+	var v AppDeployment
 	d := o.PendingDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -325,10 +380,7 @@ func (o *App) GetPendingDeployment(ctx context.Context) (AppDeployment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetPendingDeployment sets the value of the PendingDeployment field in App.
@@ -392,7 +444,7 @@ func (o *App) SetUserApiScopes(ctx context.Context, v []types.String) {
 type AppAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -400,10 +452,10 @@ type AppAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlRequest) {
+func (toState *AppAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppAccessControlRequest) {
 }
 
-func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AppAccessControlRequest) {
+func (toState *AppAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState AppAccessControlRequest) {
 }
 
 func (c AppAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -465,10 +517,10 @@ type AppAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlResponse) {
+func (toState *AppAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppAccessControlResponse) {
 }
 
-func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AppAccessControlResponse) {
+func (toState *AppAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState AppAccessControlResponse) {
 }
 
 func (c AppAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -575,10 +627,42 @@ type AppDeployment struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment) {
+func (toState *AppDeployment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeployment) {
+	if !fromPlan.DeploymentArtifacts.IsNull() && !fromPlan.DeploymentArtifacts.IsUnknown() {
+		if toStateDeploymentArtifacts, ok := toState.GetDeploymentArtifacts(ctx); ok {
+			if fromPlanDeploymentArtifacts, ok := fromPlan.GetDeploymentArtifacts(ctx); ok {
+				toStateDeploymentArtifacts.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeploymentArtifacts)
+				toState.SetDeploymentArtifacts(ctx, toStateDeploymentArtifacts)
+			}
+		}
+	}
+	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
-func (newState *AppDeployment) SyncEffectiveFieldsDuringRead(existingState AppDeployment) {
+func (toState *AppDeployment) SyncFieldsDuringRead(ctx context.Context, fromState AppDeployment) {
+	if !fromState.DeploymentArtifacts.IsNull() && !fromState.DeploymentArtifacts.IsUnknown() {
+		if toStateDeploymentArtifacts, ok := toState.GetDeploymentArtifacts(ctx); ok {
+			if fromStateDeploymentArtifacts, ok := fromState.GetDeploymentArtifacts(ctx); ok {
+				toStateDeploymentArtifacts.SyncFieldsDuringRead(ctx, fromStateDeploymentArtifacts)
+				toState.SetDeploymentArtifacts(ctx, toStateDeploymentArtifacts)
+			}
+		}
+	}
+	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
+		if toStateStatus, ok := toState.GetStatus(ctx); ok {
+			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
+				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
+				toState.SetStatus(ctx, toStateStatus)
+			}
+		}
+	}
 }
 
 func (c AppDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -650,7 +734,7 @@ func (o *AppDeployment) GetDeploymentArtifacts(ctx context.Context) (AppDeployme
 	if o.DeploymentArtifacts.IsNull() || o.DeploymentArtifacts.IsUnknown() {
 		return e, false
 	}
-	var v []AppDeploymentArtifacts
+	var v AppDeploymentArtifacts
 	d := o.DeploymentArtifacts.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -658,10 +742,7 @@ func (o *AppDeployment) GetDeploymentArtifacts(ctx context.Context) (AppDeployme
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDeploymentArtifacts sets the value of the DeploymentArtifacts field in AppDeployment.
@@ -678,7 +759,7 @@ func (o *AppDeployment) GetStatus(ctx context.Context) (AppDeploymentStatus, boo
 	if o.Status.IsNull() || o.Status.IsUnknown() {
 		return e, false
 	}
-	var v []AppDeploymentStatus
+	var v AppDeploymentStatus
 	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -686,10 +767,7 @@ func (o *AppDeployment) GetStatus(ctx context.Context) (AppDeploymentStatus, boo
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatus sets the value of the Status field in AppDeployment.
@@ -704,10 +782,10 @@ type AppDeploymentArtifacts struct {
 	SourceCodePath types.String `tfsdk:"source_code_path"`
 }
 
-func (newState *AppDeploymentArtifacts) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentArtifacts) {
+func (toState *AppDeploymentArtifacts) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeploymentArtifacts) {
 }
 
-func (newState *AppDeploymentArtifacts) SyncEffectiveFieldsDuringRead(existingState AppDeploymentArtifacts) {
+func (toState *AppDeploymentArtifacts) SyncFieldsDuringRead(ctx context.Context, fromState AppDeploymentArtifacts) {
 }
 
 func (c AppDeploymentArtifacts) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -754,10 +832,10 @@ type AppDeploymentStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus) {
+func (toState *AppDeploymentStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppDeploymentStatus) {
 }
 
-func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus) {
+func (toState *AppDeploymentStatus) SyncFieldsDuringRead(ctx context.Context, fromState AppDeploymentStatus) {
 }
 
 func (c AppDeploymentStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -804,14 +882,14 @@ type AppPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermission) {
+func (toState *AppPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermission) {
 }
 
-func (newState *AppPermission) SyncEffectiveFieldsDuringRead(existingState AppPermission) {
+func (toState *AppPermission) SyncFieldsDuringRead(ctx context.Context, fromState AppPermission) {
 }
 
 func (c AppPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -895,10 +973,10 @@ type AppPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *AppPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissions) {
+func (toState *AppPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermissions) {
 }
 
-func (newState *AppPermissions) SyncEffectiveFieldsDuringRead(existingState AppPermissions) {
+func (toState *AppPermissions) SyncFieldsDuringRead(ctx context.Context, fromState AppPermissions) {
 }
 
 func (c AppPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -976,14 +1054,14 @@ func (o *AppPermissions) SetAccessControlList(ctx context.Context, v []AppAccess
 
 type AppPermissionsDescription struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsDescription) {
+func (toState *AppPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermissionsDescription) {
 }
 
-func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState AppPermissionsDescription) {
+func (toState *AppPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState AppPermissionsDescription) {
 }
 
 func (c AppPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1030,19 +1108,6 @@ type AppPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsRequest) {
-}
-
-func (newState *AppPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState AppPermissionsRequest) {
-}
-
-func (c AppPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["app_name"] = attrs["app_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
@@ -1109,6 +1174,7 @@ func (o *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []Ap
 }
 
 type AppResource struct {
+	Database types.Object `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
 
@@ -1125,13 +1191,110 @@ type AppResource struct {
 	UcSecurable types.Object `tfsdk:"uc_securable"`
 }
 
-func (newState *AppResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource) {
+func (toState *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResource) {
+	if !fromPlan.Database.IsNull() && !fromPlan.Database.IsUnknown() {
+		if toStateDatabase, ok := toState.GetDatabase(ctx); ok {
+			if fromPlanDatabase, ok := fromPlan.GetDatabase(ctx); ok {
+				toStateDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabase)
+				toState.SetDatabase(ctx, toStateDatabase)
+			}
+		}
+	}
+	if !fromPlan.Job.IsNull() && !fromPlan.Job.IsUnknown() {
+		if toStateJob, ok := toState.GetJob(ctx); ok {
+			if fromPlanJob, ok := fromPlan.GetJob(ctx); ok {
+				toStateJob.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJob)
+				toState.SetJob(ctx, toStateJob)
+			}
+		}
+	}
+	if !fromPlan.Secret.IsNull() && !fromPlan.Secret.IsUnknown() {
+		if toStateSecret, ok := toState.GetSecret(ctx); ok {
+			if fromPlanSecret, ok := fromPlan.GetSecret(ctx); ok {
+				toStateSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSecret)
+				toState.SetSecret(ctx, toStateSecret)
+			}
+		}
+	}
+	if !fromPlan.ServingEndpoint.IsNull() && !fromPlan.ServingEndpoint.IsUnknown() {
+		if toStateServingEndpoint, ok := toState.GetServingEndpoint(ctx); ok {
+			if fromPlanServingEndpoint, ok := fromPlan.GetServingEndpoint(ctx); ok {
+				toStateServingEndpoint.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanServingEndpoint)
+				toState.SetServingEndpoint(ctx, toStateServingEndpoint)
+			}
+		}
+	}
+	if !fromPlan.SqlWarehouse.IsNull() && !fromPlan.SqlWarehouse.IsUnknown() {
+		if toStateSqlWarehouse, ok := toState.GetSqlWarehouse(ctx); ok {
+			if fromPlanSqlWarehouse, ok := fromPlan.GetSqlWarehouse(ctx); ok {
+				toStateSqlWarehouse.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlWarehouse)
+				toState.SetSqlWarehouse(ctx, toStateSqlWarehouse)
+			}
+		}
+	}
+	if !fromPlan.UcSecurable.IsNull() && !fromPlan.UcSecurable.IsUnknown() {
+		if toStateUcSecurable, ok := toState.GetUcSecurable(ctx); ok {
+			if fromPlanUcSecurable, ok := fromPlan.GetUcSecurable(ctx); ok {
+				toStateUcSecurable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUcSecurable)
+				toState.SetUcSecurable(ctx, toStateUcSecurable)
+			}
+		}
+	}
 }
 
-func (newState *AppResource) SyncEffectiveFieldsDuringRead(existingState AppResource) {
+func (toState *AppResource) SyncFieldsDuringRead(ctx context.Context, fromState AppResource) {
+	if !fromState.Database.IsNull() && !fromState.Database.IsUnknown() {
+		if toStateDatabase, ok := toState.GetDatabase(ctx); ok {
+			if fromStateDatabase, ok := fromState.GetDatabase(ctx); ok {
+				toStateDatabase.SyncFieldsDuringRead(ctx, fromStateDatabase)
+				toState.SetDatabase(ctx, toStateDatabase)
+			}
+		}
+	}
+	if !fromState.Job.IsNull() && !fromState.Job.IsUnknown() {
+		if toStateJob, ok := toState.GetJob(ctx); ok {
+			if fromStateJob, ok := fromState.GetJob(ctx); ok {
+				toStateJob.SyncFieldsDuringRead(ctx, fromStateJob)
+				toState.SetJob(ctx, toStateJob)
+			}
+		}
+	}
+	if !fromState.Secret.IsNull() && !fromState.Secret.IsUnknown() {
+		if toStateSecret, ok := toState.GetSecret(ctx); ok {
+			if fromStateSecret, ok := fromState.GetSecret(ctx); ok {
+				toStateSecret.SyncFieldsDuringRead(ctx, fromStateSecret)
+				toState.SetSecret(ctx, toStateSecret)
+			}
+		}
+	}
+	if !fromState.ServingEndpoint.IsNull() && !fromState.ServingEndpoint.IsUnknown() {
+		if toStateServingEndpoint, ok := toState.GetServingEndpoint(ctx); ok {
+			if fromStateServingEndpoint, ok := fromState.GetServingEndpoint(ctx); ok {
+				toStateServingEndpoint.SyncFieldsDuringRead(ctx, fromStateServingEndpoint)
+				toState.SetServingEndpoint(ctx, toStateServingEndpoint)
+			}
+		}
+	}
+	if !fromState.SqlWarehouse.IsNull() && !fromState.SqlWarehouse.IsUnknown() {
+		if toStateSqlWarehouse, ok := toState.GetSqlWarehouse(ctx); ok {
+			if fromStateSqlWarehouse, ok := fromState.GetSqlWarehouse(ctx); ok {
+				toStateSqlWarehouse.SyncFieldsDuringRead(ctx, fromStateSqlWarehouse)
+				toState.SetSqlWarehouse(ctx, toStateSqlWarehouse)
+			}
+		}
+	}
+	if !fromState.UcSecurable.IsNull() && !fromState.UcSecurable.IsUnknown() {
+		if toStateUcSecurable, ok := toState.GetUcSecurable(ctx); ok {
+			if fromStateUcSecurable, ok := fromState.GetUcSecurable(ctx); ok {
+				toStateUcSecurable.SyncFieldsDuringRead(ctx, fromStateUcSecurable)
+				toState.SetUcSecurable(ctx, toStateUcSecurable)
+			}
+		}
+	}
 }
 
 func (c AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database"] = attrs["database"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["job"] = attrs["job"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -1152,6 +1315,7 @@ func (c AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"database":         reflect.TypeOf(AppResourceDatabase{}),
 		"job":              reflect.TypeOf(AppResourceJob{}),
 		"secret":           reflect.TypeOf(AppResourceSecret{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint{}),
@@ -1167,6 +1331,7 @@ func (o AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database":         o.Database,
 			"description":      o.Description,
 			"job":              o.Job,
 			"name":             o.Name,
@@ -1181,6 +1346,7 @@ func (o AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o AppResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database":         AppResourceDatabase{}.Type(ctx),
 			"description":      types.StringType,
 			"job":              AppResourceJob{}.Type(ctx),
 			"name":             types.StringType,
@@ -1192,6 +1358,31 @@ func (o AppResource) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDatabase returns the value of the Database field in AppResource as
+// a AppResourceDatabase value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetDatabase(ctx context.Context) (AppResourceDatabase, bool) {
+	var e AppResourceDatabase
+	if o.Database.IsNull() || o.Database.IsUnknown() {
+		return e, false
+	}
+	var v AppResourceDatabase
+	d := o.Database.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabase sets the value of the Database field in AppResource.
+func (o *AppResource) SetDatabase(ctx context.Context, v AppResourceDatabase) {
+	vs := v.ToObjectValue(ctx)
+	o.Database = vs
+}
+
 // GetJob returns the value of the Job field in AppResource as
 // a AppResourceJob value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1200,7 +1391,7 @@ func (o *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
 	if o.Job.IsNull() || o.Job.IsUnknown() {
 		return e, false
 	}
-	var v []AppResourceJob
+	var v AppResourceJob
 	d := o.Job.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1208,10 +1399,7 @@ func (o *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetJob sets the value of the Job field in AppResource.
@@ -1228,7 +1416,7 @@ func (o *AppResource) GetSecret(ctx context.Context) (AppResourceSecret, bool) {
 	if o.Secret.IsNull() || o.Secret.IsUnknown() {
 		return e, false
 	}
-	var v []AppResourceSecret
+	var v AppResourceSecret
 	d := o.Secret.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1236,10 +1424,7 @@ func (o *AppResource) GetSecret(ctx context.Context) (AppResourceSecret, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSecret sets the value of the Secret field in AppResource.
@@ -1256,7 +1441,7 @@ func (o *AppResource) GetServingEndpoint(ctx context.Context) (AppResourceServin
 	if o.ServingEndpoint.IsNull() || o.ServingEndpoint.IsUnknown() {
 		return e, false
 	}
-	var v []AppResourceServingEndpoint
+	var v AppResourceServingEndpoint
 	d := o.ServingEndpoint.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1264,10 +1449,7 @@ func (o *AppResource) GetServingEndpoint(ctx context.Context) (AppResourceServin
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetServingEndpoint sets the value of the ServingEndpoint field in AppResource.
@@ -1284,7 +1466,7 @@ func (o *AppResource) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWareho
 	if o.SqlWarehouse.IsNull() || o.SqlWarehouse.IsUnknown() {
 		return e, false
 	}
-	var v []AppResourceSqlWarehouse
+	var v AppResourceSqlWarehouse
 	d := o.SqlWarehouse.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1292,10 +1474,7 @@ func (o *AppResource) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWareho
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSqlWarehouse sets the value of the SqlWarehouse field in AppResource.
@@ -1312,7 +1491,7 @@ func (o *AppResource) GetUcSecurable(ctx context.Context) (AppResourceUcSecurabl
 	if o.UcSecurable.IsNull() || o.UcSecurable.IsUnknown() {
 		return e, false
 	}
-	var v []AppResourceUcSecurable
+	var v AppResourceUcSecurable
 	d := o.UcSecurable.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1320,16 +1499,70 @@ func (o *AppResource) GetUcSecurable(ctx context.Context) (AppResourceUcSecurabl
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetUcSecurable sets the value of the UcSecurable field in AppResource.
 func (o *AppResource) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable) {
 	vs := v.ToObjectValue(ctx)
 	o.UcSecurable = vs
+}
+
+type AppResourceDatabase struct {
+	DatabaseName types.String `tfsdk:"database_name"`
+
+	InstanceName types.String `tfsdk:"instance_name"`
+
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (toState *AppResourceDatabase) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceDatabase) {
+}
+
+func (toState *AppResourceDatabase) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceDatabase) {
+}
+
+func (c AppResourceDatabase) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceDatabase.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppResourceDatabase) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceDatabase
+// only implements ToObjectValue() and Type().
+func (o AppResourceDatabase) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database_name": o.DatabaseName,
+			"instance_name": o.InstanceName,
+			"permission":    o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppResourceDatabase) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database_name": types.StringType,
+			"instance_name": types.StringType,
+			"permission":    types.StringType,
+		},
+	}
 }
 
 type AppResourceJob struct {
@@ -1340,10 +1573,10 @@ type AppResourceJob struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceJob) {
+func (toState *AppResourceJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceJob) {
 }
 
-func (newState *AppResourceJob) SyncEffectiveFieldsDuringRead(existingState AppResourceJob) {
+func (toState *AppResourceJob) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceJob) {
 }
 
 func (c AppResourceJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1396,10 +1629,10 @@ type AppResourceSecret struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *AppResourceSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSecret) {
+func (toState *AppResourceSecret) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceSecret) {
 }
 
-func (newState *AppResourceSecret) SyncEffectiveFieldsDuringRead(existingState AppResourceSecret) {
+func (toState *AppResourceSecret) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceSecret) {
 }
 
 func (c AppResourceSecret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1453,10 +1686,10 @@ type AppResourceServingEndpoint struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceServingEndpoint) {
+func (toState *AppResourceServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceServingEndpoint) {
 }
 
-func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringRead(existingState AppResourceServingEndpoint) {
+func (toState *AppResourceServingEndpoint) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceServingEndpoint) {
 }
 
 func (c AppResourceServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1507,10 +1740,10 @@ type AppResourceSqlWarehouse struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSqlWarehouse) {
+func (toState *AppResourceSqlWarehouse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceSqlWarehouse) {
 }
 
-func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringRead(existingState AppResourceSqlWarehouse) {
+func (toState *AppResourceSqlWarehouse) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceSqlWarehouse) {
 }
 
 func (c AppResourceSqlWarehouse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1561,10 +1794,10 @@ type AppResourceUcSecurable struct {
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
-func (newState *AppResourceUcSecurable) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceUcSecurable) {
+func (toState *AppResourceUcSecurable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppResourceUcSecurable) {
 }
 
-func (newState *AppResourceUcSecurable) SyncEffectiveFieldsDuringRead(existingState AppResourceUcSecurable) {
+func (toState *AppResourceUcSecurable) SyncFieldsDuringRead(ctx context.Context, fromState AppResourceUcSecurable) {
 }
 
 func (c AppResourceUcSecurable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1617,10 +1850,10 @@ type ApplicationStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus) {
+func (toState *ApplicationStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ApplicationStatus) {
 }
 
-func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus) {
+func (toState *ApplicationStatus) SyncFieldsDuringRead(ctx context.Context, fromState ApplicationStatus) {
 }
 
 func (c ApplicationStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1670,10 +1903,10 @@ type ComputeStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus) {
+func (toState *ComputeStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComputeStatus) {
 }
 
-func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState ComputeStatus) {
+func (toState *ComputeStatus) SyncFieldsDuringRead(ctx context.Context, fromState ComputeStatus) {
 }
 
 func (c ComputeStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1716,8 +1949,8 @@ func (o ComputeStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Create an app deployment
 type CreateAppDeploymentRequest struct {
+	// The app deployment configuration.
 	AppDeployment types.Object `tfsdk:"app_deployment"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -1766,7 +1999,7 @@ func (o *CreateAppDeploymentRequest) GetAppDeployment(ctx context.Context) (AppD
 	if o.AppDeployment.IsNull() || o.AppDeployment.IsUnknown() {
 		return e, false
 	}
-	var v []AppDeployment
+	var v AppDeployment
 	d := o.AppDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1774,10 +2007,7 @@ func (o *CreateAppDeploymentRequest) GetAppDeployment(ctx context.Context) (AppD
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetAppDeployment sets the value of the AppDeployment field in CreateAppDeploymentRequest.
@@ -1786,7 +2016,6 @@ func (o *CreateAppDeploymentRequest) SetAppDeployment(ctx context.Context, v App
 	o.AppDeployment = vs
 }
 
-// Create an app
 type CreateAppRequest struct {
 	App types.Object `tfsdk:"app"`
 	// If true, the app will not be started after creation.
@@ -1836,7 +2065,7 @@ func (o *CreateAppRequest) GetApp(ctx context.Context) (App, bool) {
 	if o.App.IsNull() || o.App.IsUnknown() {
 		return e, false
 	}
-	var v []App
+	var v App
 	d := o.App.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1844,10 +2073,7 @@ func (o *CreateAppRequest) GetApp(ctx context.Context) (App, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetApp sets the value of the App field in CreateAppRequest.
@@ -1856,7 +2082,6 @@ func (o *CreateAppRequest) SetApp(ctx context.Context, v App) {
 	o.App = vs
 }
 
-// Delete an app
 type DeleteAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -1893,7 +2118,6 @@ func (o DeleteAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app deployment
 type GetAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -1934,7 +2158,6 @@ func (o GetAppDeploymentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get app permission levels
 type GetAppPermissionLevelsRequest struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -1976,10 +2199,10 @@ type GetAppPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetAppPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsResponse) {
+func (toState *GetAppPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppPermissionLevelsResponse) {
 }
 
-func (newState *GetAppPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsResponse) {
+func (toState *GetAppPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetAppPermissionLevelsResponse) {
 }
 
 func (c GetAppPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2049,7 +2272,6 @@ func (o *GetAppPermissionLevelsResponse) SetPermissionLevels(ctx context.Context
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get app permissions
 type GetAppPermissionsRequest struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -2086,7 +2308,6 @@ func (o GetAppPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get an app
 type GetAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -2123,7 +2344,6 @@ func (o GetAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List app deployments
 type ListAppDeploymentsRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -2176,10 +2396,10 @@ type ListAppDeploymentsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppDeploymentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsResponse) {
+func (toState *ListAppDeploymentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppDeploymentsResponse) {
 }
 
-func (newState *ListAppDeploymentsResponse) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsResponse) {
+func (toState *ListAppDeploymentsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAppDeploymentsResponse) {
 }
 
 func (c ListAppDeploymentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2252,7 +2472,6 @@ func (o *ListAppDeploymentsResponse) SetAppDeployments(ctx context.Context, v []
 	o.AppDeployments = types.ListValueMust(t, vs)
 }
 
-// List apps
 type ListAppsRequest struct {
 	// Upper bound for items returned.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2300,10 +2519,10 @@ type ListAppsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListAppsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsResponse) {
+func (toState *ListAppsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppsResponse) {
 }
 
-func (newState *ListAppsResponse) SyncEffectiveFieldsDuringRead(existingState ListAppsResponse) {
+func (toState *ListAppsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAppsResponse) {
 }
 
 func (c ListAppsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2381,18 +2600,6 @@ type StartAppRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartAppRequest) {
-}
-
-func (newState *StartAppRequest) SyncEffectiveFieldsDuringRead(existingState StartAppRequest) {
-}
-
-func (c StartAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2429,18 +2636,6 @@ type StopAppRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopAppRequest) {
-}
-
-func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
-}
-
-func (c StopAppRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2472,7 +2667,6 @@ func (o StopAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update an app
 type UpdateAppRequest struct {
 	App types.Object `tfsdk:"app"`
 	// The name of the app. The name must contain only lowercase alphanumeric
@@ -2523,7 +2717,7 @@ func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 	if o.App.IsNull() || o.App.IsUnknown() {
 		return e, false
 	}
-	var v []App
+	var v App
 	d := o.App.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2531,10 +2725,7 @@ func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetApp sets the value of the App field in UpdateAppRequest.

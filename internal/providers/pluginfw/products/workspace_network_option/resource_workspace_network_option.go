@@ -63,13 +63,16 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan settin
 	}
 
 	var workspace_network_option settings.WorkspaceNetworkOption
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_network_option)...)
 	if diags.HasError() {
 		return
 	}
 
-	var updateRequest = settings.UpdateWorkspaceNetworkOptionRequest{WorkspaceNetworkOption: workspace_network_option}
-	updateRequest.WorkspaceId = plan.WorkspaceId.ValueInt64()
+	updateRequest := settings.UpdateWorkspaceNetworkOptionRequest{
+		WorkspaceNetworkOption: workspace_network_option,
+		WorkspaceId:            plan.WorkspaceId.ValueInt64(),
+	}
 
 	response, err := client.WorkspaceNetworkConfiguration.UpdateWorkspaceNetworkOptionRpc(ctx, updateRequest)
 	if err != nil {
@@ -83,7 +86,7 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan settin
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
@@ -137,7 +140,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -34,11 +34,11 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "quickstart_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
+  provider     = databricks.workspace
+  name         = "quickstart_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
 
   column {
     name = "id"
@@ -76,12 +76,12 @@ resource "databricks_sql_endpoint" "this" {
 }
 
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "quickstart_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
-  warehouse_id       = databricks_sql_endpoint.this.id
+  provider     = databricks.workspace
+  name         = "quickstart_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
+  warehouse_id = databricks_sql_endpoint.this.id
 
   column {
     name = "id"
@@ -128,11 +128,11 @@ resource "databricks_schema" "things" {
   }
 }
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "identity_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
+  provider     = databricks.workspace
+  name         = "identity_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
   column {
     name     = "id"
     type     = "bigint"
@@ -151,13 +151,13 @@ resource "databricks_sql_table" "thing" {
 
 ```hcl
 resource "databricks_sql_table" "thing" {
-  provider           = databricks.workspace
-  name               = "auto_cluster_table"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "MANAGED"
-  cluster_keys       = ["AUTO"]
-  
+  provider     = databricks.workspace
+  name         = "auto_cluster_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
+  cluster_keys = ["AUTO"]
+
   column {
     name    = "name"
     type    = "string"
@@ -174,7 +174,7 @@ The following arguments are supported:
 * `name` - Name of table relative to parent catalog and schema. Change forces the creation of a new resource.
 * `catalog_name` - Name of parent catalog. Change forces the creation of a new resource.
 * `schema_name` - Name of parent Schema relative to parent Catalog. Change forces the creation of a new resource.
-* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL`, or `VIEW`. Change forces the creation of a new resource.
+* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL`, `METRIC_VIEW` or `VIEW`. Change forces the creation of a new resource.
 * `storage_location` - (Optional) URL of storage location for Table data (required for EXTERNAL Tables). Not supported for `VIEW` or `MANAGED` table_type.
 * `data_source_format` - (Optional) External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, and `TEXT`. Change forces the creation of a new resource. Not supported for `MANAGED` tables or `VIEW`.
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
@@ -257,7 +257,9 @@ The migration would look like this:
 
 ```hcl
 # Leave this resource definition as-is.
-resource "databricks_table" "this" { ... }
+resource "databricks_table" "this" {
+  # ...
+}
 
 # Remove the old resource without destroying the existing table.
 removed {
@@ -275,17 +277,17 @@ import {
 
 # Define the new databricks_sql_table resource.
 resource "databricks_sql_table" "this" {
-  catalog_name = "catalog"
-  schema_name = "schema"
-  name = "table"
-  table_type = "MANAGED"
+  catalog_name       = "catalog"
+  schema_name        = "schema"
+  name               = "table"
+  table_type         = "MANAGED"
   data_source_format = "DELTA"
   column {
-    name = "col1"
-    type = "STRING"   # <-- changed from type_name
+    name      = "col1"
+    type      = "STRING" # <-- changed from type_name
     type_json = "{\"type\":\"STRING\"}"
-    comment = "comment"
-    nullable = true
+    comment   = "comment"
+    nullable  = true
   }
   comment = "comment"
   properties = {

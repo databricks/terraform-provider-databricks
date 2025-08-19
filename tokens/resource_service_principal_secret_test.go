@@ -17,7 +17,7 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
 			e.Create(mock.Anything, oauth2.CreateServicePrincipalSecretRequest{
-				ServicePrincipalId: 123,
+				ServicePrincipalId: "123",
 				Lifetime:           "20s",
 			}).Return(&oauth2.CreateServicePrincipalSecretResponse{
 				Secret:     "qwe",
@@ -55,7 +55,7 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
 			e.Delete(mock.Anything, oauth2.DeleteServicePrincipalSecretRequest{
-				ServicePrincipalId: 123,
+				ServicePrincipalId: "123",
 				SecretId:           "003",
 			}).Return(nil)
 		},
@@ -73,13 +73,13 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
-			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
-				Secrets: []oauth2.SecretInfo{
-					{
-						Id:         "003",
-						SecretHash: "abc",
-						Status:     "ACTIVE",
-					},
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "003",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
 				},
 			}, nil)
 		},
@@ -100,13 +100,13 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
-			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
-				Secrets: []oauth2.SecretInfo{
-					{
-						Id:         "004",
-						SecretHash: "abc",
-						Status:     "ACTIVE",
-					},
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "004",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
 				},
 			}, nil)
 		},
@@ -115,6 +115,113 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 		Read:      true,
 		Removed:   true,
 		AccountID: "xyz",
+		HCL: `
+		service_principal_id = "123"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestServicePrincipalSecretReadWorkspace(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockServicePrincipalSecretsProxyAPI().EXPECT()
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "003",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
+				},
+			}, nil)
+		},
+		Resource: ResourceServicePrincipalSecret(),
+		ID:       "003",
+		Read:     true,
+		HCL: `
+		service_principal_id = "123"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"secret_hash": "abc",
+		"status":      "ACTIVE",
+	})
+}
+
+func TestServicePrincipalSecretReadRemovedWorkspace(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockServicePrincipalSecretsProxyAPI().EXPECT()
+			e.ListAll(mock.Anything, oauth2.ListServicePrincipalSecretsRequest{
+				ServicePrincipalId: "123",
+			}).Return([]oauth2.SecretInfo{
+				{
+					Id:         "004",
+					SecretHash: "abc",
+					Status:     "ACTIVE",
+				},
+			}, nil)
+		},
+		Resource: ResourceServicePrincipalSecret(),
+		ID:       "003",
+		Read:     true,
+		Removed:  true,
+		HCL: `
+		service_principal_id = "123"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestServicePrincipalSecretCreateWorkspace(t *testing.T) {
+	expireTime := time.Now().Add(30 * time.Second).Format(time.RFC3339)
+	currentTime := time.Now().Format(time.RFC3339)
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockServicePrincipalSecretsProxyAPI().EXPECT()
+			e.Create(mock.Anything, oauth2.CreateServicePrincipalSecretRequest{
+				ServicePrincipalId: "123",
+				Lifetime:           "30s",
+			}).Return(&oauth2.CreateServicePrincipalSecretResponse{
+				Secret:     "secret-value",
+				Id:         "sp-secret-001",
+				Status:     "ACTIVE",
+				ExpireTime: expireTime,
+				CreateTime: currentTime,
+				UpdateTime: currentTime,
+				SecretHash: "hash-001",
+			}, nil)
+		},
+		Resource: ResourceServicePrincipalSecret(),
+		Create:   true,
+		HCL: `
+		service_principal_id = "123"
+		lifetime             = "30s"
+		`,
+		New: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"secret":               "secret-value",
+		"status":               "ACTIVE",
+		"service_principal_id": "123",
+		"id":                   "sp-secret-001",
+		"expire_time":          expireTime,
+		"create_time":          currentTime,
+		"update_time":          currentTime,
+		"secret_hash":          "hash-001",
+		"lifetime":             "30s",
+	})
+}
+
+func TestServicePrincipalSecretDeleteWorkspace(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockServicePrincipalSecretsProxyAPI().EXPECT()
+			e.Delete(mock.Anything, oauth2.DeleteServicePrincipalSecretRequest{
+				SecretId:           "sp-secret-001",
+				ServicePrincipalId: "123",
+			}).Return(nil)
+		},
+		Resource: ResourceServicePrincipalSecret(),
+		ID:       "sp-secret-001",
+		Delete:   true,
 		HCL: `
 		service_principal_id = "123"
 		`,

@@ -268,8 +268,24 @@ func importJob(ic *importContext, r *resource) error {
 		ic.emitIfWsfsFile(param.Default)
 		ic.emitIfVolumeFile(param.Default)
 	}
+	for _, env := range job.Environments {
+		if env.Spec != nil {
+			for _, dep := range env.Spec.Dependencies {
+				emitEnvironmentDependency(ic, dep)
+			}
+		}
+	}
 
 	return ic.importLibraries(r.Data, s)
+}
+
+func emitEnvironmentDependency(ic *importContext, dep string) {
+	v := dep
+	if res := requirementsFileRegexp.FindStringSubmatch(v); res != nil {
+		v = res[1]
+	}
+	ic.emitIfWsfsFile(v)
+	ic.emitIfVolumeFile(v)
 }
 
 func emitWebhookNotifications(ic *importContext, notifications *sdk_jobs.WebhookNotifications) {
@@ -487,7 +503,13 @@ var (
 		{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
-		{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
+		{Path: "parameter.default", Resource: "databricks_file"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_file"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+			MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+		{Path: "environments.spec.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+			Regexp: requirementsFileRegexp},
 		{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id",
 			Resource: "databricks_notification_destination"},
 		{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},

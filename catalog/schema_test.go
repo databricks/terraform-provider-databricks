@@ -18,6 +18,7 @@ const catalogTemplate = `
 `
 
 func TestUcAccSchema(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogTemplate + `
 		data "databricks_catalogs" "all" {
@@ -35,7 +36,7 @@ func TestUcAccSchema(t *testing.T) {
 				privileges = ["USE_CATALOG"]
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.RANDOM}"

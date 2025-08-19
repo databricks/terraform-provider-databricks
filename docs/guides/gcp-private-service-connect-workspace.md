@@ -10,7 +10,7 @@ Secure a workspace with private connectivity and mitigate data exfiltration risk
 
 ## Creating a GCP service account for Databricks Provisioning and Authenticate with Databricks account API
 
-To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp_workspace.md).
+To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp-workspace.md).
 
 ## Creating a VPC network
 
@@ -31,18 +31,10 @@ resource "google_compute_network" "dbx_private_vpc" {
 }
 
 resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" {
-  name          = "test-dbx-${random_string.suffix.result}"
-  ip_cidr_range = "10.0.0.0/16"
-  region        = "us-central1"
-  network       = google_compute_network.dbx_private_vpc.id
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-  secondary_ip_range {
-    range_name    = "svc"
-    ip_cidr_range = "10.2.0.0/20"
-  }
+  name                     = "test-dbx-${random_string.suffix.result}"
+  ip_cidr_range            = "10.0.0.0/16"
+  region                   = "us-central1"
+  network                  = google_compute_network.dbx_private_vpc.id
   private_ip_google_access = true
 }
 
@@ -85,12 +77,10 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.databricks_account_id
   network_name = "test-demo-${random_string.suffix.result}"
   gcp_network_info {
-    network_project_id    = var.google_project
-    vpc_id                = google_compute_network.dbx_private_vpc.name
-    subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
-    subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
+    network_project_id = var.google_project
+    vpc_id             = google_compute_network.dbx_private_vpc.name
+    subnet_id          = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
+    subnet_region      = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
   }
   vpc_endpoints {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay_vpce.vpc_endpoint_id]
@@ -135,22 +125,12 @@ resource "databricks_mws_workspaces" "this" {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
     master_ip_range   = "10.3.0.0/28"
   }
-
-  token {
-    comment = "Terraform"
-  }
-
   # this makes sure that the NAT is created for outbound traffic before creating the workspace
   depends_on = [google_compute_router_nat.nat]
 }
 
 output "databricks_host" {
   value = databricks_mws_workspaces.this.workspace_url
-}
-
-output "databricks_token" {
-  value     = databricks_mws_workspaces.this.token[0].token_value
-  sensitive = true
 }
 ```
 

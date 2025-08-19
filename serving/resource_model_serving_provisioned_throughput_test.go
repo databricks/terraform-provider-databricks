@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/service/serving"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -141,7 +143,7 @@ func TestModelServingProvisionedThroughputCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints/pt",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -197,7 +199,7 @@ func TestModelServingProvisionedThroughputCreate_WithErrorOnWait(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -326,7 +328,7 @@ func TestModelServingProvisionedThroughputRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -491,7 +493,7 @@ func TestModelServingProvisionedThroughputUpdate_Error(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -674,7 +676,7 @@ func TestModelServingProvisionedThroughputDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

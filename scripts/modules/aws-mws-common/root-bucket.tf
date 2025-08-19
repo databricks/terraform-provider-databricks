@@ -28,4 +28,3 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
   bucket = aws_s3_bucket.root_storage_bucket.id
   policy = data.databricks_aws_bucket_policy.this.json
 }
-

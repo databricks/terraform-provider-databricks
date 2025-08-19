@@ -7,11 +7,11 @@ title: "[ISSUE] Issue with `databricks_XXX` resource"
 <!--
 Hi there,
 
-Please make sure that you checked Troubleshooting Guide first: 
+Please make sure that you checked Troubleshooting Guide first:
 https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting
 
-Thank you for opening an issue. 
-Please note that we try to keep the Databricks Provider issue tracker reserved for bug reports and feature requests. 
+Thank you for opening an issue.
+Please note that we try to keep the Databricks Provider issue tracker reserved for bug reports and feature requests.
 For general Terraform usage questions, please see: <https://www.terraform.io/community.html>.
 Questions about Databricks Provider please post on https://community.databricks.com
 -->

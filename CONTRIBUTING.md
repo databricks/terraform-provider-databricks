@@ -4,6 +4,7 @@
 
 - [Issues for new contributors](#issues-for-new-contributors)
 - [Contribution Workflow](#contribution-workflow)
+- [Changelog](#changelog)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
@@ -51,6 +52,8 @@ Code contributions—bug fixes, new development, test improvement — all follow
     git commit -m "commit message here"
     ```
 
+1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading. See the [Changelog](#changelog) section for more details.
+
 1. Push your changes to your GitHub repo.
 
     ```bash
@@ -66,6 +69,30 @@ Additional git and GitHub resources:
 [Git documentation](https://git-scm.com/documentation)
 [Git development workflow](https://docs.scipy.org/doc/numpy/dev/development_workflow.html)
 [Resolving merge conflicts](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/)
+
+## Changelog
+
+All PRs that introduce a new feature, fix a bug, improve documentation, or change the behavior of the exporter must include a description of the change in the `NEXT_CHANGELOG.md` file. This file is prepended to the `CHANGELOG.md` file when a new release is created, then cleared out for the next release. Add your changelog entry to the appropriate section of the `NEXT_CHANGELOG.md` file.
+
+If the proposed change has no user-facing impact or does not require an additional changelog entry (e.g. correcting a typo in the documentation), do not add an entry to the `NEXT_CHANGELOG.md` file, and add the text `NO_CHANGELOG=true` to your PR description.
+
+The entries of the changelog must have the following format:
+
+```
+ * <Summary of the change> ([#<PR number>](<PR link>)).
+
+   <Optional additional information>
+```
+
+For example:
+
+```
+ * Added support for new feature ([#123](https://github.com/databricks/terraform-provider-databricks/pull/123)).
+```
+
+Include additional information to provide context for the change, if necessary. For example, you may include links to the Databricks documentation website, the Terraform documentation website, examples, or other relevant resources.
+
+The `NEXT_CHANGELOG.md` file also determines the next version to be released. The version number in the `NEXT_CHANGELOG.md` is automatically set to the next minor version. If there are any new features or breaking changes, leave this as is. Otherwise, set the version to the next patch version. You can see the current version at the top of the `CHANGELOG.md` file.
 
 ## Installing from source
 
@@ -109,10 +136,10 @@ provider_installation {
 
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
-## Developing Resources or Data Sources using Plugin Framework 
+## Developing Resources or Data Sources using Plugin Framework
 
 ### Package organization for Providers
-We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows: 
+We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows:
 - `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
 - `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
 - `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
@@ -125,22 +152,22 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
   - In the `Metadata()`, use the method `GetDatabricksProductionName()`.
   - In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix. The schema for the struct is automatically generated and maintained within the `ApplySchemaCustomizations` method of that struct. If you need to customize the schema further, pass in a `CustomizableSchema` to `ResourceStructToSchema` and customize the schema there. If you need to use a manually crafted struct in place of the auto-generated one, you must implement the `ApplySchemaCustomizations` method in a similar way.
 3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
-4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
+4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review. 
+6. Create a PR and send it for review.
 
 ### Adding a new data source
 1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`. 
+2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`.
 3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
-4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
+4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review. 
+6. Create a PR and send it for review.
 
 ### Migrating resource to plugin framework
 There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
-- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
-- Integration tests shouldn't require any major changes.   
+- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`.
+- Integration tests shouldn't require any major changes.
 
 By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, use the `_SdkV2` variant from the `internal/service/{package}_tf` package when defining the resource schema and when interacting with the plan, config and state. Additionally, in the `Schema()` method, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
 ```go
@@ -152,7 +179,7 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
 ```
 
 ### Code Organization
-Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
+Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package.
 
 Note: Only Docs will stay under root docs/ directory.
 
@@ -163,7 +190,7 @@ Note: Only Docs will stay under root docs/ directory.
     var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
     var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
     ```
-2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.  
+2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.
 3. Any method that returns only diagnostics should be called inline while appending diagnostics in response. Example:
     ```golang
     resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
@@ -179,12 +206,12 @@ Note: Only Docs will stay under root docs/ directory.
         return
     }
     ```
-4. Any method returning an error should directly be followed by appending that to the diagnostics. 
+4. Any method returning an error should directly be followed by appending that to the diagnostics.
     ```golang
     err := method()
-    if err != nil { 
+    if err != nil {
         resp.Diagnostics.AddError("message", err.Error())
-        return 
+        return
     }
     ```
 5. Any method returning a value alongside Diagnostics should also directly be followed by appending that to the diagnostics.

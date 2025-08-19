@@ -235,7 +235,7 @@ data "databricks_user" "john" {
 resource "databricks_budget_policy" "this" {
   policy_name = "data-science-budget-policy"
   custom_tags = [{
-    key = "mykey"
+    key   = "mykey"
     value = "myvalue"
   }]
 }

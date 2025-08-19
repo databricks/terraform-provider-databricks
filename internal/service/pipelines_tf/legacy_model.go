@@ -52,6 +52,8 @@ type CreatePipeline_SdkV2 struct {
 	DryRun types.Bool `tfsdk:"dry_run"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.List `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
@@ -77,12 +79,7 @@ type CreatePipeline_SdkV2 struct {
 	// editing the pipeline in the Databricks user interface and it is added to
 	// sys.path when executing Python sources during pipeline execution.
 	RootPath types.String `tfsdk:"root_path"`
-	// Write-only setting, available only in Create/Update calls. Specifies the
-	// user or service principal that the pipeline runs as. If not specified,
-	// the pipeline runs as the user who created the pipeline.
-	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
@@ -90,6 +87,10 @@ type CreatePipeline_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -97,53 +98,6 @@ type CreatePipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
-}
-
-func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline_SdkV2) {
-}
-
-func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePipeline_SdkV2) {
-}
-
-func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["dry_run"] = attrs["dry_run"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
@@ -158,6 +112,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment_SdkV2{}),
 		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
@@ -166,6 +121,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
 		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -188,6 +144,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"development":           o.Development,
 			"dry_run":               o.DryRun,
 			"edition":               o.Edition,
+			"environment":           o.Environment,
 			"event_log":             o.EventLog,
 			"filters":               o.Filters,
 			"gateway_definition":    o.GatewayDefinition,
@@ -203,6 +160,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
 			"storage":               o.Storage,
+			"tags":                  o.Tags,
 			"target":                o.Target,
 			"trigger":               o.Trigger,
 		})
@@ -229,6 +187,9 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"development": types.BoolType,
 			"dry_run":     types.BoolType,
 			"edition":     types.StringType,
+			"environment": basetypes.ListType{
+				ElemType: PipelinesEnvironment_SdkV2{}.Type(ctx),
+			},
 			"event_log": basetypes.ListType{
 				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
 			},
@@ -260,7 +221,10 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -344,6 +308,32 @@ func (o *CreatePipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDepl
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in CreatePipeline_SdkV2 as
+// a PipelinesEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetEnvironment(ctx context.Context) (PipelinesEnvironment_SdkV2, bool) {
+	var e PipelinesEnvironment_SdkV2
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment_SdkV2
+	d := o.Environment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetEnvironment(ctx context.Context, v PipelinesEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environment = types.ListValueMust(t, vs)
 }
 
 // GetEventLog returns the value of the EventLog field in CreatePipeline_SdkV2 as
@@ -554,6 +544,32 @@ func (o *CreatePipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
 	o.RunAs = types.ListValueMust(t, vs)
 }
 
+// GetTags returns the value of the Tags field in CreatePipeline_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
+}
+
 // GetTrigger returns the value of the Trigger field in CreatePipeline_SdkV2 as
 // a PipelineTrigger_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -588,10 +604,26 @@ type CreatePipelineResponse_SdkV2 struct {
 	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
-func (newState *CreatePipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipelineResponse_SdkV2) {
+func (toState *CreatePipelineResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePipelineResponse_SdkV2) {
+	if !fromPlan.EffectiveSettings.IsNull() && !fromPlan.EffectiveSettings.IsUnknown() {
+		if toStateEffectiveSettings, ok := toState.GetEffectiveSettings(ctx); ok {
+			if fromPlanEffectiveSettings, ok := fromPlan.GetEffectiveSettings(ctx); ok {
+				toStateEffectiveSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectiveSettings)
+				toState.SetEffectiveSettings(ctx, toStateEffectiveSettings)
+			}
+		}
+	}
 }
 
-func (newState *CreatePipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse_SdkV2) {
+func (toState *CreatePipelineResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreatePipelineResponse_SdkV2) {
+	if !fromState.EffectiveSettings.IsNull() && !fromState.EffectiveSettings.IsUnknown() {
+		if toStateEffectiveSettings, ok := toState.GetEffectiveSettings(ctx); ok {
+			if fromStateEffectiveSettings, ok := fromState.GetEffectiveSettings(ctx); ok {
+				toStateEffectiveSettings.SyncFieldsDuringRead(ctx, fromStateEffectiveSettings)
+				toState.SetEffectiveSettings(ctx, toStateEffectiveSettings)
+			}
+		}
+	}
 }
 
 func (c CreatePipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -671,10 +703,10 @@ type CronTrigger_SdkV2 struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTrigger_SdkV2) {
+func (toState *CronTrigger_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronTrigger_SdkV2) {
 }
 
-func (newState *CronTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState CronTrigger_SdkV2) {
+func (toState *CronTrigger_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CronTrigger_SdkV2) {
 }
 
 func (c CronTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -724,10 +756,10 @@ type DataPlaneId_SdkV2 struct {
 	SeqNo types.Int64 `tfsdk:"seq_no"`
 }
 
-func (newState *DataPlaneId_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneId_SdkV2) {
+func (toState *DataPlaneId_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataPlaneId_SdkV2) {
 }
 
-func (newState *DataPlaneId_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneId_SdkV2) {
+func (toState *DataPlaneId_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DataPlaneId_SdkV2) {
 }
 
 func (c DataPlaneId_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -770,7 +802,6 @@ func (o DataPlaneId_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete a pipeline
 type DeletePipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -809,10 +840,10 @@ func (o DeletePipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeletePipelineResponse_SdkV2 struct {
 }
 
-func (newState *DeletePipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineResponse_SdkV2) {
+func (toState *DeletePipelineResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePipelineResponse_SdkV2) {
 }
 
-func (newState *DeletePipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse_SdkV2) {
+func (toState *DeletePipelineResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeletePipelineResponse_SdkV2) {
 }
 
 func (c DeletePipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -873,6 +904,8 @@ type EditPipeline_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.List `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.List `tfsdk:"event_log"`
 	// If present, the last-modified time of the pipeline settings before the
@@ -904,12 +937,7 @@ type EditPipeline_SdkV2 struct {
 	// editing the pipeline in the Databricks user interface and it is added to
 	// sys.path when executing Python sources during pipeline execution.
 	RootPath types.String `tfsdk:"root_path"`
-	// Write-only setting, available only in Create/Update calls. Specifies the
-	// user or service principal that the pipeline runs as. If not specified,
-	// the pipeline runs as the user who created the pipeline.
-	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
@@ -917,6 +945,10 @@ type EditPipeline_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -924,54 +956,6 @@ type EditPipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
-}
-
-func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline_SdkV2) {
-}
-
-func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPipeline_SdkV2) {
-}
-
-func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
-	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
-	attrs["catalog"] = attrs["catalog"].SetOptional()
-	attrs["channel"] = attrs["channel"].SetOptional()
-	attrs["clusters"] = attrs["clusters"].SetOptional()
-	attrs["configuration"] = attrs["configuration"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].SetOptional()
-	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["development"] = attrs["development"].SetOptional()
-	attrs["edition"] = attrs["edition"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].SetOptional()
-	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
-	attrs["filters"] = attrs["filters"].SetOptional()
-	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
-	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
-	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["libraries"] = attrs["libraries"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["notifications"] = attrs["notifications"].SetOptional()
-	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["restart_window"] = attrs["restart_window"].SetOptional()
-	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["root_path"] = attrs["root_path"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["serverless"] = attrs["serverless"].SetOptional()
-	attrs["storage"] = attrs["storage"].SetOptional()
-	attrs["target"] = attrs["target"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].SetOptional()
-	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -986,6 +970,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment_SdkV2{}),
 		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
@@ -994,6 +979,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
 		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -1015,6 +1001,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":             o.Deployment,
 			"development":            o.Development,
 			"edition":                o.Edition,
+			"environment":            o.Environment,
 			"event_log":              o.EventLog,
 			"expected_last_modified": o.ExpectedLastModified,
 			"filters":                o.Filters,
@@ -1032,6 +1019,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
 			"storage":                o.Storage,
+			"tags":                   o.Tags,
 			"target":                 o.Target,
 			"trigger":                o.Trigger,
 		})
@@ -1057,6 +1045,9 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
+			"environment": basetypes.ListType{
+				ElemType: PipelinesEnvironment_SdkV2{}.Type(ctx),
+			},
 			"event_log": basetypes.ListType{
 				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
 			},
@@ -1090,7 +1081,10 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -1174,6 +1168,32 @@ func (o *EditPipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in EditPipeline_SdkV2 as
+// a PipelinesEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetEnvironment(ctx context.Context) (PipelinesEnvironment_SdkV2, bool) {
+	var e PipelinesEnvironment_SdkV2
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment_SdkV2
+	d := o.Environment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetEnvironment(ctx context.Context, v PipelinesEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environment = types.ListValueMust(t, vs)
 }
 
 // GetEventLog returns the value of the EventLog field in EditPipeline_SdkV2 as
@@ -1384,6 +1404,32 @@ func (o *EditPipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
 	o.RunAs = types.ListValueMust(t, vs)
 }
 
+// GetTags returns the value of the Tags field in EditPipeline_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
+}
+
 // GetTrigger returns the value of the Trigger field in EditPipeline_SdkV2 as
 // a PipelineTrigger_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1413,10 +1459,10 @@ func (o *EditPipeline_SdkV2) SetTrigger(ctx context.Context, v PipelineTrigger_S
 type EditPipelineResponse_SdkV2 struct {
 }
 
-func (newState *EditPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipelineResponse_SdkV2) {
+func (toState *EditPipelineResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditPipelineResponse_SdkV2) {
 }
 
-func (newState *EditPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse_SdkV2) {
+func (toState *EditPipelineResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EditPipelineResponse_SdkV2) {
 }
 
 func (c EditPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1458,10 +1504,10 @@ type ErrorDetail_SdkV2 struct {
 	Fatal types.Bool `tfsdk:"fatal"`
 }
 
-func (newState *ErrorDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorDetail_SdkV2) {
+func (toState *ErrorDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ErrorDetail_SdkV2) {
 }
 
-func (newState *ErrorDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState ErrorDetail_SdkV2) {
+func (toState *ErrorDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ErrorDetail_SdkV2) {
 }
 
 func (c ErrorDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1544,10 +1590,10 @@ type EventLogSpec_SdkV2 struct {
 	Schema types.String `tfsdk:"schema"`
 }
 
-func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventLogSpec_SdkV2) {
+func (toState *EventLogSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EventLogSpec_SdkV2) {
 }
 
-func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState EventLogSpec_SdkV2) {
+func (toState *EventLogSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EventLogSpec_SdkV2) {
 }
 
 func (c EventLogSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1598,10 +1644,10 @@ type FileLibrary_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *FileLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLibrary_SdkV2) {
+func (toState *FileLibrary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileLibrary_SdkV2) {
 }
 
-func (newState *FileLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileLibrary_SdkV2) {
+func (toState *FileLibrary_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState FileLibrary_SdkV2) {
 }
 
 func (c FileLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1648,10 +1694,10 @@ type Filters_SdkV2 struct {
 	Include types.List `tfsdk:"include"`
 }
 
-func (newState *Filters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters_SdkV2) {
+func (toState *Filters_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Filters_SdkV2) {
 }
 
-func (newState *Filters_SdkV2) SyncEffectiveFieldsDuringRead(existingState Filters_SdkV2) {
+func (toState *Filters_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Filters_SdkV2) {
 }
 
 func (c Filters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1753,7 +1799,6 @@ func (o *Filters_SdkV2) SetInclude(ctx context.Context, v []types.String) {
 	o.Include = types.ListValueMust(t, vs)
 }
 
-// Get pipeline permission levels
 type GetPipelinePermissionLevelsRequest_SdkV2 struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
@@ -1795,10 +1840,10 @@ type GetPipelinePermissionLevelsResponse_SdkV2 struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (newState *GetPipelinePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse_SdkV2) {
+func (toState *GetPipelinePermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPipelinePermissionLevelsResponse_SdkV2) {
 }
 
-func (newState *GetPipelinePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse_SdkV2) {
+func (toState *GetPipelinePermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPipelinePermissionLevelsResponse_SdkV2) {
 }
 
 func (c GetPipelinePermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1868,7 +1913,6 @@ func (o *GetPipelinePermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx cont
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
-// Get pipeline permissions
 type GetPipelinePermissionsRequest_SdkV2 struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
@@ -1905,7 +1949,6 @@ func (o GetPipelinePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Get a pipeline
 type GetPipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -1961,6 +2004,11 @@ type GetPipelineResponse_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
+	// The user or service principal that the pipeline runs as, if specified in
+	// the request. This field indicates the explicit configuration of `run_as`
+	// for the pipeline. To find the value in all cases, explicit or implicit,
+	// use `run_as_user_name`.
+	RunAs types.List `tfsdk:"run_as"`
 	// Username of the user that the pipeline will run on behalf of.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 	// The pipeline specification. This field is not returned when called by
@@ -1970,10 +2018,42 @@ type GetPipelineResponse_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *GetPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineResponse_SdkV2) {
+func (toState *GetPipelineResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPipelineResponse_SdkV2) {
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
-func (newState *GetPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse_SdkV2) {
+func (toState *GetPipelineResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPipelineResponse_SdkV2) {
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
+		if toStateSpec, ok := toState.GetSpec(ctx); ok {
+			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
+				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
+				toState.SetSpec(ctx, toStateSpec)
+			}
+		}
+	}
 }
 
 func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1986,6 +2066,8 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2004,6 +2086,7 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 func (a GetPipelineResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"latest_updates": reflect.TypeOf(UpdateStateInfo_SdkV2{}),
+		"run_as":         reflect.TypeOf(RunAs_SdkV2{}),
 		"spec":           reflect.TypeOf(PipelineSpec_SdkV2{}),
 	}
 }
@@ -2024,6 +2107,7 @@ func (o GetPipelineResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"latest_updates":             o.LatestUpdates,
 			"name":                       o.Name,
 			"pipeline_id":                o.PipelineId,
+			"run_as":                     o.RunAs,
 			"run_as_user_name":           o.RunAsUserName,
 			"spec":                       o.Spec,
 			"state":                      o.State,
@@ -2043,8 +2127,11 @@ func (o GetPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo_SdkV2{}.Type(ctx),
 			},
-			"name":             types.StringType,
-			"pipeline_id":      types.StringType,
+			"name":        types.StringType,
+			"pipeline_id": types.StringType,
+			"run_as": basetypes.ListType{
+				ElemType: RunAs_SdkV2{}.Type(ctx),
+			},
 			"run_as_user_name": types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: PipelineSpec_SdkV2{}.Type(ctx),
@@ -2080,6 +2167,32 @@ func (o *GetPipelineResponse_SdkV2) SetLatestUpdates(ctx context.Context, v []Up
 	o.LatestUpdates = types.ListValueMust(t, vs)
 }
 
+// GetRunAs returns the value of the RunAs field in GetPipelineResponse_SdkV2 as
+// a RunAs_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPipelineResponse_SdkV2) GetRunAs(ctx context.Context) (RunAs_SdkV2, bool) {
+	var e RunAs_SdkV2
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs_SdkV2
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in GetPipelineResponse_SdkV2.
+func (o *GetPipelineResponse_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
 // GetSpec returns the value of the Spec field in GetPipelineResponse_SdkV2 as
 // a PipelineSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -2106,7 +2219,6 @@ func (o *GetPipelineResponse_SdkV2) SetSpec(ctx context.Context, v PipelineSpec_
 	o.Spec = types.ListValueMust(t, vs)
 }
 
-// Get a pipeline update
 type GetUpdateRequest_SdkV2 struct {
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"-"`
@@ -2152,10 +2264,26 @@ type GetUpdateResponse_SdkV2 struct {
 	Update types.List `tfsdk:"update"`
 }
 
-func (newState *GetUpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse_SdkV2) {
+func (toState *GetUpdateResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetUpdateResponse_SdkV2) {
+	if !fromPlan.Update.IsNull() && !fromPlan.Update.IsUnknown() {
+		if toStateUpdate, ok := toState.GetUpdate(ctx); ok {
+			if fromPlanUpdate, ok := fromPlan.GetUpdate(ctx); ok {
+				toStateUpdate.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUpdate)
+				toState.SetUpdate(ctx, toStateUpdate)
+			}
+		}
+	}
 }
 
-func (newState *GetUpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse_SdkV2) {
+func (toState *GetUpdateResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetUpdateResponse_SdkV2) {
+	if !fromState.Update.IsNull() && !fromState.Update.IsUnknown() {
+		if toStateUpdate, ok := toState.GetUpdate(ctx); ok {
+			if fromStateUpdate, ok := fromState.GetUpdate(ctx); ok {
+				toStateUpdate.SyncFieldsDuringRead(ctx, fromStateUpdate)
+				toState.SetUpdate(ctx, toStateUpdate)
+			}
+		}
+	}
 }
 
 func (c GetUpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2235,10 +2363,58 @@ type IngestionConfig_SdkV2 struct {
 	Table types.List `tfsdk:"table"`
 }
 
-func (newState *IngestionConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig_SdkV2) {
+func (toState *IngestionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IngestionConfig_SdkV2) {
+	if !fromPlan.Report.IsNull() && !fromPlan.Report.IsUnknown() {
+		if toStateReport, ok := toState.GetReport(ctx); ok {
+			if fromPlanReport, ok := fromPlan.GetReport(ctx); ok {
+				toStateReport.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanReport)
+				toState.SetReport(ctx, toStateReport)
+			}
+		}
+	}
+	if !fromPlan.Schema.IsNull() && !fromPlan.Schema.IsUnknown() {
+		if toStateSchema, ok := toState.GetSchema(ctx); ok {
+			if fromPlanSchema, ok := fromPlan.GetSchema(ctx); ok {
+				toStateSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchema)
+				toState.SetSchema(ctx, toStateSchema)
+			}
+		}
+	}
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
-func (newState *IngestionConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionConfig_SdkV2) {
+func (toState *IngestionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState IngestionConfig_SdkV2) {
+	if !fromState.Report.IsNull() && !fromState.Report.IsUnknown() {
+		if toStateReport, ok := toState.GetReport(ctx); ok {
+			if fromStateReport, ok := fromState.GetReport(ctx); ok {
+				toStateReport.SyncFieldsDuringRead(ctx, fromStateReport)
+				toState.SetReport(ctx, toStateReport)
+			}
+		}
+	}
+	if !fromState.Schema.IsNull() && !fromState.Schema.IsUnknown() {
+		if toStateSchema, ok := toState.GetSchema(ctx); ok {
+			if fromStateSchema, ok := fromState.GetSchema(ctx); ok {
+				toStateSchema.SyncFieldsDuringRead(ctx, fromStateSchema)
+				toState.SetSchema(ctx, toStateSchema)
+			}
+		}
+	}
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
 }
 
 func (c IngestionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2396,10 +2572,10 @@ type IngestionGatewayPipelineDefinition_SdkV2 struct {
 	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema"`
 }
 
-func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition_SdkV2) {
+func (toState *IngestionGatewayPipelineDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IngestionGatewayPipelineDefinition_SdkV2) {
 }
 
-func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition_SdkV2) {
+func (toState *IngestionGatewayPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState IngestionGatewayPipelineDefinition_SdkV2) {
 }
 
 func (c IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2472,10 +2648,26 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
-func (newState *IngestionPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition_SdkV2) {
+func (toState *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IngestionPipelineDefinition_SdkV2) {
+	if !fromPlan.TableConfiguration.IsNull() && !fromPlan.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromPlanTableConfiguration, ok := fromPlan.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
-func (newState *IngestionPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition_SdkV2) {
+func (toState *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState IngestionPipelineDefinition_SdkV2) {
+	if !fromState.TableConfiguration.IsNull() && !fromState.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromStateTableConfiguration, ok := fromState.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringRead(ctx, fromStateTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
 func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2587,7 +2779,114 @@ func (o *IngestionPipelineDefinition_SdkV2) SetTableConfiguration(ctx context.Co
 	o.TableConfiguration = types.ListValueMust(t, vs)
 }
 
-// List pipeline events
+// Configurations that are only applicable for query-based ingestion connectors.
+type IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2 struct {
+	// The names of the monotonically increasing columns in the source table
+	// that are used to enable the table to be read and ingested incrementally
+	// through structured streaming. The columns are allowed to have repeated
+	// values but have to be non-decreasing. If the source data is merged into
+	// the destination (e.g., using SCD Type 1 or Type 2), these columns will
+	// implicitly define the `sequence_by` behavior. You can still explicitly
+	// set `sequence_by` to override this default.
+	CursorColumns types.List `tfsdk:"cursor_columns"`
+	// Specifies a SQL WHERE condition that specifies that the source row has
+	// been deleted. This is sometimes referred to as "soft-deletes". For
+	// example: "Operation = 'DELETE'" or "is_deleted = true". This field is
+	// orthogonal to `hard_deletion_sync_interval_in_seconds`, one for
+	// soft-deletes and the other for hard-deletes. See also the
+	// hard_deletion_sync_min_interval_in_seconds field for handling of "hard
+	// deletes" where the source rows are physically removed from the table.
+	DeletionCondition types.String `tfsdk:"deletion_condition"`
+	// Specifies the minimum interval (in seconds) between snapshots on primary
+	// keys for detecting and synchronizing hard deletions—i.e., rows that
+	// have been physically removed from the source table. This interval acts as
+	// a lower bound. If ingestion runs less frequently than this value, hard
+	// deletion synchronization will align with the actual ingestion frequency
+	// instead of happening more often. If not set, hard deletion
+	// synchronization via snapshots is disabled. This field is mutable and can
+	// be updated without triggering a full snapshot.
+	HardDeletionSyncMinIntervalInSeconds types.Int64 `tfsdk:"hard_deletion_sync_min_interval_in_seconds"`
+}
+
+func (toState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) {
+}
+
+func (toState *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) {
+}
+
+func (c IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cursor_columns"] = attrs["cursor_columns"].SetOptional()
+	attrs["deletion_condition"] = attrs["deletion_condition"].SetOptional()
+	attrs["hard_deletion_sync_min_interval_in_seconds"] = attrs["hard_deletion_sync_min_interval_in_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cursor_columns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cursor_columns":                             o.CursorColumns,
+			"deletion_condition":                         o.DeletionCondition,
+			"hard_deletion_sync_min_interval_in_seconds": o.HardDeletionSyncMinIntervalInSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cursor_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"deletion_condition":                         types.StringType,
+			"hard_deletion_sync_min_interval_in_seconds": types.Int64Type,
+		},
+	}
+}
+
+// GetCursorColumns returns the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) GetCursorColumns(ctx context.Context) ([]types.String, bool) {
+	if o.CursorColumns.IsNull() || o.CursorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.CursorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCursorColumns sets the value of the CursorColumns field in IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2.
+func (o *IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) SetCursorColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cursor_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.CursorColumns = types.ListValueMust(t, vs)
+}
+
 type ListPipelineEventsRequest_SdkV2 struct {
 	// Criteria to select a subset of results, expressed using a SQL-like
 	// syntax. The supported filters are: 1. level='INFO' (or WARN or ERROR) 2.
@@ -2692,10 +2991,10 @@ type ListPipelineEventsResponse_SdkV2 struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (newState *ListPipelineEventsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse_SdkV2) {
+func (toState *ListPipelineEventsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPipelineEventsResponse_SdkV2) {
 }
 
-func (newState *ListPipelineEventsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse_SdkV2) {
+func (toState *ListPipelineEventsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListPipelineEventsResponse_SdkV2) {
 }
 
 func (c ListPipelineEventsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2771,7 +3070,6 @@ func (o *ListPipelineEventsResponse_SdkV2) SetEvents(ctx context.Context, v []Pi
 	o.Events = types.ListValueMust(t, vs)
 }
 
-// List pipelines
 type ListPipelinesRequest_SdkV2 struct {
 	// Select a subset of results based on the specified criteria. The supported
 	// filters are:
@@ -2870,10 +3168,10 @@ type ListPipelinesResponse_SdkV2 struct {
 	Statuses types.List `tfsdk:"statuses"`
 }
 
-func (newState *ListPipelinesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesResponse_SdkV2) {
+func (toState *ListPipelinesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPipelinesResponse_SdkV2) {
 }
 
-func (newState *ListPipelinesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse_SdkV2) {
+func (toState *ListPipelinesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListPipelinesResponse_SdkV2) {
 }
 
 func (c ListPipelinesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2946,7 +3244,6 @@ func (o *ListPipelinesResponse_SdkV2) SetStatuses(ctx context.Context, v []Pipel
 	o.Statuses = types.ListValueMust(t, vs)
 }
 
-// List pipeline updates
 type ListUpdatesRequest_SdkV2 struct {
 	// Max number of entries to return in a single page.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -3006,10 +3303,10 @@ type ListUpdatesResponse_SdkV2 struct {
 	Updates types.List `tfsdk:"updates"`
 }
 
-func (newState *ListUpdatesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesResponse_SdkV2) {
+func (toState *ListUpdatesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListUpdatesResponse_SdkV2) {
 }
 
-func (newState *ListUpdatesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse_SdkV2) {
+func (toState *ListUpdatesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListUpdatesResponse_SdkV2) {
 }
 
 func (c ListUpdatesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3088,10 +3385,10 @@ func (o *ListUpdatesResponse_SdkV2) SetUpdates(ctx context.Context, v []UpdateIn
 type ManualTrigger_SdkV2 struct {
 }
 
-func (newState *ManualTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ManualTrigger_SdkV2) {
+func (toState *ManualTrigger_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ManualTrigger_SdkV2) {
 }
 
-func (newState *ManualTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState ManualTrigger_SdkV2) {
+func (toState *ManualTrigger_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ManualTrigger_SdkV2) {
 }
 
 func (c ManualTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3131,10 +3428,10 @@ type NotebookLibrary_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (newState *NotebookLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookLibrary_SdkV2) {
+func (toState *NotebookLibrary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookLibrary_SdkV2) {
 }
 
-func (newState *NotebookLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary_SdkV2) {
+func (toState *NotebookLibrary_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NotebookLibrary_SdkV2) {
 }
 
 func (c NotebookLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3187,10 +3484,10 @@ type Notifications_SdkV2 struct {
 	EmailRecipients types.List `tfsdk:"email_recipients"`
 }
 
-func (newState *Notifications_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Notifications_SdkV2) {
+func (toState *Notifications_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Notifications_SdkV2) {
 }
 
-func (newState *Notifications_SdkV2) SyncEffectiveFieldsDuringRead(existingState Notifications_SdkV2) {
+func (toState *Notifications_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Notifications_SdkV2) {
 }
 
 func (c Notifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3330,10 +3627,10 @@ type Origin_SdkV2 struct {
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *Origin_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin_SdkV2) {
+func (toState *Origin_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Origin_SdkV2) {
 }
 
-func (newState *Origin_SdkV2) SyncEffectiveFieldsDuringRead(existingState Origin_SdkV2) {
+func (toState *Origin_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Origin_SdkV2) {
 }
 
 func (c Origin_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3426,10 +3723,10 @@ type PathPattern_SdkV2 struct {
 	Include types.String `tfsdk:"include"`
 }
 
-func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PathPattern_SdkV2) {
+func (toState *PathPattern_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PathPattern_SdkV2) {
 }
 
-func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringRead(existingState PathPattern_SdkV2) {
+func (toState *PathPattern_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PathPattern_SdkV2) {
 }
 
 func (c PathPattern_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3472,7 +3769,7 @@ func (o PathPattern_SdkV2) Type(ctx context.Context) attr.Type {
 type PipelineAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -3480,10 +3777,10 @@ type PipelineAccessControlRequest_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PipelineAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest_SdkV2) {
+func (toState *PipelineAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineAccessControlRequest_SdkV2) {
 }
 
-func (newState *PipelineAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest_SdkV2) {
+func (toState *PipelineAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineAccessControlRequest_SdkV2) {
 }
 
 func (c PipelineAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3545,10 +3842,10 @@ type PipelineAccessControlResponse_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *PipelineAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse_SdkV2) {
+func (toState *PipelineAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineAccessControlResponse_SdkV2) {
 }
 
-func (newState *PipelineAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse_SdkV2) {
+func (toState *PipelineAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineAccessControlResponse_SdkV2) {
 }
 
 func (c PipelineAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3727,10 +4024,90 @@ type PipelineCluster_SdkV2 struct {
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 }
 
-func (newState *PipelineCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineCluster_SdkV2) {
+func (toState *PipelineCluster_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineCluster_SdkV2) {
+	if !fromPlan.Autoscale.IsNull() && !fromPlan.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromPlanAutoscale, ok := fromPlan.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromPlan.AwsAttributes.IsNull() && !fromPlan.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromPlanAwsAttributes, ok := fromPlan.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromPlan.AzureAttributes.IsNull() && !fromPlan.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromPlanAzureAttributes, ok := fromPlan.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromPlan.ClusterLogConf.IsNull() && !fromPlan.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromPlanClusterLogConf, ok := fromPlan.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromPlan.GcpAttributes.IsNull() && !fromPlan.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromPlanGcpAttributes, ok := fromPlan.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
 }
 
-func (newState *PipelineCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineCluster_SdkV2) {
+func (toState *PipelineCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineCluster_SdkV2) {
+	if !fromState.Autoscale.IsNull() && !fromState.Autoscale.IsUnknown() {
+		if toStateAutoscale, ok := toState.GetAutoscale(ctx); ok {
+			if fromStateAutoscale, ok := fromState.GetAutoscale(ctx); ok {
+				toStateAutoscale.SyncFieldsDuringRead(ctx, fromStateAutoscale)
+				toState.SetAutoscale(ctx, toStateAutoscale)
+			}
+		}
+	}
+	if !fromState.AwsAttributes.IsNull() && !fromState.AwsAttributes.IsUnknown() {
+		if toStateAwsAttributes, ok := toState.GetAwsAttributes(ctx); ok {
+			if fromStateAwsAttributes, ok := fromState.GetAwsAttributes(ctx); ok {
+				toStateAwsAttributes.SyncFieldsDuringRead(ctx, fromStateAwsAttributes)
+				toState.SetAwsAttributes(ctx, toStateAwsAttributes)
+			}
+		}
+	}
+	if !fromState.AzureAttributes.IsNull() && !fromState.AzureAttributes.IsUnknown() {
+		if toStateAzureAttributes, ok := toState.GetAzureAttributes(ctx); ok {
+			if fromStateAzureAttributes, ok := fromState.GetAzureAttributes(ctx); ok {
+				toStateAzureAttributes.SyncFieldsDuringRead(ctx, fromStateAzureAttributes)
+				toState.SetAzureAttributes(ctx, toStateAzureAttributes)
+			}
+		}
+	}
+	if !fromState.ClusterLogConf.IsNull() && !fromState.ClusterLogConf.IsUnknown() {
+		if toStateClusterLogConf, ok := toState.GetClusterLogConf(ctx); ok {
+			if fromStateClusterLogConf, ok := fromState.GetClusterLogConf(ctx); ok {
+				toStateClusterLogConf.SyncFieldsDuringRead(ctx, fromStateClusterLogConf)
+				toState.SetClusterLogConf(ctx, toStateClusterLogConf)
+			}
+		}
+	}
+	if !fromState.GcpAttributes.IsNull() && !fromState.GcpAttributes.IsUnknown() {
+		if toStateGcpAttributes, ok := toState.GetGcpAttributes(ctx); ok {
+			if fromStateGcpAttributes, ok := fromState.GetGcpAttributes(ctx); ok {
+				toStateGcpAttributes.SyncFieldsDuringRead(ctx, fromStateGcpAttributes)
+				toState.SetGcpAttributes(ctx, toStateGcpAttributes)
+			}
+		}
+	}
 }
 
 func (c PipelineCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4136,10 +4513,10 @@ type PipelineClusterAutoscale_SdkV2 struct {
 	Mode types.String `tfsdk:"mode"`
 }
 
-func (newState *PipelineClusterAutoscale_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale_SdkV2) {
+func (toState *PipelineClusterAutoscale_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineClusterAutoscale_SdkV2) {
 }
 
-func (newState *PipelineClusterAutoscale_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale_SdkV2) {
+func (toState *PipelineClusterAutoscale_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineClusterAutoscale_SdkV2) {
 }
 
 func (c PipelineClusterAutoscale_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4192,10 +4569,10 @@ type PipelineDeployment_SdkV2 struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
-func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineDeployment_SdkV2) {
+func (toState *PipelineDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineDeployment_SdkV2) {
 }
 
-func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment_SdkV2) {
+func (toState *PipelineDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineDeployment_SdkV2) {
 }
 
 func (c PipelineDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4259,10 +4636,58 @@ type PipelineEvent_SdkV2 struct {
 	Timestamp types.String `tfsdk:"timestamp"`
 }
 
-func (newState *PipelineEvent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineEvent_SdkV2) {
+func (toState *PipelineEvent_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineEvent_SdkV2) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromPlan.Origin.IsNull() && !fromPlan.Origin.IsUnknown() {
+		if toStateOrigin, ok := toState.GetOrigin(ctx); ok {
+			if fromPlanOrigin, ok := fromPlan.GetOrigin(ctx); ok {
+				toStateOrigin.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOrigin)
+				toState.SetOrigin(ctx, toStateOrigin)
+			}
+		}
+	}
+	if !fromPlan.Sequence.IsNull() && !fromPlan.Sequence.IsUnknown() {
+		if toStateSequence, ok := toState.GetSequence(ctx); ok {
+			if fromPlanSequence, ok := fromPlan.GetSequence(ctx); ok {
+				toStateSequence.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSequence)
+				toState.SetSequence(ctx, toStateSequence)
+			}
+		}
+	}
 }
 
-func (newState *PipelineEvent_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineEvent_SdkV2) {
+func (toState *PipelineEvent_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineEvent_SdkV2) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromState.Origin.IsNull() && !fromState.Origin.IsUnknown() {
+		if toStateOrigin, ok := toState.GetOrigin(ctx); ok {
+			if fromStateOrigin, ok := fromState.GetOrigin(ctx); ok {
+				toStateOrigin.SyncFieldsDuringRead(ctx, fromStateOrigin)
+				toState.SetOrigin(ctx, toStateOrigin)
+			}
+		}
+	}
+	if !fromState.Sequence.IsNull() && !fromState.Sequence.IsUnknown() {
+		if toStateSequence, ok := toState.GetSequence(ctx); ok {
+			if fromStateSequence, ok := fromState.GetSequence(ctx); ok {
+				toStateSequence.SyncFieldsDuringRead(ctx, fromStateSequence)
+				toState.SetSequence(ctx, toStateSequence)
+			}
+		}
+	}
 }
 
 func (c PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4436,10 +4861,74 @@ type PipelineLibrary_SdkV2 struct {
 	Whl types.String `tfsdk:"whl"`
 }
 
-func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineLibrary_SdkV2) {
+func (toState *PipelineLibrary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineLibrary_SdkV2) {
+	if !fromPlan.File.IsNull() && !fromPlan.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromPlanFile, ok := fromPlan.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromPlan.Glob.IsNull() && !fromPlan.Glob.IsUnknown() {
+		if toStateGlob, ok := toState.GetGlob(ctx); ok {
+			if fromPlanGlob, ok := fromPlan.GetGlob(ctx); ok {
+				toStateGlob.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGlob)
+				toState.SetGlob(ctx, toStateGlob)
+			}
+		}
+	}
+	if !fromPlan.Maven.IsNull() && !fromPlan.Maven.IsUnknown() {
+		if toStateMaven, ok := toState.GetMaven(ctx); ok {
+			if fromPlanMaven, ok := fromPlan.GetMaven(ctx); ok {
+				toStateMaven.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMaven)
+				toState.SetMaven(ctx, toStateMaven)
+			}
+		}
+	}
+	if !fromPlan.Notebook.IsNull() && !fromPlan.Notebook.IsUnknown() {
+		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
+			if fromPlanNotebook, ok := fromPlan.GetNotebook(ctx); ok {
+				toStateNotebook.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebook)
+				toState.SetNotebook(ctx, toStateNotebook)
+			}
+		}
+	}
 }
 
-func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary_SdkV2) {
+func (toState *PipelineLibrary_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineLibrary_SdkV2) {
+	if !fromState.File.IsNull() && !fromState.File.IsUnknown() {
+		if toStateFile, ok := toState.GetFile(ctx); ok {
+			if fromStateFile, ok := fromState.GetFile(ctx); ok {
+				toStateFile.SyncFieldsDuringRead(ctx, fromStateFile)
+				toState.SetFile(ctx, toStateFile)
+			}
+		}
+	}
+	if !fromState.Glob.IsNull() && !fromState.Glob.IsUnknown() {
+		if toStateGlob, ok := toState.GetGlob(ctx); ok {
+			if fromStateGlob, ok := fromState.GetGlob(ctx); ok {
+				toStateGlob.SyncFieldsDuringRead(ctx, fromStateGlob)
+				toState.SetGlob(ctx, toStateGlob)
+			}
+		}
+	}
+	if !fromState.Maven.IsNull() && !fromState.Maven.IsUnknown() {
+		if toStateMaven, ok := toState.GetMaven(ctx); ok {
+			if fromStateMaven, ok := fromState.GetMaven(ctx); ok {
+				toStateMaven.SyncFieldsDuringRead(ctx, fromStateMaven)
+				toState.SetMaven(ctx, toStateMaven)
+			}
+		}
+	}
+	if !fromState.Notebook.IsNull() && !fromState.Notebook.IsUnknown() {
+		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
+			if fromStateNotebook, ok := fromState.GetNotebook(ctx); ok {
+				toStateNotebook.SyncFieldsDuringRead(ctx, fromStateNotebook)
+				toState.SetNotebook(ctx, toStateNotebook)
+			}
+		}
+	}
 }
 
 func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4619,14 +5108,14 @@ type PipelinePermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PipelinePermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermission_SdkV2) {
+func (toState *PipelinePermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelinePermission_SdkV2) {
 }
 
-func (newState *PipelinePermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermission_SdkV2) {
+func (toState *PipelinePermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelinePermission_SdkV2) {
 }
 
 func (c PipelinePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4710,10 +5199,10 @@ type PipelinePermissions_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (newState *PipelinePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissions_SdkV2) {
+func (toState *PipelinePermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelinePermissions_SdkV2) {
 }
 
-func (newState *PipelinePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions_SdkV2) {
+func (toState *PipelinePermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelinePermissions_SdkV2) {
 }
 
 func (c PipelinePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4791,14 +5280,14 @@ func (o *PipelinePermissions_SdkV2) SetAccessControlList(ctx context.Context, v 
 
 type PipelinePermissionsDescription_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
-	// Permission level
+
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (newState *PipelinePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription_SdkV2) {
+func (toState *PipelinePermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelinePermissionsDescription_SdkV2) {
 }
 
-func (newState *PipelinePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription_SdkV2) {
+func (toState *PipelinePermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelinePermissionsDescription_SdkV2) {
 }
 
 func (c PipelinePermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4845,19 +5334,6 @@ type PipelinePermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsRequest_SdkV2) {
-}
-
-func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest_SdkV2) {
-}
-
-func (c PipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
@@ -4946,6 +5422,8 @@ type PipelineSpec_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.List `tfsdk:"environment"`
 	// Event log configuration for this pipeline
 	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
@@ -4977,6 +5455,10 @@ type PipelineSpec_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -4986,10 +5468,138 @@ type PipelineSpec_SdkV2 struct {
 	Trigger types.List `tfsdk:"trigger"`
 }
 
-func (newState *PipelineSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec_SdkV2) {
+func (toState *PipelineSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineSpec_SdkV2) {
+	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromPlan.Environment.IsNull() && !fromPlan.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromPlanEnvironment, ok := fromPlan.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromPlan.EventLog.IsNull() && !fromPlan.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromPlanEventLog, ok := fromPlan.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromPlan.Filters.IsNull() && !fromPlan.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromPlanFilters, ok := fromPlan.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromPlan.GatewayDefinition.IsNull() && !fromPlan.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromPlanGatewayDefinition, ok := fromPlan.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromPlan.IngestionDefinition.IsNull() && !fromPlan.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromPlanIngestionDefinition, ok := fromPlan.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromPlan.RestartWindow.IsNull() && !fromPlan.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromPlanRestartWindow, ok := fromPlan.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
 }
 
-func (newState *PipelineSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineSpec_SdkV2) {
+func (toState *PipelineSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineSpec_SdkV2) {
+	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromState.Environment.IsNull() && !fromState.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromStateEnvironment, ok := fromState.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringRead(ctx, fromStateEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromState.EventLog.IsNull() && !fromState.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromStateEventLog, ok := fromState.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringRead(ctx, fromStateEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromState.Filters.IsNull() && !fromState.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromStateFilters, ok := fromState.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringRead(ctx, fromStateFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromState.GatewayDefinition.IsNull() && !fromState.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromStateGatewayDefinition, ok := fromState.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringRead(ctx, fromStateGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromState.IngestionDefinition.IsNull() && !fromState.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromStateIngestionDefinition, ok := fromState.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringRead(ctx, fromStateIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromState.RestartWindow.IsNull() && !fromState.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromStateRestartWindow, ok := fromState.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringRead(ctx, fromStateRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
 }
 
 func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5003,6 +5613,8 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["event_log"] = attrs["event_log"].SetOptional()
 	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["filters"] = attrs["filters"].SetOptional()
@@ -5022,6 +5634,7 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5041,6 +5654,7 @@ func (a PipelineSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment_SdkV2{}),
 		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
@@ -5048,6 +5662,7 @@ func (a PipelineSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"libraries":            reflect.TypeOf(PipelineLibrary_SdkV2{}),
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -5068,6 +5683,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":           o.Deployment,
 			"development":          o.Development,
 			"edition":              o.Edition,
+			"environment":          o.Environment,
 			"event_log":            o.EventLog,
 			"filters":              o.Filters,
 			"gateway_definition":   o.GatewayDefinition,
@@ -5082,6 +5698,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"schema":               o.Schema,
 			"serverless":           o.Serverless,
 			"storage":              o.Storage,
+			"tags":                 o.Tags,
 			"target":               o.Target,
 			"trigger":              o.Trigger,
 		})
@@ -5106,6 +5723,9 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
+			"environment": basetypes.ListType{
+				ElemType: PipelinesEnvironment_SdkV2{}.Type(ctx),
+			},
 			"event_log": basetypes.ListType{
 				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
 			},
@@ -5134,7 +5754,10 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -5218,6 +5841,32 @@ func (o *PipelineSpec_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEnvironment returns the value of the Environment field in PipelineSpec_SdkV2 as
+// a PipelinesEnvironment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec_SdkV2) GetEnvironment(ctx context.Context) (PipelinesEnvironment_SdkV2, bool) {
+	var e PipelinesEnvironment_SdkV2
+	if o.Environment.IsNull() || o.Environment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelinesEnvironment_SdkV2
+	d := o.Environment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnvironment sets the value of the Environment field in PipelineSpec_SdkV2.
+func (o *PipelineSpec_SdkV2) SetEnvironment(ctx context.Context, v PipelinesEnvironment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environment = types.ListValueMust(t, vs)
 }
 
 // GetEventLog returns the value of the EventLog field in PipelineSpec_SdkV2 as
@@ -5402,6 +6051,32 @@ func (o *PipelineSpec_SdkV2) SetRestartWindow(ctx context.Context, v RestartWind
 	o.RestartWindow = types.ListValueMust(t, vs)
 }
 
+// GetTags returns the value of the Tags field in PipelineSpec_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in PipelineSpec_SdkV2.
+func (o *PipelineSpec_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
+}
+
 // GetTrigger returns the value of the Trigger field in PipelineSpec_SdkV2 as
 // a PipelineTrigger_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -5445,14 +6120,14 @@ type PipelineStateInfo_SdkV2 struct {
 	// The username that the pipeline runs as. This is a read only value derived
 	// from the pipeline owner.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-	// The pipeline state.
+
 	State types.String `tfsdk:"state"`
 }
 
-func (newState *PipelineStateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineStateInfo_SdkV2) {
+func (toState *PipelineStateInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineStateInfo_SdkV2) {
 }
 
-func (newState *PipelineStateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo_SdkV2) {
+func (toState *PipelineStateInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineStateInfo_SdkV2) {
 }
 
 func (c PipelineStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5549,10 +6224,42 @@ type PipelineTrigger_SdkV2 struct {
 	Manual types.List `tfsdk:"manual"`
 }
 
-func (newState *PipelineTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger_SdkV2) {
+func (toState *PipelineTrigger_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineTrigger_SdkV2) {
+	if !fromPlan.Cron.IsNull() && !fromPlan.Cron.IsUnknown() {
+		if toStateCron, ok := toState.GetCron(ctx); ok {
+			if fromPlanCron, ok := fromPlan.GetCron(ctx); ok {
+				toStateCron.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCron)
+				toState.SetCron(ctx, toStateCron)
+			}
+		}
+	}
+	if !fromPlan.Manual.IsNull() && !fromPlan.Manual.IsUnknown() {
+		if toStateManual, ok := toState.GetManual(ctx); ok {
+			if fromPlanManual, ok := fromPlan.GetManual(ctx); ok {
+				toStateManual.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManual)
+				toState.SetManual(ctx, toStateManual)
+			}
+		}
+	}
 }
 
-func (newState *PipelineTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger_SdkV2) {
+func (toState *PipelineTrigger_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelineTrigger_SdkV2) {
+	if !fromState.Cron.IsNull() && !fromState.Cron.IsUnknown() {
+		if toStateCron, ok := toState.GetCron(ctx); ok {
+			if fromStateCron, ok := fromState.GetCron(ctx); ok {
+				toStateCron.SyncFieldsDuringRead(ctx, fromStateCron)
+				toState.SetCron(ctx, toStateCron)
+			}
+		}
+	}
+	if !fromState.Manual.IsNull() && !fromState.Manual.IsUnknown() {
+		if toStateManual, ok := toState.GetManual(ctx); ok {
+			if fromStateManual, ok := fromState.GetManual(ctx); ok {
+				toStateManual.SyncFieldsDuringRead(ctx, fromStateManual)
+				toState.SetManual(ctx, toStateManual)
+			}
+		}
+	}
 }
 
 func (c PipelineTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5656,6 +6363,92 @@ func (o *PipelineTrigger_SdkV2) SetManual(ctx context.Context, v ManualTrigger_S
 	o.Manual = types.ListValueMust(t, vs)
 }
 
+// The environment entity used to preserve serverless environment side panel,
+// jobs' environment for non-notebook task, and DLT's environment for classic
+// and serverless pipelines. In this minimal environment spec, only pip
+// dependencies are supported.
+type PipelinesEnvironment_SdkV2 struct {
+	// List of pip dependencies, as supported by the version of pip in this
+	// environment. Each dependency is a pip requirement file line
+	// https://pip.pypa.io/en/stable/reference/requirements-file-format/ Allowed
+	// dependency could be <requirement specifier>, <archive url/path>, <local
+	// project path>(WSFS or Volumes in Databricks), <vcs project url>
+	Dependencies types.List `tfsdk:"dependencies"`
+}
+
+func (toState *PipelinesEnvironment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelinesEnvironment_SdkV2) {
+}
+
+func (toState *PipelinesEnvironment_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelinesEnvironment_SdkV2) {
+}
+
+func (c PipelinesEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinesEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PipelinesEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dependencies": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PipelinesEnvironment_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PipelinesEnvironment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dependencies": o.Dependencies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PipelinesEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetDependencies returns the value of the Dependencies field in PipelinesEnvironment_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelinesEnvironment_SdkV2) GetDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.Dependencies.IsNull() || o.Dependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Dependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependencies sets the value of the Dependencies field in PipelinesEnvironment_SdkV2.
+func (o *PipelinesEnvironment_SdkV2) SetDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Dependencies = types.ListValueMust(t, vs)
+}
+
 type ReportSpec_SdkV2 struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
@@ -5672,10 +6465,26 @@ type ReportSpec_SdkV2 struct {
 	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
-func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec_SdkV2) {
+func (toState *ReportSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ReportSpec_SdkV2) {
+	if !fromPlan.TableConfiguration.IsNull() && !fromPlan.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromPlanTableConfiguration, ok := fromPlan.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
-func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReportSpec_SdkV2) {
+func (toState *ReportSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ReportSpec_SdkV2) {
+	if !fromState.TableConfiguration.IsNull() && !fromState.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromStateTableConfiguration, ok := fromState.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringRead(ctx, fromStateTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
 func (c ReportSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5773,10 +6582,10 @@ type RestartWindow_SdkV2 struct {
 	TimeZoneId types.String `tfsdk:"time_zone_id"`
 }
 
-func (newState *RestartWindow_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartWindow_SdkV2) {
+func (toState *RestartWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestartWindow_SdkV2) {
 }
 
-func (newState *RestartWindow_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestartWindow_SdkV2) {
+func (toState *RestartWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RestartWindow_SdkV2) {
 }
 
 func (c RestartWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5867,10 +6676,10 @@ type RunAs_SdkV2 struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (newState *RunAs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunAs_SdkV2) {
+func (toState *RunAs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunAs_SdkV2) {
 }
 
-func (newState *RunAs_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunAs_SdkV2) {
+func (toState *RunAs_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RunAs_SdkV2) {
 }
 
 func (c RunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5931,10 +6740,26 @@ type SchemaSpec_SdkV2 struct {
 	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
-func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec_SdkV2) {
+func (toState *SchemaSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SchemaSpec_SdkV2) {
+	if !fromPlan.TableConfiguration.IsNull() && !fromPlan.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromPlanTableConfiguration, ok := fromPlan.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
-func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState SchemaSpec_SdkV2) {
+func (toState *SchemaSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SchemaSpec_SdkV2) {
+	if !fromState.TableConfiguration.IsNull() && !fromState.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromStateTableConfiguration, ok := fromState.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringRead(ctx, fromStateTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
 func (c SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6018,16 +6843,32 @@ func (o *SchemaSpec_SdkV2) SetTableConfiguration(ctx context.Context, v TableSpe
 }
 
 type Sequencing_SdkV2 struct {
-	// A sequence number, unique and increasing within the control plane.
+	// A sequence number, unique and increasing per pipeline.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no"`
 	// the ID assigned by the data plane.
 	DataPlaneId types.List `tfsdk:"data_plane_id"`
 }
 
-func (newState *Sequencing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing_SdkV2) {
+func (toState *Sequencing_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Sequencing_SdkV2) {
+	if !fromPlan.DataPlaneId.IsNull() && !fromPlan.DataPlaneId.IsUnknown() {
+		if toStateDataPlaneId, ok := toState.GetDataPlaneId(ctx); ok {
+			if fromPlanDataPlaneId, ok := fromPlan.GetDataPlaneId(ctx); ok {
+				toStateDataPlaneId.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataPlaneId)
+				toState.SetDataPlaneId(ctx, toStateDataPlaneId)
+			}
+		}
+	}
 }
 
-func (newState *Sequencing_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sequencing_SdkV2) {
+func (toState *Sequencing_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Sequencing_SdkV2) {
+	if !fromState.DataPlaneId.IsNull() && !fromState.DataPlaneId.IsUnknown() {
+		if toStateDataPlaneId, ok := toState.GetDataPlaneId(ctx); ok {
+			if fromStateDataPlaneId, ok := fromState.GetDataPlaneId(ctx); ok {
+				toStateDataPlaneId.SyncFieldsDuringRead(ctx, fromStateDataPlaneId)
+				toState.SetDataPlaneId(ctx, toStateDataPlaneId)
+			}
+		}
+	}
 }
 
 func (c Sequencing_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6110,10 +6951,10 @@ type SerializedException_SdkV2 struct {
 	Stack types.List `tfsdk:"stack"`
 }
 
-func (newState *SerializedException_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SerializedException_SdkV2) {
+func (toState *SerializedException_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SerializedException_SdkV2) {
 }
 
-func (newState *SerializedException_SdkV2) SyncEffectiveFieldsDuringRead(existingState SerializedException_SdkV2) {
+func (toState *SerializedException_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SerializedException_SdkV2) {
 }
 
 func (c SerializedException_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6200,10 +7041,10 @@ type StackFrame_SdkV2 struct {
 	MethodName types.String `tfsdk:"method_name"`
 }
 
-func (newState *StackFrame_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFrame_SdkV2) {
+func (toState *StackFrame_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StackFrame_SdkV2) {
 }
 
-func (newState *StackFrame_SdkV2) SyncEffectiveFieldsDuringRead(existingState StackFrame_SdkV2) {
+func (toState *StackFrame_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StackFrame_SdkV2) {
 }
 
 func (c StackFrame_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6253,7 +7094,6 @@ func (o StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type StartUpdate_SdkV2 struct {
-	// What triggered this update.
 	Cause types.String `tfsdk:"cause"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
@@ -6272,23 +7112,6 @@ type StartUpdate_SdkV2 struct {
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
-}
-
-func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate_SdkV2) {
-}
-
-func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartUpdate_SdkV2) {
-}
-
-func (c StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cause"] = attrs["cause"].SetOptional()
-	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
-	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
-	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
-	attrs["validate_only"] = attrs["validate_only"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.
@@ -6395,10 +7218,10 @@ type StartUpdateResponse_SdkV2 struct {
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *StartUpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdateResponse_SdkV2) {
+func (toState *StartUpdateResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartUpdateResponse_SdkV2) {
 }
 
-func (newState *StartUpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse_SdkV2) {
+func (toState *StartUpdateResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StartUpdateResponse_SdkV2) {
 }
 
 func (c StartUpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6441,10 +7264,10 @@ func (o StartUpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type StopPipelineResponse_SdkV2 struct {
 }
 
-func (newState *StopPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopPipelineResponse_SdkV2) {
+func (toState *StopPipelineResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StopPipelineResponse_SdkV2) {
 }
 
-func (newState *StopPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse_SdkV2) {
+func (toState *StopPipelineResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StopPipelineResponse_SdkV2) {
 }
 
 func (c StopPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6479,7 +7302,6 @@ func (o StopPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Stop a pipeline
 type StopRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -6536,10 +7358,26 @@ type TableSpec_SdkV2 struct {
 	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
-func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec_SdkV2) {
+func (toState *TableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableSpec_SdkV2) {
+	if !fromPlan.TableConfiguration.IsNull() && !fromPlan.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromPlanTableConfiguration, ok := fromPlan.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
-func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState TableSpec_SdkV2) {
+func (toState *TableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TableSpec_SdkV2) {
+	if !fromState.TableConfiguration.IsNull() && !fromState.TableConfiguration.IsUnknown() {
+		if toStateTableConfiguration, ok := toState.GetTableConfiguration(ctx); ok {
+			if fromStateTableConfiguration, ok := fromState.GetTableConfiguration(ctx); ok {
+				toStateTableConfiguration.SyncFieldsDuringRead(ctx, fromStateTableConfiguration)
+				toState.SetTableConfiguration(ctx, toStateTableConfiguration)
+			}
+		}
+	}
 }
 
 func (c TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6643,6 +7481,8 @@ type TableSpecificConfig_SdkV2 struct {
 	IncludeColumns types.List `tfsdk:"include_columns"`
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
+
+	QueryBasedConnectorConfig types.List `tfsdk:"query_based_connector_config"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -6654,16 +7494,34 @@ type TableSpecificConfig_SdkV2 struct {
 	SequenceBy types.List `tfsdk:"sequence_by"`
 }
 
-func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpecificConfig_SdkV2) {
+func (toState *TableSpecificConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableSpecificConfig_SdkV2) {
+	if !fromPlan.QueryBasedConnectorConfig.IsNull() && !fromPlan.QueryBasedConnectorConfig.IsUnknown() {
+		if toStateQueryBasedConnectorConfig, ok := toState.GetQueryBasedConnectorConfig(ctx); ok {
+			if fromPlanQueryBasedConnectorConfig, ok := fromPlan.GetQueryBasedConnectorConfig(ctx); ok {
+				toStateQueryBasedConnectorConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryBasedConnectorConfig)
+				toState.SetQueryBasedConnectorConfig(ctx, toStateQueryBasedConnectorConfig)
+			}
+		}
+	}
 }
 
-func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig_SdkV2) {
+func (toState *TableSpecificConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TableSpecificConfig_SdkV2) {
+	if !fromState.QueryBasedConnectorConfig.IsNull() && !fromState.QueryBasedConnectorConfig.IsUnknown() {
+		if toStateQueryBasedConnectorConfig, ok := toState.GetQueryBasedConnectorConfig(ctx); ok {
+			if fromStateQueryBasedConnectorConfig, ok := fromState.GetQueryBasedConnectorConfig(ctx); ok {
+				toStateQueryBasedConnectorConfig.SyncFieldsDuringRead(ctx, fromStateQueryBasedConnectorConfig)
+				toState.SetQueryBasedConnectorConfig(ctx, toStateQueryBasedConnectorConfig)
+			}
+		}
+	}
 }
 
 func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
 	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
+	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].SetOptional()
+	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
@@ -6680,10 +7538,11 @@ func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (a TableSpecificConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"exclude_columns": reflect.TypeOf(types.String{}),
-		"include_columns": reflect.TypeOf(types.String{}),
-		"primary_keys":    reflect.TypeOf(types.String{}),
-		"sequence_by":     reflect.TypeOf(types.String{}),
+		"exclude_columns":              reflect.TypeOf(types.String{}),
+		"include_columns":              reflect.TypeOf(types.String{}),
+		"primary_keys":                 reflect.TypeOf(types.String{}),
+		"query_based_connector_config": reflect.TypeOf(IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2{}),
+		"sequence_by":                  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6697,6 +7556,7 @@ func (o TableSpecificConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"exclude_columns":                   o.ExcludeColumns,
 			"include_columns":                   o.IncludeColumns,
 			"primary_keys":                      o.PrimaryKeys,
+			"query_based_connector_config":      o.QueryBasedConnectorConfig,
 			"salesforce_include_formula_fields": o.SalesforceIncludeFormulaFields,
 			"scd_type":                          o.ScdType,
 			"sequence_by":                       o.SequenceBy,
@@ -6715,6 +7575,9 @@ func (o TableSpecificConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
+			},
+			"query_based_connector_config": basetypes.ListType{
+				ElemType: IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2{}.Type(ctx),
 			},
 			"salesforce_include_formula_fields": types.BoolType,
 			"scd_type":                          types.StringType,
@@ -6803,6 +7666,32 @@ func (o *TableSpecificConfig_SdkV2) SetPrimaryKeys(ctx context.Context, v []type
 	o.PrimaryKeys = types.ListValueMust(t, vs)
 }
 
+// GetQueryBasedConnectorConfig returns the value of the QueryBasedConnectorConfig field in TableSpecificConfig_SdkV2 as
+// a IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig_SdkV2) GetQueryBasedConnectorConfig(ctx context.Context) (IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2, bool) {
+	var e IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2
+	if o.QueryBasedConnectorConfig.IsNull() || o.QueryBasedConnectorConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2
+	d := o.QueryBasedConnectorConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryBasedConnectorConfig sets the value of the QueryBasedConnectorConfig field in TableSpecificConfig_SdkV2.
+func (o *TableSpecificConfig_SdkV2) SetQueryBasedConnectorConfig(ctx context.Context, v IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_based_connector_config"]
+	o.QueryBasedConnectorConfig = types.ListValueMust(t, vs)
+}
+
 // GetSequenceBy returns the value of the SequenceBy field in TableSpecificConfig_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
@@ -6862,10 +7751,26 @@ type UpdateInfo_SdkV2 struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
-func (newState *UpdateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInfo_SdkV2) {
+func (toState *UpdateInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateInfo_SdkV2) {
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
 }
 
-func (newState *UpdateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateInfo_SdkV2) {
+func (toState *UpdateInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateInfo_SdkV2) {
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
 }
 
 func (c UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7026,16 +7931,16 @@ func (o *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 
 type UpdateStateInfo_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
-	// The update state.
+
 	State types.String `tfsdk:"state"`
 
 	UpdateId types.String `tfsdk:"update_id"`
 }
 
-func (newState *UpdateStateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStateInfo_SdkV2) {
+func (toState *UpdateStateInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateStateInfo_SdkV2) {
 }
 
-func (newState *UpdateStateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo_SdkV2) {
+func (toState *UpdateStateInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateStateInfo_SdkV2) {
 }
 
 func (c UpdateStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

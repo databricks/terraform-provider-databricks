@@ -24,21 +24,21 @@ import (
 
 const resourceName = "recipient_federation_policy"
 
-var _ resource.ResourceWithConfigure = &RecipientFederationPolicyResource{}
+var _ resource.ResourceWithConfigure = &FederationPolicyResource{}
 
-func ResourceRecipientFederationPolicy() resource.Resource {
-	return &RecipientFederationPolicyResource{}
+func ResourceFederationPolicy() resource.Resource {
+	return &FederationPolicyResource{}
 }
 
-type RecipientFederationPolicyResource struct {
+type FederationPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *RecipientFederationPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *FederationPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *RecipientFederationPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *FederationPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, sharing_tf.FederationPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
@@ -50,11 +50,11 @@ func (r *RecipientFederationPolicyResource) Schema(ctx context.Context, req reso
 	}
 }
 
-func (r *RecipientFederationPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *FederationPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *RecipientFederationPolicyResource) update(ctx context.Context, plan sharing_tf.FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *FederationPolicyResource) update(ctx context.Context, plan sharing_tf.FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -62,14 +62,17 @@ func (r *RecipientFederationPolicyResource) update(ctx context.Context, plan sha
 	}
 
 	var federation_policy sharing.FederationPolicy
+
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
 	if diags.HasError() {
 		return
 	}
 
-	var updateRequest = sharing.UpdateFederationPolicyRequest{Policy: federation_policy}
-	updateRequest.Name = plan.Name.ValueString()
-	updateRequest.UpdateMask = "comment,oidc_policy"
+	updateRequest := sharing.UpdateFederationPolicyRequest{
+		Policy:     federation_policy,
+		Name:       plan.Name.ValueString(),
+		UpdateMask: "comment,oidc_policy",
+	}
 
 	response, err := client.RecipientFederationPolicies.Update(ctx, updateRequest)
 	if err != nil {
@@ -83,11 +86,11 @@ func (r *RecipientFederationPolicyResource) update(ctx context.Context, plan sha
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *RecipientFederationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *FederationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -95,20 +98,23 @@ func (r *RecipientFederationPolicyResource) Create(ctx context.Context, req reso
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var plan sharing_tf.FederationPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var federation_policy sharing.FederationPolicy
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.RecipientFederationPolicies.Create(ctx, sharing.CreateFederationPolicyRequest{Policy: federation_policy})
+	createRequest := sharing.CreateFederationPolicyRequest{
+		Policy: federation_policy,
+	}
+
+	response, err := client.RecipientFederationPolicies.Create(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create recipient_federation_policy", err.Error())
 		return
@@ -122,7 +128,7 @@ func (r *RecipientFederationPolicyResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
@@ -130,7 +136,7 @@ func (r *RecipientFederationPolicyResource) Create(ctx context.Context, req reso
 	}
 }
 
-func (r *RecipientFederationPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -168,12 +174,12 @@ func (r *RecipientFederationPolicyResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState)
+	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *RecipientFederationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *FederationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	var plan sharing_tf.FederationPolicy
@@ -185,7 +191,7 @@ func (r *RecipientFederationPolicyResource) Update(ctx context.Context, req reso
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *RecipientFederationPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *FederationPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -213,9 +219,9 @@ func (r *RecipientFederationPolicyResource) Delete(ctx context.Context, req reso
 	}
 }
 
-var _ resource.ResourceWithImportState = &RecipientFederationPolicyResource{}
+var _ resource.ResourceWithImportState = &FederationPolicyResource{}
 
-func (r *RecipientFederationPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *FederationPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {

@@ -347,12 +347,16 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 {
+	if len(changes) > 0 || !plan.Comment.IsNull() {
 		// if there are any other changes, update the share with the changes
-		upToDateShareInfo, err = client.Shares.Update(ctx, sharing.UpdateShare{
+		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
-		})
+		}
+		if !plan.Comment.IsNull() {
+			update.Comment = plan.Comment.ValueString()
+		}
+		upToDateShareInfo, err = client.Shares.Update(ctx, update)
 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())
@@ -411,38 +415,38 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 }
 
 type effectiveFieldsAction interface {
-	resourceLevel(*ShareInfoExtended, sharing_tf.ShareInfo_SdkV2)
-	objectLevel(*sharing_tf.SharedDataObject_SdkV2, sharing_tf.SharedDataObject_SdkV2)
+	resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2)
+	objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2)
 }
 
 type effectiveFieldsActionCreateOrUpdate struct{}
 
-func (effectiveFieldsActionCreateOrUpdate) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+func (effectiveFieldsActionCreateOrUpdate) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
+	state.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 }
 
-func (effectiveFieldsActionCreateOrUpdate) objectLevel(state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
-	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
+	state.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 }
 
 type effectiveFieldsActionRead struct{}
 
-func (effectiveFieldsActionRead) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncEffectiveFieldsDuringRead(plan)
+func (effectiveFieldsActionRead) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
+	state.SyncFieldsDuringRead(ctx, plan)
 }
 
-func (effectiveFieldsActionRead) objectLevel(state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
-	state.SyncEffectiveFieldsDuringRead(plan)
+func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
+	state.SyncFieldsDuringRead(ctx, plan)
 }
 
 func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
-	mode.resourceLevel(&state, plan.ShareInfo_SdkV2)
+	mode.resourceLevel(ctx, &state, plan.ShareInfo_SdkV2)
 	planObjects, _ := plan.GetObjects(ctx)
 	stateObjects, _ := state.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
 	for i := range stateObjects {
-		mode.objectLevel(&stateObjects[i], planObjects[i])
+		mode.objectLevel(ctx, &stateObjects[i], planObjects[i])
 		finalObjects = append(finalObjects, stateObjects[i])
 	}
 	state.SetObjects(ctx, finalObjects)

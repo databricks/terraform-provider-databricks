@@ -4,9 +4,9 @@ subcategory: "Settings"
 
 # databricks_compliance_security_profile_workspace_setting Resource
 
-The `databricks_compliance_security_profile_workspace_setting` resource allows you to control whether to enable the 
-compliance security profile for the current workspace. Enabling it on a workspace is permanent. By default, it is 
-turned off. This setting can NOT be disabled once it is enabled.
+The `databricks_compliance_security_profile_workspace_setting` resource allows you to control whether to enable the
+compliance security profile for the current workspace. Enabling it on a workspace is permanent. By default, it is
+turned off.
 
 ~> This setting can NOT be disabled once it is enabled.
 
@@ -31,7 +31,7 @@ The resource supports the following arguments:
 
 - `compliance_security_profile_workspace` block with following attributes:
   - `is_enabled` - (Required) Enable the Compliance Security Profile on the workspace
-  - `compliance_standards` - (Required) Enable one or more compliance standards on the workspace, e.g. `HIPAA`, `PCI_DSS`, `FEDRAMP_MODERATE`
+  - `compliance_standards` - (Required, list of strings) Enable one or more compliance standards on the workspace, e.g. `HIPAA`, `PCI_DSS`, `FEDRAMP_MODERATE`, etc. (See [Go SDK documentation](https://pkg.go.dev/github.com/databricks/databricks-sdk-go/service/settings#ComplianceStandard) for the full list of supported values).
 
 ## Import
 

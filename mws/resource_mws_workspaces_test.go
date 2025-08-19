@@ -181,7 +181,7 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 						"SoldToCode": "1234",
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_PARAMETER_VALUE",
 					Message:   "custom_tags are only allowed for AWS workspaces",
 				},
@@ -484,7 +484,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -493,7 +493,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -623,7 +623,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -643,7 +643,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -825,7 +825,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -870,7 +870,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cannot find anything",
 				},
@@ -891,7 +891,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1324,7 +1324,7 @@ func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 	},
 		`
 	network_id = "beta"
-	token { 
+	token {
 		comment = "I am Batman!"
 	}`)
 }
@@ -1358,7 +1358,7 @@ func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
 		"token.0.lifetime_seconds": "2592000",
 		"token.0.token_id":         "abcdef",
 		"token.0.token_value":      "sensitive",
-	}, `token { 
+	}, `token {
 		comment = "I am Batman!"
 	}`)
 }
@@ -1465,9 +1465,8 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			ReuseRequest: true,
 			Status:       418,
 			Response: apierr.APIError{
-				ErrorCode:  "NONSENSE",
-				StatusCode: 418,
-				Message:    "i'm a teapot",
+				ErrorCode: "NONSENSE",
+				Message:   "i'm a teapot",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1522,9 +1521,8 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			ReuseRequest: true,
 			Status:       418,
 			Response: apierr.APIError{
-				ErrorCode:  "NONSENSE",
-				StatusCode: 418,
-				Message:    "🐜",
+				ErrorCode: "NONSENSE",
+				Message:   "🐜",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {

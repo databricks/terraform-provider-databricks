@@ -71,13 +71,6 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
-	// Workspaces not enrolled in the private preview must not send run_as in the update request.
-	// If run_as was persisted in state because of a `terraform refresh`, there will not be a planned change
-	// as long as the user hasn't specified a value.
-	if !d.HasChange("run_as") {
-		updatePipelineRequest.RunAs = nil
-	}
-
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err
@@ -174,7 +167,7 @@ type Pipeline struct {
 	Health               pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
 	LastModified         int64                               `json:"last_modified,omitempty"`
 	LatestUpdates        []pipelines.UpdateStateInfo         `json:"latest_updates,omitempty"`
-	RunAs                pipelines.RunAs                     `json:"run_as,omitempty"`
+	RunAs                *pipelines.RunAs                    `json:"run_as,omitempty"`
 	RunAsUserName        string                              `json:"run_as_user_name,omitempty"`
 	ExpectedLastModified int64                               `json:"expected_last_modified,omitempty"`
 	State                pipelines.PipelineState             `json:"state,omitempty"`
@@ -212,13 +205,18 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
 	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
+	// Required fields
+	s.SchemaPath("library", "glob", "include").SetRequired()
+	s.SchemaPath("library", "notebook", "path").SetRequired()
+	s.SchemaPath("library", "file", "path").SetRequired()
+
 	// Computed fields
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
 	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
 
 	for _, field := range []string{"id", "state", "latest_updates", "last_modified",
-		"health", "cause", "cluster_id", "creator_user_name", "run_as", "url", "run_as_user_name"} {
+		"health", "cause", "cluster_id", "creator_user_name", "url", "run_as_user_name"} {
 		s.SchemaPath(field).SetComputed()
 	}
 
@@ -315,17 +313,6 @@ func ResourcePipeline() common.Resource {
 				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
-			}
-			if readPipeline.RunAsUserName != "" {
-				if common.StringIsUUID(readPipeline.RunAsUserName) {
-					p.RunAs = pipelines.RunAs{
-						ServicePrincipalName: readPipeline.RunAsUserName,
-					}
-				} else {
-					p.RunAs = pipelines.RunAs{
-						UserName: readPipeline.RunAsUserName,
-					}
-				}
 			}
 			return common.StructToData(p, pipelineSchema, d)
 		},

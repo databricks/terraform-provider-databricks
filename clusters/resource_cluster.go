@@ -102,6 +102,18 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 	return false
 }
 
+// These are aliases which is the reason why we suppress these changes
+func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if (old != "" && new == "") ||
+		(old == "SINGLE_USER" && new == "DATA_SECURITY_MODE_DEDICATED") ||
+		(old == "USER_ISOLATION" && new == "DATA_SECURITY_MODE_STANDARD") ||
+		((old == "SINGLE_USER" || old == "USER_ISOLATION") && new == "DATA_SECURITY_MODE_AUTO") {
+		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func ModifyRequestOnInstancePool(cluster any) error {
@@ -330,12 +342,13 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 		lib := libraries.NewLibraryFromInstanceState(i)
 		return schema.HashString(lib.String())
 	}
+	s.SchemaPath("library", "egg").SetDeprecated(EggDeprecationWarning)
 	s.AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		ForceNew: true,
 	})
-	s.SchemaPath("data_security_mode").SetSuppressDiff()
+	s.SchemaPath("data_security_mode").SetCustomSuppressDiff(DataSecurityModeDiffSuppressFunc)
 	s.SchemaPath("docker_image", "url").SetRequired()
 	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()

@@ -469,14 +469,14 @@ var emptyDestinationNotficationsList = qa.HTTPFixture{
 
 var emptyUsersList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySpnsList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+	Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=10000&startIndex=1",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -1018,7 +1018,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
 				Response: scim.UserList{
 					Resources: []scim.User{
@@ -2837,7 +2837,7 @@ terraform import databricks_pipeline.def "def"
 			os.WriteFile(tmpDir+"/import.tf", []byte(
 				`import {
   id = "abc"
-  to = databricks_pipeline.abc 
+  to = databricks_pipeline.abc
 }
 import {
   id = "def"
@@ -2847,7 +2847,7 @@ import {
 
 			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
 }
-			
+
 resource "databricks_pipeline" "def" {
 }
 `), 0700)

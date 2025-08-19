@@ -39,10 +39,10 @@ type AuthorizationDetails struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetails) {
+func (toState *AuthorizationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetails) {
 }
 
-func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetails) {
+func (toState *AuthorizationDetails) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetails) {
 }
 
 func (c AuthorizationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -128,10 +128,10 @@ type AuthorizationDetailsGrantRule struct {
 	PermissionSet types.String `tfsdk:"permission_set"`
 }
 
-func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetailsGrantRule) {
+func (toState *AuthorizationDetailsGrantRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AuthorizationDetailsGrantRule) {
 }
 
-func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetailsGrantRule) {
+func (toState *AuthorizationDetailsGrantRule) SyncFieldsDuringRead(ctx context.Context, fromState AuthorizationDetailsGrantRule) {
 }
 
 func (c AuthorizationDetailsGrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -171,279 +171,6 @@ func (o AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Cancel the results for the a query for a published, embedded dashboard
-type CancelPublishedQueryExecutionRequest struct {
-	DashboardName types.String `tfsdk:"-"`
-
-	DashboardRevisionId types.String `tfsdk:"-"`
-	// Example:
-	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
-	Tokens types.List `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelPublishedQueryExecutionRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelPublishedQueryExecutionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tokens": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelPublishedQueryExecutionRequest
-// only implements ToObjectValue() and Type().
-func (o CancelPublishedQueryExecutionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"dashboard_name":        o.DashboardName,
-			"dashboard_revision_id": o.DashboardRevisionId,
-			"tokens":                o.Tokens,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelPublishedQueryExecutionRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"dashboard_name":        types.StringType,
-			"dashboard_revision_id": types.StringType,
-			"tokens": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
-}
-
-// GetTokens returns the value of the Tokens field in CancelPublishedQueryExecutionRequest as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CancelPublishedQueryExecutionRequest) GetTokens(ctx context.Context) ([]types.String, bool) {
-	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Tokens.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTokens sets the value of the Tokens field in CancelPublishedQueryExecutionRequest.
-func (o *CancelPublishedQueryExecutionRequest) SetTokens(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tokens = types.ListValueMust(t, vs)
-}
-
-type CancelQueryExecutionResponse struct {
-	Status types.List `tfsdk:"status"`
-}
-
-func (newState *CancelQueryExecutionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelQueryExecutionResponse) {
-}
-
-func (newState *CancelQueryExecutionResponse) SyncEffectiveFieldsDuringRead(existingState CancelQueryExecutionResponse) {
-}
-
-func (c CancelQueryExecutionResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelQueryExecutionResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelQueryExecutionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"status": reflect.TypeOf(CancelQueryExecutionResponseStatus{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelQueryExecutionResponse
-// only implements ToObjectValue() and Type().
-func (o CancelQueryExecutionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"status": o.Status,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelQueryExecutionResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"status": basetypes.ListType{
-				ElemType: CancelQueryExecutionResponseStatus{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetStatus returns the value of the Status field in CancelQueryExecutionResponse as
-// a slice of CancelQueryExecutionResponseStatus values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CancelQueryExecutionResponse) GetStatus(ctx context.Context) ([]CancelQueryExecutionResponseStatus, bool) {
-	if o.Status.IsNull() || o.Status.IsUnknown() {
-		return nil, false
-	}
-	var v []CancelQueryExecutionResponseStatus
-	d := o.Status.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetStatus sets the value of the Status field in CancelQueryExecutionResponse.
-func (o *CancelQueryExecutionResponse) SetStatus(ctx context.Context, v []CancelQueryExecutionResponseStatus) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Status = types.ListValueMust(t, vs)
-}
-
-type CancelQueryExecutionResponseStatus struct {
-	// The token to poll for result asynchronously Example:
-	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
-	DataToken types.String `tfsdk:"data_token"`
-	// Represents an empty message, similar to google.protobuf.Empty, which is
-	// not available in the firm right now.
-	Pending types.Object `tfsdk:"pending"`
-	// Represents an empty message, similar to google.protobuf.Empty, which is
-	// not available in the firm right now.
-	Success types.Object `tfsdk:"success"`
-}
-
-func (newState *CancelQueryExecutionResponseStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelQueryExecutionResponseStatus) {
-}
-
-func (newState *CancelQueryExecutionResponseStatus) SyncEffectiveFieldsDuringRead(existingState CancelQueryExecutionResponseStatus) {
-}
-
-func (c CancelQueryExecutionResponseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_token"] = attrs["data_token"].SetRequired()
-	attrs["pending"] = attrs["pending"].SetOptional()
-	attrs["success"] = attrs["success"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelQueryExecutionResponseStatus.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelQueryExecutionResponseStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"pending": reflect.TypeOf(Empty{}),
-		"success": reflect.TypeOf(Empty{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelQueryExecutionResponseStatus
-// only implements ToObjectValue() and Type().
-func (o CancelQueryExecutionResponseStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"data_token": o.DataToken,
-			"pending":    o.Pending,
-			"success":    o.Success,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelQueryExecutionResponseStatus) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data_token": types.StringType,
-			"pending":    Empty{}.Type(ctx),
-			"success":    Empty{}.Type(ctx),
-		},
-	}
-}
-
-// GetPending returns the value of the Pending field in CancelQueryExecutionResponseStatus as
-// a Empty value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CancelQueryExecutionResponseStatus) GetPending(ctx context.Context) (Empty, bool) {
-	var e Empty
-	if o.Pending.IsNull() || o.Pending.IsUnknown() {
-		return e, false
-	}
-	var v []Empty
-	d := o.Pending.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetPending sets the value of the Pending field in CancelQueryExecutionResponseStatus.
-func (o *CancelQueryExecutionResponseStatus) SetPending(ctx context.Context, v Empty) {
-	vs := v.ToObjectValue(ctx)
-	o.Pending = vs
-}
-
-// GetSuccess returns the value of the Success field in CancelQueryExecutionResponseStatus as
-// a Empty value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CancelQueryExecutionResponseStatus) GetSuccess(ctx context.Context) (Empty, bool) {
-	var e Empty
-	if o.Success.IsNull() || o.Success.IsUnknown() {
-		return e, false
-	}
-	var v []Empty
-	d := o.Success.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSuccess sets the value of the Success field in CancelQueryExecutionResponseStatus.
-func (o *CancelQueryExecutionResponseStatus) SetSuccess(ctx context.Context, v Empty) {
-	vs := v.ToObjectValue(ctx)
-	o.Success = vs
-}
-
-// Create dashboard
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 }
@@ -489,7 +216,7 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
 		return e, false
 	}
-	var v []Dashboard
+	var v Dashboard
 	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -497,10 +224,7 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboard sets the value of the Dashboard field in CreateDashboardRequest.
@@ -509,11 +233,10 @@ func (o *CreateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 	o.Dashboard = vs
 }
 
-// Create dashboard schedule
 type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
-
+	// The schedule to create. A dashboard is limited to 10 schedules.
 	Schedule types.Object `tfsdk:"schedule"`
 }
 
@@ -560,7 +283,7 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []Schedule
+	var v Schedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -568,10 +291,7 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in CreateScheduleRequest.
@@ -580,13 +300,12 @@ func (o *CreateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
 	o.Schedule = vs
 }
 
-// Create schedule subscription
 type CreateSubscriptionRequest struct {
 	// UUID identifying the dashboard to which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
-
+	// The subscription to create. A schedule is limited to 100 subscriptions.
 	Subscription types.Object `tfsdk:"subscription"`
 }
 
@@ -635,7 +354,7 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
 		return e, false
 	}
-	var v []Subscription
+	var v Subscription
 	d := o.Subscription.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -643,10 +362,7 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSubscription sets the value of the Subscription field in CreateSubscriptionRequest.
@@ -668,10 +384,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule) {
 }
 
-func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+func (toState *CronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -750,10 +466,10 @@ type Dashboard struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
+func (toState *Dashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dashboard) {
 }
 
-func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
+func (toState *Dashboard) SyncFieldsDuringRead(ctx context.Context, fromState Dashboard) {
 }
 
 func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -763,7 +479,7 @@ func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
-	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -821,7 +537,6 @@ func (o Dashboard) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Delete dashboard schedule
 type DeleteScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -867,37 +582,6 @@ func (o DeleteScheduleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteScheduleResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteScheduleResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteScheduleResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteScheduleResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteScheduleResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-// Delete schedule subscription
 type DeleteSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -947,185 +631,6 @@ func (o DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteSubscriptionResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteSubscriptionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSubscriptionResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteSubscriptionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteSubscriptionResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-// Represents an empty message, similar to google.protobuf.Empty, which is not
-// available in the firm right now.
-type Empty struct {
-}
-
-func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
-}
-
-func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
-}
-
-func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Empty.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a Empty) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Empty
-// only implements ToObjectValue() and Type().
-func (o Empty) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o Empty) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-// Execute query request for published Dashboards. Since published dashboards
-// have the option of running as the publisher, the datasets, warehouse_id are
-// excluded from the request and instead read from the source (lakeview-config)
-// via the additional parameters (dashboardName and dashboardRevisionId)
-type ExecutePublishedDashboardQueryRequest struct {
-	// Dashboard name and revision_id is required to retrieve
-	// PublishedDatasetDataModel which contains the list of datasets,
-	// warehouse_id, and embedded_credentials
-	DashboardName types.String `tfsdk:"dashboard_name"`
-
-	DashboardRevisionId types.String `tfsdk:"dashboard_revision_id"`
-	// A dashboard schedule can override the warehouse used as compute for
-	// processing the published dashboard queries
-	OverrideWarehouseId types.String `tfsdk:"override_warehouse_id"`
-}
-
-func (newState *ExecutePublishedDashboardQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExecutePublishedDashboardQueryRequest) {
-}
-
-func (newState *ExecutePublishedDashboardQueryRequest) SyncEffectiveFieldsDuringRead(existingState ExecutePublishedDashboardQueryRequest) {
-}
-
-func (c ExecutePublishedDashboardQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_name"] = attrs["dashboard_name"].SetRequired()
-	attrs["dashboard_revision_id"] = attrs["dashboard_revision_id"].SetRequired()
-	attrs["override_warehouse_id"] = attrs["override_warehouse_id"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecutePublishedDashboardQueryRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ExecutePublishedDashboardQueryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ExecutePublishedDashboardQueryRequest
-// only implements ToObjectValue() and Type().
-func (o ExecutePublishedDashboardQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"dashboard_name":        o.DashboardName,
-			"dashboard_revision_id": o.DashboardRevisionId,
-			"override_warehouse_id": o.OverrideWarehouseId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ExecutePublishedDashboardQueryRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"dashboard_name":        types.StringType,
-			"dashboard_revision_id": types.StringType,
-			"override_warehouse_id": types.StringType,
-		},
-	}
-}
-
-type ExecuteQueryResponse struct {
-}
-
-func (newState *ExecuteQueryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExecuteQueryResponse) {
-}
-
-func (newState *ExecuteQueryResponse) SyncEffectiveFieldsDuringRead(existingState ExecuteQueryResponse) {
-}
-
-func (c ExecuteQueryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecuteQueryResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ExecuteQueryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ExecuteQueryResponse
-// only implements ToObjectValue() and Type().
-func (o ExecuteQueryResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ExecuteQueryResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Genie AI Response
 type GenieAttachment struct {
 	// Attachment ID
@@ -1136,10 +641,42 @@ type GenieAttachment struct {
 	Text types.Object `tfsdk:"text"`
 }
 
-func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment) {
+func (toState *GenieAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieAttachment) {
+	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromPlan.Text.IsNull() && !fromPlan.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromPlanText, ok := fromPlan.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
-func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
+func (toState *GenieAttachment) SyncFieldsDuringRead(ctx context.Context, fromState GenieAttachment) {
+	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
+		if toStateQuery, ok := toState.GetQuery(ctx); ok {
+			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
+				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
+				toState.SetQuery(ctx, toStateQuery)
+			}
+		}
+	}
+	if !fromState.Text.IsNull() && !fromState.Text.IsUnknown() {
+		if toStateText, ok := toState.GetText(ctx); ok {
+			if fromStateText, ok := fromState.GetText(ctx); ok {
+				toStateText.SyncFieldsDuringRead(ctx, fromStateText)
+				toState.SetText(ctx, toStateText)
+			}
+		}
+	}
 }
 
 func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1196,7 +733,7 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (GenieQueryAttachment, b
 	if o.Query.IsNull() || o.Query.IsUnknown() {
 		return e, false
 	}
-	var v []GenieQueryAttachment
+	var v GenieQueryAttachment
 	d := o.Query.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1204,10 +741,7 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (GenieQueryAttachment, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQuery sets the value of the Query field in GenieAttachment.
@@ -1224,7 +758,7 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 	if o.Text.IsNull() || o.Text.IsUnknown() {
 		return e, false
 	}
-	var v []TextAttachment
+	var v TextAttachment
 	d := o.Text.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1232,10 +766,7 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetText sets the value of the Text field in GenieAttachment.
@@ -1261,10 +792,10 @@ type GenieConversation struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversation) {
+func (toState *GenieConversation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversation) {
 }
 
-func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
+func (toState *GenieConversation) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversation) {
 }
 
 func (c GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1322,6 +853,63 @@ func (o GenieConversation) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieConversationSummary struct {
+	ConversationId types.String `tfsdk:"conversation_id"`
+
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+
+	Title types.String `tfsdk:"title"`
+}
+
+func (toState *GenieConversationSummary) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieConversationSummary) {
+}
+
+func (toState *GenieConversationSummary) SyncFieldsDuringRead(ctx context.Context, fromState GenieConversationSummary) {
+}
+
+func (c GenieConversationSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetRequired()
+	attrs["title"] = attrs["title"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieConversationSummary.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieConversationSummary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieConversationSummary
+// only implements ToObjectValue() and Type().
+func (o GenieConversationSummary) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id":   o.ConversationId,
+			"created_timestamp": o.CreatedTimestamp,
+			"title":             o.Title,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieConversationSummary) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id":   types.StringType,
+			"created_timestamp": types.Int64Type,
+			"title":             types.StringType,
+		},
+	}
+}
+
 type GenieCreateConversationMessageRequest struct {
 	// User message content.
 	Content types.String `tfsdk:"content"`
@@ -1329,20 +917,6 @@ type GenieCreateConversationMessageRequest struct {
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is started.
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieCreateConversationMessageRequest) {
-}
-
-func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
-}
-
-func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
@@ -1380,7 +954,46 @@ func (o GenieCreateConversationMessageRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
-// Execute message attachment SQL query
+type GenieDeleteConversationRequest struct {
+	// The ID of the conversation to delete.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the conversation is located.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieDeleteConversationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieDeleteConversationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieDeleteConversationRequest
+// only implements ToObjectValue() and Type().
+func (o GenieDeleteConversationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": o.ConversationId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieDeleteConversationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id": types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
 type GenieExecuteMessageAttachmentQueryRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1429,7 +1042,6 @@ func (o GenieExecuteMessageAttachmentQueryRequest) Type(ctx context.Context) att
 	}
 }
 
-// [Deprecated] Execute SQL query in a conversation message
 type GenieExecuteMessageQueryRequest struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"-"`
@@ -1474,105 +1086,6 @@ func (o GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Generate full query result download
-type GenieGenerateDownloadFullQueryResultRequest struct {
-	// Attachment ID
-	AttachmentId types.String `tfsdk:"-"`
-	// Conversation ID
-	ConversationId types.String `tfsdk:"-"`
-	// Message ID
-	MessageId types.String `tfsdk:"-"`
-	// Genie space ID
-	SpaceId types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGenerateDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultRequest
-// only implements ToObjectValue() and Type().
-func (o GenieGenerateDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"attachment_id":   o.AttachmentId,
-			"conversation_id": o.ConversationId,
-			"message_id":      o.MessageId,
-			"space_id":        o.SpaceId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGenerateDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attachment_id":   types.StringType,
-			"conversation_id": types.StringType,
-			"message_id":      types.StringType,
-			"space_id":        types.StringType,
-		},
-	}
-}
-
-type GenieGenerateDownloadFullQueryResultResponse struct {
-	// Download ID. Use this ID to track the download request in subsequent
-	// polling calls
-	DownloadId types.String `tfsdk:"download_id"`
-}
-
-func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGenerateDownloadFullQueryResultResponse) {
-}
-
-func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGenerateDownloadFullQueryResultResponse) {
-}
-
-func (c GenieGenerateDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["download_id"] = attrs["download_id"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGenerateDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultResponse
-// only implements ToObjectValue() and Type().
-func (o GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"download_id": o.DownloadId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"download_id": types.StringType,
-		},
-	}
-}
-
-// Get conversation message
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1619,140 +1132,6 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Get download full query result
-type GenieGetDownloadFullQueryResultRequest struct {
-	// Attachment ID
-	AttachmentId types.String `tfsdk:"-"`
-	// Conversation ID
-	ConversationId types.String `tfsdk:"-"`
-	// Download ID. This ID is provided by the [Generate Download
-	// endpoint](:method:genie/generateDownloadFullQueryResult)
-	DownloadId types.String `tfsdk:"-"`
-	// Message ID
-	MessageId types.String `tfsdk:"-"`
-	// Genie space ID
-	SpaceId types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGetDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultRequest
-// only implements ToObjectValue() and Type().
-func (o GenieGetDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"attachment_id":   o.AttachmentId,
-			"conversation_id": o.ConversationId,
-			"download_id":     o.DownloadId,
-			"message_id":      o.MessageId,
-			"space_id":        o.SpaceId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGetDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attachment_id":   types.StringType,
-			"conversation_id": types.StringType,
-			"download_id":     types.StringType,
-			"message_id":      types.StringType,
-			"space_id":        types.StringType,
-		},
-	}
-}
-
-type GenieGetDownloadFullQueryResultResponse struct {
-	// SQL Statement Execution response. See [Get status, manifest, and result
-	// first chunk](:method:statementexecution/getstatement) for more details.
-	StatementResponse types.Object `tfsdk:"statement_response"`
-}
-
-func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetDownloadFullQueryResultResponse) {
-}
-
-func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetDownloadFullQueryResultResponse) {
-}
-
-func (c GenieGetDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["statement_response"] = attrs["statement_response"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GenieGetDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultResponse
-// only implements ToObjectValue() and Type().
-func (o GenieGetDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"statement_response": o.StatementResponse,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GenieGetDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
-		},
-	}
-}
-
-// GetStatementResponse returns the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse as
-// a sql_tf.StatementResponse value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *GenieGetDownloadFullQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
-	var e sql_tf.StatementResponse
-	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
-		return e, false
-	}
-	var v []sql_tf.StatementResponse
-	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetStatementResponse sets the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse.
-func (o *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
-	vs := v.ToObjectValue(ctx)
-	o.StatementResponse = vs
-}
-
-// Get message attachment SQL query result
 type GenieGetMessageAttachmentQueryResultRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1801,7 +1180,6 @@ func (o GenieGetMessageAttachmentQueryResultRequest) Type(ctx context.Context) a
 	}
 }
 
-// [Deprecated] Get conversation message SQL query result
 type GenieGetMessageQueryResultRequest struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"-"`
@@ -1852,10 +1230,26 @@ type GenieGetMessageQueryResultResponse struct {
 	StatementResponse types.Object `tfsdk:"statement_response"`
 }
 
-func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultResponse) {
+func (toState *GenieGetMessageQueryResultResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetMessageQueryResultResponse) {
+	if !fromPlan.StatementResponse.IsNull() && !fromPlan.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromPlanStatementResponse, ok := fromPlan.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
-func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
+func (toState *GenieGetMessageQueryResultResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetMessageQueryResultResponse) {
+	if !fromState.StatementResponse.IsNull() && !fromState.StatementResponse.IsUnknown() {
+		if toStateStatementResponse, ok := toState.GetStatementResponse(ctx); ok {
+			if fromStateStatementResponse, ok := fromState.GetStatementResponse(ctx); ok {
+				toStateStatementResponse.SyncFieldsDuringRead(ctx, fromStateStatementResponse)
+				toState.SetStatementResponse(ctx, toStateStatementResponse)
+			}
+		}
+	}
 }
 
 func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1905,7 +1299,7 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
 		return e, false
 	}
-	var v []sql_tf.StatementResponse
+	var v sql_tf.StatementResponse
 	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1913,10 +1307,7 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetStatementResponse sets the value of the StatementResponse field in GenieGetMessageQueryResultResponse.
@@ -1925,7 +1316,6 @@ func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Co
 	o.StatementResponse = vs
 }
 
-// [Deprecated] Get conversation message SQL query result
 type GenieGetQueryResultByAttachmentRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1974,7 +1364,6 @@ func (o GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.T
 	}
 }
 
-// Get Genie Space
 type GenieGetSpaceRequest struct {
 	// The ID associated with the Genie space
 	SpaceId types.String `tfsdk:"-"`
@@ -2011,6 +1400,256 @@ func (o GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieListConversationsRequest struct {
+	// Maximum number of conversations to return per page
+	PageSize types.Int64 `tfsdk:"-"`
+	// Token to get the next page of results
+	PageToken types.String `tfsdk:"-"`
+	// The ID of the Genie space to retrieve conversations from.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationsRequest
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+			"space_id":   o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"space_id":   types.StringType,
+		},
+	}
+}
+
+type GenieListConversationsResponse struct {
+	// List of conversations in the Genie space
+	Conversations types.List `tfsdk:"conversations"`
+	// Token to get the next page of results
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (toState *GenieListConversationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationsResponse) {
+}
+
+func (toState *GenieListConversationsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationsResponse) {
+}
+
+func (c GenieListConversationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversations"] = attrs["conversations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"conversations": reflect.TypeOf(GenieConversationSummary{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationsResponse
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversations":   o.Conversations,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversations": basetypes.ListType{
+				ElemType: GenieConversationSummary{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetConversations returns the value of the Conversations field in GenieListConversationsResponse as
+// a slice of GenieConversationSummary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieListConversationsResponse) GetConversations(ctx context.Context) ([]GenieConversationSummary, bool) {
+	if o.Conversations.IsNull() || o.Conversations.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieConversationSummary
+	d := o.Conversations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConversations sets the value of the Conversations field in GenieListConversationsResponse.
+func (o *GenieListConversationsResponse) SetConversations(ctx context.Context, v []GenieConversationSummary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["conversations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Conversations = types.ListValueMust(t, vs)
+}
+
+type GenieListSpacesRequest struct {
+	// Maximum number of spaces to return per page
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token for getting the next page of results
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListSpacesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListSpacesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListSpacesRequest
+// only implements ToObjectValue() and Type().
+func (o GenieListSpacesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListSpacesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type GenieListSpacesResponse struct {
+	// Token to get the next page of results
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// List of Genie spaces
+	Spaces types.List `tfsdk:"spaces"`
+}
+
+func (toState *GenieListSpacesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListSpacesResponse) {
+}
+
+func (toState *GenieListSpacesResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieListSpacesResponse) {
+}
+
+func (c GenieListSpacesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["spaces"] = attrs["spaces"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListSpacesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListSpacesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spaces": reflect.TypeOf(GenieSpace{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListSpacesResponse
+// only implements ToObjectValue() and Type().
+func (o GenieListSpacesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"spaces":          o.Spaces,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListSpacesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"spaces": basetypes.ListType{
+				ElemType: GenieSpace{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSpaces returns the value of the Spaces field in GenieListSpacesResponse as
+// a slice of GenieSpace values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieListSpacesResponse) GetSpaces(ctx context.Context) ([]GenieSpace, bool) {
+	if o.Spaces.IsNull() || o.Spaces.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieSpace
+	d := o.Spaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpaces sets the value of the Spaces field in GenieListSpacesResponse.
+func (o *GenieListSpacesResponse) SetSpaces(ctx context.Context, v []GenieSpace) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Spaces = types.ListValueMust(t, vs)
+}
+
 type GenieMessage struct {
 	// AI-generated response to the message
 	Attachments types.List `tfsdk:"attachments"`
@@ -2034,32 +1673,48 @@ type GenieMessage struct {
 	QueryResult types.Object `tfsdk:"query_result"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
-	// MessageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
-	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
-	// context step to determine relevant context. * `ASKING_AI`: Waiting for
-	// the LLM to respond to the user's question. * `PENDING_WAREHOUSE`: Waiting
-	// for warehouse before the SQL query can start executing. *
-	// `EXECUTING_QUERY`: Executing a generated SQL query. Get the SQL query
-	// result by calling
-	// [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult)
-	// API. * `FAILED`: The response generation or query execution failed. See
-	// `error` field. * `COMPLETED`: Message processing is completed. Results
-	// are in the `attachments` field. Get the SQL query result by calling
-	// [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult)
-	// API. * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`:
-	// SQL result is not available anymore. The user needs to rerun the query.
-	// Rerun the SQL query result by calling
-	// [executeMessageAttachmentQuery](:method:genie/executeMessageAttachmentQuery)
-	// API. * `CANCELLED`: Message has been cancelled.
+
 	Status types.String `tfsdk:"status"`
 	// ID of the user who created the message
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieMessage) {
+func (toState *GenieMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieMessage) {
+	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromPlan.QueryResult.IsNull() && !fromPlan.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromPlanQueryResult, ok := fromPlan.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
-func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
+func (toState *GenieMessage) SyncFieldsDuringRead(ctx context.Context, fromState GenieMessage) {
+	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
+		if toStateError, ok := toState.GetError(ctx); ok {
+			if fromStateError, ok := fromState.GetError(ctx); ok {
+				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
+				toState.SetError(ctx, toStateError)
+			}
+		}
+	}
+	if !fromState.QueryResult.IsNull() && !fromState.QueryResult.IsUnknown() {
+		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
+			if fromStateQueryResult, ok := fromState.GetQueryResult(ctx); ok {
+				toStateQueryResult.SyncFieldsDuringRead(ctx, fromStateQueryResult)
+				toState.SetQueryResult(ctx, toStateQueryResult)
+			}
+		}
+	}
 }
 
 func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2172,7 +1827,7 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 	if o.Error.IsNull() || o.Error.IsUnknown() {
 		return e, false
 	}
-	var v []MessageError
+	var v MessageError
 	d := o.Error.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2180,10 +1835,7 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetError sets the value of the Error field in GenieMessage.
@@ -2200,7 +1852,7 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 	if o.QueryResult.IsNull() || o.QueryResult.IsUnknown() {
 		return e, false
 	}
-	var v []Result
+	var v Result
 	d := o.QueryResult.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2208,10 +1860,7 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueryResult sets the value of the QueryResult field in GenieMessage.
@@ -2239,10 +1888,26 @@ type GenieQueryAttachment struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieQueryAttachment) {
+func (toState *GenieQueryAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieQueryAttachment) {
+	if !fromPlan.QueryResultMetadata.IsNull() && !fromPlan.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromPlanQueryResultMetadata, ok := fromPlan.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
-func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringRead(existingState GenieQueryAttachment) {
+func (toState *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, fromState GenieQueryAttachment) {
+	if !fromState.QueryResultMetadata.IsNull() && !fromState.QueryResultMetadata.IsUnknown() {
+		if toStateQueryResultMetadata, ok := toState.GetQueryResultMetadata(ctx); ok {
+			if fromStateQueryResultMetadata, ok := fromState.GetQueryResultMetadata(ctx); ok {
+				toStateQueryResultMetadata.SyncFieldsDuringRead(ctx, fromStateQueryResultMetadata)
+				toState.SetQueryResultMetadata(ctx, toStateQueryResultMetadata)
+			}
+		}
+	}
 }
 
 func (c GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2310,7 +1975,7 @@ func (o *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (Geni
 	if o.QueryResultMetadata.IsNull() || o.QueryResultMetadata.IsUnknown() {
 		return e, false
 	}
-	var v []GenieResultMetadata
+	var v GenieResultMetadata
 	d := o.QueryResultMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2318,10 +1983,7 @@ func (o *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (Geni
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetQueryResultMetadata sets the value of the QueryResultMetadata field in GenieQueryAttachment.
@@ -2337,10 +1999,10 @@ type GenieResultMetadata struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieResultMetadata) {
+func (toState *GenieResultMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieResultMetadata) {
 }
 
-func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringRead(existingState GenieResultMetadata) {
+func (toState *GenieResultMetadata) SyncFieldsDuringRead(ctx context.Context, fromState GenieResultMetadata) {
 }
 
 func (c GenieResultMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2392,10 +2054,10 @@ type GenieSpace struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (newState *GenieSpace) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieSpace) {
+func (toState *GenieSpace) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieSpace) {
 }
 
-func (newState *GenieSpace) SyncEffectiveFieldsDuringRead(existingState GenieSpace) {
+func (toState *GenieSpace) SyncFieldsDuringRead(ctx context.Context, fromState GenieSpace) {
 }
 
 func (c GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2449,19 +2111,6 @@ type GenieStartConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationMessageRequest) {
-}
-
-func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
-}
-
-func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content"] = attrs["content"].SetRequired()
-	attrs["space_id"] = attrs["space_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2505,10 +2154,42 @@ type GenieStartConversationResponse struct {
 	MessageId types.String `tfsdk:"message_id"`
 }
 
-func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationResponse) {
+func (toState *GenieStartConversationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieStartConversationResponse) {
+	if !fromPlan.Conversation.IsNull() && !fromPlan.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromPlanConversation, ok := fromPlan.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromPlan.Message.IsNull() && !fromPlan.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromPlanMessage, ok := fromPlan.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
-func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
+func (toState *GenieStartConversationResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenieStartConversationResponse) {
+	if !fromState.Conversation.IsNull() && !fromState.Conversation.IsUnknown() {
+		if toStateConversation, ok := toState.GetConversation(ctx); ok {
+			if fromStateConversation, ok := fromState.GetConversation(ctx); ok {
+				toStateConversation.SyncFieldsDuringRead(ctx, fromStateConversation)
+				toState.SetConversation(ctx, toStateConversation)
+			}
+		}
+	}
+	if !fromState.Message.IsNull() && !fromState.Message.IsUnknown() {
+		if toStateMessage, ok := toState.GetMessage(ctx); ok {
+			if fromStateMessage, ok := fromState.GetMessage(ctx); ok {
+				toStateMessage.SyncFieldsDuringRead(ctx, fromStateMessage)
+				toState.SetMessage(ctx, toStateMessage)
+			}
+		}
+	}
 }
 
 func (c GenieStartConversationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2568,7 +2249,7 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 	if o.Conversation.IsNull() || o.Conversation.IsUnknown() {
 		return e, false
 	}
-	var v []GenieConversation
+	var v GenieConversation
 	d := o.Conversation.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2576,10 +2257,7 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetConversation sets the value of the Conversation field in GenieStartConversationResponse.
@@ -2596,7 +2274,7 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 	if o.Message.IsNull() || o.Message.IsUnknown() {
 		return e, false
 	}
-	var v []GenieMessage
+	var v GenieMessage
 	d := o.Message.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -2604,10 +2282,7 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetMessage sets the value of the Message field in GenieStartConversationResponse.
@@ -2616,7 +2291,42 @@ func (o *GenieStartConversationResponse) SetMessage(ctx context.Context, v Genie
 	o.Message = vs
 }
 
-// Get dashboard
+type GenieTrashSpaceRequest struct {
+	// The ID associated with the Genie space to be sent to the trash.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieTrashSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieTrashSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieTrashSpaceRequest
+// only implements ToObjectValue() and Type().
+func (o GenieTrashSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"space_id": o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieTrashSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"space_id": types.StringType,
+		},
+	}
+}
+
 type GetDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2653,85 +2363,6 @@ func (o GetDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Read a published dashboard in an embedded ui.
-type GetPublishedDashboardEmbeddedRequest struct {
-	// UUID identifying the published dashboard.
-	DashboardId types.String `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardEmbeddedRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GetPublishedDashboardEmbeddedRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardEmbeddedRequest
-// only implements ToObjectValue() and Type().
-func (o GetPublishedDashboardEmbeddedRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"dashboard_id": o.DashboardId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GetPublishedDashboardEmbeddedRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"dashboard_id": types.StringType,
-		},
-	}
-}
-
-type GetPublishedDashboardEmbeddedResponse struct {
-}
-
-func (newState *GetPublishedDashboardEmbeddedResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardEmbeddedResponse) {
-}
-
-func (newState *GetPublishedDashboardEmbeddedResponse) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardEmbeddedResponse) {
-}
-
-func (c GetPublishedDashboardEmbeddedResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardEmbeddedResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GetPublishedDashboardEmbeddedResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardEmbeddedResponse
-// only implements ToObjectValue() and Type().
-func (o GetPublishedDashboardEmbeddedResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GetPublishedDashboardEmbeddedResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
-// Get published dashboard
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2768,7 +2399,6 @@ func (o GetPublishedDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Read an information of a published dashboard to mint an OAuth token.
 type GetPublishedDashboardTokenInfoRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -2826,10 +2456,10 @@ type GetPublishedDashboardTokenInfoResponse struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardTokenInfoResponse) {
+func (toState *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedDashboardTokenInfoResponse) {
 }
 
-func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardTokenInfoResponse) {
+func (toState *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedDashboardTokenInfoResponse) {
 }
 
 func (c GetPublishedDashboardTokenInfoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2905,7 +2535,6 @@ func (o *GetPublishedDashboardTokenInfoResponse) SetAuthorizationDetails(ctx con
 	o.AuthorizationDetails = types.ListValueMust(t, vs)
 }
 
-// Get dashboard schedule
 type GetScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -2946,7 +2575,6 @@ func (o GetScheduleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get schedule subscription
 type GetSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -2991,7 +2619,6 @@ func (o GetSubscriptionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// List dashboards
 type ListDashboardsRequest struct {
 	// The number of dashboards to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -3049,10 +2676,10 @@ type ListDashboardsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsResponse) {
+func (toState *ListDashboardsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDashboardsResponse) {
 }
 
-func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+func (toState *ListDashboardsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListDashboardsResponse) {
 }
 
 func (c ListDashboardsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3125,7 +2752,6 @@ func (o *ListDashboardsResponse) SetDashboards(ctx context.Context, v []Dashboar
 	o.Dashboards = types.ListValueMust(t, vs)
 }
 
-// List dashboard schedules
 type ListSchedulesRequest struct {
 	// UUID identifying the dashboard to which the schedules belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -3180,10 +2806,10 @@ type ListSchedulesResponse struct {
 	Schedules types.List `tfsdk:"schedules"`
 }
 
-func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse) {
+func (toState *ListSchedulesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSchedulesResponse) {
 }
 
-func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+func (toState *ListSchedulesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSchedulesResponse) {
 }
 
 func (c ListSchedulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3256,7 +2882,6 @@ func (o *ListSchedulesResponse) SetSchedules(ctx context.Context, v []Schedule) 
 	o.Schedules = types.ListValueMust(t, vs)
 }
 
-// List schedule subscriptions
 type ListSubscriptionsRequest struct {
 	// UUID identifying the dashboard which the subscriptions belongs.
 	DashboardId types.String `tfsdk:"-"`
@@ -3315,10 +2940,10 @@ type ListSubscriptionsResponse struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse) {
+func (toState *ListSubscriptionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSubscriptionsResponse) {
 }
 
-func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+func (toState *ListSubscriptionsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListSubscriptionsResponse) {
 }
 
 func (c ListSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3397,10 +3022,10 @@ type MessageError struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan MessageError) {
+func (toState *MessageError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MessageError) {
 }
 
-func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
+func (toState *MessageError) SyncFieldsDuringRead(ctx context.Context, fromState MessageError) {
 }
 
 func (c MessageError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3457,21 +3082,6 @@ type MigrateDashboardRequest struct {
 	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
-func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest) {
-}
-
-func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
-}
-
-func (c MigrateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["parent_path"] = attrs["parent_path"].SetOptional()
-	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
-	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3509,284 +3119,6 @@ func (o MigrateDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type PendingStatus struct {
-	// The token to poll for result asynchronously Example:
-	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
-	DataToken types.String `tfsdk:"data_token"`
-}
-
-func (newState *PendingStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan PendingStatus) {
-}
-
-func (newState *PendingStatus) SyncEffectiveFieldsDuringRead(existingState PendingStatus) {
-}
-
-func (c PendingStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_token"] = attrs["data_token"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PendingStatus.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PendingStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PendingStatus
-// only implements ToObjectValue() and Type().
-func (o PendingStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"data_token": o.DataToken,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PendingStatus) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data_token": types.StringType,
-		},
-	}
-}
-
-// Poll the results for the a query for a published, embedded dashboard
-type PollPublishedQueryStatusRequest struct {
-	DashboardName types.String `tfsdk:"-"`
-
-	DashboardRevisionId types.String `tfsdk:"-"`
-	// Example:
-	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
-	Tokens types.List `tfsdk:"-"`
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollPublishedQueryStatusRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PollPublishedQueryStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tokens": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PollPublishedQueryStatusRequest
-// only implements ToObjectValue() and Type().
-func (o PollPublishedQueryStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"dashboard_name":        o.DashboardName,
-			"dashboard_revision_id": o.DashboardRevisionId,
-			"tokens":                o.Tokens,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PollPublishedQueryStatusRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"dashboard_name":        types.StringType,
-			"dashboard_revision_id": types.StringType,
-			"tokens": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
-}
-
-// GetTokens returns the value of the Tokens field in PollPublishedQueryStatusRequest as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *PollPublishedQueryStatusRequest) GetTokens(ctx context.Context) ([]types.String, bool) {
-	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := o.Tokens.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTokens sets the value of the Tokens field in PollPublishedQueryStatusRequest.
-func (o *PollPublishedQueryStatusRequest) SetTokens(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tokens = types.ListValueMust(t, vs)
-}
-
-type PollQueryStatusResponse struct {
-	Data types.List `tfsdk:"data"`
-}
-
-func (newState *PollQueryStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PollQueryStatusResponse) {
-}
-
-func (newState *PollQueryStatusResponse) SyncEffectiveFieldsDuringRead(existingState PollQueryStatusResponse) {
-}
-
-func (c PollQueryStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data"] = attrs["data"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollQueryStatusResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PollQueryStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"data": reflect.TypeOf(PollQueryStatusResponseData{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PollQueryStatusResponse
-// only implements ToObjectValue() and Type().
-func (o PollQueryStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"data": o.Data,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PollQueryStatusResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data": basetypes.ListType{
-				ElemType: PollQueryStatusResponseData{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetData returns the value of the Data field in PollQueryStatusResponse as
-// a slice of PollQueryStatusResponseData values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *PollQueryStatusResponse) GetData(ctx context.Context) ([]PollQueryStatusResponseData, bool) {
-	if o.Data.IsNull() || o.Data.IsUnknown() {
-		return nil, false
-	}
-	var v []PollQueryStatusResponseData
-	d := o.Data.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetData sets the value of the Data field in PollQueryStatusResponse.
-func (o *PollQueryStatusResponse) SetData(ctx context.Context, v []PollQueryStatusResponseData) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Data = types.ListValueMust(t, vs)
-}
-
-type PollQueryStatusResponseData struct {
-	Status types.Object `tfsdk:"status"`
-}
-
-func (newState *PollQueryStatusResponseData) SyncEffectiveFieldsDuringCreateOrUpdate(plan PollQueryStatusResponseData) {
-}
-
-func (newState *PollQueryStatusResponseData) SyncEffectiveFieldsDuringRead(existingState PollQueryStatusResponseData) {
-}
-
-func (c PollQueryStatusResponseData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["status"] = attrs["status"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PollQueryStatusResponseData.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PollQueryStatusResponseData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"status": reflect.TypeOf(QueryResponseStatus{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PollQueryStatusResponseData
-// only implements ToObjectValue() and Type().
-func (o PollQueryStatusResponseData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"status": o.Status,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PollQueryStatusResponseData) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"status": QueryResponseStatus{}.Type(ctx),
-		},
-	}
-}
-
-// GetStatus returns the value of the Status field in PollQueryStatusResponseData as
-// a QueryResponseStatus value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *PollQueryStatusResponseData) GetStatus(ctx context.Context) (QueryResponseStatus, bool) {
-	var e QueryResponseStatus
-	if o.Status.IsNull() || o.Status.IsUnknown() {
-		return e, false
-	}
-	var v []QueryResponseStatus
-	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetStatus sets the value of the Status field in PollQueryStatusResponseData.
-func (o *PollQueryStatusResponseData) SetStatus(ctx context.Context, v QueryResponseStatus) {
-	vs := v.ToObjectValue(ctx)
-	o.Status = vs
-}
-
 type PublishRequest struct {
 	// UUID identifying the dashboard to be published.
 	DashboardId types.String `tfsdk:"-"`
@@ -3797,20 +3129,6 @@ type PublishRequest struct {
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishRequest) {
-}
-
-func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
-}
-
-func (c PublishRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -3859,10 +3177,10 @@ type PublishedDashboard struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedDashboard) {
+func (toState *PublishedDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublishedDashboard) {
 }
 
-func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+func (toState *PublishedDashboard) SyncFieldsDuringRead(ctx context.Context, fromState PublishedDashboard) {
 }
 
 func (c PublishedDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3911,196 +3229,6 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type QueryResponseStatus struct {
-	// Represents an empty message, similar to google.protobuf.Empty, which is
-	// not available in the firm right now.
-	Canceled types.Object `tfsdk:"canceled"`
-	// Represents an empty message, similar to google.protobuf.Empty, which is
-	// not available in the firm right now.
-	Closed types.Object `tfsdk:"closed"`
-
-	Pending types.Object `tfsdk:"pending"`
-	// The statement id in format(01eef5da-c56e-1f36-bafa-21906587d6ba) The
-	// statement_id should be identical to data_token in SuccessStatus and
-	// PendingStatus. This field is created for audit logging purpose to record
-	// the statement_id of all QueryResponseStatus.
-	StatementId types.String `tfsdk:"statement_id"`
-
-	Success types.Object `tfsdk:"success"`
-}
-
-func (newState *QueryResponseStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryResponseStatus) {
-}
-
-func (newState *QueryResponseStatus) SyncEffectiveFieldsDuringRead(existingState QueryResponseStatus) {
-}
-
-func (c QueryResponseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["canceled"] = attrs["canceled"].SetOptional()
-	attrs["closed"] = attrs["closed"].SetOptional()
-	attrs["pending"] = attrs["pending"].SetOptional()
-	attrs["statement_id"] = attrs["statement_id"].SetOptional()
-	attrs["success"] = attrs["success"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryResponseStatus.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a QueryResponseStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"canceled": reflect.TypeOf(Empty{}),
-		"closed":   reflect.TypeOf(Empty{}),
-		"pending":  reflect.TypeOf(PendingStatus{}),
-		"success":  reflect.TypeOf(SuccessStatus{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, QueryResponseStatus
-// only implements ToObjectValue() and Type().
-func (o QueryResponseStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"canceled":     o.Canceled,
-			"closed":       o.Closed,
-			"pending":      o.Pending,
-			"statement_id": o.StatementId,
-			"success":      o.Success,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o QueryResponseStatus) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"canceled":     Empty{}.Type(ctx),
-			"closed":       Empty{}.Type(ctx),
-			"pending":      PendingStatus{}.Type(ctx),
-			"statement_id": types.StringType,
-			"success":      SuccessStatus{}.Type(ctx),
-		},
-	}
-}
-
-// GetCanceled returns the value of the Canceled field in QueryResponseStatus as
-// a Empty value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QueryResponseStatus) GetCanceled(ctx context.Context) (Empty, bool) {
-	var e Empty
-	if o.Canceled.IsNull() || o.Canceled.IsUnknown() {
-		return e, false
-	}
-	var v []Empty
-	d := o.Canceled.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetCanceled sets the value of the Canceled field in QueryResponseStatus.
-func (o *QueryResponseStatus) SetCanceled(ctx context.Context, v Empty) {
-	vs := v.ToObjectValue(ctx)
-	o.Canceled = vs
-}
-
-// GetClosed returns the value of the Closed field in QueryResponseStatus as
-// a Empty value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QueryResponseStatus) GetClosed(ctx context.Context) (Empty, bool) {
-	var e Empty
-	if o.Closed.IsNull() || o.Closed.IsUnknown() {
-		return e, false
-	}
-	var v []Empty
-	d := o.Closed.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetClosed sets the value of the Closed field in QueryResponseStatus.
-func (o *QueryResponseStatus) SetClosed(ctx context.Context, v Empty) {
-	vs := v.ToObjectValue(ctx)
-	o.Closed = vs
-}
-
-// GetPending returns the value of the Pending field in QueryResponseStatus as
-// a PendingStatus value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QueryResponseStatus) GetPending(ctx context.Context) (PendingStatus, bool) {
-	var e PendingStatus
-	if o.Pending.IsNull() || o.Pending.IsUnknown() {
-		return e, false
-	}
-	var v []PendingStatus
-	d := o.Pending.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetPending sets the value of the Pending field in QueryResponseStatus.
-func (o *QueryResponseStatus) SetPending(ctx context.Context, v PendingStatus) {
-	vs := v.ToObjectValue(ctx)
-	o.Pending = vs
-}
-
-// GetSuccess returns the value of the Success field in QueryResponseStatus as
-// a SuccessStatus value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QueryResponseStatus) GetSuccess(ctx context.Context) (SuccessStatus, bool) {
-	var e SuccessStatus
-	if o.Success.IsNull() || o.Success.IsUnknown() {
-		return e, false
-	}
-	var v []SuccessStatus
-	d := o.Success.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSuccess sets the value of the Success field in QueryResponseStatus.
-func (o *QueryResponseStatus) SetSuccess(ctx context.Context, v SuccessStatus) {
-	vs := v.ToObjectValue(ctx)
-	o.Success = vs
-}
-
 type Result struct {
 	// If result is truncated
 	IsTruncated types.Bool `tfsdk:"is_truncated"`
@@ -4110,18 +3238,21 @@ type Result struct {
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
 	StatementId types.String `tfsdk:"statement_id"`
+	// JWT corresponding to the statement contained in this result
+	StatementIdSignature types.String `tfsdk:"statement_id_signature"`
 }
 
-func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
+func (toState *Result) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Result) {
 }
 
-func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
+func (toState *Result) SyncFieldsDuringRead(ctx context.Context, fromState Result) {
 }
 
 func (c Result) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
 	attrs["row_count"] = attrs["row_count"].SetOptional()
 	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["statement_id_signature"] = attrs["statement_id_signature"].SetOptional()
 
 	return attrs
 }
@@ -4144,9 +3275,10 @@ func (o Result) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_truncated": o.IsTruncated,
-			"row_count":    o.RowCount,
-			"statement_id": o.StatementId,
+			"is_truncated":           o.IsTruncated,
+			"row_count":              o.RowCount,
+			"statement_id":           o.StatementId,
+			"statement_id_signature": o.StatementIdSignature,
 		})
 }
 
@@ -4154,9 +3286,10 @@ func (o Result) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Result) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"is_truncated": types.BoolType,
-			"row_count":    types.Int64Type,
-			"statement_id": types.StringType,
+			"is_truncated":           types.BoolType,
+			"row_count":              types.Int64Type,
+			"statement_id":           types.StringType,
+			"statement_id_signature": types.StringType,
 		},
 	}
 }
@@ -4185,10 +3318,26 @@ type Schedule struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule) {
+func (toState *Schedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Schedule) {
+	if !fromPlan.CronSchedule.IsNull() && !fromPlan.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromPlanCronSchedule, ok := fromPlan.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
-func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
+func (toState *Schedule) SyncFieldsDuringRead(ctx context.Context, fromState Schedule) {
+	if !fromState.CronSchedule.IsNull() && !fromState.CronSchedule.IsUnknown() {
+		if toStateCronSchedule, ok := toState.GetCronSchedule(ctx); ok {
+			if fromStateCronSchedule, ok := fromState.GetCronSchedule(ctx); ok {
+				toStateCronSchedule.SyncFieldsDuringRead(ctx, fromStateCronSchedule)
+				toState.SetCronSchedule(ctx, toStateCronSchedule)
+			}
+		}
+	}
 }
 
 func (c Schedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4262,7 +3411,7 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 	if o.CronSchedule.IsNull() || o.CronSchedule.IsUnknown() {
 		return e, false
 	}
-	var v []CronSchedule
+	var v CronSchedule
 	d := o.CronSchedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4270,10 +3419,7 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetCronSchedule sets the value of the CronSchedule field in Schedule.
@@ -4291,10 +3437,42 @@ type Subscriber struct {
 	UserSubscriber types.Object `tfsdk:"user_subscriber"`
 }
 
-func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber) {
+func (toState *Subscriber) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscriber) {
+	if !fromPlan.DestinationSubscriber.IsNull() && !fromPlan.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromPlanDestinationSubscriber, ok := fromPlan.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromPlan.UserSubscriber.IsNull() && !fromPlan.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromPlanUserSubscriber, ok := fromPlan.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
+func (toState *Subscriber) SyncFieldsDuringRead(ctx context.Context, fromState Subscriber) {
+	if !fromState.DestinationSubscriber.IsNull() && !fromState.DestinationSubscriber.IsUnknown() {
+		if toStateDestinationSubscriber, ok := toState.GetDestinationSubscriber(ctx); ok {
+			if fromStateDestinationSubscriber, ok := fromState.GetDestinationSubscriber(ctx); ok {
+				toStateDestinationSubscriber.SyncFieldsDuringRead(ctx, fromStateDestinationSubscriber)
+				toState.SetDestinationSubscriber(ctx, toStateDestinationSubscriber)
+			}
+		}
+	}
+	if !fromState.UserSubscriber.IsNull() && !fromState.UserSubscriber.IsUnknown() {
+		if toStateUserSubscriber, ok := toState.GetUserSubscriber(ctx); ok {
+			if fromStateUserSubscriber, ok := fromState.GetUserSubscriber(ctx); ok {
+				toStateUserSubscriber.SyncFieldsDuringRead(ctx, fromStateUserSubscriber)
+				toState.SetUserSubscriber(ctx, toStateUserSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4348,7 +3526,7 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 	if o.DestinationSubscriber.IsNull() || o.DestinationSubscriber.IsUnknown() {
 		return e, false
 	}
-	var v []SubscriptionSubscriberDestination
+	var v SubscriptionSubscriberDestination
 	d := o.DestinationSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4356,10 +3534,7 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDestinationSubscriber sets the value of the DestinationSubscriber field in Subscriber.
@@ -4376,7 +3551,7 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 	if o.UserSubscriber.IsNull() || o.UserSubscriber.IsUnknown() {
 		return e, false
 	}
-	var v []SubscriptionSubscriberUser
+	var v SubscriptionSubscriberUser
 	d := o.UserSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4384,10 +3559,7 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetUserSubscriber sets the value of the UserSubscriber field in Subscriber.
@@ -4419,10 +3591,26 @@ type Subscription struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
+func (toState *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscription) {
+	if !fromPlan.Subscriber.IsNull() && !fromPlan.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromPlanSubscriber, ok := fromPlan.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
-func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+func (toState *Subscription) SyncFieldsDuringRead(ctx context.Context, fromState Subscription) {
+	if !fromState.Subscriber.IsNull() && !fromState.Subscriber.IsUnknown() {
+		if toStateSubscriber, ok := toState.GetSubscriber(ctx); ok {
+			if fromStateSubscriber, ok := fromState.GetSubscriber(ctx); ok {
+				toStateSubscriber.SyncFieldsDuringRead(ctx, fromStateSubscriber)
+				toState.SetSubscriber(ctx, toStateSubscriber)
+			}
+		}
+	}
 }
 
 func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4493,7 +3681,7 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 	if o.Subscriber.IsNull() || o.Subscriber.IsUnknown() {
 		return e, false
 	}
-	var v []Subscriber
+	var v Subscriber
 	d := o.Subscriber.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4501,10 +3689,7 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSubscriber sets the value of the Subscriber field in Subscription.
@@ -4519,10 +3704,10 @@ type SubscriptionSubscriberDestination struct {
 	DestinationId types.String `tfsdk:"destination_id"`
 }
 
-func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberDestination) {
+func (toState *SubscriptionSubscriberDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberDestination) {
 }
 
-func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
+func (toState *SubscriptionSubscriberDestination) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberDestination) {
 }
 
 func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4567,10 +3752,10 @@ type SubscriptionSubscriberUser struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberUser) {
+func (toState *SubscriptionSubscriberUser) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriberUser) {
 }
 
-func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+func (toState *SubscriptionSubscriberUser) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriberUser) {
 }
 
 func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4610,60 +3795,6 @@ func (o SubscriptionSubscriberUser) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type SuccessStatus struct {
-	// The token to poll for result asynchronously Example:
-	// EC0A..ChAB7WCEn_4Qo4vkLqEbXsxxEgh3Y2pbWw45WhoQXgZSQo9aS5q2ZvFcbvbx9CgA-PAEAQ
-	DataToken types.String `tfsdk:"data_token"`
-	// Whether the query result is truncated (either by byte limit or row limit)
-	Truncated types.Bool `tfsdk:"truncated"`
-}
-
-func (newState *SuccessStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan SuccessStatus) {
-}
-
-func (newState *SuccessStatus) SyncEffectiveFieldsDuringRead(existingState SuccessStatus) {
-}
-
-func (c SuccessStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_token"] = attrs["data_token"].SetRequired()
-	attrs["truncated"] = attrs["truncated"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in SuccessStatus.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a SuccessStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SuccessStatus
-// only implements ToObjectValue() and Type().
-func (o SuccessStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"data_token": o.DataToken,
-			"truncated":  o.Truncated,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o SuccessStatus) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data_token": types.StringType,
-			"truncated":  types.BoolType,
-		},
-	}
-}
-
 type TextAttachment struct {
 	// AI generated message
 	Content types.String `tfsdk:"content"`
@@ -4671,10 +3802,10 @@ type TextAttachment struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextAttachment) {
+func (toState *TextAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TextAttachment) {
 }
 
-func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
+func (toState *TextAttachment) SyncFieldsDuringRead(ctx context.Context, fromState TextAttachment) {
 }
 
 func (c TextAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4717,7 +3848,6 @@ func (o TextAttachment) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Trash dashboard
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -4757,10 +3887,10 @@ func (o TrashDashboardRequest) Type(ctx context.Context) attr.Type {
 type TrashDashboardResponse struct {
 }
 
-func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashDashboardResponse) {
+func (toState *TrashDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TrashDashboardResponse) {
 }
 
-func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
+func (toState *TrashDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState TrashDashboardResponse) {
 }
 
 func (c TrashDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4795,7 +3925,6 @@ func (o TrashDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Unpublish dashboard
 type UnpublishDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
@@ -4835,10 +3964,10 @@ func (o UnpublishDashboardRequest) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardResponse struct {
 }
 
-func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpublishDashboardResponse) {
+func (toState *UnpublishDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnpublishDashboardResponse) {
 }
 
-func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
+func (toState *UnpublishDashboardResponse) SyncFieldsDuringRead(ctx context.Context, fromState UnpublishDashboardResponse) {
 }
 
 func (c UnpublishDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4873,7 +4002,6 @@ func (o UnpublishDashboardResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update dashboard
 type UpdateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
@@ -4923,7 +4051,7 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
 		return e, false
 	}
-	var v []Dashboard
+	var v Dashboard
 	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -4931,10 +4059,7 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetDashboard sets the value of the Dashboard field in UpdateDashboardRequest.
@@ -4943,11 +4068,10 @@ func (o *UpdateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) 
 	o.Dashboard = vs
 }
 
-// Update dashboard schedule
 type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
-
+	// The schedule to update.
 	Schedule types.Object `tfsdk:"schedule"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
@@ -4998,7 +4122,7 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
 		return e, false
 	}
-	var v []Schedule
+	var v Schedule
 	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -5006,10 +4130,7 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
+	return v, true
 }
 
 // SetSchedule sets the value of the Schedule field in UpdateScheduleRequest.

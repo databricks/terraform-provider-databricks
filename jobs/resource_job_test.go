@@ -243,7 +243,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			rules {
 				metric = "RUN_DURATION_SECONDS"
 				op     = "GREATER_THAN"
-				value  = 3600						  
+				value  = 3600
 			}
 		}
 
@@ -264,10 +264,10 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 				rules {
 					metric = "RUN_DURATION_SECONDS"
 					op     = "GREATER_THAN"
-					value  = 50000000000				  
+					value  = 50000000000
 				}
 			}
-	
+
 		}
 
 		task {
@@ -410,7 +410,7 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 			rules {
 				metric = "RUN_DURATION_SECONDS"
 				op     = "GREATER_THAN"
-				value  = 3600						  
+				value  = 3600
 			}
 		}
 
@@ -437,7 +437,7 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 				notebook_path = "/b"
 			}
 		}
-		
+
 		task {
 			task_key = "c"
 
@@ -533,7 +533,7 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 		Resource: ResourceJob(),
 		HCL: `
 		name = "ConditionTaskTesting"
-	
+
 		task {
 			task_key = "a"
 			condition_task {
@@ -612,7 +612,7 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 					task_key = "nested_task_key"
 
 					existing_cluster_id = "abc"
-					
+
 						notebook_task {
 							notebook_path = "/Stuff"
 						}
@@ -816,7 +816,7 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 				name = "key"
 				default = "value_default"
 		}
-	
+
 		task {
 			task_key = "a"
 		}
@@ -1027,7 +1027,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			  node_type_id  = "c"
 			}
 		}
-		
+
 		job_cluster {
 			job_cluster_key = "k"
 			new_cluster {
@@ -1036,7 +1036,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			  node_type_id  = "y"
 			}
 		}
-		
+
 		task {
 			task_key = "a"
 			job_cluster_key = "j"
@@ -1059,7 +1059,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 				notebook_path = "/Stuff"
 			}
 		}
-		
+
 		task {
 			task_key = "c"
 			new_cluster {
@@ -1332,7 +1332,7 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 
 		task {
 		  task_key = "a"
-	  
+
 		  sql_task {
 			warehouse_id = "dca3a0ba199040eb"
 			alert {
@@ -1347,10 +1347,10 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 			}
 		  }
 		}
-	  
+
 		task {
 		  task_key = "d"
-	  
+
 		  sql_task {
 			warehouse_id = "dca3a0ba199040eb"
 			dashboard {
@@ -1421,7 +1421,7 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 
 		task {
 		  task_key = "runJobTask"
-	  
+
 		  run_job_task {
 				job_id = "123"
 		  }
@@ -1786,7 +1786,7 @@ func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t 
 					JobID: 789,
 				},
 				Status: 409,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "CONFLICT",
 					Message:   "A concurrent request to run the continuous job is already in progress. Please wait for it to complete before issuing a new request.",
 				},
@@ -1949,7 +1949,7 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
             custom_tags {
                 "ResourceClass" = "SingleNode"
             }
-		  }	
+		  }
 		max_concurrent_runs = 1
 		max_retries = 3
 		min_retry_interval_millis = 5000
@@ -2013,7 +2013,7 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 			num_workers   = 5
 			spark_version = "7.3.x-scala2.12"
 			node_type_id  = "Standard_DS3_v2"
-		  }	
+		  }
 		max_concurrent_runs = 1
 		max_retries = 3
 		min_retry_interval_millis = 5000
@@ -2103,19 +2103,19 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 		}
 		webhook_notifications {
 			on_start {
-				id = "id3" 
+				id = "id3"
 			}
 			on_start {
-				id = "id1" 
+				id = "id1"
 			}
 			on_start {
-				id = "id2" 
+				id = "id2"
 			}
 			on_success {
-				id = "id2" 
+				id = "id2"
 			}
 			on_failure {
-				id = "id3" 
+				id = "id3"
 			}
 		}
 		notification_settings {
@@ -2212,9 +2212,9 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 	var hclTemplate = `existing_cluster_id = "abc"
 		max_concurrent_runs = 1
 		name = "GitSourceJob"
-		
+
 		%s
-		
+
 		task {
 			task_key = "b"
 
@@ -2355,7 +2355,7 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -2376,7 +2376,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -2486,6 +2486,9 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 					JobID: 789,
 					NewSettings: &JobSettings{
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						Tasks: []JobTaskSettings{
 							{
 								TaskKey: "task1",
@@ -2610,6 +2613,9 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 							},
 						},
 						Name: "My job",
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2704,6 +2710,9 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 						},
 						Name:              "Featurizer New",
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2786,6 +2795,9 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 						},
 						Name:              "Featurizer New",
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 			},
@@ -2857,6 +2869,9 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 							},
 						},
 						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 					},
 				},
 				Response: Job{
@@ -2956,6 +2971,322 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestResourceJobUpdate_ApplyPolicyDefaultValues_Default(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									ApplyPolicyDefaultValues: true,
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"name": "Test Job",
+
+			"job_cluster.#":               "1",
+			"job_cluster.0.new_cluster.#": "1",
+
+			// We assume the following:
+			//  - The user previously created the job.
+			//  - It was configured with `apply_policy_default_values = true`
+			//  - The policy defaults include `local_ssd_count = 2`
+			//
+			// On a subsequent update, the instance state already contains these defaults
+			// and we expect that diff suppression kicks in. The logs for this test include:
+			//
+			// > Suppressing diff for job_cluster.0.new_cluster.0.gcp_attributes.0.local_ssd_count: platform="2" config="0"
+			//
+			"job_cluster.0.new_cluster.0.gcp_attributes.#":                 "1",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.local_ssd_count": "2",
+		},
+		HCL: `
+		name = "Test Job"
+
+		task {
+			task_key = "task_1"
+			job_cluster_key = "job_cluster_1"
+		}
+
+		job_cluster {
+			job_cluster_key = "job_cluster_1"
+			new_cluster {
+				apply_policy_default_values = true
+			}
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_Empty(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									ApplyPolicyDefaultValues: true,
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"name": "Test Job",
+
+			"job_cluster.#":               "1",
+			"job_cluster.0.new_cluster.#": "1",
+			"job_cluster.0.new_cluster.0.apply_policy_default_values": "true",
+
+			// This test confirms that an empty allow list does NOT activate payload filtering.
+			// The server-side value is sent to the API.
+			"job_cluster.0.new_cluster.0.gcp_attributes.#":                 "1",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.local_ssd_count": "2",
+		},
+		HCL: `
+		name = "Test Job"
+
+		task {
+			task_key = "task_1"
+			job_cluster_key = "job_cluster_1"
+		}
+
+		job_cluster {
+			job_cluster_key = "job_cluster_1"
+			new_cluster {
+				apply_policy_default_values = true
+
+				// An empty allow list does NOT activate payload filtering.
+				__apply_policy_default_values_allow_list = []
+			}
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_GcpAttributes(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									ApplyPolicyDefaultValues: true,
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "Test Job",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey:       "task_1",
+								JobClusterKey: "job_cluster_1",
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								JobClusterKey: "job_cluster_1",
+								NewCluster: &clusters.Cluster{
+									GcpAttributes: &clusters.GcpAttributes{
+										LocalSsdCount: 2,
+										Availability:  "SPOT",
+										ZoneId:        "us-central1-a",
+									},
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
+					},
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"name": "Test Job",
+
+			"job_cluster.#":               "1",
+			"job_cluster.0.new_cluster.#": "1",
+			"job_cluster.0.new_cluster.0.apply_policy_default_values": "true",
+
+			// This test confirms that only fields listed in the allow list are sent to the API.
+			"job_cluster.0.new_cluster.0.gcp_attributes.#":                 "1",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.local_ssd_count": "2",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.availability":    "SPOT",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.zone_id":         "us-central1-a",
+		},
+		HCL: `
+		name = "Test Job"
+
+		task {
+			task_key = "task_1"
+			job_cluster_key = "job_cluster_1"
+		}
+
+		job_cluster {
+			job_cluster_key = "job_cluster_1"
+			new_cluster {
+				apply_policy_default_values = true
+
+				// Only the "apply_policy_default_values" field is included in the allow list.
+				__apply_policy_default_values_allow_list = [
+					"gcp_attributes.local_ssd_count",
+				]
+
+				gcp_attributes {
+					local_ssd_count = 2
+				}
+			}
+		}
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestJobRestarts(t *testing.T) {

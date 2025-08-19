@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/service/serving"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -278,7 +280,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -336,7 +338,7 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -393,6 +395,7 @@ func TestModelServingRead(t *testing.T) {
 					State: &serving.EndpointState{
 						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
+					EndpointUrl: "https://example.com/endpoint",
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedModels: []serving.ServedModelOutput{
 							{
@@ -426,10 +429,12 @@ func TestModelServingRead(t *testing.T) {
 							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
+									ServedEntityName:  "prod_model", // Server returns both fields with same value
 									TrafficPercentage: 90,
 								},
 								{
 									ServedModelName:   "candidate_model",
+									ServedEntityName:  "candidate_model", // Server returns both fields with same value
 									TrafficPercentage: 10,
 								},
 							},
@@ -441,7 +446,21 @@ func TestModelServingRead(t *testing.T) {
 		Resource: ResourceModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"serving_endpoint_id":                                   "test-endpoint",
+		"endpoint_url":                                          "https://example.com/endpoint",
+		"config.0.served_entities.#":                            2,
+		"config.0.served_entities.0.name":                       "prod_model",
+		"config.0.served_entities.1.name":                       "candidate_model",
+		"config.0.traffic_config.#":                             1,
+		"config.0.traffic_config.0.routes.#":                    2,
+		"config.0.traffic_config.0.routes.0.served_model_name":  "prod_model",
+		"config.0.traffic_config.0.routes.1.served_model_name":  "candidate_model",
+		"config.0.traffic_config.0.routes.0.served_entity_name": "prod_model",
+		"config.0.traffic_config.0.routes.1.served_entity_name": "candidate_model",
+		"config.0.traffic_config.0.routes.0.traffic_percentage": 90,
+		"config.0.traffic_config.0.routes.1.traffic_percentage": 10,
+	})
 }
 
 func TestModelServingReadEmptyConfig(t *testing.T) {
@@ -481,7 +500,7 @@ func TestModelServingRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -601,6 +620,7 @@ func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
 			"config.0.served_models.#":      "1",
 			"config.0.served_models.0.name": "prod_model",
 			"serving_endpoint_id":           "id",
+			"endpoint_url":                  "https://example.com/endpoint",
 		},
 		HCL: `
 			name = "test-endpoint"
@@ -615,7 +635,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -670,7 +690,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -30,7 +30,7 @@ func TestUcAccDataSourceVolumes(t *testing.T) {
 				purpose = "testing"
 			}
 		}
-		
+
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.RANDOM}"
@@ -43,12 +43,12 @@ func TestUcAccDataSourceVolumes(t *testing.T) {
 			name         = "volume_data_source_test"
 			catalog_name = databricks_catalog.sandbox.name
 			schema_name  = databricks_schema.things.name
-			volume_type  = "MANAGED"      
+			volume_type  = "MANAGED"
 		}
 		data "databricks_volumes" "this" {
 			catalog_name = databricks_catalog.sandbox.name
 			schema_name = databricks_schema.things.name
-			depends_on = [ databricks_volume.this ] 
+			depends_on = [ databricks_volume.this ]
 		}
 		output "volumes" {
 			value = length(data.databricks_volumes.this.ids)

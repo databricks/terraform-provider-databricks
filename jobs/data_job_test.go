@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -215,11 +215,11 @@ func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=567",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Job 567 does not exist.",
 				},
-				Status: 400,
+				Status: 404,
 			},
 		},
 		Resource:    DataSourceJob(),

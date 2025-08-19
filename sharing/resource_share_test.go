@@ -3,10 +3,12 @@ package sharing
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -31,7 +33,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	secondShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -47,7 +50,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	thirdShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -63,7 +67,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "d",
 				},
-			}},
+			},
+		},
 	}
 	fourthShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -79,7 +84,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	diffAdd := []sharing.SharedDataObjectUpdate{
 		{
@@ -191,19 +197,23 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
+						Name:    "a",
+						Comment: "b",
 					},
 				},
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
-					}},
+						Name:    "a",
+						Comment: "b",
+					},
+				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
 				ExpectedRequest: sharing.UpdateShare{
-					Owner: "admin",
+					Owner:   "admin",
+					Comment: "b",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "ADD",
@@ -225,7 +235,8 @@ func TestCreateShare(t *testing.T) {
 				},
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name: "a",
+						Name:    "a",
+						Comment: "b",
 					},
 				},
 			},
@@ -234,8 +245,9 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
-						Name:  "a",
-						Owner: "admin",
+						Name:    "a",
+						Comment: "b",
+						Owner:   "admin",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "main.a",
@@ -247,7 +259,8 @@ func TestCreateShare(t *testing.T) {
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -255,6 +268,7 @@ func TestCreateShare(t *testing.T) {
 		Create:   true,
 		HCL: `
 			name  = "a"
+			comment = "b"
 			owner = "admin"
 			object {
 				name = "main.a"
@@ -288,7 +302,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -302,6 +317,7 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Comment: "cba",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -335,8 +351,9 @@ func TestUpdateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
 					sharing.ShareInfo{
-						Name:  "abc",
-						Owner: "admin",
+						Name:    "abc",
+						Owner:   "admin",
+						Comment: "cba",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "a",
@@ -354,7 +371,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -367,6 +385,7 @@ func TestUpdateShare(t *testing.T) {
 		HCL: `
 			name  = "abc"
 			owner = "admin"
+			comment = "cba"
 			object {
 				name = "a"
 				comment = "c"
@@ -400,7 +419,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -414,6 +434,7 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: sharing.UpdateShare{
+					Comment: "updatedComment",
 					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
@@ -441,7 +462,7 @@ func TestUpdateShareRollback(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -455,12 +476,19 @@ func TestUpdateShareRollback(t *testing.T) {
 				},
 			},
 			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Comment: "cba",
+				},
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
 					sharing.ShareInfo{
-						Name:  "abc",
-						Owner: "admin",
+						Name:    "abc",
+						Comment: "cba",
 						Objects: []sharing.SharedDataObject{
 							{
 								Name:           "a",
@@ -478,7 +506,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -486,11 +515,13 @@ func TestUpdateShareRollback(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
-			"name":  "abc",
-			"owner": "admin",
+			"name":    "abc",
+			"owner":   "admin",
+			"comment": "cba",
 		},
 		HCL: `
 			name  = "abc"
+			comment = "updatedComment"
 			owner = "updatedOwner"
 			object {
 				name = "a"
@@ -528,7 +559,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								ForceSendFields: []string{"Name", "Comment", "DataObjectType"},
 							},
 						},
-					}},
+					},
+				},
 			},
 			{
 				Method:   "GET",
@@ -546,7 +578,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								AddedBy:        "",
 							},
 						},
-					}},
+					},
+				},
 			},
 		},
 		ID:          "abc",
@@ -578,7 +611,7 @@ func TestCreateShare_ThrowError(t *testing.T) {
 						Name: "a",
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -645,7 +678,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -695,7 +728,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -737,7 +771,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},

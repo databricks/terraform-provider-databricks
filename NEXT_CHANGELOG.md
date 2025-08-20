@@ -27,3 +27,4 @@
 ### Internal Changes
 
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Upddated Go SDK to 0.81.0([#4956](https://github.com/databricks/terraform-provider-databricks/pull/4956))

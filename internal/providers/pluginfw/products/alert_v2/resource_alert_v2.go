@@ -71,7 +71,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags
 	updateRequest := sql.UpdateAlertV2Request{
 		Alert:      alert_v2,
 		Id:         plan.Id.ValueString(),
-		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as_user_name,schedule,warehouse_id",
+		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
 	}
 
 	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)

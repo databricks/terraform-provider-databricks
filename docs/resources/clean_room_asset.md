@@ -59,7 +59,7 @@ The following arguments are supported:
 ### CleanRoomAssetNotebook
 * `notebook_content` (string, required) - Base 64 representation of the notebook contents.
   This is the same format as returned by :method:workspace/export with the format of **HTML**
-* `runner_collaborator_aliases` (list of string, optional) - collaborators that can run the notebook
+* `runner_collaborator_aliases` (list of string, optional) - Aliases of collaborators that can run the notebook
 
 ### CleanRoomAssetTableLocalDetails
 * `local_name` (string, required) - The fully qualified name of the table in its owner's local metastore,

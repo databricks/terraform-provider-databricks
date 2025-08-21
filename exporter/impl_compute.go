@@ -77,6 +77,10 @@ func (ic *importContext) importCluster(c *sdk_compute.ClusterSpec) {
 			ID:       c.PolicyId,
 		})
 	}
+	if c.DockerImage != nil && c.DockerImage.BasicAuth != nil {
+		ic.emitSecretsFromSecretPathString(c.DockerImage.BasicAuth.Password)
+		ic.emitSecretsFromSecretPathString(c.DockerImage.BasicAuth.Username)
+	}
 	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
 	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)

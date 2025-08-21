@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Enable update of `databricks_mws_ncc_private_endpoint_rule` resource ([#4957](https://github.com/databricks/terraform-provider-databricks/pull/4957))
+
 ### Documentation
 
 * Improve documentation for grant resource ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4935))

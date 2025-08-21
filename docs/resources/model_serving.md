@@ -242,6 +242,7 @@ The following arguments are supported:
 * `key` - (Optional) Key field for a serving endpoint rate limit. Currently, `user`, `user_group`, `service_principal`, and `endpoint` are supported, with `endpoint` being the default if not specified.
 * `principal` - (Optional) Principal field for a user, user group, or service principal to apply rate limiting to. Accepts a user email, group name, or service principal application ID.
 * `renewal_period` - (Required) Renewal period field for a serving endpoint rate limit. Currently, only `minute` is supported.
+* `tokens` - (Optional, int) Specifies how many tokens are allowed for a key within the renewal_period.
 
 ### ai_gateway Configuration Block
 

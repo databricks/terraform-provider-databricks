@@ -113,8 +113,8 @@ var templateWithInvalidResource = `
 func TestAccApp_InvalidResource(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: templateWithInvalidResource,
-		ExpectError: regexp.MustCompile(`2 attributes specified when one (and only one) of
-\[.*resources\[0\]\.job\.<\.secret,.*resources\[0\]\.job\.<\.serving_endpoint,.*resources\[0\]\.job\.<\.sql_warehouse,.*resources\[0\]\.job\.<\.uc_securable.*\]
+		ExpectError: regexp.MustCompile(`2 attributes specified when one \(and only one\) of
+\[.*resources\[0\].*<\.job,.*\.<\.serving_endpoint,.*\.<\.sql_warehouse,.*\.<\.uc_securable.*\]
 is required`),
 	})
 }

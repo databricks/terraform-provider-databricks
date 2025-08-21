@@ -9,7 +9,7 @@ import (
 
 const preTestTemplate = `
 	resource "databricks_catalog" "sandbox" {
-		name         = "sandbox{var.STICKY_RANDOM}"
+		name         = "sandbox{var.STICKY_RANDOM}_res"
 		comment      = "this catalog is managed by terraform"
 		properties = {
 			purpose = "testing"
@@ -18,7 +18,7 @@ const preTestTemplate = `
 
 	resource "databricks_schema" "things" {
 		catalog_name = databricks_catalog.sandbox.id
-		name         = "things{var.STICKY_RANDOM}"
+		name         = "things{var.STICKY_RANDOM}_res"
 		comment      = "this database is managed by terraform"
 		properties = {
 			kind = "various"
@@ -28,7 +28,7 @@ const preTestTemplate = `
 	resource "databricks_table" "mytable" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
-		name = "bar"
+		name = "bar{var.RANDOM}_res"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
 
@@ -44,7 +44,7 @@ const preTestTemplate = `
 	resource "databricks_table" "mytable_2" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
-		name = "bar_2"
+		name = "bar_2{var.RANDOM}_res"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
 
@@ -60,7 +60,7 @@ const preTestTemplate = `
 	resource "databricks_table" "mytable_3" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
-		name = "bar_3"
+		name = "bar_3{var.RANDOM}_res"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
 

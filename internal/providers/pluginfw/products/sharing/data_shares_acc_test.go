@@ -23,7 +23,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
-			name         = "sandbox{var.RANDOM}"
+			name         = "sandbox{var.RANDOM}_data"
 			comment      = "this catalog is managed by terraform"
 			properties = {
 				purpose = "testing"
@@ -32,7 +32,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
-			name         = "things{var.RANDOM}"
+			name         = "things{var.RANDOM}_data"
 			comment      = "this database is managed by terraform"
 			properties = {
 				kind = "various"
@@ -42,7 +42,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 		resource "databricks_table" "mytable" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
-			name = "bar"
+			name = "bar{var.RANDOM}_data"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
 
@@ -58,7 +58,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 		resource "databricks_table" "mytable_2" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
-			name = "bar_2"
+			name = "bar_2{var.RANDOM}_data"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
 

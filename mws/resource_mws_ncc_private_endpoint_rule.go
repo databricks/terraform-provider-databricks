@@ -108,7 +108,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				}
 				updatePrivateEndpointRule.ResourceNames = newResourceNames
 			}
-			rule, err := acc.NetworkConnectivity.UpdatePrivateEndpointRule(ctx, settings.UpdateNccPrivateEndpointRuleRequest{
+			_, err = acc.NetworkConnectivity.UpdatePrivateEndpointRule(ctx, settings.UpdateNccPrivateEndpointRuleRequest{
 				NetworkConnectivityConfigId: nccId,
 				PrivateEndpointRuleId:       ruleId,
 				PrivateEndpointRule:         updatePrivateEndpointRule,
@@ -117,8 +117,6 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			if err != nil {
 				return err
 			}
-			common.StructToData(rule, s, d)
-			p.Pack(d)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

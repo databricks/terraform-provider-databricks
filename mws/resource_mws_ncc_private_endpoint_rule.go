@@ -99,7 +99,8 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 					newDomainNames = append(newDomainNames, v.(string))
 				}
 				updatePrivateEndpointRule.DomainNames = newDomainNames
-			} else if d.HasChange("resource_names") {
+			}
+			if d.HasChange("resource_names") {
 				updateMask = append(updateMask, "resource_names")
 				newResourceNames := []string{}
 				for _, v := range d.Get("resource_names").([]any) {

@@ -120,7 +120,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateDomainName(t *te
 				PrivateEndpointRule: settings.UpdatePrivateEndpointRule{
 					DomainNames: []string{"my-new-example.exampledomain.com", "my-new-example2.exampledomain.com"},
 				},
-				UpdateMask: "domain_names",
+				UpdateMask: "enabled,domain_names",
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
 				&settings.NccPrivateEndpointRule{
@@ -167,7 +167,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 				PrivateEndpointRule: settings.UpdatePrivateEndpointRule{
 					ResourceNames: []string{"bucket1", "bucket2"},
 				},
-				UpdateMask: "resource_names",
+				UpdateMask: "enabled,resource_names",
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
 				&settings.NccPrivateEndpointRule{

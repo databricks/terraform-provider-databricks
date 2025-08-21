@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -86,20 +87,20 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			// only enabled, domain names & resource names are updatable
 			// they do require update_mask to be set
 			// resource_names are not applicable to Azure, so we exclude them from the update
-			updateMask := "enabled"
+			updateMask := []string{"enabled"}
 			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{
 				Enabled: d.Get("enabled").(bool),
 			}
 
 			if d.HasChange("domain_names") {
-				updateMask = "domain_names"
+				updateMask = append(updateMask, "domain_names")
 				newDomainNames := []string{}
 				for _, v := range d.Get("domain_names").([]any) {
 					newDomainNames = append(newDomainNames, v.(string))
 				}
 				updatePrivateEndpointRule.DomainNames = newDomainNames
 			} else if d.HasChange("resource_names") {
-				updateMask += "resource_names"
+				updateMask = append(updateMask, "resource_names")
 				newResourceNames := []string{}
 				for _, v := range d.Get("resource_names").([]any) {
 					newResourceNames = append(newResourceNames, v.(string))
@@ -110,7 +111,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				NetworkConnectivityConfigId: nccId,
 				PrivateEndpointRuleId:       ruleId,
 				PrivateEndpointRule:         updatePrivateEndpointRule,
-				UpdateMask:                  updateMask,
+				UpdateMask:                  strings.Join(updateMask, ","),
 			})
 			if err != nil {
 				return err

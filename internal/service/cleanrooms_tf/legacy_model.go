@@ -50,7 +50,7 @@ type CleanRoom_SdkV2 struct {
 	// catalog is manipulated using the separate CreateCleanRoomOutputCatalog
 	// API.
 	OutputCatalog types.List `tfsdk:"output_catalog"`
-	// This is Databricks username of the owner of the local clean room
+	// This is the Databricks username of the owner of the local clean room
 	// securable for permission management.
 	Owner types.String `tfsdk:"owner"`
 	// Central clean room details. During creation, users need to specify
@@ -863,7 +863,7 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	ReviewState types.String `tfsdk:"review_state"`
 	// All existing approvals or rejections
 	Reviews types.List `tfsdk:"reviews"`
-	// collaborators that can run the notebook
+	// Aliases of collaborators that can run the notebook.
 	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
@@ -1414,7 +1414,7 @@ type CleanRoomCollaborator_SdkV2 struct {
 	// rooms, it is the organization name of the metastore. It is not restricted
 	// to these values and could change in the future
 	DisplayName types.String `tfsdk:"display_name"`
-	// The global Unity Catalog metastore id of the collaborator. The identifier
+	// The global Unity Catalog metastore ID of the collaborator. The identifier
 	// is of format cloud:region:metastore-uuid.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id"`
 	// Email of the user who is receiving the clean room "invitation". It should

@@ -789,6 +789,9 @@ type AiGatewayRateLimit struct {
 	// Renewal period field for a rate limit. Currently, only 'minute' is
 	// supported.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
+	// Used to specify how many tokens are allowed for a key within the
+	// renewal_period.
+	Tokens types.Int64 `tfsdk:"tokens"`
 }
 
 func (toState *AiGatewayRateLimit) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayRateLimit) {
@@ -802,6 +805,7 @@ func (c AiGatewayRateLimit) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["key"] = attrs["key"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["tokens"] = attrs["tokens"].SetOptional()
 
 	return attrs
 }
@@ -828,6 +832,7 @@ func (o AiGatewayRateLimit) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"key":            o.Key,
 			"principal":      o.Principal,
 			"renewal_period": o.RenewalPeriod,
+			"tokens":         o.Tokens,
 		})
 }
 
@@ -839,6 +844,7 @@ func (o AiGatewayRateLimit) Type(ctx context.Context) attr.Type {
 			"key":            types.StringType,
 			"principal":      types.StringType,
 			"renewal_period": types.StringType,
+			"tokens":         types.Int64Type,
 		},
 	}
 }
@@ -8177,6 +8183,8 @@ type ServingEndpoint struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// The usage policy associated with serving endpoint.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (toState *ServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpoint) {
@@ -8246,6 +8254,7 @@ func (c ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -8285,6 +8294,7 @@ func (o ServingEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"state":                  o.State,
 			"tags":                   o.Tags,
 			"task":                   o.Task,
+			"usage_policy_id":        o.UsagePolicyId,
 		})
 }
 
@@ -8305,7 +8315,8 @@ func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
-			"task": types.StringType,
+			"task":            types.StringType,
+			"usage_policy_id": types.StringType,
 		},
 	}
 }

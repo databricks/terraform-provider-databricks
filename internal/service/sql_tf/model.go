@@ -978,6 +978,10 @@ type AlertV2 struct {
 	CustomSummary types.String `tfsdk:"custom_summary"`
 	// The display name of the alert.
 	DisplayName types.String `tfsdk:"display_name"`
+	// The actual identity that will be used to execute the alert. This is an
+	// output-only field that shows the resolved run-as identity after applying
+	// permissions and defaults.
+	EffectiveRunAs types.Object `tfsdk:"effective_run_as"`
 
 	Evaluation types.Object `tfsdk:"evaluation"`
 	// UUID identifying the alert.
@@ -992,9 +996,19 @@ type AlertV2 struct {
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
+	// Specifies the identity that will be used to run the alert. This field
+	// allows you to configure alerts to run as a specific user or service
+	// principal. - For user identity: Set `user_name` to the email of an active
+	// workspace user. Users can only set this to their own email. - For service
+	// principal: Set `service_principal_name` to the application ID. Requires
+	// the `servicePrincipal/user` role. If not specified, the alert will run as
+	// the request user.
+	RunAs types.Object `tfsdk:"run_as"`
 	// The run as username or application ID of service principal. On Create and
 	// Update, this field can be set to application ID of an active service
 	// principal. Setting this field requires the servicePrincipal/user role.
+	// Deprecated: Use `run_as` field instead. This field will be removed in a
+	// future release.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 
 	Schedule types.Object `tfsdk:"schedule"`
@@ -1005,11 +1019,27 @@ type AlertV2 struct {
 }
 
 func (toState *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2) {
+	if !fromPlan.EffectiveRunAs.IsNull() && !fromPlan.EffectiveRunAs.IsUnknown() {
+		if toStateEffectiveRunAs, ok := toState.GetEffectiveRunAs(ctx); ok {
+			if fromPlanEffectiveRunAs, ok := fromPlan.GetEffectiveRunAs(ctx); ok {
+				toStateEffectiveRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectiveRunAs)
+				toState.SetEffectiveRunAs(ctx, toStateEffectiveRunAs)
+			}
+		}
+	}
 	if !fromPlan.Evaluation.IsNull() && !fromPlan.Evaluation.IsUnknown() {
 		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
 			if fromPlanEvaluation, ok := fromPlan.GetEvaluation(ctx); ok {
 				toStateEvaluation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEvaluation)
 				toState.SetEvaluation(ctx, toStateEvaluation)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
 			}
 		}
 	}
@@ -1024,11 +1054,27 @@ func (toState *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (toState *AlertV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2) {
+	if !fromState.EffectiveRunAs.IsNull() && !fromState.EffectiveRunAs.IsUnknown() {
+		if toStateEffectiveRunAs, ok := toState.GetEffectiveRunAs(ctx); ok {
+			if fromStateEffectiveRunAs, ok := fromState.GetEffectiveRunAs(ctx); ok {
+				toStateEffectiveRunAs.SyncFieldsDuringRead(ctx, fromStateEffectiveRunAs)
+				toState.SetEffectiveRunAs(ctx, toStateEffectiveRunAs)
+			}
+		}
+	}
 	if !fromState.Evaluation.IsNull() && !fromState.Evaluation.IsUnknown() {
 		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
 			if fromStateEvaluation, ok := fromState.GetEvaluation(ctx); ok {
 				toStateEvaluation.SyncFieldsDuringRead(ctx, fromStateEvaluation)
 				toState.SetEvaluation(ctx, toStateEvaluation)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
 			}
 		}
 	}
@@ -1047,12 +1093,14 @@ func (c AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["custom_description"] = attrs["custom_description"].SetOptional()
 	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
 	attrs["evaluation"] = attrs["evaluation"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
 	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1070,8 +1118,10 @@ func (c AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 // SDK values.
 func (a AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"evaluation": reflect.TypeOf(AlertV2Evaluation{}),
-		"schedule":   reflect.TypeOf(CronSchedule{}),
+		"effective_run_as": reflect.TypeOf(AlertV2RunAs{}),
+		"evaluation":       reflect.TypeOf(AlertV2Evaluation{}),
+		"run_as":           reflect.TypeOf(AlertV2RunAs{}),
+		"schedule":         reflect.TypeOf(CronSchedule{}),
 	}
 }
 
@@ -1086,12 +1136,14 @@ func (o AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"custom_description": o.CustomDescription,
 			"custom_summary":     o.CustomSummary,
 			"display_name":       o.DisplayName,
+			"effective_run_as":   o.EffectiveRunAs,
 			"evaluation":         o.Evaluation,
 			"id":                 o.Id,
 			"lifecycle_state":    o.LifecycleState,
 			"owner_user_name":    o.OwnerUserName,
 			"parent_path":        o.ParentPath,
 			"query_text":         o.QueryText,
+			"run_as":             o.RunAs,
 			"run_as_user_name":   o.RunAsUserName,
 			"schedule":           o.Schedule,
 			"update_time":        o.UpdateTime,
@@ -1107,18 +1159,45 @@ func (o AlertV2) Type(ctx context.Context) attr.Type {
 			"custom_description": types.StringType,
 			"custom_summary":     types.StringType,
 			"display_name":       types.StringType,
+			"effective_run_as":   AlertV2RunAs{}.Type(ctx),
 			"evaluation":         AlertV2Evaluation{}.Type(ctx),
 			"id":                 types.StringType,
 			"lifecycle_state":    types.StringType,
 			"owner_user_name":    types.StringType,
 			"parent_path":        types.StringType,
 			"query_text":         types.StringType,
+			"run_as":             AlertV2RunAs{}.Type(ctx),
 			"run_as_user_name":   types.StringType,
 			"schedule":           CronSchedule{}.Type(ctx),
 			"update_time":        types.StringType,
 			"warehouse_id":       types.StringType,
 		},
 	}
+}
+
+// GetEffectiveRunAs returns the value of the EffectiveRunAs field in AlertV2 as
+// a AlertV2RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2) GetEffectiveRunAs(ctx context.Context) (AlertV2RunAs, bool) {
+	var e AlertV2RunAs
+	if o.EffectiveRunAs.IsNull() || o.EffectiveRunAs.IsUnknown() {
+		return e, false
+	}
+	var v AlertV2RunAs
+	d := o.EffectiveRunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveRunAs sets the value of the EffectiveRunAs field in AlertV2.
+func (o *AlertV2) SetEffectiveRunAs(ctx context.Context, v AlertV2RunAs) {
+	vs := v.ToObjectValue(ctx)
+	o.EffectiveRunAs = vs
 }
 
 // GetEvaluation returns the value of the Evaluation field in AlertV2 as
@@ -1144,6 +1223,31 @@ func (o *AlertV2) GetEvaluation(ctx context.Context) (AlertV2Evaluation, bool) {
 func (o *AlertV2) SetEvaluation(ctx context.Context, v AlertV2Evaluation) {
 	vs := v.ToObjectValue(ctx)
 	o.Evaluation = vs
+}
+
+// GetRunAs returns the value of the RunAs field in AlertV2 as
+// a AlertV2RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2) GetRunAs(ctx context.Context) (AlertV2RunAs, bool) {
+	var e AlertV2RunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v AlertV2RunAs
+	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRunAs sets the value of the RunAs field in AlertV2.
+func (o *AlertV2) SetRunAs(ctx context.Context, v AlertV2RunAs) {
+	vs := v.ToObjectValue(ctx)
+	o.RunAs = vs
 }
 
 // GetSchedule returns the value of the Schedule field in AlertV2 as
@@ -1713,6 +1817,61 @@ func (o AlertV2OperandValue) Type(ctx context.Context) attr.Type {
 			"bool_value":   types.BoolType,
 			"double_value": types.Float64Type,
 			"string_value": types.StringType,
+		},
+	}
+}
+
+type AlertV2RunAs struct {
+	// Application ID of an active service principal. Setting this field
+	// requires the `servicePrincipal/user` role.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// The email of an active workspace user. Can only set this field to their
+	// own email.
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (toState *AlertV2RunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2RunAs) {
+}
+
+func (toState *AlertV2RunAs) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2RunAs) {
+}
+
+func (c AlertV2RunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2RunAs.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2RunAs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2RunAs
+// only implements ToObjectValue() and Type().
+func (o AlertV2RunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2RunAs) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -10354,6 +10513,8 @@ func (o *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
 }
 
 type QueryInfo struct {
+	// The ID of the cached query if this result retrieved from cache
+	CacheQueryId types.String `tfsdk:"cache_query_id"`
 	// SQL Warehouse channel information at the time of query execution
 	ChannelUsed types.Object `tfsdk:"channel_used"`
 	// Client application that ran the statement. For example: Databricks SQL
@@ -10471,6 +10632,7 @@ func (toState *QueryInfo) SyncFieldsDuringRead(ctx context.Context, fromState Qu
 }
 
 func (c QueryInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cache_query_id"] = attrs["cache_query_id"].SetOptional()
 	attrs["channel_used"] = attrs["channel_used"].SetOptional()
 	attrs["client_application"] = attrs["client_application"].SetOptional()
 	attrs["duration"] = attrs["duration"].SetOptional()
@@ -10521,6 +10683,7 @@ func (o QueryInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"cache_query_id":        o.CacheQueryId,
 			"channel_used":          o.ChannelUsed,
 			"client_application":    o.ClientApplication,
 			"duration":              o.Duration,
@@ -10552,6 +10715,7 @@ func (o QueryInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o QueryInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"cache_query_id":        types.StringType,
 			"channel_used":          ChannelInfo{}.Type(ctx),
 			"client_application":    types.StringType,
 			"duration":              types.Int64Type,

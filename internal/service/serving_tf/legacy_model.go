@@ -818,6 +818,9 @@ type AiGatewayRateLimit_SdkV2 struct {
 	// Renewal period field for a rate limit. Currently, only 'minute' is
 	// supported.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
+	// Used to specify how many tokens are allowed for a key within the
+	// renewal_period.
+	Tokens types.Int64 `tfsdk:"tokens"`
 }
 
 func (toState *AiGatewayRateLimit_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AiGatewayRateLimit_SdkV2) {
@@ -831,6 +834,7 @@ func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["key"] = attrs["key"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["tokens"] = attrs["tokens"].SetOptional()
 
 	return attrs
 }
@@ -857,6 +861,7 @@ func (o AiGatewayRateLimit_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"key":            o.Key,
 			"principal":      o.Principal,
 			"renewal_period": o.RenewalPeriod,
+			"tokens":         o.Tokens,
 		})
 }
 
@@ -868,6 +873,7 @@ func (o AiGatewayRateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 			"key":            types.StringType,
 			"principal":      types.StringType,
 			"renewal_period": types.StringType,
+			"tokens":         types.Int64Type,
 		},
 	}
 }
@@ -8371,6 +8377,8 @@ type ServingEndpoint_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// The usage policy associated with serving endpoint.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (toState *ServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpoint_SdkV2) {
@@ -8443,6 +8451,7 @@ func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -8482,6 +8491,7 @@ func (o ServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"state":                  o.State,
 			"tags":                   o.Tags,
 			"task":                   o.Task,
+			"usage_policy_id":        o.UsagePolicyId,
 		})
 }
 
@@ -8508,7 +8518,8 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
-			"task": types.StringType,
+			"task":            types.StringType,
+			"usage_policy_id": types.StringType,
 		},
 	}
 }

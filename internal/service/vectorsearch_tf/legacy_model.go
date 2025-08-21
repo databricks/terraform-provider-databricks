@@ -1125,8 +1125,12 @@ func (o *DirectAccessVectorIndexSpec_SdkV2) SetEmbeddingVectorColumns(ctx contex
 }
 
 type EmbeddingSourceColumn_SdkV2 struct {
-	// Name of the embedding model endpoint
+	// Name of the embedding model endpoint, used by default for both ingestion
+	// and querying.
 	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name"`
+	// Name of the embedding model endpoint which, if specified, is used for
+	// querying (not ingestion).
+	ModelEndpointNameForQuery types.String `tfsdk:"model_endpoint_name_for_query"`
 	// Name of the column
 	Name types.String `tfsdk:"name"`
 }
@@ -1139,6 +1143,7 @@ func (toState *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringRead(ctx context.Con
 
 func (c EmbeddingSourceColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["embedding_model_endpoint_name"] = attrs["embedding_model_endpoint_name"].SetOptional()
+	attrs["model_endpoint_name_for_query"] = attrs["model_endpoint_name_for_query"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 
 	return attrs
@@ -1163,6 +1168,7 @@ func (o EmbeddingSourceColumn_SdkV2) ToObjectValue(ctx context.Context) basetype
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"embedding_model_endpoint_name": o.EmbeddingModelEndpointName,
+			"model_endpoint_name_for_query": o.ModelEndpointNameForQuery,
 			"name":                          o.Name,
 		})
 }
@@ -1172,6 +1178,7 @@ func (o EmbeddingSourceColumn_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_model_endpoint_name": types.StringType,
+			"model_endpoint_name_for_query": types.StringType,
 			"name":                          types.StringType,
 		},
 	}

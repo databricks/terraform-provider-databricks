@@ -71,8 +71,14 @@ The following arguments are supported:
 * `evaluation` (AlertV2Evaluation, optional)
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string, optional) - Text of the query to be run
-* `run_as_user_name` (string, optional) - The run as username or application ID of service principal.
-  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role
+* `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
+  This field allows you to configure alerts to run as a specific user or service principal.
+  - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.
+  - For service principal: Set `service_principal_name` to the application ID. Requires the `servicePrincipal/user` role.
+  If not specified, the alert will run as the request user
+* `run_as_user_name` (string, optional, deprecated) - The run as username or application ID of service principal.
+  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role.
+  Deprecated: Use `run_as` field instead. This field will be removed in a future release
 * `schedule` (CronSchedule, optional)
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
 
@@ -102,6 +108,10 @@ The following arguments are supported:
 * `double_value` (number, optional)
 * `string_value` (string, optional)
 
+### AlertV2RunAs
+* `service_principal_name` (string, optional) - Application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role
+* `user_name` (string, optional) - The email of an active workspace user. Can only set this field to their own email
+
 ### AlertV2Subscription
 * `destination_id` (string, optional)
 * `user_email` (string, optional)
@@ -117,6 +127,9 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - The timestamp indicating when the alert was created
+* `effective_run_as` (AlertV2RunAs) - The actual identity that will be used to execute the alert.
+  This is an output-only field that shows the resolved run-as identity after applying
+  permissions and defaults
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted

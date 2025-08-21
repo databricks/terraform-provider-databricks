@@ -4269,16 +4269,9 @@ func (o *SecurablePropertiesKvPairs_SdkV2) SetProperties(ctx context.Context, v 
 }
 
 type Share_SdkV2 struct {
-	// The comment of the share.
-	Comment types.String `tfsdk:"comment"`
-	// The display name of the share. If defined, it will be shown in the UI.
-	DisplayName types.String `tfsdk:"display_name"`
-
 	Id types.String `tfsdk:"id"`
 
 	Name types.String `tfsdk:"name"`
-	// The tags of the share.
-	Tags types.List `tfsdk:"tags"`
 }
 
 func (toState *Share_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Share_SdkV2) {
@@ -4288,11 +4281,8 @@ func (toState *Share_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState 
 }
 
 func (c Share_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
 }
@@ -4305,9 +4295,7 @@ func (c Share_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a Share_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
-	}
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4317,11 +4305,8 @@ func (o Share_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":      o.Comment,
-			"display_name": o.DisplayName,
-			"id":           o.Id,
-			"name":         o.Name,
-			"tags":         o.Tags,
+			"id":   o.Id,
+			"name": o.Name,
 		})
 }
 
@@ -4329,41 +4314,10 @@ func (o Share_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Share_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":      types.StringType,
-			"display_name": types.StringType,
-			"id":           types.StringType,
-			"name":         types.StringType,
-			"tags": basetypes.ListType{
-				ElemType: catalog_tf.TagKeyValue_SdkV2{}.Type(ctx),
-			},
+			"id":   types.StringType,
+			"name": types.StringType,
 		},
 	}
-}
-
-// GetTags returns the value of the Tags field in Share_SdkV2 as
-// a slice of catalog_tf.TagKeyValue_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *Share_SdkV2) GetTags(ctx context.Context) ([]catalog_tf.TagKeyValue_SdkV2, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
-		return nil, false
-	}
-	var v []catalog_tf.TagKeyValue_SdkV2
-	d := o.Tags.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTags sets the value of the Tags field in Share_SdkV2.
-func (o *Share_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.ListValueMust(t, vs)
 }
 
 type ShareInfo_SdkV2 struct {

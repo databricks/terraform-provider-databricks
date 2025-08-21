@@ -878,6 +878,639 @@ func (o AppDeploymentStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// App manifest definition
+type AppManifest struct {
+	// Description of the app defined by manifest author / publisher
+	Description types.String `tfsdk:"description"`
+	// Name of the app defined by manifest author / publisher
+	Name types.String `tfsdk:"name"`
+
+	ResourceSpecs types.List `tfsdk:"resource_specs"`
+	// The manifest schema version, for now only 1 is allowed
+	Version types.Int64 `tfsdk:"version"`
+}
+
+func (toState *AppManifest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifest) {
+}
+
+func (toState *AppManifest) SyncFieldsDuringRead(ctx context.Context, fromState AppManifest) {
+}
+
+func (c AppManifest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["resource_specs"] = attrs["resource_specs"].SetOptional()
+	attrs["version"] = attrs["version"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"resource_specs": reflect.TypeOf(AppManifestAppResourceSpec{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifest
+// only implements ToObjectValue() and Type().
+func (o AppManifest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":    o.Description,
+			"name":           o.Name,
+			"resource_specs": o.ResourceSpecs,
+			"version":        o.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"name":        types.StringType,
+			"resource_specs": basetypes.ListType{
+				ElemType: AppManifestAppResourceSpec{}.Type(ctx),
+			},
+			"version": types.Int64Type,
+		},
+	}
+}
+
+// GetResourceSpecs returns the value of the ResourceSpecs field in AppManifest as
+// a slice of AppManifestAppResourceSpec values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifest) GetResourceSpecs(ctx context.Context) ([]AppManifestAppResourceSpec, bool) {
+	if o.ResourceSpecs.IsNull() || o.ResourceSpecs.IsUnknown() {
+		return nil, false
+	}
+	var v []AppManifestAppResourceSpec
+	d := o.ResourceSpecs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResourceSpecs sets the value of the ResourceSpecs field in AppManifest.
+func (o *AppManifest) SetResourceSpecs(ctx context.Context, v []AppManifestAppResourceSpec) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_specs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ResourceSpecs = types.ListValueMust(t, vs)
+}
+
+type AppManifestAppResourceJobSpec struct {
+	// Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE",
+	// "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW".
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (toState *AppManifestAppResourceJobSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceJobSpec) {
+}
+
+func (toState *AppManifestAppResourceJobSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceJobSpec) {
+}
+
+func (c AppManifestAppResourceJobSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceJobSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceJobSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceJobSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceJobSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceJobSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
+type AppManifestAppResourceSecretSpec struct {
+	// Permission to grant on the secret scope. For secrets, only one permission
+	// is allowed. Permission must be one of: "READ", "WRITE", "MANAGE".
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (toState *AppManifestAppResourceSecretSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceSecretSpec) {
+}
+
+func (toState *AppManifestAppResourceSecretSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceSecretSpec) {
+}
+
+func (c AppManifestAppResourceSecretSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceSecretSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceSecretSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSecretSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceSecretSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceSecretSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
+type AppManifestAppResourceServingEndpointSpec struct {
+	// Permission to grant on the serving endpoint. Supported permissions are:
+	// "CAN_MANAGE", "CAN_QUERY", "CAN_VIEW".
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (toState *AppManifestAppResourceServingEndpointSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceServingEndpointSpec) {
+}
+
+func (toState *AppManifestAppResourceServingEndpointSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceServingEndpointSpec) {
+}
+
+func (c AppManifestAppResourceServingEndpointSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceServingEndpointSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceServingEndpointSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceServingEndpointSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceServingEndpointSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceServingEndpointSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
+// AppResource related fields are copied from app.proto but excludes resource
+// identifiers (e.g. name, id, key, scope, etc.)
+type AppManifestAppResourceSpec struct {
+	// Description of the App Resource.
+	Description types.String `tfsdk:"description"`
+
+	JobSpec types.Object `tfsdk:"job_spec"`
+	// Name of the App Resource.
+	Name types.String `tfsdk:"name"`
+
+	SecretSpec types.Object `tfsdk:"secret_spec"`
+
+	ServingEndpointSpec types.Object `tfsdk:"serving_endpoint_spec"`
+
+	SqlWarehouseSpec types.Object `tfsdk:"sql_warehouse_spec"`
+
+	UcSecurableSpec types.Object `tfsdk:"uc_securable_spec"`
+}
+
+func (toState *AppManifestAppResourceSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceSpec) {
+	if !fromPlan.JobSpec.IsNull() && !fromPlan.JobSpec.IsUnknown() {
+		if toStateJobSpec, ok := toState.GetJobSpec(ctx); ok {
+			if fromPlanJobSpec, ok := fromPlan.GetJobSpec(ctx); ok {
+				toStateJobSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJobSpec)
+				toState.SetJobSpec(ctx, toStateJobSpec)
+			}
+		}
+	}
+	if !fromPlan.SecretSpec.IsNull() && !fromPlan.SecretSpec.IsUnknown() {
+		if toStateSecretSpec, ok := toState.GetSecretSpec(ctx); ok {
+			if fromPlanSecretSpec, ok := fromPlan.GetSecretSpec(ctx); ok {
+				toStateSecretSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSecretSpec)
+				toState.SetSecretSpec(ctx, toStateSecretSpec)
+			}
+		}
+	}
+	if !fromPlan.ServingEndpointSpec.IsNull() && !fromPlan.ServingEndpointSpec.IsUnknown() {
+		if toStateServingEndpointSpec, ok := toState.GetServingEndpointSpec(ctx); ok {
+			if fromPlanServingEndpointSpec, ok := fromPlan.GetServingEndpointSpec(ctx); ok {
+				toStateServingEndpointSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanServingEndpointSpec)
+				toState.SetServingEndpointSpec(ctx, toStateServingEndpointSpec)
+			}
+		}
+	}
+	if !fromPlan.SqlWarehouseSpec.IsNull() && !fromPlan.SqlWarehouseSpec.IsUnknown() {
+		if toStateSqlWarehouseSpec, ok := toState.GetSqlWarehouseSpec(ctx); ok {
+			if fromPlanSqlWarehouseSpec, ok := fromPlan.GetSqlWarehouseSpec(ctx); ok {
+				toStateSqlWarehouseSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlWarehouseSpec)
+				toState.SetSqlWarehouseSpec(ctx, toStateSqlWarehouseSpec)
+			}
+		}
+	}
+	if !fromPlan.UcSecurableSpec.IsNull() && !fromPlan.UcSecurableSpec.IsUnknown() {
+		if toStateUcSecurableSpec, ok := toState.GetUcSecurableSpec(ctx); ok {
+			if fromPlanUcSecurableSpec, ok := fromPlan.GetUcSecurableSpec(ctx); ok {
+				toStateUcSecurableSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUcSecurableSpec)
+				toState.SetUcSecurableSpec(ctx, toStateUcSecurableSpec)
+			}
+		}
+	}
+}
+
+func (toState *AppManifestAppResourceSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceSpec) {
+	if !fromState.JobSpec.IsNull() && !fromState.JobSpec.IsUnknown() {
+		if toStateJobSpec, ok := toState.GetJobSpec(ctx); ok {
+			if fromStateJobSpec, ok := fromState.GetJobSpec(ctx); ok {
+				toStateJobSpec.SyncFieldsDuringRead(ctx, fromStateJobSpec)
+				toState.SetJobSpec(ctx, toStateJobSpec)
+			}
+		}
+	}
+	if !fromState.SecretSpec.IsNull() && !fromState.SecretSpec.IsUnknown() {
+		if toStateSecretSpec, ok := toState.GetSecretSpec(ctx); ok {
+			if fromStateSecretSpec, ok := fromState.GetSecretSpec(ctx); ok {
+				toStateSecretSpec.SyncFieldsDuringRead(ctx, fromStateSecretSpec)
+				toState.SetSecretSpec(ctx, toStateSecretSpec)
+			}
+		}
+	}
+	if !fromState.ServingEndpointSpec.IsNull() && !fromState.ServingEndpointSpec.IsUnknown() {
+		if toStateServingEndpointSpec, ok := toState.GetServingEndpointSpec(ctx); ok {
+			if fromStateServingEndpointSpec, ok := fromState.GetServingEndpointSpec(ctx); ok {
+				toStateServingEndpointSpec.SyncFieldsDuringRead(ctx, fromStateServingEndpointSpec)
+				toState.SetServingEndpointSpec(ctx, toStateServingEndpointSpec)
+			}
+		}
+	}
+	if !fromState.SqlWarehouseSpec.IsNull() && !fromState.SqlWarehouseSpec.IsUnknown() {
+		if toStateSqlWarehouseSpec, ok := toState.GetSqlWarehouseSpec(ctx); ok {
+			if fromStateSqlWarehouseSpec, ok := fromState.GetSqlWarehouseSpec(ctx); ok {
+				toStateSqlWarehouseSpec.SyncFieldsDuringRead(ctx, fromStateSqlWarehouseSpec)
+				toState.SetSqlWarehouseSpec(ctx, toStateSqlWarehouseSpec)
+			}
+		}
+	}
+	if !fromState.UcSecurableSpec.IsNull() && !fromState.UcSecurableSpec.IsUnknown() {
+		if toStateUcSecurableSpec, ok := toState.GetUcSecurableSpec(ctx); ok {
+			if fromStateUcSecurableSpec, ok := fromState.GetUcSecurableSpec(ctx); ok {
+				toStateUcSecurableSpec.SyncFieldsDuringRead(ctx, fromStateUcSecurableSpec)
+				toState.SetUcSecurableSpec(ctx, toStateUcSecurableSpec)
+			}
+		}
+	}
+}
+
+func (c AppManifestAppResourceSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["job_spec"] = attrs["job_spec"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["secret_spec"] = attrs["secret_spec"].SetOptional()
+	attrs["serving_endpoint_spec"] = attrs["serving_endpoint_spec"].SetOptional()
+	attrs["sql_warehouse_spec"] = attrs["sql_warehouse_spec"].SetOptional()
+	attrs["uc_securable_spec"] = attrs["uc_securable_spec"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"job_spec":              reflect.TypeOf(AppManifestAppResourceJobSpec{}),
+		"secret_spec":           reflect.TypeOf(AppManifestAppResourceSecretSpec{}),
+		"serving_endpoint_spec": reflect.TypeOf(AppManifestAppResourceServingEndpointSpec{}),
+		"sql_warehouse_spec":    reflect.TypeOf(AppManifestAppResourceSqlWarehouseSpec{}),
+		"uc_securable_spec":     reflect.TypeOf(AppManifestAppResourceUcSecurableSpec{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":           o.Description,
+			"job_spec":              o.JobSpec,
+			"name":                  o.Name,
+			"secret_spec":           o.SecretSpec,
+			"serving_endpoint_spec": o.ServingEndpointSpec,
+			"sql_warehouse_spec":    o.SqlWarehouseSpec,
+			"uc_securable_spec":     o.UcSecurableSpec,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":           types.StringType,
+			"job_spec":              AppManifestAppResourceJobSpec{}.Type(ctx),
+			"name":                  types.StringType,
+			"secret_spec":           AppManifestAppResourceSecretSpec{}.Type(ctx),
+			"serving_endpoint_spec": AppManifestAppResourceServingEndpointSpec{}.Type(ctx),
+			"sql_warehouse_spec":    AppManifestAppResourceSqlWarehouseSpec{}.Type(ctx),
+			"uc_securable_spec":     AppManifestAppResourceUcSecurableSpec{}.Type(ctx),
+		},
+	}
+}
+
+// GetJobSpec returns the value of the JobSpec field in AppManifestAppResourceSpec as
+// a AppManifestAppResourceJobSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifestAppResourceSpec) GetJobSpec(ctx context.Context) (AppManifestAppResourceJobSpec, bool) {
+	var e AppManifestAppResourceJobSpec
+	if o.JobSpec.IsNull() || o.JobSpec.IsUnknown() {
+		return e, false
+	}
+	var v AppManifestAppResourceJobSpec
+	d := o.JobSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobSpec sets the value of the JobSpec field in AppManifestAppResourceSpec.
+func (o *AppManifestAppResourceSpec) SetJobSpec(ctx context.Context, v AppManifestAppResourceJobSpec) {
+	vs := v.ToObjectValue(ctx)
+	o.JobSpec = vs
+}
+
+// GetSecretSpec returns the value of the SecretSpec field in AppManifestAppResourceSpec as
+// a AppManifestAppResourceSecretSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifestAppResourceSpec) GetSecretSpec(ctx context.Context) (AppManifestAppResourceSecretSpec, bool) {
+	var e AppManifestAppResourceSecretSpec
+	if o.SecretSpec.IsNull() || o.SecretSpec.IsUnknown() {
+		return e, false
+	}
+	var v AppManifestAppResourceSecretSpec
+	d := o.SecretSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecretSpec sets the value of the SecretSpec field in AppManifestAppResourceSpec.
+func (o *AppManifestAppResourceSpec) SetSecretSpec(ctx context.Context, v AppManifestAppResourceSecretSpec) {
+	vs := v.ToObjectValue(ctx)
+	o.SecretSpec = vs
+}
+
+// GetServingEndpointSpec returns the value of the ServingEndpointSpec field in AppManifestAppResourceSpec as
+// a AppManifestAppResourceServingEndpointSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifestAppResourceSpec) GetServingEndpointSpec(ctx context.Context) (AppManifestAppResourceServingEndpointSpec, bool) {
+	var e AppManifestAppResourceServingEndpointSpec
+	if o.ServingEndpointSpec.IsNull() || o.ServingEndpointSpec.IsUnknown() {
+		return e, false
+	}
+	var v AppManifestAppResourceServingEndpointSpec
+	d := o.ServingEndpointSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServingEndpointSpec sets the value of the ServingEndpointSpec field in AppManifestAppResourceSpec.
+func (o *AppManifestAppResourceSpec) SetServingEndpointSpec(ctx context.Context, v AppManifestAppResourceServingEndpointSpec) {
+	vs := v.ToObjectValue(ctx)
+	o.ServingEndpointSpec = vs
+}
+
+// GetSqlWarehouseSpec returns the value of the SqlWarehouseSpec field in AppManifestAppResourceSpec as
+// a AppManifestAppResourceSqlWarehouseSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifestAppResourceSpec) GetSqlWarehouseSpec(ctx context.Context) (AppManifestAppResourceSqlWarehouseSpec, bool) {
+	var e AppManifestAppResourceSqlWarehouseSpec
+	if o.SqlWarehouseSpec.IsNull() || o.SqlWarehouseSpec.IsUnknown() {
+		return e, false
+	}
+	var v AppManifestAppResourceSqlWarehouseSpec
+	d := o.SqlWarehouseSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlWarehouseSpec sets the value of the SqlWarehouseSpec field in AppManifestAppResourceSpec.
+func (o *AppManifestAppResourceSpec) SetSqlWarehouseSpec(ctx context.Context, v AppManifestAppResourceSqlWarehouseSpec) {
+	vs := v.ToObjectValue(ctx)
+	o.SqlWarehouseSpec = vs
+}
+
+// GetUcSecurableSpec returns the value of the UcSecurableSpec field in AppManifestAppResourceSpec as
+// a AppManifestAppResourceUcSecurableSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppManifestAppResourceSpec) GetUcSecurableSpec(ctx context.Context) (AppManifestAppResourceUcSecurableSpec, bool) {
+	var e AppManifestAppResourceUcSecurableSpec
+	if o.UcSecurableSpec.IsNull() || o.UcSecurableSpec.IsUnknown() {
+		return e, false
+	}
+	var v AppManifestAppResourceUcSecurableSpec
+	d := o.UcSecurableSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUcSecurableSpec sets the value of the UcSecurableSpec field in AppManifestAppResourceSpec.
+func (o *AppManifestAppResourceSpec) SetUcSecurableSpec(ctx context.Context, v AppManifestAppResourceUcSecurableSpec) {
+	vs := v.ToObjectValue(ctx)
+	o.UcSecurableSpec = vs
+}
+
+type AppManifestAppResourceSqlWarehouseSpec struct {
+	// Permission to grant on the SQL warehouse. Supported permissions are:
+	// "CAN_MANAGE", "CAN_USE", "IS_OWNER".
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (toState *AppManifestAppResourceSqlWarehouseSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceSqlWarehouseSpec) {
+}
+
+func (toState *AppManifestAppResourceSqlWarehouseSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceSqlWarehouseSpec) {
+}
+
+func (c AppManifestAppResourceSqlWarehouseSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceSqlWarehouseSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceSqlWarehouseSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSqlWarehouseSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceSqlWarehouseSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": o.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceSqlWarehouseSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
+type AppManifestAppResourceUcSecurableSpec struct {
+	Permission types.String `tfsdk:"permission"`
+
+	SecurableType types.String `tfsdk:"securable_type"`
+}
+
+func (toState *AppManifestAppResourceUcSecurableSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppManifestAppResourceUcSecurableSpec) {
+}
+
+func (toState *AppManifestAppResourceUcSecurableSpec) SyncFieldsDuringRead(ctx context.Context, fromState AppManifestAppResourceUcSecurableSpec) {
+}
+
+func (c AppManifestAppResourceUcSecurableSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceUcSecurableSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AppManifestAppResourceUcSecurableSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceUcSecurableSpec
+// only implements ToObjectValue() and Type().
+func (o AppManifestAppResourceUcSecurableSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission":     o.Permission,
+			"securable_type": o.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AppManifestAppResourceUcSecurableSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission":     types.StringType,
+			"securable_type": types.StringType,
+		},
+	}
+}
+
 type AppPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
@@ -2082,6 +2715,191 @@ func (o *CreateAppRequest) SetApp(ctx context.Context, v App) {
 	o.App = vs
 }
 
+type CreateCustomTemplateRequest struct {
+	Template types.Object `tfsdk:"template"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomTemplateRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateCustomTemplateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"template": reflect.TypeOf(CustomTemplate{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCustomTemplateRequest
+// only implements ToObjectValue() and Type().
+func (o CreateCustomTemplateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"template": o.Template,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateCustomTemplateRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"template": CustomTemplate{}.Type(ctx),
+		},
+	}
+}
+
+// GetTemplate returns the value of the Template field in CreateCustomTemplateRequest as
+// a CustomTemplate value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomTemplateRequest) GetTemplate(ctx context.Context) (CustomTemplate, bool) {
+	var e CustomTemplate
+	if o.Template.IsNull() || o.Template.IsUnknown() {
+		return e, false
+	}
+	var v CustomTemplate
+	d := o.Template.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTemplate sets the value of the Template field in CreateCustomTemplateRequest.
+func (o *CreateCustomTemplateRequest) SetTemplate(ctx context.Context, v CustomTemplate) {
+	vs := v.ToObjectValue(ctx)
+	o.Template = vs
+}
+
+type CustomTemplate struct {
+	Creator types.String `tfsdk:"creator"`
+	// The description of the template.
+	Description types.String `tfsdk:"description"`
+	// The Git provider of the template.
+	GitProvider types.String `tfsdk:"git_provider"`
+	// The Git repository URL that the template resides in.
+	GitRepo types.String `tfsdk:"git_repo"`
+	// The manifest of the template. It defines fields and default values when
+	// installing the template.
+	Manifest types.Object `tfsdk:"manifest"`
+	// The name of the template. It must contain only alphanumeric characters,
+	// hyphens, underscores, and whitespaces. It must be unique within the
+	// workspace.
+	Name types.String `tfsdk:"name"`
+	// The path to the template within the Git repository.
+	Path types.String `tfsdk:"path"`
+}
+
+func (toState *CustomTemplate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomTemplate) {
+	if !fromPlan.Manifest.IsNull() && !fromPlan.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromPlanManifest, ok := fromPlan.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+}
+
+func (toState *CustomTemplate) SyncFieldsDuringRead(ctx context.Context, fromState CustomTemplate) {
+	if !fromState.Manifest.IsNull() && !fromState.Manifest.IsUnknown() {
+		if toStateManifest, ok := toState.GetManifest(ctx); ok {
+			if fromStateManifest, ok := fromState.GetManifest(ctx); ok {
+				toStateManifest.SyncFieldsDuringRead(ctx, fromStateManifest)
+				toState.SetManifest(ctx, toStateManifest)
+			}
+		}
+	}
+}
+
+func (c CustomTemplate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_repo"] = attrs["git_repo"].SetRequired()
+	attrs["manifest"] = attrs["manifest"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomTemplate.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CustomTemplate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"manifest": reflect.TypeOf(AppManifest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTemplate
+// only implements ToObjectValue() and Type().
+func (o CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"creator":      o.Creator,
+			"description":  o.Description,
+			"git_provider": o.GitProvider,
+			"git_repo":     o.GitRepo,
+			"manifest":     o.Manifest,
+			"name":         o.Name,
+			"path":         o.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CustomTemplate) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"creator":      types.StringType,
+			"description":  types.StringType,
+			"git_provider": types.StringType,
+			"git_repo":     types.StringType,
+			"manifest":     AppManifest{}.Type(ctx),
+			"name":         types.StringType,
+			"path":         types.StringType,
+		},
+	}
+}
+
+// GetManifest returns the value of the Manifest field in CustomTemplate as
+// a AppManifest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomTemplate) GetManifest(ctx context.Context) (AppManifest, bool) {
+	var e AppManifest
+	if o.Manifest.IsNull() || o.Manifest.IsUnknown() {
+		return e, false
+	}
+	var v AppManifest
+	d := o.Manifest.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetManifest sets the value of the Manifest field in CustomTemplate.
+func (o *CustomTemplate) SetManifest(ctx context.Context, v AppManifest) {
+	vs := v.ToObjectValue(ctx)
+	o.Manifest = vs
+}
+
 type DeleteAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -2111,6 +2929,42 @@ func (o DeleteAppRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 
 // Type implements basetypes.ObjectValuable.
 func (o DeleteAppRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteCustomTemplateRequest struct {
+	// The name of the custom template.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCustomTemplateRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteCustomTemplateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCustomTemplateRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteCustomTemplateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteCustomTemplateRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2337,6 +3191,42 @@ func (o GetAppRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 
 // Type implements basetypes.ObjectValuable.
 func (o GetAppRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetCustomTemplateRequest struct {
+	// The name of the custom template.
+	Name types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCustomTemplateRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCustomTemplateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCustomTemplateRequest
+// only implements ToObjectValue() and Type().
+func (o GetCustomTemplateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCustomTemplateRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2595,6 +3485,130 @@ func (o *ListAppsResponse) SetApps(ctx context.Context, v []App) {
 	o.Apps = types.ListValueMust(t, vs)
 }
 
+type ListCustomTemplatesRequest struct {
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of custom templates. Requests
+	// first page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCustomTemplatesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCustomTemplatesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCustomTemplatesRequest
+// only implements ToObjectValue() and Type().
+func (o ListCustomTemplatesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCustomTemplatesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListCustomTemplatesResponse struct {
+	// Pagination token to request the next page of custom templates.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Templates types.List `tfsdk:"templates"`
+}
+
+func (toState *ListCustomTemplatesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCustomTemplatesResponse) {
+}
+
+func (toState *ListCustomTemplatesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListCustomTemplatesResponse) {
+}
+
+func (c ListCustomTemplatesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["templates"] = attrs["templates"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCustomTemplatesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListCustomTemplatesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"templates": reflect.TypeOf(CustomTemplate{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCustomTemplatesResponse
+// only implements ToObjectValue() and Type().
+func (o ListCustomTemplatesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"templates":       o.Templates,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListCustomTemplatesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"templates": basetypes.ListType{
+				ElemType: CustomTemplate{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTemplates returns the value of the Templates field in ListCustomTemplatesResponse as
+// a slice of CustomTemplate values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCustomTemplatesResponse) GetTemplates(ctx context.Context) ([]CustomTemplate, bool) {
+	if o.Templates.IsNull() || o.Templates.IsUnknown() {
+		return nil, false
+	}
+	var v []CustomTemplate
+	d := o.Templates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTemplates sets the value of the Templates field in ListCustomTemplatesResponse.
+func (o *ListCustomTemplatesResponse) SetTemplates(ctx context.Context, v []CustomTemplate) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["templates"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Templates = types.ListValueMust(t, vs)
+}
+
 type StartAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -2732,4 +3746,73 @@ func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 func (o *UpdateAppRequest) SetApp(ctx context.Context, v App) {
 	vs := v.ToObjectValue(ctx)
 	o.App = vs
+}
+
+type UpdateCustomTemplateRequest struct {
+	// The name of the template. It must contain only alphanumeric characters,
+	// hyphens, underscores, and whitespaces. It must be unique within the
+	// workspace.
+	Name types.String `tfsdk:"-"`
+
+	Template types.Object `tfsdk:"template"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomTemplateRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateCustomTemplateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"template": reflect.TypeOf(CustomTemplate{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCustomTemplateRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateCustomTemplateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":     o.Name,
+			"template": o.Template,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateCustomTemplateRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":     types.StringType,
+			"template": CustomTemplate{}.Type(ctx),
+		},
+	}
+}
+
+// GetTemplate returns the value of the Template field in UpdateCustomTemplateRequest as
+// a CustomTemplate value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomTemplateRequest) GetTemplate(ctx context.Context) (CustomTemplate, bool) {
+	var e CustomTemplate
+	if o.Template.IsNull() || o.Template.IsUnknown() {
+		return e, false
+	}
+	var v CustomTemplate
+	d := o.Template.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTemplate sets the value of the Template field in UpdateCustomTemplateRequest.
+func (o *UpdateCustomTemplateRequest) SetTemplate(ctx context.Context, v CustomTemplate) {
+	vs := v.ToObjectValue(ctx)
+	o.Template = vs
 }

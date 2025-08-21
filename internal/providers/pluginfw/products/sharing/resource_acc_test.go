@@ -376,3 +376,57 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 		},
 	)
 }
+
+// TestUcAccShareMigrationFromPluginFramework tests the transition from plugin framework to sdkv2.
+// This test verifies that existing state created by plugin framework implementation can be
+// successfully managed by the SDK v2 implementation without any changes.
+func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t,
+		// Step 1: Create share using plugin framework implementation
+		acceptance.Step{
+			Template: preTestTemplate + preTestTemplateUpdate + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
+					owner = "account users"
+					object {
+						name = databricks_table.mytable.id
+						comment = "Shared table for migration test"
+						data_object_type = "TABLE"
+					}
+					object {
+						name = databricks_table.mytable_2.id
+						comment = "Second shared table"
+						data_object_type = "TABLE"
+						cdf_enabled = false
+					}
+				}`,
+		},
+		// Step 2: Update the share using SDK v2 (default)
+		// This verifies no changes are needed when switching implementations
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			ExpectNonEmptyPlan: false,
+			Template: preTestTemplate + preTestTemplateUpdate + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
+					owner = "account users"
+					object {
+						name = databricks_table.mytable.id
+						comment = "Shared table for migration test"
+						data_object_type = "TABLE"
+					}
+					object {
+						name = databricks_table.mytable_2.id
+						comment = "Second shared table"
+						data_object_type = "TABLE"
+						cdf_enabled = false
+					}
+				}`,
+		},
+	)
+}

@@ -6,12 +6,9 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-<<<<<<< HEAD
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-=======
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
->>>>>>> share-resource-sdkv2-compatible
 )
 
 const preTestTemplate = `

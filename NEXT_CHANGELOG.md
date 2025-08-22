@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fixed syncing of effective fields in plugin framework implementation of share resource ([#4969](https://github.com/databricks/terraform-provider-databricks/pull/4969))
+
 ### Documentation
 
 * Improve documentation for grant resource ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4935))

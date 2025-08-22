@@ -396,6 +396,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
+	state.ID = state.Name
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 

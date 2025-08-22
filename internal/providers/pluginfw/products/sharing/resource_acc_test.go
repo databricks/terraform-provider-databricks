@@ -6,8 +6,12 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+<<<<<<< HEAD
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+=======
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+>>>>>>> share-resource-sdkv2-compatible
 )
 
 const preTestTemplate = `
@@ -429,4 +433,41 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 				}`,
 		},
 	)
+}
+func shareUpdateWithName(name string) string {
+	return fmt.Sprintf(`resource "databricks_share_pluginframework" "myshare" {
+			name  = "%s"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "A"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+		}`, name)
+}
+
+func shareCheckStateforID() func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		r, ok := s.RootModule().Resources["databricks_share_pluginframework.myshare"]
+		if !ok {
+			return fmt.Errorf("resource not found in state")
+		}
+		id := r.Primary.Attributes["id"]
+		name := r.Primary.Attributes["name"]
+		if id != name {
+			return fmt.Errorf("resource ID is not equal to the name. Attributes: %v", r.Primary.Attributes)
+		}
+		return nil
+	}
+}
+
+func TestUcAccUpdateShareName(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-before"),
+		Check:    shareCheckStateforID(),
+	}, acceptance.Step{
+		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-after"),
+		Check:    shareCheckStateforID(),
+	})
 }

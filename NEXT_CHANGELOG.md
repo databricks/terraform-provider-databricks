@@ -25,5 +25,3 @@
 * Resolve references also for map values ([#4944](https://github.com/databricks/terraform-provider-databricks/pull/4944))
 
 ### Internal Changes
-
-* Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))

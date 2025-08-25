@@ -446,13 +446,8 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state Sha
 	stateObjects, _ := state.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
 	for i := range stateObjects {
-		for j := range planObjects {
-			if stateObjects[i].Name == planObjects[j].Name {
-				mode.objectLevel(ctx, &stateObjects[i], planObjects[j])
-				finalObjects = append(finalObjects, stateObjects[i])
-				break
-			}
-		}
+		mode.objectLevel(ctx, &stateObjects[i], planObjects[i])
+		finalObjects = append(finalObjects, stateObjects[i])
 	}
 	state.SetObjects(ctx, finalObjects)
 	return state, d

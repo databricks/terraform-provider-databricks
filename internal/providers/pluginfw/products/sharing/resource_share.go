@@ -448,7 +448,7 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state Sha
 	for i := range stateObjects {
 		for j := range planObjects {
 			if stateObjects[i].Name == planObjects[j].Name {
-				mode.objectLevel(ctx, &stateObjects[i], planObjects[i])
+				mode.objectLevel(ctx, &stateObjects[i], planObjects[j])
 				finalObjects = append(finalObjects, stateObjects[i])
 				break
 			}

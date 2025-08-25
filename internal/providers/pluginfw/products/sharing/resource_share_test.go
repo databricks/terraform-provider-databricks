@@ -4,24 +4,139 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestShareSyncEffectiveFields(t *testing.T) {
 	shareName := "test-share-name"
+	ctx := context.Background()
 	shares := ShareResource{}
-	plan := ShareInfoExtended{
-		ShareInfo_SdkV2: sharing_tf.ShareInfo_SdkV2{
-			Name: types.StringValue(shareName),
+
+	tests := []struct {
+		name       string
+		planGoSDK  sharing.ShareInfo
+		stateGoSDK sharing.ShareInfo
+	}{
+		{
+			name: "plan with less objects",
+			planGoSDK: sharing.ShareInfo{
+				Name: shareName,
+				Objects: []sharing.SharedDataObject{
+					{
+						Name: "obj-1",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-1"}}},
+						},
+					},
+					{
+						Name: "obj-3",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-3"}}},
+						},
+					},
+				},
+			},
+			stateGoSDK: sharing.ShareInfo{
+				Name: shareName,
+				Objects: []sharing.SharedDataObject{
+					{
+						Name: "obj-1",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-1"}}},
+						},
+					},
+					{
+						Name: "obj-2",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-2"}}},
+						},
+					},
+					{
+						Name: "obj-3",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-3"}}},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "plan with more objects",
+			planGoSDK: sharing.ShareInfo{
+				Name: shareName,
+				Objects: []sharing.SharedDataObject{
+					{
+						Name: "obj-1",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-1"}}},
+						},
+					},
+					{
+						Name: "obj-2",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-2"}}},
+						},
+					},
+					{
+						Name: "obj-3",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-3"}}},
+						},
+					},
+				},
+			},
+			stateGoSDK: sharing.ShareInfo{
+				Name: shareName,
+				Objects: []sharing.SharedDataObject{
+					{
+						Name: "obj-1",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-1"}}},
+						},
+					},
+					{
+						Name: "obj-3",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-3"}}},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "empty plan",
+			planGoSDK: sharing.ShareInfo{
+				Name:    shareName,
+				Objects: []sharing.SharedDataObject{},
+			},
+			stateGoSDK: sharing.ShareInfo{
+				Name: shareName,
+				Objects: []sharing.SharedDataObject{
+					{
+						Name: "obj-1",
+						Partitions: []sharing.Partition{
+							{Values: []sharing.PartitionValue{{Value: "part-1"}}},
+						},
+					},
+				},
+			},
 		},
 	}
-	state := ShareInfoExtended{
-		ShareInfo_SdkV2: sharing_tf.ShareInfo_SdkV2{
-			Name: types.StringValue(shareName),
-		},
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var planTFSDK ShareInfoExtended
+			diagnostics := converters.GoSdkToTfSdkStruct(ctx, tt.planGoSDK, &planTFSDK)
+			assert.False(t, diagnostics.HasError())
+
+			var stateTFSDK ShareInfoExtended
+			diagnostics = converters.GoSdkToTfSdkStruct(ctx, tt.stateGoSDK, &stateTFSDK)
+			assert.False(t, diagnostics.HasError())
+
+			_, diagnostics = shares.syncEffectiveFields(ctx, planTFSDK, stateTFSDK, effectiveFieldsActionRead{})
+			assert.False(t, diagnostics.HasError())
+		})
 	}
-	_, diagnostics := shares.syncEffectiveFields(context.Background(), plan, state, effectiveFieldsActionRead{})
-	assert.False(t, diagnostics.HasError())
 }

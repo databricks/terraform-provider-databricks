@@ -73,30 +73,34 @@ type DatabricksClient struct {
 }
 
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, diag.Diagnostics) {
-	if workspaceId != 0 {
-		// get the workspace client for the specified workspace ID
-		// workspace_id is set in the resource
-		w, err := c.WorkspaceClientForWorkspace(ctx, workspaceId)
-		if err == nil {
-			return w, nil
-		}
-		// check if the workspace ID specified in the resource matches
-		// the workspace ID of the provider configured workspace client
-		w, diags := c.GetWorkspaceClient()
-		if diags.HasError() {
-			return nil, diags
-		}
-		id, errCurrentWorkspaceId := w.CurrentWorkspaceID(ctx)
-		if errCurrentWorkspaceId != nil {
-			return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get the workspace id", errCurrentWorkspaceId.Error())}
-		}
-		if id != workspaceId {
-			return nil, diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("Workspace ID mismatch: expected %d but got %d", workspaceId, id), "Please check the workspace_id provided in the resource.")}
-		}
-		// the provider is configured at the workspace level and the workspace ID matches
+	// Workspace ID is not set in the resource.
+	if workspaceId == 0 {
+		return c.GetWorkspaceClient()
+	}
+
+	// Get the workspace client for the specified workspace_id
+	// set in the resource.
+	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceId)
+	if err == nil {
 		return w, nil
 	}
-	return c.GetWorkspaceClient()
+
+	// Check if the workspace ID specified in the resource matches
+	// the workspace ID of the provider configured workspace client.
+	w, diags := c.GetWorkspaceClient()
+	if diags.HasError() {
+		return nil, diags
+	}
+	id, errCurrentWorkspaceId := w.CurrentWorkspaceID(ctx)
+	if errCurrentWorkspaceId != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get the workspace id", errCurrentWorkspaceId.Error())}
+	}
+	if id != workspaceId {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("Workspace ID mismatch: expected %d but got %d", workspaceId, id), "Please check the workspace_id provided in the resource.")}
+	}
+	// The provider is configured at the workspace level and the workspace ID matches
+	return w, nil
+
 }
 
 // GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.

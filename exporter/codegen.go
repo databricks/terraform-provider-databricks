@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -76,6 +78,9 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			return "", nil, false
 		}
 		res := ref.Regexp.FindStringSubmatch(value)
+		if res == nil {
+			return "", nil, false
+		}
 		if len(res) < 2 {
 			log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, value)
 			return "", nil, false
@@ -267,7 +272,7 @@ type fieldTuple struct {
 	Schema *schema.Schema
 }
 
-func (ic *importContext) dataToHcl(i importable, path []string,
+func (ic *importContext) dataToHcl(imp importable, path []string,
 	pr *schema.Resource, res *resource, body *hclwrite.Body) error {
 	d := res.Data
 	ss := []fieldTuple{}
@@ -285,15 +290,15 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		pathString := strings.Join(append(path, a), ".")
 		raw, nonZero := d.GetOk(pathString)
 		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
-		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
+		if imp.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
 			if defaultShouldOmitFieldFunc(ic, pathString, as, d, res) {
 				continue
 			}
-		} else if i.ShouldOmitField(ic, pathString, as, d, res) {
+		} else if imp.ShouldOmitField(ic, pathString, as, d, res) {
 			continue
 		}
 		mpath := dependsRe.ReplaceAllString(pathString, "")
-		for _, ref := range i.Depends {
+		for _, ref := range imp.Depends {
 			if ref.Path == mpath && ref.Variable {
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
@@ -312,13 +317,13 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			// In case when have zero value, but there is non-zero default, we also need to produce it
 			shouldSkip = false
 		}
-		if shouldSkip && (i.ShouldGenerateField == nil || !i.ShouldGenerateField(ic, pathString, as, d, res)) {
+		if shouldSkip && (imp.ShouldGenerateField == nil || !imp.ShouldGenerateField(ic, pathString, as, d, res)) {
 			continue
 		}
 		switch as.Type {
 		case schema.TypeString:
 			value := raw.(string)
-			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value), res)
+			tokens := ic.reference(imp, append(path, a), value, cty.StringVal(value), res)
 			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
@@ -332,22 +337,34 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			case int64:
 				num = iv
 			}
-			body.SetAttributeRaw(a, ic.reference(i, append(path, a),
+			body.SetAttributeRaw(a, ic.reference(imp, append(path, a),
 				strconv.FormatInt(num, 10), cty.NumberIntVal(num), res))
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
-			// TODO: Resolve references in maps as well, and also support different types inside map...
-			ov := map[string]cty.Value{}
-			for key, iv := range raw.(map[string]any) {
-				v := cty.StringVal(fmt.Sprintf("%v", iv))
-				ov[key] = v
+			// Resolve references in maps as well, and also support different types inside map...
+			attrs := []hclwrite.ObjectAttrTokens{}
+			m := raw.(map[string]any)
+			keys := slices.Sorted(maps.Keys(m))
+			for _, key := range keys {
+				iv := m[key]
+				var nameTokens hclwrite.Tokens
+				if hclsyntax.ValidIdentifier(key) {
+					nameTokens = hclwrite.TokensForIdentifier(key)
+				} else {
+					nameTokens = hclwrite.TokensForValue(cty.StringVal(key))
+				}
+				v := cty.StringVal(fmt.Sprintf("%v", iv)) // TODO: support different types inside map...
+				attrs = append(attrs, hclwrite.ObjectAttrTokens{
+					Name:  nameTokens,
+					Value: ic.reference(imp, append(path, a), v.AsString(), v, res),
+				})
 			}
-			body.SetAttributeValue(a, cty.ObjectVal(ov))
+			body.SetAttributeRaw(a, hclwrite.TokensForObject(attrs))
 		case schema.TypeSet:
 			if rawSet, ok := raw.(*schema.Set); ok {
 				rawList := rawSet.List()
-				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, func(i int) string {
+				err := ic.readListFromData(imp, append(path, a), res, rawList, body, as, func(i int) string {
 					return strconv.Itoa(rawSet.F(rawList[i]))
 				})
 				if err != nil {
@@ -356,7 +373,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			}
 		case schema.TypeList:
 			if rawList, ok := raw.([]any); ok {
-				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, strconv.Itoa)
+				err := ic.readListFromData(imp, append(path, a), res, rawList, body, as, strconv.Itoa)
 				if err != nil {
 					return err
 				}
@@ -519,7 +536,7 @@ func (ic *importContext) generateVariables() error {
 				for _, block := range tbody.Blocks() {
 					typ := block.Type()
 					labels := block.Labels()
-					log.Printf("[DEBUG] blockBody: %v %v\n", typ, labels)
+					// log.Printf("[DEBUG] blockBody: %v %v\n", typ, labels)
 					_, present := ic.variables[labels[0]]
 					if typ == "variable" && present {
 						log.Printf("[DEBUG] Ignoring variable '%s' that will be re-exported", labels[0])

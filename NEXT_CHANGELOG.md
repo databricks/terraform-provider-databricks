@@ -23,6 +23,7 @@
 * Add match by name to more exported resources ([#4939](https://github.com/databricks/terraform-provider-databricks/pull/4939))
 * Improve handling of new dependencies in jobs, pipelines, model serving ([#4914](https://github.com/databricks/terraform-provider-databricks/pull/4914))
 * Correct support for `library.glob` in `databricks_pipeline` ([#4937](https://github.com/databricks/terraform-provider-databricks/pull/4937))
+* Resolve references also for map values ([#4944](https://github.com/databricks/terraform-provider-databricks/pull/4944))
 
 ### Internal Changes
 

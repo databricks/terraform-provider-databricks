@@ -21,12 +21,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make diff-schema` - Compare current schema with previous version (useful for migration verification)
 
 ### Single Test Execution
+For unit tests:
 ```bash
-# Run a specific test
 go test -v -run TestSpecificTest ./path/to/package
+```
 
-# Run acceptance tests for a specific resource
-TF_ACC=1 go test -v -run TestAccResourceName ./path/to/package
+For integration tests:
+- First, load the environment to use from `~/.databricks/debug-env.json`. The keys in this file are environments, and the values are
+  maps of environment variable names to values. Based on the *Level test function used, load the appropriate environment:
+  - WorkspaceLevel: "workspace"
+  - AccountLevel: "account"
+  - UnityWorkspaceLevel: "ucws"
+  - UnityAccountLevel: "ucacct"
+- Then, run the test.
+```
+go test -v -run TestAccResourceName ./path/to/package
 ```
 
 ## Code Architecture
@@ -99,7 +108,7 @@ Order imports as: Go standard library, vendor packages, current provider package
 Within each section, maintain alphabetical order.
 
 ### Documentation
-- All resources require Terraform Registry compatible documentation in `docs/`
+- All resources and data sources require Terraform Registry compatible documentation in `docs/`
 - Code samples must be formatted with `make fmt-docs`
 - Cross-link integrity between markdown files is required
 - Use Terraform Registry Doc Preview Tool for validation

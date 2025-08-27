@@ -2,6 +2,8 @@ package catalog
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -36,6 +38,39 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
 		return adjustDataAccessSchema(m)
 	})
+
+// parseStorageCredentialId parses the resource ID to extract metastore_id and storage_credential_name
+// for composite IDs in the format "metastore_id|storage_credential_name" (account-level)
+// or just returns the ID as is for workspace-level resources
+func parseStorageCredentialId(d *schema.ResourceData) (metastoreId, storageCredentialName string, err error) {
+	id := d.Id()
+	parts := strings.Split(id, "|")
+	
+	if len(parts) == 2 {
+		// Account-level format: metastore_id|storage_credential_name
+		metastoreId = parts[0]
+		storageCredentialName = parts[1]
+		
+		// Set the metastore_id in the state if not already set
+		if d.Get("metastore_id").(string) == "" {
+			if err := d.Set("metastore_id", metastoreId); err != nil {
+				return "", "", fmt.Errorf("failed to set metastore_id: %w", err)
+			}
+		}
+		
+		// Update the resource ID to just the storage credential name
+		d.SetId(storageCredentialName)
+		return metastoreId, storageCredentialName, nil
+	} else if len(parts) == 1 {
+		// Workspace-level format: just the storage credential name
+		// Get metastore_id from the existing state
+		metastoreId = d.Get("metastore_id").(string)
+		storageCredentialName = id
+		return metastoreId, storageCredentialName, nil
+	} else {
+		return "", "", fmt.Errorf("invalid storage credential ID format: expected 'name' or 'metastore_id|name', got '%s'", id)
+	}
+}
 
 func ResourceStorageCredential() common.Resource {
 	return common.Resource{
@@ -104,10 +139,16 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// Parse the ID to handle both composite and simple formats
+			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
+			if err != nil {
+				return err
+			}
+			
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId:           d.Get("metastore_id").(string),
-					StorageCredentialName: d.Id(),
+					MetastoreId:           metastoreId,
+					StorageCredentialName: storageCredentialName,
 				})
 				if err != nil {
 					return err
@@ -132,7 +173,7 @@ func ResourceStorageCredential() common.Resource {
 				d.Set("storage_credential_id", storageCredential.CredentialInfo.Id)
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
+				storageCredential, err := w.StorageCredentials.GetByName(ctx, storageCredentialName)
 				if err != nil {
 					return err
 				}

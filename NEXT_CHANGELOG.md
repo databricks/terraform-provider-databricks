@@ -10,6 +10,10 @@
 
 ### Bug Fixes
 
+* Fix metastore ID interpolation for account-level storage credential imports ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX)).
+
+  Storage credentials can now be imported using two formats: `<storage_credential_name>` for workspace-level imports, and `<metastore_id>|<storage_credential_name>` for account-level imports. Previously, importing account-level storage credentials would fail due to missing metastore ID in the API call.
+
 ### Documentation
 
 * Improve documentation for grant resource ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4935))

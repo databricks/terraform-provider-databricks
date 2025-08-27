@@ -45,7 +45,7 @@ func listUcCatalogs(ic *importContext) error {
 }
 
 func importUcCatalog(ic *importContext, r *resource) error {
-	var cat tf_uc.CatalogInfo
+	var cat catalog.CatalogInfo
 	s := ic.Resources["databricks_catalog"].Schema
 	common.DataToStructPointer(r.Data, s, &cat)
 
@@ -59,7 +59,7 @@ func importUcCatalog(ic *importContext, r *resource) error {
 	if cat.ConnectionName != "" {
 		ic.Emit(&resource{
 			Resource: "databricks_connection",
-			ID:       cat.MetastoreID + "|" + cat.ConnectionName,
+			ID:       cat.MetastoreId + "|" + cat.ConnectionName,
 		})
 	} else if cat.ShareName == "" {
 		// TODO: We need to be careful here if we add more catalog types... Really we need to have CatalogType in resource

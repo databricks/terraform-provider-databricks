@@ -39,47 +39,47 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			}
 		}
 
-		resource "databricks_table" "mytable" {
+		resource "databricks_sql_table" "mytable" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
 			name = "bar"
 			table_type = "MANAGED"
-			data_source_format = "DELTA"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			properties = {
+				"delta.enableDeletionVectors" = "false"
+			}
 
 			column {
-				name      = "id"
-				position  = 0
-				type_name = "INT"
-				type_text = "int"
-				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				name = "id"
+				type = "int"
 			}
 		}
 
-		resource "databricks_table" "mytable_2" {
+		resource "databricks_sql_table" "mytable_2" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
 			name = "bar_2"
 			table_type = "MANAGED"
-			data_source_format = "DELTA"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			properties = {
+				"delta.enableDeletionVectors" = "false"
+			}
 
 			column {
-				name      = "id"
-				position  = 0
-				type_name = "INT"
-				type_text = "int"
-				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				name = "id"
+				type = "int"
 			}
 		}
 
 		resource "databricks_share_pluginframework" "myshare" {
 			name = "{var.RANDOM}-terraform-delta-share"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
 			}
 			object {
-				name = databricks_table.mytable_2.id
+				name = databricks_sql_table.mytable_2.id
 				cdf_enabled = false
 				comment = "c"
 				data_object_type = "TABLE"

@@ -117,3 +117,15 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/serving
       test_name: TestUcAccModelServingProvisionedThroughputResource
       comment: Failure due to limited capacity in specific regions
+    - package: github.com/databricks/terraform-provider-databricks/sharing
+      test_name: TestUcAccCreateShare
+      comment: Failure due to partition spec validation error when adding Delta tables to shares. Backend issue affecting Unity Catalog sharing validation.
+    - package: github.com/databricks/terraform-provider-databricks/sharing
+      test_name: TestUcAccUpdateShare
+      comment: Failure due to partition spec validation error when adding Delta tables to shares. Backend issue affecting Unity Catalog sharing validation.
+    - package: github.com/databricks/terraform-provider-databricks/sharing
+      test_name: TestUcAccDataSourceShares
+      comment: Failure due to partition spec validation error when adding Delta tables to shares. Backend issue affecting Unity Catalog sharing validation.
+    - package: github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing
+      test_name: TestUcAccUpdateShareReorderObject
+      comment: Failure due to partition spec validation error when adding Delta tables to shares. Backend issue affecting Unity Catalog sharing validation.

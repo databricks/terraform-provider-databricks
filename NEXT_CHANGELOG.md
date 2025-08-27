@@ -27,3 +27,4 @@
 ### Internal Changes
 
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Mark `TestUcAccCreateShare`, `TestUcAccUpdateShare`, `TestUcAccDataSourceShares` and `TestUcAccUpdateShareReorderObject` as flaky tests ([#4979](https://github.com/databricks/terraform-provider-databricks/pull/4979)).

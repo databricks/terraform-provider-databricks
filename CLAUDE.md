@@ -95,6 +95,27 @@ Resources are being migrated from SDKv2 to Plugin Framework. When migrating:
   - `TestMwsAcc*` - Account-level tests across all clouds
   - `TestUcAcc*` - Unity Catalog tests across all clouds
 
+### Dual-Provider Resource Patterns
+
+#### Import Handling for Account/Workspace Resources
+Some Unity Catalog resources (e.g., storage credentials, external locations) work with both account-level and workspace-level providers but require different ID formats for imports:
+
+**ID Parsing Pattern**: Implement a `parse{ResourceName}Id()` function that:
+1. Splits composite IDs on "|" delimiter (format: `metastore_id|resource_name`)
+2. For account-level providers: extracts metastore_id, sets it in state, updates resource ID to simple name
+3. For workspace-level providers: uses the ID as-is (simple name)
+4. Returns parsed components and any validation errors
+
+**CRUD Method Consistency**: All CRUD methods (Create, Read, Update, Delete) must use the same ID parsing logic to ensure consistent behavior across operations.
+
+**Testing Import Functionality**: Use `qa.ResourceFixture` with:
+- `Read: true` to test import behavior
+- Test both valid composite ID format and simple name format
+- Test error conditions with exact error message matching
+- Example: `"metastore123|my-credential"` and `"my-credential"`
+
+**Documentation Pattern**: When documenting import formats, specify "when using a workspace-level/account-level provider" to clarify it's about provider configuration, not resource classification.
+
 ## Development Guidelines
 
 ### Code Organization
@@ -123,3 +144,5 @@ All user-facing changes must be documented in `NEXT_CHANGELOG.md` with format:
 
 ### Migration Verification
 When migrating resources to Plugin Framework, always run `make diff-schema` to ensure no breaking changes to the Terraform schema.
+
+- Always run make fmt before making any commit.

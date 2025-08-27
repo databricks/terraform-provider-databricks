@@ -45,19 +45,19 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 func parseStorageCredentialId(d *schema.ResourceData) (metastoreId, storageCredentialName string, err error) {
 	id := d.Id()
 	parts := strings.Split(id, "|")
-	
+
 	if len(parts) == 2 {
 		// Account-level format: metastore_id|storage_credential_name
 		metastoreId = parts[0]
 		storageCredentialName = parts[1]
-		
+
 		// Set the metastore_id in the state if not already set
 		if d.Get("metastore_id").(string) == "" {
 			if err := d.Set("metastore_id", metastoreId); err != nil {
 				return "", "", fmt.Errorf("failed to set metastore_id: %w", err)
 			}
 		}
-		
+
 		// Update the resource ID to just the storage credential name
 		d.SetId(storageCredentialName)
 		return metastoreId, storageCredentialName, nil
@@ -144,7 +144,7 @@ func ResourceStorageCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			
+
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
@@ -204,7 +204,7 @@ func ResourceStorageCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			
+
 			var update catalog.UpdateStorageCredential
 			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
@@ -314,7 +314,7 @@ func ResourceStorageCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			
+
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{

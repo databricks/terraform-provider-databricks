@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Suppress diff for `databricks_catalog` attributes ([#4975](https://github.com/databricks/terraform-provider-databricks/pull/4975))
+
 ### Documentation
 
 * Improve documentation for grant resource ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4935))

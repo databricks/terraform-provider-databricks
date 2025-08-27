@@ -964,5 +964,5 @@ func TestStorageCredentialImportInvalidFormat(t *testing.T) {
 		Resource: ResourceStorageCredential(),
 		Read:     true,
 		ID:       "invalid|format|with|too|many|parts",
-	}.ExpectError(t, "invalid storage credential ID format")
+	}.ExpectError(t, "invalid storage credential ID format: expected 'name' or 'metastore_id|name', got 'invalid|format|with|too|many|parts'")
 }

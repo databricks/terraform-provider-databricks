@@ -12,7 +12,7 @@
 
 * Fix metastore ID interpolation for account-level storage credential imports ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX)).
 
-  Storage credentials can now be imported using two formats: `<storage_credential_name>` for workspace-level imports, and `<metastore_id>|<storage_credential_name>` for account-level imports. Previously, importing account-level storage credentials would fail due to missing metastore ID in the API call.
+  Storage credentials can now be imported using two formats: `<storage_credential_name>` when using a workspace-level provider, and `<metastore_id>|<storage_credential_name>` when using an account-level provider. Previously, importing storage credentials with an account-level provider would fail due to missing metastore ID in the API call.
 
 ### Documentation
 

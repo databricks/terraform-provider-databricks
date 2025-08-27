@@ -199,10 +199,16 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// Parse the ID to handle both composite and simple formats
+			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
+			if err != nil {
+				return err
+			}
+			
 			var update catalog.UpdateStorageCredential
 			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
-			update.Name = d.Id()
+			update.Name = storageCredentialName
 			update.Force = force
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
@@ -214,8 +220,8 @@ func ResourceStorageCredential() common.Resource {
 							Name:  update.Name,
 							Owner: update.Owner,
 						},
-						MetastoreId:           d.Get("metastore_id").(string),
-						StorageCredentialName: d.Id(),
+						MetastoreId:           metastoreId,
+						StorageCredentialName: storageCredentialName,
 					})
 					if err != nil {
 						return err
@@ -235,8 +241,8 @@ func ResourceStorageCredential() common.Resource {
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
-					MetastoreId:           d.Get("metastore_id").(string),
-					StorageCredentialName: d.Id(),
+					MetastoreId:           metastoreId,
+					StorageCredentialName: storageCredentialName,
 				})
 				if err != nil {
 					if d.HasChange("owner") {
@@ -247,8 +253,8 @@ func ResourceStorageCredential() common.Resource {
 								Name:  update.Name,
 								Owner: old.(string),
 							},
-							MetastoreId:           d.Get("metastore_id").(string),
-							StorageCredentialName: d.Id(),
+							MetastoreId:           metastoreId,
+							StorageCredentialName: storageCredentialName,
 						})
 						if rollbackErr != nil {
 							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -258,7 +264,7 @@ func ResourceStorageCredential() common.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				err := validateMetastoreId(ctx, w, metastoreId)
 				if err != nil {
 					return err
 				}
@@ -303,21 +309,27 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// Parse the ID to handle both composite and simple formats
+			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
+			if err != nil {
+				return err
+			}
+			
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					Force:                 force,
-					StorageCredentialName: d.Id(),
-					MetastoreId:           d.Get("metastore_id").(string),
+					StorageCredentialName: storageCredentialName,
+					MetastoreId:           metastoreId,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				err := validateMetastoreId(ctx, w, metastoreId)
 				if err != nil {
 					return err
 				}
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
 					Force: force,
-					Name:  d.Id(),
+					Name:  storageCredentialName,
 				})
 			})
 		},

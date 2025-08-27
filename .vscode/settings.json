@@ -10,5 +10,6 @@
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
     "go.useCodeSnippetsOnFunctionSuggest": true,
-    "go.useCodeSnippetsOnFunctionSuggestWithoutType": true
+    "go.useCodeSnippetsOnFunctionSuggestWithoutType": true,
+    "makefile.configureOnOpen": false
 }

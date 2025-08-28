@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/billing"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -53,6 +54,7 @@ var (
 	jobClustersRegex                 = regexp.MustCompile(`^((job_cluster|task)\.\d+\.new_cluster\.\d+\.)`)
 	dltClusterRegex                  = regexp.MustCompile(`^(cluster\.\d+\.)`)
 	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
+	secretScopePathRegex             = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/[^}]+\}\}$`)
 	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
 	requirementsFileRegexp           = regexp.MustCompile(`-r\s+(/.*)$`)
 	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -312,6 +314,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "docker_image.basic_auth.password", Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "docker_image.basic_auth.username", Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "docker_image.basic_auth.password", Resource: "databricks_secret_scope",
+				MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "docker_image.basic_auth.username", Resource: "databricks_secret_scope",
+				MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "spark_conf", Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "spark_env_vars", Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "spark_conf", Resource: "databricks_secret_scope",
+				MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "spark_env_vars", Resource: "databricks_secret_scope",
+				MatchType: MatchRegexp, Regexp: secretScopePathRegex},
 			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "single_user_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
@@ -439,13 +453,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.emitWorkspaceFileOrRepo(eitherString(value, defaultValue))
 				}
 				if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
-					either := eitherString(value, defaultValue)
-					if res := secretPathRegex.FindStringSubmatch(either); res != nil {
-						ic.Emit(&resource{
-							Resource: "databricks_secret_scope",
-							ID:       res[1],
-						})
-					}
+					ic.emitSecretsFromSecretPathString(eitherString(value, defaultValue))
 				}
 			}
 
@@ -1671,6 +1679,17 @@ var resourcesMap map[string]importable = map[string]importable{
 						if se.ExternalModel.PalmConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.PalmConfig.PalmApiKey)
 						}
+						if se.ExternalModel.GoogleCloudVertexAiConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.GoogleCloudVertexAiConfig.PrivateKey)
+						}
+						if se.ExternalModel.CustomProviderConfig != nil {
+							if se.ExternalModel.CustomProviderConfig.ApiKeyAuth != nil {
+								ic.emitSecretsFromSecretPathString(se.ExternalModel.CustomProviderConfig.ApiKeyAuth.Value)
+							}
+							if se.ExternalModel.CustomProviderConfig.BearerTokenAuth != nil {
+								ic.emitSecretsFromSecretPathString(se.ExternalModel.CustomProviderConfig.BearerTokenAuth.Token)
+							}
+						}
 					}
 				}
 			}
@@ -1689,6 +1708,31 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_schema",
 					ID:       mse.AiGateway.InferenceTableConfig.CatalogName + "." + mse.AiGateway.InferenceTableConfig.SchemaName,
 				})
+			}
+			if mse.AiGateway != nil && mse.AiGateway.RateLimits != nil {
+				for _, rl := range mse.AiGateway.RateLimits {
+					// principal could be a group, user, or service principal
+					var isGroupFound bool
+					if !common.StringIsUUID(rl.Principal) {
+						err := ic.cacheGroups()
+						if err == nil {
+							for _, g := range ic.allGroups {
+								if g.DisplayName == rl.Principal {
+									ic.Emit(&resource{
+										Resource:  "databricks_group",
+										Attribute: "display_name",
+										Value:     rl.Principal,
+									})
+									isGroupFound = true
+									break
+								}
+							}
+						}
+					}
+					if !isGroupFound {
+						ic.emitUserOrServicePrincipal(rl.Principal)
+					}
+				}
 			}
 			if mse.EmailNotifications != nil {
 				ic.emitListOfUsers(mse.EmailNotifications.OnUpdateFailure)
@@ -1716,6 +1760,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				(pathString == "config.0.auto_capture_config.0.table_name_prefix" && d.Get(pathString).(string) != "") {
 				return false
 			}
+			if strings.HasPrefix(pathString, "config.0.traffic_config.0.routes") && strings.HasSuffix(pathString, ".served_model_name") {
+				return true
+			}
 			if res := servedEntityFieldExtractionRegex.FindStringSubmatch(pathString); res != nil {
 				field := res[2]
 				log.Printf("[DEBUG] ShouldOmitField: extracted field from %s: '%s'", pathString, field)
@@ -1741,6 +1788,57 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "config.served_entities.instance_profile_arn", Resource: "databricks_instance_profile",
 				Match: "instance_profile_arn"},
 			{Path: "config.auto_capture_config.catalog_name", Resource: "databricks_catalog"},
+			{Path: "config.served_entities.external_model.databricks_model_serving_config.databricks_api_token",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.ai21labs_config.ai21labs_api_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.anthropic_config.anthropic_api_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.aws_access_key_id",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.aws_secret_access_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.cohere_config.cohere_api_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.openai_config.openai_api_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.openai_config.microsoft_entra_client_secret",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.palm_config.palm_api_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.google_cloud_vertex_ai_config.private_key",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.custom_provider_config.api_key_auth.value",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.custom_provider_config.bearer_token_auth.token",
+				Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.external_model.databricks_model_serving_config.databricks_api_token",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.ai21labs_config.ai21labs_api_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.anthropic_config.anthropic_api_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.aws_access_key_id",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.aws_secret_access_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.cohere_config.cohere_api_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.openai_config.openai_api_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.openai_config.microsoft_entra_client_secret",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.palm_config.palm_api_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.google_cloud_vertex_ai_config.private_key",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.custom_provider_config.api_key_auth.value",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.external_model.custom_provider_config.bearer_token_auth.token",
+				Resource: "databricks_secret_scope", MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+			{Path: "config.served_entities.environment_vars", Resource: "databricks_secret", Match: "config_reference"},
+			{Path: "config.served_entities.environment_vars", Resource: "databricks_secret_scope",
+				MatchType: MatchRegexp, Regexp: secretScopePathRegex},
 			{Path: "config.auto_capture_config.schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
 				SkipDirectLookup:     true},
@@ -1748,6 +1846,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "ai_gateway.inference_table_config.schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
 				SkipDirectLookup:     true},
+			{Path: "ai_gateway.rate_limits.principal", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "ai_gateway.rate_limits.principal", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "ai_gateway.rate_limits.principal", Resource: "databricks_group", Match: "display_name"},
 			{Path: "email_notifications.on_update_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_update_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
@@ -2967,6 +3068,59 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "storage_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "managed_services_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "credentials_id", Resource: "databricks_mws_credentials", Match: "credentials_id"},
+		},
+	},
+	"databricks_budget": {
+		AccountLevel: true,
+		Service:      "billing",
+		List: func(ic *importContext) error {
+			updatedSinceMs := ic.getUpdatedSinceMs()
+			budgets, err := ic.accountClient.Budgets.ListAll(ic.Context, billing.ListBudgetConfigurationsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, budget := range budgets {
+				if ic.incremental && budget.CreateTime < updatedSinceMs {
+					log.Printf("[DEBUG] skipping budget '%s' that was updated at %d (last active=%d)",
+						budget.DisplayName, budget.UpdateTime, updatedSinceMs)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_budget",
+					ID:       ic.accountClient.Config.AccountID + "|" + budget.BudgetConfigurationId,
+					Name:     budget.DisplayName,
+				})
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var budget billing.BudgetConfiguration
+			s := ic.Resources["databricks_budget"].Schema
+			common.DataToStructPointer(r.Data, s, &budget)
+			if budget.Filter != nil && budget.Filter.WorkspaceId != nil && !ic.accountClient.Config.IsAzure() {
+				for _, workspaceId := range budget.Filter.WorkspaceId.Values {
+					ic.Emit(&resource{
+						Resource: "databricks_mws_workspaces",
+						ID:       ic.accountClient.Config.AccountID + "/" + strconv.FormatInt(workspaceId, 10),
+					})
+				}
+			}
+			for _, alert := range budget.AlertConfigurations {
+				for _, action := range alert.ActionConfigurations {
+					if action.ActionType == billing.ActionConfigurationTypeEmailNotification {
+						ic.Emit(&resource{
+							Resource:  "databricks_user",
+							Attribute: "user_name",
+							Value:     action.Target,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "filter.workspace_id.values", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
+			{Path: "alert_configurations.action_configurations.target", Resource: "databricks_user", Match: "user_name"},
 		},
 	},
 }

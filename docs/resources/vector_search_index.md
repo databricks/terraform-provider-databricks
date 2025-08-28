@@ -45,7 +45,8 @@ The following arguments are supported (change of any parameter leads to recreati
 * `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
 * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
   * `name` - The name of the column
-  * `embedding_model_endpoint_name` - The name of the embedding model endpoint
+  * `embedding_model_endpoint_name` - The name of the embedding model endpoint, used by default for both ingestion and querying.
+  * `model_endpoint_name_for_query` - (Optional) The name of the embedding model endpoint which, if specified, is used for querying (not ingestion).
 * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
   * `name` - The name of the column.
   * `embedding_dimension` - Dimension of the embedding vector.
@@ -60,6 +61,7 @@ The following arguments are supported (change of any parameter leads to recreati
 * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
   * `name` - The name of the column
   * `embedding_model_endpoint_name` - The name of the embedding model endpoint
+  * `model_endpoint_name_for_query` - (Optional) The name of the embedding model endpoint which, if specified, is used for querying (not ingestion).
 * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
   * `name` - The name of the column.
   * `embedding_dimension` - Dimension of the embedding vector.

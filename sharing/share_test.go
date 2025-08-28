@@ -31,9 +31,6 @@ const preTestTemplate = `
 		name = "bar"
 		table_type = "MANAGED"
 		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-		properties = {
-			"delta.enableDeletionVectors" = "false"
-		}
 
 		column {
 			name = "id"
@@ -47,9 +44,6 @@ const preTestTemplate = `
 		name = "bar_2"
 		table_type = "MANAGED"
 		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-		properties = {
-			"delta.enableDeletionVectors" = "false"
-		}
 
 		column {
 			name = "id"
@@ -82,12 +76,13 @@ func TestUcAccCreateShare(t *testing.T) {
 				name = databricks_sql_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
 				name = databricks_sql_table.mytable_2.id
-				cdf_enabled = false
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}
 
@@ -122,6 +117,7 @@ func shareTemplateWithOwner(comment string, owner string) string {
 				name = databricks_sql_table.mytable.id
 				comment = "%s"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`, owner, comment)
 }

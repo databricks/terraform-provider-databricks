@@ -45,9 +45,6 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			name = "bar"
 			table_type = "MANAGED"
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			properties = {
-				"delta.enableDeletionVectors" = "false"
-			}
 
 			column {
 				name = "id"
@@ -61,9 +58,6 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			name = "bar_2"
 			table_type = "MANAGED"
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			properties = {
-				"delta.enableDeletionVectors" = "false"
-			}
 
 			column {
 				name = "id"
@@ -77,12 +71,13 @@ func TestUcAccDataSourceShares(t *testing.T) {
 				name = databricks_sql_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
 				name = databricks_sql_table.mytable_2.id
-				cdf_enabled = false
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}
 

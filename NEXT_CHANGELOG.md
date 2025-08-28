@@ -9,7 +9,7 @@
 * Document and handle additional Slack options in `databricks_notification_destination` ([#4933](https://github.com/databricks/terraform-provider-databricks/pull/4933))
 
 ### Bug Fixes
-
+* Add support for share resource in plugin framework implementation to be SDKv2 compatible ([#4965](https://github.com/databricks/terraform-provider-databricks/pull/4965))
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
 
 ### Documentation

@@ -780,6 +780,7 @@ func TestCatalogSuppressCaseSensitivity(t *testing.T) {
 			"securable_type":                 {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"catalog_type":                   {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"effective_predictive_optimization_flag.#": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"full_name": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 		},
 		HCL: `
 		name = "A"

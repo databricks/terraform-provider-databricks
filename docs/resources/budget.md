@@ -1,5 +1,5 @@
 ---
-subcategory: "FinOps"
+subcategory: "Billing"
 ---
 # databricks_budget Resource
 

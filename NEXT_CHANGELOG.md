@@ -9,6 +9,7 @@
 * Document and handle additional Slack options in `databricks_notification_destination` ([#4933](https://github.com/databricks/terraform-provider-databricks/pull/4933))
 
 ### Bug Fixes
+
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
 * Add support for share resource in plugin framework implementation to be SDKv2 compatible ([#4965](https://github.com/databricks/terraform-provider-databricks/pull/4965))
 
@@ -32,4 +33,5 @@
 
 * Make plugin framework implementation of share resource as default ([#4967](https://github.com/databricks/terraform-provider-databricks/pull/4967))
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Reimplement `databricks_group` data source to use combination of List + Get API ([#4947](https://github.com/databricks/terraform-provider-databricks/pull/4947))
 * Use databricks_sql_table Instead of databricks_table in Sharing Tests ([#4981](https://github.com/databricks/terraform-provider-databricks/pull/4981)

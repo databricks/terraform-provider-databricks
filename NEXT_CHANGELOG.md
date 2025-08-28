@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
+
 ### Documentation
 
 * Improve documentation for grant resource ([#4906](https://github.com/databricks/terraform-provider-databricks/pull/4935))

@@ -53,6 +53,10 @@ func ResourceCatalog() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+			for _, v := range []string{"effective_predictive_optimization_flag", "catalog_type", "created_at", "created_by",
+				"updated_at", "updated_by", "securable_type"} {
+				common.CustomizeSchemaPath(s, v).SetReadOnly()
+			}
 			return s
 		})
 	return common.Resource{

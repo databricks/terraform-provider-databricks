@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Document and handle additional Slack options in `databricks_notification_destination` ([#4933](https://github.com/databricks/terraform-provider-databricks/pull/4933))
+* Lower case `warehouse_name_contains` when comparing in `databricks_warehouses` ([#4966](https://github.com/databricks/terraform-provider-databricks/pull/4966))
 
 ### Bug Fixes
 

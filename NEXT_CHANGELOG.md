@@ -7,10 +7,13 @@
 ### New Features and Improvements
 
 * Document and handle additional Slack options in `databricks_notification_destination` ([#4933](https://github.com/databricks/terraform-provider-databricks/pull/4933))
+* Lower case `warehouse_name_contains` when comparing in `databricks_warehouses` ([#4966](https://github.com/databricks/terraform-provider-databricks/pull/4966))
 
 ### Bug Fixes
 
+* Correct which file event fields should be reset in `databricks_external_location` ([#4945](https://github.com/databricks/terraform-provider-databricks/pull/4945))
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
+* Enable update of `databricks_mws_ncc_private_endpoint_rule` resource ([#4957](https://github.com/databricks/terraform-provider-databricks/pull/4957))
 
 ### Documentation
 
@@ -32,4 +35,5 @@
 ### Internal Changes
 
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
+* Reimplement `databricks_group` data source to use combination of List + Get API ([#4947](https://github.com/databricks/terraform-provider-databricks/pull/4947))
 * Use databricks_sql_table Instead of databricks_table in Sharing Tests ([#4981](https://github.com/databricks/terraform-provider-databricks/pull/4981)

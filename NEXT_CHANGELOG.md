@@ -16,6 +16,7 @@
 * Document `gcp_attributes.first_on_demand` attribute in `databricks_cluster` ([#4934](https://github.com/databricks/terraform-provider-databricks/pull/4934))
 * Improve `databricks_mws_permission_assignment` documentation ([#4943](https://github.com/databricks/terraform-provider-databricks/pull/4943))
 * Update `databricks_job` example to use `environment_version` ([#4942](https://github.com/databricks/terraform-provider-databricks/pull/4942))
+* Update existing docs to match Go SDK 0.81.0 ([#4960](https://github.com/databricks/terraform-provider-databricks/pull/4960))
 
 ### Exporter
 

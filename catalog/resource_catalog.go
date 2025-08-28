@@ -44,9 +44,10 @@ func ResourceCatalog() common.Resource {
 			for _, v := range []string{"name", "connection_name", "share_name", "provider_name"} {
 				common.CustomizeSchemaPath(s, v).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			}
-			// set conflicts with storage_root
-			for _, v := range []string{"provider_name", "share_name", "connection_name"} {
-				common.CustomizeSchemaPath(s, v).SetConflictsWith([]string{"storage_root"}).SetForceNew()
+			// can only have one of provider_name + share_name, connection_name or storage_root
+			common.CustomizeSchemaPath(s, "connection_name").SetConflictsWith([]string{"storage_root", "provider_name", "share_name"}).SetForceNew()
+			for _, v := range []string{"provider_name", "share_name"} {
+				common.CustomizeSchemaPath(s, v).SetConflictsWith([]string{"connection_name", "storage_root"}).SetForceNew()
 			}
 			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff).SetForceNew()
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(

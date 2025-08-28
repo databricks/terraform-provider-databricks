@@ -76,7 +76,7 @@ The following arguments are available:
 * `domain_names`
   * On Azure: List of domain names of target private link service. Only used by private endpoints to customer-managed private endpoint services. Conflicts with `group_id`.
   * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`.
-* `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint.
+* `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
 * `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created.
 
@@ -92,7 +92,7 @@ The possible values are:
   * `ESTABLISHED`: The endpoint has been approved and is ready to be used in your serverless compute resources.
   * `REJECTED`: Connection was rejected by the private link resource owner.
   * `DISCONNECTED`: Connection was removed by the private link resource owner, the private endpoint becomes informative and should be deleted for clean-up.
-  * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED.  
+  * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED.
 * `deactivated` - Whether this private endpoint is deactivated.
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.

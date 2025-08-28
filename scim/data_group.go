@@ -43,7 +43,11 @@ func DataSourceGroup() common.Resource {
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
 			groupAttributes := "members,roles,entitlements,externalId"
-			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, groupAttributes)
+			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, "id")
+			if err != nil {
+				return err
+			}
+			group, err = groupsAPI.Read(group.ID, groupAttributes)
 			if err != nil {
 				return err
 			}

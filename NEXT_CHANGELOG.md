@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
+* Enable update of `databricks_mws_ncc_private_endpoint_rule` resource ([#4957](https://github.com/databricks/terraform-provider-databricks/pull/4957))
 
 ### Documentation
 

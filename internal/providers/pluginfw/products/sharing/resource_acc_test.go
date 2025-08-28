@@ -29,51 +29,42 @@ const preTestTemplate = `
 		}
 	}
 
-	resource "databricks_table" "mytable" {
+	resource "databricks_sql_table" "mytable" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 
-	resource "databricks_table" "mytable_2" {
+	resource "databricks_sql_table" "mytable_2" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar_2"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 
-	resource "databricks_table" "mytable_3" {
+	resource "databricks_sql_table" "mytable_3" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar_3"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 `
@@ -99,15 +90,16 @@ func TestUcAccCreateShare(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
          	}
 			object {
-				name = databricks_table.mytable_2.id
-				cdf_enabled = false
+				name = databricks_sql_table.mytable_2.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}
 
@@ -139,10 +131,10 @@ func shareTemplateWithOwner(comment string, owner string) string {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "%s"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "%s"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 
 		}`, owner, comment)
@@ -167,16 +159,16 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "A"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				comment = "C"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 
 		}`,
@@ -186,22 +178,22 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "AA"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_2.id
+				name = databricks_sql_table.mytable_2.id
 				comment = "BB"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				comment = "CC"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	})
@@ -214,12 +206,14 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	}, acceptance.Step{
@@ -228,12 +222,14 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	})

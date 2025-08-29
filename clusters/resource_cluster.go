@@ -140,7 +140,7 @@ func Validate(cluster any) error {
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
-	return fmt.Errorf(numWorkerErr)
+	return fmt.Errorf("%s", numWorkerErr)
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.

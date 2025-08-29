@@ -639,7 +639,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
+			fmt.Errorf("%s", userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -660,7 +660,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			fmt.Errorf("%s", userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -701,7 +701,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("Me@Example.Com", false)),
+			fmt.Errorf("%s", userExistsErrorMessage("Me@Example.Com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -743,7 +743,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			fmt.Errorf("%s", userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

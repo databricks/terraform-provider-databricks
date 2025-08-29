@@ -464,7 +464,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		for _, d := range diags {
 			issues = append(issues, d.Summary)
 		}
-		return nil, fmt.Errorf(strings.Join(issues, ", "))
+		return nil, fmt.Errorf("%s", strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
 	r, err := http.NewRequest("GET", "", nil)

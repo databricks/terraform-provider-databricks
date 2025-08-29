@@ -184,11 +184,11 @@ func (a CommandsAPI) waitForContextReady(contextID, clusterID string) error {
 			return resource.NonRetryableError(err)
 		}
 		if status == "Error" {
-			return resource.NonRetryableError(fmt.Errorf(status))
+			return resource.NonRetryableError(fmt.Errorf("%s", status))
 		}
 		if status == "Running" {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf(status))
+		return resource.RetryableError(fmt.Errorf("%s", status))
 	})
 }

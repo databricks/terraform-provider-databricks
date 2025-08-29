@@ -88,7 +88,7 @@ func (cr *CommandResults) Err() error {
 	if !cr.Failed() {
 		return nil
 	}
-	return fmt.Errorf(cr.Error())
+	return fmt.Errorf("%s", cr.Error())
 }
 
 // Error returns error in a bit more friendly way

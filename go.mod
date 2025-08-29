@@ -1,6 +1,8 @@
 module github.com/databricks/terraform-provider-databricks
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.6
 
 require (
 	github.com/databricks/databricks-sdk-go v0.43.2
@@ -13,7 +15,6 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.14.4
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
-	golang.org/x/mod v0.19.0
 )
 
 require (

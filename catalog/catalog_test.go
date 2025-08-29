@@ -173,7 +173,7 @@ func TestUcAccCatalogHmsConnectionUpdate(t *testing.T) {
 				port     = "3306"
 				user     = "user"
 				password = "password"
-				database = "metastore"
+				database = "metastore{var.STICKY_RANDOM}"
 				db_type  = "MYSQL"
 				version  = "2.3"
 			}

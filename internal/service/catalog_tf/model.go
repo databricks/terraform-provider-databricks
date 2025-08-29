@@ -2288,6 +2288,101 @@ func (o *ColumnMask) SetUsingColumnNames(ctx context.Context, v []types.String) 
 	o.UsingColumnNames = types.ListValueMust(t, vs)
 }
 
+type ColumnMaskOptions struct {
+	// The fully qualified name of the column mask function. The function is
+	// called on each row of the target table. The function's first argument and
+	// its return type should match the type of the masked column. Required on
+	// create and update.
+	FunctionName types.String `tfsdk:"function_name"`
+	// The alias of the column to be masked. The alias must refer to one of
+	// matched columns. The values of the column is passed to the column mask
+	// function as the first argument. Required on create and update.
+	OnColumn types.String `tfsdk:"on_column"`
+	// Optional list of column aliases or constant literals to be passed as
+	// additional arguments to the column mask function. The type of each column
+	// should match the positional argument of the column mask function.
+	Using types.List `tfsdk:"using"`
+}
+
+func (toState *ColumnMaskOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnMaskOptions) {
+}
+
+func (toState *ColumnMaskOptions) SyncFieldsDuringRead(ctx context.Context, fromState ColumnMaskOptions) {
+}
+
+func (c ColumnMaskOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["function_name"] = attrs["function_name"].SetRequired()
+	attrs["on_column"] = attrs["on_column"].SetRequired()
+	attrs["using"] = attrs["using"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnMaskOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ColumnMaskOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"using": reflect.TypeOf(FunctionArgument{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnMaskOptions
+// only implements ToObjectValue() and Type().
+func (o ColumnMaskOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"function_name": o.FunctionName,
+			"on_column":     o.OnColumn,
+			"using":         o.Using,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ColumnMaskOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"function_name": types.StringType,
+			"on_column":     types.StringType,
+			"using": basetypes.ListType{
+				ElemType: FunctionArgument{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetUsing returns the value of the Using field in ColumnMaskOptions as
+// a slice of FunctionArgument values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ColumnMaskOptions) GetUsing(ctx context.Context) ([]FunctionArgument, bool) {
+	if o.Using.IsNull() || o.Using.IsUnknown() {
+		return nil, false
+	}
+	var v []FunctionArgument
+	d := o.Using.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUsing sets the value of the Using field in ColumnMaskOptions.
+func (o *ColumnMaskOptions) SetUsing(ctx context.Context, v []FunctionArgument) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["using"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Using = types.ListValueMust(t, vs)
+}
+
 type ColumnRelationship struct {
 	Source types.String `tfsdk:"source"`
 
@@ -4323,6 +4418,69 @@ func (o *CreateOnlineTableRequest) SetTable(ctx context.Context, v OnlineTable) 
 	o.Table = vs
 }
 
+type CreatePolicyRequest struct {
+	// Required. The policy to create.
+	PolicyInfo types.Object `tfsdk:"policy_info"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreatePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policy_info": reflect.TypeOf(PolicyInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreatePolicyRequest
+// only implements ToObjectValue() and Type().
+func (o CreatePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"policy_info": o.PolicyInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreatePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"policy_info": PolicyInfo{}.Type(ctx),
+		},
+	}
+}
+
+// GetPolicyInfo returns the value of the PolicyInfo field in CreatePolicyRequest as
+// a PolicyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePolicyRequest) GetPolicyInfo(ctx context.Context) (PolicyInfo, bool) {
+	var e PolicyInfo
+	if o.PolicyInfo.IsNull() || o.PolicyInfo.IsUnknown() {
+		return e, false
+	}
+	var v PolicyInfo
+	d := o.PolicyInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicyInfo sets the value of the PolicyInfo field in CreatePolicyRequest.
+func (o *CreatePolicyRequest) SetPolicyInfo(ctx context.Context, v PolicyInfo) {
+	vs := v.ToObjectValue(ctx)
+	o.PolicyInfo = vs
+}
+
 type CreateRegisteredModelRequest struct {
 	// The name of the catalog where the schema and the registered model reside
 	CatalogName types.String `tfsdk:"catalog_name"`
@@ -5065,6 +5223,129 @@ func (o *CreateTableConstraint) GetConstraint(ctx context.Context) (TableConstra
 func (o *CreateTableConstraint) SetConstraint(ctx context.Context, v TableConstraint) {
 	vs := v.ToObjectValue(ctx)
 	o.Constraint = vs
+}
+
+type CreateTableRequest struct {
+	// Name of parent catalog.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// The array of __ColumnInfo__ definitions of the table's columns.
+	Columns types.List `tfsdk:"columns"`
+
+	DataSourceFormat types.String `tfsdk:"data_source_format"`
+	// Name of table, relative to parent schema.
+	Name types.String `tfsdk:"name"`
+	// A map of key-value properties attached to the securable.
+	Properties types.Map `tfsdk:"properties"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"schema_name"`
+	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
+	StorageLocation types.String `tfsdk:"storage_location"`
+
+	TableType types.String `tfsdk:"table_type"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateTableRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns":    reflect.TypeOf(ColumnInfo{}),
+		"properties": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateTableRequest
+// only implements ToObjectValue() and Type().
+func (o CreateTableRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name":       o.CatalogName,
+			"columns":            o.Columns,
+			"data_source_format": o.DataSourceFormat,
+			"name":               o.Name,
+			"properties":         o.Properties,
+			"schema_name":        o.SchemaName,
+			"storage_location":   o.StorageLocation,
+			"table_type":         o.TableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateTableRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name": types.StringType,
+			"columns": basetypes.ListType{
+				ElemType: ColumnInfo{}.Type(ctx),
+			},
+			"data_source_format": types.StringType,
+			"name":               types.StringType,
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"schema_name":      types.StringType,
+			"storage_location": types.StringType,
+			"table_type":       types.StringType,
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in CreateTableRequest as
+// a slice of ColumnInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateTableRequest) GetColumns(ctx context.Context) ([]ColumnInfo, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnInfo
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in CreateTableRequest.
+func (o *CreateTableRequest) SetColumns(ctx context.Context, v []ColumnInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in CreateTableRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateTableRequest) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CreateTableRequest.
+func (o *CreateTableRequest) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Properties = types.MapValueMust(t, vs)
 }
 
 type CreateVolumeRequestContent struct {
@@ -6406,6 +6687,92 @@ func (o DeleteOnlineTableRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 		},
+	}
+}
+
+type DeletePolicyRequest struct {
+	// Required. The name of the policy to delete
+	Name types.String `tfsdk:"-"`
+	// Required. The fully qualified name of the securable to delete the policy
+	// from.
+	OnSecurableFullname types.String `tfsdk:"-"`
+	// Required. The type of the securable to delete the policy from.
+	OnSecurableType types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeletePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeletePolicyRequest
+// only implements ToObjectValue() and Type().
+func (o DeletePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":                  o.Name,
+			"on_securable_fullname": o.OnSecurableFullname,
+			"on_securable_type":     o.OnSecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeletePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":                  types.StringType,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+		},
+	}
+}
+
+type DeletePolicyResponse struct {
+}
+
+func (toState *DeletePolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePolicyResponse) {
+}
+
+func (toState *DeletePolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeletePolicyResponse) {
+}
+
+func (c DeletePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicyResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeletePolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeletePolicyResponse
+// only implements ToObjectValue() and Type().
+func (o DeletePolicyResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeletePolicyResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -10258,6 +10625,59 @@ func (o *ForeignKeyConstraint) SetParentColumns(ctx context.Context, v []types.S
 	o.ParentColumns = types.ListValueMust(t, vs)
 }
 
+type FunctionArgument struct {
+	// The alias of a matched column.
+	Alias types.String `tfsdk:"alias"`
+	// A constant literal.
+	Constant types.String `tfsdk:"constant"`
+}
+
+func (toState *FunctionArgument) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FunctionArgument) {
+}
+
+func (toState *FunctionArgument) SyncFieldsDuringRead(ctx context.Context, fromState FunctionArgument) {
+}
+
+func (c FunctionArgument) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alias"] = attrs["alias"].SetOptional()
+	attrs["constant"] = attrs["constant"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FunctionArgument.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FunctionArgument) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FunctionArgument
+// only implements ToObjectValue() and Type().
+func (o FunctionArgument) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alias":    o.Alias,
+			"constant": o.Constant,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FunctionArgument) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alias":    types.StringType,
+			"constant": types.StringType,
+		},
+	}
+}
+
 // A function that is dependent on a SQL object.
 type FunctionDependency struct {
 	// Full name of the dependent function, in the form of
@@ -10920,6 +11340,342 @@ func (o GcpPubsub) Type(ctx context.Context) attr.Type {
 			"subscription_name":   types.StringType,
 		},
 	}
+}
+
+type GenerateTemporaryPathCredentialRequest struct {
+	// Optional. When set to true, the service will not validate that the
+	// generated credentials can perform write operations, therefore no new
+	// paths will be created and the response will not contain valid
+	// credentials. Defaults to false.
+	DryRun types.Bool `tfsdk:"dry_run"`
+	// The operation being performed on the path.
+	Operation types.String `tfsdk:"operation"`
+	// URL for path-based access.
+	Url types.String `tfsdk:"url"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryPathCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenerateTemporaryPathCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateTemporaryPathCredentialRequest
+// only implements ToObjectValue() and Type().
+func (o GenerateTemporaryPathCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dry_run":   o.DryRun,
+			"operation": o.Operation,
+			"url":       o.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenerateTemporaryPathCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dry_run":   types.BoolType,
+			"operation": types.StringType,
+			"url":       types.StringType,
+		},
+	}
+}
+
+type GenerateTemporaryPathCredentialResponse struct {
+	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
+
+	AzureAad types.Object `tfsdk:"azure_aad"`
+
+	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas"`
+	// Server time when the credential will expire, in epoch milliseconds. The
+	// API client is advised to cache the credential given this expiration time.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+
+	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
+
+	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
+	// The URL of the storage path accessible by the temporary credential.
+	Url types.String `tfsdk:"url"`
+}
+
+func (toState *GenerateTemporaryPathCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenerateTemporaryPathCredentialResponse) {
+	if !fromPlan.AwsTempCredentials.IsNull() && !fromPlan.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromPlanAwsTempCredentials, ok := fromPlan.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromPlan.AzureAad.IsNull() && !fromPlan.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromPlanAzureAad, ok := fromPlan.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromPlan.AzureUserDelegationSas.IsNull() && !fromPlan.AzureUserDelegationSas.IsUnknown() {
+		if toStateAzureUserDelegationSas, ok := toState.GetAzureUserDelegationSas(ctx); ok {
+			if fromPlanAzureUserDelegationSas, ok := fromPlan.GetAzureUserDelegationSas(ctx); ok {
+				toStateAzureUserDelegationSas.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureUserDelegationSas)
+				toState.SetAzureUserDelegationSas(ctx, toStateAzureUserDelegationSas)
+			}
+		}
+	}
+	if !fromPlan.GcpOauthToken.IsNull() && !fromPlan.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromPlanGcpOauthToken, ok := fromPlan.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
+	if !fromPlan.R2TempCredentials.IsNull() && !fromPlan.R2TempCredentials.IsUnknown() {
+		if toStateR2TempCredentials, ok := toState.GetR2TempCredentials(ctx); ok {
+			if fromPlanR2TempCredentials, ok := fromPlan.GetR2TempCredentials(ctx); ok {
+				toStateR2TempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanR2TempCredentials)
+				toState.SetR2TempCredentials(ctx, toStateR2TempCredentials)
+			}
+		}
+	}
+}
+
+func (toState *GenerateTemporaryPathCredentialResponse) SyncFieldsDuringRead(ctx context.Context, fromState GenerateTemporaryPathCredentialResponse) {
+	if !fromState.AwsTempCredentials.IsNull() && !fromState.AwsTempCredentials.IsUnknown() {
+		if toStateAwsTempCredentials, ok := toState.GetAwsTempCredentials(ctx); ok {
+			if fromStateAwsTempCredentials, ok := fromState.GetAwsTempCredentials(ctx); ok {
+				toStateAwsTempCredentials.SyncFieldsDuringRead(ctx, fromStateAwsTempCredentials)
+				toState.SetAwsTempCredentials(ctx, toStateAwsTempCredentials)
+			}
+		}
+	}
+	if !fromState.AzureAad.IsNull() && !fromState.AzureAad.IsUnknown() {
+		if toStateAzureAad, ok := toState.GetAzureAad(ctx); ok {
+			if fromStateAzureAad, ok := fromState.GetAzureAad(ctx); ok {
+				toStateAzureAad.SyncFieldsDuringRead(ctx, fromStateAzureAad)
+				toState.SetAzureAad(ctx, toStateAzureAad)
+			}
+		}
+	}
+	if !fromState.AzureUserDelegationSas.IsNull() && !fromState.AzureUserDelegationSas.IsUnknown() {
+		if toStateAzureUserDelegationSas, ok := toState.GetAzureUserDelegationSas(ctx); ok {
+			if fromStateAzureUserDelegationSas, ok := fromState.GetAzureUserDelegationSas(ctx); ok {
+				toStateAzureUserDelegationSas.SyncFieldsDuringRead(ctx, fromStateAzureUserDelegationSas)
+				toState.SetAzureUserDelegationSas(ctx, toStateAzureUserDelegationSas)
+			}
+		}
+	}
+	if !fromState.GcpOauthToken.IsNull() && !fromState.GcpOauthToken.IsUnknown() {
+		if toStateGcpOauthToken, ok := toState.GetGcpOauthToken(ctx); ok {
+			if fromStateGcpOauthToken, ok := fromState.GetGcpOauthToken(ctx); ok {
+				toStateGcpOauthToken.SyncFieldsDuringRead(ctx, fromStateGcpOauthToken)
+				toState.SetGcpOauthToken(ctx, toStateGcpOauthToken)
+			}
+		}
+	}
+	if !fromState.R2TempCredentials.IsNull() && !fromState.R2TempCredentials.IsUnknown() {
+		if toStateR2TempCredentials, ok := toState.GetR2TempCredentials(ctx); ok {
+			if fromStateR2TempCredentials, ok := fromState.GetR2TempCredentials(ctx); ok {
+				toStateR2TempCredentials.SyncFieldsDuringRead(ctx, fromStateR2TempCredentials)
+				toState.SetR2TempCredentials(ctx, toStateR2TempCredentials)
+			}
+		}
+	}
+}
+
+func (c GenerateTemporaryPathCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_temp_credentials"] = attrs["aws_temp_credentials"].SetOptional()
+	attrs["azure_aad"] = attrs["azure_aad"].SetOptional()
+	attrs["azure_user_delegation_sas"] = attrs["azure_user_delegation_sas"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].SetOptional()
+	attrs["r2_temp_credentials"] = attrs["r2_temp_credentials"].SetOptional()
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryPathCredentialResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenerateTemporaryPathCredentialResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aws_temp_credentials":      reflect.TypeOf(AwsCredentials{}),
+		"azure_aad":                 reflect.TypeOf(AzureActiveDirectoryToken{}),
+		"azure_user_delegation_sas": reflect.TypeOf(AzureUserDelegationSas{}),
+		"gcp_oauth_token":           reflect.TypeOf(GcpOauthToken{}),
+		"r2_temp_credentials":       reflect.TypeOf(R2Credentials{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateTemporaryPathCredentialResponse
+// only implements ToObjectValue() and Type().
+func (o GenerateTemporaryPathCredentialResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aws_temp_credentials":      o.AwsTempCredentials,
+			"azure_aad":                 o.AzureAad,
+			"azure_user_delegation_sas": o.AzureUserDelegationSas,
+			"expiration_time":           o.ExpirationTime,
+			"gcp_oauth_token":           o.GcpOauthToken,
+			"r2_temp_credentials":       o.R2TempCredentials,
+			"url":                       o.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenerateTemporaryPathCredentialResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aws_temp_credentials":      AwsCredentials{}.Type(ctx),
+			"azure_aad":                 AzureActiveDirectoryToken{}.Type(ctx),
+			"azure_user_delegation_sas": AzureUserDelegationSas{}.Type(ctx),
+			"expiration_time":           types.Int64Type,
+			"gcp_oauth_token":           GcpOauthToken{}.Type(ctx),
+			"r2_temp_credentials":       R2Credentials{}.Type(ctx),
+			"url":                       types.StringType,
+		},
+	}
+}
+
+// GetAwsTempCredentials returns the value of the AwsTempCredentials field in GenerateTemporaryPathCredentialResponse as
+// a AwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryPathCredentialResponse) GetAwsTempCredentials(ctx context.Context) (AwsCredentials, bool) {
+	var e AwsCredentials
+	if o.AwsTempCredentials.IsNull() || o.AwsTempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v AwsCredentials
+	d := o.AwsTempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAwsTempCredentials sets the value of the AwsTempCredentials field in GenerateTemporaryPathCredentialResponse.
+func (o *GenerateTemporaryPathCredentialResponse) SetAwsTempCredentials(ctx context.Context, v AwsCredentials) {
+	vs := v.ToObjectValue(ctx)
+	o.AwsTempCredentials = vs
+}
+
+// GetAzureAad returns the value of the AzureAad field in GenerateTemporaryPathCredentialResponse as
+// a AzureActiveDirectoryToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryPathCredentialResponse) GetAzureAad(ctx context.Context) (AzureActiveDirectoryToken, bool) {
+	var e AzureActiveDirectoryToken
+	if o.AzureAad.IsNull() || o.AzureAad.IsUnknown() {
+		return e, false
+	}
+	var v AzureActiveDirectoryToken
+	d := o.AzureAad.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureAad sets the value of the AzureAad field in GenerateTemporaryPathCredentialResponse.
+func (o *GenerateTemporaryPathCredentialResponse) SetAzureAad(ctx context.Context, v AzureActiveDirectoryToken) {
+	vs := v.ToObjectValue(ctx)
+	o.AzureAad = vs
+}
+
+// GetAzureUserDelegationSas returns the value of the AzureUserDelegationSas field in GenerateTemporaryPathCredentialResponse as
+// a AzureUserDelegationSas value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryPathCredentialResponse) GetAzureUserDelegationSas(ctx context.Context) (AzureUserDelegationSas, bool) {
+	var e AzureUserDelegationSas
+	if o.AzureUserDelegationSas.IsNull() || o.AzureUserDelegationSas.IsUnknown() {
+		return e, false
+	}
+	var v AzureUserDelegationSas
+	d := o.AzureUserDelegationSas.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureUserDelegationSas sets the value of the AzureUserDelegationSas field in GenerateTemporaryPathCredentialResponse.
+func (o *GenerateTemporaryPathCredentialResponse) SetAzureUserDelegationSas(ctx context.Context, v AzureUserDelegationSas) {
+	vs := v.ToObjectValue(ctx)
+	o.AzureUserDelegationSas = vs
+}
+
+// GetGcpOauthToken returns the value of the GcpOauthToken field in GenerateTemporaryPathCredentialResponse as
+// a GcpOauthToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryPathCredentialResponse) GetGcpOauthToken(ctx context.Context) (GcpOauthToken, bool) {
+	var e GcpOauthToken
+	if o.GcpOauthToken.IsNull() || o.GcpOauthToken.IsUnknown() {
+		return e, false
+	}
+	var v GcpOauthToken
+	d := o.GcpOauthToken.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGcpOauthToken sets the value of the GcpOauthToken field in GenerateTemporaryPathCredentialResponse.
+func (o *GenerateTemporaryPathCredentialResponse) SetGcpOauthToken(ctx context.Context, v GcpOauthToken) {
+	vs := v.ToObjectValue(ctx)
+	o.GcpOauthToken = vs
+}
+
+// GetR2TempCredentials returns the value of the R2TempCredentials field in GenerateTemporaryPathCredentialResponse as
+// a R2Credentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryPathCredentialResponse) GetR2TempCredentials(ctx context.Context) (R2Credentials, bool) {
+	var e R2Credentials
+	if o.R2TempCredentials.IsNull() || o.R2TempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v R2Credentials
+	d := o.R2TempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetR2TempCredentials sets the value of the R2TempCredentials field in GenerateTemporaryPathCredentialResponse.
+func (o *GenerateTemporaryPathCredentialResponse) SetR2TempCredentials(ctx context.Context, v R2Credentials) {
+	vs := v.ToObjectValue(ctx)
+	o.R2TempCredentials = vs
 }
 
 // The Azure cloud options to customize the requested temporary credential
@@ -12543,6 +13299,50 @@ func (o *GetPermissionsResponse) SetPrivilegeAssignments(ctx context.Context, v 
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
+}
+
+type GetPolicyRequest struct {
+	// Required. The name of the policy to retrieve.
+	Name types.String `tfsdk:"-"`
+	// Required. The fully qualified name of securable to retrieve policy for.
+	OnSecurableFullname types.String `tfsdk:"-"`
+	// Required. The type of the securable to retrieve the policy for.
+	OnSecurableType types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPolicyRequest
+// only implements ToObjectValue() and Type().
+func (o GetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":                  o.Name,
+			"on_securable_fullname": o.OnSecurableFullname,
+			"on_securable_type":     o.OnSecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":                  types.StringType,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+		},
+	}
 }
 
 type GetQualityMonitorRequest struct {
@@ -14545,6 +15345,148 @@ func (o *ListModelVersionsResponse) SetModelVersions(ctx context.Context, v []Mo
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
+type ListPoliciesRequest struct {
+	// Optional. Whether to include policies defined on parent securables. By
+	// default, the inherited policies are not included.
+	IncludeInherited types.Bool `tfsdk:"-"`
+	// Optional. Maximum number of policies to return on a single page (page
+	// length). - When not set or set to 0, the page length is set to a server
+	// configured value (recommended); - When set to a value greater than 0, the
+	// page length is the minimum of this value and a server configured value;
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Required. The fully qualified name of securable to list policies for.
+	OnSecurableFullname types.String `tfsdk:"-"`
+	// Required. The type of the securable to list policies for.
+	OnSecurableType types.String `tfsdk:"-"`
+	// Optional. Opaque pagination token to go to next page based on previous
+	// query.
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPoliciesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPoliciesRequest
+// only implements ToObjectValue() and Type().
+func (o ListPoliciesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"include_inherited":     o.IncludeInherited,
+			"max_results":           o.MaxResults,
+			"on_securable_fullname": o.OnSecurableFullname,
+			"on_securable_type":     o.OnSecurableType,
+			"page_token":            o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListPoliciesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"include_inherited":     types.BoolType,
+			"max_results":           types.Int64Type,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+			"page_token":            types.StringType,
+		},
+	}
+}
+
+type ListPoliciesResponse struct {
+	// Optional opaque token for continuing pagination. `page_token` should be
+	// set to this value for the next request to retrieve the next page of
+	// results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// The list of retrieved policies.
+	Policies types.List `tfsdk:"policies"`
+}
+
+func (toState *ListPoliciesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPoliciesResponse) {
+}
+
+func (toState *ListPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListPoliciesResponse) {
+}
+
+func (c ListPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["policies"] = attrs["policies"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPoliciesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policies": reflect.TypeOf(PolicyInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPoliciesResponse
+// only implements ToObjectValue() and Type().
+func (o ListPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"policies":        o.Policies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListPoliciesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"policies": basetypes.ListType{
+				ElemType: PolicyInfo{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPolicies returns the value of the Policies field in ListPoliciesResponse as
+// a slice of PolicyInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPoliciesResponse) GetPolicies(ctx context.Context) ([]PolicyInfo, bool) {
+	if o.Policies.IsNull() || o.Policies.IsUnknown() {
+		return nil, false
+	}
+	var v []PolicyInfo
+	d := o.Policies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicies sets the value of the Policies field in ListPoliciesResponse.
+func (o *ListPoliciesResponse) SetPolicies(ctx context.Context, v []PolicyInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Policies = types.ListValueMust(t, vs)
+}
+
 type ListQuotasRequest struct {
 	// The number of quotas to return.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -15724,6 +16666,59 @@ func (o *ListVolumesResponseContent) SetVolumes(ctx context.Context, v []VolumeI
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Volumes = types.ListValueMust(t, vs)
+}
+
+type MatchColumn struct {
+	// Optional alias of the matched column.
+	Alias types.String `tfsdk:"alias"`
+	// The condition expression used to match a table column.
+	Condition types.String `tfsdk:"condition"`
+}
+
+func (toState *MatchColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MatchColumn) {
+}
+
+func (toState *MatchColumn) SyncFieldsDuringRead(ctx context.Context, fromState MatchColumn) {
+}
+
+func (c MatchColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alias"] = attrs["alias"].SetOptional()
+	attrs["condition"] = attrs["condition"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MatchColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a MatchColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MatchColumn
+// only implements ToObjectValue() and Type().
+func (o MatchColumn) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alias":     o.Alias,
+			"condition": o.Condition,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o MatchColumn) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alias":     types.StringType,
+			"condition": types.StringType,
+		},
+	}
 }
 
 type MetastoreAssignment struct {
@@ -18518,6 +19513,323 @@ func (o PipelineProgress) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type PolicyInfo struct {
+	// Options for column mask policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_COLUMN_MASK`. Required on create and optional on update.
+	// When specified on update, the new options will replace the existing
+	// options as a whole.
+	ColumnMask types.Object `tfsdk:"column_mask"`
+	// Optional description of the policy.
+	Comment types.String `tfsdk:"comment"`
+	// Time at which the policy was created, in epoch milliseconds. Output only.
+	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Username of the user who created the policy. Output only.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Optional list of user or group names that should be excluded from the
+	// policy.
+	ExceptPrincipals types.List `tfsdk:"except_principals"`
+	// Type of securables that the policy should take effect on. Only `table` is
+	// supported at this moment. Required on create and optional on update.
+	ForSecurableType types.String `tfsdk:"for_securable_type"`
+	// Unique identifier of the policy. This field is output only and is
+	// generated by the system.
+	Id types.String `tfsdk:"id"`
+	// Optional list of condition expressions used to match table columns. Only
+	// valid when `for_securable_type` is `table`. When specified, the policy
+	// only applies to tables whose columns satisfy all match conditions.
+	MatchColumns types.List `tfsdk:"match_columns"`
+	// Name of the policy. Required on create and ignored on update. To update
+	// the name, use the `new_name` field.
+	Name types.String `tfsdk:"name"`
+	// Full name of the securable on which the policy is defined. Required on
+	// create and ignored on update.
+	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
+	// Type of the securable on which the policy is defined. Only `catalog`,
+	// `schema` and `table` are supported at this moment. Required on create and
+	// ignored on update.
+	OnSecurableType types.String `tfsdk:"on_securable_type"`
+	// Type of the policy. Required on create and ignored on update.
+	PolicyType types.String `tfsdk:"policy_type"`
+	// Options for row filter policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_ROW_FILTER`. Required on create and optional on update. When
+	// specified on update, the new options will replace the existing options as
+	// a whole.
+	RowFilter types.Object `tfsdk:"row_filter"`
+	// List of user or group names that the policy applies to. Required on
+	// create and optional on update.
+	ToPrincipals types.List `tfsdk:"to_principals"`
+	// Time at which the policy was last modified, in epoch milliseconds. Output
+	// only.
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
+	// Username of the user who last modified the policy. Output only.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+	// Optional condition when the policy should take effect.
+	WhenCondition types.String `tfsdk:"when_condition"`
+}
+
+func (toState *PolicyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PolicyInfo) {
+	if !fromPlan.ColumnMask.IsNull() && !fromPlan.ColumnMask.IsUnknown() {
+		if toStateColumnMask, ok := toState.GetColumnMask(ctx); ok {
+			if fromPlanColumnMask, ok := fromPlan.GetColumnMask(ctx); ok {
+				toStateColumnMask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanColumnMask)
+				toState.SetColumnMask(ctx, toStateColumnMask)
+			}
+		}
+	}
+	if !fromPlan.RowFilter.IsNull() && !fromPlan.RowFilter.IsUnknown() {
+		if toStateRowFilter, ok := toState.GetRowFilter(ctx); ok {
+			if fromPlanRowFilter, ok := fromPlan.GetRowFilter(ctx); ok {
+				toStateRowFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRowFilter)
+				toState.SetRowFilter(ctx, toStateRowFilter)
+			}
+		}
+	}
+}
+
+func (toState *PolicyInfo) SyncFieldsDuringRead(ctx context.Context, fromState PolicyInfo) {
+	if !fromState.ColumnMask.IsNull() && !fromState.ColumnMask.IsUnknown() {
+		if toStateColumnMask, ok := toState.GetColumnMask(ctx); ok {
+			if fromStateColumnMask, ok := fromState.GetColumnMask(ctx); ok {
+				toStateColumnMask.SyncFieldsDuringRead(ctx, fromStateColumnMask)
+				toState.SetColumnMask(ctx, toStateColumnMask)
+			}
+		}
+	}
+	if !fromState.RowFilter.IsNull() && !fromState.RowFilter.IsUnknown() {
+		if toStateRowFilter, ok := toState.GetRowFilter(ctx); ok {
+			if fromStateRowFilter, ok := fromState.GetRowFilter(ctx); ok {
+				toStateRowFilter.SyncFieldsDuringRead(ctx, fromStateRowFilter)
+				toState.SetRowFilter(ctx, toStateRowFilter)
+			}
+		}
+	}
+}
+
+func (c PolicyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_mask"] = attrs["column_mask"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["except_principals"] = attrs["except_principals"].SetOptional()
+	attrs["for_securable_type"] = attrs["for_securable_type"].SetRequired()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["match_columns"] = attrs["match_columns"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetOptional()
+	attrs["on_securable_type"] = attrs["on_securable_type"].SetOptional()
+	attrs["policy_type"] = attrs["policy_type"].SetRequired()
+	attrs["row_filter"] = attrs["row_filter"].SetOptional()
+	attrs["to_principals"] = attrs["to_principals"].SetRequired()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+	attrs["when_condition"] = attrs["when_condition"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PolicyInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PolicyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"column_mask":       reflect.TypeOf(ColumnMaskOptions{}),
+		"except_principals": reflect.TypeOf(types.String{}),
+		"match_columns":     reflect.TypeOf(MatchColumn{}),
+		"row_filter":        reflect.TypeOf(RowFilterOptions{}),
+		"to_principals":     reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfo
+// only implements ToObjectValue() and Type().
+func (o PolicyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_mask":           o.ColumnMask,
+			"comment":               o.Comment,
+			"created_at":            o.CreatedAt,
+			"created_by":            o.CreatedBy,
+			"except_principals":     o.ExceptPrincipals,
+			"for_securable_type":    o.ForSecurableType,
+			"id":                    o.Id,
+			"match_columns":         o.MatchColumns,
+			"name":                  o.Name,
+			"on_securable_fullname": o.OnSecurableFullname,
+			"on_securable_type":     o.OnSecurableType,
+			"policy_type":           o.PolicyType,
+			"row_filter":            o.RowFilter,
+			"to_principals":         o.ToPrincipals,
+			"updated_at":            o.UpdatedAt,
+			"updated_by":            o.UpdatedBy,
+			"when_condition":        o.WhenCondition,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PolicyInfo) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_mask": ColumnMaskOptions{}.Type(ctx),
+			"comment":     types.StringType,
+			"created_at":  types.Int64Type,
+			"created_by":  types.StringType,
+			"except_principals": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"for_securable_type": types.StringType,
+			"id":                 types.StringType,
+			"match_columns": basetypes.ListType{
+				ElemType: MatchColumn{}.Type(ctx),
+			},
+			"name":                  types.StringType,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+			"policy_type":           types.StringType,
+			"row_filter":            RowFilterOptions{}.Type(ctx),
+			"to_principals": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"updated_at":     types.Int64Type,
+			"updated_by":     types.StringType,
+			"when_condition": types.StringType,
+		},
+	}
+}
+
+// GetColumnMask returns the value of the ColumnMask field in PolicyInfo as
+// a ColumnMaskOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PolicyInfo) GetColumnMask(ctx context.Context) (ColumnMaskOptions, bool) {
+	var e ColumnMaskOptions
+	if o.ColumnMask.IsNull() || o.ColumnMask.IsUnknown() {
+		return e, false
+	}
+	var v ColumnMaskOptions
+	d := o.ColumnMask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnMask sets the value of the ColumnMask field in PolicyInfo.
+func (o *PolicyInfo) SetColumnMask(ctx context.Context, v ColumnMaskOptions) {
+	vs := v.ToObjectValue(ctx)
+	o.ColumnMask = vs
+}
+
+// GetExceptPrincipals returns the value of the ExceptPrincipals field in PolicyInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PolicyInfo) GetExceptPrincipals(ctx context.Context) ([]types.String, bool) {
+	if o.ExceptPrincipals.IsNull() || o.ExceptPrincipals.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExceptPrincipals.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExceptPrincipals sets the value of the ExceptPrincipals field in PolicyInfo.
+func (o *PolicyInfo) SetExceptPrincipals(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["except_principals"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExceptPrincipals = types.ListValueMust(t, vs)
+}
+
+// GetMatchColumns returns the value of the MatchColumns field in PolicyInfo as
+// a slice of MatchColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PolicyInfo) GetMatchColumns(ctx context.Context) ([]MatchColumn, bool) {
+	if o.MatchColumns.IsNull() || o.MatchColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []MatchColumn
+	d := o.MatchColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMatchColumns sets the value of the MatchColumns field in PolicyInfo.
+func (o *PolicyInfo) SetMatchColumns(ctx context.Context, v []MatchColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["match_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.MatchColumns = types.ListValueMust(t, vs)
+}
+
+// GetRowFilter returns the value of the RowFilter field in PolicyInfo as
+// a RowFilterOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PolicyInfo) GetRowFilter(ctx context.Context) (RowFilterOptions, bool) {
+	var e RowFilterOptions
+	if o.RowFilter.IsNull() || o.RowFilter.IsUnknown() {
+		return e, false
+	}
+	var v RowFilterOptions
+	d := o.RowFilter.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRowFilter sets the value of the RowFilter field in PolicyInfo.
+func (o *PolicyInfo) SetRowFilter(ctx context.Context, v RowFilterOptions) {
+	vs := v.ToObjectValue(ctx)
+	o.RowFilter = vs
+}
+
+// GetToPrincipals returns the value of the ToPrincipals field in PolicyInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PolicyInfo) GetToPrincipals(ctx context.Context) ([]types.String, bool) {
+	if o.ToPrincipals.IsNull() || o.ToPrincipals.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ToPrincipals.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetToPrincipals sets the value of the ToPrincipals field in PolicyInfo.
+func (o *PolicyInfo) SetToPrincipals(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["to_principals"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ToPrincipals = types.ListValueMust(t, vs)
+}
+
 type PrimaryKeyConstraint struct {
 	// Column names for this constraint.
 	ChildColumns types.List `tfsdk:"child_columns"`
@@ -19336,6 +20648,94 @@ func (o *RegisteredModelInfo) SetAliases(ctx context.Context, v []RegisteredMode
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Aliases = types.ListValueMust(t, vs)
+}
+
+type RowFilterOptions struct {
+	// The fully qualified name of the row filter function. The function is
+	// called on each row of the target table. It should return a boolean value
+	// indicating whether the row should be visible to the user. Required on
+	// create and update.
+	FunctionName types.String `tfsdk:"function_name"`
+	// Optional list of column aliases or constant literals to be passed as
+	// arguments to the row filter function. The type of each column should
+	// match the positional argument of the row filter function.
+	Using types.List `tfsdk:"using"`
+}
+
+func (toState *RowFilterOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RowFilterOptions) {
+}
+
+func (toState *RowFilterOptions) SyncFieldsDuringRead(ctx context.Context, fromState RowFilterOptions) {
+}
+
+func (c RowFilterOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["function_name"] = attrs["function_name"].SetRequired()
+	attrs["using"] = attrs["using"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RowFilterOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RowFilterOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"using": reflect.TypeOf(FunctionArgument{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RowFilterOptions
+// only implements ToObjectValue() and Type().
+func (o RowFilterOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"function_name": o.FunctionName,
+			"using":         o.Using,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RowFilterOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"function_name": types.StringType,
+			"using": basetypes.ListType{
+				ElemType: FunctionArgument{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetUsing returns the value of the Using field in RowFilterOptions as
+// a slice of FunctionArgument values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RowFilterOptions) GetUsing(ctx context.Context) ([]FunctionArgument, bool) {
+	if o.Using.IsNull() || o.Using.IsUnknown() {
+		return nil, false
+	}
+	var v []FunctionArgument
+	d := o.Using.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUsing sets the value of the Using field in RowFilterOptions.
+func (o *RowFilterOptions) SetUsing(ctx context.Context, v []FunctionArgument) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["using"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Using = types.ListValueMust(t, vs)
 }
 
 type RunRefreshRequest struct {
@@ -20308,7 +21708,7 @@ type SystemSchemaInfo struct {
 	// The current state of enablement for the system schema. An empty string
 	// means the system schema is available and ready for opt-in. Possible
 	// values: AVAILABLE | ENABLE_INITIALIZED | ENABLE_COMPLETED |
-	// DISABLE_INITIALIZED | UNAVAILABLE
+	// DISABLE_INITIALIZED | UNAVAILABLE | MANAGED
 	State types.String `tfsdk:"state"`
 }
 
@@ -23353,6 +24753,94 @@ func (o *UpdatePermissionsResponse) SetPrivilegeAssignments(ctx context.Context,
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
+}
+
+type UpdatePolicyRequest struct {
+	// Required. The name of the policy to update.
+	Name types.String `tfsdk:"-"`
+	// Required. The fully qualified name of the securable to update the policy
+	// for.
+	OnSecurableFullname types.String `tfsdk:"-"`
+	// Required. The type of the securable to update the policy for.
+	OnSecurableType types.String `tfsdk:"-"`
+	// Optional fields to update. This is the request body for updating a
+	// policy. Use `update_mask` field to specify which fields in the request is
+	// to be updated. - If `update_mask` is empty or "*", all specified fields
+	// will be updated. - If `update_mask` is specified, only the fields
+	// specified in the `update_mask` will be updated. If a field is specified
+	// in `update_mask` and not set in the request, the field will be cleared.
+	// Users can use the update mask to explicitly unset optional fields such as
+	// `exception_principals` and `when_condition`.
+	PolicyInfo types.Object `tfsdk:"policy_info"`
+	// Optional. The update mask field for specifying user intentions on which
+	// fields to update in the request.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdatePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policy_info": reflect.TypeOf(PolicyInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdatePolicyRequest
+// only implements ToObjectValue() and Type().
+func (o UpdatePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":                  o.Name,
+			"on_securable_fullname": o.OnSecurableFullname,
+			"on_securable_type":     o.OnSecurableType,
+			"policy_info":           o.PolicyInfo,
+			"update_mask":           o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdatePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":                  types.StringType,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+			"policy_info":           PolicyInfo{}.Type(ctx),
+			"update_mask":           types.StringType,
+		},
+	}
+}
+
+// GetPolicyInfo returns the value of the PolicyInfo field in UpdatePolicyRequest as
+// a PolicyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePolicyRequest) GetPolicyInfo(ctx context.Context) (PolicyInfo, bool) {
+	var e PolicyInfo
+	if o.PolicyInfo.IsNull() || o.PolicyInfo.IsUnknown() {
+		return e, false
+	}
+	var v PolicyInfo
+	d := o.PolicyInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicyInfo sets the value of the PolicyInfo field in UpdatePolicyRequest.
+func (o *UpdatePolicyRequest) SetPolicyInfo(ctx context.Context, v PolicyInfo) {
+	vs := v.ToObjectValue(ctx)
+	o.PolicyInfo = vs
 }
 
 type UpdateRegisteredModelRequest struct {

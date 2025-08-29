@@ -3,9 +3,11 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -607,7 +609,7 @@ func TestUpdateStorageCredentialsRollback(t *testing.T) {
 						RoleArn: "CHANGED",
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -902,4 +904,65 @@ func TestUpdateAzStorageCredentialSpn(t *testing.T) {
 		"azure_service_principal.0.directory_id":   "SAME",
 		"azure_service_principal.0.client_secret":  "CHANGED",
 	})
+}
+
+func TestStorageCredentialImportAccountLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name?",
+				Response: &catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "storage_credential_name",
+						AwsIamRole: &catalog.AwsIamRoleResponse{
+							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+						},
+						Id:          "1234-5678",
+						MetastoreId: "metastore_id",
+					},
+				},
+			},
+		},
+		Resource:  ResourceStorageCredential(),
+		AccountID: "account_id",
+		Read:      true,
+		ID:        "metastore_id|storage_credential_name",
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id":          "metastore_id",
+		"storage_credential_id": "1234-5678",
+	})
+}
+
+func TestStorageCredentialImportWorkspaceLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/storage_credential_name?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "storage_credential_name",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+					},
+					Id:          "1234-5678",
+					MetastoreId: "metastore_id",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Read:     true,
+		ID:       "storage_credential_name",
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id":          "metastore_id",
+		"storage_credential_id": "1234-5678",
+	})
+}
+
+func TestStorageCredentialImportInvalidFormat(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceStorageCredential(),
+		Read:     true,
+		ID:       "invalid|format|with|too|many|parts",
+	}.ExpectError(t, "invalid storage credential ID format: expected 'name' or 'metastore_id|name', got 'invalid|format|with|too|many|parts'")
 }

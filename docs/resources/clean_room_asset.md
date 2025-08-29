@@ -31,7 +31,8 @@ The following arguments are supported:
   
   For UC securable assets (tables, volumes, etc.), the format is *shared_catalog*.*shared_schema*.*asset_name*
   
-  For notebooks, the name is the notebook file name
+  For notebooks, the name is the notebook file name.
+  For jar analyses, the name is the jar analysis name
 * `clean_room_name` (string, optional) - The name of the clean room this asset belongs to.
   This field is required for create operations and populated by the server for responses
 * `foreign_table` (CleanRoomAssetForeignTable, optional) - Foreign table details available to all collaborators of the clean room.
@@ -74,11 +75,11 @@ The following arguments are supported:
   in the format of *catalog*.*schema*.*volume_name*
 
 ### CleanRoomNotebookReview
-* `comment` (string, optional) - review comment
-* `created_at_millis` (integer, optional) - timestamp of when the review was submitted
-* `review_state` (string, optional) - review outcome. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
-* `review_sub_reason` (string, optional) - specified when the review was not explicitly made by a user. Possible values are: `AUTO_APPROVED`, `BACKFILLED`
-* `reviewer_collaborator_alias` (string, optional) - collaborator alias of the reviewer
+* `comment` (string, optional) - Review comment
+* `created_at_millis` (integer, optional) - When the review was submitted, in epoch milliseconds
+* `review_state` (string, optional) - Review outcome. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
+* `review_sub_reason` (string, optional) - Specified when the review was not explicitly made by a user. Possible values are: `AUTO_APPROVED`, `BACKFILLED`
+* `reviewer_collaborator_alias` (string, optional) - Collaborator alias of the reviewer
 
 ### ColumnInfo
 * `comment` (string, optional) - User-provided free-form text description
@@ -122,7 +123,7 @@ In addition to the above arguments, the following attributes are exported:
 
 ### CleanRoomAssetNotebook
 * `etag` (string) - Server generated etag that represents the notebook version
-* `review_state` (string) - top-level status derived from all reviews. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
+* `review_state` (string) - Top-level status derived from all reviews. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
 * `reviews` (list of CleanRoomNotebookReview) - All existing approvals or rejections
 
 ### CleanRoomAssetTable

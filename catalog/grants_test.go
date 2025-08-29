@@ -30,9 +30,25 @@ resource "databricks_schema" "things" {
 resource "databricks_table" "mytable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "bar"
+	name = "managed-{var.STICKY_RANDOM}"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
+
+	column {
+		name      = "id"
+		position  = 0
+		type_name = "INT"
+		type_text = "int"
+		type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+	}
+}
+
+resource "databricks_table" "metric_view_grants" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name = databricks_schema.things.name
+	name = "metric-view-{var.STICKY_RANDOM}"
+	table_type = "METRIC_VIEW"
+	data_source_format = ""
 
 	column {
 		name      = "id"
@@ -84,6 +100,14 @@ resource "databricks_grants" "schema" {
 
 resource "databricks_grants" "table" {
 	table = databricks_table.mytable.id
+	grant {
+		principal  = "%s"
+		privileges = ["ALL_PRIVILEGES"]
+	}
+}
+
+resource "databricks_grants" "metric_view_grants" {
+	table = databricks_table.metric_view_grants.id
 	grant {
 		principal  = "%s"
 		privileges = ["ALL_PRIVILEGES"]

@@ -268,8 +268,24 @@ func importJob(ic *importContext, r *resource) error {
 		ic.emitIfWsfsFile(param.Default)
 		ic.emitIfVolumeFile(param.Default)
 	}
+	for _, env := range job.Environments {
+		if env.Spec != nil {
+			for _, dep := range env.Spec.Dependencies {
+				emitEnvironmentDependency(ic, dep)
+			}
+		}
+	}
 
 	return ic.importLibraries(r.Data, s)
+}
+
+func emitEnvironmentDependency(ic *importContext, dep string) {
+	v := dep
+	if res := requirementsFileRegexp.FindStringSubmatch(v); res != nil {
+		v = res[1]
+	}
+	ic.emitIfWsfsFile(v)
+	ic.emitIfVolumeFile(v)
 }
 
 func emitWebhookNotifications(ic *importContext, notifications *sdk_jobs.WebhookNotifications) {
@@ -410,6 +426,18 @@ var (
 		{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 		{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 		{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+		{Path: "job_cluster.new_cluster.docker_image.basic_auth.password", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "job_cluster.new_cluster.docker_image.basic_auth.username", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "job_cluster.new_cluster.docker_image.basic_auth.password", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "job_cluster.new_cluster.docker_image.basic_auth.username", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "job_cluster.new_cluster.spark_conf", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "job_cluster.new_cluster.spark_env_vars", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "job_cluster.new_cluster.spark_conf", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "job_cluster.new_cluster.spark_env_vars", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
 		{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 		{Path: "task.dbt_task.catalog", Resource: "databricks_catalog"},
@@ -444,6 +472,18 @@ var (
 		{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 		{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 		{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+		{Path: "task.new_cluster.docker_image.basic_auth.password", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "task.new_cluster.docker_image.basic_auth.username", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "task.new_cluster.docker_image.basic_auth.password", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "task.new_cluster.docker_image.basic_auth.username", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "task.new_cluster.spark_conf", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "task.new_cluster.spark_env_vars", Resource: "databricks_secret", Match: "config_reference"},
+		{Path: "task.new_cluster.spark_conf", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
+		{Path: "task.new_cluster.spark_env_vars", Resource: "databricks_secret_scope",
+			MatchType: MatchRegexp, Regexp: secretScopePathRegex},
 		{Path: "task.notebook_task.base_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		{Path: "task.notebook_task.base_parameters", Resource: "databricks_file"},
 		{Path: "task.notebook_task.base_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
@@ -487,7 +527,13 @@ var (
 		{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
-		{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
+		{Path: "parameter.default", Resource: "databricks_file"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_file"},
+		{Path: "environments.spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+			MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+		{Path: "environments.spec.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+			Regexp: requirementsFileRegexp},
 		{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id",
 			Resource: "databricks_notification_destination"},
 		{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},

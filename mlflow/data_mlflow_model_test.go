@@ -60,8 +60,9 @@ func TestDataSourceModelNotFound(t *testing.T) {
 				GetModel(mock.Anything, ml.GetModelRequest{
 					Name: modelName,
 				}).Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-				Message:   fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName),
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName),
+				StatusCode: 404,
 			})
 		},
 		Read:        true,

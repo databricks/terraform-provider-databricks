@@ -10302,8 +10302,7 @@ type PublishSpec struct {
 	// The full three-part (catalog, schema, table) name of the online table.
 	OnlineTableName types.String `tfsdk:"online_table_name"`
 	// The publish mode of the pipeline that syncs the online table with the
-	// source table. Defaults to TRIGGERED if not specified. All publish modes
-	// require the source table to have Change Data Feed (CDF) enabled.
+	// source table.
 	PublishMode types.String `tfsdk:"publish_mode"`
 }
 
@@ -10316,7 +10315,7 @@ func (toState *PublishSpec) SyncFieldsDuringRead(ctx context.Context, fromState 
 func (c PublishSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["online_store"] = attrs["online_store"].SetRequired()
 	attrs["online_table_name"] = attrs["online_table_name"].SetRequired()
-	attrs["publish_mode"] = attrs["publish_mode"].SetOptional()
+	attrs["publish_mode"] = attrs["publish_mode"].SetRequired()
 
 	return attrs
 }

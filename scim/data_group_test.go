@@ -18,41 +18,50 @@ func TestDataSourceGroup(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22ds%22`,
+				Resource: `/api/2.0/preview/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
 				Response: GroupList{
 					Resources: []Group{
 						{
 							DisplayName: "ds",
 							ID:          "eerste",
-							Entitlements: []ComplexValue{
-								{
-									Value: "allow-cluster-create",
-								},
-							},
-							Members: []ComplexValue{
-								{
-									Ref:   "Users/1112",
-									Value: "1112",
-								},
-								{
-									Ref:   "ServicePrincipals/1113",
-									Value: "1113",
-								},
-								{
-									Ref:   "Groups/1114",
-									Value: "1114",
-								},
-							},
-							Groups: []ComplexValue{
-								{
-									Value: "abc",
-								},
-							},
-							Roles: []ComplexValue{
-								{
-									Value: "a",
-								},
-							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/eerste?attributes=members,roles,entitlements,externalId",
+
+				Response: Group{
+					DisplayName: "ds",
+					ID:          "eerste",
+					Entitlements: []ComplexValue{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Members: []ComplexValue{
+						{
+							Ref:   "Users/1112",
+							Value: "1112",
+						},
+						{
+							Ref:   "ServicePrincipals/1113",
+							Value: "1113",
+						},
+						{
+							Ref:   "Groups/1114",
+							Value: "1114",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Value: "abc",
+						},
+					},
+					Roles: []ComplexValue{
+						{
+							Value: "a",
 						},
 					},
 				},

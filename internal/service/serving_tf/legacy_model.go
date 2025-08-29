@@ -6400,6 +6400,9 @@ func (o *PutResponse_SdkV2) SetRateLimits(ctx context.Context, v []RateLimit_Sdk
 }
 
 type QueryEndpointInput_SdkV2 struct {
+	// Optional user-provided request identifier that will be recorded in the
+	// inference table and the usage tracking table.
+	ClientRequestId types.String `tfsdk:"client_request_id"`
 	// Pandas Dataframe input in the records orientation.
 	DataframeRecords types.List `tfsdk:"dataframe_records"`
 	// Pandas Dataframe input in the split orientation.
@@ -6450,6 +6453,9 @@ type QueryEndpointInput_SdkV2 struct {
 	// with a default of 1.0 and should only be used with other chat/completions
 	// query fields.
 	Temperature types.Float64 `tfsdk:"temperature"`
+	// Optional user-provided context that will be recorded in the usage
+	// tracking table.
+	UsageContext types.Map `tfsdk:"usage_context"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointInput.
@@ -6467,6 +6473,7 @@ func (a QueryEndpointInput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[
 		"instances":         reflect.TypeOf(types.Object{}),
 		"messages":          reflect.TypeOf(ChatMessage_SdkV2{}),
 		"stop":              reflect.TypeOf(types.String{}),
+		"usage_context":     reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6477,6 +6484,7 @@ func (o QueryEndpointInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"client_request_id": o.ClientRequestId,
 			"dataframe_records": o.DataframeRecords,
 			"dataframe_split":   o.DataframeSplit,
 			"extra_params":      o.ExtraParams,
@@ -6491,6 +6499,7 @@ func (o QueryEndpointInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"stop":              o.Stop,
 			"stream":            o.Stream,
 			"temperature":       o.Temperature,
+			"usage_context":     o.UsageContext,
 		})
 }
 
@@ -6498,6 +6507,7 @@ func (o QueryEndpointInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 func (o QueryEndpointInput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"client_request_id": types.StringType,
 			"dataframe_records": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
@@ -6524,6 +6534,9 @@ func (o QueryEndpointInput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"stream":      types.BoolType,
 			"temperature": types.Float64Type,
+			"usage_context": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -6682,6 +6695,32 @@ func (o *QueryEndpointInput_SdkV2) SetStop(ctx context.Context, v []types.String
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stop"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stop = types.ListValueMust(t, vs)
+}
+
+// GetUsageContext returns the value of the UsageContext field in QueryEndpointInput_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput_SdkV2) GetUsageContext(ctx context.Context) (map[string]types.String, bool) {
+	if o.UsageContext.IsNull() || o.UsageContext.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.UsageContext.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUsageContext sets the value of the UsageContext field in QueryEndpointInput_SdkV2.
+func (o *QueryEndpointInput_SdkV2) SetUsageContext(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["usage_context"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UsageContext = types.MapValueMust(t, vs)
 }
 
 type QueryEndpointResponse_SdkV2 struct {

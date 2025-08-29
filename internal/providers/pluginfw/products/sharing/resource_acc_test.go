@@ -1,13 +1,10 @@
 package sharing_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
 const preTestTemplate = `
@@ -28,51 +25,42 @@ const preTestTemplate = `
 		}
 	}
 
-	resource "databricks_table" "mytable" {
+	resource "databricks_sql_table" "mytable" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 
-	resource "databricks_table" "mytable_2" {
+	resource "databricks_sql_table" "mytable_2" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar_2"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 
-	resource "databricks_table" "mytable_3" {
+	resource "databricks_sql_table" "mytable_3" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
 		name = "bar_3"
 		table_type = "MANAGED"
-		data_source_format = "DELTA"
+		warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 		column {
-			name      = "id"
-			position  = 0
-			type_name = "INT"
-			type_text = "int"
-			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+			name = "id"
+			type = "int"
 		}
 	}
 `
@@ -94,19 +82,20 @@ const preTestTemplateUpdate = `
 func TestUcAccCreateShare(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + `
-		resource "databricks_share" "myshare" {
+		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
          	}
 			object {
-				name = databricks_table.mytable_2.id
-				cdf_enabled = false
+				name = databricks_sql_table.mytable_2.id
 				comment = "c"
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}
 
@@ -122,7 +111,7 @@ func TestUcAccCreateShare(t *testing.T) {
 		}
 
 		resource "databricks_grants" "some" {
-			share = databricks_share.myshare.name
+			share = databricks_share_pluginframework.myshare.name
 			grant {
 				principal  = databricks_recipient.db2open.name
 				privileges = ["SELECT"]
@@ -134,14 +123,14 @@ func TestUcAccCreateShare(t *testing.T) {
 
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
-		resource "databricks_share" "myshare" {
+		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "%s"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "%s"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 
 		}`, owner, comment)
@@ -162,45 +151,45 @@ func TestUcAccUpdateShare(t *testing.T) {
 func TestUcAccUpdateShareAddObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
+			`resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "A"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				comment = "C"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
+			`resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "AA"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_2.id
+				name = databricks_sql_table.mytable_2.id
 				comment = "BB"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				comment = "CC"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	})
@@ -209,170 +198,35 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 func TestUcAccUpdateShareReorderObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
+			`resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
+			`resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`,
 	})
-}
-
-// TestUcAccUpdateShareNoChanges tests that updating a share with no actual changes doesn't cause issues
-func TestUcAccUpdateShareNoChanges(t *testing.T) {
-	shareConfig := preTestTemplate + preTestTemplateUpdate +
-		`resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
-			object {
-				name = databricks_table.mytable.id
-				comment = "stable comment"
-				data_object_type = "TABLE"
-			}
-		}`
-
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: shareConfig,
-	}, acceptance.Step{
-		Template: shareConfig, // Same config - should not trigger any updates
-	})
-}
-
-// TestUcAccUpdateShareComplexObjectChanges tests complex scenarios with multiple object updates
-func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
-			object {
-				name = databricks_table.mytable.id
-				comment = "original comment"
-				data_object_type = "TABLE"
-			}
-			object {
-				name = databricks_table.mytable_2.id
-				comment = "second table"
-				data_object_type = "TABLE"
-			}
-		}`,
-	}, acceptance.Step{
-		// Remove one object, add another, and update comment on existing
-		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
-			object {
-				name = databricks_table.mytable.id
-				comment = "updated comment"
-				data_object_type = "TABLE"
-			}
-			object {
-				name = databricks_table.mytable_3.id
-				comment = "third table"
-				data_object_type = "TABLE"
-			}
-		}`,
-	})
-}
-
-// TestUcAccUpdateShareRemoveAllObjects tests removing all objects from a share
-func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
-			object {
-				name = databricks_table.mytable.id
-				comment = "to be removed"
-				data_object_type = "TABLE"
-			}
-			object {
-				name = databricks_table.mytable_2.id
-				comment = "also to be removed"
-				data_object_type = "TABLE"
-			}
-		}`,
-	}, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
-			`resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
-		}`,
-	})
-}
-
-// TestUcAccShareMigrationFromSDKv2 tests the transition from sdkv2 to plugin framework.
-// This test verifies that existing state created by SDK v2 implementation can be
-// successfully managed by the plugin framework implementation without any changes.
-func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t,
-		// Step 1: Create share using SDK v2 implementation
-		acceptance.Step{
-			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-				"databricks": func() (tfprotov6.ProviderServer, error) {
-					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
-					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-				},
-			},
-			Template: preTestTemplate + preTestTemplateUpdate + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					owner = "account users"
-					object {
-						name = databricks_table.mytable.id
-						comment = "Shared table for migration test"
-						data_object_type = "TABLE"
-					}
-					object {
-						name = databricks_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
-					}
-				}`,
-		},
-		// Step 2: Update the share using plugin framework implementation (default)
-		// This verifies no changes are needed when switching implementations
-		acceptance.Step{
-			ExpectNonEmptyPlan: false,
-			Template: preTestTemplate + preTestTemplateUpdate + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					owner = "account users"
-					object {
-						name = databricks_table.mytable.id
-						comment = "Updated comment after migration"
-						data_object_type = "TABLE"
-					}
-					object {
-						name = databricks_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
-					}
-				}`,
-		},
-	)
 }

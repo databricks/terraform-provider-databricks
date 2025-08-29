@@ -69,9 +69,9 @@ All arguments are optional, and they tune what code is being generated.
 * `-last-active-days` - Items older than `-last-active-days` won't be imported. By default, the value is set to 3650 (10 years). Has an effect on listing [databricks_cluster](../resources/cluster.md) and [databricks_job](../resources/job.md) resources.
 * `-listing` - Comma-separated list of services to be listed and further passed on for importing. For each service specified, the exporter performs a listing of available resources using the `List` function and emits them for importing together with their dependencies. The `-services` parameter could be used to control which transitive dependencies will also be imported.
 * `-services` - Comma-separated list of services to import. By default, all services are imported.
-* `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default, it is empty, which matches everything.
-* `-matchRegex` - Match resource names against a given regex during listing operation. Applicable to all resources selected for listing.
-* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to all resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.
+* `-match` - Match resource names during listing operation. This filter applies to many (*but not all!*) resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default, it is empty, which matches everything.
+* `-matchRegex` - Match resource names against a given regex during listing operation. Applicable to many (*but not all!*) resources selected for listing.
+* `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to  to many (*but not all!*) resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.
 * `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify a condition for `/Users` as well, so the regex will be `^(/Users|/Users/[a-c].*)$`*.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
@@ -155,6 +155,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
+* `billing` - **listing** [databricks_budget](../resources/budget.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
@@ -219,6 +220,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | --- | --- | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
 | [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No | Yes | No |
+| [databricks_budget](../resources/budget.md) | Yes | Yes | No | Yes |
 | [databricks_catalog](../resources/catalog.md) | Yes | Yes | Yes | No |
 | [databricks_cluster](../resources/cluster.md) | Yes | No | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No | Yes | No |

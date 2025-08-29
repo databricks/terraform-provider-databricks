@@ -140,7 +140,7 @@ type ShareResource struct {
 }
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

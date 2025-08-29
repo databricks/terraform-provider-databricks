@@ -1,5 +1,32 @@
 # Version changelog
 
+## Release v1.87.1
+
+### Breaking Changes
+Terraform databricks provider version 1.86.0 introduced changes to databricks_share resource leading to panic for some users while applying terraform. We are rolling back to SDKv2 implementation in this version. No change is expected for users who are upgrading to latest version from before 1.86.0. Users on 1.86.0 and not facing issues are suggested to not upgrade their version to this patch release. We are investigating the issue and will release a fix soon.
+
+### Internal Changes
+* Use SDKv2 Implementation for databricks_share resource as default ([#4931](https://github.com/databricks/terraform-provider-databricks/pull/4931))
+
+
+## Release v1.87.0
+
+### Bug Fixes
+
+* Suppress `data_security_mode` aliases for `databricks_cluster` resource ([#4911](https://github.com/databricks/terraform-provider-databricks/pull/4911)).
+
+### Documentation
+
+* Document `email_notifications` block in model serving resources ([#4910](https://github.com/databricks/terraform-provider-databricks/pull/4910))
+* Deprecate `data_source_id` attribute in `databricks_sql_endpoint` resource ([#4929](https://github.com/databricks/terraform-provider-databricks/pull/4929))
+* Deprecate `databricks_sql_visualization` and `databricks_sql_widget` resource. ([#4924](https://github.com/databricks/terraform-provider-databricks/pull/4924))
+* Document `APPLY_TAG` privilege for `databricks_volume` grants ([#4928](https://github.com/databricks/terraform-provider-databricks/pull/4928))
+
+### Internal Changes
+* Added integration test for METRIC_VIEW table type in `databricks_grant` and `databricks_grants` ([#4927](https://github.com/databricks/terraform-provider-databricks/pull/4927))
+* Update Go SDK to v0.80.0 ([#4932](https://github.com/databricks/terraform-provider-databricks/pull/4932))
+
+
 ## Release v1.86.0
 
 ### Breaking Changes

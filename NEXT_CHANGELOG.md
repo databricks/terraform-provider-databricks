@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 
+* Suppress diff for `databricks_catalog` attributes ([#4975](https://github.com/databricks/terraform-provider-databricks/pull/4975))
 * Correct which file event fields should be reset in `databricks_external_location` ([#4945](https://github.com/databricks/terraform-provider-databricks/pull/4945))
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))
 * Enable update of `databricks_mws_ncc_private_endpoint_rule` resource ([#4957](https://github.com/databricks/terraform-provider-databricks/pull/4957))

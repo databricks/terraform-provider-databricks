@@ -10,6 +10,7 @@
 * Lower case `warehouse_name_contains` when comparing in `databricks_warehouses` ([#4966](https://github.com/databricks/terraform-provider-databricks/pull/4966))
 
 ### Bug Fixes
+ * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
 * Correct which file event fields should be reset in `databricks_external_location` ([#4945](https://github.com/databricks/terraform-provider-databricks/pull/4945))
 * Fix `ExactlyOneOf` in `databricks_app` ([#4946](https://github.com/databricks/terraform-provider-databricks/pull/4946))

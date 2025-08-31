@@ -8,6 +8,15 @@
 
 * Document and handle additional Slack options in `databricks_notification_destination` ([#4933](https://github.com/databricks/terraform-provider-databricks/pull/4933))
 * Lower case `warehouse_name_contains` when comparing in `databricks_warehouses` ([#4966](https://github.com/databricks/terraform-provider-databricks/pull/4966))
+* Added `account_federation_policies` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `account_setting_v2` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `account_settings_metadata_v2` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `apps_settings_custom_template` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `entity_tag_assignment` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `service_principal_federation_policies` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `tag_policy` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `workspace_setting_v2` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
+* Added `workspace_settings_metadata_v2` resource and data sources ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).
 
 ### Bug Fixes
 
@@ -39,3 +48,4 @@
 * Replaced `common.APIErrorBody` with corresponding structs in Go SDK ([#4936](https://github.com/databricks/terraform-provider-databricks/pull/4936))
 * Reimplement `databricks_group` data source to use combination of List + Get API ([#4947](https://github.com/databricks/terraform-provider-databricks/pull/4947))
 * Use databricks_sql_table Instead of databricks_table in Sharing Tests ([#4981](https://github.com/databricks/terraform-provider-databricks/pull/4981)
+* Bump the Go SDK to v0.82.0 ([#4986](https://github.com/databricks/terraform-provider-databricks/pull/4986)).

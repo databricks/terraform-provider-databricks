@@ -82,13 +82,17 @@ The following arguments are supported:
   * `email` - The email configuration of the Notification Destination. It must contain the following:
     * `addresses` - (Required) The list of email addresses to send notifications to.
   * `slack` - The Slack configuration of the Notification Destination. It must contain the following:
-    * `url` - (Required) The Slack webhook URL.
+    * `url` - (Optional) The Slack webhook URL.
     * `channel_id`  - (Optional) Slack channel ID for notifications.
     * `oauth_token` - (Optional) OAuth token for Slack authentication.
   * `pagerduty` - The PagerDuty configuration of the Notification Destination. It must contain the following:
     * `integration_key` - (Required) The PagerDuty integration key.
   * `microsoft_teams` - The Microsoft Teams configuration of the Notification Destination. It must contain the following:
-    * `url` - (Required) The Microsoft Teams webhook URL.
+    * `url` - (Optional) The Microsoft Teams webhook URL.
+    * `app_id` - (Optional) App ID for Microsoft Teams App.
+    * `auth_secret` - (Optional) Secret for Microsoft Teams App authentication.
+    * `channel_url` - (Optional) Channel URL for Microsoft Teams App.
+    * `tenant_id` - (Optional) Tenant ID for Microsoft Teams App.
   * `generic_webhook` - The Generic Webhook configuration of the Notification Destination. It must contain the following:
     * `url` - (Required) The Generic Webhook URL.
     * `username` - (Optional) The username for basic authentication.

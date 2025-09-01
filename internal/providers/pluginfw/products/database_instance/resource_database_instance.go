@@ -42,7 +42,8 @@ type DatabaseInstanceResource struct {
 // It embeds the main model struct and adds a types.Object for resource Behavior.
 type DatabaseInstanceExtended struct {
 	database_tf.DatabaseInstance
-	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
+	PurgeOnDelete types.Bool  `tfsdk:"purge_on_delete"`
+	WorkspaceId   types.Int64 `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -107,6 +108,7 @@ func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.Sche
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstanceExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		c.SetOptional("purge_on_delete")
+		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -121,11 +123,6 @@ func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.C
 }
 
 func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstanceExtended, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
 
 	var database_instance database.DatabaseInstance
 
@@ -140,6 +137,11 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 		UpdateMask:       "capacity,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, plan.WorkspaceId.ValueInt64())
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update database_instance", err.Error())
@@ -159,11 +161,6 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var plan DatabaseInstanceExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -180,6 +177,11 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		DatabaseInstance: database_instance,
 	}
 
+	client, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, plan.WorkspaceId.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.Database.CreateDatabaseInstance(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create database_instance", err.Error())
@@ -221,12 +223,6 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var existingState DatabaseInstanceExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -239,6 +235,11 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
+	client, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, existingState.WorkspaceId.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.Database.GetDatabaseInstance(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -276,12 +277,6 @@ func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.Upda
 func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var state DatabaseInstanceExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -297,6 +292,11 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
+	client, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, state.WorkspaceId.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.Database.DeleteDatabaseInstance(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_instance", err.Error())

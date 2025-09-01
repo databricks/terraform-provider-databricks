@@ -15,6 +15,7 @@ The following arguments are supported:
   Only one of `author_collaborator_alias` and `author_scope` can be set. Possible values are: `ANY_AUTHOR`
 * `clean_room_name` (string, optional) - The name of the clean room this auto-approval rule belongs to
 * `runner_collaborator_alias` (string, optional) - Collaborator alias of the runner covered by the rule
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -26,12 +27,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = rule_id
+  id = "rule_id"
   to = databricks_clean_room_auto_approval_rule.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_clean_room_auto_approval_rule rule_id
+terraform import databricks_clean_room_auto_approval_rule "rule_id"
 ```

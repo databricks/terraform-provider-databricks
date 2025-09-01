@@ -769,6 +769,7 @@ func (c BudgetPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["binding_workspace_ids"] = attrs["binding_workspace_ids"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["policy_name"] = attrs["policy_name"].SetOptional()
 
 	return attrs

@@ -10,7 +10,7 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified
-
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 
 ## Attributes

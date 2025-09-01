@@ -26,17 +26,13 @@ func DataSourceFeatureTags() datasource.DataSource {
 	return &FeatureTagsDataSource{}
 }
 
-type FeatureTagsList struct {
-	ml_tf.ListFeatureTagsRequest
-	MaterializedFeatures types.List `tfsdk:"feature_tags"`
+// FeatureTagsData extends the main model with additional fields.
+type FeatureTagsData struct {
+	MaterializedFeatures types.List   `tfsdk:"feature_tags"`
+	WorkspaceID          types.String `tfsdk:"workspace_id"`
 }
 
-func (c FeatureTagsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["feature_tags"] = attrs["feature_tags"].SetComputed()
-	return attrs
-}
-
-func (FeatureTagsList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"feature_tags": reflect.TypeOf(ml_tf.FeatureTag{}),
 	}
@@ -51,7 +47,11 @@ func (r *FeatureTagsDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *FeatureTagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("feature_tags")
+		c.SetOptional("workspace_id")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,
@@ -72,7 +72,7 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var config FeatureTagsList
+	var config FeatureTagsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +100,8 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, feature_tag.ToObjectValue(ctx))
 	}
 
-	var newState FeatureTagsList
+	var newState FeatureTagsData
 	newState.MaterializedFeatures = types.ListValueMust(ml_tf.FeatureTag{}.Type(ctx), results)
+	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

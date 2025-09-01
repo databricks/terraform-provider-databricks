@@ -10439,7 +10439,23 @@ func (o *LlmProxyPartnerPoweredWorkspace_SdkV2) SetBooleanVal(ctx context.Contex
 }
 
 type MicrosoftTeamsConfig_SdkV2 struct {
-	// [Input-Only] URL for Microsoft Teams.
+	// [Input-Only] App ID for Microsoft Teams App.
+	AppId types.String `tfsdk:"app_id"`
+	// [Output-Only] Whether App ID is set.
+	AppIdSet types.Bool `tfsdk:"app_id_set"`
+	// [Input-Only] Secret for Microsoft Teams App authentication.
+	AuthSecret types.String `tfsdk:"auth_secret"`
+	// [Output-Only] Whether secret is set.
+	AuthSecretSet types.Bool `tfsdk:"auth_secret_set"`
+	// [Input-Only] Channel URL for Microsoft Teams App.
+	ChannelUrl types.String `tfsdk:"channel_url"`
+	// [Output-Only] Whether Channel URL is set.
+	ChannelUrlSet types.Bool `tfsdk:"channel_url_set"`
+	// [Input-Only] Tenant ID for Microsoft Teams App.
+	TenantId types.String `tfsdk:"tenant_id"`
+	// [Output-Only] Whether Tenant ID is set.
+	TenantIdSet types.Bool `tfsdk:"tenant_id_set"`
+	// [Input-Only] URL for Microsoft Teams webhook.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
@@ -10452,6 +10468,14 @@ func (toState *MicrosoftTeamsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (c MicrosoftTeamsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_id"] = attrs["app_id"].SetOptional()
+	attrs["app_id_set"] = attrs["app_id_set"].SetOptional()
+	attrs["auth_secret"] = attrs["auth_secret"].SetOptional()
+	attrs["auth_secret_set"] = attrs["auth_secret_set"].SetOptional()
+	attrs["channel_url"] = attrs["channel_url"].SetOptional()
+	attrs["channel_url_set"] = attrs["channel_url_set"].SetOptional()
+	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
+	attrs["tenant_id_set"] = attrs["tenant_id_set"].SetOptional()
 	attrs["url"] = attrs["url"].SetOptional()
 	attrs["url_set"] = attrs["url_set"].SetOptional()
 
@@ -10476,8 +10500,16 @@ func (o MicrosoftTeamsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"url":     o.Url,
-			"url_set": o.UrlSet,
+			"app_id":          o.AppId,
+			"app_id_set":      o.AppIdSet,
+			"auth_secret":     o.AuthSecret,
+			"auth_secret_set": o.AuthSecretSet,
+			"channel_url":     o.ChannelUrl,
+			"channel_url_set": o.ChannelUrlSet,
+			"tenant_id":       o.TenantId,
+			"tenant_id_set":   o.TenantIdSet,
+			"url":             o.Url,
+			"url_set":         o.UrlSet,
 		})
 }
 
@@ -10485,8 +10517,16 @@ func (o MicrosoftTeamsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (o MicrosoftTeamsConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"url":     types.StringType,
-			"url_set": types.BoolType,
+			"app_id":          types.StringType,
+			"app_id_set":      types.BoolType,
+			"auth_secret":     types.StringType,
+			"auth_secret_set": types.BoolType,
+			"channel_url":     types.StringType,
+			"channel_url_set": types.BoolType,
+			"tenant_id":       types.StringType,
+			"tenant_id_set":   types.BoolType,
+			"url":             types.StringType,
+			"url_set":         types.BoolType,
 		},
 	}
 }

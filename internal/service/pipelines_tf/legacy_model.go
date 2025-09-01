@@ -2639,6 +2639,8 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// Top-level source configurations
+	SourceConfigurations types.List `tfsdk:"source_configurations"`
 	// The type of the foreign source. The source type will be inferred from the
 	// source connection or ingestion gateway. This field is output only and
 	// will be ignored if provided.
@@ -2674,6 +2676,7 @@ func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[s
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_configurations"] = attrs["source_configurations"].SetOptional()
 	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2690,8 +2693,9 @@ func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[s
 // SDK values.
 func (a IngestionPipelineDefinition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"objects":             reflect.TypeOf(IngestionConfig_SdkV2{}),
-		"table_configuration": reflect.TypeOf(TableSpecificConfig_SdkV2{}),
+		"objects":               reflect.TypeOf(IngestionConfig_SdkV2{}),
+		"source_configurations": reflect.TypeOf(SourceConfig_SdkV2{}),
+		"table_configuration":   reflect.TypeOf(TableSpecificConfig_SdkV2{}),
 	}
 }
 
@@ -2702,11 +2706,12 @@ func (o IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_name":      o.ConnectionName,
-			"ingestion_gateway_id": o.IngestionGatewayId,
-			"objects":              o.Objects,
-			"source_type":          o.SourceType,
-			"table_configuration":  o.TableConfiguration,
+			"connection_name":       o.ConnectionName,
+			"ingestion_gateway_id":  o.IngestionGatewayId,
+			"objects":               o.Objects,
+			"source_configurations": o.SourceConfigurations,
+			"source_type":           o.SourceType,
+			"table_configuration":   o.TableConfiguration,
 		})
 }
 
@@ -2718,6 +2723,9 @@ func (o IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 			"ingestion_gateway_id": types.StringType,
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
+			},
+			"source_configurations": basetypes.ListType{
+				ElemType: SourceConfig_SdkV2{}.Type(ctx),
 			},
 			"source_type": types.StringType,
 			"table_configuration": basetypes.ListType{
@@ -2751,6 +2759,32 @@ func (o *IngestionPipelineDefinition_SdkV2) SetObjects(ctx context.Context, v []
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["objects"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Objects = types.ListValueMust(t, vs)
+}
+
+// GetSourceConfigurations returns the value of the SourceConfigurations field in IngestionPipelineDefinition_SdkV2 as
+// a slice of SourceConfig_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinition_SdkV2) GetSourceConfigurations(ctx context.Context) ([]SourceConfig_SdkV2, bool) {
+	if o.SourceConfigurations.IsNull() || o.SourceConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []SourceConfig_SdkV2
+	d := o.SourceConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSourceConfigurations sets the value of the SourceConfigurations field in IngestionPipelineDefinition_SdkV2.
+func (o *IngestionPipelineDefinition_SdkV2) SetSourceConfigurations(ctx context.Context, v []SourceConfig_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["source_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.SourceConfigurations = types.ListValueMust(t, vs)
 }
 
 // GetTableConfiguration returns the value of the TableConfiguration field in IngestionPipelineDefinition_SdkV2 as
@@ -6449,6 +6483,157 @@ func (o *PipelinesEnvironment_SdkV2) SetDependencies(ctx context.Context, v []ty
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
+// PG-specific catalog-level configuration parameters
+type PostgresCatalogConfig_SdkV2 struct {
+	// Optional. The Postgres slot configuration to use for logical replication
+	SlotConfig types.List `tfsdk:"slot_config"`
+}
+
+func (toState *PostgresCatalogConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PostgresCatalogConfig_SdkV2) {
+	if !fromPlan.SlotConfig.IsNull() && !fromPlan.SlotConfig.IsUnknown() {
+		if toStateSlotConfig, ok := toState.GetSlotConfig(ctx); ok {
+			if fromPlanSlotConfig, ok := fromPlan.GetSlotConfig(ctx); ok {
+				toStateSlotConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSlotConfig)
+				toState.SetSlotConfig(ctx, toStateSlotConfig)
+			}
+		}
+	}
+}
+
+func (toState *PostgresCatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PostgresCatalogConfig_SdkV2) {
+	if !fromState.SlotConfig.IsNull() && !fromState.SlotConfig.IsUnknown() {
+		if toStateSlotConfig, ok := toState.GetSlotConfig(ctx); ok {
+			if fromStateSlotConfig, ok := fromState.GetSlotConfig(ctx); ok {
+				toStateSlotConfig.SyncFieldsDuringRead(ctx, fromStateSlotConfig)
+				toState.SetSlotConfig(ctx, toStateSlotConfig)
+			}
+		}
+	}
+}
+
+func (c PostgresCatalogConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["slot_config"] = attrs["slot_config"].SetOptional()
+	attrs["slot_config"] = attrs["slot_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresCatalogConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"slot_config": reflect.TypeOf(PostgresSlotConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresCatalogConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PostgresCatalogConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"slot_config": o.SlotConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresCatalogConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"slot_config": basetypes.ListType{
+				ElemType: PostgresSlotConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSlotConfig returns the value of the SlotConfig field in PostgresCatalogConfig_SdkV2 as
+// a PostgresSlotConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PostgresCatalogConfig_SdkV2) GetSlotConfig(ctx context.Context) (PostgresSlotConfig_SdkV2, bool) {
+	var e PostgresSlotConfig_SdkV2
+	if o.SlotConfig.IsNull() || o.SlotConfig.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresSlotConfig_SdkV2
+	d := o.SlotConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSlotConfig sets the value of the SlotConfig field in PostgresCatalogConfig_SdkV2.
+func (o *PostgresCatalogConfig_SdkV2) SetSlotConfig(ctx context.Context, v PostgresSlotConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slot_config"]
+	o.SlotConfig = types.ListValueMust(t, vs)
+}
+
+// PostgresSlotConfig contains the configuration for a Postgres logical
+// replication slot
+type PostgresSlotConfig_SdkV2 struct {
+	// The name of the publication to use for the Postgres source
+	PublicationName types.String `tfsdk:"publication_name"`
+	// The name of the logical replication slot to use for the Postgres source
+	SlotName types.String `tfsdk:"slot_name"`
+}
+
+func (toState *PostgresSlotConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PostgresSlotConfig_SdkV2) {
+}
+
+func (toState *PostgresSlotConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PostgresSlotConfig_SdkV2) {
+}
+
+func (c PostgresSlotConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["publication_name"] = attrs["publication_name"].SetOptional()
+	attrs["slot_name"] = attrs["slot_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PostgresSlotConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PostgresSlotConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PostgresSlotConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PostgresSlotConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"publication_name": o.PublicationName,
+			"slot_name":        o.SlotName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PostgresSlotConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"publication_name": types.StringType,
+			"slot_name":        types.StringType,
+		},
+	}
+}
+
 type ReportSpec_SdkV2 struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
@@ -7028,6 +7213,203 @@ func (o *SerializedException_SdkV2) SetStack(ctx context.Context, v []StackFrame
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stack"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stack = types.ListValueMust(t, vs)
+}
+
+// SourceCatalogConfig contains catalog-level custom configuration parameters
+// for each source
+type SourceCatalogConfig_SdkV2 struct {
+	// Postgres-specific catalog-level configuration parameters
+	Postgres types.List `tfsdk:"postgres"`
+	// Source catalog name
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (toState *SourceCatalogConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SourceCatalogConfig_SdkV2) {
+	if !fromPlan.Postgres.IsNull() && !fromPlan.Postgres.IsUnknown() {
+		if toStatePostgres, ok := toState.GetPostgres(ctx); ok {
+			if fromPlanPostgres, ok := fromPlan.GetPostgres(ctx); ok {
+				toStatePostgres.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPostgres)
+				toState.SetPostgres(ctx, toStatePostgres)
+			}
+		}
+	}
+}
+
+func (toState *SourceCatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SourceCatalogConfig_SdkV2) {
+	if !fromState.Postgres.IsNull() && !fromState.Postgres.IsUnknown() {
+		if toStatePostgres, ok := toState.GetPostgres(ctx); ok {
+			if fromStatePostgres, ok := fromState.GetPostgres(ctx); ok {
+				toStatePostgres.SyncFieldsDuringRead(ctx, fromStatePostgres)
+				toState.SetPostgres(ctx, toStatePostgres)
+			}
+		}
+	}
+}
+
+func (c SourceCatalogConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["postgres"] = attrs["postgres"].SetOptional()
+	attrs["postgres"] = attrs["postgres"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceCatalogConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceCatalogConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"postgres": reflect.TypeOf(PostgresCatalogConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceCatalogConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SourceCatalogConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"postgres":       o.Postgres,
+			"source_catalog": o.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceCatalogConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"postgres": basetypes.ListType{
+				ElemType: PostgresCatalogConfig_SdkV2{}.Type(ctx),
+			},
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
+// GetPostgres returns the value of the Postgres field in SourceCatalogConfig_SdkV2 as
+// a PostgresCatalogConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceCatalogConfig_SdkV2) GetPostgres(ctx context.Context) (PostgresCatalogConfig_SdkV2, bool) {
+	var e PostgresCatalogConfig_SdkV2
+	if o.Postgres.IsNull() || o.Postgres.IsUnknown() {
+		return e, false
+	}
+	var v []PostgresCatalogConfig_SdkV2
+	d := o.Postgres.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPostgres sets the value of the Postgres field in SourceCatalogConfig_SdkV2.
+func (o *SourceCatalogConfig_SdkV2) SetPostgres(ctx context.Context, v PostgresCatalogConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["postgres"]
+	o.Postgres = types.ListValueMust(t, vs)
+}
+
+type SourceConfig_SdkV2 struct {
+	// Catalog-level source configuration parameters
+	Catalog types.List `tfsdk:"catalog"`
+}
+
+func (toState *SourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SourceConfig_SdkV2) {
+	if !fromPlan.Catalog.IsNull() && !fromPlan.Catalog.IsUnknown() {
+		if toStateCatalog, ok := toState.GetCatalog(ctx); ok {
+			if fromPlanCatalog, ok := fromPlan.GetCatalog(ctx); ok {
+				toStateCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCatalog)
+				toState.SetCatalog(ctx, toStateCatalog)
+			}
+		}
+	}
+}
+
+func (toState *SourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SourceConfig_SdkV2) {
+	if !fromState.Catalog.IsNull() && !fromState.Catalog.IsUnknown() {
+		if toStateCatalog, ok := toState.GetCatalog(ctx); ok {
+			if fromStateCatalog, ok := fromState.GetCatalog(ctx); ok {
+				toStateCatalog.SyncFieldsDuringRead(ctx, fromStateCatalog)
+				toState.SetCatalog(ctx, toStateCatalog)
+			}
+		}
+	}
+}
+
+func (c SourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"catalog": reflect.TypeOf(SourceCatalogConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o SourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": o.Catalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": basetypes.ListType{
+				ElemType: SourceCatalogConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCatalog returns the value of the Catalog field in SourceConfig_SdkV2 as
+// a SourceCatalogConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SourceConfig_SdkV2) GetCatalog(ctx context.Context) (SourceCatalogConfig_SdkV2, bool) {
+	var e SourceCatalogConfig_SdkV2
+	if o.Catalog.IsNull() || o.Catalog.IsUnknown() {
+		return e, false
+	}
+	var v []SourceCatalogConfig_SdkV2
+	d := o.Catalog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCatalog sets the value of the Catalog field in SourceConfig_SdkV2.
+func (o *SourceConfig_SdkV2) SetCatalog(ctx context.Context, v SourceCatalogConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog"]
+	o.Catalog = types.ListValueMust(t, vs)
 }
 
 type StackFrame_SdkV2 struct {

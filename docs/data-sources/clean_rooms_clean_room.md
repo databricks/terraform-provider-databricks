@@ -19,6 +19,7 @@ data "databricks_clean_rooms_clean_room" "example" {
 The following arguments are supported:
 * `name` (string, required) - The name of the clean room.
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:
@@ -30,7 +31,7 @@ The following attributes are exported:
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
 * `output_catalog` (CleanRoomOutputCatalog) - Output catalog of the clean room. It is an output only field. Output catalog is manipulated
   using the separate CreateCleanRoomOutputCatalog API
-* `owner` (string) - This is Databricks username of the owner of the local clean room securable for permission management
+* `owner` (string) - This is the Databricks username of the owner of the local clean room securable for permission management
 * `remote_detailed_info` (CleanRoomRemoteDetail) - Central clean room details. During creation, users need to specify
   cloud_vendor, region, and collaborators.global_metastore_id.
   This field will not be filled in the ListCleanRooms call
@@ -44,7 +45,7 @@ The following attributes are exported:
 * `display_name` (string) - Generated display name for the collaborator. In the case of a single metastore clean room, it is the clean
   room name. For x-metastore clean rooms, it is the organization name of the metastore. It is not restricted to
   these values and could change in the future
-* `global_metastore_id` (string) - The global Unity Catalog metastore id of the collaborator. The identifier is of format cloud:region:metastore-uuid
+* `global_metastore_id` (string) - The global Unity Catalog metastore ID of the collaborator. The identifier is of format cloud:region:metastore-uuid
 * `invite_recipient_email` (string) - Email of the user who is receiving the clean room "invitation". It should be empty
   for the creator of the clean room, and non-empty for the invitees of the clean room.
   It is only returned in the output when clean room creator calls GET

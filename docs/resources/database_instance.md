@@ -72,6 +72,7 @@ resource "databricks_database_instance" "child" {
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
 * `capacity` (string, optional) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
+* `enable_pg_native_login` (boolean, optional) - Whether the instance has PG native password login enabled. Defaults to true
 * `enable_readable_secondaries` (boolean, optional) - Whether to enable secondaries to serve read-only traffic. Defaults to false
 * `node_count` (integer, optional) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
   1 primary and 0 secondaries
@@ -84,6 +85,7 @@ The following arguments are supported:
   Valid values are 2 to 35 days
 * `stopped` (boolean, optional) - Whether the instance is stopped
 * `purge_on_delete` (boolean, optional) - Purge the resource on delete
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### DatabaseInstanceRef
 * `branch_time` (string, optional) - Branch time of the ref database instance.
@@ -105,6 +107,9 @@ In addition to the above arguments, the following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
+* `effective_enable_pg_native_login` (boolean) - xref AIP-129. `enable_pg_native_login` is owned by the client, while `effective_enable_pg_native_login` is owned by the server.
+  `enable_pg_native_login` will only be set in Create/Update response messages if and only if the user provides the field via the request.
+  `effective_enable_pg_native_login` on the other hand will always bet set in all response messages (Create/Update/Get/List)
 * `effective_enable_readable_secondaries` (boolean) - xref AIP-129. `enable_readable_secondaries` is owned by the client, while `effective_enable_readable_secondaries` is owned by the server.
   `enable_readable_secondaries` will only be set in Create/Update response messages if and only if the user provides the field via the request.
   `effective_enable_readable_secondaries` on the other hand will always bet set in all response messages (Create/Update/Get/List)
@@ -138,12 +143,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_database_instance.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_instance name
+terraform import databricks_database_instance "name"
 ```

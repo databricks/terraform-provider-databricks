@@ -5,6 +5,7 @@ package recipient_federation_policy
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "recipient_federation_policy"
@@ -34,13 +38,74 @@ type FederationPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// FederationPolicy extends the main model with additional fields.
+type FederationPolicy struct {
+	sharing_tf.FederationPolicy
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// FederationPolicy struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m FederationPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.FederationPolicy.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FederationPolicy
+// only implements ToObjectValue() and Type().
+func (m FederationPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.FederationPolicy.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+	embeddedAttrs["workspace_id"] = m.WorkspaceID
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m FederationPolicy) Type(ctx context.Context) attr.Type {
+	embeddedType := m.FederationPolicy.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+	attrTypes["workspace_id"] = types.StringType
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *FederationPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan FederationPolicy) {
+	m.FederationPolicy.SyncFieldsDuringCreateOrUpdate(ctx, plan.FederationPolicy)
+	m.WorkspaceID = plan.WorkspaceID
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *FederationPolicy) SyncFieldsDuringRead(ctx context.Context, existingState FederationPolicy) {
+	m.FederationPolicy.SyncFieldsDuringRead(ctx, existingState.FederationPolicy)
+	m.WorkspaceID = existingState.WorkspaceID
+}
+
 func (r *FederationPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *FederationPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, sharing_tf.FederationPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, FederationPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
+		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -54,7 +119,7 @@ func (r *FederationPolicyResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FederationPolicyResource) update(ctx context.Context, plan sharing_tf.FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *FederationPolicyResource) update(ctx context.Context, plan FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -80,7 +145,7 @@ func (r *FederationPolicyResource) update(ctx context.Context, plan sharing_tf.F
 		return
 	}
 
-	var newState sharing_tf.FederationPolicy
+	var newState FederationPolicy
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -98,7 +163,7 @@ func (r *FederationPolicyResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan sharing_tf.FederationPolicy
+	var plan FederationPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,7 +185,7 @@ func (r *FederationPolicyResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	var newState sharing_tf.FederationPolicy
+	var newState FederationPolicy
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -145,7 +210,7 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var existingState sharing_tf.FederationPolicy
+	var existingState FederationPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,7 +233,7 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var newState sharing_tf.FederationPolicy
+	var newState FederationPolicy
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +247,7 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 func (r *FederationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan sharing_tf.FederationPolicy
+	var plan FederationPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,7 +265,7 @@ func (r *FederationPolicyResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	var state sharing_tf.FederationPolicy
+	var state FederationPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

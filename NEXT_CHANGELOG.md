@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Document and handle additional Microsoft Teams options in `databricks_notification_destination` ([#4990](https://github.com/databricks/terraform-provider-databricks/pull/4990))
+
 ### Bug Fixes
 
 ### Documentation

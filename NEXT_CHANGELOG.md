@@ -11,6 +11,8 @@
 ### Bug Fixes
 
 ### Documentation
+* Document `continuous.task_retry_mode` in `databricks_job`  ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))
+
 
 ### Exporter
 

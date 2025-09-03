@@ -2699,6 +2699,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       col.EmbeddingModelEndpointName,
 						})
 					}
+					if col.ModelEndpointNameForQuery != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.ModelEndpointNameForQuery,
+						})
+					}
 				}
 			}
 			if vsi.DirectAccessIndexSpec != nil {
@@ -2709,6 +2715,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       col.EmbeddingModelEndpointName,
 						})
 					}
+					if col.ModelEndpointNameForQuery != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.ModelEndpointNameForQuery,
+						})
+					}
 				}
 			}
 			return nil
@@ -2717,7 +2729,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "delta_sync_index_spec.source_table", Resource: "databricks_sql_table"},
 			{Path: "endpoint_name", Resource: "databricks_vector_search_endpoint"},
 			{Path: "delta_sync_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
+			{Path: "delta_sync_index_spec.embedding_source_columns.model_endpoint_name_for_query", Resource: "databricks_model_serving"},
 			{Path: "direct_access_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
+			{Path: "direct_access_index_spec.embedding_source_columns.model_endpoint_name_for_query", Resource: "databricks_model_serving"},
 		},
 	},
 	"databricks_mws_network_connectivity_config": {
@@ -2757,6 +2771,13 @@ var resourcesMap map[string]importable = map[string]importable{
 							Resource: "databricks_mws_ncc_private_endpoint_rule",
 							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
 							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId,
+						})
+					}
+					for _, rule := range nc.EgressConfig.TargetRules.AwsPrivateEndpointRules {
+						ic.Emit(&resource{
+							Resource: "databricks_mws_ncc_private_endpoint_rule",
+							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
+							Name:     nc.Name + "_" + rule.EndpointService,
 						})
 					}
 				}

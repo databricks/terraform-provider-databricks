@@ -40,14 +40,20 @@ func DataSourceGroup() common.Resource {
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			var this entity
+			var group Group
+			var err error
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
 			groupAttributes := "members,roles,entitlements,externalId"
-			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, "id")
-			if err != nil {
-				return err
+			if m.DatabricksClient.Config.IsAccountClient() {
+				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")
+				if err != nil {
+					return err
+				}
+				group, err = groupsAPI.Read(group.ID, groupAttributes)
+			} else {
+				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, groupAttributes)
 			}
-			group, err = groupsAPI.Read(group.ID, groupAttributes)
 			if err != nil {
 				return err
 			}

@@ -10,10 +10,14 @@
 
 ### Bug Fixes
 
+* Fix regression with `databricks_group` data source introduced by a recent change ([#4995](https://github.com/databricks/terraform-provider-databricks/pull/4995))
+
 ### Documentation
-* Document `continuous.task_retry_mode` in `databricks_job`  ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))
+
+* Document `continuous.task_retry_mode` in `databricks_job` ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))
 
 
 ### Exporter
 
 ### Internal Changes
+

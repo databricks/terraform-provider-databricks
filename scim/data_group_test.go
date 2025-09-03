@@ -18,7 +18,7 @@ func TestDataSourceGroup(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?attributes=members%2Croles%2Centitlements%2CexternalId&filter=displayName%20eq%20%22ds%22`,
+				Resource: `/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22ds%22`,
 				Response: GroupList{
 					Resources: []Group{
 						{
@@ -59,7 +59,7 @@ func TestDataSourceGroup(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members,roles,entitlements,externalId",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "product",
 					ID:          "abc",
@@ -122,7 +122,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/eerste?attributes=members,roles,entitlements,externalId",
+				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "ds",
 					ID:          "eerste",
@@ -149,7 +149,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/abc?attributes=members,roles,entitlements,externalId",
+				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "product",
 					ID:          "abc",

@@ -4,17 +4,10 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func assertContains(t *testing.T, s any, e string) bool {
-	return assert.True(t, s.(*schema.Set).Contains(e), "%#v doesn't contain %s", s, e)
-}
-
 func TestDataSourceGroup(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -88,25 +81,22 @@ func TestDataSourceGroup(t *testing.T) {
 		State: map[string]any{
 			"display_name": "ds",
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "eerste", d.Id())
-	assert.Equal(t, d.Get("acl_principal_id"), "groups/ds")
-	assertContains(t, d.Get("instance_profiles"), "a")
-	assertContains(t, d.Get("instance_profiles"), "b")
-	assertContains(t, d.Get("members"), "1112")
-	assertContains(t, d.Get("members"), "1113")
-	assertContains(t, d.Get("groups"), "abc")
-	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
-
-	assertContains(t, d.Get("users"), "1112")
-	assertContains(t, d.Get("service_principals"), "1113")
-	assertContains(t, d.Get("child_groups"), "1114")
+	}.ApplyAndExpectData(t, map[string]any{
+		"acl_principal_id":           "groups/ds",
+		"instance_profiles":          []string{"a", "b"},
+		"members":                    []string{"1112", "1113", "1114"},
+		"groups":                     []string{"abc"},
+		"allow_instance_pool_create": true,
+		"allow_cluster_create":       true,
+		"users":                      []string{"1112"},
+		"service_principals":         []string{"1113"},
+		"child_groups":               []string{"1114"},
+		"id":                         "eerste",
+	})
 }
 
 func TestDataSourceGroupAccountClient(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -169,14 +159,14 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 		State: map[string]any{
 			"display_name": "ds",
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "eerste", d.Id())
-	assert.Equal(t, d.Get("acl_principal_id"), "groups/ds")
-	assertContains(t, d.Get("members"), "1112")
-	assertContains(t, d.Get("members"), "1113")
-	assertContains(t, d.Get("groups"), "abc")
-	assertContains(t, d.Get("users"), "1112")
-	assertContains(t, d.Get("service_principals"), "1113")
-	assertContains(t, d.Get("child_groups"), "1114")
+	}.ApplyAndExpectData(t, map[string]any{
+		"acl_principal_id":   "groups/ds",
+		"members":            []string{"1112", "1113", "1114"},
+		"groups":             []string{"abc"},
+		"users":              []string{"1112"},
+		"service_principals": []string{"1113"},
+		"child_groups":       []string{"1114"},
+		"id":                 "eerste",
+	})
+
 }

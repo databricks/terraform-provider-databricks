@@ -9,6 +9,7 @@
 * Document and handle additional Microsoft Teams options in `databricks_notification_destination` ([#4990](https://github.com/databricks/terraform-provider-databricks/pull/4990))
 
 ### Bug Fixes
+ * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
 * Fix regression with `databricks_group` data source introduced by a recent change ([#4995](https://github.com/databricks/terraform-provider-databricks/pull/4995))
 

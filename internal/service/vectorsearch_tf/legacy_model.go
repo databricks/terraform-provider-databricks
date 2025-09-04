@@ -1125,8 +1125,12 @@ func (o *DirectAccessVectorIndexSpec_SdkV2) SetEmbeddingVectorColumns(ctx contex
 }
 
 type EmbeddingSourceColumn_SdkV2 struct {
-	// Name of the embedding model endpoint
+	// Name of the embedding model endpoint, used by default for both ingestion
+	// and querying.
 	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name"`
+	// Name of the embedding model endpoint which, if specified, is used for
+	// querying (not ingestion).
+	ModelEndpointNameForQuery types.String `tfsdk:"model_endpoint_name_for_query"`
 	// Name of the column
 	Name types.String `tfsdk:"name"`
 }
@@ -1139,6 +1143,7 @@ func (toState *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringRead(ctx context.Con
 
 func (c EmbeddingSourceColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["embedding_model_endpoint_name"] = attrs["embedding_model_endpoint_name"].SetOptional()
+	attrs["model_endpoint_name_for_query"] = attrs["model_endpoint_name_for_query"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 
 	return attrs
@@ -1163,6 +1168,7 @@ func (o EmbeddingSourceColumn_SdkV2) ToObjectValue(ctx context.Context) basetype
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"embedding_model_endpoint_name": o.EmbeddingModelEndpointName,
+			"model_endpoint_name_for_query": o.ModelEndpointNameForQuery,
 			"name":                          o.Name,
 		})
 }
@@ -1172,6 +1178,7 @@ func (o EmbeddingSourceColumn_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_model_endpoint_name": types.StringType,
+			"model_endpoint_name_for_query": types.StringType,
 			"name":                          types.StringType,
 		},
 	}
@@ -1495,6 +1502,12 @@ func (o GetEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetIndexRequest_SdkV2 struct {
+	// If true, the URL returned for the index is guaranteed to be compatible
+	// with the reranker. Currently this means we return the CP URL regardless
+	// of how the index is being accessed. If not set or set to false, the URL
+	// may still be compatible with the reranker depending on what URL we
+	// return.
+	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
 }
@@ -1517,7 +1530,8 @@ func (o GetIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index_name": o.IndexName,
+			"ensure_reranker_compatible": o.EnsureRerankerCompatible,
+			"index_name":                 o.IndexName,
 		})
 }
 
@@ -1525,7 +1539,8 @@ func (o GetIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o GetIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"index_name": types.StringType,
+			"ensure_reranker_compatible": types.BoolType,
+			"index_name":                 types.StringType,
 		},
 	}
 }
@@ -2022,7 +2037,8 @@ func (o MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
-	// The budget policy id to be applied
+	// The budget policy id to be applied (hima-sheth) TODO: remove this once
+	// we've migrated to usage policies
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -2180,6 +2196,8 @@ type QueryVectorIndexRequest_SdkV2 struct {
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
+
+	Reranker types.List `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 }
@@ -2196,6 +2214,7 @@ func (a QueryVectorIndexRequest_SdkV2) GetComplexFieldTypes(ctx context.Context)
 		"columns":           reflect.TypeOf(types.String{}),
 		"columns_to_rerank": reflect.TypeOf(types.String{}),
 		"query_vector":      reflect.TypeOf(types.Float64{}),
+		"reranker":          reflect.TypeOf(RerankerConfig_SdkV2{}),
 	}
 }
 
@@ -2214,6 +2233,7 @@ func (o QueryVectorIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 			"query_text":        o.QueryText,
 			"query_type":        o.QueryType,
 			"query_vector":      o.QueryVector,
+			"reranker":          o.Reranker,
 			"score_threshold":   o.ScoreThreshold,
 		})
 }
@@ -2235,6 +2255,9 @@ func (o QueryVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_type":   types.StringType,
 			"query_vector": basetypes.ListType{
 				ElemType: types.Float64Type,
+			},
+			"reranker": basetypes.ListType{
+				ElemType: RerankerConfig_SdkV2{}.Type(ctx),
 			},
 			"score_threshold": types.Float64Type,
 		},
@@ -2317,6 +2340,32 @@ func (o *QueryVectorIndexRequest_SdkV2) SetQueryVector(ctx context.Context, v []
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_vector"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.QueryVector = types.ListValueMust(t, vs)
+}
+
+// GetReranker returns the value of the Reranker field in QueryVectorIndexRequest_SdkV2 as
+// a RerankerConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest_SdkV2) GetReranker(ctx context.Context) (RerankerConfig_SdkV2, bool) {
+	var e RerankerConfig_SdkV2
+	if o.Reranker.IsNull() || o.Reranker.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfig_SdkV2
+	d := o.Reranker.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReranker sets the value of the Reranker field in QueryVectorIndexRequest_SdkV2.
+func (o *QueryVectorIndexRequest_SdkV2) SetReranker(ctx context.Context, v RerankerConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reranker"]
+	o.Reranker = types.ListValueMust(t, vs)
 }
 
 type QueryVectorIndexResponse_SdkV2 struct {
@@ -2471,6 +2520,182 @@ func (o *QueryVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v Result
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["result"]
 	o.Result = types.ListValueMust(t, vs)
+}
+
+type RerankerConfig_SdkV2 struct {
+	Model types.String `tfsdk:"model"`
+
+	Parameters types.List `tfsdk:"parameters"`
+}
+
+func (toState *RerankerConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RerankerConfig_SdkV2) {
+	if !fromPlan.Parameters.IsNull() && !fromPlan.Parameters.IsUnknown() {
+		if toStateParameters, ok := toState.GetParameters(ctx); ok {
+			if fromPlanParameters, ok := fromPlan.GetParameters(ctx); ok {
+				toStateParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanParameters)
+				toState.SetParameters(ctx, toStateParameters)
+			}
+		}
+	}
+}
+
+func (toState *RerankerConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RerankerConfig_SdkV2) {
+	if !fromState.Parameters.IsNull() && !fromState.Parameters.IsUnknown() {
+		if toStateParameters, ok := toState.GetParameters(ctx); ok {
+			if fromStateParameters, ok := fromState.GetParameters(ctx); ok {
+				toStateParameters.SyncFieldsDuringRead(ctx, fromStateParameters)
+				toState.SetParameters(ctx, toStateParameters)
+			}
+		}
+	}
+}
+
+func (c RerankerConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(RerankerConfigRerankerParameters_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RerankerConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model":      o.Model,
+			"parameters": o.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model": types.StringType,
+			"parameters": basetypes.ListType{
+				ElemType: RerankerConfigRerankerParameters_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in RerankerConfig_SdkV2 as
+// a RerankerConfigRerankerParameters_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfig_SdkV2) GetParameters(ctx context.Context) (RerankerConfigRerankerParameters_SdkV2, bool) {
+	var e RerankerConfigRerankerParameters_SdkV2
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfigRerankerParameters_SdkV2
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetParameters sets the value of the Parameters field in RerankerConfig_SdkV2.
+func (o *RerankerConfig_SdkV2) SetParameters(ctx context.Context, v RerankerConfigRerankerParameters_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+type RerankerConfigRerankerParameters_SdkV2 struct {
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
+}
+
+func (toState *RerankerConfigRerankerParameters_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RerankerConfigRerankerParameters_SdkV2) {
+}
+
+func (toState *RerankerConfigRerankerParameters_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RerankerConfigRerankerParameters_SdkV2) {
+}
+
+func (c RerankerConfigRerankerParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfigRerankerParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfigRerankerParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfigRerankerParameters_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RerankerConfigRerankerParameters_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns_to_rerank": o.ColumnsToRerank,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfigRerankerParameters_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns_to_rerank": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in RerankerConfigRerankerParameters_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfigRerankerParameters_SdkV2) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in RerankerConfigRerankerParameters_SdkV2.
+func (o *RerankerConfigRerankerParameters_SdkV2) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
 }
 
 // Data returned in the query result.

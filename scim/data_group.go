@@ -40,14 +40,22 @@ func DataSourceGroup() common.Resource {
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			var this entity
+			var group Group
+			var err error
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
-			groupAttributes := "members,roles,entitlements,externalId"
-			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, "id")
-			if err != nil {
-				return err
+			groupAttributes := "displayName,members,roles,entitlements,externalId,groups"
+			if m.DatabricksClient.Config.IsAccountClient() {
+				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")
+				if err != nil {
+					return err
+				}
+				group, err = groupsAPI.Read(group.ID, groupAttributes)
+			} else {
+				// For workspace level we rely on default attributes as explicit attributes, likes `externalId`
+				// may not work for non-admin users
+				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "")
 			}
-			group, err = groupsAPI.Read(group.ID, groupAttributes)
 			if err != nil {
 				return err
 			}
@@ -84,7 +92,7 @@ func DataSourceGroup() common.Resource {
 				}
 			}
 			this.ExternalID = group.ExternalID
-			this.AclPrincipalID = fmt.Sprintf("groups/%s", group.DisplayName)
+			this.AclPrincipalID = fmt.Sprintf("groups/%s", this.DisplayName)
 			sort.Strings(this.Groups)
 			sort.Strings(this.Members)
 			sort.Strings(this.Users)

@@ -23,7 +23,7 @@ data "databricks_alert_v2" "all" {}
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
-
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 
 ## Attributes
@@ -32,14 +32,23 @@ This data source exports a single attribute, `results`. It is a list of resource
 * `custom_description` (string) - Custom description for the alert. support mustache template
 * `custom_summary` (string) - Custom summary for the alert. support mustache template
 * `display_name` (string) - The display name of the alert
+* `effective_run_as` (AlertV2RunAs) - The actual identity that will be used to execute the alert.
+  This is an output-only field that shows the resolved run-as identity after applying
+  permissions and defaults
 * `evaluation` (AlertV2Evaluation)
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
-* `run_as_user_name` (string) - The run as username or application ID of service principal.
-  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role
+* `run_as` (AlertV2RunAs) - Specifies the identity that will be used to run the alert.
+  This field allows you to configure alerts to run as a specific user or service principal.
+  - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.
+  - For service principal: Set `service_principal_name` to the application ID. Requires the `servicePrincipal/user` role.
+  If not specified, the alert will run as the request user
+* `run_as_user_name` (string, deprecated) - The run as username or application ID of service principal.
+  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role.
+  Deprecated: Use `run_as` field instead. This field will be removed in a future release
 * `schedule` (CronSchedule)
 * `update_time` (string) - The timestamp indicating when the alert was updated
 * `warehouse_id` (string) - ID of the SQL warehouse attached to the alert
@@ -71,6 +80,10 @@ This data source exports a single attribute, `results`. It is a list of resource
 * `bool_value` (boolean)
 * `double_value` (number)
 * `string_value` (string)
+
+### AlertV2RunAs
+* `service_principal_name` (string) - Application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role
+* `user_name` (string) - The email of an active workspace user. Can only set this field to their own email
 
 ### AlertV2Subscription
 * `destination_id` (string)

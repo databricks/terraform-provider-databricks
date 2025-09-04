@@ -18,6 +18,7 @@ data "databricks_database_instance" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:
@@ -26,6 +27,9 @@ The following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
+* `effective_enable_pg_native_login` (boolean) - xref AIP-129. `enable_pg_native_login` is owned by the client, while `effective_enable_pg_native_login` is owned by the server.
+  `enable_pg_native_login` will only be set in Create/Update response messages if and only if the user provides the field via the request.
+  `effective_enable_pg_native_login` on the other hand will always bet set in all response messages (Create/Update/Get/List)
 * `effective_enable_readable_secondaries` (boolean) - xref AIP-129. `enable_readable_secondaries` is owned by the client, while `effective_enable_readable_secondaries` is owned by the server.
   `enable_readable_secondaries` will only be set in Create/Update response messages if and only if the user provides the field via the request.
   `effective_enable_readable_secondaries` on the other hand will always bet set in all response messages (Create/Update/Get/List)
@@ -38,6 +42,7 @@ The following attributes are exported:
 * `effective_stopped` (boolean) - xref AIP-129. `stopped` is owned by the client, while `effective_stopped` is owned by the server.
   `stopped` will only be set in Create/Update response messages if and only if the user provides the field via the request.
   `effective_stopped` on the other hand will always bet set in all response messages (Create/Update/Get/List)
+* `enable_pg_native_login` (boolean) - Whether the instance has PG native password login enabled. Defaults to true
 * `enable_readable_secondaries` (boolean) - Whether to enable secondaries to serve read-only traffic. Defaults to false
 * `name` (string) - The name of the instance. This is the unique identifier for the instance
 * `node_count` (integer) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to

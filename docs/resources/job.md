@@ -416,6 +416,10 @@ resource "databricks_job" "this" {
 
 * `pause_status` - (Optional) Indicate whether this continuous job is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 
+* `task_retry_mode` - (Optional) Controls task level retry behaviour. Allowed values are:
+  * `NEVER` (default): The failed task will not be retried.
+  * `ON_FAILURE`: Retry a failed task if at least one other task in the job is still running its first attempt. When this condition is no longer met or the retry limit is reached, the job run is cancelled and a new run is started.
+
 ### queue Configuration Block
 
 This block describes the queue settings of the job:

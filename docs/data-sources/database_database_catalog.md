@@ -18,6 +18,7 @@ data "databricks_database_database_catalog" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the catalog in UC
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

@@ -4308,65 +4308,6 @@ func (o ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Feature for model version.
-type Feature_SdkV2 struct {
-	// Feature name
-	FeatureName types.String `tfsdk:"feature_name"`
-	// Feature table id
-	FeatureTableId types.String `tfsdk:"feature_table_id"`
-	// Feature table name
-	FeatureTableName types.String `tfsdk:"feature_table_name"`
-}
-
-func (toState *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Feature_SdkV2) {
-}
-
-func (toState *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Feature_SdkV2) {
-}
-
-func (c Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["feature_name"] = attrs["feature_name"].SetOptional()
-	attrs["feature_table_id"] = attrs["feature_table_id"].SetOptional()
-	attrs["feature_table_name"] = attrs["feature_table_name"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Feature.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a Feature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Feature_SdkV2
-// only implements ToObjectValue() and Type().
-func (o Feature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"feature_name":       o.FeatureName,
-			"feature_table_id":   o.FeatureTableId,
-			"feature_table_name": o.FeatureTableName,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o Feature_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"feature_name":       types.StringType,
-			"feature_table_id":   types.StringType,
-			"feature_table_name": types.StringType,
-		},
-	}
-}
-
 type FeatureLineage_SdkV2 struct {
 	// List of feature specs that contain this feature.
 	FeatureSpecs types.List `tfsdk:"feature_specs"`
@@ -4693,7 +4634,7 @@ func (c FeatureList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (a FeatureList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"features": reflect.TypeOf(Feature_SdkV2{}),
+		"features": reflect.TypeOf(LinkedFeature_SdkV2{}),
 	}
 }
 
@@ -4713,20 +4654,20 @@ func (o FeatureList_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"features": basetypes.ListType{
-				ElemType: Feature_SdkV2{}.Type(ctx),
+				ElemType: LinkedFeature_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetFeatures returns the value of the Features field in FeatureList_SdkV2 as
-// a slice of Feature_SdkV2 values.
+// a slice of LinkedFeature_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *FeatureList_SdkV2) GetFeatures(ctx context.Context) ([]Feature_SdkV2, bool) {
+func (o *FeatureList_SdkV2) GetFeatures(ctx context.Context) ([]LinkedFeature_SdkV2, bool) {
 	if o.Features.IsNull() || o.Features.IsUnknown() {
 		return nil, false
 	}
-	var v []Feature_SdkV2
+	var v []LinkedFeature_SdkV2
 	d := o.Features.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -4735,7 +4676,7 @@ func (o *FeatureList_SdkV2) GetFeatures(ctx context.Context) ([]Feature_SdkV2, b
 }
 
 // SetFeatures sets the value of the Features field in FeatureList_SdkV2.
-func (o *FeatureList_SdkV2) SetFeatures(ctx context.Context, v []Feature_SdkV2) {
+func (o *FeatureList_SdkV2) SetFeatures(ctx context.Context, v []LinkedFeature_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -6982,6 +6923,65 @@ func (o JobSpecWithoutSecret_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"job_id":        types.StringType,
 			"workspace_url": types.StringType,
+		},
+	}
+}
+
+// Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
+type LinkedFeature_SdkV2 struct {
+	// Feature name
+	FeatureName types.String `tfsdk:"feature_name"`
+	// Feature table id
+	FeatureTableId types.String `tfsdk:"feature_table_id"`
+	// Feature table name
+	FeatureTableName types.String `tfsdk:"feature_table_name"`
+}
+
+func (toState *LinkedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LinkedFeature_SdkV2) {
+}
+
+func (toState *LinkedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState LinkedFeature_SdkV2) {
+}
+
+func (c LinkedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_name"] = attrs["feature_name"].SetOptional()
+	attrs["feature_table_id"] = attrs["feature_table_id"].SetOptional()
+	attrs["feature_table_name"] = attrs["feature_table_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LinkedFeature.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LinkedFeature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LinkedFeature_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LinkedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_name":       o.FeatureName,
+			"feature_table_id":   o.FeatureTableId,
+			"feature_table_name": o.FeatureTableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LinkedFeature_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_name":       types.StringType,
+			"feature_table_id":   types.StringType,
+			"feature_table_name": types.StringType,
 		},
 	}
 }

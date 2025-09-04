@@ -1543,7 +1543,8 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 					MaxConcurrentRuns: 1,
 					Name:              "Test",
 					Continuous: &ContinuousConf{
-						PauseStatus: "UNPAUSED",
+						PauseStatus:   "UNPAUSED",
+						TaskRetryMode: "NEVER",
 					},
 				},
 				Response: Job{
@@ -1559,7 +1560,8 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 						MaxConcurrentRuns: 1,
 						Name:              "Test",
 						Continuous: &ContinuousConf{
-							PauseStatus: "UNPAUSED",
+							PauseStatus:   "UNPAUSED",
+							TaskRetryMode: "NEVER",
 						},
 					},
 				},
@@ -1568,6 +1570,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 		HCL: `
 		continuous {
 			pause_status = "UNPAUSED"
+			task_retry_mode = "NEVER"
 		}
 		control_run_state = true
 		max_concurrent_runs = 1

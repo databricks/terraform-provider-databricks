@@ -251,7 +251,8 @@ type JobCluster struct {
 }
 
 type ContinuousConf struct {
-	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
+	PauseStatus   string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
+	TaskRetryMode string `json:"task_retry_mode,omitempty" tf:"default:NEVER"`
 }
 
 type JobRunAs struct {
@@ -566,6 +567,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
 	s.SchemaPath("trigger", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
 	s.SchemaPath("continuous", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	s.SchemaPath("continuous", "task_retry_mode").SetValidateFunc(validation.StringInSlice([]string{"NEVER", "ON_FAILURE"}, false))
 	s.SchemaPath("max_concurrent_runs").SetDefault(1).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
 
 	s.AddNewField("url", &schema.Schema{

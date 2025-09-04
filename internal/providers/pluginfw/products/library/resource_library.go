@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -16,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/databricks/databricks-sdk-go"
 )
@@ -72,10 +75,41 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 	return nil, d
 }
 
+type MetadataAttributes struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r MetadataAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	return attrs
+}
+
+func (r MetadataAttributes) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r MetadataAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+
+}
+func (r MetadataAttributes) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 type LibraryExtended struct {
 	compute_tf.Library_SdkV2
-	ClusterId types.String `tfsdk:"cluster_id"`
-	ID        types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	ClusterId          types.String `tfsdk:"cluster_id"`
+	ID                 types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	MetadataAttributes types.Object `tfsdk:"metadata_attributes"`
 }
 
 type LibraryResource struct {
@@ -107,6 +141,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		c.SetOptional("id")
 		c.SetComputed("id")
 		c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
+		c.SetOptional("metadata_attributes")
 		return c
 	})
 	resp.Schema = schema.Schema{

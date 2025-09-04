@@ -16,11 +16,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "quality_monitor"
@@ -57,11 +59,42 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 	return nil
 }
 
+type MetadataAttributes struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r MetadataAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	return attrs
+}
+
+func (r MetadataAttributes) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r MetadataAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+
+}
+func (r MetadataAttributes) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 type MonitorInfoExtended struct {
 	catalog_tf.MonitorInfo_SdkV2
 	WarehouseId          types.String `tfsdk:"warehouse_id"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
 	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	MetadataAttributes   types.Object `tfsdk:"metadata_attributes"`
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
@@ -92,6 +125,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
 		c.SetOptional("id")
+		c.SetOptional("metadata_attributes")
 		return c
 	})
 	resp.Schema = schema.Schema{

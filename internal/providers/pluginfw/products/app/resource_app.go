@@ -17,11 +17,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const (
@@ -29,9 +31,40 @@ const (
 	resourceNamePlural = "apps"
 )
 
+type MetadataAttributes struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r MetadataAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	return attrs
+}
+
+func (r MetadataAttributes) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r MetadataAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+
+}
+func (r MetadataAttributes) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 type appResource struct {
 	apps_tf.App
-	NoCompute types.Bool `tfsdk:"no_compute"`
+	NoCompute          types.Bool   `tfsdk:"no_compute"`
+	MetadataAttributes types.Object `tfsdk:"metadata_attributes"`
 }
 
 func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -81,6 +114,7 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 			cs.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), field)
 		}
 		cs.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "service_principal_id")
+		cs.SetOptional("metadata_attributes")
 		return cs
 	})
 }

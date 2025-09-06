@@ -19,7 +19,9 @@ type groupMembersInfo struct {
 	lock        sync.Mutex
 }
 
-type GroupCache struct {
+// groupCache is a cache of groups to their members by their ID. Access to the cache
+// must be protected by the lock.
+type groupCache struct {
 	// The mapping of cached members for this group. The cache key is the group ID.
 	// TODO: add workspace ID to the cache key when account-level and workspace-level providers are unified.
 	cache map[string]*GroupMembersInfo

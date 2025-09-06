@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type GroupMembersInfo struct {
+// groupMembersInfo is the set of members that belong to a group. Read and write access
+// to the underlying members map must be protected by the lock.
+type groupMembersInfo struct {
 	initialized bool
 	members     map[string]struct{}
 	lock        sync.Mutex

@@ -18,6 +18,8 @@ type GroupMembersInfo struct {
 }
 
 type GroupCache struct {
+	// The mapping of cached members for this group. The cache key is the group ID.
+	// TODO: add workspace ID to the cache key when account-level and workspace-level providers are unified.
 	cache map[string]*GroupMembersInfo
 	lock  sync.Mutex
 }

@@ -51,7 +51,7 @@ func (gc *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
 	return groupInfo
 }
 
-func (gc *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+func (gc *GroupCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
 	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()

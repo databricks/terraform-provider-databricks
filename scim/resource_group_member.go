@@ -3,7 +3,6 @@ package scim
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -64,8 +63,7 @@ func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 		}
 		tflog.Debug(api.context, fmt.Sprintf("Group %s has %d members", groupID, len(group.Members)))
 		for _, member := range group.Members {
-			memberKey := strings.ToLower(member.Value)
-			groupInfo.members[memberKey] = struct{}{}
+			groupInfo.members[member.Value] = struct{}{}
 		}
 		groupInfo.initialized = true
 		tflog.Debug(api.context, fmt.Sprintf("Group %s has %d members (initialized)", groupID, len(groupInfo.members)))
@@ -91,8 +89,7 @@ func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID strin
 	}
 
 	if groupInfo.initialized {
-		memberKey := strings.ToLower(memberID)
-		delete(groupInfo.members, memberKey)
+		delete(groupInfo.members, memberID)
 	}
 	return err
 }
@@ -107,15 +104,13 @@ func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) 
 		return err
 	}
 	if groupInfo.initialized {
-		memberKey := strings.ToLower(memberID)
-		groupInfo.members[memberKey] = struct{}{}
+		groupInfo.members[memberID] = struct{}{}
 	}
 	return err
 }
 
 func hasMember(members map[string]struct{}, memberID string) bool {
-	memberKey := strings.ToLower(memberID)
-	_, ok := members[memberKey]
+	_, ok := members[memberID]
 	return ok
 }
 

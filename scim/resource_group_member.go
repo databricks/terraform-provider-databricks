@@ -24,24 +24,24 @@ type groupMembersInfo struct {
 type groupCache struct {
 	// The mapping of cached members for this group. The cache key is the group ID.
 	// TODO: add workspace ID to the cache key when account-level and workspace-level providers are unified.
-	cache map[string]*GroupMembersInfo
+	cache map[string]*groupMembersInfo
 	lock  sync.Mutex
 }
 
-func NewGroupsCache() *GroupCache {
-	return &GroupCache{
-		cache: make(map[string]*GroupMembersInfo),
+func newGroupCache() *groupCache {
+	return &groupCache{
+		cache: make(map[string]*groupMembersInfo),
 		lock:  sync.Mutex{},
 	}
 }
 
-func (gc *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
+func (gc *groupCache) getOrCreateGroupInfo(groupID string) *groupMembersInfo {
 	gc.lock.Lock()
 	defer gc.lock.Unlock()
 
 	groupInfo, exists := gc.cache[groupID]
 	if !exists {
-		groupInfo = &GroupMembersInfo{
+		groupInfo = &groupMembersInfo{
 			initialized: false,
 			members:     make(map[string]struct{}),
 			lock:        sync.Mutex{},
@@ -51,7 +51,7 @@ func (gc *GroupCache) getOrCreateGroupInfo(groupID string) *GroupMembersInfo {
 	return groupInfo
 }
 
-func (gc *GroupCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
 	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
@@ -79,7 +79,7 @@ func (gc *GroupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 	return membersCopy, nil
 }
 
-func (gc *GroupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
+func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
 	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
@@ -97,7 +97,7 @@ func (gc *GroupCache) removeMember(api GroupsAPI, groupID string, memberID strin
 	return err
 }
 
-func (gc *GroupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
+func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
 	groupInfo := gc.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
@@ -119,7 +119,7 @@ func hasMember(members map[string]struct{}, memberID string) bool {
 	return ok
 }
 
-var globalGroupsCache = NewGroupsCache()
+var globalGroupsCache = newGroupCache()
 
 // ResourceGroupMember bind group with member
 func ResourceGroupMember() common.Resource {
@@ -128,7 +128,7 @@ func ResourceGroupMember() common.Resource {
 			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c), groupID, memberID)
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			members, err := globalGroupsCache.GetMembers(NewGroupsAPI(ctx, c), groupID)
+			members, err := globalGroupsCache.getMembers(NewGroupsAPI(ctx, c), groupID)
 			if err == nil && !hasMember(members, memberID) {
 				return &apierr.APIError{
 					ErrorCode:  "NOT_FOUND",

@@ -9,7 +9,7 @@ import (
 )
 
 func TestResourceGroupMemberCreate(t *testing.T) {
-	globalGroupsCache = NewGroupsCache()
+	globalGroupsCache = newGroupCache()
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -81,7 +81,7 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead(t *testing.T) {
-	globalGroupsCache = NewGroupsCache()
+	globalGroupsCache = newGroupCache()
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -179,7 +179,7 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberDelete(t *testing.T) {
-	globalGroupsCache = NewGroupsCache()
+	globalGroupsCache = newGroupCache()
 
 	groupInfo := globalGroupsCache.getOrCreateGroupInfo("abc")
 	groupInfo.initialized = true

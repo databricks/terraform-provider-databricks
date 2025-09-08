@@ -2584,29 +2584,53 @@ var resourcesMap map[string]importable = map[string]importable{
 						}
 					}
 				case "SLACK":
-					if notificationDestination.Config.Slack != nil && pathString == "config.0.slack.0.url" {
-						return !notificationDestination.Config.Slack.UrlSet
+					if notificationDestination.Config.Slack != nil {
+						switch pathString {
+						case "config.0.slack.0.url":
+							return !notificationDestination.Config.Slack.UrlSet
+						case "config.0.slack.0.channel_id":
+							return !notificationDestination.Config.Slack.ChannelIdSet
+						case "config.0.slack.0.oauth_token":
+							return !notificationDestination.Config.Slack.OauthTokenSet
+						}
 					}
 				case "PAGERDUTY":
 					if notificationDestination.Config.Pagerduty != nil && pathString == "config.0.pagerduty.0.integration_key" {
 						return !notificationDestination.Config.Pagerduty.IntegrationKeySet
 					}
 				case "MICROSOFT_TEAMS":
-					if notificationDestination.Config.MicrosoftTeams != nil && pathString == "config.0.microsoft_teams.0.url" {
-						return !notificationDestination.Config.MicrosoftTeams.UrlSet
+					if notificationDestination.Config.MicrosoftTeams != nil {
+						switch pathString {
+						case "config.0.microsoft_teams.0.url":
+							return !notificationDestination.Config.MicrosoftTeams.UrlSet
+						case "config.0.microsoft_teams.0.channel_url":
+							return !notificationDestination.Config.MicrosoftTeams.ChannelUrlSet
+						case "config.0.microsoft_teams.0.auth_secret":
+							return !notificationDestination.Config.MicrosoftTeams.AuthSecretSet
+						case "config.0.microsoft_teams.0.tenant_id":
+							return !notificationDestination.Config.MicrosoftTeams.TenantIdSet
+						case "config.0.microsoft_teams.0.app_id":
+							return !notificationDestination.Config.MicrosoftTeams.AppIdSet
+						}
 					}
 				}
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
 		Depends: []reference{
-			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "config.microsoft_teams.url", Variable: true},
 			{Path: "config.pagerduty.integration_key", Variable: true},
 			{Path: "config.generic_webhook.url", Variable: true},
 			{Path: "config.generic_webhook.username", Variable: true},
 			{Path: "config.generic_webhook.password", Variable: true},
 			{Path: "config.slack.url", Variable: true},
+			{Path: "config.slack.channel_id", Variable: true},
+			{Path: "config.slack.oauth_token", Variable: true},
+			{Path: "config.microsoft_teams.url", Variable: true},
+			{Path: "config.microsoft_teams.channel_url", Variable: true},
+			{Path: "config.microsoft_teams.auth_secret", Variable: true},
+			{Path: "config.microsoft_teams.tenant_id", Variable: true},
+			{Path: "config.microsoft_teams.app_id", Variable: true},
+			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_online_table": {

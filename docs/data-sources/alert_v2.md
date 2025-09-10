@@ -24,7 +24,6 @@ data "databricks_alert_v2" "this" {
 ## Arguments
 The following arguments are supported:
 * `id` (string, required) - UUID identifying the alert
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

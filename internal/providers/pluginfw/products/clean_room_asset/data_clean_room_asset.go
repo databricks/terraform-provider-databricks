@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,20 +31,19 @@ type CleanRoomAssetDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// CleanRoomAssetData extends the main model with additional fields.
-type CleanRoomAssetData struct {
+// CleanRoomAssetDataExtended extends the main model with additional fields.
+type CleanRoomAssetDataExtended struct {
 	cleanrooms_tf.CleanRoomAsset
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CleanRoomAssetData struct. Container types (types.Map, types.List, types.Set) and
+// CleanRoomAssetDataExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m CleanRoomAssetData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomAssetDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.CleanRoomAsset.GetComplexFieldTypes(ctx)
 }
 
@@ -53,33 +51,22 @@ func (m CleanRoomAssetData) GetComplexFieldTypes(ctx context.Context) map[string
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetDataExtended
 // only implements ToObjectValue() and Type().
-func (m CleanRoomAssetData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.CleanRoomAsset.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
-	)
+func (m CleanRoomAssetDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return m.CleanRoomAsset.ToObjectValue(ctx)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m CleanRoomAssetData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.CleanRoomAsset.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
-
-	return types.ObjectType{AttrTypes: attrTypes}
+func (m CleanRoomAssetDataExtended) Type(ctx context.Context) attr.Type {
+	return m.CleanRoomAsset.Type(ctx)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CleanRoomAssetData) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAssetData) {
+func (m *CleanRoomAssetDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAssetDataExtended) {
 	m.CleanRoomAsset.SyncFieldsDuringRead(ctx, existingState.CleanRoomAsset)
 }
 
@@ -88,10 +75,7 @@ func (r *CleanRoomAssetDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *CleanRoomAssetDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAssetData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAssetDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoomAsset",
 		Attributes:  attrs,
@@ -112,7 +96,7 @@ func (r *CleanRoomAssetDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var config CleanRoomAssetData
+	var config CleanRoomAssetDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,7 +119,7 @@ func (r *CleanRoomAssetDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var newState CleanRoomAssetData
+	var newState CleanRoomAssetDataExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

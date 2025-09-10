@@ -10,7 +10,6 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

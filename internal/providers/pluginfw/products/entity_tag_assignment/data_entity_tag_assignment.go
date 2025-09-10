@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,20 +31,19 @@ type EntityTagAssignmentDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// EntityTagAssignmentData extends the main model with additional fields.
-type EntityTagAssignmentData struct {
+// EntityTagAssignmentDataExtended extends the main model with additional fields.
+type EntityTagAssignmentDataExtended struct {
 	catalog_tf.EntityTagAssignment
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// EntityTagAssignmentData struct. Container types (types.Map, types.List, types.Set) and
+// EntityTagAssignmentDataExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m EntityTagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m EntityTagAssignmentDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.EntityTagAssignment.GetComplexFieldTypes(ctx)
 }
 
@@ -53,33 +51,22 @@ func (m EntityTagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[s
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignmentData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignmentDataExtended
 // only implements ToObjectValue() and Type().
-func (m EntityTagAssignmentData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.EntityTagAssignment.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
-	)
+func (m EntityTagAssignmentDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return m.EntityTagAssignment.ToObjectValue(ctx)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m EntityTagAssignmentData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.EntityTagAssignment.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
-
-	return types.ObjectType{AttrTypes: attrTypes}
+func (m EntityTagAssignmentDataExtended) Type(ctx context.Context) attr.Type {
+	return m.EntityTagAssignment.Type(ctx)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *EntityTagAssignmentData) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignmentData) {
+func (m *EntityTagAssignmentDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignmentDataExtended) {
 	m.EntityTagAssignment.SyncFieldsDuringRead(ctx, existingState.EntityTagAssignment)
 }
 
@@ -88,10 +75,7 @@ func (r *EntityTagAssignmentDataSource) Metadata(ctx context.Context, req dataso
 }
 
 func (r *EntityTagAssignmentDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks EntityTagAssignment",
 		Attributes:  attrs,
@@ -112,7 +96,7 @@ func (r *EntityTagAssignmentDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	var config EntityTagAssignmentData
+	var config EntityTagAssignmentDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,7 +119,7 @@ func (r *EntityTagAssignmentDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	var newState EntityTagAssignmentData
+	var newState EntityTagAssignmentDataExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

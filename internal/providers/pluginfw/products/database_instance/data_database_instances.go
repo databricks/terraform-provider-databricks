@@ -26,13 +26,18 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 	return &DatabaseInstancesDataSource{}
 }
 
-// DatabaseInstancesData extends the main model with additional fields.
-type DatabaseInstancesData struct {
-	Database    types.List   `tfsdk:"database_instances"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+// DatabaseInstancesDataExtended extends the main model with additional fields.
+type DatabaseInstancesDataExtended struct {
+	database_tf.ListDatabaseInstancesRequest
+	Database types.List `tfsdk:"database_instances"`
 }
 
-func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c DatabaseInstancesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_instances"] = attrs["database_instances"].SetComputed()
+	return attrs
+}
+
+func (DatabaseInstancesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database_instances": reflect.TypeOf(database_tf.DatabaseInstance{}),
 	}
@@ -47,11 +52,7 @@ func (r *DatabaseInstancesDataSource) Metadata(ctx context.Context, req datasour
 }
 
 func (r *DatabaseInstancesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("database_instances")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseInstance",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var config DatabaseInstancesData
+	var config DatabaseInstancesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, database_instance.ToObjectValue(ctx))
 	}
 
-	var newState DatabaseInstancesData
+	var newState DatabaseInstancesDataExtended
 	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

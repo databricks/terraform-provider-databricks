@@ -19,7 +19,6 @@ data "databricks_apps_settings_custom_template" "my_template" {
 The following arguments are supported:
 * `name` (string, required) - The name of the template. It must contain only alphanumeric characters, hyphens, underscores, and whitespaces.
   It must be unique within the workspace
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

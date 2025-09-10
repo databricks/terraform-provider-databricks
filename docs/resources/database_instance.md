@@ -85,7 +85,6 @@ The following arguments are supported:
   Valid values are 2 to 35 days
 * `stopped` (boolean, optional) - Whether the instance is stopped
 * `purge_on_delete` (boolean, optional) - Purge the resource on delete
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### DatabaseInstanceRef
 * `branch_time` (string, optional) - Branch time of the ref database instance.
@@ -143,12 +142,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "name"
+  id = name
   to = databricks_database_instance.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_instance "name"
+terraform import databricks_database_instance name
 ```

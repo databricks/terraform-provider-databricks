@@ -11,7 +11,6 @@ subcategory: "Delta Sharing"
 The following arguments are supported:
 * `name` (string, required) - Name of the federation policy. A recipient can have multiple policies with different names.
   The name must contain only lowercase alphanumeric characters, numbers, and hyphens
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

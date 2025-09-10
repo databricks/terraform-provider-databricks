@@ -38,20 +38,19 @@ type EntityTagAssignmentResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// EntityTagAssignment extends the main model with additional fields.
-type EntityTagAssignment struct {
+// EntityTagAssignmentExtended extends the main model with additional fields.
+type EntityTagAssignmentExtended struct {
 	catalog_tf.EntityTagAssignment
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// EntityTagAssignment struct. Container types (types.Map, types.List, types.Set) and
+// EntityTagAssignmentExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m EntityTagAssignmentExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.EntityTagAssignment.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[strin
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignmentExtended
 // only implements ToObjectValue() and Type().
-func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m EntityTagAssignmentExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.EntityTagAssignment.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
+func (m EntityTagAssignmentExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.EntityTagAssignment.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan EntityTagAssignment) {
+func (m *EntityTagAssignmentExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan EntityTagAssignmentExtended) {
 	m.EntityTagAssignment.SyncFieldsDuringCreateOrUpdate(ctx, plan.EntityTagAssignment)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *EntityTagAssignment) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignment) {
+func (m *EntityTagAssignmentExtended) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignmentExtended) {
 	m.EntityTagAssignment.SyncFieldsDuringRead(ctx, existingState.EntityTagAssignment)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,11 +98,10 @@ func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource
 }
 
 func (r *EntityTagAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, EntityTagAssignment{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, EntityTagAssignmentExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_name")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "tag_key")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -121,7 +115,7 @@ func (r *EntityTagAssignmentResource) Configure(ctx context.Context, req resourc
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTagAssignment, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTagAssignmentExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -149,7 +143,7 @@ func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTag
 		return
 	}
 
-	var newState EntityTagAssignment
+	var newState EntityTagAssignmentExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -167,7 +161,7 @@ func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.C
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan EntityTagAssignment
+	var plan EntityTagAssignmentExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,7 +183,7 @@ func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var newState EntityTagAssignment
+	var newState EntityTagAssignmentExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -214,7 +208,7 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var existingState EntityTagAssignment
+	var existingState EntityTagAssignmentExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -237,7 +231,7 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState EntityTagAssignment
+	var newState EntityTagAssignmentExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -251,7 +245,7 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 func (r *EntityTagAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan EntityTagAssignment
+	var plan EntityTagAssignmentExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -269,7 +263,7 @@ func (r *EntityTagAssignmentResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	var state EntityTagAssignment
+	var state EntityTagAssignmentExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

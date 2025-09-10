@@ -38,20 +38,19 @@ type CleanRoomAutoApprovalRuleResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// CleanRoomAutoApprovalRule extends the main model with additional fields.
-type CleanRoomAutoApprovalRule struct {
+// CleanRoomAutoApprovalRuleExtended extends the main model with additional fields.
+type CleanRoomAutoApprovalRuleExtended struct {
 	cleanrooms_tf.CleanRoomAutoApprovalRule
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CleanRoomAutoApprovalRule struct. Container types (types.Map, types.List, types.Set) and
+// CleanRoomAutoApprovalRuleExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m CleanRoomAutoApprovalRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomAutoApprovalRuleExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.CleanRoomAutoApprovalRule.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m CleanRoomAutoApprovalRule) GetComplexFieldTypes(ctx context.Context) map
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAutoApprovalRule
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAutoApprovalRuleExtended
 // only implements ToObjectValue() and Type().
-func (m CleanRoomAutoApprovalRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CleanRoomAutoApprovalRuleExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.CleanRoomAutoApprovalRule.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m CleanRoomAutoApprovalRule) ToObjectValue(ctx context.Context) basetypes.
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m CleanRoomAutoApprovalRule) Type(ctx context.Context) attr.Type {
+func (m CleanRoomAutoApprovalRuleExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.CleanRoomAutoApprovalRule.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m CleanRoomAutoApprovalRule) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *CleanRoomAutoApprovalRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CleanRoomAutoApprovalRule) {
+func (m *CleanRoomAutoApprovalRuleExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CleanRoomAutoApprovalRuleExtended) {
 	m.CleanRoomAutoApprovalRule.SyncFieldsDuringCreateOrUpdate(ctx, plan.CleanRoomAutoApprovalRule)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CleanRoomAutoApprovalRule) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAutoApprovalRule) {
+func (m *CleanRoomAutoApprovalRuleExtended) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAutoApprovalRuleExtended) {
 	m.CleanRoomAutoApprovalRule.SyncFieldsDuringRead(ctx, existingState.CleanRoomAutoApprovalRule)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *CleanRoomAutoApprovalRuleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,9 +98,8 @@ func (r *CleanRoomAutoApprovalRuleResource) Metadata(ctx context.Context, req re
 }
 
 func (r *CleanRoomAutoApprovalRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRule{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRuleExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "rule_id")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -119,7 +113,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Configure(ctx context.Context, req r
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *CleanRoomAutoApprovalRuleResource) update(ctx context.Context, plan CleanRoomAutoApprovalRule, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *CleanRoomAutoApprovalRuleResource) update(ctx context.Context, plan CleanRoomAutoApprovalRuleExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -144,7 +138,7 @@ func (r *CleanRoomAutoApprovalRuleResource) update(ctx context.Context, plan Cle
 		return
 	}
 
-	var newState CleanRoomAutoApprovalRule
+	var newState CleanRoomAutoApprovalRuleExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -162,7 +156,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Create(ctx context.Context, req reso
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan CleanRoomAutoApprovalRule
+	var plan CleanRoomAutoApprovalRuleExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -184,7 +178,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	var newState CleanRoomAutoApprovalRule
+	var newState CleanRoomAutoApprovalRuleExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -209,7 +203,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	var existingState CleanRoomAutoApprovalRule
+	var existingState CleanRoomAutoApprovalRuleExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -232,7 +226,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	var newState CleanRoomAutoApprovalRule
+	var newState CleanRoomAutoApprovalRuleExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -246,7 +240,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Read(ctx context.Context, req resour
 func (r *CleanRoomAutoApprovalRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan CleanRoomAutoApprovalRule
+	var plan CleanRoomAutoApprovalRuleExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -264,7 +258,7 @@ func (r *CleanRoomAutoApprovalRuleResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	var state CleanRoomAutoApprovalRule
+	var state CleanRoomAutoApprovalRuleExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

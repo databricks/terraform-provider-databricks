@@ -26,12 +26,18 @@ func DataSourceAccountNetworkPolicies() datasource.DataSource {
 	return &AccountNetworkPoliciesDataSource{}
 }
 
-// AccountNetworkPoliciesData extends the main model with additional fields.
-type AccountNetworkPoliciesData struct {
+// AccountNetworkPoliciesDataExtended extends the main model with additional fields.
+type AccountNetworkPoliciesDataExtended struct {
+	settings_tf.ListNetworkPoliciesRequest
 	NetworkPolicies types.List `tfsdk:"items"`
 }
 
-func (AccountNetworkPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c AccountNetworkPoliciesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["items"] = attrs["items"].SetComputed()
+	return attrs
+}
+
+func (AccountNetworkPoliciesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"items": reflect.TypeOf(settings_tf.AccountNetworkPolicy{}),
 	}
@@ -46,10 +52,7 @@ func (r *AccountNetworkPoliciesDataSource) Metadata(ctx context.Context, req dat
 }
 
 func (r *AccountNetworkPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("items")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPoliciesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AccountNetworkPolicy",
 		Attributes:  attrs,
@@ -70,7 +73,7 @@ func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	var config AccountNetworkPoliciesData
+	var config AccountNetworkPoliciesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -98,7 +101,7 @@ func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasou
 		results = append(results, account_network_policy.ToObjectValue(ctx))
 	}
 
-	var newState AccountNetworkPoliciesData
+	var newState AccountNetworkPoliciesDataExtended
 	newState.NetworkPolicies = types.ListValueMust(settings_tf.AccountNetworkPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

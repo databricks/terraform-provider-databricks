@@ -20,7 +20,7 @@ output "all_custom_templates" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Upper bound for items returned
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

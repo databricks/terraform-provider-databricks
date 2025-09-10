@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,20 +31,19 @@ type SyncedDatabaseTableDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// SyncedDatabaseTableData extends the main model with additional fields.
-type SyncedDatabaseTableData struct {
+// SyncedDatabaseTableDataExtended extends the main model with additional fields.
+type SyncedDatabaseTableDataExtended struct {
 	database_tf.SyncedDatabaseTable
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// SyncedDatabaseTableData struct. Container types (types.Map, types.List, types.Set) and
+// SyncedDatabaseTableDataExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m SyncedDatabaseTableData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SyncedDatabaseTableDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.SyncedDatabaseTable.GetComplexFieldTypes(ctx)
 }
 
@@ -53,33 +51,22 @@ func (m SyncedDatabaseTableData) GetComplexFieldTypes(ctx context.Context) map[s
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedDatabaseTableData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedDatabaseTableDataExtended
 // only implements ToObjectValue() and Type().
-func (m SyncedDatabaseTableData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.SyncedDatabaseTable.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
-	)
+func (m SyncedDatabaseTableDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return m.SyncedDatabaseTable.ToObjectValue(ctx)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m SyncedDatabaseTableData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.SyncedDatabaseTable.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
-
-	return types.ObjectType{AttrTypes: attrTypes}
+func (m SyncedDatabaseTableDataExtended) Type(ctx context.Context) attr.Type {
+	return m.SyncedDatabaseTable.Type(ctx)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *SyncedDatabaseTableData) SyncFieldsDuringRead(ctx context.Context, existingState SyncedDatabaseTableData) {
+func (m *SyncedDatabaseTableDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState SyncedDatabaseTableDataExtended) {
 	m.SyncedDatabaseTable.SyncFieldsDuringRead(ctx, existingState.SyncedDatabaseTable)
 }
 
@@ -88,10 +75,7 @@ func (r *SyncedDatabaseTableDataSource) Metadata(ctx context.Context, req dataso
 }
 
 func (r *SyncedDatabaseTableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SyncedDatabaseTableData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SyncedDatabaseTableDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks SyncedDatabaseTable",
 		Attributes:  attrs,
@@ -112,7 +96,7 @@ func (r *SyncedDatabaseTableDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	var config SyncedDatabaseTableData
+	var config SyncedDatabaseTableDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,7 +119,7 @@ func (r *SyncedDatabaseTableDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	var newState SyncedDatabaseTableData
+	var newState SyncedDatabaseTableDataExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

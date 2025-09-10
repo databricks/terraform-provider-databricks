@@ -104,7 +104,6 @@ The following arguments are supported:
   It must be unique within the workspace
 * `path` (string, required) - The path to the template within the Git repository
 * `description` (string, optional) - The description of the template
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### AppManifest
 * `name` (string, required) - Name of the app defined by manifest author / publisher
@@ -145,12 +144,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "name"
+  id = name
   to = databricks_apps_settings_custom_template.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_apps_settings_custom_template "name"
+terraform import databricks_apps_settings_custom_template name
 ```

@@ -37,12 +37,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "workspace_id"
+  id = workspace_id
   to = databricks_workspace_network_option.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_network_option "workspace_id"
+terraform import databricks_workspace_network_option workspace_id
 ```

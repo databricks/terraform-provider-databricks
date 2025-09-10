@@ -13,7 +13,6 @@ This data source can be used to get a single tag policy by its tag key.
 ## Arguments
 The following arguments are supported:
 * `tag_key` (string, required)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

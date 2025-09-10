@@ -15,7 +15,7 @@ The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return in this request. Fewer results may be returned than requested. If
   unspecified or set to 0, this defaults to 1000. The maximum value is 1000; values above 1000 will be coerced down
   to 1000
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

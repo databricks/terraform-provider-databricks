@@ -38,20 +38,19 @@ type DatabaseCatalogResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// DatabaseCatalog extends the main model with additional fields.
-type DatabaseCatalog struct {
+// DatabaseCatalogExtended extends the main model with additional fields.
+type DatabaseCatalogExtended struct {
 	database_tf.DatabaseCatalog
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// DatabaseCatalog struct. Container types (types.Map, types.List, types.Set) and
+// DatabaseCatalogExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DatabaseCatalogExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.DatabaseCatalog.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]re
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCatalog
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCatalogExtended
 // only implements ToObjectValue() and Type().
-func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DatabaseCatalogExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.DatabaseCatalog.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
+func (m DatabaseCatalogExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseCatalog.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseCatalog) {
+func (m *DatabaseCatalogExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseCatalogExtended) {
 	m.DatabaseCatalog.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseCatalog)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalog) {
+func (m *DatabaseCatalogExtended) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalogExtended) {
 	m.DatabaseCatalog.SyncFieldsDuringRead(ctx, existingState.DatabaseCatalog)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,9 +98,8 @@ func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.Met
 }
 
 func (r *DatabaseCatalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalogExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -119,7 +113,7 @@ func (r *DatabaseCatalogResource) Configure(ctx context.Context, req resource.Co
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatalog, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatalogExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -145,7 +139,7 @@ func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatal
 		return
 	}
 
-	var newState DatabaseCatalog
+	var newState DatabaseCatalogExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -163,7 +157,7 @@ func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.Creat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan DatabaseCatalog
+	var plan DatabaseCatalogExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +179,7 @@ func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	var newState DatabaseCatalog
+	var newState DatabaseCatalogExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -210,7 +204,7 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	var existingState DatabaseCatalog
+	var existingState DatabaseCatalogExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -233,7 +227,7 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	var newState DatabaseCatalog
+	var newState DatabaseCatalogExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,7 +241,7 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 func (r *DatabaseCatalogResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan DatabaseCatalog
+	var plan DatabaseCatalogExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,7 +259,7 @@ func (r *DatabaseCatalogResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	var state DatabaseCatalog
+	var state DatabaseCatalogExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

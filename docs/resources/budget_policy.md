@@ -46,12 +46,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "policy_id"
+  id = policy_id
   to = databricks_budget_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_budget_policy "policy_id"
+terraform import databricks_budget_policy policy_id
 ```

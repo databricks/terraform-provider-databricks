@@ -21,6 +21,7 @@ The following arguments are supported:
 * `page_size` (integer, optional)
 
 
+
 ## Attributes
 This data source exports a single attribute, `policies`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - Creation time of the federation policy

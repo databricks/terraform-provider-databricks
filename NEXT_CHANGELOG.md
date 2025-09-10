@@ -20,5 +20,6 @@
 
 * Improve handling of dependencies for vector search index ([#4989](https://github.com/databricks/terraform-provider-databricks/pull/4989)).
 * Handle new attributes for Slack and MS Teams in `databricks_notification_destination` ([#5008](https://github.com/databricks/terraform-provider-databricks/pull/5008)).
+* Emit permission assignment and users/SPs/groups when processing `databricks_mws_workspaces` ([#5012](https://github.com/databricks/terraform-provider-databricks/pull/5012)).
 
 ### Internal Changes

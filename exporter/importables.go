@@ -2434,50 +2434,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[DEBUG] Skipping workspace %d because it doesn't match to the filter", ws.WorkspaceId)
 					continue
 				}
-				pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, ws.WorkspaceId)
+				wsIdString := strconv.FormatInt(ws.WorkspaceId, 10)
+				ic.Emit(&resource{
+					Resource: "databricks_mws_workspaces",
+					ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+					Name:     ws.WorkspaceName + "_" + wsIdString,
+				})
+				err = emitIdfedAndUsersSpsGroups(ic, ws.WorkspaceId)
 				if err != nil {
 					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
 						ws.WorkspaceId, err.Error())
 					continue
-				}
-				log.Printf("[DEBUG] Emitting permission assignments for workspace %d", ws.WorkspaceId)
-				for _, pa := range pas.PermissionAssignments {
-					perm := "unknown"
-					if len(pa.Permissions) > 0 {
-						perm = pa.Permissions[0].String()
-					}
-					nm := fmt.Sprintf("mws_pa_%d_%s_%s_%d", ws.WorkspaceId, pa.Principal.DisplayName,
-						perm, pa.Principal.PrincipalId)
-					// We  generate Data directly to avoid calling APIs
-					data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
-					paId := fmt.Sprintf("%d|%d", ws.WorkspaceId, pa.Principal.PrincipalId)
-					data = ic.generateNewData(data, "databricks_mws_permission_assignment", paId, pa)
-					data.Set("workspace_id", ws.WorkspaceId)
-					data.Set("principal_id", pa.Principal.PrincipalId)
-					ic.Emit(&resource{
-						Resource: "databricks_mws_permission_assignment",
-						ID:       paId,
-						Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
-						Data:     data,
-					})
-					// Emit principals
-					strPrincipalId := strconv.FormatInt(pa.Principal.PrincipalId, 10)
-					if pa.Principal.ServicePrincipalName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_service_principal",
-							ID:       strPrincipalId,
-						})
-					} else if pa.Principal.UserName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_user",
-							ID:       strPrincipalId,
-						})
-					} else if pa.Principal.GroupName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_group",
-							ID:       strPrincipalId,
-						})
-					}
 				}
 			}
 			return nil
@@ -2486,6 +2453,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Resource: "databricks_service_principal", Path: "principal_id"},
 			{Resource: "databricks_user", Path: "principal_id"},
 			{Resource: "databricks_group", Path: "principal_id"},
+			{Resource: "databricks_mws_workspaces", Path: "workspace_id", Match: "workspace_id"},
 		},
 	},
 	"databricks_dashboard": {
@@ -3056,10 +3024,11 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[DEBUG] skipping mws_workspaces '%s' that is not running", workspace.WorkspaceName)
 					continue
 				}
+				wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
 				ic.Emit(&resource{
 					Resource: "databricks_mws_workspaces",
-					ID:       ic.accountClient.Config.AccountID + "/" + strconv.FormatInt(workspace.WorkspaceId, 10),
-					Name:     workspace.WorkspaceName,
+					ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+					Name:     workspace.WorkspaceName + "_" + wsIdString,
 				})
 			}
 			return nil
@@ -3103,6 +3072,13 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_mws_credentials",
 					ID:       ic.accountClient.Config.AccountID + "/" + workspace.CredentialsID,
 				})
+			}
+			if ic.isServiceEnabled("idfed") {
+				err := emitIdfedAndUsersSpsGroups(ic, workspace.WorkspaceID)
+				if err != nil {
+					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
+						workspace.WorkspaceID, err.Error())
+				}
 			}
 			return nil
 		},

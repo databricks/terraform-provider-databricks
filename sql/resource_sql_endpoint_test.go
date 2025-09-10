@@ -428,7 +428,7 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 		NumClusters:    0, // No clusters running yet
 	}
 
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			api := w.GetMockWarehousesAPI()
 			// The Create should return immediately without waiting due to no_wait=true
@@ -448,12 +448,10 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 		cluster_size = "Small"
 		no_wait = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	// no_wait should be set to true
-	assert.Equal(t, true, d.Get("no_wait"))
-	// State should be STARTING since we didn't wait for it to be RUNNING
-	assert.Equal(t, "STARTING", d.Get("state"))
-	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"id":             "abc",
+		"no_wait":        true,
+		"state":          "STARTING",
+		"data_source_id": "d7c9d05c-7496-4c69-b089-48823edad40c",
+	})
 }

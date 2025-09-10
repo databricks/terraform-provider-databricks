@@ -39,7 +39,7 @@ func DataSourceGroup() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			var this entity
+			var this groupData
 			var group Group
 			var err error
 			common.DataToStructPointer(d, s, &this)

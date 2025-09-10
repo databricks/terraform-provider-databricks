@@ -12,6 +12,8 @@
 
 * Fix regression with `databricks_group` data source introduced by a recent change ([#4995](https://github.com/databricks/terraform-provider-databricks/pull/4995))
 
+* Fix drift detection for `databricks_connection` with HTTP OAuth M2M
+
 ### Documentation
 
 * Document `continuous.task_retry_mode` in `databricks_job` ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))

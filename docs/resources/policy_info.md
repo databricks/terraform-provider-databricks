@@ -10,7 +10,7 @@ subcategory: "Unity Catalog"
 ## Arguments
 The following arguments are supported:
 * `for_securable_type` (string, required) - Type of securables that the policy should take effect on.
-  Only `table` is supported at this moment.
+  Only `TABLE` is supported at this moment.
   Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `policy_type` (string, required) - Type of the policy. Required on create and ignored on update. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
 * `to_principals` (list of string, required) - List of user or group names that the policy applies to.
@@ -21,19 +21,20 @@ The following arguments are supported:
 * `comment` (string, optional) - Optional description of the policy
 * `except_principals` (list of string, optional) - Optional list of user or group names that should be excluded from the policy
 * `match_columns` (list of MatchColumn, optional) - Optional list of condition expressions used to match table columns.
-  Only valid when `for_securable_type` is `table`.
+  Only valid when `for_securable_type` is `TABLE`.
   When specified, the policy only applies to tables whose columns satisfy all match conditions
-* `name` (string, optional) - Name of the policy. Required on create and ignored on update.
-  To update the name, use the `new_name` field
+* `name` (string, optional) - Name of the policy. Required on create and optional on update.
+  To rename the policy, set `name` to a different value on update
 * `on_securable_fullname` (string, optional) - Full name of the securable on which the policy is defined.
   Required on create and ignored on update
 * `on_securable_type` (string, optional) - Type of the securable on which the policy is defined.
-  Only `catalog`, `schema` and `table` are supported at this moment.
+  Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
   Required on create and ignored on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `row_filter` (RowFilterOptions, optional) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
 * `when_condition` (string, optional) - Optional condition when the policy should take effect
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### ColumnMaskOptions
 * `function_name` (string, required) - The fully qualified name of the column mask function.
@@ -74,12 +75,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = on_securable_type,on_securable_fullname,name
+  id = "on_securable_type,on_securable_fullname,name"
   to = databricks_policy_info.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_policy_info on_securable_type,on_securable_fullname,name
+terraform import databricks_policy_info "on_securable_type,on_securable_fullname,name"
 ```

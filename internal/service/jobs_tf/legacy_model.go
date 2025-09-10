@@ -38,6 +38,9 @@ type BaseJob_SdkV2 struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The id of the usage policy used by this job for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
@@ -94,6 +97,7 @@ func (c BaseJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
@@ -128,6 +132,7 @@ func (o BaseJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
 			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
 			"settings":                   o.Settings,
@@ -142,6 +147,7 @@ func (o BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
 			"settings": basetypes.ListType{
@@ -242,6 +248,9 @@ type BaseRun_SdkV2 struct {
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
 	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
+	// The id of the usage policy used by this run for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -485,6 +494,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -559,6 +569,7 @@ func (o BaseRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"creator_user_name":            o.CreatorUserName,
 			"description":                  o.Description,
 			"effective_performance_target": o.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
 			"end_time":                     o.EndTime,
 			"execution_duration":           o.ExecutionDuration,
 			"git_source":                   o.GitSource,
@@ -603,6 +614,7 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
+			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
 			"execution_duration":           types.Int64Type,
 			"git_source": basetypes.ListType{
@@ -1795,6 +1807,9 @@ type Continuous_SdkV2 struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
+	// Indicate whether the continuous job is applying task level retries or
+	// not. Defaults to NEVER.
+	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
 func (toState *Continuous_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Continuous_SdkV2) {
@@ -1805,6 +1820,7 @@ func (toState *Continuous_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromS
 
 func (c Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1827,7 +1843,8 @@ func (o Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status": o.PauseStatus,
+			"pause_status":    o.PauseStatus,
+			"task_retry_mode": o.TaskRetryMode,
 		})
 }
 
@@ -1835,7 +1852,8 @@ func (o Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o Continuous_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status": types.StringType,
+			"pause_status":    types.StringType,
+			"task_retry_mode": types.StringType,
 		},
 	}
 }
@@ -1954,7 +1972,7 @@ type CreateJob_SdkV2 struct {
 	Trigger types.List `tfsdk:"trigger"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
-	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// modifying the job. See `effective_usage_policy_id` for the usage policy
 	// used by this workload.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
@@ -5357,6 +5375,9 @@ type Job_SdkV2 struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The id of the usage policy used by this job for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
@@ -5423,6 +5444,7 @@ func (c Job_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
@@ -5459,6 +5481,7 @@ func (o Job_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
 			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
 			"next_page_token":            o.NextPageToken,
@@ -5475,6 +5498,7 @@ func (o Job_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
 			"next_page_token":            types.StringType,
@@ -6925,7 +6949,7 @@ type JobSettings_SdkV2 struct {
 	Trigger types.List `tfsdk:"trigger"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
-	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// modifying the job. See `effective_usage_policy_id` for the usage policy
 	// used by this workload.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
@@ -11287,6 +11311,9 @@ type Run_SdkV2 struct {
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
 	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
+	// The id of the usage policy used by this run for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -11535,6 +11562,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -11612,6 +11640,7 @@ func (o Run_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            o.CreatorUserName,
 			"description":                  o.Description,
 			"effective_performance_target": o.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
 			"end_time":                     o.EndTime,
 			"execution_duration":           o.ExecutionDuration,
 			"git_source":                   o.GitSource,
@@ -11658,6 +11687,7 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
+			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
 			"execution_duration":           types.Int64Type,
 			"git_source": basetypes.ListType{

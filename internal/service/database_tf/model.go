@@ -481,6 +481,13 @@ type DatabaseInstance struct {
 	CreationTime types.String `tfsdk:"creation_time"`
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
+	// xref AIP-129. `enable_pg_native_login` is owned by the client, while
+	// `effective_enable_pg_native_login` is owned by the server.
+	// `enable_pg_native_login` will only be set in Create/Update response
+	// messages if and only if the user provides the field via the request.
+	// `effective_enable_pg_native_login` on the other hand will always bet set
+	// in all response messages (Create/Update/Get/List).
+	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// xref AIP-129. `enable_readable_secondaries` is owned by the client, while
 	// `effective_enable_readable_secondaries` is owned by the server.
 	// `enable_readable_secondaries` will only be set in Create/Update response
@@ -507,6 +514,9 @@ type DatabaseInstance struct {
 	// request. `effective_stopped` on the other hand will always bet set in all
 	// response messages (Create/Update/Get/List).
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
+	// Whether the instance has PG native password login enabled. Defaults to
+	// true.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// Whether to enable secondaries to serve read-only traffic. Defaults to
 	// false.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
@@ -540,6 +550,10 @@ type DatabaseInstance struct {
 }
 
 func (toState *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DatabaseInstance) {
+	if !fromPlan.EnablePgNativeLogin.IsUnknown() && !fromPlan.EnablePgNativeLogin.IsNull() {
+		// EnablePgNativeLogin is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.EnablePgNativeLogin = fromPlan.EnablePgNativeLogin
+	}
 	if !fromPlan.ParentInstanceRef.IsNull() && !fromPlan.ParentInstanceRef.IsUnknown() {
 		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
 			if fromPlanParentInstanceRef, ok := fromPlan.GetParentInstanceRef(ctx); ok {
@@ -551,6 +565,10 @@ func (toState *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 }
 
 func (toState *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, fromState DatabaseInstance) {
+	if !fromState.EnablePgNativeLogin.IsUnknown() && !fromState.EnablePgNativeLogin.IsNull() {
+		// EnablePgNativeLogin is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.EnablePgNativeLogin = fromState.EnablePgNativeLogin
+	}
 	if !fromState.ParentInstanceRef.IsNull() && !fromState.ParentInstanceRef.IsUnknown() {
 		if toStateParentInstanceRef, ok := toState.GetParentInstanceRef(ctx); ok {
 			if fromStateParentInstanceRef, ok := fromState.GetParentInstanceRef(ctx); ok {
@@ -566,10 +584,14 @@ func (c DatabaseInstance) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
 	attrs["effective_enable_readable_secondaries"] = attrs["effective_enable_readable_secondaries"].SetComputed()
 	attrs["effective_node_count"] = attrs["effective_node_count"].SetComputed()
 	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
 	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["node_count"] = attrs["node_count"].SetOptional()
@@ -610,10 +632,12 @@ func (o DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"child_instance_refs":                   o.ChildInstanceRefs,
 			"creation_time":                         o.CreationTime,
 			"creator":                               o.Creator,
+			"effective_enable_pg_native_login":      o.EffectiveEnablePgNativeLogin,
 			"effective_enable_readable_secondaries": o.EffectiveEnableReadableSecondaries,
 			"effective_node_count":                  o.EffectiveNodeCount,
 			"effective_retention_window_in_days":    o.EffectiveRetentionWindowInDays,
 			"effective_stopped":                     o.EffectiveStopped,
+			"enable_pg_native_login":                o.EnablePgNativeLogin,
 			"enable_readable_secondaries":           o.EnableReadableSecondaries,
 			"name":                                  o.Name,
 			"node_count":                            o.NodeCount,
@@ -638,10 +662,12 @@ func (o DatabaseInstance) Type(ctx context.Context) attr.Type {
 			},
 			"creation_time":                         types.StringType,
 			"creator":                               types.StringType,
+			"effective_enable_pg_native_login":      types.BoolType,
 			"effective_enable_readable_secondaries": types.BoolType,
 			"effective_node_count":                  types.Int64Type,
 			"effective_retention_window_in_days":    types.Int64Type,
 			"effective_stopped":                     types.BoolType,
+			"enable_pg_native_login":                types.BoolType,
 			"enable_readable_secondaries":           types.BoolType,
 			"name":                                  types.StringType,
 			"node_count":                            types.Int64Type,

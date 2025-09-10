@@ -51,6 +51,7 @@ The following arguments are supported:
   Present if and only if **asset_type** is **VIEW**
 * `volume_local_details` (CleanRoomAssetVolumeLocalDetails, optional) - Local details for a volume that are only available to its owner.
   Present if and only if **asset_type** is **VOLUME**
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### CleanRoomAssetForeignTableLocalDetails
 * `local_name` (string, required) - The fully qualified name of the foreign table in its owner's local metastore,
@@ -59,7 +60,7 @@ The following arguments are supported:
 ### CleanRoomAssetNotebook
 * `notebook_content` (string, required) - Base 64 representation of the notebook contents.
   This is the same format as returned by :method:workspace/export with the format of **HTML**
-* `runner_collaborator_aliases` (list of string, optional) - collaborators that can run the notebook
+* `runner_collaborator_aliases` (list of string, optional) - Aliases of collaborators that can run the notebook
 
 ### CleanRoomAssetTableLocalDetails
 * `local_name` (string, required) - The fully qualified name of the table in its owner's local metastore,
@@ -136,12 +137,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = clean_room_name,name,asset_type
+  id = "clean_room_name,name,asset_type"
   to = databricks_clean_room_asset.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_clean_room_asset clean_room_name,name,asset_type
+terraform import databricks_clean_room_asset "clean_room_name,name,asset_type"
 ```

@@ -29,17 +29,17 @@ func DataSourceAlertsV2() datasource.DataSource {
 // AlertsV2DataExtended extends the main model with additional fields.
 type AlertsV2DataExtended struct {
 	sql_tf.ListAlertsV2Request
-	AlertsV2 types.List `tfsdk:"results"`
+	AlertsV2 types.List `tfsdk:"alerts"`
 }
 
 func (c AlertsV2DataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["results"] = attrs["results"].SetComputed()
+	attrs["alerts"] = attrs["alerts"].SetComputed()
 	return attrs
 }
 
 func (AlertsV2DataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"results": reflect.TypeOf(sql_tf.AlertV2{}),
+		"alerts": reflect.TypeOf(sql_tf.AlertV2{}),
 	}
 }
 

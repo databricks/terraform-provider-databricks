@@ -84,7 +84,7 @@ The following arguments are supported:
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
-* `empty_result_state` (string, optional) - Alert state if result is empty. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `empty_result_state` (string, optional) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `notification` (AlertV2Notification, optional) - User or Notification Destination to notify when alert is triggered
 * `source` (AlertV2OperandColumn, optional) - Source column from result to use to evaluate alert
 * `threshold` (AlertV2Operand, optional) - Threshold to user for alert evaluation, can be a column or a value

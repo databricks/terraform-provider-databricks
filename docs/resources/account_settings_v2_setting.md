@@ -2,10 +2,22 @@
 subcategory: "Settings"
 ---
 # databricks_account_settings_v2_setting Resource
+Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 
+[//]: # (todo: add public link to metadata api after production doc link available)
+See settings-metadata api for list of settings that can be modified using this resource. 
 
 ## Example Usage
+Getting an account level setting:
 
+```hcl
+resource "databricks_account_setting" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:

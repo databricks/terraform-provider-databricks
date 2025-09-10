@@ -959,10 +959,10 @@ type FederationPolicy_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 
 	OidcPolicy types.List `tfsdk:"oidc_policy"`
-	// The ID of the federation policy.
+	// The ID of the federation policy. Output only.
 	PolicyId types.String `tfsdk:"policy_id"`
-	// The service principal ID that this federation policy applies to. Only set
-	// for service principal federation policies.
+	// The service principal ID that this federation policy applies to. Output
+	// only. Only set for service principal federation policies.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 	// Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`

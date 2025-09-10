@@ -2,10 +2,47 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_entity_tag_assignment Resource
-
+This resource allows you to create, update, list, and delete tag assignments on Unity Catalog entities.
 
 ## Example Usage
+### Basic tag assignment to a catalog
 
+```hcl
+resource "databricks_entity_tag_assignment" "catalog_tag" {
+  entity_type = "catalogs"
+  entity_name = "production_catalog"
+  tag_key     = "environment"
+  tag_value   = "production"
+}
+
+resource "databricks_entity_tag_assignment" "schema_tag" {
+  entity_type = "schemas"
+  entity_name = "production_catalog.sales_data"
+  tag_key     = "owner"
+  tag_value   = "sales-team"
+}
+
+resource "databricks_entity_tag_assignment" "table_tag" {
+  entity_type = "tables"
+  entity_name = "production_catalog.sales_data.customer_orders"
+  tag_key     = "data_classification"
+  tag_value   = "confidential"
+}
+
+resource "databricks_entity_tag_assignment" "column_tag" {
+  entity_type = "columns"
+  entity_name = "production_catalog.sales_data.customers.email_address"
+  tag_key     = "pii"
+  tag_value   = "email"
+}
+
+resource "databricks_entity_tag_assignment" "volume_tag" {
+  entity_type = "volumes"
+  entity_name = "production_catalog.raw_data.landing_zone"
+  tag_key     = "purpose"
+  tag_value   = "data_ingestion"
+}
+```
 
 ## Arguments
 The following arguments are supported:

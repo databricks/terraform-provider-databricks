@@ -4009,7 +4009,8 @@ type CreateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings.
+	// File event queue settings. If `enable_file_events` is `true`, must be
+	// defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -10562,7 +10563,8 @@ type ExternalLocationInfo_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings.
+	// File event queue settings. If `enable_file_events` is `true`, must be
+	// defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 
 	IsolationMode types.String `tfsdk:"isolation_mode"`
@@ -25617,7 +25619,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings.
+	// File event queue settings. If `enable_file_events` is `true`, must be
+	// defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.

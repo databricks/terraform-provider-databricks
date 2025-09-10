@@ -2,10 +2,37 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_entity_tag_assignments Data Source
-
+This data source allows you to retrieve tag assignments that have been applied to a particular entity in Unity Catalog.
 
 ## Example Usage
+### Get all tag assignments for a catalog
 
+```hcl
+data "databricks_entity_tag_assignments" "catalog_tags" {
+  entity_type = "catalogs"
+  entity_name = "production_catalog"
+}
+
+data "databricks_entity_tag_assignments" "schema_tags" {
+  entity_type = "schemas"
+  entity_name = "production_catalog.sales_data"
+}
+
+data "databricks_entity_tag_assignments" "table_tags" {
+  entity_type = "tables"
+  entity_name = "production_catalog.sales_data.customer_orders"
+}
+
+data "databricks_entity_tag_assignments" "column_tags" {
+  entity_type = "columns"
+  entity_name = "production_catalog.customer_data.users.email_address"
+}
+
+data "databricks_entity_tag_assignments" "volume_tags" {
+  entity_type = "volumes"
+  entity_name = "production_catalog.raw_data.landing_zone"
+}
+```
 
 ## Arguments
 The following arguments are supported:

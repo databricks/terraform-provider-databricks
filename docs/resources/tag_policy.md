@@ -8,6 +8,21 @@ Define tag policies to manage governed tags in your account.
 
 ## Example Usage
 ```hcl
+resource "databricks_tag_policy" "example_tag_policy" {
+  tag_key     = "example_tag_key"
+  description = "Example description."
+  values = [
+    {
+      name = "example_value_1"
+    },
+    {
+      name = "example_value_2"
+    },
+    {
+      name = "example_value_3"
+    }
+  ]
+}
 ```
 
 ## Arguments

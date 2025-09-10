@@ -2,10 +2,19 @@
 subcategory: "Settings"
 ---
 # databricks_account_settings_v2_setting Data Source
-
+This data source can be used to get a single account setting. 
 
 ## Example Usage
+Referring to a setting by id
 
+```hcl
+data "databricks_account_setting" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:

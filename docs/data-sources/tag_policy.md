@@ -7,7 +7,12 @@ This data source can be used to get a single tag policy by its tag key.
 -> **Note** This resource can only be used with an account-level provider!
 
 ## Example Usage
+Referring to a tag policy by its tag key:
+
 ```hcl
+data "databricks_tag_policy" "example_tag_policy" {
+  tag_key = "example_tag_key"
+}
 ```
 
 ## Arguments

@@ -7,7 +7,14 @@ This data source can be used to list all tag policies in the account.
 -> **Note** This resource can only be used with an account-level provider!
 
 ## Example Usage
+Getting a list of all tag policies:
+
 ```hcl
+data "databricks_tag_policies" "all" {}
+
+output "all_tag_policies" {
+  value = data.databricks_tag_policies.all.tag_policies
+}
 ```
 
 ## Arguments

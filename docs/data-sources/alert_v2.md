@@ -54,7 +54,7 @@ The following attributes are exported:
 
 ### AlertV2Evaluation
 * `comparison_operator` (string) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
-* `empty_result_state` (string) - Alert state if result is empty. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `empty_result_state` (string) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `last_evaluated_at` (string) - Timestamp of the last evaluation
 * `notification` (AlertV2Notification) - User or Notification Destination to notify when alert is triggered
 * `source` (AlertV2OperandColumn) - Source column from result to use to evaluate alert

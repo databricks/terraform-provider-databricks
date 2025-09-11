@@ -455,13 +455,16 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 	newStateObjects, _ := newState.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
 	for i := range newStateObjects {
+		// For each object in the new state, we check if it exists in the existing state
+		// and if it does, we sync the effective fields.
+		// If it does not exist, we keep the new state object as is.
 		for j := range existingStateObjects {
 			if newStateObjects[i].Name == existingStateObjects[j].Name {
 				mode.objectLevel(ctx, &newStateObjects[i], existingStateObjects[j])
-				finalObjects = append(finalObjects, newStateObjects[i])
 				break
 			}
 		}
+		finalObjects = append(finalObjects, newStateObjects[i])
 	}
 	newState.SetObjects(ctx, finalObjects)
 	return newState, d

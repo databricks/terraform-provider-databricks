@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation
+
 ### Bug Fixes
 
 ### Documentation

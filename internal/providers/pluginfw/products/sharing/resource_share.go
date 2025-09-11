@@ -439,21 +439,30 @@ func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing
 	state.SyncFieldsDuringRead(ctx, plan)
 }
 
-func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
+// syncEffectiveFields syncs the effective fields between existingState and newState
+// and returns the newState
+//
+// existingState: infrastructure values that are recorded in the existing terraform state.
+// newState: latest infrastructure values that are returned by the CRUD API calls.
+//
+// HCL config is compared with this newState to determine what changes are to be made
+// to the infrastructure and then the newState values are recorded in the terraform state.
+// Hence we ignore the values in existingState which are not present in newState.
+func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, newState ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
-	mode.resourceLevel(ctx, &state, plan.ShareInfo_SdkV2)
-	planObjects, _ := plan.GetObjects(ctx)
-	stateObjects, _ := state.GetObjects(ctx)
+	mode.resourceLevel(ctx, &newState, existingState.ShareInfo_SdkV2)
+	existingStateObjects, _ := existingState.GetObjects(ctx)
+	newStateObjects, _ := newState.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
-	for i := range stateObjects {
-		for j := range planObjects {
-			if stateObjects[i].Name == planObjects[j].Name {
-				mode.objectLevel(ctx, &stateObjects[i], planObjects[j])
-				finalObjects = append(finalObjects, stateObjects[i])
+	for i := range newStateObjects {
+		for j := range existingStateObjects {
+			if newStateObjects[i].Name == existingStateObjects[j].Name {
+				mode.objectLevel(ctx, &newStateObjects[i], existingStateObjects[j])
+				finalObjects = append(finalObjects, newStateObjects[i])
 				break
 			}
 		}
 	}
-	state.SetObjects(ctx, finalObjects)
-	return state, d
+	newState.SetObjects(ctx, finalObjects)
+	return newState, d
 }

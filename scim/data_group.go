@@ -11,35 +11,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type groupData struct {
+	entitlements
+	DisplayName       string   `json:"display_name"`
+	Recursive         bool     `json:"recursive,omitempty"`
+	Members           []string `json:"members,omitempty" tf:"slice_set,computed"`
+	Users             []string `json:"users,omitempty" tf:"slice_set,computed"`
+	ServicePrincipals []string `json:"service_principals,omitempty" tf:"slice_set,computed"`
+	ChildGroups       []string `json:"child_groups,omitempty" tf:"slice_set,computed"`
+	Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
+	InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
+	ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
+	AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
+}
+
 // DataSourceGroup returns information about group specified by display name
 func DataSourceGroup() common.Resource {
-	type entity struct {
-		DisplayName       string   `json:"display_name"`
-		Recursive         bool     `json:"recursive,omitempty"`
-		Members           []string `json:"members,omitempty" tf:"slice_set,computed"`
-		Users             []string `json:"users,omitempty" tf:"slice_set,computed"`
-		ServicePrincipals []string `json:"service_principals,omitempty" tf:"slice_set,computed"`
-		ChildGroups       []string `json:"child_groups,omitempty" tf:"slice_set,computed"`
-		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
-		InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
-		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
-		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
-	}
-
-	s := common.StructToSchema(entity{}, func(
+	s := common.StructToSchema(groupData{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint once SDKv2 has Diagnostics-returning validators, change
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
-		addEntitlementsToSchema(s)
 		return s
 	})
 
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			var this entity
+			var this groupData
 			var group Group
 			var err error
 			common.DataToStructPointer(d, s, &this)
@@ -79,7 +79,7 @@ func DataSourceGroup() common.Resource {
 				for _, x := range current.Roles {
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
-				current.Entitlements.readIntoData(d)
+				this.entitlements = mergeEntitlements(this.entitlements, newEntitlements(ctx, current.Entitlements))
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {
@@ -99,11 +99,7 @@ func DataSourceGroup() common.Resource {
 			sort.Strings(this.ChildGroups)
 			sort.Strings(this.ServicePrincipals)
 			sort.Strings(this.InstanceProfiles)
-			err = common.StructToData(this, s, d)
-			if err != nil {
-				return err
-			}
-			return nil
+			return common.StructToData(this, s, d)
 		},
 	}
 }

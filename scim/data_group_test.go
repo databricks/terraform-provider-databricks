@@ -76,6 +76,7 @@ func TestDataSourceGroup(t *testing.T) {
 		},
 		Read:        true,
 		NonWritable: true,
+		New:         true,
 		Resource:    DataSourceGroup(),
 		ID:          ".",
 		State: map[string]any{

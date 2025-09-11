@@ -240,7 +240,7 @@ func shareUpdateWithName(name string) string {
 				name = databricks_table.mytable.id
 				comment = "A"
 				data_object_type = "TABLE"
-				history_data_sharing_status = "DISABLED"
+				history_data_sharing_status = "ENABLED"
 			}
 		}`, name)
 }

@@ -26,17 +26,14 @@ func DataSourceCleanRoomAssets() datasource.DataSource {
 	return &CleanRoomAssetsDataSource{}
 }
 
-type CleanRoomAssetsList struct {
-	cleanrooms_tf.ListCleanRoomAssetRevisionsRequest
-	CleanRoomAssetRevisions types.List `tfsdk:"revisions"`
+// CleanRoomAssetsData extends the main model with additional fields.
+type CleanRoomAssetsData struct {
+	CleanRoomAssetRevisions types.List   `tfsdk:"revisions"`
+	Name                    types.String `tfsdk:"name"`
+	WorkspaceID             types.String `tfsdk:"workspace_id"`
 }
 
-func (c CleanRoomAssetsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["revisions"] = attrs["revisions"].SetComputed()
-	return attrs
-}
-
-func (CleanRoomAssetsList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (CleanRoomAssetsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"revisions": reflect.TypeOf(cleanrooms_tf.CleanRoomAsset{}),
 	}
@@ -51,7 +48,12 @@ func (r *CleanRoomAssetsDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *CleanRoomAssetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAssetsList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAssetsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("revisions")
+		c.SetRequired("name")
+		c.SetOptional("workspace_id")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoomAsset",
 		Attributes:  attrs,
@@ -72,7 +74,7 @@ func (r *CleanRoomAssetsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	var config CleanRoomAssetsList
+	var config CleanRoomAssetsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +102,8 @@ func (r *CleanRoomAssetsDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, clean_room_asset.ToObjectValue(ctx))
 	}
 
-	var newState CleanRoomAssetsList
+	var newState CleanRoomAssetsData
 	newState.CleanRoomAssetRevisions = types.ListValueMust(cleanrooms_tf.CleanRoomAsset{}.Type(ctx), results)
+	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

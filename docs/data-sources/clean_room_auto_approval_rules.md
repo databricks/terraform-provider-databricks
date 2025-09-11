@@ -11,7 +11,7 @@ subcategory: "Clean Rooms"
 The following arguments are supported:
 * `clean_room_name` (string, required)
 * `page_size` (integer, optional) - Maximum number of auto-approval rules to return. Defaults to 100
-
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 
 ## Attributes

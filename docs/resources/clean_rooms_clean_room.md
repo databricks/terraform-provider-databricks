@@ -43,16 +43,17 @@ The following arguments are supported:
 * `comment` (string, optional)
 * `name` (string, optional) - The name of the clean room.
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
-* `owner` (string, optional) - This is Databricks username of the owner of the local clean room securable for permission management
+* `owner` (string, optional) - This is the Databricks username of the owner of the local clean room securable for permission management
 * `remote_detailed_info` (CleanRoomRemoteDetail, optional) - Central clean room details. During creation, users need to specify
   cloud_vendor, region, and collaborators.global_metastore_id.
   This field will not be filled in the ListCleanRooms call
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### CleanRoomCollaborator
 * `collaborator_alias` (string, required) - Collaborator alias specified by the clean room creator. It is unique across all collaborators of this clean room, and used to derive
   multiple values internally such as catalog alias and clean room name for single metastore clean rooms.
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
-* `global_metastore_id` (string, optional) - The global Unity Catalog metastore id of the collaborator. The identifier is of format cloud:region:metastore-uuid
+* `global_metastore_id` (string, optional) - The global Unity Catalog metastore ID of the collaborator. The identifier is of format cloud:region:metastore-uuid
 * `invite_recipient_email` (string, optional) - Email of the user who is receiving the clean room "invitation". It should be empty
   for the creator of the clean room, and non-empty for the invitees of the clean room.
   It is only returned in the output when clean room creator calls GET
@@ -137,12 +138,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_clean_rooms_clean_room.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_clean_rooms_clean_room name
+terraform import databricks_clean_rooms_clean_room "name"
 ```

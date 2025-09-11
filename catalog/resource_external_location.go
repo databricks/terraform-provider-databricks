@@ -150,13 +150,13 @@ func ResourceExternalLocation() common.Resource {
 					updateExternalLocationRequest.FileEventQueue.ManagedSqs.ManagedResourceId = ""
 				}
 				if updateExternalLocationRequest.FileEventQueue.ProvidedPubsub != nil {
-					updateExternalLocationRequest.FileEventQueue.ProvidedPubsub.SubscriptionName = ""
+					updateExternalLocationRequest.FileEventQueue.ProvidedPubsub.ManagedResourceId = ""
 				}
 				if updateExternalLocationRequest.FileEventQueue.ProvidedAqs != nil {
-					updateExternalLocationRequest.FileEventQueue.ProvidedAqs.QueueUrl = ""
+					updateExternalLocationRequest.FileEventQueue.ProvidedAqs.ManagedResourceId = ""
 				}
 				if updateExternalLocationRequest.FileEventQueue.ProvidedSqs != nil {
-					updateExternalLocationRequest.FileEventQueue.ProvidedSqs.QueueUrl = ""
+					updateExternalLocationRequest.FileEventQueue.ProvidedSqs.ManagedResourceId = ""
 				}
 			}
 			// if file events are disabled we shouldn't send FileEventQueue

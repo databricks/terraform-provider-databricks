@@ -18,6 +18,7 @@ data "databricks_database_synced_database_table" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Full three-part (catalog, schema, table) name of the table
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

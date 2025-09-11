@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation
+* Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
 
 ### Bug Fixes
 

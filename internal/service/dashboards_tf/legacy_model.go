@@ -972,6 +972,50 @@ func (o GenieCreateConversationMessageRequest_SdkV2) Type(ctx context.Context) a
 	}
 }
 
+type GenieDeleteConversationMessageRequest_SdkV2 struct {
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the message to delete.
+	MessageId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the message is located.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieDeleteConversationMessageRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieDeleteConversationMessageRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieDeleteConversationMessageRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GenieDeleteConversationMessageRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": o.ConversationId,
+			"message_id":      o.MessageId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieDeleteConversationMessageRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
 type GenieDeleteConversationRequest_SdkV2 struct {
 	// The ID of the conversation to delete.
 	ConversationId types.String `tfsdk:"-"`
@@ -1422,7 +1466,141 @@ func (o GenieGetSpaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieListConversationMessagesRequest_SdkV2 struct {
+	// The ID of the conversation to list messages from
+	ConversationId types.String `tfsdk:"-"`
+	// Maximum number of messages to return per page
+	PageSize types.Int64 `tfsdk:"-"`
+	// Token to get the next page of results
+	PageToken types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the conversation is located
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationMessagesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationMessagesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationMessagesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationMessagesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": o.ConversationId,
+			"page_size":       o.PageSize,
+			"page_token":      o.PageToken,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationMessagesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id": types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieListConversationMessagesResponse_SdkV2 struct {
+	// List of messages in the conversation.
+	Messages types.List `tfsdk:"messages"`
+	// The token to use for retrieving the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (toState *GenieListConversationMessagesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationMessagesResponse_SdkV2) {
+}
+
+func (toState *GenieListConversationMessagesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationMessagesResponse_SdkV2) {
+}
+
+func (c GenieListConversationMessagesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["messages"] = attrs["messages"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationMessagesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieListConversationMessagesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"messages": reflect.TypeOf(GenieMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationMessagesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GenieListConversationMessagesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"messages":        o.Messages,
+			"next_page_token": o.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieListConversationMessagesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"messages": basetypes.ListType{
+				ElemType: GenieMessage_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetMessages returns the value of the Messages field in GenieListConversationMessagesResponse_SdkV2 as
+// a slice of GenieMessage_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieListConversationMessagesResponse_SdkV2) GetMessages(ctx context.Context) ([]GenieMessage_SdkV2, bool) {
+	if o.Messages.IsNull() || o.Messages.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieMessage_SdkV2
+	d := o.Messages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMessages sets the value of the Messages field in GenieListConversationMessagesResponse_SdkV2.
+func (o *GenieListConversationMessagesResponse_SdkV2) SetMessages(ctx context.Context, v []GenieMessage_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Messages = types.ListValueMust(t, vs)
+}
+
 type GenieListConversationsRequest_SdkV2 struct {
+	// Include all conversations in the space across all users. Requires "Can
+	// Manage" permission on the space.
+	IncludeAll types.Bool `tfsdk:"-"`
 	// Maximum number of conversations to return per page
 	PageSize types.Int64 `tfsdk:"-"`
 	// Token to get the next page of results
@@ -1449,9 +1627,10 @@ func (o GenieListConversationsRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
-			"space_id":   o.SpaceId,
+			"include_all": o.IncludeAll,
+			"page_size":   o.PageSize,
+			"page_token":  o.PageToken,
+			"space_id":    o.SpaceId,
 		})
 }
 
@@ -1459,9 +1638,10 @@ func (o GenieListConversationsRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (o GenieListConversationsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
-			"space_id":   types.StringType,
+			"include_all": types.BoolType,
+			"page_size":   types.Int64Type,
+			"page_token":  types.StringType,
+			"space_id":    types.StringType,
 		},
 	}
 }
@@ -2075,6 +2255,58 @@ func (o GenieResultMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"is_truncated": types.BoolType,
 			"row_count":    types.Int64Type,
+		},
+	}
+}
+
+type GenieSendMessageFeedbackRequest_SdkV2 struct {
+	// Optional text feedback that will be stored as a comment.
+	Comment types.String `tfsdk:"comment"`
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the message to provide feedback for.
+	MessageId types.String `tfsdk:"-"`
+	// The rating (POSITIVE, NEGATIVE, or NONE).
+	Rating types.String `tfsdk:"rating"`
+	// The ID associated with the Genie space where the message is located.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieSendMessageFeedbackRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieSendMessageFeedbackRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieSendMessageFeedbackRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GenieSendMessageFeedbackRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":         o.Comment,
+			"conversation_id": o.ConversationId,
+			"message_id":      o.MessageId,
+			"rating":          o.Rating,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieSendMessageFeedbackRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":         types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"rating":          types.StringType,
+			"space_id":        types.StringType,
 		},
 	}
 }

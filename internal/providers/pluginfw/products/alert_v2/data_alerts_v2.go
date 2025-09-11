@@ -26,17 +26,13 @@ func DataSourceAlertsV2() datasource.DataSource {
 	return &AlertsV2DataSource{}
 }
 
-type AlertsV2List struct {
-	sql_tf.ListAlertsV2Request
-	AlertsV2 types.List `tfsdk:"results"`
+// AlertsV2Data extends the main model with additional fields.
+type AlertsV2Data struct {
+	AlertsV2    types.List   `tfsdk:"results"`
+	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
-func (c AlertsV2List) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["results"] = attrs["results"].SetComputed()
-	return attrs
-}
-
-func (AlertsV2List) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"results": reflect.TypeOf(sql_tf.AlertV2{}),
 	}
@@ -51,7 +47,11 @@ func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.Metada
 }
 
 func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2List{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("results")
+		c.SetOptional("workspace_id")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -72,7 +72,7 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var config AlertsV2List
+	var config AlertsV2Data
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +100,8 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertsV2List
+	var newState AlertsV2Data
 	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
+	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

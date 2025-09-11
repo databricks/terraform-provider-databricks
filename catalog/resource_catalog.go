@@ -28,34 +28,36 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 	return false
 }
 
-type CatalogInfo struct {
-	Name                         string            `json:"name"`
-	Comment                      string            `json:"comment,omitempty"`
-	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`
-	ProviderName                 string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ShareName                    string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ConnectionName               string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	EnablePredictiveOptimization string            `json:"enable_predictive_optimization,omitempty" tf:"computed"`
-	Options                      map[string]string `json:"options,omitempty"`
-	Properties                   map[string]string `json:"properties,omitempty"`
-	Owner                        string            `json:"owner,omitempty" tf:"computed"`
-	IsolationMode                string            `json:"isolation_mode,omitempty" tf:"computed"`
-	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
-}
-
 func ResourceCatalog() common.Resource {
-	catalogSchema := common.StructToSchema(CatalogInfo{},
+	catalogSchema := common.StructToSchema(catalog.CatalogInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			}
-			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
-			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			// mark all computed values
+			for _, v := range []string{"owner", "isolation_mode", "metastore_id", "enable_predictive_optimization"} {
+				common.CustomizeSchemaPath(s, v).SetOptional().SetComputed()
+			}
+			// case sensitive suppress diff
+			for _, v := range []string{"name", "connection_name", "share_name", "provider_name"} {
+				common.CustomizeSchemaPath(s, v).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			}
+			// can only have one of provider_name + share_name, connection_name or storage_root
+			common.CustomizeSchemaPath(s, "connection_name").SetConflictsWith([]string{"storage_root", "provider_name", "share_name"}).SetForceNew()
+			for _, v := range []string{"provider_name", "share_name"} {
+				common.CustomizeSchemaPath(s, v).SetConflictsWith([]string{"connection_name", "storage_root"}).SetForceNew()
+			}
+			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff).SetForceNew()
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+			for _, v := range []string{"catalog_type", "created_at", "created_by",
+				"updated_at", "updated_by", "securable_type", "full_name"} {
+				common.CustomizeSchemaPath(s, v).SetReadOnly()
+			}
+			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
 			return s
 		})
 	return common.Resource{

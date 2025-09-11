@@ -129,6 +129,7 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### NewPipelineSpec
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.
@@ -242,12 +243,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_database_synced_database_table.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_synced_database_table name
+terraform import databricks_database_synced_database_table "name"
 ```

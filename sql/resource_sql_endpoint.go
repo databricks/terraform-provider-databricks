@@ -83,6 +83,21 @@ func ResourceSqlEndpoint() common.Resource {
 		common.CustomizeSchemaPath(m, "warehouse_type").
 			SetSuppressDiff().
 			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
+
+		// Add no_wait field to schema
+		m["no_wait"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "If true, skip waiting for the warehouse to start after creation.",
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new == "false" {
+					return true
+				}
+				return old == new
+			},
+		}
+
 		return m
 	})
 	return common.Resource{
@@ -101,7 +116,17 @@ func ResourceSqlEndpoint() common.Resource {
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)
 			}
-			resp, err := wait.Get()
+
+			d.SetId(wait.Id)
+
+			// Check if no_wait flag is set to true
+			noWait, ok := d.GetOk("no_wait")
+			if ok && noWait.(bool) {
+				return nil
+			}
+
+			// Wait for warehouse to start if no_wait is false or not set
+			_, err = wait.Get()
 			if err != nil {
 				// Rollback by deleting the warehouse
 				rollbackErr := w.Warehouses.DeleteById(ctx, wait.Id)
@@ -110,7 +135,6 @@ func ResourceSqlEndpoint() common.Resource {
 				}
 				return fmt.Errorf("failed waiting for warehouse to start: %w", err)
 			}
-			d.SetId(resp.Id)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

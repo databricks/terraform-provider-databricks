@@ -97,6 +97,7 @@ type Workspace struct {
 	WorkspaceURL                        string                   `json:"workspace_url,omitempty" tf:"computed"`
 	WorkspaceStatus                     string                   `json:"workspace_status,omitempty" tf:"computed"`
 	WorkspaceStatusMessage              string                   `json:"workspace_status_message,omitempty" tf:"computed"`
+	ExpectedWorkspaceStatus				string					 `json:"expected_workspace_status,omitempty" tf:"optional"`
 	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
 	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
 	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
@@ -146,6 +147,10 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	if w.ComputeMode != "" {
 		workspaceCreationRequest["compute_mode"] = w.ComputeMode
+	}
+	// For now, only translate provisioning status
+	if w.ExpectedWorkspaceStatus == WorkspaceStatusProvisioning {
+		workspaceCreationRequest["workspace_state"] = "WORKSPACE_STATE_PROVISIONING"
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -239,22 +244,32 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 		ws.WorkspaceStatusMessage, strBuffer.String())
 }
 
-// WaitForRunning will wait until workspace is running, otherwise will try to explain why it failed
+// If specified an expected_workspace_status, WaitForRunning will wait until workspace is in the expected status.
+// If not, it will wait until workspace is running, and otherwise will try to explain why it failed
 func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+		// expected status should only ever be PROVISIONING or RUNNING
+		expected := ws.ExpectedWorkspaceStatus
+		if expected == "" {
+			expected = WorkspaceStatusRunning
+		}
 		switch workspace.WorkspaceStatus {
-		case WorkspaceStatusRunning:
-			log.Printf("[INFO] Workspace is now running")
-			if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
-				// nobody would probably name workspace as 900150983cd24fb0,
-				// so we'll use it as unit testing shim
-				return nil
+		case expected:
+			log.Printf("[INFO] Workspace is now in expected status %s", expected)
+			// only verify that workspace is reachable if expected status is RUNNING
+			if expected == WorkspaceStatusRunning {
+				if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
+					// nobody would probably name workspace as 900150983cd24fb0,
+					// so we'll use it as unit testing shim
+					return nil
+				}
+				return a.verifyWorkspaceReachable(workspace)
 			}
-			return a.verifyWorkspaceReachable(workspace)
+			return nil
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			err = a.explainWorkspaceFailure(workspace)

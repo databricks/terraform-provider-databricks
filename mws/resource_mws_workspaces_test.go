@@ -176,7 +176,7 @@ func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
 						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
-					"workspace_state": "WORKSPACE_STATE_PROVISIONING"
+					"workspace_state": "WORKSPACE_STATE_PROVISIONING",
 				},
 				Response: Workspace{
 					WorkspaceID:    1234,
@@ -193,6 +193,7 @@ func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
 					AccountID:       "abc",
 					WorkspaceID:     1234,
 					WorkspaceStatus: WorkspaceStatusProvisioning,
+					ExpectedWorkspaceStatus: WorkspaceStatusProvisioning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
 					Location:        "bcd",

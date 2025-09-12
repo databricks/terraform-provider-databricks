@@ -38,20 +38,19 @@ type OnlineStoreResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// OnlineStore extends the main model with additional fields.
-type OnlineStore struct {
+// OnlineStoreExtended extends the main model with additional fields.
+type OnlineStoreExtended struct {
 	ml_tf.OnlineStore
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// OnlineStore struct. Container types (types.Map, types.List, types.Set) and
+// OnlineStoreExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m OnlineStoreExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.OnlineStore.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStore
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStoreExtended
 // only implements ToObjectValue() and Type().
-func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m OnlineStoreExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.OnlineStore.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m OnlineStore) Type(ctx context.Context) attr.Type {
+func (m OnlineStoreExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.OnlineStore.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan OnlineStore) {
+func (m *OnlineStoreExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan OnlineStoreExtended) {
 	m.OnlineStore.SyncFieldsDuringCreateOrUpdate(ctx, plan.OnlineStore)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *OnlineStore) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStore) {
+func (m *OnlineStoreExtended) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStoreExtended) {
 	m.OnlineStore.SyncFieldsDuringRead(ctx, existingState.OnlineStore)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,9 +98,8 @@ func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStoreExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -119,7 +113,7 @@ func (r *OnlineStoreResource) Configure(ctx context.Context, req resource.Config
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStoreExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -145,7 +139,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 		return
 	}
 
-	var newState OnlineStore
+	var newState OnlineStoreExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -163,7 +157,7 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan OnlineStore
+	var plan OnlineStoreExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +179,7 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	var newState OnlineStore
+	var newState OnlineStoreExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -210,7 +204,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	var existingState OnlineStore
+	var existingState OnlineStoreExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -233,7 +227,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	var newState OnlineStore
+	var newState OnlineStoreExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,7 +241,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 func (r *OnlineStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan OnlineStore
+	var plan OnlineStoreExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,7 +259,7 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	var state OnlineStore
+	var state OnlineStoreExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

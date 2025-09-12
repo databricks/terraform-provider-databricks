@@ -34,7 +34,6 @@ The following arguments are supported:
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
 * `when_condition` (string, optional) - Optional condition when the policy should take effect
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### ColumnMaskOptions
 * `function_name` (string, required) - The fully qualified name of the column mask function.
@@ -75,12 +74,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "on_securable_type,on_securable_fullname,name"
+  id = on_securable_type,on_securable_fullname,name
   to = databricks_policy_info.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_policy_info "on_securable_type,on_securable_fullname,name"
+terraform import databricks_policy_info on_securable_type,on_securable_fullname,name
 ```

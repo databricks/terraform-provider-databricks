@@ -13,7 +13,6 @@ The following arguments are supported:
 * `name` (string, optional) - Name of the federation policy. A recipient can have multiple policies with different names.
   The name must contain only lowercase alphanumeric characters, numbers, and hyphens
 * `oidc_policy` (OidcFederationPolicy, optional) - Specifies the policy to use for validating OIDC claims in the federated tokens
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### OidcFederationPolicy
 * `issuer` (string, required) - The required token issuer, as specified in the 'iss' claim of federated tokens
@@ -50,12 +49,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "name"
+  id = name
   to = databricks_recipient_federation_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_recipient_federation_policy "name"
+terraform import databricks_recipient_federation_policy name
 ```

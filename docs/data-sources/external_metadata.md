@@ -18,7 +18,6 @@ data "databricks_external_metadata" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Name of the external metadata object
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

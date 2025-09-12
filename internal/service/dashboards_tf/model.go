@@ -1130,6 +1130,60 @@ func (o GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Feedback containing rating and optional comment
+type GenieFeedback struct {
+	// Optional feedback comment text
+	Comment types.String `tfsdk:"comment"`
+	// The feedback rating
+	Rating types.String `tfsdk:"rating"`
+}
+
+func (toState *GenieFeedback) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieFeedback) {
+}
+
+func (toState *GenieFeedback) SyncFieldsDuringRead(ctx context.Context, fromState GenieFeedback) {
+}
+
+func (c GenieFeedback) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["rating"] = attrs["rating"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieFeedback.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieFeedback) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieFeedback
+// only implements ToObjectValue() and Type().
+func (o GenieFeedback) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment": o.Comment,
+			"rating":  o.Rating,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieFeedback) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment": types.StringType,
+			"rating":  types.StringType,
+		},
+	}
+}
+
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1576,8 +1630,8 @@ func (o *GenieListConversationMessagesResponse) SetMessages(ctx context.Context,
 }
 
 type GenieListConversationsRequest struct {
-	// Include all conversations in the space across all users. Requires "Can
-	// Manage" permission on the space.
+	// Include all conversations in the space across all users. Requires at
+	// least CAN MANAGE permission on the space.
 	IncludeAll types.Bool `tfsdk:"-"`
 	// Maximum number of conversations to return per page
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1841,6 +1895,8 @@ type GenieMessage struct {
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Error message if Genie failed to respond to the message
 	Error types.Object `tfsdk:"error"`
+	// User feedback for the message if provided
+	Feedback types.Object `tfsdk:"feedback"`
 	// Message ID. Legacy identifier, use message_id instead
 	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
@@ -1868,6 +1924,14 @@ func (toState *GenieMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 			}
 		}
 	}
+	if !fromPlan.Feedback.IsNull() && !fromPlan.Feedback.IsUnknown() {
+		if toStateFeedback, ok := toState.GetFeedback(ctx); ok {
+			if fromPlanFeedback, ok := fromPlan.GetFeedback(ctx); ok {
+				toStateFeedback.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFeedback)
+				toState.SetFeedback(ctx, toStateFeedback)
+			}
+		}
+	}
 	if !fromPlan.QueryResult.IsNull() && !fromPlan.QueryResult.IsUnknown() {
 		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
 			if fromPlanQueryResult, ok := fromPlan.GetQueryResult(ctx); ok {
@@ -1887,6 +1951,14 @@ func (toState *GenieMessage) SyncFieldsDuringRead(ctx context.Context, fromState
 			}
 		}
 	}
+	if !fromState.Feedback.IsNull() && !fromState.Feedback.IsUnknown() {
+		if toStateFeedback, ok := toState.GetFeedback(ctx); ok {
+			if fromStateFeedback, ok := fromState.GetFeedback(ctx); ok {
+				toStateFeedback.SyncFieldsDuringRead(ctx, fromStateFeedback)
+				toState.SetFeedback(ctx, toStateFeedback)
+			}
+		}
+	}
 	if !fromState.QueryResult.IsNull() && !fromState.QueryResult.IsUnknown() {
 		if toStateQueryResult, ok := toState.GetQueryResult(ctx); ok {
 			if fromStateQueryResult, ok := fromState.GetQueryResult(ctx); ok {
@@ -1903,6 +1975,7 @@ func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
 	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
 	attrs["error"] = attrs["error"].SetOptional()
+	attrs["feedback"] = attrs["feedback"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["message_id"] = attrs["message_id"].SetRequired()
@@ -1925,6 +1998,7 @@ func (a GenieMessage) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{
 		"attachments":  reflect.TypeOf(GenieAttachment{}),
 		"error":        reflect.TypeOf(MessageError{}),
+		"feedback":     reflect.TypeOf(GenieFeedback{}),
 		"query_result": reflect.TypeOf(Result{}),
 	}
 }
@@ -1941,6 +2015,7 @@ func (o GenieMessage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"conversation_id":        o.ConversationId,
 			"created_timestamp":      o.CreatedTimestamp,
 			"error":                  o.Error,
+			"feedback":               o.Feedback,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
 			"message_id":             o.MessageId,
@@ -1962,6 +2037,7 @@ func (o GenieMessage) Type(ctx context.Context) attr.Type {
 			"conversation_id":        types.StringType,
 			"created_timestamp":      types.Int64Type,
 			"error":                  MessageError{}.Type(ctx),
+			"feedback":               GenieFeedback{}.Type(ctx),
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"message_id":             types.StringType,
@@ -2022,6 +2098,31 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 func (o *GenieMessage) SetError(ctx context.Context, v MessageError) {
 	vs := v.ToObjectValue(ctx)
 	o.Error = vs
+}
+
+// GetFeedback returns the value of the Feedback field in GenieMessage as
+// a GenieFeedback value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieMessage) GetFeedback(ctx context.Context) (GenieFeedback, bool) {
+	var e GenieFeedback
+	if o.Feedback.IsNull() || o.Feedback.IsUnknown() {
+		return e, false
+	}
+	var v GenieFeedback
+	d := o.Feedback.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeedback sets the value of the Feedback field in GenieMessage.
+func (o *GenieMessage) SetFeedback(ctx context.Context, v GenieFeedback) {
+	vs := v.ToObjectValue(ctx)
+	o.Feedback = vs
 }
 
 // GetQueryResult returns the value of the QueryResult field in GenieMessage as

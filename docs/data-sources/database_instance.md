@@ -18,7 +18,6 @@ data "databricks_database_instance" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

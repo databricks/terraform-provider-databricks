@@ -959,10 +959,10 @@ type FederationPolicy_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 
 	OidcPolicy types.List `tfsdk:"oidc_policy"`
-	// The ID of the federation policy.
+	// The ID of the federation policy. Output only.
 	PolicyId types.String `tfsdk:"policy_id"`
-	// The service principal ID that this federation policy applies to. Only set
-	// for service principal federation policies.
+	// The service principal ID that this federation policy applies to. Output
+	// only. Only set for service principal federation policies.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 	// Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`
@@ -1002,12 +1002,8 @@ func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["oidc_policy"] = attrs["oidc_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
 	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetOptional()
-	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()

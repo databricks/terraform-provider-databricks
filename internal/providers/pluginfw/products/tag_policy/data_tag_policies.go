@@ -26,13 +26,18 @@ func DataSourceTagPolicies() datasource.DataSource {
 	return &TagPoliciesDataSource{}
 }
 
-// TagPoliciesData extends the main model with additional fields.
-type TagPoliciesData struct {
-	TagPolicies types.List   `tfsdk:"tag_policies"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+// TagPoliciesDataExtended extends the main model with additional fields.
+type TagPoliciesDataExtended struct {
+	tags_tf.ListTagPoliciesRequest
+	TagPolicies types.List `tfsdk:"tag_policies"`
 }
 
-func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c TagPoliciesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_policies"] = attrs["tag_policies"].SetComputed()
+	return attrs
+}
+
+func (TagPoliciesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_policies": reflect.TypeOf(tags_tf.TagPolicy{}),
 	}
@@ -47,11 +52,7 @@ func (r *TagPoliciesDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *TagPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("tag_policies")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPoliciesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks TagPolicy",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var config TagPoliciesData
+	var config TagPoliciesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, tag_policy.ToObjectValue(ctx))
 	}
 
-	var newState TagPoliciesData
+	var newState TagPoliciesDataExtended
 	newState.TagPolicies = types.ListValueMust(tags_tf.TagPolicy{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

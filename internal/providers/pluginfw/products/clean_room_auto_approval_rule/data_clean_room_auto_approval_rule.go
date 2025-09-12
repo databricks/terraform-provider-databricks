@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,20 +31,19 @@ type CleanRoomAutoApprovalRuleDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// CleanRoomAutoApprovalRuleData extends the main model with additional fields.
-type CleanRoomAutoApprovalRuleData struct {
+// CleanRoomAutoApprovalRuleDataExtended extends the main model with additional fields.
+type CleanRoomAutoApprovalRuleDataExtended struct {
 	cleanrooms_tf.CleanRoomAutoApprovalRule
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CleanRoomAutoApprovalRuleData struct. Container types (types.Map, types.List, types.Set) and
+// CleanRoomAutoApprovalRuleDataExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m CleanRoomAutoApprovalRuleData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomAutoApprovalRuleDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.CleanRoomAutoApprovalRule.GetComplexFieldTypes(ctx)
 }
 
@@ -53,33 +51,22 @@ func (m CleanRoomAutoApprovalRuleData) GetComplexFieldTypes(ctx context.Context)
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAutoApprovalRuleData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAutoApprovalRuleDataExtended
 // only implements ToObjectValue() and Type().
-func (m CleanRoomAutoApprovalRuleData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.CleanRoomAutoApprovalRule.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
-	)
+func (m CleanRoomAutoApprovalRuleDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return m.CleanRoomAutoApprovalRule.ToObjectValue(ctx)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m CleanRoomAutoApprovalRuleData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.CleanRoomAutoApprovalRule.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
-
-	return types.ObjectType{AttrTypes: attrTypes}
+func (m CleanRoomAutoApprovalRuleDataExtended) Type(ctx context.Context) attr.Type {
+	return m.CleanRoomAutoApprovalRule.Type(ctx)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CleanRoomAutoApprovalRuleData) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAutoApprovalRuleData) {
+func (m *CleanRoomAutoApprovalRuleDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAutoApprovalRuleDataExtended) {
 	m.CleanRoomAutoApprovalRule.SyncFieldsDuringRead(ctx, existingState.CleanRoomAutoApprovalRule)
 }
 
@@ -88,10 +75,7 @@ func (r *CleanRoomAutoApprovalRuleDataSource) Metadata(ctx context.Context, req 
 }
 
 func (r *CleanRoomAutoApprovalRuleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRuleData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRuleDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoomAutoApprovalRule",
 		Attributes:  attrs,
@@ -112,7 +96,7 @@ func (r *CleanRoomAutoApprovalRuleDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	var config CleanRoomAutoApprovalRuleData
+	var config CleanRoomAutoApprovalRuleDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,7 +119,7 @@ func (r *CleanRoomAutoApprovalRuleDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	var newState CleanRoomAutoApprovalRuleData
+	var newState CleanRoomAutoApprovalRuleDataExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

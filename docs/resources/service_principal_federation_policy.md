@@ -60,8 +60,8 @@ In addition to the above arguments, the following attributes are exported:
   for Service Principal Federation Policies. Typically an output parameter, which does not need to be
   specified in create or update requests. If specified in a request, must match the value in the
   request URL
-* `policy_id` (string) - The ID of the federation policy
-* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Only set for service principal federation policies
+* `policy_id` (string) - The ID of the federation policy. Output only
+* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
 * `uid` (string) - Unique, immutable id of the federation policy
 * `update_time` (string) - Last update time of the federation policy
 
@@ -69,12 +69,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "service_principal_id,policy_id"
+  id = service_principal_id,policy_id
   to = databricks_service_principal_federation_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_service_principal_federation_policy "service_principal_id,policy_id"
+terraform import databricks_service_principal_federation_policy service_principal_id,policy_id
 ```

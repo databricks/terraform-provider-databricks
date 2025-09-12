@@ -1278,7 +1278,8 @@ func (o *AlertV2) SetSchedule(ctx context.Context, v CronSchedule) {
 type AlertV2Evaluation struct {
 	// Operator used for comparison in alert evaluation.
 	ComparisonOperator types.String `tfsdk:"comparison_operator"`
-	// Alert state if result is empty.
+	// Alert state if result is empty. Please avoid setting this field to be
+	// `UNKNOWN` because `UNKNOWN` state is planned to be deprecated.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Timestamp of the last evaluation.
 	LastEvaluatedAt types.String `tfsdk:"last_evaluated_at"`
@@ -8537,8 +8538,10 @@ func (o ListAlertsV2Request) Type(ctx context.Context) attr.Type {
 }
 
 type ListAlertsV2Response struct {
-	NextPageToken types.String `tfsdk:"next_page_token"`
+	Alerts types.List `tfsdk:"alerts"`
 
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Deprecated. Use `alerts` instead.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -8549,6 +8552,7 @@ func (toState *ListAlertsV2Response) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (c ListAlertsV2Response) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alerts"] = attrs["alerts"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["results"] = attrs["results"].SetOptional()
 
@@ -8564,6 +8568,7 @@ func (c ListAlertsV2Response) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (a ListAlertsV2Response) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"alerts":  reflect.TypeOf(AlertV2{}),
 		"results": reflect.TypeOf(AlertV2{}),
 	}
 }
@@ -8575,6 +8580,7 @@ func (o ListAlertsV2Response) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"alerts":          o.Alerts,
 			"next_page_token": o.NextPageToken,
 			"results":         o.Results,
 		})
@@ -8584,12 +8590,41 @@ func (o ListAlertsV2Response) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListAlertsV2Response) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"alerts": basetypes.ListType{
+				ElemType: AlertV2{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
 				ElemType: AlertV2{}.Type(ctx),
 			},
 		},
 	}
+}
+
+// GetAlerts returns the value of the Alerts field in ListAlertsV2Response as
+// a slice of AlertV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAlertsV2Response) GetAlerts(ctx context.Context) ([]AlertV2, bool) {
+	if o.Alerts.IsNull() || o.Alerts.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertV2
+	d := o.Alerts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlerts sets the value of the Alerts field in ListAlertsV2Response.
+func (o *ListAlertsV2Response) SetAlerts(ctx context.Context, v []AlertV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alerts"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Alerts = types.ListValueMust(t, vs)
 }
 
 // GetResults returns the value of the Results field in ListAlertsV2Response as

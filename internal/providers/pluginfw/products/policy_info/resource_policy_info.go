@@ -38,20 +38,19 @@ type PolicyInfoResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// PolicyInfo extends the main model with additional fields.
-type PolicyInfo struct {
+// PolicyInfoExtended extends the main model with additional fields.
+type PolicyInfoExtended struct {
 	catalog_tf.PolicyInfo
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// PolicyInfo struct. Container types (types.Map, types.List, types.Set) and
+// PolicyInfoExtended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m PolicyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PolicyInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.PolicyInfo.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m PolicyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfoExtended
 // only implements ToObjectValue() and Type().
-func (m PolicyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PolicyInfoExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.PolicyInfo.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m PolicyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m PolicyInfo) Type(ctx context.Context) attr.Type {
+func (m PolicyInfoExtended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.PolicyInfo.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m PolicyInfo) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *PolicyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan PolicyInfo) {
+func (m *PolicyInfoExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan PolicyInfoExtended) {
 	m.PolicyInfo.SyncFieldsDuringCreateOrUpdate(ctx, plan.PolicyInfo)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *PolicyInfo) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfo) {
+func (m *PolicyInfoExtended) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfoExtended) {
 	m.PolicyInfo.SyncFieldsDuringRead(ctx, existingState.PolicyInfo)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *PolicyInfoResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,11 +98,10 @@ func (r *PolicyInfoResource) Metadata(ctx context.Context, req resource.Metadata
 }
 
 func (r *PolicyInfoResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, PolicyInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, PolicyInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "on_securable_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "on_securable_fullname")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -121,7 +115,7 @@ func (r *PolicyInfoResource) Configure(ctx context.Context, req resource.Configu
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfoExtended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -149,7 +143,7 @@ func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags 
 		return
 	}
 
-	var newState PolicyInfo
+	var newState PolicyInfoExtended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -167,7 +161,7 @@ func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan PolicyInfo
+	var plan PolicyInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,7 +183,7 @@ func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var newState PolicyInfo
+	var newState PolicyInfoExtended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -214,7 +208,7 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var existingState PolicyInfo
+	var existingState PolicyInfoExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -237,7 +231,7 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var newState PolicyInfo
+	var newState PolicyInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -251,7 +245,7 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 func (r *PolicyInfoResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan PolicyInfo
+	var plan PolicyInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -269,7 +263,7 @@ func (r *PolicyInfoResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	var state PolicyInfo
+	var state PolicyInfoExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

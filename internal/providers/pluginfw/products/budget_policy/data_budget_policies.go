@@ -26,12 +26,18 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 	return &BudgetPoliciesDataSource{}
 }
 
-// BudgetPoliciesData extends the main model with additional fields.
-type BudgetPoliciesData struct {
+// BudgetPoliciesDataExtended extends the main model with additional fields.
+type BudgetPoliciesDataExtended struct {
+	billing_tf.ListBudgetPoliciesRequest
 	BudgetPolicy types.List `tfsdk:"policies"`
 }
 
-func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c BudgetPoliciesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policies"] = attrs["policies"].SetComputed()
+	return attrs
+}
+
+func (BudgetPoliciesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
 	}
@@ -46,10 +52,7 @@ func (r *BudgetPoliciesDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *BudgetPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("policies")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks BudgetPolicy",
 		Attributes:  attrs,
@@ -70,7 +73,7 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var config BudgetPoliciesData
+	var config BudgetPoliciesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -98,7 +101,7 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		results = append(results, budget_policy.ToObjectValue(ctx))
 	}
 
-	var newState BudgetPoliciesData
+	var newState BudgetPoliciesDataExtended
 	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

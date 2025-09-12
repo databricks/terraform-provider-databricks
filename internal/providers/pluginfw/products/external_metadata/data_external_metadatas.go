@@ -26,13 +26,18 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 	return &ExternalMetadatasDataSource{}
 }
 
-// ExternalMetadatasData extends the main model with additional fields.
-type ExternalMetadatasData struct {
-	ExternalMetadata types.List   `tfsdk:"external_metadata"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+// ExternalMetadatasDataExtended extends the main model with additional fields.
+type ExternalMetadatasDataExtended struct {
+	catalog_tf.ListExternalMetadataRequest
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
 }
 
-func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c ExternalMetadatasDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_metadata"] = attrs["external_metadata"].SetComputed()
+	return attrs
+}
+
+func (ExternalMetadatasDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"external_metadata": reflect.TypeOf(catalog_tf.ExternalMetadata{}),
 	}
@@ -47,11 +52,7 @@ func (r *ExternalMetadatasDataSource) Metadata(ctx context.Context, req datasour
 }
 
 func (r *ExternalMetadatasDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("external_metadata")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks ExternalMetadata",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var config ExternalMetadatasData
+	var config ExternalMetadatasDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, external_metadata.ToObjectValue(ctx))
 	}
 
-	var newState ExternalMetadatasData
+	var newState ExternalMetadatasDataExtended
 	newState.ExternalMetadata = types.ListValueMust(catalog_tf.ExternalMetadata{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

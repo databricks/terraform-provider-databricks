@@ -38,20 +38,19 @@ type AlertV2Resource struct {
 	Client *autogen.DatabricksClient
 }
 
-// AlertV2 extends the main model with additional fields.
-type AlertV2 struct {
+// AlertV2Extended extends the main model with additional fields.
+type AlertV2Extended struct {
 	sql_tf.AlertV2
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AlertV2 struct. Container types (types.Map, types.List, types.Set) and
+// AlertV2Extended struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AlertV2Extended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.AlertV2.GetComplexFieldTypes(ctx)
 }
 
@@ -59,12 +58,11 @@ func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2Extended
 // only implements ToObjectValue() and Type().
-func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AlertV2Extended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.AlertV2.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -74,10 +72,9 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m AlertV2) Type(ctx context.Context) attr.Type {
+func (m AlertV2Extended) Type(ctx context.Context) attr.Type {
 	embeddedType := m.AlertV2.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -85,17 +82,15 @@ func (m AlertV2) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AlertV2) {
+func (m *AlertV2Extended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AlertV2Extended) {
 	m.AlertV2.SyncFieldsDuringCreateOrUpdate(ctx, plan.AlertV2)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AlertV2) SyncFieldsDuringRead(ctx context.Context, existingState AlertV2) {
+func (m *AlertV2Extended) SyncFieldsDuringRead(ctx context.Context, existingState AlertV2Extended) {
 	m.AlertV2.SyncFieldsDuringRead(ctx, existingState.AlertV2)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,9 +98,8 @@ func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AlertV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AlertV2Extended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "id")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -119,7 +113,7 @@ func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2Extended, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -145,7 +139,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 		return
 	}
 
-	var newState AlertV2
+	var newState AlertV2Extended
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -163,7 +157,7 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan AlertV2
+	var plan AlertV2Extended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +179,7 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var newState AlertV2
+	var newState AlertV2Extended
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -210,7 +204,7 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var existingState AlertV2
+	var existingState AlertV2Extended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -233,7 +227,7 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var newState AlertV2
+	var newState AlertV2Extended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,7 +241,7 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan AlertV2
+	var plan AlertV2Extended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,7 +259,7 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	var state AlertV2
+	var state AlertV2Extended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

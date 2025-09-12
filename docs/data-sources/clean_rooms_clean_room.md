@@ -19,7 +19,6 @@ data "databricks_clean_rooms_clean_room" "example" {
 The following arguments are supported:
 * `name` (string, required) - The name of the clean room.
   It should follow [UC securable naming requirements](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

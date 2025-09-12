@@ -12,7 +12,7 @@ The following arguments are supported:
 * `feature_name` (string, required)
 * `table_name` (string, required)
 * `page_size` (integer, optional) - The maximum number of results to return
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

@@ -26,13 +26,18 @@ func DataSourceQualityMonitors() datasource.DataSource {
 	return &QualityMonitorsDataSource{}
 }
 
-// QualityMonitorsData extends the main model with additional fields.
-type QualityMonitorsData struct {
-	QualityMonitorV2 types.List   `tfsdk:"quality_monitors"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+// QualityMonitorsDataExtended extends the main model with additional fields.
+type QualityMonitorsDataExtended struct {
+	qualitymonitorv2_tf.ListQualityMonitorRequest
+	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
 }
 
-func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c QualityMonitorsDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
+	return attrs
+}
+
+func (QualityMonitorsDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitors": reflect.TypeOf(qualitymonitorv2_tf.QualityMonitor{}),
 	}
@@ -47,11 +52,7 @@ func (r *QualityMonitorsDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *QualityMonitorsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("quality_monitors")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks QualityMonitor",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	var config QualityMonitorsData
+	var config QualityMonitorsDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, quality_monitor.ToObjectValue(ctx))
 	}
 
-	var newState QualityMonitorsData
+	var newState QualityMonitorsDataExtended
 	newState.QualityMonitorV2 = types.ListValueMust(qualitymonitorv2_tf.QualityMonitor{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

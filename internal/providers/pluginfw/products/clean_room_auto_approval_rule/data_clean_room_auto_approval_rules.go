@@ -26,13 +26,18 @@ func DataSourceCleanRoomAutoApprovalRules() datasource.DataSource {
 	return &CleanRoomAutoApprovalRulesDataSource{}
 }
 
-// CleanRoomAutoApprovalRulesData extends the main model with additional fields.
-type CleanRoomAutoApprovalRulesData struct {
-	CleanRoomAutoApprovalRules types.List   `tfsdk:"rules"`
-	WorkspaceID                types.String `tfsdk:"workspace_id"`
+// CleanRoomAutoApprovalRulesDataExtended extends the main model with additional fields.
+type CleanRoomAutoApprovalRulesDataExtended struct {
+	cleanrooms_tf.ListCleanRoomAutoApprovalRulesRequest
+	CleanRoomAutoApprovalRules types.List `tfsdk:"rules"`
 }
 
-func (CleanRoomAutoApprovalRulesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c CleanRoomAutoApprovalRulesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["rules"] = attrs["rules"].SetComputed()
+	return attrs
+}
+
+func (CleanRoomAutoApprovalRulesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"rules": reflect.TypeOf(cleanrooms_tf.CleanRoomAutoApprovalRule{}),
 	}
@@ -47,11 +52,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Metadata(ctx context.Context, req
 }
 
 func (r *CleanRoomAutoApprovalRulesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRulesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("rules")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAutoApprovalRulesDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoomAutoApprovalRule",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	var config CleanRoomAutoApprovalRulesData
+	var config CleanRoomAutoApprovalRulesDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *CleanRoomAutoApprovalRulesDataSource) Read(ctx context.Context, req dat
 		results = append(results, clean_room_auto_approval_rule.ToObjectValue(ctx))
 	}
 
-	var newState CleanRoomAutoApprovalRulesData
+	var newState CleanRoomAutoApprovalRulesDataExtended
 	newState.CleanRoomAutoApprovalRules = types.ListValueMust(cleanrooms_tf.CleanRoomAutoApprovalRule{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

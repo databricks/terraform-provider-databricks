@@ -18,7 +18,7 @@ data "databricks_quality_monitors_v2" "all" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

@@ -5069,6 +5069,8 @@ func (o *Table_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_Sd
 // Internal information for D2D sharing that should not be disclosed to external
 // users.
 type TableInternalAttributes_SdkV2 struct {
+	// Managed Delta Metadata location for foreign iceberg tables.
+	AuxiliaryManagedLocation types.String `tfsdk:"auxiliary_managed_location"`
 	// Will be populated in the reconciliation response for VIEW and
 	// FOREIGN_TABLE, with the value of the parent UC entity's storage_location,
 	// following the same logic as getManagedEntityPath in
@@ -5094,6 +5096,7 @@ func (toState *TableInternalAttributes_SdkV2) SyncFieldsDuringRead(ctx context.C
 }
 
 func (c TableInternalAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auxiliary_managed_location"] = attrs["auxiliary_managed_location"].SetOptional()
 	attrs["parent_storage_location"] = attrs["parent_storage_location"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
@@ -5120,10 +5123,11 @@ func (o TableInternalAttributes_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"parent_storage_location": o.ParentStorageLocation,
-			"storage_location":        o.StorageLocation,
-			"type":                    o.Type_,
-			"view_definition":         o.ViewDefinition,
+			"auxiliary_managed_location": o.AuxiliaryManagedLocation,
+			"parent_storage_location":    o.ParentStorageLocation,
+			"storage_location":           o.StorageLocation,
+			"type":                       o.Type_,
+			"view_definition":            o.ViewDefinition,
 		})
 }
 
@@ -5131,10 +5135,11 @@ func (o TableInternalAttributes_SdkV2) ToObjectValue(ctx context.Context) basety
 func (o TableInternalAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parent_storage_location": types.StringType,
-			"storage_location":        types.StringType,
-			"type":                    types.StringType,
-			"view_definition":         types.StringType,
+			"auxiliary_managed_location": types.StringType,
+			"parent_storage_location":    types.StringType,
+			"storage_location":           types.StringType,
+			"type":                       types.StringType,
+			"view_definition":            types.StringType,
 		},
 	}
 }

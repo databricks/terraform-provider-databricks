@@ -1668,7 +1668,7 @@ type Group struct {
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+	// external_id should be unique for identifying groups
 	ExternalId types.String `tfsdk:"externalId"`
 
 	Groups types.List `tfsdk:"groups"`

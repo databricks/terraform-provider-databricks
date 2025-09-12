@@ -14238,8 +14238,6 @@ type RunTask struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
-	// Deprecated, field was never used in production.
-	Disabled types.Bool `tfsdk:"disabled"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -14820,7 +14818,6 @@ func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["disabled"] = attrs["disabled"].SetComputed()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -14918,7 +14915,6 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dbt_task":                     o.DbtTask,
 			"depends_on":                   o.DependsOn,
 			"description":                  o.Description,
-			"disabled":                     o.Disabled,
 			"effective_performance_target": o.EffectivePerformanceTarget,
 			"email_notifications":          o.EmailNotifications,
 			"end_time":                     o.EndTime,
@@ -14974,7 +14970,6 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 				ElemType: TaskDependency{}.Type(ctx),
 			},
 			"description":                  types.StringType,
-			"disabled":                     types.BoolType,
 			"effective_performance_target": types.StringType,
 			"email_notifications":          JobEmailNotifications{}.Type(ctx),
 			"end_time":                     types.Int64Type,
@@ -19400,6 +19395,9 @@ type Task struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
@@ -19877,6 +19875,7 @@ func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
@@ -19959,6 +19958,7 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
 			"disable_auto_optimization": o.DisableAutoOptimization,
+			"disabled":                  o.Disabled,
 			"email_notifications":       o.EmailNotifications,
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
@@ -20003,6 +20003,7 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
+			"disabled":                  types.BoolType,
 			"email_notifications":       TaskEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
 			"existing_cluster_id":       types.StringType,

@@ -97,7 +97,7 @@ type Workspace struct {
 	WorkspaceURL                        string                   `json:"workspace_url,omitempty" tf:"computed"`
 	WorkspaceStatus                     string                   `json:"workspace_status,omitempty" tf:"computed"`
 	WorkspaceStatusMessage              string                   `json:"workspace_status_message,omitempty" tf:"computed"`
-	ExpectedWorkspaceStatus				string					 `json:"expected_workspace_status,omitempty"`
+	ExpectedWorkspaceStatus             string                   `json:"expected_workspace_status,omitempty"`
 	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
 	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
 	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
@@ -571,7 +571,7 @@ func ResourceMwsWorkspaces() common.Resource {
 						WorkspaceStatusRunning,
 					}, false),
 				)
-        	}
+			}
 			docOptions := docs.DocOptions{
 				Section:  docs.Guides,
 				Slug:     "gcp-workspace",

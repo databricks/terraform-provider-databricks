@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -268,7 +269,7 @@ func (a PipelinesAPI) Delete(id string, timeout time.Duration) error {
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet deleted", id, *i.State)
 			log.Printf("[DEBUG] %s", message)
-			return resource.RetryableError(fmt.Errorf(message))
+			return resource.RetryableError(errors.New(message))
 		})
 }
 
@@ -316,7 +317,7 @@ func (a PipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)
-			return resource.RetryableError(fmt.Errorf(message))
+			return resource.RetryableError(errors.New(message))
 		})
 }
 

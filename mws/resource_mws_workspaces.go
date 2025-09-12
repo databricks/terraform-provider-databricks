@@ -166,7 +166,7 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	if err != nil {
 		return err
 	}
-	if err = a.WaitForRunning(*ws, timeout); err != nil {
+	if err = a.WaitForExpectedStatus(*ws, timeout); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
 		if derr := a.Delete(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID)); derr != nil {
 			return fmt.Errorf("%s - %s", err, derr)
@@ -244,9 +244,9 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 		ws.WorkspaceStatusMessage, strBuffer.String())
 }
 
-// If specified an expected_workspace_status, WaitForRunning will wait until workspace is in the expected status.
-// If not, it will wait until workspace is running, and otherwise will try to explain why it failed
-func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error {
+// If expected_workspace_status is specified, WaitForExpectedStatus will wait until workspace is in the expected status.
+// If not, it will wait until workspace is running, and otherwise will try to explain why it failed.
+func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
@@ -322,7 +322,7 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if err != nil {
 		return err
 	}
-	return a.WaitForRunning(ws, timeout)
+	return a.WaitForExpectedStatus(ws, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
@@ -563,6 +563,15 @@ func ResourceMwsWorkspaces() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
+			// validate that expected_workspace_status is one of [PROVISIONING, RUNNING]
+			if f, ok := s["expected_workspace_status"]; ok {
+				f.ValidateDiagFunc = validation.ToDiagFunc(
+					validation.StringInSlice([]string{
+						WorkspaceStatusProvisioning,
+						WorkspaceStatusRunning,
+					}, false),
+				)
+        	}
 			docOptions := docs.DocOptions{
 				Section:  docs.Guides,
 				Slug:     "gcp-workspace",
@@ -591,10 +600,7 @@ func ResourceMwsWorkspaces() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			if v, ok := d.GetOk("expected_workspace_status"); ok {
-				workspace.ExpectedWorkspaceStatus = v.(string)
-			}
-
+			common.DataToStructPointer(d, workspaceSchema, &workspace)
 			if c.IsAws() {
 				if _, ok := d.GetOk("aws_region"); !ok {
 					return fmt.Errorf("aws_region is required for AWS workspaces")
@@ -653,7 +659,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err = common.StructToData(workspace, workspaceSchema, d); err != nil {
 				return err
 			}
-			err = workspacesAPI.WaitForRunning(workspace, d.Timeout(schema.TimeoutRead))
+			err = workspacesAPI.WaitForExpectedStatus(workspace, d.Timeout(schema.TimeoutRead))
 			if err != nil {
 				return err
 			}

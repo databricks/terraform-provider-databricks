@@ -515,16 +515,8 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 
 // ResourceMwsWorkspaces manages E2 workspaces
 func ResourceMwsWorkspaces() common.Resource {
-	log.Printf("[DEBUG] ResourceMwsWorkspaces() called - generating schema")
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			log.Printf("[DEBUG] Schema customization function called")
-			// Check if our field exists
-			if field, exists := s["expected_workspace_status"]; exists {
-				log.Printf("[DEBUG] ✅ expected_workspace_status found in schema: %+v", field)
-			} else {
-				log.Printf("[DEBUG] ❌ expected_workspace_status NOT found in schema")
-			}
 			for name, fieldSchema := range s {
 				if fieldSchema.Computed {
 					// skip checking all changes from remote state
@@ -599,17 +591,6 @@ func ResourceMwsWorkspaces() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			if v, ok := d.GetOk("expected_workspace_status"); ok {
-				log.Printf("[DEBUG] expected_workspace_status in ResourceData: %v", v)
-			} else {
-				log.Printf("[DEBUG] expected_workspace_status NOT in ResourceData")
-				// Check raw value
-				raw := d.Get("expected_workspace_status")
-				log.Printf("[DEBUG] Raw value: '%v' (type: %T)", raw, raw)
-}
-			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			log.Printf("[DEBUG] workspace.ExpectedWorkspaceStatus after conversion: '%s'", workspace.ExpectedWorkspaceStatus)
-
 			if v, ok := d.GetOk("expected_workspace_status"); ok {
 				workspace.ExpectedWorkspaceStatus = v.(string)
 			}

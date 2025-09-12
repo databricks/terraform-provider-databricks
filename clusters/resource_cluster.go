@@ -2,6 +2,7 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"

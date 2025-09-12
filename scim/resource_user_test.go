@@ -2,6 +2,7 @@ package scim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 

@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"

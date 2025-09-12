@@ -237,7 +237,7 @@ func shareUpdateWithName(name string) string {
 			name  = "%s"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "A"
 				data_object_type = "TABLE"
 				history_data_sharing_status = "ENABLED"

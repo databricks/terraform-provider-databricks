@@ -162,22 +162,22 @@ func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
 				// retreating to raw JSON, as certain fields don't work well together
-				// ExpectedRequest: map[string]any{
-				// 	"account_id": "abc",
-				// 	"cloud":      "gcp",
-				// 	"cloud_resource_container": map[string]any{
-				// 		"gcp": map[string]any{
-				// 			"project_id": "def",
-				// 		},
-				// 	},
-				// 	"location":   "bcd",
-				// 	"network_id": "net_id_a",
-				// 	"gcp_managed_network_config": map[string]any{
-				// 		"subnet_cidr": "a",
-				// 	},
-				// 	"workspace_name": "labdata",
-				// 	"workspace_state": "WORKSPACE_STATE_PROVISIONING",
-				// },
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name": "labdata",
+					"workspace_state": "WORKSPACE_STATE_PROVISIONING",
+				},
 				Response: Workspace{
 					WorkspaceID:    1234,
 					AccountID:      "abc",

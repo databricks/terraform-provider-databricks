@@ -258,6 +258,44 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 	})
 }
 
+func TestMwsAccGcpWorkspacesWithExpectedProvisioning(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_mws_workspaces" "this" {
+			account_id                = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name            = "{env.TEST_PREFIX}-{var.RANDOM}"
+			location                  = "{env.GOOGLE_REGION}"
+			expected_workspace_status = "PROVISIONING"
+
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+		}`,
+		Check: func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("databricks_mws_workspaces.this not found")
+			}
+			if rs.Primary.Attributes["workspace_id"] == "" {
+				return fmt.Errorf("workspace_id is empty")
+			}
+
+			expectedStatus := "PROVISIONING"
+			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
+				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
+			}
+
+			if expectedAttr := rs.Primary.Attributes["expected_workspace_status"]; expectedAttr != expectedStatus {
+				return fmt.Errorf("expected expected_workspace_status to be %s, got %s", expectedStatus, expectedAttr)
+			}
+
+			return nil
+		},
+	})
+}
+
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `

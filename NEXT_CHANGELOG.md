@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Remove incorrect customization for `databricks_catalog`
+
 ### Documentation
 
 ### Exporter

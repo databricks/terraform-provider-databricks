@@ -10,6 +10,7 @@
 
 ### Bug Fixes
  * Add support for share resource in plugin framework implementation to be SDKv2 compatible ([#4965](https://github.com/databricks/terraform-provider-databricks/pull/4965))
+
 ### Documentation
 
 ### Exporter

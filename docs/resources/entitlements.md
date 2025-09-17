@@ -67,7 +67,7 @@ The following entitlements are available.
 * `allow_instance_pool_create` -  (Optional) Allow the principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
 * `databricks_sql_access` - (Optional) This is a field to allow the principal to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
 * `workspace_access` - (Optional) This is a field to allow the principal to have access to a Databricks Workspace.
-* `workspace_consume` - (Optional) This is a field to allow the principal to have access to a Databricks Workspace as consumer, with limited access to workspace UI.  Couldn't be used with `workspace_access` or `databricks_sql_access`.
+* `workspace_consume` - (Optional) This is a field to allow the principal to have access to a Databricks Workspace as consumer, with limited access to workspace UI.
 
 ## Import
 

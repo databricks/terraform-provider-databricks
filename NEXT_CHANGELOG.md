@@ -4,8 +4,8 @@
 
 ### Breaking Changes
 
+
 ### New Features and Improvements
-* Added the following resources and data sources: `account_settings_v2_setting` and `workspace_settings_v2_setting` ([#5016](https://github.com/databricks/terraform-provider-databricks/pull/5016)).
 * Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation ([#5014](https://github.com/databricks/terraform-provider-databricks/pull/5014))
 
 ### Bug Fixes

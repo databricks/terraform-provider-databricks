@@ -2,6 +2,8 @@
 subcategory: "OAuth"
 ---
 # databricks_service_principal_federation_policies Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of federation policies for a service principal.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -32,8 +34,8 @@ This data source exports a single attribute, `policies`. It is a list of resourc
   specified in create or update requests. If specified in a request, must match the value in the
   request URL
 * `oidc_policy` (OidcFederationPolicy)
-* `policy_id` (string) - The ID of the federation policy
-* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Only set for service principal federation policies
+* `policy_id` (string) - The ID of the federation policy. Output only
+* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
 * `uid` (string) - Unique, immutable id of the federation policy
 * `update_time` (string) - Last update time of the federation policy
 

@@ -28,8 +28,7 @@ func DataSourceOnlineStores() datasource.DataSource {
 
 // OnlineStoresData extends the main model with additional fields.
 type OnlineStoresData struct {
-	FeatureStore types.List   `tfsdk:"online_stores"`
-	WorkspaceID  types.String `tfsdk:"workspace_id"`
+	FeatureStore types.List `tfsdk:"online_stores"`
 }
 
 func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *OnlineStoresDataSource) Metadata(ctx context.Context, req datasource.Me
 func (r *OnlineStoresDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("online_stores")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var newState OnlineStoresData
 	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

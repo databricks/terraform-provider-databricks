@@ -41,7 +41,6 @@ type ExternalMetadataResource struct {
 // ExternalMetadata extends the main model with additional fields.
 type ExternalMetadata struct {
 	catalog_tf.ExternalMetadata
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m ExternalMetadata) GetComplexFieldTypes(ctx context.Context) map[string]r
 func (m ExternalMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.ExternalMetadata.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m ExternalMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ExternalMetadata) Type(ctx context.Context) attr.Type {
 	embeddedType := m.ExternalMetadata.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m ExternalMetadata) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *ExternalMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan ExternalMetadata) {
 	m.ExternalMetadata.SyncFieldsDuringCreateOrUpdate(ctx, plan.ExternalMetadata)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *ExternalMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, p
 // during read.
 func (m *ExternalMetadata) SyncFieldsDuringRead(ctx context.Context, existingState ExternalMetadata) {
 	m.ExternalMetadata.SyncFieldsDuringRead(ctx, existingState.ExternalMetadata)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *ExternalMetadataResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *ExternalMetadataResource) Metadata(ctx context.Context, req resource.Me
 func (r *ExternalMetadataResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ExternalMetadata{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

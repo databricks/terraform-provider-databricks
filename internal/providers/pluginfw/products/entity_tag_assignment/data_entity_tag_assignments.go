@@ -29,9 +29,8 @@ func DataSourceEntityTagAssignments() datasource.DataSource {
 // EntityTagAssignmentsData extends the main model with additional fields.
 type EntityTagAssignmentsData struct {
 	EntityTagAssignments types.List   `tfsdk:"tag_assignments"`
-	EntityName           types.String `tfsdk:"entity_name"`
 	EntityType           types.String `tfsdk:"entity_type"`
-	WorkspaceID          types.String `tfsdk:"workspace_id"`
+	EntityName           types.String `tfsdk:"entity_name"`
 }
 
 func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -51,9 +50,8 @@ func (r *EntityTagAssignmentsDataSource) Metadata(ctx context.Context, req datas
 func (r *EntityTagAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("tag_assignments")
-		c.SetRequired("entity_name")
 		c.SetRequired("entity_type")
-		c.SetOptional("workspace_id")
+		c.SetRequired("entity_name")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -106,6 +104,5 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 
 	var newState EntityTagAssignmentsData
 	newState.EntityTagAssignments = types.ListValueMust(catalog_tf.EntityTagAssignment{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -26,13 +26,18 @@ func DataSourceCleanRooms() datasource.DataSource {
 	return &CleanRoomsDataSource{}
 }
 
-// CleanRoomsData extends the main model with additional fields.
-type CleanRoomsData struct {
-	CleanRooms  types.List   `tfsdk:"clean_rooms"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+// CleanRoomsDataExtended extends the main model with additional fields.
+type CleanRoomsDataExtended struct {
+	cleanrooms_tf.ListCleanRoomsRequest
+	CleanRooms types.List `tfsdk:"clean_rooms"`
 }
 
-func (CleanRoomsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (c CleanRoomsDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms"] = attrs["clean_rooms"].SetComputed()
+	return attrs
+}
+
+func (CleanRoomsDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms": reflect.TypeOf(cleanrooms_tf.CleanRoom{}),
 	}
@@ -47,11 +52,7 @@ func (r *CleanRoomsDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *CleanRoomsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("clean_rooms")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomsDataExtended{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CleanRoom",
 		Attributes:  attrs,
@@ -72,7 +73,7 @@ func (r *CleanRoomsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var config CleanRoomsData
+	var config CleanRoomsDataExtended
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +101,7 @@ func (r *CleanRoomsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		results = append(results, clean_room.ToObjectValue(ctx))
 	}
 
-	var newState CleanRoomsData
+	var newState CleanRoomsDataExtended
 	newState.CleanRooms = types.ListValueMust(cleanrooms_tf.CleanRoom{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

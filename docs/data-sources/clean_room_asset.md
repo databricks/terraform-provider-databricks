@@ -27,7 +27,6 @@ The following arguments are supported:
   
   For notebooks, the name is the notebook file name.
   For jar analyses, the name is the jar analysis name
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

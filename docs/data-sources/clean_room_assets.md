@@ -17,7 +17,7 @@ resource "databricks_clean_rooms_asset" "all" {
 ## Arguments
 The following arguments are supported:
 * `clean_room_name` (string, required) - Name of the clean room
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

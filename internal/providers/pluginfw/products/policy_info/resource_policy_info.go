@@ -41,7 +41,6 @@ type PolicyInfoResource struct {
 // PolicyInfo extends the main model with additional fields.
 type PolicyInfo struct {
 	catalog_tf.PolicyInfo
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m PolicyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 func (m PolicyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.PolicyInfo.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m PolicyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m PolicyInfo) Type(ctx context.Context) attr.Type {
 	embeddedType := m.PolicyInfo.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m PolicyInfo) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *PolicyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan PolicyInfo) {
 	m.PolicyInfo.SyncFieldsDuringCreateOrUpdate(ctx, plan.PolicyInfo)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *PolicyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan Po
 // during read.
 func (m *PolicyInfo) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfo) {
 	m.PolicyInfo.SyncFieldsDuringRead(ctx, existingState.PolicyInfo)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *PolicyInfoResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -107,7 +102,6 @@ func (r *PolicyInfoResource) Schema(ctx context.Context, req resource.SchemaRequ
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "on_securable_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "on_securable_fullname")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

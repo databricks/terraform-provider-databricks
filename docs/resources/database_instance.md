@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Resource
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Lakebase Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances.
 
 ### Use Cases
@@ -85,7 +87,6 @@ The following arguments are supported:
   Valid values are 2 to 35 days
 * `stopped` (boolean, optional) - Whether the instance is stopped
 * `purge_on_delete` (boolean, optional) - Purge the resource on delete
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### DatabaseInstanceRef
 * `branch_time` (string, optional) - Branch time of the ref database instance.

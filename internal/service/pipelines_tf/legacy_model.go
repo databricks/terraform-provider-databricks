@@ -17,7 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf" // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -98,6 +98,200 @@ type CreatePipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
+}
+
+func (toState *CreatePipeline_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePipeline_SdkV2) {
+	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromPlan.Environment.IsNull() && !fromPlan.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromPlanEnvironment, ok := fromPlan.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromPlan.EventLog.IsNull() && !fromPlan.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromPlanEventLog, ok := fromPlan.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromPlan.Filters.IsNull() && !fromPlan.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromPlanFilters, ok := fromPlan.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromPlan.GatewayDefinition.IsNull() && !fromPlan.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromPlanGatewayDefinition, ok := fromPlan.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromPlan.IngestionDefinition.IsNull() && !fromPlan.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromPlanIngestionDefinition, ok := fromPlan.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromPlan.RestartWindow.IsNull() && !fromPlan.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromPlanRestartWindow, ok := fromPlan.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+}
+
+func (toState *CreatePipeline_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreatePipeline_SdkV2) {
+	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromState.Environment.IsNull() && !fromState.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromStateEnvironment, ok := fromState.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringRead(ctx, fromStateEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromState.EventLog.IsNull() && !fromState.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromStateEventLog, ok := fromState.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringRead(ctx, fromStateEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromState.Filters.IsNull() && !fromState.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromStateFilters, ok := fromState.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringRead(ctx, fromStateFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromState.GatewayDefinition.IsNull() && !fromState.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromStateGatewayDefinition, ok := fromState.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringRead(ctx, fromStateGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromState.IngestionDefinition.IsNull() && !fromState.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromStateIngestionDefinition, ok := fromState.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringRead(ctx, fromStateIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromState.RestartWindow.IsNull() && !fromState.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromStateRestartWindow, ok := fromState.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringRead(ctx, fromStateRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+}
+
+func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["dry_run"] = attrs["dry_run"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["root_path"] = attrs["root_path"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
@@ -806,6 +1000,18 @@ type DeletePipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (toState *DeletePipelineRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePipelineRequest_SdkV2) {
+}
+
+func (toState *DeletePipelineRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeletePipelineRequest_SdkV2) {
+}
+
+func (c DeletePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -956,6 +1162,201 @@ type EditPipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
+}
+
+func (toState *EditPipeline_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditPipeline_SdkV2) {
+	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromPlan.Environment.IsNull() && !fromPlan.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromPlanEnvironment, ok := fromPlan.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromPlan.EventLog.IsNull() && !fromPlan.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromPlanEventLog, ok := fromPlan.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromPlan.Filters.IsNull() && !fromPlan.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromPlanFilters, ok := fromPlan.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromPlan.GatewayDefinition.IsNull() && !fromPlan.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromPlanGatewayDefinition, ok := fromPlan.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromPlan.IngestionDefinition.IsNull() && !fromPlan.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromPlanIngestionDefinition, ok := fromPlan.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromPlan.RestartWindow.IsNull() && !fromPlan.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromPlanRestartWindow, ok := fromPlan.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+}
+
+func (toState *EditPipeline_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EditPipeline_SdkV2) {
+	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromState.Environment.IsNull() && !fromState.Environment.IsUnknown() {
+		if toStateEnvironment, ok := toState.GetEnvironment(ctx); ok {
+			if fromStateEnvironment, ok := fromState.GetEnvironment(ctx); ok {
+				toStateEnvironment.SyncFieldsDuringRead(ctx, fromStateEnvironment)
+				toState.SetEnvironment(ctx, toStateEnvironment)
+			}
+		}
+	}
+	if !fromState.EventLog.IsNull() && !fromState.EventLog.IsUnknown() {
+		if toStateEventLog, ok := toState.GetEventLog(ctx); ok {
+			if fromStateEventLog, ok := fromState.GetEventLog(ctx); ok {
+				toStateEventLog.SyncFieldsDuringRead(ctx, fromStateEventLog)
+				toState.SetEventLog(ctx, toStateEventLog)
+			}
+		}
+	}
+	if !fromState.Filters.IsNull() && !fromState.Filters.IsUnknown() {
+		if toStateFilters, ok := toState.GetFilters(ctx); ok {
+			if fromStateFilters, ok := fromState.GetFilters(ctx); ok {
+				toStateFilters.SyncFieldsDuringRead(ctx, fromStateFilters)
+				toState.SetFilters(ctx, toStateFilters)
+			}
+		}
+	}
+	if !fromState.GatewayDefinition.IsNull() && !fromState.GatewayDefinition.IsUnknown() {
+		if toStateGatewayDefinition, ok := toState.GetGatewayDefinition(ctx); ok {
+			if fromStateGatewayDefinition, ok := fromState.GetGatewayDefinition(ctx); ok {
+				toStateGatewayDefinition.SyncFieldsDuringRead(ctx, fromStateGatewayDefinition)
+				toState.SetGatewayDefinition(ctx, toStateGatewayDefinition)
+			}
+		}
+	}
+	if !fromState.IngestionDefinition.IsNull() && !fromState.IngestionDefinition.IsUnknown() {
+		if toStateIngestionDefinition, ok := toState.GetIngestionDefinition(ctx); ok {
+			if fromStateIngestionDefinition, ok := fromState.GetIngestionDefinition(ctx); ok {
+				toStateIngestionDefinition.SyncFieldsDuringRead(ctx, fromStateIngestionDefinition)
+				toState.SetIngestionDefinition(ctx, toStateIngestionDefinition)
+			}
+		}
+	}
+	if !fromState.RestartWindow.IsNull() && !fromState.RestartWindow.IsUnknown() {
+		if toStateRestartWindow, ok := toState.GetRestartWindow(ctx); ok {
+			if fromStateRestartWindow, ok := fromState.GetRestartWindow(ctx); ok {
+				toStateRestartWindow.SyncFieldsDuringRead(ctx, fromStateRestartWindow)
+				toState.SetRestartWindow(ctx, toStateRestartWindow)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+}
+
+func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["environment"] = attrs["environment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["root_path"] = attrs["root_path"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -1804,6 +2205,18 @@ type GetPipelinePermissionLevelsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (toState *GetPipelinePermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPipelinePermissionLevelsRequest_SdkV2) {
+}
+
+func (toState *GetPipelinePermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPipelinePermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetPipelinePermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1918,6 +2331,18 @@ type GetPipelinePermissionsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (toState *GetPipelinePermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPipelinePermissionsRequest_SdkV2) {
+}
+
+func (toState *GetPipelinePermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPipelinePermissionsRequest_SdkV2) {
+}
+
+func (c GetPipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1951,6 +2376,18 @@ func (o GetPipelinePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type
 
 type GetPipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (toState *GetPipelineRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPipelineRequest_SdkV2) {
+}
+
+func (toState *GetPipelineRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPipelineRequest_SdkV2) {
+}
+
+func (c GetPipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineRequest.
@@ -2224,6 +2661,19 @@ type GetUpdateRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 	// The ID of the update.
 	UpdateId types.String `tfsdk:"-"`
+}
+
+func (toState *GetUpdateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetUpdateRequest_SdkV2) {
+}
+
+func (toState *GetUpdateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetUpdateRequest_SdkV2) {
+}
+
+func (c GetUpdateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["update_id"] = attrs["update_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateRequest.
@@ -2947,6 +3397,22 @@ type ListPipelineEventsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (toState *ListPipelineEventsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPipelineEventsRequest_SdkV2) {
+}
+
+func (toState *ListPipelineEventsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListPipelineEventsRequest_SdkV2) {
+}
+
+func (c ListPipelineEventsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3128,6 +3594,21 @@ type ListPipelinesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListPipelinesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPipelinesRequest_SdkV2) {
+}
+
+func (toState *ListPipelinesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListPipelinesRequest_SdkV2) {
+}
+
+func (c ListPipelinesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3287,6 +3768,21 @@ type ListUpdatesRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 	// If present, returns updates until and including this update_id.
 	UntilUpdateId types.String `tfsdk:"-"`
+}
+
+func (toState *ListUpdatesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListUpdatesRequest_SdkV2) {
+}
+
+func (toState *ListUpdatesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListUpdatesRequest_SdkV2) {
+}
+
+func (c ListUpdatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["until_update_id"] = attrs["until_update_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesRequest.
@@ -5368,6 +5864,19 @@ type PipelinePermissionsRequest_SdkV2 struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (toState *PipelinePermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelinePermissionsRequest_SdkV2) {
+}
+
+func (toState *PipelinePermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PipelinePermissionsRequest_SdkV2) {
+}
+
+func (c PipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
@@ -7496,6 +8005,23 @@ type StartUpdate_SdkV2 struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
+func (toState *StartUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartUpdate_SdkV2) {
+}
+
+func (toState *StartUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StartUpdate_SdkV2) {
+}
+
+func (c StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7686,6 +8212,18 @@ func (o StopPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type StopRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (toState *StopRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StopRequest_SdkV2) {
+}
+
+func (toState *StopRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StopRequest_SdkV2) {
+}
+
+func (c StopRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.

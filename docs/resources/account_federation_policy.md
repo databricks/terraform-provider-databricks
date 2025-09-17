@@ -2,6 +2,8 @@
 subcategory: "OAuth"
 ---
 # databricks_account_federation_policy Resource
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Account federation policies allow users and service principals in your Databricks account to securely access Databricks APIs using tokens from your trusted identity providers (IdPs).
 
 Token federation policies eliminate the need to manage Databricks secrets, and allow you to centralize management of token issuance policies in your IdP. Databricks token federation policies are typically used in combination with [SCIM](/admin/users-groups/scim/index.html), so users in your IdP are synchronized into your Databricks account.
@@ -59,8 +61,8 @@ In addition to the above arguments, the following attributes are exported:
   for Service Principal Federation Policies. Typically an output parameter, which does not need to be
   specified in create or update requests. If specified in a request, must match the value in the
   request URL
-* `policy_id` (string) - The ID of the federation policy
-* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Only set for service principal federation policies
+* `policy_id` (string) - The ID of the federation policy. Output only
+* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
 * `uid` (string) - Unique, immutable id of the federation policy
 * `update_time` (string) - Last update time of the federation policy
 

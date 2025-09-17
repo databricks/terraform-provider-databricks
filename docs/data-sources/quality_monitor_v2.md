@@ -2,6 +2,8 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch a quality monitors v2.
 
 -> **Note** This data source can only be used with an workspace-level provider!
@@ -25,7 +27,6 @@ data "databricks_quality_monitor_v2" "this" {
 The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

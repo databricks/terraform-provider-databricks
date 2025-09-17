@@ -28,6 +28,18 @@ type CancelCustomLlmOptimizationRunRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *CancelCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CancelCustomLlmOptimizationRunRequest_SdkV2) {
+}
+
+func (toState *CancelCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CancelCustomLlmOptimizationRunRequest_SdkV2) {
+}
+
+func (c CancelCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelCustomLlmOptimizationRunRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -74,6 +86,22 @@ type CreateCustomLlmRequest_SdkV2 struct {
 	Instructions types.String `tfsdk:"instructions"`
 	// Name of the custom LLM. Only alphanumeric characters and dashes allowed.
 	Name types.String `tfsdk:"name"`
+}
+
+func (toState *CreateCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCustomLlmRequest_SdkV2) {
+}
+
+func (toState *CreateCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCustomLlmRequest_SdkV2) {
+}
+
+func (c CreateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["agent_artifact_path"] = attrs["agent_artifact_path"].SetOptional()
+	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["guidelines"] = attrs["guidelines"].SetOptional()
+	attrs["instructions"] = attrs["instructions"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomLlmRequest.
@@ -426,6 +454,18 @@ type DeleteCustomLlmRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCustomLlmRequest_SdkV2) {
+}
+
+func (toState *DeleteCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCustomLlmRequest_SdkV2) {
+}
+
+func (c DeleteCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCustomLlmRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -462,6 +502,18 @@ type GetCustomLlmRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *GetCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCustomLlmRequest_SdkV2) {
+}
+
+func (toState *GetCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCustomLlmRequest_SdkV2) {
+}
+
+func (c GetCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCustomLlmRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -496,6 +548,18 @@ func (o GetCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type StartCustomLlmOptimizationRunRequest_SdkV2 struct {
 	// The Id of the tile.
 	Id types.String `tfsdk:"-"`
+}
+
+func (toState *StartCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartCustomLlmOptimizationRunRequest_SdkV2) {
+}
+
+func (toState *StartCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StartCustomLlmOptimizationRunRequest_SdkV2) {
+}
+
+func (c StartCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartCustomLlmOptimizationRunRequest.
@@ -607,6 +671,37 @@ type UpdateCustomLlmRequest_SdkV2 struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (toState *UpdateCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCustomLlmRequest_SdkV2) {
+	if !fromPlan.CustomLlm.IsNull() && !fromPlan.CustomLlm.IsUnknown() {
+		if toStateCustomLlm, ok := toState.GetCustomLlm(ctx); ok {
+			if fromPlanCustomLlm, ok := fromPlan.GetCustomLlm(ctx); ok {
+				toStateCustomLlm.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCustomLlm)
+				toState.SetCustomLlm(ctx, toStateCustomLlm)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCustomLlmRequest_SdkV2) {
+	if !fromState.CustomLlm.IsNull() && !fromState.CustomLlm.IsUnknown() {
+		if toStateCustomLlm, ok := toState.GetCustomLlm(ctx); ok {
+			if fromStateCustomLlm, ok := fromState.GetCustomLlm(ctx); ok {
+				toStateCustomLlm.SyncFieldsDuringRead(ctx, fromStateCustomLlm)
+				toState.SetCustomLlm(ctx, toStateCustomLlm)
+			}
+		}
+	}
+}
+
+func (c UpdateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_llm"] = attrs["custom_llm"].SetRequired()
+	attrs["custom_llm"] = attrs["custom_llm"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomLlmRequest.

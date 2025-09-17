@@ -16,7 +16,7 @@ data "databricks_clean_rooms_clean_room" "all" {}
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Maximum number of clean rooms to return (i.e., the page length). Defaults to 100
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

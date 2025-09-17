@@ -13,7 +13,7 @@ The following arguments are supported:
 * `clean_room_name` (string, required) - Name of the clean room
 * `name` (string, required) - Name of the asset
 * `page_size` (integer, optional) - Maximum number of asset revisions to return. Defaults to 10
-* `workspace_id` (string, optional) - Workspace ID of the resource
+
 
 
 ## Attributes

@@ -1788,6 +1788,19 @@ type AppPermissionsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+func (toState *AppPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AppPermissionsRequest_SdkV2) {
+}
+
+func (toState *AppPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AppPermissionsRequest_SdkV2) {
+}
+
+func (c AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2658,6 +2671,36 @@ type CreateAppDeploymentRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+func (toState *CreateAppDeploymentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAppDeploymentRequest_SdkV2) {
+	if !fromPlan.AppDeployment.IsNull() && !fromPlan.AppDeployment.IsUnknown() {
+		if toStateAppDeployment, ok := toState.GetAppDeployment(ctx); ok {
+			if fromPlanAppDeployment, ok := fromPlan.GetAppDeployment(ctx); ok {
+				toStateAppDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAppDeployment)
+				toState.SetAppDeployment(ctx, toStateAppDeployment)
+			}
+		}
+	}
+}
+
+func (toState *CreateAppDeploymentRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateAppDeploymentRequest_SdkV2) {
+	if !fromState.AppDeployment.IsNull() && !fromState.AppDeployment.IsUnknown() {
+		if toStateAppDeployment, ok := toState.GetAppDeployment(ctx); ok {
+			if fromStateAppDeployment, ok := fromState.GetAppDeployment(ctx); ok {
+				toStateAppDeployment.SyncFieldsDuringRead(ctx, fromStateAppDeployment)
+				toState.SetAppDeployment(ctx, toStateAppDeployment)
+			}
+		}
+	}
+}
+
+func (c CreateAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_deployment"] = attrs["app_deployment"].SetRequired()
+	attrs["app_deployment"] = attrs["app_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppDeploymentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2727,6 +2770,36 @@ type CreateAppRequest_SdkV2 struct {
 	NoCompute types.Bool `tfsdk:"-"`
 }
 
+func (toState *CreateAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAppRequest_SdkV2) {
+	if !fromPlan.App.IsNull() && !fromPlan.App.IsUnknown() {
+		if toStateApp, ok := toState.GetApp(ctx); ok {
+			if fromPlanApp, ok := fromPlan.GetApp(ctx); ok {
+				toStateApp.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanApp)
+				toState.SetApp(ctx, toStateApp)
+			}
+		}
+	}
+}
+
+func (toState *CreateAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateAppRequest_SdkV2) {
+	if !fromState.App.IsNull() && !fromState.App.IsUnknown() {
+		if toStateApp, ok := toState.GetApp(ctx); ok {
+			if fromStateApp, ok := fromState.GetApp(ctx); ok {
+				toStateApp.SyncFieldsDuringRead(ctx, fromStateApp)
+				toState.SetApp(ctx, toStateApp)
+			}
+		}
+	}
+}
+
+func (c CreateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetRequired()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["no_compute"] = attrs["no_compute"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2792,6 +2865,35 @@ func (o *CreateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 
 type CreateCustomTemplateRequest_SdkV2 struct {
 	Template types.List `tfsdk:"template"`
+}
+
+func (toState *CreateCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCustomTemplateRequest_SdkV2) {
+	if !fromPlan.Template.IsNull() && !fromPlan.Template.IsUnknown() {
+		if toStateTemplate, ok := toState.GetTemplate(ctx); ok {
+			if fromPlanTemplate, ok := fromPlan.GetTemplate(ctx); ok {
+				toStateTemplate.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTemplate)
+				toState.SetTemplate(ctx, toStateTemplate)
+			}
+		}
+	}
+}
+
+func (toState *CreateCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCustomTemplateRequest_SdkV2) {
+	if !fromState.Template.IsNull() && !fromState.Template.IsUnknown() {
+		if toStateTemplate, ok := toState.GetTemplate(ctx); ok {
+			if fromStateTemplate, ok := fromState.GetTemplate(ctx); ok {
+				toStateTemplate.SyncFieldsDuringRead(ctx, fromStateTemplate)
+				toState.SetTemplate(ctx, toStateTemplate)
+			}
+		}
+	}
+}
+
+func (c CreateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["template"] = attrs["template"].SetRequired()
+	attrs["template"] = attrs["template"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomTemplateRequest.
@@ -2987,6 +3089,18 @@ type DeleteAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAppRequest_SdkV2) {
+}
+
+func (toState *DeleteAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAppRequest_SdkV2) {
+}
+
+func (c DeleteAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3021,6 +3135,18 @@ func (o DeleteAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteCustomTemplateRequest_SdkV2 struct {
 	// The name of the custom template.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCustomTemplateRequest_SdkV2) {
+}
+
+func (toState *DeleteCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCustomTemplateRequest_SdkV2) {
+}
+
+func (c DeleteCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCustomTemplateRequest.
@@ -3061,6 +3187,19 @@ type GetAppDeploymentRequest_SdkV2 struct {
 	DeploymentId types.String `tfsdk:"-"`
 }
 
+func (toState *GetAppDeploymentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppDeploymentRequest_SdkV2) {
+}
+
+func (toState *GetAppDeploymentRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetAppDeploymentRequest_SdkV2) {
+}
+
+func (c GetAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+	attrs["deployment_id"] = attrs["deployment_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppDeploymentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3097,6 +3236,18 @@ func (o GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetAppPermissionLevelsRequest_SdkV2 struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
+}
+
+func (toState *GetAppPermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppPermissionLevelsRequest_SdkV2) {
+}
+
+func (toState *GetAppPermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetAppPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetAppPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionLevelsRequest.
@@ -3213,6 +3364,18 @@ type GetAppPermissionsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+func (toState *GetAppPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppPermissionsRequest_SdkV2) {
+}
+
+func (toState *GetAppPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetAppPermissionsRequest_SdkV2) {
+}
+
+func (c GetAppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3249,6 +3412,18 @@ type GetAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAppRequest_SdkV2) {
+}
+
+func (toState *GetAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetAppRequest_SdkV2) {
+}
+
+func (c GetAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3283,6 +3458,18 @@ func (o GetAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetCustomTemplateRequest_SdkV2 struct {
 	// The name of the custom template.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCustomTemplateRequest_SdkV2) {
+}
+
+func (toState *GetCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCustomTemplateRequest_SdkV2) {
+}
+
+func (c GetCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCustomTemplateRequest.
@@ -3324,6 +3511,20 @@ type ListAppDeploymentsRequest_SdkV2 struct {
 	// Pagination token to go to the next page of apps. Requests first page if
 	// absent.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListAppDeploymentsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppDeploymentsRequest_SdkV2) {
+}
+
+func (toState *ListAppDeploymentsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAppDeploymentsRequest_SdkV2) {
+}
+
+func (c ListAppDeploymentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentsRequest.
@@ -3452,6 +3653,19 @@ type ListAppsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListAppsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAppsRequest_SdkV2) {
+}
+
+func (toState *ListAppsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListAppsRequest_SdkV2) {
+}
+
+func (c ListAppsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3575,6 +3789,19 @@ type ListCustomTemplatesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListCustomTemplatesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCustomTemplatesRequest_SdkV2) {
+}
+
+func (toState *ListCustomTemplatesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCustomTemplatesRequest_SdkV2) {
+}
+
+func (c ListCustomTemplatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCustomTemplatesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3696,6 +3923,18 @@ type StartAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *StartAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartAppRequest_SdkV2) {
+}
+
+func (toState *StartAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StartAppRequest_SdkV2) {
+}
+
+func (c StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3730,6 +3969,18 @@ func (o StartAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type StopAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *StopAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StopAppRequest_SdkV2) {
+}
+
+func (toState *StopAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StopAppRequest_SdkV2) {
+}
+
+func (c StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.
@@ -3768,6 +4019,36 @@ type UpdateAppRequest_SdkV2 struct {
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateAppRequest_SdkV2) {
+	if !fromPlan.App.IsNull() && !fromPlan.App.IsUnknown() {
+		if toStateApp, ok := toState.GetApp(ctx); ok {
+			if fromPlanApp, ok := fromPlan.GetApp(ctx); ok {
+				toStateApp.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanApp)
+				toState.SetApp(ctx, toStateApp)
+			}
+		}
+	}
+}
+
+func (toState *UpdateAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateAppRequest_SdkV2) {
+	if !fromState.App.IsNull() && !fromState.App.IsUnknown() {
+		if toStateApp, ok := toState.GetApp(ctx); ok {
+			if fromStateApp, ok := fromState.GetApp(ctx); ok {
+				toStateApp.SyncFieldsDuringRead(ctx, fromStateApp)
+				toState.SetApp(ctx, toStateApp)
+			}
+		}
+	}
+}
+
+func (c UpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetRequired()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAppRequest.
@@ -3840,6 +4121,36 @@ type UpdateCustomTemplateRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 
 	Template types.List `tfsdk:"template"`
+}
+
+func (toState *UpdateCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCustomTemplateRequest_SdkV2) {
+	if !fromPlan.Template.IsNull() && !fromPlan.Template.IsUnknown() {
+		if toStateTemplate, ok := toState.GetTemplate(ctx); ok {
+			if fromPlanTemplate, ok := fromPlan.GetTemplate(ctx); ok {
+				toStateTemplate.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTemplate)
+				toState.SetTemplate(ctx, toStateTemplate)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCustomTemplateRequest_SdkV2) {
+	if !fromState.Template.IsNull() && !fromState.Template.IsUnknown() {
+		if toStateTemplate, ok := toState.GetTemplate(ctx); ok {
+			if fromStateTemplate, ok := fromState.GetTemplate(ctx); ok {
+				toStateTemplate.SyncFieldsDuringRead(ctx, fromStateTemplate)
+				toState.SetTemplate(ctx, toStateTemplate)
+			}
+		}
+	}
+}
+
+func (c UpdateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["template"] = attrs["template"].SetRequired()
+	attrs["template"] = attrs["template"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomTemplateRequest.

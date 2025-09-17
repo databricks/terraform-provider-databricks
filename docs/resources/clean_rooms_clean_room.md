@@ -47,7 +47,6 @@ The following arguments are supported:
 * `remote_detailed_info` (CleanRoomRemoteDetail, optional) - Central clean room details. During creation, users need to specify
   cloud_vendor, region, and collaborators.global_metastore_id.
   This field will not be filled in the ListCleanRooms call
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### CleanRoomCollaborator
 * `collaborator_alias` (string, required) - Collaborator alias specified by the clean room creator. It is unique across all collaborators of this clean room, and used to derive
@@ -138,12 +137,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "name"
+  id = name
   to = databricks_clean_rooms_clean_room.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_clean_rooms_clean_room "name"
+terraform import databricks_clean_rooms_clean_room name
 ```

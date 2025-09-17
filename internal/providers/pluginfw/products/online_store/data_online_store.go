@@ -35,7 +35,6 @@ type OnlineStoreDataSource struct {
 // OnlineStoreData extends the main model with additional fields.
 type OnlineStoreData struct {
 	ml_tf.OnlineStore
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m OnlineStoreData) GetComplexFieldTypes(ctx context.Context) map[string]re
 func (m OnlineStoreData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.OnlineStore.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m OnlineStoreData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m OnlineStoreData) Type(ctx context.Context) attr.Type {
 	embeddedType := m.OnlineStore.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *OnlineStoreDataSource) Metadata(ctx context.Context, req datasource.Met
 
 func (r *OnlineStoreDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoreData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

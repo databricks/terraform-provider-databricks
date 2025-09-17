@@ -41,7 +41,6 @@ type CustomTemplateResource struct {
 // CustomTemplate extends the main model with additional fields.
 type CustomTemplate struct {
 	apps_tf.CustomTemplate
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m CustomTemplate) GetComplexFieldTypes(ctx context.Context) map[string]ref
 func (m CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.CustomTemplate.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m CustomTemplate) Type(ctx context.Context) attr.Type {
 	embeddedType := m.CustomTemplate.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m CustomTemplate) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *CustomTemplate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CustomTemplate) {
 	m.CustomTemplate.SyncFieldsDuringCreateOrUpdate(ctx, plan.CustomTemplate)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *CustomTemplate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, pla
 // during read.
 func (m *CustomTemplate) SyncFieldsDuringRead(ctx context.Context, existingState CustomTemplate) {
 	m.CustomTemplate.SyncFieldsDuringRead(ctx, existingState.CustomTemplate)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *CustomTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *CustomTemplateResource) Metadata(ctx context.Context, req resource.Meta
 func (r *CustomTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CustomTemplate{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

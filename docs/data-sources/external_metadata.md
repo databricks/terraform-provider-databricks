@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_external_metadata Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single external metadata object.
 
 -> **Note** This resource can only be used with an workspace-level provider!
@@ -18,7 +20,6 @@ data "databricks_external_metadata" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Name of the external metadata object
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

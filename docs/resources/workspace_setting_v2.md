@@ -2,10 +2,24 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_setting_v2 Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
+
+[//]: # (todo: add public link to metadata api after production doc link available)
+See settings-metadata api for list of settings that can be modified using this resource. 
 
 ## Example Usage
+Getting a workspace level setting:
 
+```hcl
+resource "databricks_workspace_setting_v2" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:
@@ -25,7 +39,6 @@ The following arguments are supported:
 * `personal_compute` (PersonalComputeMessage, optional)
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
 * `string_val` (StringMessage, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - . Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`

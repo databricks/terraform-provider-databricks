@@ -28,13 +28,12 @@ func DataSourceAlertsV2() datasource.DataSource {
 
 // AlertsV2Data extends the main model with additional fields.
 type AlertsV2Data struct {
-	AlertsV2    types.List   `tfsdk:"results"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	AlertsV2 types.List `tfsdk:"alerts"`
 }
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"results": reflect.TypeOf(sql_tf.AlertV2{}),
+		"alerts": reflect.TypeOf(sql_tf.AlertV2{}),
 	}
 }
 
@@ -48,8 +47,7 @@ func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.Metada
 
 func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("results")
-		c.SetOptional("workspace_id")
+		c.SetComputed("alerts")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var newState AlertsV2Data
 	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -10,7 +10,6 @@ subcategory: "Clean Rooms"
 ## Arguments
 The following arguments are supported:
 * `rule_id` (string, required) - A generated UUID identifying the rule
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

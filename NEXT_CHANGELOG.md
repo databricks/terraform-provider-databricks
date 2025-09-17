@@ -4,8 +4,8 @@
 
 ### Breaking Changes
 
-### New Features and Improvements
 
+### New Features and Improvements
 * Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation ([#5014](https://github.com/databricks/terraform-provider-databricks/pull/5014))
 
 ### Bug Fixes
@@ -19,4 +19,5 @@
 ### Exporter
 
 ### Internal Changes
+* Update Go SDK to v0.83.0 ([#5016](https://github.com/databricks/terraform-provider-databricks/pull/5016)).
 * Use `Jobs.Get` instead of `JobsGetByJobId` ([#5029](https://github.com/databricks/terraform-provider-databricks/pull/5029))

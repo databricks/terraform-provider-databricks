@@ -1451,6 +1451,19 @@ type BuildLogsRequest struct {
 	ServedModelName types.String `tfsdk:"-"`
 }
 
+func (toState *BuildLogsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BuildLogsRequest) {
+}
+
+func (toState *BuildLogsRequest) SyncFieldsDuringRead(ctx context.Context, fromState BuildLogsRequest) {
+}
+
+func (c BuildLogsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1668,6 +1681,71 @@ type CreatePtEndpointRequest struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
+func (toState *CreatePtEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePtEndpointRequest) {
+	if !fromPlan.AiGateway.IsNull() && !fromPlan.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromPlanAiGateway, ok := fromPlan.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+}
+
+func (toState *CreatePtEndpointRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreatePtEndpointRequest) {
+	if !fromState.AiGateway.IsNull() && !fromState.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromStateAiGateway, ok := fromState.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringRead(ctx, fromStateAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+}
+
+func (c CreatePtEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePtEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1842,6 +1920,74 @@ type CreateServingEndpoint struct {
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
 	Tags types.List `tfsdk:"tags"`
+}
+
+func (toState *CreateServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateServingEndpoint) {
+	if !fromPlan.AiGateway.IsNull() && !fromPlan.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromPlanAiGateway, ok := fromPlan.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+}
+
+func (toState *CreateServingEndpoint) SyncFieldsDuringRead(ctx context.Context, fromState CreateServingEndpoint) {
+	if !fromState.AiGateway.IsNull() && !fromState.AiGateway.IsUnknown() {
+		if toStateAiGateway, ok := toState.GetAiGateway(ctx); ok {
+			if fromStateAiGateway, ok := fromState.GetAiGateway(ctx); ok {
+				toStateAiGateway.SyncFieldsDuringRead(ctx, fromStateAiGateway)
+				toState.SetAiGateway(ctx, toStateAiGateway)
+			}
+		}
+	}
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+}
+
+func (c CreateServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServingEndpoint.
@@ -2443,38 +2589,20 @@ func (o *DataframeSplitInput) SetIndex(ctx context.Context, v []types.Int64) {
 	o.Index = types.ListValueMust(t, vs)
 }
 
-type DeleteResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteServingEndpointRequest struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteServingEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteServingEndpointRequest) {
+}
+
+func (toState *DeleteServingEndpointRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteServingEndpointRequest) {
+}
+
+func (c DeleteServingEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServingEndpointRequest.
@@ -2768,10 +2896,10 @@ func (toState *EndpointCoreConfigInput) SyncFieldsDuringRead(ctx context.Context
 
 func (c EndpointCoreConfigInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auto_capture_config"] = attrs["auto_capture_config"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
 	attrs["served_entities"] = attrs["served_entities"].SetOptional()
 	attrs["served_models"] = attrs["served_models"].SetOptional()
 	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3674,6 +3802,18 @@ type ExportMetricsRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *ExportMetricsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportMetricsRequest) {
+}
+
+func (toState *ExportMetricsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ExportMetricsRequest) {
+}
+
+func (c ExportMetricsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3707,6 +3847,18 @@ func (o ExportMetricsRequest) Type(ctx context.Context) attr.Type {
 
 type ExportMetricsResponse struct {
 	Contents types.Object `tfsdk:"-"`
+}
+
+func (toState *ExportMetricsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportMetricsResponse) {
+}
+
+func (toState *ExportMetricsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ExportMetricsResponse) {
+}
+
+func (c ExportMetricsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsResponse.
@@ -3756,6 +3908,23 @@ type ExternalFunctionRequest struct {
 	Params types.String `tfsdk:"params"`
 	// The relative path for the API endpoint. This is required.
 	Path types.String `tfsdk:"path"`
+}
+
+func (toState *ExternalFunctionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalFunctionRequest) {
+}
+
+func (toState *ExternalFunctionRequest) SyncFieldsDuringRead(ctx context.Context, fromState ExternalFunctionRequest) {
+}
+
+func (c ExternalFunctionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["headers"] = attrs["headers"].SetOptional()
+	attrs["json"] = attrs["json"].SetOptional()
+	attrs["method"] = attrs["method"].SetRequired()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalFunctionRequest.
@@ -4467,6 +4636,18 @@ type GetOpenApiRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetOpenApiRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetOpenApiRequest) {
+}
+
+func (toState *GetOpenApiRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetOpenApiRequest) {
+}
+
+func (c GetOpenApiRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4500,6 +4681,18 @@ func (o GetOpenApiRequest) Type(ctx context.Context) attr.Type {
 
 type GetOpenApiResponse struct {
 	Contents types.Object `tfsdk:"-"`
+}
+
+func (toState *GetOpenApiResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetOpenApiResponse) {
+}
+
+func (toState *GetOpenApiResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetOpenApiResponse) {
+}
+
+func (c GetOpenApiResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiResponse.
@@ -4536,6 +4729,18 @@ func (o GetOpenApiResponse) Type(ctx context.Context) attr.Type {
 type GetServingEndpointPermissionLevelsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
+}
+
+func (toState *GetServingEndpointPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServingEndpointPermissionLevelsRequest) {
+}
+
+func (toState *GetServingEndpointPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetServingEndpointPermissionLevelsRequest) {
+}
+
+func (c GetServingEndpointPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsRequest.
@@ -4652,6 +4857,18 @@ type GetServingEndpointPermissionsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
+func (toState *GetServingEndpointPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServingEndpointPermissionsRequest) {
+}
+
+func (toState *GetServingEndpointPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetServingEndpointPermissionsRequest) {
+}
+
+func (c GetServingEndpointPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4686,6 +4903,18 @@ func (o GetServingEndpointPermissionsRequest) Type(ctx context.Context) attr.Typ
 type GetServingEndpointRequest struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetServingEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServingEndpointRequest) {
+}
+
+func (toState *GetServingEndpointRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetServingEndpointRequest) {
+}
+
+func (c GetServingEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointRequest.
@@ -4808,6 +5037,18 @@ type HttpRequestResponse struct {
 	Contents types.Object `tfsdk:"-"`
 }
 
+func (toState *HttpRequestResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan HttpRequestResponse) {
+}
+
+func (toState *HttpRequestResponse) SyncFieldsDuringRead(ctx context.Context, fromState HttpRequestResponse) {
+}
+
+func (c HttpRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4920,6 +5161,17 @@ func (o *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []ServingEnd
 type ListServingEndpointsRequest struct {
 }
 
+func (toState *ListServingEndpointsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServingEndpointsRequest) {
+}
+
+func (toState *ListServingEndpointsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListServingEndpointsRequest) {
+}
+
+func (c ListServingEndpointsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServingEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4954,6 +5206,19 @@ type LogsRequest struct {
 	// The name of the served model that logs will be retrieved for. This field
 	// is required.
 	ServedModelName types.String `tfsdk:"-"`
+}
+
+func (toState *LogsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LogsRequest) {
+}
+
+func (toState *LogsRequest) SyncFieldsDuringRead(ctx context.Context, fromState LogsRequest) {
+}
+
+func (c LogsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogsRequest.
@@ -5277,6 +5542,20 @@ type PatchServingEndpointTags struct {
 	// The name of the serving endpoint who's tags to patch. This field is
 	// required.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *PatchServingEndpointTags) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchServingEndpointTags) {
+}
+
+func (toState *PatchServingEndpointTags) SyncFieldsDuringRead(ctx context.Context, fromState PatchServingEndpointTags) {
+}
+
+func (c PatchServingEndpointTags) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["add_tags"] = attrs["add_tags"].SetOptional()
+	attrs["delete_tags"] = attrs["delete_tags"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchServingEndpointTags.
@@ -5647,6 +5926,87 @@ type PutAiGatewayRequest struct {
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
 	UsageTrackingConfig types.Object `tfsdk:"usage_tracking_config"`
+}
+
+func (toState *PutAiGatewayRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutAiGatewayRequest) {
+	if !fromPlan.FallbackConfig.IsNull() && !fromPlan.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromPlanFallbackConfig, ok := fromPlan.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromPlan.Guardrails.IsNull() && !fromPlan.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromPlanGuardrails, ok := fromPlan.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromPlan.InferenceTableConfig.IsNull() && !fromPlan.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromPlanInferenceTableConfig, ok := fromPlan.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromPlan.UsageTrackingConfig.IsNull() && !fromPlan.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromPlanUsageTrackingConfig, ok := fromPlan.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
+}
+
+func (toState *PutAiGatewayRequest) SyncFieldsDuringRead(ctx context.Context, fromState PutAiGatewayRequest) {
+	if !fromState.FallbackConfig.IsNull() && !fromState.FallbackConfig.IsUnknown() {
+		if toStateFallbackConfig, ok := toState.GetFallbackConfig(ctx); ok {
+			if fromStateFallbackConfig, ok := fromState.GetFallbackConfig(ctx); ok {
+				toStateFallbackConfig.SyncFieldsDuringRead(ctx, fromStateFallbackConfig)
+				toState.SetFallbackConfig(ctx, toStateFallbackConfig)
+			}
+		}
+	}
+	if !fromState.Guardrails.IsNull() && !fromState.Guardrails.IsUnknown() {
+		if toStateGuardrails, ok := toState.GetGuardrails(ctx); ok {
+			if fromStateGuardrails, ok := fromState.GetGuardrails(ctx); ok {
+				toStateGuardrails.SyncFieldsDuringRead(ctx, fromStateGuardrails)
+				toState.SetGuardrails(ctx, toStateGuardrails)
+			}
+		}
+	}
+	if !fromState.InferenceTableConfig.IsNull() && !fromState.InferenceTableConfig.IsUnknown() {
+		if toStateInferenceTableConfig, ok := toState.GetInferenceTableConfig(ctx); ok {
+			if fromStateInferenceTableConfig, ok := fromState.GetInferenceTableConfig(ctx); ok {
+				toStateInferenceTableConfig.SyncFieldsDuringRead(ctx, fromStateInferenceTableConfig)
+				toState.SetInferenceTableConfig(ctx, toStateInferenceTableConfig)
+			}
+		}
+	}
+	if !fromState.UsageTrackingConfig.IsNull() && !fromState.UsageTrackingConfig.IsUnknown() {
+		if toStateUsageTrackingConfig, ok := toState.GetUsageTrackingConfig(ctx); ok {
+			if fromStateUsageTrackingConfig, ok := fromState.GetUsageTrackingConfig(ctx); ok {
+				toStateUsageTrackingConfig.SyncFieldsDuringRead(ctx, fromStateUsageTrackingConfig)
+				toState.SetUsageTrackingConfig(ctx, toStateUsageTrackingConfig)
+			}
+		}
+	}
+}
+
+func (c PutAiGatewayRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fallback_config"] = attrs["fallback_config"].SetOptional()
+	attrs["guardrails"] = attrs["guardrails"].SetOptional()
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayRequest.
@@ -6105,6 +6465,19 @@ type PutRequest struct {
 	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
+func (toState *PutRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutRequest) {
+}
+
+func (toState *PutRequest) SyncFieldsDuringRead(ctx context.Context, fromState PutRequest) {
+}
+
+func (c PutRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6303,6 +6676,49 @@ type QueryEndpointInput struct {
 	// Optional user-provided context that will be recorded in the usage
 	// tracking table.
 	UsageContext types.Map `tfsdk:"usage_context"`
+}
+
+func (toState *QueryEndpointInput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryEndpointInput) {
+	if !fromPlan.DataframeSplit.IsNull() && !fromPlan.DataframeSplit.IsUnknown() {
+		if toStateDataframeSplit, ok := toState.GetDataframeSplit(ctx); ok {
+			if fromPlanDataframeSplit, ok := fromPlan.GetDataframeSplit(ctx); ok {
+				toStateDataframeSplit.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDataframeSplit)
+				toState.SetDataframeSplit(ctx, toStateDataframeSplit)
+			}
+		}
+	}
+}
+
+func (toState *QueryEndpointInput) SyncFieldsDuringRead(ctx context.Context, fromState QueryEndpointInput) {
+	if !fromState.DataframeSplit.IsNull() && !fromState.DataframeSplit.IsUnknown() {
+		if toStateDataframeSplit, ok := toState.GetDataframeSplit(ctx); ok {
+			if fromStateDataframeSplit, ok := fromState.GetDataframeSplit(ctx); ok {
+				toStateDataframeSplit.SyncFieldsDuringRead(ctx, fromStateDataframeSplit)
+				toState.SetDataframeSplit(ctx, toStateDataframeSplit)
+			}
+		}
+	}
+}
+
+func (c QueryEndpointInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["client_request_id"] = attrs["client_request_id"].SetOptional()
+	attrs["dataframe_records"] = attrs["dataframe_records"].SetOptional()
+	attrs["dataframe_split"] = attrs["dataframe_split"].SetOptional()
+	attrs["extra_params"] = attrs["extra_params"].SetOptional()
+	attrs["input"] = attrs["input"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].SetOptional()
+	attrs["instances"] = attrs["instances"].SetOptional()
+	attrs["max_tokens"] = attrs["max_tokens"].SetOptional()
+	attrs["messages"] = attrs["messages"].SetOptional()
+	attrs["n"] = attrs["n"].SetOptional()
+	attrs["prompt"] = attrs["prompt"].SetOptional()
+	attrs["stop"] = attrs["stop"].SetOptional()
+	attrs["stream"] = attrs["stream"].SetOptional()
+	attrs["temperature"] = attrs["temperature"].SetOptional()
+	attrs["usage_context"] = attrs["usage_context"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointInput.
@@ -6628,8 +7044,8 @@ func (c QueryEndpointResponse) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["model"] = attrs["model"].SetOptional()
 	attrs["object"] = attrs["object"].SetOptional()
 	attrs["predictions"] = attrs["predictions"].SetOptional()
-	attrs["served-model-name"] = attrs["served-model-name"].SetOptional()
 	attrs["usage"] = attrs["usage"].SetOptional()
+	attrs["served_model_name"] = attrs["served_model_name"].SetOptional()
 
 	return attrs
 }
@@ -6664,7 +7080,7 @@ func (o QueryEndpointResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 			"model":             o.Model,
 			"object":            o.Object,
 			"predictions":       o.Predictions,
-			"served-model-name": o.ServedModelName,
+			"served_model_name": o.ServedModelName,
 			"usage":             o.Usage,
 		})
 }
@@ -6686,7 +7102,7 @@ func (o QueryEndpointResponse) Type(ctx context.Context) attr.Type {
 			"predictions": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"served-model-name": types.StringType,
+			"served_model_name": types.StringType,
 			"usage":             ExternalModelUsageElement{}.Type(ctx),
 		},
 	}
@@ -9234,6 +9650,19 @@ type ServingEndpointPermissionsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
+func (toState *ServingEndpointPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServingEndpointPermissionsRequest) {
+}
+
+func (toState *ServingEndpointPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ServingEndpointPermissionsRequest) {
+}
+
+func (c ServingEndpointPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9381,6 +9810,35 @@ type UpdateProvisionedThroughputEndpointConfigRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateProvisionedThroughputEndpointConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateProvisionedThroughputEndpointConfigRequest) {
+	if !fromPlan.Config.IsNull() && !fromPlan.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromPlanConfig, ok := fromPlan.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+}
+
+func (toState *UpdateProvisionedThroughputEndpointConfigRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateProvisionedThroughputEndpointConfigRequest) {
+	if !fromState.Config.IsNull() && !fromState.Config.IsUnknown() {
+		if toStateConfig, ok := toState.GetConfig(ctx); ok {
+			if fromStateConfig, ok := fromState.GetConfig(ctx); ok {
+				toStateConfig.SyncFieldsDuringRead(ctx, fromStateConfig)
+				toState.SetConfig(ctx, toStateConfig)
+			}
+		}
+	}
+}
+
+func (c UpdateProvisionedThroughputEndpointConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvisionedThroughputEndpointConfigRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9443,7 +9901,7 @@ func (o *UpdateProvisionedThroughputEndpointConfigRequest) SetConfig(ctx context
 
 type V1ResponseChoiceElement struct {
 	// The finish reason returned by the endpoint.
-	FinishReason types.String `tfsdk:"finishReason"`
+	FinishReason types.String `tfsdk:"finish_reason"`
 	// The index of the choice in the __chat or completions__ response.
 	Index types.Int64 `tfsdk:"index"`
 	// The logprobs returned only by the __completions__ endpoint.
@@ -9477,7 +9935,7 @@ func (toState *V1ResponseChoiceElement) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (c V1ResponseChoiceElement) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["finishReason"] = attrs["finishReason"].SetOptional()
+	attrs["finish_reason"] = attrs["finish_reason"].SetOptional()
 	attrs["index"] = attrs["index"].SetOptional()
 	attrs["logprobs"] = attrs["logprobs"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
@@ -9506,11 +9964,11 @@ func (o V1ResponseChoiceElement) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"finishReason": o.FinishReason,
-			"index":        o.Index,
-			"logprobs":     o.Logprobs,
-			"message":      o.Message,
-			"text":         o.Text,
+			"finish_reason": o.FinishReason,
+			"index":         o.Index,
+			"logprobs":      o.Logprobs,
+			"message":       o.Message,
+			"text":          o.Text,
 		})
 }
 
@@ -9518,11 +9976,11 @@ func (o V1ResponseChoiceElement) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o V1ResponseChoiceElement) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"finishReason": types.StringType,
-			"index":        types.Int64Type,
-			"logprobs":     types.Int64Type,
-			"message":      ChatMessage{}.Type(ctx),
-			"text":         types.StringType,
+			"finish_reason": types.StringType,
+			"index":         types.Int64Type,
+			"logprobs":      types.Int64Type,
+			"message":       ChatMessage{}.Type(ctx),
+			"text":          types.StringType,
 		},
 	}
 }

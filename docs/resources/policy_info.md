@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_info Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -34,7 +36,6 @@ The following arguments are supported:
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
 * `when_condition` (string, optional) - Optional condition when the policy should take effect
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### ColumnMaskOptions
 * `function_name` (string, required) - The fully qualified name of the column mask function.

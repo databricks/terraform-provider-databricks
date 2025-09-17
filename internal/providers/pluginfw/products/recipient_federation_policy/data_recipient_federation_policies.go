@@ -28,8 +28,7 @@ func DataSourceFederationPolicies() datasource.DataSource {
 
 // FederationPoliciesData extends the main model with additional fields.
 type FederationPoliciesData struct {
-	RecipientFederationPolicies types.List   `tfsdk:"policies"`
-	WorkspaceID                 types.String `tfsdk:"workspace_id"`
+	RecipientFederationPolicies types.List `tfsdk:"policies"`
 }
 
 func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasou
 func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("policies")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 
 	var newState FederationPoliciesData
 	newState.RecipientFederationPolicies = types.ListValueMust(sharing_tf.FederationPolicy{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

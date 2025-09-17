@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,35 @@ import (
 
 type CreateTagPolicyRequest_SdkV2 struct {
 	TagPolicy types.List `tfsdk:"tag_policy"`
+}
+
+func (toState *CreateTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateTagPolicyRequest_SdkV2) {
+	if !fromPlan.TagPolicy.IsNull() && !fromPlan.TagPolicy.IsUnknown() {
+		if toStateTagPolicy, ok := toState.GetTagPolicy(ctx); ok {
+			if fromPlanTagPolicy, ok := fromPlan.GetTagPolicy(ctx); ok {
+				toStateTagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTagPolicy)
+				toState.SetTagPolicy(ctx, toStateTagPolicy)
+			}
+		}
+	}
+}
+
+func (toState *CreateTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateTagPolicyRequest_SdkV2) {
+	if !fromState.TagPolicy.IsNull() && !fromState.TagPolicy.IsUnknown() {
+		if toStateTagPolicy, ok := toState.GetTagPolicy(ctx); ok {
+			if fromStateTagPolicy, ok := fromState.GetTagPolicy(ctx); ok {
+				toStateTagPolicy.SyncFieldsDuringRead(ctx, fromStateTagPolicy)
+				toState.SetTagPolicy(ctx, toStateTagPolicy)
+			}
+		}
+	}
+}
+
+func (c CreateTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
+	attrs["tag_policy"] = attrs["tag_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTagPolicyRequest.
@@ -92,6 +122,18 @@ type DeleteTagPolicyRequest_SdkV2 struct {
 	TagKey types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteTagPolicyRequest_SdkV2) {
+}
+
+func (toState *DeleteTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteTagPolicyRequest_SdkV2) {
+}
+
+func (c DeleteTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTagPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -125,6 +167,18 @@ func (o DeleteTagPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetTagPolicyRequest_SdkV2 struct {
 	TagKey types.String `tfsdk:"-"`
+}
+
+func (toState *GetTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetTagPolicyRequest_SdkV2) {
+}
+
+func (toState *GetTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetTagPolicyRequest_SdkV2) {
+}
+
+func (c GetTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTagPolicyRequest.
@@ -166,6 +220,19 @@ type ListTagPoliciesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// An optional page token received from a previous list tag policies call.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListTagPoliciesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListTagPoliciesRequest_SdkV2) {
+}
+
+func (toState *ListTagPoliciesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListTagPoliciesRequest_SdkV2) {
+}
+
+func (c ListTagPoliciesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTagPoliciesRequest.
@@ -392,6 +459,38 @@ type UpdateTagPolicyRequest_SdkV2 struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateTagPolicyRequest_SdkV2) {
+	if !fromPlan.TagPolicy.IsNull() && !fromPlan.TagPolicy.IsUnknown() {
+		if toStateTagPolicy, ok := toState.GetTagPolicy(ctx); ok {
+			if fromPlanTagPolicy, ok := fromPlan.GetTagPolicy(ctx); ok {
+				toStateTagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTagPolicy)
+				toState.SetTagPolicy(ctx, toStateTagPolicy)
+			}
+		}
+	}
+}
+
+func (toState *UpdateTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateTagPolicyRequest_SdkV2) {
+	if !fromState.TagPolicy.IsNull() && !fromState.TagPolicy.IsUnknown() {
+		if toStateTagPolicy, ok := toState.GetTagPolicy(ctx); ok {
+			if fromStateTagPolicy, ok := fromState.GetTagPolicy(ctx); ok {
+				toStateTagPolicy.SyncFieldsDuringRead(ctx, fromStateTagPolicy)
+				toState.SetTagPolicy(ctx, toStateTagPolicy)
+			}
+		}
+	}
+}
+
+func (c UpdateTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
+	attrs["tag_policy"] = attrs["tag_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTagPolicyRequest.

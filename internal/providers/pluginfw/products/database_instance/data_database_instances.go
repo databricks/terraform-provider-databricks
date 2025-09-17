@@ -28,8 +28,7 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 
 // DatabaseInstancesData extends the main model with additional fields.
 type DatabaseInstancesData struct {
-	Database    types.List   `tfsdk:"database_instances"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	Database types.List `tfsdk:"database_instances"`
 }
 
 func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *DatabaseInstancesDataSource) Metadata(ctx context.Context, req datasour
 func (r *DatabaseInstancesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("database_instances")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 
 	var newState DatabaseInstancesData
 	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

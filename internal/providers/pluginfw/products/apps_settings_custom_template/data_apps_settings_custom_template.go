@@ -35,7 +35,6 @@ type CustomTemplateDataSource struct {
 // CustomTemplateData extends the main model with additional fields.
 type CustomTemplateData struct {
 	apps_tf.CustomTemplate
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m CustomTemplateData) GetComplexFieldTypes(ctx context.Context) map[string
 func (m CustomTemplateData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.CustomTemplate.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m CustomTemplateData) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m CustomTemplateData) Type(ctx context.Context) attr.Type {
 	embeddedType := m.CustomTemplate.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *CustomTemplateDataSource) Metadata(ctx context.Context, req datasource.
 
 func (r *CustomTemplateDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplateData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

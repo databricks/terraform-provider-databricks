@@ -41,7 +41,6 @@ type FeatureTagResource struct {
 // FeatureTag extends the main model with additional fields.
 type FeatureTag struct {
 	ml_tf.FeatureTag
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m FeatureTag) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 func (m FeatureTag) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m FeatureTag) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m FeatureTag) Type(ctx context.Context) attr.Type {
 	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m FeatureTag) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *FeatureTag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan FeatureTag) {
 	m.FeatureTag.SyncFieldsDuringCreateOrUpdate(ctx, plan.FeatureTag)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *FeatureTag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan Fe
 // during read.
 func (m *FeatureTag) SyncFieldsDuringRead(ctx context.Context, existingState FeatureTag) {
 	m.FeatureTag.SyncFieldsDuringRead(ctx, existingState.FeatureTag)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *FeatureTagResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *FeatureTagResource) Metadata(ctx context.Context, req resource.Metadata
 func (r *FeatureTagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, FeatureTag{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "key")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

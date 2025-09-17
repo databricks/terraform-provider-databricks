@@ -41,7 +41,6 @@ type SyncedDatabaseTableResource struct {
 // SyncedDatabaseTable extends the main model with additional fields.
 type SyncedDatabaseTable struct {
 	database_tf.SyncedDatabaseTable
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m SyncedDatabaseTable) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m SyncedDatabaseTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.SyncedDatabaseTable.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m SyncedDatabaseTable) ToObjectValue(ctx context.Context) basetypes.Object
 func (m SyncedDatabaseTable) Type(ctx context.Context) attr.Type {
 	embeddedType := m.SyncedDatabaseTable.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m SyncedDatabaseTable) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *SyncedDatabaseTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan SyncedDatabaseTable) {
 	m.SyncedDatabaseTable.SyncFieldsDuringCreateOrUpdate(ctx, plan.SyncedDatabaseTable)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *SyncedDatabaseTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 // during read.
 func (m *SyncedDatabaseTable) SyncFieldsDuringRead(ctx context.Context, existingState SyncedDatabaseTable) {
 	m.SyncedDatabaseTable.SyncFieldsDuringRead(ctx, existingState.SyncedDatabaseTable)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *SyncedDatabaseTableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *SyncedDatabaseTableResource) Metadata(ctx context.Context, req resource
 func (r *SyncedDatabaseTableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, SyncedDatabaseTable{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

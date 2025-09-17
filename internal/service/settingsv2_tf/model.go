@@ -710,6 +710,19 @@ type GetPublicAccountSettingRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetPublicAccountSettingRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublicAccountSettingRequest) {
+}
+
+func (toState *GetPublicAccountSettingRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPublicAccountSettingRequest) {
+}
+
+func (c GetPublicAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublicAccountSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -743,6 +756,18 @@ func (o GetPublicAccountSettingRequest) Type(ctx context.Context) attr.Type {
 
 type GetPublicWorkspaceSettingRequest struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetPublicWorkspaceSettingRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublicWorkspaceSettingRequest) {
+}
+
+func (toState *GetPublicWorkspaceSettingRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPublicWorkspaceSettingRequest) {
+}
+
+func (c GetPublicWorkspaceSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublicWorkspaceSettingRequest.
@@ -836,6 +861,20 @@ type ListAccountSettingsMetadataRequest struct {
 	// `ListAccountSettingsMetadataRequest` must match the call that provided
 	// the page token.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListAccountSettingsMetadataRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountSettingsMetadataRequest) {
+}
+
+func (toState *ListAccountSettingsMetadataRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountSettingsMetadataRequest) {
+}
+
+func (c ListAccountSettingsMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountSettingsMetadataRequest.
@@ -970,6 +1009,19 @@ type ListWorkspaceSettingsMetadataRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListWorkspaceSettingsMetadataRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListWorkspaceSettingsMetadataRequest) {
+}
+
+func (toState *ListWorkspaceSettingsMetadataRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListWorkspaceSettingsMetadataRequest) {
+}
+
+func (c ListWorkspaceSettingsMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceSettingsMetadataRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1093,6 +1145,36 @@ type PatchPublicAccountSettingRequest struct {
 	Setting types.Object `tfsdk:"setting"`
 }
 
+func (toState *PatchPublicAccountSettingRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchPublicAccountSettingRequest) {
+	if !fromPlan.Setting.IsNull() && !fromPlan.Setting.IsUnknown() {
+		if toStateSetting, ok := toState.GetSetting(ctx); ok {
+			if fromPlanSetting, ok := fromPlan.GetSetting(ctx); ok {
+				toStateSetting.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSetting)
+				toState.SetSetting(ctx, toStateSetting)
+			}
+		}
+	}
+}
+
+func (toState *PatchPublicAccountSettingRequest) SyncFieldsDuringRead(ctx context.Context, fromState PatchPublicAccountSettingRequest) {
+	if !fromState.Setting.IsNull() && !fromState.Setting.IsUnknown() {
+		if toStateSetting, ok := toState.GetSetting(ctx); ok {
+			if fromStateSetting, ok := fromState.GetSetting(ctx); ok {
+				toStateSetting.SyncFieldsDuringRead(ctx, fromStateSetting)
+				toState.SetSetting(ctx, toStateSetting)
+			}
+		}
+	}
+}
+
+func (c PatchPublicAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchPublicAccountSettingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1157,6 +1239,35 @@ type PatchPublicWorkspaceSettingRequest struct {
 	Name types.String `tfsdk:"-"`
 
 	Setting types.Object `tfsdk:"setting"`
+}
+
+func (toState *PatchPublicWorkspaceSettingRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchPublicWorkspaceSettingRequest) {
+	if !fromPlan.Setting.IsNull() && !fromPlan.Setting.IsUnknown() {
+		if toStateSetting, ok := toState.GetSetting(ctx); ok {
+			if fromPlanSetting, ok := fromPlan.GetSetting(ctx); ok {
+				toStateSetting.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSetting)
+				toState.SetSetting(ctx, toStateSetting)
+			}
+		}
+	}
+}
+
+func (toState *PatchPublicWorkspaceSettingRequest) SyncFieldsDuringRead(ctx context.Context, fromState PatchPublicWorkspaceSettingRequest) {
+	if !fromState.Setting.IsNull() && !fromState.Setting.IsUnknown() {
+		if toStateSetting, ok := toState.GetSetting(ctx); ok {
+			if fromStateSetting, ok := fromState.GetSetting(ctx); ok {
+				toStateSetting.SyncFieldsDuringRead(ctx, fromStateSetting)
+				toState.SetSetting(ctx, toStateSetting)
+			}
+		}
+	}
+}
+
+func (c PatchPublicWorkspaceSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchPublicWorkspaceSettingRequest.

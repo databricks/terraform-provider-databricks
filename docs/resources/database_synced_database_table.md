@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_synced_database_table Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Lakebase Synced Database Tables are Postgres tables automatically synced from a source table inside Unity Catalog.
 They can be used to serve realtime queries without the operational overhead of managing ETL pipelines. 
 
@@ -129,7 +131,6 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### NewPipelineSpec
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.

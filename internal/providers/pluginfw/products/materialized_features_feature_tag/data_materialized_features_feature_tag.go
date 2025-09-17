@@ -35,7 +35,6 @@ type FeatureTagDataSource struct {
 // FeatureTagData extends the main model with additional fields.
 type FeatureTagData struct {
 	ml_tf.FeatureTag
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]ref
 func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m FeatureTagData) Type(ctx context.Context) attr.Type {
 	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.Meta
 
 func (r *FeatureTagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

@@ -28,8 +28,7 @@ func DataSourceDatabaseCatalogs() datasource.DataSource {
 
 // DatabaseCatalogsData extends the main model with additional fields.
 type DatabaseCatalogsData struct {
-	Database    types.List   `tfsdk:"database_catalogs"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	Database types.List `tfsdk:"database_catalogs"`
 }
 
 func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *DatabaseCatalogsDataSource) Metadata(ctx context.Context, req datasourc
 func (r *DatabaseCatalogsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("database_catalogs")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 
 	var newState DatabaseCatalogsData
 	newState.Database = types.ListValueMust(database_tf.DatabaseCatalog{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

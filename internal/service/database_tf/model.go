@@ -29,6 +29,34 @@ type CreateDatabaseCatalogRequest struct {
 	Catalog types.Object `tfsdk:"catalog"`
 }
 
+func (toState *CreateDatabaseCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateDatabaseCatalogRequest) {
+	if !fromPlan.Catalog.IsNull() && !fromPlan.Catalog.IsUnknown() {
+		if toStateCatalog, ok := toState.GetCatalog(ctx); ok {
+			if fromPlanCatalog, ok := fromPlan.GetCatalog(ctx); ok {
+				toStateCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCatalog)
+				toState.SetCatalog(ctx, toStateCatalog)
+			}
+		}
+	}
+}
+
+func (toState *CreateDatabaseCatalogRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateDatabaseCatalogRequest) {
+	if !fromState.Catalog.IsNull() && !fromState.Catalog.IsUnknown() {
+		if toStateCatalog, ok := toState.GetCatalog(ctx); ok {
+			if fromStateCatalog, ok := fromState.GetCatalog(ctx); ok {
+				toStateCatalog.SyncFieldsDuringRead(ctx, fromStateCatalog)
+				toState.SetCatalog(ctx, toStateCatalog)
+			}
+		}
+	}
+}
+
+func (c CreateDatabaseCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDatabaseCatalogRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -90,6 +118,34 @@ func (o *CreateDatabaseCatalogRequest) SetCatalog(ctx context.Context, v Databas
 type CreateDatabaseInstanceRequest struct {
 	// Instance to create.
 	DatabaseInstance types.Object `tfsdk:"database_instance"`
+}
+
+func (toState *CreateDatabaseInstanceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateDatabaseInstanceRequest) {
+	if !fromPlan.DatabaseInstance.IsNull() && !fromPlan.DatabaseInstance.IsUnknown() {
+		if toStateDatabaseInstance, ok := toState.GetDatabaseInstance(ctx); ok {
+			if fromPlanDatabaseInstance, ok := fromPlan.GetDatabaseInstance(ctx); ok {
+				toStateDatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabaseInstance)
+				toState.SetDatabaseInstance(ctx, toStateDatabaseInstance)
+			}
+		}
+	}
+}
+
+func (toState *CreateDatabaseInstanceRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateDatabaseInstanceRequest) {
+	if !fromState.DatabaseInstance.IsNull() && !fromState.DatabaseInstance.IsUnknown() {
+		if toStateDatabaseInstance, ok := toState.GetDatabaseInstance(ctx); ok {
+			if fromStateDatabaseInstance, ok := fromState.GetDatabaseInstance(ctx); ok {
+				toStateDatabaseInstance.SyncFieldsDuringRead(ctx, fromStateDatabaseInstance)
+				toState.SetDatabaseInstance(ctx, toStateDatabaseInstance)
+			}
+		}
+	}
+}
+
+func (c CreateDatabaseInstanceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_instance"] = attrs["database_instance"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDatabaseInstanceRequest.
@@ -156,6 +212,35 @@ type CreateDatabaseInstanceRoleRequest struct {
 	InstanceName types.String `tfsdk:"-"`
 }
 
+func (toState *CreateDatabaseInstanceRoleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateDatabaseInstanceRoleRequest) {
+	if !fromPlan.DatabaseInstanceRole.IsNull() && !fromPlan.DatabaseInstanceRole.IsUnknown() {
+		if toStateDatabaseInstanceRole, ok := toState.GetDatabaseInstanceRole(ctx); ok {
+			if fromPlanDatabaseInstanceRole, ok := fromPlan.GetDatabaseInstanceRole(ctx); ok {
+				toStateDatabaseInstanceRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabaseInstanceRole)
+				toState.SetDatabaseInstanceRole(ctx, toStateDatabaseInstanceRole)
+			}
+		}
+	}
+}
+
+func (toState *CreateDatabaseInstanceRoleRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateDatabaseInstanceRoleRequest) {
+	if !fromState.DatabaseInstanceRole.IsNull() && !fromState.DatabaseInstanceRole.IsUnknown() {
+		if toStateDatabaseInstanceRole, ok := toState.GetDatabaseInstanceRole(ctx); ok {
+			if fromStateDatabaseInstanceRole, ok := fromState.GetDatabaseInstanceRole(ctx); ok {
+				toStateDatabaseInstanceRole.SyncFieldsDuringRead(ctx, fromStateDatabaseInstanceRole)
+				toState.SetDatabaseInstanceRole(ctx, toStateDatabaseInstanceRole)
+			}
+		}
+	}
+}
+
+func (c CreateDatabaseInstanceRoleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_instance_role"] = attrs["database_instance_role"].SetRequired()
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDatabaseInstanceRoleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -220,6 +305,34 @@ type CreateDatabaseTableRequest struct {
 	Table types.Object `tfsdk:"table"`
 }
 
+func (toState *CreateDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateDatabaseTableRequest) {
+	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+}
+
+func (toState *CreateDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateDatabaseTableRequest) {
+	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
+		if toStateTable, ok := toState.GetTable(ctx); ok {
+			if fromStateTable, ok := fromState.GetTable(ctx); ok {
+				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
+				toState.SetTable(ctx, toStateTable)
+			}
+		}
+	}
+}
+
+func (c CreateDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["table"] = attrs["table"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDatabaseTableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -280,6 +393,34 @@ func (o *CreateDatabaseTableRequest) SetTable(ctx context.Context, v DatabaseTab
 
 type CreateSyncedDatabaseTableRequest struct {
 	SyncedTable types.Object `tfsdk:"synced_table"`
+}
+
+func (toState *CreateSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateSyncedDatabaseTableRequest) {
+	if !fromPlan.SyncedTable.IsNull() && !fromPlan.SyncedTable.IsUnknown() {
+		if toStateSyncedTable, ok := toState.GetSyncedTable(ctx); ok {
+			if fromPlanSyncedTable, ok := fromPlan.GetSyncedTable(ctx); ok {
+				toStateSyncedTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSyncedTable)
+				toState.SetSyncedTable(ctx, toStateSyncedTable)
+			}
+		}
+	}
+}
+
+func (toState *CreateSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateSyncedDatabaseTableRequest) {
+	if !fromState.SyncedTable.IsNull() && !fromState.SyncedTable.IsUnknown() {
+		if toStateSyncedTable, ok := toState.GetSyncedTable(ctx); ok {
+			if fromStateSyncedTable, ok := fromState.GetSyncedTable(ctx); ok {
+				toStateSyncedTable.SyncFieldsDuringRead(ctx, fromStateSyncedTable)
+				toState.SetSyncedTable(ctx, toStateSyncedTable)
+			}
+		}
+	}
+}
+
+func (c CreateSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["synced_table"] = attrs["synced_table"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSyncedDatabaseTableRequest.
@@ -1074,6 +1215,18 @@ type DeleteDatabaseCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteDatabaseCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDatabaseCatalogRequest) {
+}
+
+func (toState *DeleteDatabaseCatalogRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDatabaseCatalogRequest) {
+}
+
+func (c DeleteDatabaseCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDatabaseCatalogRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1123,6 +1276,20 @@ type DeleteDatabaseInstanceRequest struct {
 	Purge types.Bool `tfsdk:"-"`
 }
 
+func (toState *DeleteDatabaseInstanceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDatabaseInstanceRequest) {
+}
+
+func (toState *DeleteDatabaseInstanceRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDatabaseInstanceRequest) {
+}
+
+func (c DeleteDatabaseInstanceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["force"] = attrs["force"].SetOptional()
+	attrs["purge"] = attrs["purge"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDatabaseInstanceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1170,6 +1337,21 @@ type DeleteDatabaseInstanceRoleRequest struct {
 	ReassignOwnedTo types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteDatabaseInstanceRoleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDatabaseInstanceRoleRequest) {
+}
+
+func (toState *DeleteDatabaseInstanceRoleRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDatabaseInstanceRoleRequest) {
+}
+
+func (c DeleteDatabaseInstanceRoleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["reassign_owned_to"] = attrs["reassign_owned_to"].SetOptional()
+	attrs["allow_missing"] = attrs["allow_missing"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDatabaseInstanceRoleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1211,6 +1393,18 @@ type DeleteDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDatabaseTableRequest) {
+}
+
+func (toState *DeleteDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDatabaseTableRequest) {
+}
+
+func (c DeleteDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDatabaseTableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1244,6 +1438,18 @@ func (o DeleteDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteSyncedDatabaseTableRequest) {
+}
+
+func (toState *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteSyncedDatabaseTableRequest) {
+}
+
+func (c DeleteSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSyncedDatabaseTableRequest.
@@ -1337,6 +1543,18 @@ type FindDatabaseInstanceByUidRequest struct {
 	Uid types.String `tfsdk:"-"`
 }
 
+func (toState *FindDatabaseInstanceByUidRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FindDatabaseInstanceByUidRequest) {
+}
+
+func (toState *FindDatabaseInstanceByUidRequest) SyncFieldsDuringRead(ctx context.Context, fromState FindDatabaseInstanceByUidRequest) {
+}
+
+func (c FindDatabaseInstanceByUidRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["uid"] = attrs["uid"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FindDatabaseInstanceByUidRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1378,6 +1596,20 @@ type GenerateDatabaseCredentialRequest struct {
 	InstanceNames types.List `tfsdk:"instance_names"`
 
 	RequestId types.String `tfsdk:"request_id"`
+}
+
+func (toState *GenerateDatabaseCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenerateDatabaseCredentialRequest) {
+}
+
+func (toState *GenerateDatabaseCredentialRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenerateDatabaseCredentialRequest) {
+}
+
+func (c GenerateDatabaseCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["claims"] = attrs["claims"].SetOptional()
+	attrs["instance_names"] = attrs["instance_names"].SetOptional()
+	attrs["request_id"] = attrs["request_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateDatabaseCredentialRequest.
@@ -1478,6 +1710,18 @@ type GetDatabaseCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetDatabaseCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetDatabaseCatalogRequest) {
+}
+
+func (toState *GetDatabaseCatalogRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetDatabaseCatalogRequest) {
+}
+
+func (c GetDatabaseCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDatabaseCatalogRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1512,6 +1756,18 @@ func (o GetDatabaseCatalogRequest) Type(ctx context.Context) attr.Type {
 type GetDatabaseInstanceRequest struct {
 	// Name of the cluster to get.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetDatabaseInstanceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetDatabaseInstanceRequest) {
+}
+
+func (toState *GetDatabaseInstanceRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetDatabaseInstanceRequest) {
+}
+
+func (c GetDatabaseInstanceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDatabaseInstanceRequest.
@@ -1551,6 +1807,19 @@ type GetDatabaseInstanceRoleRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetDatabaseInstanceRoleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetDatabaseInstanceRoleRequest) {
+}
+
+func (toState *GetDatabaseInstanceRoleRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetDatabaseInstanceRoleRequest) {
+}
+
+func (c GetDatabaseInstanceRoleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDatabaseInstanceRoleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1588,6 +1857,18 @@ type GetDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetDatabaseTableRequest) {
+}
+
+func (toState *GetDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetDatabaseTableRequest) {
+}
+
+func (c GetDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDatabaseTableRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1621,6 +1902,18 @@ func (o GetDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 
 type GetSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetSyncedDatabaseTableRequest) {
+}
+
+func (toState *GetSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetSyncedDatabaseTableRequest) {
+}
+
+func (c GetSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSyncedDatabaseTableRequest.
@@ -1662,6 +1955,20 @@ type ListDatabaseCatalogsRequest struct {
 	// Pagination token to go to the next page of synced database tables.
 	// Requests first page if absent.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListDatabaseCatalogsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseCatalogsRequest) {
+}
+
+func (toState *ListDatabaseCatalogsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseCatalogsRequest) {
+}
+
+func (c ListDatabaseCatalogsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseCatalogsRequest.
@@ -1790,6 +2097,20 @@ type ListDatabaseInstanceRolesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListDatabaseInstanceRolesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstanceRolesRequest) {
+}
+
+func (toState *ListDatabaseInstanceRolesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstanceRolesRequest) {
+}
+
+func (c ListDatabaseInstanceRolesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseInstanceRolesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1916,6 +2237,19 @@ type ListDatabaseInstancesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListDatabaseInstancesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDatabaseInstancesRequest) {
+}
+
+func (toState *ListDatabaseInstancesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListDatabaseInstancesRequest) {
+}
+
+func (c ListDatabaseInstancesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabaseInstancesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2040,6 +2374,20 @@ type ListSyncedDatabaseTablesRequest struct {
 	// Pagination token to go to the next page of synced database tables.
 	// Requests first page if absent.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListSyncedDatabaseTablesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSyncedDatabaseTablesRequest) {
+}
+
+func (toState *ListSyncedDatabaseTablesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListSyncedDatabaseTablesRequest) {
+}
+
+func (c ListSyncedDatabaseTablesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSyncedDatabaseTablesRequest.
@@ -3631,6 +3979,36 @@ type UpdateDatabaseCatalogRequest struct {
 	UpdateMask types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateDatabaseCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateDatabaseCatalogRequest) {
+	if !fromPlan.DatabaseCatalog.IsNull() && !fromPlan.DatabaseCatalog.IsUnknown() {
+		if toStateDatabaseCatalog, ok := toState.GetDatabaseCatalog(ctx); ok {
+			if fromPlanDatabaseCatalog, ok := fromPlan.GetDatabaseCatalog(ctx); ok {
+				toStateDatabaseCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabaseCatalog)
+				toState.SetDatabaseCatalog(ctx, toStateDatabaseCatalog)
+			}
+		}
+	}
+}
+
+func (toState *UpdateDatabaseCatalogRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateDatabaseCatalogRequest) {
+	if !fromState.DatabaseCatalog.IsNull() && !fromState.DatabaseCatalog.IsUnknown() {
+		if toStateDatabaseCatalog, ok := toState.GetDatabaseCatalog(ctx); ok {
+			if fromStateDatabaseCatalog, ok := fromState.GetDatabaseCatalog(ctx); ok {
+				toStateDatabaseCatalog.SyncFieldsDuringRead(ctx, fromStateDatabaseCatalog)
+				toState.SetDatabaseCatalog(ctx, toStateDatabaseCatalog)
+			}
+		}
+	}
+}
+
+func (c UpdateDatabaseCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_catalog"] = attrs["database_catalog"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDatabaseCatalogRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3703,6 +4081,36 @@ type UpdateDatabaseInstanceRequest struct {
 	UpdateMask types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateDatabaseInstanceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateDatabaseInstanceRequest) {
+	if !fromPlan.DatabaseInstance.IsNull() && !fromPlan.DatabaseInstance.IsUnknown() {
+		if toStateDatabaseInstance, ok := toState.GetDatabaseInstance(ctx); ok {
+			if fromPlanDatabaseInstance, ok := fromPlan.GetDatabaseInstance(ctx); ok {
+				toStateDatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDatabaseInstance)
+				toState.SetDatabaseInstance(ctx, toStateDatabaseInstance)
+			}
+		}
+	}
+}
+
+func (toState *UpdateDatabaseInstanceRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateDatabaseInstanceRequest) {
+	if !fromState.DatabaseInstance.IsNull() && !fromState.DatabaseInstance.IsUnknown() {
+		if toStateDatabaseInstance, ok := toState.GetDatabaseInstance(ctx); ok {
+			if fromStateDatabaseInstance, ok := fromState.GetDatabaseInstance(ctx); ok {
+				toStateDatabaseInstance.SyncFieldsDuringRead(ctx, fromStateDatabaseInstance)
+				toState.SetDatabaseInstance(ctx, toStateDatabaseInstance)
+			}
+		}
+	}
+}
+
+func (c UpdateDatabaseInstanceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_instance"] = attrs["database_instance"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDatabaseInstanceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3772,6 +4180,36 @@ type UpdateSyncedDatabaseTableRequest struct {
 	SyncedTable types.Object `tfsdk:"synced_table"`
 	// The list of fields to update. Setting this field is not yet supported.
 	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateSyncedDatabaseTableRequest) {
+	if !fromPlan.SyncedTable.IsNull() && !fromPlan.SyncedTable.IsUnknown() {
+		if toStateSyncedTable, ok := toState.GetSyncedTable(ctx); ok {
+			if fromPlanSyncedTable, ok := fromPlan.GetSyncedTable(ctx); ok {
+				toStateSyncedTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSyncedTable)
+				toState.SetSyncedTable(ctx, toStateSyncedTable)
+			}
+		}
+	}
+}
+
+func (toState *UpdateSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateSyncedDatabaseTableRequest) {
+	if !fromState.SyncedTable.IsNull() && !fromState.SyncedTable.IsUnknown() {
+		if toStateSyncedTable, ok := toState.GetSyncedTable(ctx); ok {
+			if fromStateSyncedTable, ok := fromState.GetSyncedTable(ctx); ok {
+				toStateSyncedTable.SyncFieldsDuringRead(ctx, fromStateSyncedTable)
+				toState.SetSyncedTable(ctx, toStateSyncedTable)
+			}
+		}
+	}
+}
+
+func (c UpdateSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["synced_table"] = attrs["synced_table"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSyncedDatabaseTableRequest.

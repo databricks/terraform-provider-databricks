@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Database Instance.
 
 
@@ -18,7 +20,6 @@ data "databricks_database_instance" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

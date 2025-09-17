@@ -80,6 +80,20 @@ type CreateEndpoint_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
+func (toState *CreateEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateEndpoint_SdkV2) {
+}
+
+func (toState *CreateEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateEndpoint_SdkV2) {
+}
+
+func (c CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateEndpoint.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -130,6 +144,57 @@ type CreateVectorIndexRequest_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key"`
+}
+
+func (toState *CreateVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateVectorIndexRequest_SdkV2) {
+	if !fromPlan.DeltaSyncIndexSpec.IsNull() && !fromPlan.DeltaSyncIndexSpec.IsUnknown() {
+		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromPlanDeltaSyncIndexSpec, ok := fromPlan.GetDeltaSyncIndexSpec(ctx); ok {
+				toStateDeltaSyncIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaSyncIndexSpec)
+				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !fromPlan.DirectAccessIndexSpec.IsNull() && !fromPlan.DirectAccessIndexSpec.IsUnknown() {
+		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
+			if fromPlanDirectAccessIndexSpec, ok := fromPlan.GetDirectAccessIndexSpec(ctx); ok {
+				toStateDirectAccessIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDirectAccessIndexSpec)
+				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+			}
+		}
+	}
+}
+
+func (toState *CreateVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateVectorIndexRequest_SdkV2) {
+	if !fromState.DeltaSyncIndexSpec.IsNull() && !fromState.DeltaSyncIndexSpec.IsUnknown() {
+		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromStateDeltaSyncIndexSpec, ok := fromState.GetDeltaSyncIndexSpec(ctx); ok {
+				toStateDeltaSyncIndexSpec.SyncFieldsDuringRead(ctx, fromStateDeltaSyncIndexSpec)
+				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !fromState.DirectAccessIndexSpec.IsNull() && !fromState.DirectAccessIndexSpec.IsUnknown() {
+		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
+			if fromStateDirectAccessIndexSpec, ok := fromState.GetDirectAccessIndexSpec(ctx); ok {
+				toStateDirectAccessIndexSpec.SyncFieldsDuringRead(ctx, fromStateDirectAccessIndexSpec)
+				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+			}
+		}
+	}
+}
+
+func (c CreateVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].SetOptional()
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["index_type"] = attrs["index_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["primary_key"] = attrs["primary_key"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexRequest.
@@ -376,6 +441,19 @@ type DeleteDataVectorIndexRequest_SdkV2 struct {
 	PrimaryKeys types.List `tfsdk:"-"`
 }
 
+func (toState *DeleteDataVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDataVectorIndexRequest_SdkV2) {
+}
+
+func (toState *DeleteDataVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDataVectorIndexRequest_SdkV2) {
+}
+
+func (c DeleteDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["primary_keys"] = attrs["primary_keys"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -544,6 +622,18 @@ type DeleteEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteEndpointRequest_SdkV2) {
+}
+
+func (toState *DeleteEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteEndpointRequest_SdkV2) {
+}
+
+func (c DeleteEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -619,6 +709,18 @@ func (o DeleteEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteIndexRequest_SdkV2) {
+}
+
+func (toState *DeleteIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteIndexRequest_SdkV2) {
+}
+
+func (c DeleteIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexRequest.
@@ -1470,6 +1572,18 @@ type GetEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (toState *GetEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetEndpointRequest_SdkV2) {
+}
+
+func (toState *GetEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetEndpointRequest_SdkV2) {
+}
+
+func (c GetEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1510,6 +1624,19 @@ type GetIndexRequest_SdkV2 struct {
 	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
+}
+
+func (toState *GetIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetIndexRequest_SdkV2) {
+}
+
+func (toState *GetIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetIndexRequest_SdkV2) {
+}
+
+func (c GetIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["ensure_reranker_compatible"] = attrs["ensure_reranker_compatible"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIndexRequest.
@@ -1634,6 +1761,18 @@ type ListEndpointsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListEndpointsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListEndpointsRequest_SdkV2) {
+}
+
+func (toState *ListEndpointsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListEndpointsRequest_SdkV2) {
+}
+
+func (c ListEndpointsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1670,6 +1809,19 @@ type ListIndexesRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListIndexesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListIndexesRequest_SdkV2) {
+}
+
+func (toState *ListIndexesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListIndexesRequest_SdkV2) {
+}
+
+func (c ListIndexesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIndexesRequest.
@@ -2044,6 +2196,19 @@ type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (toState *PatchEndpointBudgetPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (toState *PatchEndpointBudgetPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (c PatchEndpointBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointBudgetPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2136,6 +2301,20 @@ type QueryVectorIndexNextPageRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"page_token"`
 }
 
+func (toState *QueryVectorIndexNextPageRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryVectorIndexNextPageRequest_SdkV2) {
+}
+
+func (toState *QueryVectorIndexNextPageRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryVectorIndexNextPageRequest_SdkV2) {
+}
+
+func (c QueryVectorIndexNextPageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexNextPageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2200,6 +2379,44 @@ type QueryVectorIndexRequest_SdkV2 struct {
 	Reranker types.List `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
+}
+
+func (toState *QueryVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryVectorIndexRequest_SdkV2) {
+	if !fromPlan.Reranker.IsNull() && !fromPlan.Reranker.IsUnknown() {
+		if toStateReranker, ok := toState.GetReranker(ctx); ok {
+			if fromPlanReranker, ok := fromPlan.GetReranker(ctx); ok {
+				toStateReranker.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanReranker)
+				toState.SetReranker(ctx, toStateReranker)
+			}
+		}
+	}
+}
+
+func (toState *QueryVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryVectorIndexRequest_SdkV2) {
+	if !fromState.Reranker.IsNull() && !fromState.Reranker.IsUnknown() {
+		if toStateReranker, ok := toState.GetReranker(ctx); ok {
+			if fromStateReranker, ok := fromState.GetReranker(ctx); ok {
+				toStateReranker.SyncFieldsDuringRead(ctx, fromStateReranker)
+				toState.SetReranker(ctx, toStateReranker)
+			}
+		}
+	}
+}
+
+func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetRequired()
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+	attrs["filters_json"] = attrs["filters_json"].SetOptional()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["query_type"] = attrs["query_type"].SetOptional()
+	attrs["query_vector"] = attrs["query_vector"].SetOptional()
+	attrs["reranker"] = attrs["reranker"].SetOptional()
+	attrs["reranker"] = attrs["reranker"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["score_threshold"] = attrs["score_threshold"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexRequest.
@@ -2877,6 +3094,20 @@ type ScanVectorIndexRequest_SdkV2 struct {
 	NumResults types.Int64 `tfsdk:"num_results"`
 }
 
+func (toState *ScanVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ScanVectorIndexRequest_SdkV2) {
+}
+
+func (toState *ScanVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ScanVectorIndexRequest_SdkV2) {
+}
+
+func (c ScanVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_primary_key"] = attrs["last_primary_key"].SetOptional()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ScanVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3079,6 +3310,18 @@ type SyncIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
+func (toState *SyncIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncIndexRequest_SdkV2) {
+}
+
+func (toState *SyncIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncIndexRequest_SdkV2) {
+}
+
+func (c SyncIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3156,6 +3399,19 @@ type UpdateEndpointCustomTagsRequest_SdkV2 struct {
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateEndpointCustomTagsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (toState *UpdateEndpointCustomTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (c UpdateEndpointCustomTagsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEndpointCustomTagsRequest.
@@ -3393,6 +3649,19 @@ type UpsertDataVectorIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 	// JSON string representing the data to be upserted.
 	InputsJson types.String `tfsdk:"inputs_json"`
+}
+
+func (toState *UpsertDataVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpsertDataVectorIndexRequest_SdkV2) {
+}
+
+func (toState *UpsertDataVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpsertDataVectorIndexRequest_SdkV2) {
+}
+
+func (c UpsertDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inputs_json"] = attrs["inputs_json"].SetRequired()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataVectorIndexRequest.

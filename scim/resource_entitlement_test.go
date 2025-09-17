@@ -453,6 +453,58 @@ func TestResourceEntitlementsUserRead_Error(t *testing.T) {
 	}.ExpectError(t, "Something")
 }
 
+func TestResourceEntitlementsWorkspaceAccessAndConsume(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: PatchRequestComplexValue([]patchOperation{
+					{
+						"replace", "entitlements", []ComplexValue{
+							{
+								Value: "workspace-access",
+							},
+							{
+								Value: "workspace-consume",
+							},
+						},
+					},
+				}),
+				Response: User{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
+				Response: User{
+					ID: "abc",
+					Entitlements: []ComplexValue{
+						{
+							Value: "workspace-access",
+						},
+						{
+							Value: "workspace-consume",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceEntitlements(),
+		HCL: `
+		user_id = "abc"
+		workspace_access = true
+		workspace_consume = true
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "user/abc", d.Id())
+	assert.Equal(t, true, d.Get("workspace_access"))
+	assert.Equal(t, true, d.Get("workspace_consume"))
+}
+
 func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

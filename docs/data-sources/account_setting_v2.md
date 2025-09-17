@@ -2,10 +2,21 @@
 subcategory: "Settings"
 ---
 # databricks_account_setting_v2 Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source can be used to get a single account setting. 
 
 ## Example Usage
+Referring to a setting by id
 
+```hcl
+data "databricks_account_setting_v2" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:

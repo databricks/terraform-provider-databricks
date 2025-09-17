@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type OnlineStoreDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// OnlineStoreDataExtended extends the main model with additional fields.
-type OnlineStoreDataExtended struct {
+// OnlineStoreData extends the main model with additional fields.
+type OnlineStoreData struct {
 	ml_tf.OnlineStore
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// OnlineStoreDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// OnlineStoreData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m OnlineStoreDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m OnlineStoreData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.OnlineStore.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m OnlineStoreDataExtended) GetComplexFieldTypes(ctx context.Context) map[s
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStoreDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStoreData
 // only implements ToObjectValue() and Type().
-func (m OnlineStoreDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.OnlineStore.ToObjectValue(ctx)
+func (m OnlineStoreData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.OnlineStore.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m OnlineStoreDataExtended) Type(ctx context.Context) attr.Type {
-	return m.OnlineStore.Type(ctx)
+func (m OnlineStoreData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.OnlineStore.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *OnlineStoreDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStoreDataExtended) {
+func (m *OnlineStoreData) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStoreData) {
 	m.OnlineStore.SyncFieldsDuringRead(ctx, existingState.OnlineStore)
 }
 
@@ -75,7 +85,9 @@ func (r *OnlineStoreDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *OnlineStoreDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoreDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoreData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks OnlineStore",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *OnlineStoreDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var config OnlineStoreDataExtended
+	var config OnlineStoreData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *OnlineStoreDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var newState OnlineStoreDataExtended
+	var newState OnlineStoreData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

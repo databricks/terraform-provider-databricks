@@ -333,7 +333,7 @@ type ComplexValue struct {
 
 	Primary types.Bool `tfsdk:"primary"`
 
-	Ref types.String `tfsdk:"$ref"`
+	Ref types.String `tfsdk:"ref"`
 
 	Type_ types.String `tfsdk:"type"`
 
@@ -347,9 +347,9 @@ func (toState *ComplexValue) SyncFieldsDuringRead(ctx context.Context, fromState
 }
 
 func (c ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ref"] = attrs["ref"].SetOptional()
 	attrs["display"] = attrs["display"].SetOptional()
 	attrs["primary"] = attrs["primary"].SetOptional()
-	attrs["$ref"] = attrs["$ref"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
 
@@ -376,7 +376,7 @@ func (o ComplexValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"display": o.Display,
 			"primary": o.Primary,
-			"$ref":    o.Ref,
+			"ref":     o.Ref,
 			"type":    o.Type_,
 			"value":   o.Value,
 		})
@@ -388,7 +388,7 @@ func (o ComplexValue) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"display": types.StringType,
 			"primary": types.BoolType,
-			"$ref":    types.StringType,
+			"ref":     types.StringType,
 			"type":    types.StringType,
 			"value":   types.StringType,
 		},
@@ -447,6 +447,19 @@ type DeleteAccountGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAccountGroupRequest) {
+}
+
+func (toState *DeleteAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAccountGroupRequest) {
+}
+
+func (c DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountGroupRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -481,6 +494,19 @@ func (o DeleteAccountGroupRequest) Type(ctx context.Context) attr.Type {
 type DeleteAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAccountServicePrincipalRequest) {
+}
+
+func (toState *DeleteAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAccountServicePrincipalRequest) {
+}
+
+func (c DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountServicePrincipalRequest.
@@ -519,6 +545,19 @@ type DeleteAccountUserRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAccountUserRequest) {
+}
+
+func (toState *DeleteAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAccountUserRequest) {
+}
+
+func (c DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountUserRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -555,6 +594,18 @@ type DeleteGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteGroupRequest) {
+}
+
+func (toState *DeleteGroupRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteGroupRequest) {
+}
+
+func (c DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteGroupRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -586,39 +637,21 @@ func (o DeleteGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteServicePrincipalRequest) {
+}
+
+func (toState *DeleteServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteServicePrincipalRequest) {
+}
+
+func (c DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServicePrincipalRequest.
@@ -657,6 +690,18 @@ type DeleteUserRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteUserRequest) {
+}
+
+func (toState *DeleteUserRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteUserRequest) {
+}
+
+func (c DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteUserRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -693,6 +738,20 @@ type DeleteWorkspaceAssignmentRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteWorkspaceAssignmentRequest) {
+}
+
+func (toState *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteWorkspaceAssignmentRequest) {
+}
+
+func (c DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceAssignmentRequest.
@@ -774,6 +833,19 @@ type GetAccountGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *GetAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAccountGroupRequest) {
+}
+
+func (toState *GetAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAccountGroupRequest) {
+}
+
+func (c GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountGroupRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -808,6 +880,19 @@ func (o GetAccountGroupRequest) Type(ctx context.Context) attr.Type {
 type GetAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
+}
+
+func (toState *GetAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAccountServicePrincipalRequest) {
+}
+
+func (toState *GetAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAccountServicePrincipalRequest) {
+}
+
+func (c GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountServicePrincipalRequest.
@@ -867,6 +952,26 @@ type GetAccountUserRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *GetAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAccountUserRequest) {
+}
+
+func (toState *GetAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAccountUserRequest) {
+}
+
+func (c GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountUserRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -885,14 +990,14 @@ func (o GetAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"id":                 o.Id,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"id":                  o.Id,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -900,14 +1005,14 @@ func (o GetAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o GetAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"id":                 types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"id":                  types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -921,6 +1026,19 @@ type GetAssignableRolesForResourceRequest struct {
 	// the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
 	// resource name for the service principal.
 	Resource types.String `tfsdk:"-"`
+}
+
+func (toState *GetAssignableRolesForResourceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAssignableRolesForResourceRequest) {
+}
+
+func (toState *GetAssignableRolesForResourceRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAssignableRolesForResourceRequest) {
+}
+
+func (c GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["resource"] = attrs["resource"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAssignableRolesForResourceRequest.
@@ -1036,6 +1154,18 @@ type GetGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (toState *GetGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetGroupRequest) {
+}
+
+func (toState *GetGroupRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetGroupRequest) {
+}
+
+func (c GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetGroupRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1068,6 +1198,17 @@ func (o GetGroupRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetPasswordPermissionLevelsRequest struct {
+}
+
+func (toState *GetPasswordPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPasswordPermissionLevelsRequest) {
+}
+
+func (toState *GetPasswordPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPasswordPermissionLevelsRequest) {
+}
+
+func (c GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionLevelsRequest.
@@ -1178,6 +1319,17 @@ func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 type GetPasswordPermissionsRequest struct {
 }
 
+func (toState *GetPasswordPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPasswordPermissionsRequest) {
+}
+
+func (toState *GetPasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPasswordPermissionsRequest) {
+}
+
+func (c GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1213,6 +1365,19 @@ type GetPermissionLevelsRequest struct {
 	// notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (toState *GetPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPermissionLevelsRequest) {
+}
+
+func (toState *GetPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPermissionLevelsRequest) {
+}
+
+func (c GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPermissionLevelsRequest.
@@ -1337,6 +1502,19 @@ type GetPermissionRequest struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *GetPermissionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPermissionRequest) {
+}
+
+func (toState *GetPermissionRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPermissionRequest) {
+}
+
+func (c GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPermissionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1397,6 +1575,20 @@ type GetRuleSetRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetRuleSetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRuleSetRequest) {
+}
+
+func (toState *GetRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetRuleSetRequest) {
+}
+
+func (c GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRuleSetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1433,6 +1625,18 @@ func (o GetRuleSetRequest) Type(ctx context.Context) attr.Type {
 type GetServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
+}
+
+func (toState *GetServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServicePrincipalRequest) {
+}
+
+func (toState *GetServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetServicePrincipalRequest) {
+}
+
+func (c GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServicePrincipalRequest.
@@ -1492,6 +1696,25 @@ type GetUserRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *GetUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetUserRequest) {
+}
+
+func (toState *GetUserRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetUserRequest) {
+}
+
+func (c GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUserRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1510,14 +1733,14 @@ func (o GetUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"id":                 o.Id,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"id":                  o.Id,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -1525,14 +1748,14 @@ func (o GetUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o GetUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"id":                 types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"id":                  types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -1540,6 +1763,19 @@ func (o GetUserRequest) Type(ctx context.Context) attr.Type {
 type GetWorkspaceAssignmentRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceAssignmentRequest) {
+}
+
+func (toState *GetWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceAssignmentRequest) {
+}
+
+func (c GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAssignmentRequest.
@@ -1662,14 +1898,14 @@ func (o *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
 
 type Group struct {
 	// String that represents a human-readable group name
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Entitlements assigned to the group. See [assigning entitlements] for a
 	// full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
 	// external_id should be unique for identifying groups
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"external_id"`
 
 	Groups types.List `tfsdk:"groups"`
 	// Databricks group ID
@@ -1707,15 +1943,16 @@ func (toState *Group) SyncFieldsDuringRead(ctx context.Context, fromState Group)
 }
 
 func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["groups"] = attrs["groups"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["members"] = attrs["members"].SetOptional()
 	attrs["meta"] = attrs["meta"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1745,9 +1982,9 @@ func (o Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"displayName":  o.DisplayName,
+			"display_name": o.DisplayName,
 			"entitlements": o.Entitlements,
-			"externalId":   o.ExternalId,
+			"external_id":  o.ExternalId,
 			"groups":       o.Groups,
 			"id":           o.Id,
 			"members":      o.Members,
@@ -1761,11 +1998,11 @@ func (o Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Group) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"displayName": types.StringType,
+			"display_name": types.StringType,
 			"entitlements": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
-			"externalId": types.StringType,
+			"external_id": types.StringType,
 			"groups": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
@@ -1962,6 +2199,25 @@ type ListAccountGroupsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListAccountGroupsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountGroupsRequest) {
+}
+
+func (toState *ListAccountGroupsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountGroupsRequest) {
+}
+
+func (c ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountGroupsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1980,13 +2236,13 @@ func (o ListAccountGroupsRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -1994,13 +2250,13 @@ func (o ListAccountGroupsRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -2028,6 +2284,25 @@ type ListAccountServicePrincipalsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListAccountServicePrincipalsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountServicePrincipalsRequest) {
+}
+
+func (toState *ListAccountServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountServicePrincipalsRequest) {
+}
+
+func (c ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountServicePrincipalsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2046,13 +2321,13 @@ func (o ListAccountServicePrincipalsRequest) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -2060,13 +2335,13 @@ func (o ListAccountServicePrincipalsRequest) ToObjectValue(ctx context.Context) 
 func (o ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -2095,6 +2370,25 @@ type ListAccountUsersRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListAccountUsersRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountUsersRequest) {
+}
+
+func (toState *ListAccountUsersRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountUsersRequest) {
+}
+
+func (c ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountUsersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2113,13 +2407,13 @@ func (o ListAccountUsersRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -2127,13 +2421,13 @@ func (o ListAccountUsersRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListAccountUsersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -2161,6 +2455,24 @@ type ListGroupsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListGroupsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListGroupsRequest) {
+}
+
+func (toState *ListGroupsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListGroupsRequest) {
+}
+
+func (c ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListGroupsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2179,13 +2491,13 @@ func (o ListGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -2193,29 +2505,29 @@ func (o ListGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o ListGroupsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
 
 type ListGroupsResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
 	// User objects returned in the response.
-	Resources types.List `tfsdk:"Resources"`
+	Resources types.List `tfsdk:"resources"`
 	// The schema of the service principal.
 	Schemas types.List `tfsdk:"schemas"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"start_index"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (toState *ListGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListGroupsResponse) {
@@ -2225,11 +2537,11 @@ func (toState *ListGroupsResponse) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["itemsPerPage"] = attrs["itemsPerPage"].SetOptional()
-	attrs["Resources"] = attrs["Resources"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["startIndex"] = attrs["startIndex"].SetOptional()
-	attrs["totalResults"] = attrs["totalResults"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+	attrs["total_results"] = attrs["total_results"].SetOptional()
 
 	return attrs
 }
@@ -2243,7 +2555,7 @@ func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.
 // SDK values.
 func (a ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Resources": reflect.TypeOf(Group{}),
+		"resources": reflect.TypeOf(Group{}),
 		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
@@ -2255,11 +2567,11 @@ func (o ListGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"itemsPerPage": o.ItemsPerPage,
-			"Resources":    o.Resources,
-			"schemas":      o.Schemas,
-			"startIndex":   o.StartIndex,
-			"totalResults": o.TotalResults,
+			"items_per_page": o.ItemsPerPage,
+			"resources":      o.Resources,
+			"schemas":        o.Schemas,
+			"start_index":    o.StartIndex,
+			"total_results":  o.TotalResults,
 		})
 }
 
@@ -2267,15 +2579,15 @@ func (o ListGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ListGroupsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
+			"items_per_page": types.Int64Type,
+			"resources": basetypes.ListType{
 				ElemType: Group{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"startIndex":   types.Int64Type,
-			"totalResults": types.Int64Type,
+			"start_index":   types.Int64Type,
+			"total_results": types.Int64Type,
 		},
 	}
 }
@@ -2301,7 +2613,7 @@ func (o *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
@@ -2334,16 +2646,16 @@ func (o *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
 
 type ListServicePrincipalResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
 	// User objects returned in the response.
-	Resources types.List `tfsdk:"Resources"`
+	Resources types.List `tfsdk:"resources"`
 	// The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"start_index"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (toState *ListServicePrincipalResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalResponse) {
@@ -2353,11 +2665,11 @@ func (toState *ListServicePrincipalResponse) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["itemsPerPage"] = attrs["itemsPerPage"].SetOptional()
-	attrs["Resources"] = attrs["Resources"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["startIndex"] = attrs["startIndex"].SetOptional()
-	attrs["totalResults"] = attrs["totalResults"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+	attrs["total_results"] = attrs["total_results"].SetOptional()
 
 	return attrs
 }
@@ -2371,7 +2683,7 @@ func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (a ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Resources": reflect.TypeOf(ServicePrincipal{}),
+		"resources": reflect.TypeOf(ServicePrincipal{}),
 		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
@@ -2383,11 +2695,11 @@ func (o ListServicePrincipalResponse) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"itemsPerPage": o.ItemsPerPage,
-			"Resources":    o.Resources,
-			"schemas":      o.Schemas,
-			"startIndex":   o.StartIndex,
-			"totalResults": o.TotalResults,
+			"items_per_page": o.ItemsPerPage,
+			"resources":      o.Resources,
+			"schemas":        o.Schemas,
+			"start_index":    o.StartIndex,
+			"total_results":  o.TotalResults,
 		})
 }
 
@@ -2395,15 +2707,15 @@ func (o ListServicePrincipalResponse) ToObjectValue(ctx context.Context) basetyp
 func (o ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
+			"items_per_page": types.Int64Type,
+			"resources": basetypes.ListType{
 				ElemType: ServicePrincipal{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"startIndex":   types.Int64Type,
-			"totalResults": types.Int64Type,
+			"start_index":   types.Int64Type,
+			"total_results": types.Int64Type,
 		},
 	}
 }
@@ -2429,7 +2741,7 @@ func (o *ListServicePrincipalResponse) SetResources(ctx context.Context, v []Ser
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
@@ -2483,6 +2795,24 @@ type ListServicePrincipalsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListServicePrincipalsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalsRequest) {
+}
+
+func (toState *ListServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListServicePrincipalsRequest) {
+}
+
+func (c ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2501,13 +2831,13 @@ func (o ListServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -2515,13 +2845,13 @@ func (o ListServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetyp
 func (o ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
@@ -2550,6 +2880,24 @@ type ListUsersRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListUsersRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListUsersRequest) {
+}
+
+func (toState *ListUsersRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListUsersRequest) {
+}
+
+func (c ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUsersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2568,13 +2916,13 @@ func (o ListUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":         o.Attributes,
-			"count":              o.Count,
-			"excludedAttributes": o.ExcludedAttributes,
-			"filter":             o.Filter,
-			"sortBy":             o.SortBy,
-			"sortOrder":          o.SortOrder,
-			"startIndex":         o.StartIndex,
+			"attributes":          o.Attributes,
+			"count":               o.Count,
+			"excluded_attributes": o.ExcludedAttributes,
+			"filter":              o.Filter,
+			"sort_by":             o.SortBy,
+			"sort_order":          o.SortOrder,
+			"start_index":         o.StartIndex,
 		})
 }
 
@@ -2582,29 +2930,29 @@ func (o ListUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListUsersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":         types.StringType,
-			"count":              types.Int64Type,
-			"excludedAttributes": types.StringType,
-			"filter":             types.StringType,
-			"sortBy":             types.StringType,
-			"sortOrder":          types.StringType,
-			"startIndex":         types.Int64Type,
+			"attributes":          types.StringType,
+			"count":               types.Int64Type,
+			"excluded_attributes": types.StringType,
+			"filter":              types.StringType,
+			"sort_by":             types.StringType,
+			"sort_order":          types.StringType,
+			"start_index":         types.Int64Type,
 		},
 	}
 }
 
 type ListUsersResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
 	// User objects returned in the response.
-	Resources types.List `tfsdk:"Resources"`
+	Resources types.List `tfsdk:"resources"`
 	// The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"start_index"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (toState *ListUsersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListUsersResponse) {
@@ -2614,11 +2962,11 @@ func (toState *ListUsersResponse) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["itemsPerPage"] = attrs["itemsPerPage"].SetOptional()
-	attrs["Resources"] = attrs["Resources"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["startIndex"] = attrs["startIndex"].SetOptional()
-	attrs["totalResults"] = attrs["totalResults"].SetOptional()
+	attrs["start_index"] = attrs["start_index"].SetOptional()
+	attrs["total_results"] = attrs["total_results"].SetOptional()
 
 	return attrs
 }
@@ -2632,7 +2980,7 @@ func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (a ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Resources": reflect.TypeOf(User{}),
+		"resources": reflect.TypeOf(User{}),
 		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
@@ -2644,11 +2992,11 @@ func (o ListUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"itemsPerPage": o.ItemsPerPage,
-			"Resources":    o.Resources,
-			"schemas":      o.Schemas,
-			"startIndex":   o.StartIndex,
-			"totalResults": o.TotalResults,
+			"items_per_page": o.ItemsPerPage,
+			"resources":      o.Resources,
+			"schemas":        o.Schemas,
+			"start_index":    o.StartIndex,
+			"total_results":  o.TotalResults,
 		})
 }
 
@@ -2656,15 +3004,15 @@ func (o ListUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o ListUsersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
+			"items_per_page": types.Int64Type,
+			"resources": basetypes.ListType{
 				ElemType: User{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"startIndex":   types.Int64Type,
-			"totalResults": types.Int64Type,
+			"start_index":   types.Int64Type,
+			"total_results": types.Int64Type,
 		},
 	}
 }
@@ -2690,7 +3038,7 @@ func (o *ListUsersResponse) SetResources(ctx context.Context, v []User) {
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
@@ -2726,6 +3074,19 @@ type ListWorkspaceAssignmentRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (toState *ListWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListWorkspaceAssignmentRequest) {
+}
+
+func (toState *ListWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListWorkspaceAssignmentRequest) {
+}
+
+func (c ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceAssignmentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2758,6 +3119,17 @@ func (o ListWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 }
 
 type MeRequest struct {
+}
+
+func (toState *MeRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MeRequest) {
+}
+
+func (toState *MeRequest) SyncFieldsDuringRead(ctx context.Context, fromState MeRequest) {
+}
+
+func (c MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MeRequest.
@@ -2797,6 +3169,21 @@ type MigratePermissionsRequest struct {
 	// WorkspaceId of the associated workspace where the permission migration
 	// will occur.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
+}
+
+func (toState *MigratePermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MigratePermissionsRequest) {
+}
+
+func (toState *MigratePermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState MigratePermissionsRequest) {
+}
+
+func (c MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
+	attrs["size"] = attrs["size"].SetOptional()
+	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsRequest.
@@ -2886,9 +3273,9 @@ func (o MigratePermissionsResponse) Type(ctx context.Context) attr.Type {
 
 type Name struct {
 	// Family name of the Databricks user.
-	FamilyName types.String `tfsdk:"familyName"`
+	FamilyName types.String `tfsdk:"family_name"`
 	// Given name of the Databricks user.
-	GivenName types.String `tfsdk:"givenName"`
+	GivenName types.String `tfsdk:"given_name"`
 }
 
 func (toState *Name) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Name) {
@@ -2898,8 +3285,8 @@ func (toState *Name) SyncFieldsDuringRead(ctx context.Context, fromState Name) {
 }
 
 func (c Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["familyName"] = attrs["familyName"].SetOptional()
-	attrs["givenName"] = attrs["givenName"].SetOptional()
+	attrs["family_name"] = attrs["family_name"].SetOptional()
+	attrs["given_name"] = attrs["given_name"].SetOptional()
 
 	return attrs
 }
@@ -2922,8 +3309,8 @@ func (o Name) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"familyName": o.FamilyName,
-			"givenName":  o.GivenName,
+			"family_name": o.FamilyName,
+			"given_name":  o.GivenName,
 		})
 }
 
@@ -2931,8 +3318,8 @@ func (o Name) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Name) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"familyName": types.StringType,
-			"givenName":  types.StringType,
+			"family_name": types.StringType,
+			"given_name":  types.StringType,
 		},
 	}
 }
@@ -3028,10 +3415,25 @@ type PartialUpdate struct {
 	// Unique ID in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 
-	Operations types.List `tfsdk:"Operations"`
+	Operations types.List `tfsdk:"operations"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
+}
+
+func (toState *PartialUpdate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PartialUpdate) {
+}
+
+func (toState *PartialUpdate) SyncFieldsDuringRead(ctx context.Context, fromState PartialUpdate) {
+}
+
+func (c PartialUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["operations"] = attrs["operations"].SetOptional()
+	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartialUpdate.
@@ -3043,7 +3445,7 @@ type PartialUpdate struct {
 // SDK values.
 func (a PartialUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Operations": reflect.TypeOf(Patch{}),
+		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
 	}
 }
@@ -3056,7 +3458,7 @@ func (o PartialUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"id":         o.Id,
-			"Operations": o.Operations,
+			"operations": o.Operations,
 			"schemas":    o.Schemas,
 		})
 }
@@ -3066,7 +3468,7 @@ func (o PartialUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
-			"Operations": basetypes.ListType{
+			"operations": basetypes.ListType{
 				ElemType: Patch{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
@@ -3097,7 +3499,7 @@ func (o *PartialUpdate) SetOperations(ctx context.Context, v []Patch) {
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Operations"]
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Operations = types.ListValueMust(t, vs)
 }
@@ -3519,6 +3921,18 @@ type PasswordPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 }
 
+func (toState *PasswordPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PasswordPermissionsRequest) {
+}
+
+func (toState *PasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState PasswordPermissionsRequest) {
+}
+
+func (c PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3635,36 +4049,6 @@ func (o Patch) Type(ctx context.Context) attr.Type {
 			"path":  types.StringType,
 			"value": types.ObjectType{},
 		},
-	}
-}
-
-type PatchResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PatchResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchResponse
-// only implements ToObjectValue() and Type().
-func (o PatchResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PatchResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -4143,7 +4527,7 @@ func (o PrincipalOutput) Type(ctx context.Context) attr.Type {
 type ResourceMeta struct {
 	// Identifier for group type. Can be local workspace group
 	// (`WorkspaceGroup`) or account group (`Group`).
-	ResourceType types.String `tfsdk:"resourceType"`
+	ResourceType types.String `tfsdk:"resource_type"`
 }
 
 func (toState *ResourceMeta) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResourceMeta) {
@@ -4153,7 +4537,7 @@ func (toState *ResourceMeta) SyncFieldsDuringRead(ctx context.Context, fromState
 }
 
 func (c ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resourceType"] = attrs["resourceType"].SetOptional()
+	attrs["resource_type"] = attrs["resource_type"].SetOptional()
 
 	return attrs
 }
@@ -4176,7 +4560,7 @@ func (o ResourceMeta) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"resourceType": o.ResourceType,
+			"resource_type": o.ResourceType,
 		})
 }
 
@@ -4184,7 +4568,7 @@ func (o ResourceMeta) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ResourceMeta) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"resourceType": types.StringType,
+			"resource_type": types.StringType,
 		},
 	}
 }
@@ -4433,16 +4817,16 @@ type ServicePrincipal struct {
 	// If this user is active
 	Active types.Bool `tfsdk:"active"`
 	// UUID relating to the service principal
-	ApplicationId types.String `tfsdk:"applicationId"`
+	ApplicationId types.String `tfsdk:"application_id"`
 	// String that represents a concatenation of given and family names.
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Entitlements assigned to the service principal. See [assigning
 	// entitlements] for a full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
 
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"external_id"`
 
 	Groups types.List `tfsdk:"groups"`
 	// Databricks service principal ID.
@@ -4461,14 +4845,15 @@ func (toState *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, fromS
 
 func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
-	attrs["applicationId"] = attrs["applicationId"].SetOptional()
-	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["application_id"] = attrs["application_id"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["groups"] = attrs["groups"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -4496,15 +4881,15 @@ func (o ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":        o.Active,
-			"applicationId": o.ApplicationId,
-			"displayName":   o.DisplayName,
-			"entitlements":  o.Entitlements,
-			"externalId":    o.ExternalId,
-			"groups":        o.Groups,
-			"id":            o.Id,
-			"roles":         o.Roles,
-			"schemas":       o.Schemas,
+			"active":         o.Active,
+			"application_id": o.ApplicationId,
+			"display_name":   o.DisplayName,
+			"entitlements":   o.Entitlements,
+			"external_id":    o.ExternalId,
+			"groups":         o.Groups,
+			"id":             o.Id,
+			"roles":          o.Roles,
+			"schemas":        o.Schemas,
 		})
 }
 
@@ -4512,13 +4897,13 @@ func (o ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"active":        types.BoolType,
-			"applicationId": types.StringType,
-			"displayName":   types.StringType,
+			"active":         types.BoolType,
+			"application_id": types.StringType,
+			"display_name":   types.StringType,
 			"entitlements": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
-			"externalId": types.StringType,
+			"external_id": types.StringType,
 			"groups": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
@@ -4649,6 +5034,20 @@ type SetObjectPermissions struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *SetObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SetObjectPermissions) {
+}
+
+func (toState *SetObjectPermissions) SyncFieldsDuringRead(ctx context.Context, fromState SetObjectPermissions) {
+}
+
+func (c SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4726,6 +5125,20 @@ type UpdateObjectPermissions struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateObjectPermissions) {
+}
+
+func (toState *UpdateObjectPermissions) SyncFieldsDuringRead(ctx context.Context, fromState UpdateObjectPermissions) {
+}
+
+func (c UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4791,41 +5204,41 @@ func (o *UpdateObjectPermissions) SetAccessControlList(ctx context.Context, v []
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
-type UpdateResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse
-// only implements ToObjectValue() and Type().
-func (o UpdateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type UpdateRuleSetRequest struct {
 	// Name of the rule set.
 	Name types.String `tfsdk:"name"`
 
 	RuleSet types.Object `tfsdk:"rule_set"`
+}
+
+func (toState *UpdateRuleSetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateRuleSetRequest) {
+	if !fromPlan.RuleSet.IsNull() && !fromPlan.RuleSet.IsUnknown() {
+		if toStateRuleSet, ok := toState.GetRuleSet(ctx); ok {
+			if fromPlanRuleSet, ok := fromPlan.GetRuleSet(ctx); ok {
+				toStateRuleSet.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRuleSet)
+				toState.SetRuleSet(ctx, toStateRuleSet)
+			}
+		}
+	}
+}
+
+func (toState *UpdateRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateRuleSetRequest) {
+	if !fromState.RuleSet.IsNull() && !fromState.RuleSet.IsUnknown() {
+		if toStateRuleSet, ok := toState.GetRuleSet(ctx); ok {
+			if fromStateRuleSet, ok := fromState.GetRuleSet(ctx); ok {
+				toStateRuleSet.SyncFieldsDuringRead(ctx, fromStateRuleSet)
+				toState.SetRuleSet(ctx, toStateRuleSet)
+			}
+		}
+	}
+}
+
+func (c UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rule_set"] = attrs["rule_set"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRuleSetRequest.
@@ -4902,6 +5315,21 @@ type UpdateWorkspaceAssignments struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (toState *UpdateWorkspaceAssignments) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateWorkspaceAssignments) {
+}
+
+func (toState *UpdateWorkspaceAssignments) SyncFieldsDuringRead(ctx context.Context, fromState UpdateWorkspaceAssignments) {
+}
+
+func (c UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permissions"] = attrs["permissions"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignments.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4976,7 +5404,7 @@ type User struct {
 	// update `displayName`.
 	//
 	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// All the emails associated with the Databricks user.
 	Emails types.List `tfsdk:"emails"`
 	// Entitlements assigned to the user. See [assigning entitlements] for a
@@ -4985,7 +5413,7 @@ type User struct {
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
 	// External ID is not currently supported. It is reserved for future use.
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"external_id"`
 
 	Groups types.List `tfsdk:"groups"`
 	// Databricks user ID.
@@ -4997,7 +5425,7 @@ type User struct {
 	// The schema of the user.
 	Schemas types.List `tfsdk:"schemas"`
 	// Email address of the Databricks user.
-	UserName types.String `tfsdk:"userName"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (toState *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan User) {
@@ -5024,16 +5452,17 @@ func (toState *User) SyncFieldsDuringRead(ctx context.Context, fromState User) {
 
 func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
-	attrs["displayName"] = attrs["displayName"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["externalId"] = attrs["externalId"].SetOptional()
+	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["groups"] = attrs["groups"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["userName"] = attrs["userName"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -5064,16 +5493,16 @@ func (o User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"active":       o.Active,
-			"displayName":  o.DisplayName,
+			"display_name": o.DisplayName,
 			"emails":       o.Emails,
 			"entitlements": o.Entitlements,
-			"externalId":   o.ExternalId,
+			"external_id":  o.ExternalId,
 			"groups":       o.Groups,
 			"id":           o.Id,
 			"name":         o.Name,
 			"roles":        o.Roles,
 			"schemas":      o.Schemas,
-			"userName":     o.UserName,
+			"user_name":    o.UserName,
 		})
 }
 
@@ -5081,15 +5510,15 @@ func (o User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o User) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"active":      types.BoolType,
-			"displayName": types.StringType,
+			"active":       types.BoolType,
+			"display_name": types.StringType,
 			"emails": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
 			"entitlements": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
-			"externalId": types.StringType,
+			"external_id": types.StringType,
 			"groups": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
@@ -5101,7 +5530,7 @@ func (o User) Type(ctx context.Context) attr.Type {
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"userName": types.StringType,
+			"user_name": types.StringType,
 		},
 	}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type ExternalMetadataDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// ExternalMetadataDataExtended extends the main model with additional fields.
-type ExternalMetadataDataExtended struct {
+// ExternalMetadataData extends the main model with additional fields.
+type ExternalMetadataData struct {
 	catalog_tf.ExternalMetadata
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ExternalMetadataDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// ExternalMetadataData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m ExternalMetadataDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ExternalMetadataData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.ExternalMetadata.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m ExternalMetadataDataExtended) GetComplexFieldTypes(ctx context.Context) 
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalMetadataDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalMetadataData
 // only implements ToObjectValue() and Type().
-func (m ExternalMetadataDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.ExternalMetadata.ToObjectValue(ctx)
+func (m ExternalMetadataData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.ExternalMetadata.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m ExternalMetadataDataExtended) Type(ctx context.Context) attr.Type {
-	return m.ExternalMetadata.Type(ctx)
+func (m ExternalMetadataData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.ExternalMetadata.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *ExternalMetadataDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState ExternalMetadataDataExtended) {
+func (m *ExternalMetadataData) SyncFieldsDuringRead(ctx context.Context, existingState ExternalMetadataData) {
 	m.ExternalMetadata.SyncFieldsDuringRead(ctx, existingState.ExternalMetadata)
 }
 
@@ -75,7 +85,9 @@ func (r *ExternalMetadataDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *ExternalMetadataDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadataDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadataData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks ExternalMetadata",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *ExternalMetadataDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var config ExternalMetadataDataExtended
+	var config ExternalMetadataData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *ExternalMetadataDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var newState ExternalMetadataDataExtended
+	var newState ExternalMetadataData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instances Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of Database Instances within the workspace.
 The list can then be accessed via the data object's `database_instances` field.
 
@@ -21,7 +23,6 @@ output "all_database_instances" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Upper bound for items returned
-
 
 
 ## Attributes

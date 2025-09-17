@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_info Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage

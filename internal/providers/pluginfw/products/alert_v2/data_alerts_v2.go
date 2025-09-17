@@ -26,18 +26,12 @@ func DataSourceAlertsV2() datasource.DataSource {
 	return &AlertsV2DataSource{}
 }
 
-// AlertsV2DataExtended extends the main model with additional fields.
-type AlertsV2DataExtended struct {
-	sql_tf.ListAlertsV2Request
+// AlertsV2Data extends the main model with additional fields.
+type AlertsV2Data struct {
 	AlertsV2 types.List `tfsdk:"alerts"`
 }
 
-func (c AlertsV2DataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alerts"] = attrs["alerts"].SetComputed()
-	return attrs
-}
-
-func (AlertsV2DataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alerts": reflect.TypeOf(sql_tf.AlertV2{}),
 	}
@@ -52,7 +46,10 @@ func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.Metada
 }
 
 func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2DataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("alerts")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var config AlertsV2DataExtended
+	var config AlertsV2Data
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertsV2DataExtended
+	var newState AlertsV2Data
 	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

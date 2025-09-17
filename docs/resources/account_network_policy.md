@@ -2,6 +2,8 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policy Resource
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Network policies control which network destinations can be accessed from the Databricks environment. 
 
 Each Databricks account includes a default policy named `default-policy`. This policy is:
@@ -82,12 +84,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = network_policy_id
+  id = "network_policy_id"
   to = databricks_account_network_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_network_policy network_policy_id
+terraform import databricks_account_network_policy "network_policy_id"
 ```

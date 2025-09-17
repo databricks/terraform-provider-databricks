@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type TagPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// TagPolicyDataExtended extends the main model with additional fields.
-type TagPolicyDataExtended struct {
+// TagPolicyData extends the main model with additional fields.
+type TagPolicyData struct {
 	tags_tf.TagPolicy
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagPolicyDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// TagPolicyData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m TagPolicyDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TagPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.TagPolicy.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m TagPolicyDataExtended) GetComplexFieldTypes(ctx context.Context) map[str
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicyDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicyData
 // only implements ToObjectValue() and Type().
-func (m TagPolicyDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.TagPolicy.ToObjectValue(ctx)
+func (m TagPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.TagPolicy.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m TagPolicyDataExtended) Type(ctx context.Context) attr.Type {
-	return m.TagPolicy.Type(ctx)
+func (m TagPolicyData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.TagPolicy.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *TagPolicyDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicyDataExtended) {
+func (m *TagPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicyData) {
 	m.TagPolicy.SyncFieldsDuringRead(ctx, existingState.TagPolicy)
 }
 
@@ -75,7 +85,9 @@ func (r *TagPolicyDataSource) Metadata(ctx context.Context, req datasource.Metad
 }
 
 func (r *TagPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPolicyDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks TagPolicy",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	var config TagPolicyDataExtended
+	var config TagPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	var newState TagPolicyDataExtended
+	var newState TagPolicyData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

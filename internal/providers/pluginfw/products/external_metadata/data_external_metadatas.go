@@ -26,18 +26,12 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 	return &ExternalMetadatasDataSource{}
 }
 
-// ExternalMetadatasDataExtended extends the main model with additional fields.
-type ExternalMetadatasDataExtended struct {
-	catalog_tf.ListExternalMetadataRequest
+// ExternalMetadatasData extends the main model with additional fields.
+type ExternalMetadatasData struct {
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
 }
 
-func (c ExternalMetadatasDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["external_metadata"] = attrs["external_metadata"].SetComputed()
-	return attrs
-}
-
-func (ExternalMetadatasDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"external_metadata": reflect.TypeOf(catalog_tf.ExternalMetadata{}),
 	}
@@ -52,7 +46,10 @@ func (r *ExternalMetadatasDataSource) Metadata(ctx context.Context, req datasour
 }
 
 func (r *ExternalMetadatasDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("external_metadata")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks ExternalMetadata",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var config ExternalMetadatasDataExtended
+	var config ExternalMetadatasData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, external_metadata.ToObjectValue(ctx))
 	}
 
-	var newState ExternalMetadatasDataExtended
+	var newState ExternalMetadatasData
 	newState.ExternalMetadata = types.ListValueMust(catalog_tf.ExternalMetadata{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

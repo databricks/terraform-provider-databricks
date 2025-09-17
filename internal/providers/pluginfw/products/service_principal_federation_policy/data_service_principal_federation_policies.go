@@ -26,18 +26,13 @@ func DataSourceFederationPolicies() datasource.DataSource {
 	return &FederationPoliciesDataSource{}
 }
 
-// FederationPoliciesDataExtended extends the main model with additional fields.
-type FederationPoliciesDataExtended struct {
-	oauth2_tf.ListServicePrincipalFederationPoliciesRequest
-	ServicePrincipalFederationPolicy types.List `tfsdk:"policies"`
+// FederationPoliciesData extends the main model with additional fields.
+type FederationPoliciesData struct {
+	ServicePrincipalFederationPolicy types.List  `tfsdk:"policies"`
+	ServicePrincipalId               types.Int64 `tfsdk:"service_principal_id"`
 }
 
-func (c FederationPoliciesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policies"] = attrs["policies"].SetComputed()
-	return attrs
-}
-
-func (FederationPoliciesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policies": reflect.TypeOf(oauth2_tf.FederationPolicy{}),
 	}
@@ -52,7 +47,11 @@ func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasou
 }
 
 func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("policies")
+		c.SetRequired("service_principal_id")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,
@@ -73,7 +72,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	var config FederationPoliciesDataExtended
+	var config FederationPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +100,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
-	var newState FederationPoliciesDataExtended
+	var newState FederationPoliciesData
 	newState.ServicePrincipalFederationPolicy = types.ListValueMust(oauth2_tf.FederationPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

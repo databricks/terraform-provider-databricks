@@ -38,19 +38,19 @@ type CustomTemplateResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// CustomTemplateExtended extends the main model with additional fields.
-type CustomTemplateExtended struct {
+// CustomTemplate extends the main model with additional fields.
+type CustomTemplate struct {
 	apps_tf.CustomTemplate
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CustomTemplateExtended struct. Container types (types.Map, types.List, types.Set) and
+// CustomTemplate struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m CustomTemplateExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CustomTemplate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.CustomTemplate.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m CustomTemplateExtended) GetComplexFieldTypes(ctx context.Context) map[st
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTemplateExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTemplate
 // only implements ToObjectValue() and Type().
-func (m CustomTemplateExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.CustomTemplate.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m CustomTemplateExtended) ToObjectValue(ctx context.Context) basetypes.Obj
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m CustomTemplateExtended) Type(ctx context.Context) attr.Type {
+func (m CustomTemplate) Type(ctx context.Context) attr.Type {
 	embeddedType := m.CustomTemplate.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m CustomTemplateExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *CustomTemplateExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CustomTemplateExtended) {
+func (m *CustomTemplate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CustomTemplate) {
 	m.CustomTemplate.SyncFieldsDuringCreateOrUpdate(ctx, plan.CustomTemplate)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CustomTemplateExtended) SyncFieldsDuringRead(ctx context.Context, existingState CustomTemplateExtended) {
+func (m *CustomTemplate) SyncFieldsDuringRead(ctx context.Context, existingState CustomTemplate) {
 	m.CustomTemplate.SyncFieldsDuringRead(ctx, existingState.CustomTemplate)
 }
 
@@ -98,7 +98,7 @@ func (r *CustomTemplateResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *CustomTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CustomTemplateExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CustomTemplate{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
@@ -113,7 +113,7 @@ func (r *CustomTemplateResource) Configure(ctx context.Context, req resource.Con
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplateExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -138,7 +138,7 @@ func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate
 		return
 	}
 
-	var newState CustomTemplateExtended
+	var newState CustomTemplate
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -156,7 +156,7 @@ func (r *CustomTemplateResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan CustomTemplateExtended
+	var plan CustomTemplate
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -178,7 +178,7 @@ func (r *CustomTemplateResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	var newState CustomTemplateExtended
+	var newState CustomTemplate
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -203,7 +203,7 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var existingState CustomTemplateExtended
+	var existingState CustomTemplate
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,7 +226,7 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var newState CustomTemplateExtended
+	var newState CustomTemplate
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -240,7 +240,7 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 func (r *CustomTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan CustomTemplateExtended
+	var plan CustomTemplate
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -258,7 +258,7 @@ func (r *CustomTemplateResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var state CustomTemplateExtended
+	var state CustomTemplate
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

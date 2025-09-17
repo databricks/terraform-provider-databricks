@@ -26,18 +26,12 @@ func DataSourceSyncedDatabaseTables() datasource.DataSource {
 	return &SyncedDatabaseTablesDataSource{}
 }
 
-// SyncedDatabaseTablesDataExtended extends the main model with additional fields.
-type SyncedDatabaseTablesDataExtended struct {
-	database_tf.ListSyncedDatabaseTablesRequest
+// SyncedDatabaseTablesData extends the main model with additional fields.
+type SyncedDatabaseTablesData struct {
 	Database types.List `tfsdk:"synced_tables"`
 }
 
-func (c SyncedDatabaseTablesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["synced_tables"] = attrs["synced_tables"].SetComputed()
-	return attrs
-}
-
-func (SyncedDatabaseTablesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"synced_tables": reflect.TypeOf(database_tf.SyncedDatabaseTable{}),
 	}
@@ -52,7 +46,10 @@ func (r *SyncedDatabaseTablesDataSource) Metadata(ctx context.Context, req datas
 }
 
 func (r *SyncedDatabaseTablesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SyncedDatabaseTablesDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SyncedDatabaseTablesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("synced_tables")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks SyncedDatabaseTable",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	var config SyncedDatabaseTablesDataExtended
+	var config SyncedDatabaseTablesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		results = append(results, synced_database_table.ToObjectValue(ctx))
 	}
 
-	var newState SyncedDatabaseTablesDataExtended
+	var newState SyncedDatabaseTablesData
 	newState.Database = types.ListValueMust(database_tf.SyncedDatabaseTable{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -39,19 +39,19 @@ type WorkspaceNetworkOptionResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// WorkspaceNetworkOptionExtended extends the main model with additional fields.
-type WorkspaceNetworkOptionExtended struct {
+// WorkspaceNetworkOption extends the main model with additional fields.
+type WorkspaceNetworkOption struct {
 	settings_tf.WorkspaceNetworkOption
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// WorkspaceNetworkOptionExtended struct. Container types (types.Map, types.List, types.Set) and
+// WorkspaceNetworkOption struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m WorkspaceNetworkOptionExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WorkspaceNetworkOption) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.WorkspaceNetworkOption.GetComplexFieldTypes(ctx)
 }
 
@@ -59,9 +59,9 @@ func (m WorkspaceNetworkOptionExtended) GetComplexFieldTypes(ctx context.Context
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceNetworkOptionExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceNetworkOption
 // only implements ToObjectValue() and Type().
-func (m WorkspaceNetworkOptionExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WorkspaceNetworkOption) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.WorkspaceNetworkOption.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -73,7 +73,7 @@ func (m WorkspaceNetworkOptionExtended) ToObjectValue(ctx context.Context) baset
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m WorkspaceNetworkOptionExtended) Type(ctx context.Context) attr.Type {
+func (m WorkspaceNetworkOption) Type(ctx context.Context) attr.Type {
 	embeddedType := m.WorkspaceNetworkOption.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -83,14 +83,14 @@ func (m WorkspaceNetworkOptionExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *WorkspaceNetworkOptionExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan WorkspaceNetworkOptionExtended) {
+func (m *WorkspaceNetworkOption) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan WorkspaceNetworkOption) {
 	m.WorkspaceNetworkOption.SyncFieldsDuringCreateOrUpdate(ctx, plan.WorkspaceNetworkOption)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *WorkspaceNetworkOptionExtended) SyncFieldsDuringRead(ctx context.Context, existingState WorkspaceNetworkOptionExtended) {
+func (m *WorkspaceNetworkOption) SyncFieldsDuringRead(ctx context.Context, existingState WorkspaceNetworkOption) {
 	m.WorkspaceNetworkOption.SyncFieldsDuringRead(ctx, existingState.WorkspaceNetworkOption)
 }
 
@@ -99,7 +99,7 @@ func (r *WorkspaceNetworkOptionResource) Metadata(ctx context.Context, req resou
 }
 
 func (r *WorkspaceNetworkOptionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, WorkspaceNetworkOptionExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, WorkspaceNetworkOption{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "workspace_id")
 		return c
 	})
@@ -114,7 +114,7 @@ func (r *WorkspaceNetworkOptionResource) Configure(ctx context.Context, req reso
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan WorkspaceNetworkOptionExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan WorkspaceNetworkOption, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetAccountClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -139,7 +139,7 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan Worksp
 		return
 	}
 
-	var newState WorkspaceNetworkOptionExtended
+	var newState WorkspaceNetworkOption
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -152,7 +152,7 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan Worksp
 func (r *WorkspaceNetworkOptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan WorkspaceNetworkOptionExtended
+	var plan WorkspaceNetworkOption
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -170,7 +170,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	var existingState WorkspaceNetworkOptionExtended
+	var existingState WorkspaceNetworkOption
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,7 +193,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	var newState WorkspaceNetworkOptionExtended
+	var newState WorkspaceNetworkOption
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,7 +207,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 func (r *WorkspaceNetworkOptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan WorkspaceNetworkOptionExtended
+	var plan WorkspaceNetworkOption
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return

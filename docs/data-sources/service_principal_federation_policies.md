@@ -2,6 +2,8 @@
 subcategory: "OAuth"
 ---
 # databricks_service_principal_federation_policies Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of federation policies for a service principal.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -19,7 +21,6 @@ data "databricks_service_principal_federation_policies" "all" {
 The following arguments are supported:
 * `service_principal_id` (integer, required) - The service principal id for the federation policy
 * `page_size` (integer, optional)
-
 
 
 ## Attributes

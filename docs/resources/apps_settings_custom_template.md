@@ -2,6 +2,8 @@
 subcategory: "Apps"
 ---
 # databricks_apps_settings_custom_template Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Custom App Templates store the metadata of custom app code hosted in an external Git repository, enabling users to reuse boilerplate code when creating apps.
 
 ### Use Cases
@@ -144,12 +146,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_apps_settings_custom_template.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_apps_settings_custom_template name
+terraform import databricks_apps_settings_custom_template "name"
 ```

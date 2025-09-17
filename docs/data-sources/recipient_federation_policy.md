@@ -2,6 +2,8 @@
 subcategory: "Delta Sharing"
 ---
 # databricks_recipient_federation_policy Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage

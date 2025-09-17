@@ -38,20 +38,20 @@ type DatabaseInstanceResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// DatabaseInstanceExtended extends the main model with additional fields.
-type DatabaseInstanceExtended struct {
+// DatabaseInstance extends the main model with additional fields.
+type DatabaseInstance struct {
 	database_tf.DatabaseInstance
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// DatabaseInstanceExtended struct. Container types (types.Map, types.List, types.Set) and
+// DatabaseInstance struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m DatabaseInstanceExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DatabaseInstance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.DatabaseInstance.GetComplexFieldTypes(ctx)
 }
 
@@ -59,9 +59,9 @@ func (m DatabaseInstanceExtended) GetComplexFieldTypes(ctx context.Context) map[
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstance
 // only implements ToObjectValue() and Type().
-func (m DatabaseInstanceExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.DatabaseInstance.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 	embeddedAttrs["purge_on_delete"] = m.PurgeOnDelete
@@ -74,7 +74,7 @@ func (m DatabaseInstanceExtended) ToObjectValue(ctx context.Context) basetypes.O
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
+func (m DatabaseInstance) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 	attrTypes["purge_on_delete"] = types.BoolType
@@ -85,7 +85,7 @@ func (m DatabaseInstanceExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstanceExtended) {
+func (m *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstance) {
 	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseInstance)
 	m.PurgeOnDelete = plan.PurgeOnDelete
 }
@@ -93,7 +93,7 @@ func (m *DatabaseInstanceExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseInstanceExtended) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceExtended) {
+func (m *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstance) {
 	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
 	m.PurgeOnDelete = existingState.PurgeOnDelete
 }
@@ -103,7 +103,7 @@ func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.Me
 }
 
 func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstanceExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		c.SetOptional("purge_on_delete")
 		return c
@@ -119,7 +119,7 @@ func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstanceExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -145,7 +145,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 		return
 	}
 
-	var newState DatabaseInstanceExtended
+	var newState DatabaseInstance
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -163,7 +163,7 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan DatabaseInstanceExtended
+	var plan DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +185,7 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	var newState DatabaseInstanceExtended
+	var newState DatabaseInstance
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response.Response, &newState)...)
 	if resp.Diagnostics.HasError() {
@@ -226,7 +226,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var existingState DatabaseInstanceExtended
+	var existingState DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -249,7 +249,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var newState DatabaseInstanceExtended
+	var newState DatabaseInstance
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -263,7 +263,7 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan DatabaseInstanceExtended
+	var plan DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -281,7 +281,7 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	var state DatabaseInstanceExtended
+	var state DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -17,7 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf" // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -175,6 +175,34 @@ type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 }
 
+func (toState *CreateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateDashboardRequest) {
+	if !fromPlan.Dashboard.IsNull() && !fromPlan.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromPlanDashboard, ok := fromPlan.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+}
+
+func (toState *CreateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateDashboardRequest) {
+	if !fromState.Dashboard.IsNull() && !fromState.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromStateDashboard, ok := fromState.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringRead(ctx, fromStateDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+}
+
+func (c CreateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard"] = attrs["dashboard"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -238,6 +266,35 @@ type CreateScheduleRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 	// The schedule to create. A dashboard is limited to 10 schedules.
 	Schedule types.Object `tfsdk:"schedule"`
+}
+
+func (toState *CreateScheduleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateScheduleRequest) {
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+}
+
+func (toState *CreateScheduleRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateScheduleRequest) {
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+}
+
+func (c CreateScheduleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["schedule"] = attrs["schedule"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScheduleRequest.
@@ -307,6 +364,36 @@ type CreateSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// The subscription to create. A schedule is limited to 100 subscriptions.
 	Subscription types.Object `tfsdk:"subscription"`
+}
+
+func (toState *CreateSubscriptionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateSubscriptionRequest) {
+	if !fromPlan.Subscription.IsNull() && !fromPlan.Subscription.IsUnknown() {
+		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
+			if fromPlanSubscription, ok := fromPlan.GetSubscription(ctx); ok {
+				toStateSubscription.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscription)
+				toState.SetSubscription(ctx, toStateSubscription)
+			}
+		}
+	}
+}
+
+func (toState *CreateSubscriptionRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateSubscriptionRequest) {
+	if !fromState.Subscription.IsNull() && !fromState.Subscription.IsUnknown() {
+		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
+			if fromStateSubscription, ok := fromState.GetSubscription(ctx); ok {
+				toStateSubscription.SyncFieldsDuringRead(ctx, fromStateSubscription)
+				toState.SetSubscription(ctx, toStateSubscription)
+			}
+		}
+	}
+}
+
+func (c CreateSubscriptionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["subscription"] = attrs["subscription"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSubscriptionRequest.
@@ -547,6 +634,20 @@ type DeleteScheduleRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteScheduleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteScheduleRequest) {
+}
+
+func (toState *DeleteScheduleRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteScheduleRequest) {
+}
+
+func (c DeleteScheduleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["schedule_id"] = attrs["schedule_id"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -592,6 +693,21 @@ type DeleteSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteSubscriptionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteSubscriptionRequest) {
+}
+
+func (toState *DeleteSubscriptionRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteSubscriptionRequest) {
+}
+
+func (c DeleteSubscriptionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["schedule_id"] = attrs["schedule_id"].SetRequired()
+	attrs["subscription_id"] = attrs["subscription_id"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionRequest.
@@ -919,6 +1035,20 @@ type GenieCreateConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieCreateConversationMessageRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieCreateConversationMessageRequest) {
+}
+
+func (toState *GenieCreateConversationMessageRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieCreateConversationMessageRequest) {
+}
+
+func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -963,6 +1093,20 @@ type GenieDeleteConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieDeleteConversationMessageRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieDeleteConversationMessageRequest) {
+}
+
+func (toState *GenieDeleteConversationMessageRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieDeleteConversationMessageRequest) {
+}
+
+func (c GenieDeleteConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieDeleteConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1003,6 +1147,19 @@ type GenieDeleteConversationRequest struct {
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is located.
 	SpaceId types.String `tfsdk:"-"`
+}
+
+func (toState *GenieDeleteConversationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieDeleteConversationRequest) {
+}
+
+func (toState *GenieDeleteConversationRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieDeleteConversationRequest) {
+}
+
+func (c GenieDeleteConversationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieDeleteConversationRequest.
@@ -1049,6 +1206,21 @@ type GenieExecuteMessageAttachmentQueryRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieExecuteMessageAttachmentQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieExecuteMessageAttachmentQueryRequest) {
+}
+
+func (toState *GenieExecuteMessageAttachmentQueryRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieExecuteMessageAttachmentQueryRequest) {
+}
+
+func (c GenieExecuteMessageAttachmentQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieExecuteMessageAttachmentQueryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1093,6 +1265,20 @@ type GenieExecuteMessageQueryRequest struct {
 	MessageId types.String `tfsdk:"-"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
+}
+
+func (toState *GenieExecuteMessageQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieExecuteMessageQueryRequest) {
+}
+
+func (toState *GenieExecuteMessageQueryRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieExecuteMessageQueryRequest) {
+}
+
+func (c GenieExecuteMessageQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieExecuteMessageQueryRequest.
@@ -1195,6 +1381,20 @@ type GenieGetConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieGetConversationMessageRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetConversationMessageRequest) {
+}
+
+func (toState *GenieGetConversationMessageRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetConversationMessageRequest) {
+}
+
+func (c GenieGetConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1241,6 +1441,21 @@ type GenieGetMessageAttachmentQueryResultRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieGetMessageAttachmentQueryResultRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetMessageAttachmentQueryResultRequest) {
+}
+
+func (toState *GenieGetMessageAttachmentQueryResultRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetMessageAttachmentQueryResultRequest) {
+}
+
+func (c GenieGetMessageAttachmentQueryResultRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageAttachmentQueryResultRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1285,6 +1500,20 @@ type GenieGetMessageQueryResultRequest struct {
 	MessageId types.String `tfsdk:"-"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
+}
+
+func (toState *GenieGetMessageQueryResultRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetMessageQueryResultRequest) {
+}
+
+func (toState *GenieGetMessageQueryResultRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetMessageQueryResultRequest) {
+}
+
+func (c GenieGetMessageQueryResultRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultRequest.
@@ -1425,6 +1654,21 @@ type GenieGetQueryResultByAttachmentRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieGetQueryResultByAttachmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetQueryResultByAttachmentRequest) {
+}
+
+func (toState *GenieGetQueryResultByAttachmentRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetQueryResultByAttachmentRequest) {
+}
+
+func (c GenieGetQueryResultByAttachmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetQueryResultByAttachmentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1467,6 +1711,18 @@ type GenieGetSpaceRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieGetSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieGetSpaceRequest) {
+}
+
+func (toState *GenieGetSpaceRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieGetSpaceRequest) {
+}
+
+func (c GenieGetSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetSpaceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1507,6 +1763,21 @@ type GenieListConversationMessagesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is located
 	SpaceId types.String `tfsdk:"-"`
+}
+
+func (toState *GenieListConversationMessagesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationMessagesRequest) {
+}
+
+func (toState *GenieListConversationMessagesRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationMessagesRequest) {
+}
+
+func (c GenieListConversationMessagesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationMessagesRequest.
@@ -1641,6 +1912,21 @@ type GenieListConversationsRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieListConversationsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListConversationsRequest) {
+}
+
+func (toState *GenieListConversationsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieListConversationsRequest) {
+}
+
+func (c GenieListConversationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["include_all"] = attrs["include_all"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1766,6 +2052,19 @@ type GenieListSpacesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Pagination token for getting the next page of results
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *GenieListSpacesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieListSpacesRequest) {
+}
+
+func (toState *GenieListSpacesRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieListSpacesRequest) {
+}
+
+func (c GenieListSpacesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListSpacesRequest.
@@ -2339,6 +2638,22 @@ type GenieSendMessageFeedbackRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieSendMessageFeedbackRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieSendMessageFeedbackRequest) {
+}
+
+func (toState *GenieSendMessageFeedbackRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieSendMessageFeedbackRequest) {
+}
+
+func (c GenieSendMessageFeedbackRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["rating"] = attrs["rating"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieSendMessageFeedbackRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2442,6 +2757,19 @@ type GenieStartConversationMessageRequest struct {
 	// The ID associated with the Genie space where you want to start a
 	// conversation.
 	SpaceId types.String `tfsdk:"-"`
+}
+
+func (toState *GenieStartConversationMessageRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieStartConversationMessageRequest) {
+}
+
+func (toState *GenieStartConversationMessageRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieStartConversationMessageRequest) {
+}
+
+func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
@@ -2629,6 +2957,18 @@ type GenieTrashSpaceRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
+func (toState *GenieTrashSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenieTrashSpaceRequest) {
+}
+
+func (toState *GenieTrashSpaceRequest) SyncFieldsDuringRead(ctx context.Context, fromState GenieTrashSpaceRequest) {
+}
+
+func (c GenieTrashSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieTrashSpaceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2665,6 +3005,18 @@ type GetDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
+func (toState *GetDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetDashboardRequest) {
+}
+
+func (toState *GetDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetDashboardRequest) {
+}
+
+func (c GetDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2699,6 +3051,18 @@ func (o GetDashboardRequest) Type(ctx context.Context) attr.Type {
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
+}
+
+func (toState *GetPublishedDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedDashboardRequest) {
+}
+
+func (toState *GetPublishedDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedDashboardRequest) {
+}
+
+func (c GetPublishedDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardRequest.
@@ -2739,6 +3103,20 @@ type GetPublishedDashboardTokenInfoRequest struct {
 	ExternalValue types.String `tfsdk:"-"`
 	// Provided external viewer id to be included in the custom claim.
 	ExternalViewerId types.String `tfsdk:"-"`
+}
+
+func (toState *GetPublishedDashboardTokenInfoRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedDashboardTokenInfoRequest) {
+}
+
+func (toState *GetPublishedDashboardTokenInfoRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedDashboardTokenInfoRequest) {
+}
+
+func (c GetPublishedDashboardTokenInfoRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["external_value"] = attrs["external_value"].SetOptional()
+	attrs["external_viewer_id"] = attrs["external_viewer_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardTokenInfoRequest.
@@ -2875,6 +3253,19 @@ type GetScheduleRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
+func (toState *GetScheduleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetScheduleRequest) {
+}
+
+func (toState *GetScheduleRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetScheduleRequest) {
+}
+
+func (c GetScheduleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["schedule_id"] = attrs["schedule_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetScheduleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2915,6 +3306,20 @@ type GetSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
+}
+
+func (toState *GetSubscriptionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetSubscriptionRequest) {
+}
+
+func (toState *GetSubscriptionRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetSubscriptionRequest) {
+}
+
+func (c GetSubscriptionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["schedule_id"] = attrs["schedule_id"].SetRequired()
+	attrs["subscription_id"] = attrs["subscription_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSubscriptionRequest.
@@ -2963,6 +3368,21 @@ type ListDashboardsRequest struct {
 	ShowTrashed types.Bool `tfsdk:"-"`
 	// `DASHBOARD_VIEW_BASIC`only includes summary metadata from the dashboard.
 	View types.String `tfsdk:"-"`
+}
+
+func (toState *ListDashboardsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDashboardsRequest) {
+}
+
+func (toState *ListDashboardsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListDashboardsRequest) {
+}
+
+func (c ListDashboardsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["show_trashed"] = attrs["show_trashed"].SetOptional()
+	attrs["view"] = attrs["view"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsRequest.
@@ -3095,6 +3515,20 @@ type ListSchedulesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListSchedulesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSchedulesRequest) {
+}
+
+func (toState *ListSchedulesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListSchedulesRequest) {
+}
+
+func (c ListSchedulesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3225,6 +3659,21 @@ type ListSubscriptionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// UUID identifying the schedule which the subscriptions belongs.
 	ScheduleId types.String `tfsdk:"-"`
+}
+
+func (toState *ListSubscriptionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSubscriptionsRequest) {
+}
+
+func (toState *ListSubscriptionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListSubscriptionsRequest) {
+}
+
+func (c ListSubscriptionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["schedule_id"] = attrs["schedule_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsRequest.
@@ -3415,6 +3864,21 @@ type MigrateDashboardRequest struct {
 	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
+func (toState *MigrateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MigrateDashboardRequest) {
+}
+
+func (toState *MigrateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState MigrateDashboardRequest) {
+}
+
+func (c MigrateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
+	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3462,6 +3926,20 @@ type PublishRequest struct {
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (toState *PublishRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PublishRequest) {
+}
+
+func (toState *PublishRequest) SyncFieldsDuringRead(ctx context.Context, fromState PublishRequest) {
+}
+
+func (c PublishRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -4186,6 +4664,18 @@ type TrashDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
+func (toState *TrashDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TrashDashboardRequest) {
+}
+
+func (toState *TrashDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState TrashDashboardRequest) {
+}
+
+func (c TrashDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4261,6 +4751,18 @@ func (o TrashDashboardResponse) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
+}
+
+func (toState *UnpublishDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UnpublishDashboardRequest) {
+}
+
+func (toState *UnpublishDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState UnpublishDashboardRequest) {
+}
+
+func (c UnpublishDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardRequest.
@@ -4341,6 +4843,35 @@ type UpdateDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateDashboardRequest) {
+	if !fromPlan.Dashboard.IsNull() && !fromPlan.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromPlanDashboard, ok := fromPlan.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+}
+
+func (toState *UpdateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateDashboardRequest) {
+	if !fromState.Dashboard.IsNull() && !fromState.Dashboard.IsUnknown() {
+		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
+			if fromStateDashboard, ok := fromState.GetDashboard(ctx); ok {
+				toStateDashboard.SyncFieldsDuringRead(ctx, fromStateDashboard)
+				toState.SetDashboard(ctx, toStateDashboard)
+			}
+		}
+	}
+}
+
+func (c UpdateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard"] = attrs["dashboard"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4408,6 +4939,36 @@ type UpdateScheduleRequest struct {
 	Schedule types.Object `tfsdk:"schedule"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateScheduleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateScheduleRequest) {
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+}
+
+func (toState *UpdateScheduleRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateScheduleRequest) {
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+}
+
+func (c UpdateScheduleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["schedule"] = attrs["schedule"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateScheduleRequest.

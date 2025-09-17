@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type WorkspaceNetworkOptionDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// WorkspaceNetworkOptionDataExtended extends the main model with additional fields.
-type WorkspaceNetworkOptionDataExtended struct {
+// WorkspaceNetworkOptionData extends the main model with additional fields.
+type WorkspaceNetworkOptionData struct {
 	settings_tf.WorkspaceNetworkOption
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// WorkspaceNetworkOptionDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// WorkspaceNetworkOptionData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m WorkspaceNetworkOptionDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WorkspaceNetworkOptionData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.WorkspaceNetworkOption.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m WorkspaceNetworkOptionDataExtended) GetComplexFieldTypes(ctx context.Con
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceNetworkOptionDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceNetworkOptionData
 // only implements ToObjectValue() and Type().
-func (m WorkspaceNetworkOptionDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.WorkspaceNetworkOption.ToObjectValue(ctx)
+func (m WorkspaceNetworkOptionData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.WorkspaceNetworkOption.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m WorkspaceNetworkOptionDataExtended) Type(ctx context.Context) attr.Type {
-	return m.WorkspaceNetworkOption.Type(ctx)
+func (m WorkspaceNetworkOptionData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.WorkspaceNetworkOption.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *WorkspaceNetworkOptionDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState WorkspaceNetworkOptionDataExtended) {
+func (m *WorkspaceNetworkOptionData) SyncFieldsDuringRead(ctx context.Context, existingState WorkspaceNetworkOptionData) {
 	m.WorkspaceNetworkOption.SyncFieldsDuringRead(ctx, existingState.WorkspaceNetworkOption)
 }
 
@@ -75,7 +85,9 @@ func (r *WorkspaceNetworkOptionDataSource) Metadata(ctx context.Context, req dat
 }
 
 func (r *WorkspaceNetworkOptionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, WorkspaceNetworkOptionDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, WorkspaceNetworkOptionData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks WorkspaceNetworkOption",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *WorkspaceNetworkOptionDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	var config WorkspaceNetworkOptionDataExtended
+	var config WorkspaceNetworkOptionData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *WorkspaceNetworkOptionDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	var newState WorkspaceNetworkOptionDataExtended
+	var newState WorkspaceNetworkOptionData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -32,6 +32,36 @@ type CreateAccountFederationPolicyRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (toState *CreateAccountFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAccountFederationPolicyRequest) {
+	if !fromPlan.Policy.IsNull() && !fromPlan.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromPlanPolicy, ok := fromPlan.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (toState *CreateAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateAccountFederationPolicyRequest) {
+	if !fromState.Policy.IsNull() && !fromState.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromStatePolicy, ok := fromState.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringRead(ctx, fromStatePolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (c CreateAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy"] = attrs["policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccountFederationPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -109,6 +139,40 @@ type CreateCustomAppIntegration struct {
 	// token. If the user does not authorize the access token will not be
 	// minted. Must be a subset of scopes.
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
+}
+
+func (toState *CreateCustomAppIntegration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCustomAppIntegration) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (toState *CreateCustomAppIntegration) SyncFieldsDuringRead(ctx context.Context, fromState CreateCustomAppIntegration) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (c CreateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["confidential"] = attrs["confidential"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
+	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomAppIntegration.
@@ -333,6 +397,36 @@ type CreatePublishedAppIntegration struct {
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
+func (toState *CreatePublishedAppIntegration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreatePublishedAppIntegration) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (toState *CreatePublishedAppIntegration) SyncFieldsDuringRead(ctx context.Context, fromState CreatePublishedAppIntegration) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (c CreatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_id"] = attrs["app_id"].SetOptional()
+	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePublishedAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -451,6 +545,37 @@ type CreateServicePrincipalFederationPolicyRequest struct {
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
 }
 
+func (toState *CreateServicePrincipalFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateServicePrincipalFederationPolicyRequest) {
+	if !fromPlan.Policy.IsNull() && !fromPlan.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromPlanPolicy, ok := fromPlan.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (toState *CreateServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateServicePrincipalFederationPolicyRequest) {
+	if !fromState.Policy.IsNull() && !fromState.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromStatePolicy, ok := fromState.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringRead(ctx, fromStatePolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (c CreateServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy"] = attrs["policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalFederationPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -519,6 +644,20 @@ type CreateServicePrincipalSecretRequest struct {
 	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
 	ServicePrincipalId types.String `tfsdk:"-"`
+}
+
+func (toState *CreateServicePrincipalSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateServicePrincipalSecretRequest) {
+}
+
+func (toState *CreateServicePrincipalSecretRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateServicePrincipalSecretRequest) {
+}
+
+func (c CreateServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lifetime"] = attrs["lifetime"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -638,6 +777,19 @@ type DeleteAccountFederationPolicyRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteAccountFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAccountFederationPolicyRequest) {
+}
+
+func (toState *DeleteAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAccountFederationPolicyRequest) {
+}
+
+func (c DeleteAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountFederationPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -712,6 +864,19 @@ func (o DeleteCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 
 type DeleteCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteCustomAppIntegrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCustomAppIntegrationRequest) {
+}
+
+func (toState *DeleteCustomAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCustomAppIntegrationRequest) {
+}
+
+func (c DeleteCustomAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCustomAppIntegrationRequest.
@@ -790,6 +955,19 @@ type DeletePublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (toState *DeletePublishedAppIntegrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeletePublishedAppIntegrationRequest) {
+}
+
+func (toState *DeletePublishedAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeletePublishedAppIntegrationRequest) {
+}
+
+func (c DeletePublishedAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePublishedAppIntegrationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -821,41 +999,25 @@ func (o DeletePublishedAppIntegrationRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-type DeleteResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteServicePrincipalFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *DeleteServicePrincipalFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteServicePrincipalFederationPolicyRequest) {
+}
+
+func (toState *DeleteServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteServicePrincipalFederationPolicyRequest) {
+}
+
+func (c DeleteServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServicePrincipalFederationPolicyRequest.
@@ -896,6 +1058,20 @@ type DeleteServicePrincipalSecretRequest struct {
 	SecretId types.String `tfsdk:"-"`
 	// The service principal ID.
 	ServicePrincipalId types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteServicePrincipalSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteServicePrincipalSecretRequest) {
+}
+
+func (toState *DeleteServicePrincipalSecretRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteServicePrincipalSecretRequest) {
+}
+
+func (c DeleteServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["secret_id"] = attrs["secret_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServicePrincipalSecretRequest.
@@ -988,8 +1164,12 @@ func (c FederationPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
 	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetOptional()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1072,6 +1252,19 @@ func (o *FederationPolicy) SetOidcPolicy(ctx context.Context, v OidcFederationPo
 type GetAccountFederationPolicyRequest struct {
 	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
+}
+
+func (toState *GetAccountFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAccountFederationPolicyRequest) {
+}
+
+func (toState *GetAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAccountFederationPolicyRequest) {
+}
+
+func (c GetAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountFederationPolicyRequest.
@@ -1341,6 +1534,19 @@ type GetCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (toState *GetCustomAppIntegrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCustomAppIntegrationRequest) {
+}
+
+func (toState *GetCustomAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetCustomAppIntegrationRequest) {
+}
+
+func (c GetCustomAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCustomAppIntegrationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1575,6 +1781,19 @@ type GetPublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (toState *GetPublishedAppIntegrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPublishedAppIntegrationRequest) {
+}
+
+func (toState *GetPublishedAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetPublishedAppIntegrationRequest) {
+}
+
+func (c GetPublishedAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedAppIntegrationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1780,6 +1999,20 @@ type GetServicePrincipalFederationPolicyRequest struct {
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
 }
 
+func (toState *GetServicePrincipalFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetServicePrincipalFederationPolicyRequest) {
+}
+
+func (toState *GetServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetServicePrincipalFederationPolicyRequest) {
+}
+
+func (c GetServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServicePrincipalFederationPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1817,6 +2050,20 @@ type ListAccountFederationPoliciesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListAccountFederationPoliciesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAccountFederationPoliciesRequest) {
+}
+
+func (toState *ListAccountFederationPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAccountFederationPoliciesRequest) {
+}
+
+func (c ListAccountFederationPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountFederationPoliciesRequest.
@@ -1858,6 +2105,21 @@ type ListCustomAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListCustomAppIntegrationsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCustomAppIntegrationsRequest) {
+}
+
+func (toState *ListCustomAppIntegrationsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListCustomAppIntegrationsRequest) {
+}
+
+func (c ListCustomAppIntegrationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["include_creator_username"] = attrs["include_creator_username"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCustomAppIntegrationsRequest.
@@ -1984,6 +2246,20 @@ type ListOAuthPublishedAppsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListOAuthPublishedAppsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListOAuthPublishedAppsRequest) {
+}
+
+func (toState *ListOAuthPublishedAppsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListOAuthPublishedAppsRequest) {
+}
+
+func (c ListOAuthPublishedAppsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListOAuthPublishedAppsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2021,6 +2297,20 @@ type ListPublishedAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListPublishedAppIntegrationsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListPublishedAppIntegrationsRequest) {
+}
+
+func (toState *ListPublishedAppIntegrationsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListPublishedAppIntegrationsRequest) {
+}
+
+func (c ListPublishedAppIntegrationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPublishedAppIntegrationsRequest.
@@ -2062,6 +2352,21 @@ type ListServicePrincipalFederationPoliciesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *ListServicePrincipalFederationPoliciesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalFederationPoliciesRequest) {
+}
+
+func (toState *ListServicePrincipalFederationPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListServicePrincipalFederationPoliciesRequest) {
+}
+
+func (c ListServicePrincipalFederationPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalFederationPoliciesRequest.
@@ -2113,6 +2418,21 @@ type ListServicePrincipalSecretsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// The service principal ID.
 	ServicePrincipalId types.String `tfsdk:"-"`
+}
+
+func (toState *ListServicePrincipalSecretsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListServicePrincipalSecretsRequest) {
+}
+
+func (toState *ListServicePrincipalSecretsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListServicePrincipalSecretsRequest) {
+}
+
+func (c ListServicePrincipalSecretsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalSecretsRequest.
@@ -2636,6 +2956,37 @@ type UpdateAccountFederationPolicyRequest struct {
 	UpdateMask types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateAccountFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateAccountFederationPolicyRequest) {
+	if !fromPlan.Policy.IsNull() && !fromPlan.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromPlanPolicy, ok := fromPlan.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (toState *UpdateAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateAccountFederationPolicyRequest) {
+	if !fromState.Policy.IsNull() && !fromState.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromStatePolicy, ok := fromState.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringRead(ctx, fromStatePolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (c UpdateAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy"] = attrs["policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccountFederationPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2713,6 +3064,39 @@ type UpdateCustomAppIntegration struct {
 	// token. If the user does not authorize the access token will not be
 	// minted. Must be a subset of scopes.
 	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
+}
+
+func (toState *UpdateCustomAppIntegration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCustomAppIntegration) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCustomAppIntegration) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCustomAppIntegration) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
+	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCustomAppIntegration.
@@ -2915,6 +3299,36 @@ type UpdatePublishedAppIntegration struct {
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
+func (toState *UpdatePublishedAppIntegration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdatePublishedAppIntegration) {
+	if !fromPlan.TokenAccessPolicy.IsNull() && !fromPlan.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromPlanTokenAccessPolicy, ok := fromPlan.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (toState *UpdatePublishedAppIntegration) SyncFieldsDuringRead(ctx context.Context, fromState UpdatePublishedAppIntegration) {
+	if !fromState.TokenAccessPolicy.IsNull() && !fromState.TokenAccessPolicy.IsUnknown() {
+		if toStateTokenAccessPolicy, ok := toState.GetTokenAccessPolicy(ctx); ok {
+			if fromStateTokenAccessPolicy, ok := fromState.GetTokenAccessPolicy(ctx); ok {
+				toStateTokenAccessPolicy.SyncFieldsDuringRead(ctx, fromStateTokenAccessPolicy)
+				toState.SetTokenAccessPolicy(ctx, toStateTokenAccessPolicy)
+			}
+		}
+	}
+}
+
+func (c UpdatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["integration_id"] = attrs["integration_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePublishedAppIntegration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3029,6 +3443,38 @@ type UpdateServicePrincipalFederationPolicyRequest struct {
 	// provided in the update request will overwrite the corresponding fields in
 	// the existing policy. Example value: 'description,oidc_policy.audiences'.
 	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateServicePrincipalFederationPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateServicePrincipalFederationPolicyRequest) {
+	if !fromPlan.Policy.IsNull() && !fromPlan.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromPlanPolicy, ok := fromPlan.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (toState *UpdateServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateServicePrincipalFederationPolicyRequest) {
+	if !fromState.Policy.IsNull() && !fromState.Policy.IsUnknown() {
+		if toStatePolicy, ok := toState.GetPolicy(ctx); ok {
+			if fromStatePolicy, ok := fromState.GetPolicy(ctx); ok {
+				toStatePolicy.SyncFieldsDuringRead(ctx, fromStatePolicy)
+				toState.SetPolicy(ctx, toStatePolicy)
+			}
+		}
+	}
+}
+
+func (c UpdateServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy"] = attrs["policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateServicePrincipalFederationPolicyRequest.

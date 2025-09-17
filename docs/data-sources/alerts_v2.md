@@ -2,6 +2,8 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alerts_v2 Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 The SQL Alerts v2 data source allows you to retrieve a list of alerts in Databricks SQL that are accessible to the current user. This data source returns alerts ordered by their creation time.
 
 You can use this data source to:
@@ -23,7 +25,6 @@ data "databricks_alert_v2" "all" {}
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
-
 
 
 ## Attributes

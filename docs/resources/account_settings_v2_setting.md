@@ -2,6 +2,8 @@
 subcategory: "Settings"
 ---
 # databricks_account_settings_v2_setting Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 
 [//]: # (todo: add public link to metadata api after production doc link available)
@@ -96,12 +98,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_account_settings_v2_setting.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_settings_v2_setting name
+terraform import databricks_account_settings_v2_setting "name"
 ```

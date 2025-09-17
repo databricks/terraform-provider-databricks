@@ -18,8 +18,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
-	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
-	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"     // .tmpl
+	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf" // .tmpl
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -2232,6 +2232,36 @@ type CreateCleanRoomAssetRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
+func (toState *CreateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomAssetRequest_SdkV2) {
+	if !fromPlan.Asset.IsNull() && !fromPlan.Asset.IsUnknown() {
+		if toStateAsset, ok := toState.GetAsset(ctx); ok {
+			if fromPlanAsset, ok := fromPlan.GetAsset(ctx); ok {
+				toStateAsset.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAsset)
+				toState.SetAsset(ctx, toStateAsset)
+			}
+		}
+	}
+}
+
+func (toState *CreateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomAssetRequest_SdkV2) {
+	if !fromState.Asset.IsNull() && !fromState.Asset.IsUnknown() {
+		if toStateAsset, ok := toState.GetAsset(ctx); ok {
+			if fromStateAsset, ok := fromState.GetAsset(ctx); ok {
+				toStateAsset.SyncFieldsDuringRead(ctx, fromStateAsset)
+				toState.SetAsset(ctx, toStateAsset)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["asset"] = attrs["asset"].SetRequired()
+	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2304,6 +2334,38 @@ type CreateCleanRoomAssetReviewRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 
 	NotebookReview types.List `tfsdk:"notebook_review"`
+}
+
+func (toState *CreateCleanRoomAssetReviewRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomAssetReviewRequest_SdkV2) {
+	if !fromPlan.NotebookReview.IsNull() && !fromPlan.NotebookReview.IsUnknown() {
+		if toStateNotebookReview, ok := toState.GetNotebookReview(ctx); ok {
+			if fromPlanNotebookReview, ok := fromPlan.GetNotebookReview(ctx); ok {
+				toStateNotebookReview.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookReview)
+				toState.SetNotebookReview(ctx, toStateNotebookReview)
+			}
+		}
+	}
+}
+
+func (toState *CreateCleanRoomAssetReviewRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomAssetReviewRequest_SdkV2) {
+	if !fromState.NotebookReview.IsNull() && !fromState.NotebookReview.IsUnknown() {
+		if toStateNotebookReview, ok := toState.GetNotebookReview(ctx); ok {
+			if fromStateNotebookReview, ok := fromState.GetNotebookReview(ctx); ok {
+				toStateNotebookReview.SyncFieldsDuringRead(ctx, fromStateNotebookReview)
+				toState.SetNotebookReview(ctx, toStateNotebookReview)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAssetReviewRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["notebook_review"] = attrs["notebook_review"].SetOptional()
+	attrs["notebook_review"] = attrs["notebook_review"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetReviewRequest.
@@ -2462,6 +2524,36 @@ type CreateCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
+func (toState *CreateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !fromPlan.AutoApprovalRule.IsNull() && !fromPlan.AutoApprovalRule.IsUnknown() {
+		if toStateAutoApprovalRule, ok := toState.GetAutoApprovalRule(ctx); ok {
+			if fromPlanAutoApprovalRule, ok := fromPlan.GetAutoApprovalRule(ctx); ok {
+				toStateAutoApprovalRule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoApprovalRule)
+				toState.SetAutoApprovalRule(ctx, toStateAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (toState *CreateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !fromState.AutoApprovalRule.IsNull() && !fromState.AutoApprovalRule.IsUnknown() {
+		if toStateAutoApprovalRule, ok := toState.GetAutoApprovalRule(ctx); ok {
+			if fromStateAutoApprovalRule, ok := fromState.GetAutoApprovalRule(ctx); ok {
+				toStateAutoApprovalRule.SyncFieldsDuringRead(ctx, fromStateAutoApprovalRule)
+				toState.SetAutoApprovalRule(ctx, toStateAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].SetRequired()
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2530,6 +2622,36 @@ type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 
 	OutputCatalog types.List `tfsdk:"output_catalog"`
+}
+
+func (toState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomOutputCatalogRequest_SdkV2) {
+	if !fromPlan.OutputCatalog.IsNull() && !fromPlan.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromPlanOutputCatalog, ok := fromPlan.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
+}
+
+func (toState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomOutputCatalogRequest_SdkV2) {
+	if !fromState.OutputCatalog.IsNull() && !fromState.OutputCatalog.IsUnknown() {
+		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
+			if fromStateOutputCatalog, ok := fromState.GetOutputCatalog(ctx); ok {
+				toStateOutputCatalog.SyncFieldsDuringRead(ctx, fromStateOutputCatalog)
+				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomOutputCatalogRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["output_catalog"] = attrs["output_catalog"].SetRequired()
+	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
@@ -2693,6 +2815,35 @@ type CreateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 }
 
+func (toState *CreateCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomRequest_SdkV2) {
+	if !fromPlan.CleanRoom.IsNull() && !fromPlan.CleanRoom.IsUnknown() {
+		if toStateCleanRoom, ok := toState.GetCleanRoom(ctx); ok {
+			if fromPlanCleanRoom, ok := fromPlan.GetCleanRoom(ctx); ok {
+				toStateCleanRoom.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoom)
+				toState.SetCleanRoom(ctx, toStateCleanRoom)
+			}
+		}
+	}
+}
+
+func (toState *CreateCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomRequest_SdkV2) {
+	if !fromState.CleanRoom.IsNull() && !fromState.CleanRoom.IsUnknown() {
+		if toStateCleanRoom, ok := toState.GetCleanRoom(ctx); ok {
+			if fromStateCleanRoom, ok := fromState.GetCleanRoom(ctx); ok {
+				toStateCleanRoom.SyncFieldsDuringRead(ctx, fromStateCleanRoom)
+				toState.SetCleanRoom(ctx, toStateCleanRoom)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room"] = attrs["clean_room"].SetRequired()
+	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2762,6 +2913,20 @@ type DeleteCleanRoomAssetRequest_SdkV2 struct {
 	// The fully qualified name of the asset, it is same as the name field in
 	// CleanRoomAsset.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCleanRoomAssetRequest_SdkV2) {
+}
+
+func (toState *DeleteCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCleanRoomAssetRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2848,6 +3013,19 @@ type DeleteCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (toState *DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2884,6 +3062,18 @@ func (o DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) Type(ctx context.Context) 
 type DeleteCleanRoomRequest_SdkV2 struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *DeleteCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCleanRoomRequest_SdkV2) {
+}
+
+func (toState *DeleteCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCleanRoomRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
@@ -2925,6 +3115,20 @@ type GetCleanRoomAssetRequest_SdkV2 struct {
 	// The fully qualified name of the asset, it is same as the name field in
 	// CleanRoomAsset.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCleanRoomAssetRequest_SdkV2) {
+}
+
+func (toState *GetCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCleanRoomAssetRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2974,6 +3178,21 @@ type GetCleanRoomAssetRevisionRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *GetCleanRoomAssetRevisionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCleanRoomAssetRevisionRequest_SdkV2) {
+}
+
+func (toState *GetCleanRoomAssetRevisionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCleanRoomAssetRevisionRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAssetRevisionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRevisionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3017,6 +3236,19 @@ type GetCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (toState *GetCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (toState *GetCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3052,6 +3284,18 @@ func (o GetCleanRoomAutoApprovalRuleRequest_SdkV2) Type(ctx context.Context) att
 
 type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *GetCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCleanRoomRequest_SdkV2) {
+}
+
+func (toState *GetCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetCleanRoomRequest_SdkV2) {
+}
+
+func (c GetCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
@@ -3096,6 +3340,22 @@ type ListCleanRoomAssetRevisionsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on the previous query.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListCleanRoomAssetRevisionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetRevisionsRequest_SdkV2) {
+}
+
+func (toState *ListCleanRoomAssetRevisionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetRevisionsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAssetRevisionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetRevisionsRequest.
@@ -3226,6 +3486,19 @@ type ListCleanRoomAssetsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListCleanRoomAssetsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetsRequest_SdkV2) {
+}
+
+func (toState *ListCleanRoomAssetsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAssetsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3350,6 +3623,20 @@ type ListCleanRoomAutoApprovalRulesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListCleanRoomAutoApprovalRulesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAutoApprovalRulesRequest_SdkV2) {
+}
+
+func (toState *ListCleanRoomAutoApprovalRulesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAutoApprovalRulesRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAutoApprovalRulesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAutoApprovalRulesRequest.
@@ -3484,6 +3771,21 @@ type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
+}
+
+func (toState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomNotebookTaskRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3612,6 +3914,19 @@ type ListCleanRoomsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListCleanRoomsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomsRequest_SdkV2) {
+}
+
+func (toState *ListCleanRoomsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
@@ -3808,6 +4123,38 @@ type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCleanRoomAssetRequest_SdkV2) {
+	if !fromPlan.Asset.IsNull() && !fromPlan.Asset.IsUnknown() {
+		if toStateAsset, ok := toState.GetAsset(ctx); ok {
+			if fromPlanAsset, ok := fromPlan.GetAsset(ctx); ok {
+				toStateAsset.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAsset)
+				toState.SetAsset(ctx, toStateAsset)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCleanRoomAssetRequest_SdkV2) {
+	if !fromState.Asset.IsNull() && !fromState.Asset.IsUnknown() {
+		if toStateAsset, ok := toState.GetAsset(ctx); ok {
+			if fromStateAsset, ok := fromState.GetAsset(ctx); ok {
+				toStateAsset.SyncFieldsDuringRead(ctx, fromStateAsset)
+				toState.SetAsset(ctx, toStateAsset)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["asset"] = attrs["asset"].SetRequired()
+	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3885,6 +4232,37 @@ type UpdateCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (toState *UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !fromPlan.AutoApprovalRule.IsNull() && !fromPlan.AutoApprovalRule.IsUnknown() {
+		if toStateAutoApprovalRule, ok := toState.GetAutoApprovalRule(ctx); ok {
+			if fromPlanAutoApprovalRule, ok := fromPlan.GetAutoApprovalRule(ctx); ok {
+				toStateAutoApprovalRule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAutoApprovalRule)
+				toState.SetAutoApprovalRule(ctx, toStateAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !fromState.AutoApprovalRule.IsNull() && !fromState.AutoApprovalRule.IsUnknown() {
+		if toStateAutoApprovalRule, ok := toState.GetAutoApprovalRule(ctx); ok {
+			if fromStateAutoApprovalRule, ok := fromState.GetAutoApprovalRule(ctx); ok {
+				toStateAutoApprovalRule.SyncFieldsDuringRead(ctx, fromStateAutoApprovalRule)
+				toState.SetAutoApprovalRule(ctx, toStateAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].SetRequired()
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetComputed()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3954,6 +4332,36 @@ type UpdateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
+}
+
+func (toState *UpdateCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCleanRoomRequest_SdkV2) {
+	if !fromPlan.CleanRoom.IsNull() && !fromPlan.CleanRoom.IsUnknown() {
+		if toStateCleanRoom, ok := toState.GetCleanRoom(ctx); ok {
+			if fromPlanCleanRoom, ok := fromPlan.GetCleanRoom(ctx); ok {
+				toStateCleanRoom.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoom)
+				toState.SetCleanRoom(ctx, toStateCleanRoom)
+			}
+		}
+	}
+}
+
+func (toState *UpdateCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCleanRoomRequest_SdkV2) {
+	if !fromState.CleanRoom.IsNull() && !fromState.CleanRoom.IsUnknown() {
+		if toStateCleanRoom, ok := toState.GetCleanRoom(ctx); ok {
+			if fromStateCleanRoom, ok := fromState.GetCleanRoom(ctx); ok {
+				toStateCleanRoom.SyncFieldsDuringRead(ctx, fromStateCleanRoom)
+				toState.SetCleanRoom(ctx, toStateCleanRoom)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room"] = attrs["clean_room"].SetOptional()
+	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.

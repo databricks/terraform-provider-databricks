@@ -38,19 +38,19 @@ type SettingResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// SettingExtended extends the main model with additional fields.
-type SettingExtended struct {
+// Setting extends the main model with additional fields.
+type Setting struct {
 	settingsv2_tf.Setting
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// SettingExtended struct. Container types (types.Map, types.List, types.Set) and
+// Setting struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m SettingExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.Setting.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m SettingExtended) GetComplexFieldTypes(ctx context.Context) map[string]re
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SettingExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Setting
 // only implements ToObjectValue() and Type().
-func (m SettingExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.Setting.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m SettingExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m SettingExtended) Type(ctx context.Context) attr.Type {
+func (m Setting) Type(ctx context.Context) attr.Type {
 	embeddedType := m.Setting.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m SettingExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *SettingExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan SettingExtended) {
+func (m *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan Setting) {
 	m.Setting.SyncFieldsDuringCreateOrUpdate(ctx, plan.Setting)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *SettingExtended) SyncFieldsDuringRead(ctx context.Context, existingState SettingExtended) {
+func (m *Setting) SyncFieldsDuringRead(ctx context.Context, existingState Setting) {
 	m.Setting.SyncFieldsDuringRead(ctx, existingState.Setting)
 }
 
@@ -98,7 +98,7 @@ func (r *SettingResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *SettingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, SettingExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Setting{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
@@ -113,7 +113,7 @@ func (r *SettingResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *SettingResource) update(ctx context.Context, plan SettingExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -138,7 +138,7 @@ func (r *SettingResource) update(ctx context.Context, plan SettingExtended, diag
 		return
 	}
 
-	var newState SettingExtended
+	var newState Setting
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -151,7 +151,7 @@ func (r *SettingResource) update(ctx context.Context, plan SettingExtended, diag
 func (r *SettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan SettingExtended
+	var plan Setting
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,7 +169,7 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var existingState SettingExtended
+	var existingState Setting
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,7 +192,7 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var newState SettingExtended
+	var newState Setting
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -206,7 +206,7 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 func (r *SettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan SettingExtended
+	var plan Setting
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return

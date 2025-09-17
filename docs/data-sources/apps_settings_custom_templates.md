@@ -2,6 +2,8 @@
 subcategory: "Apps"
 ---
 # databricks_apps_settings_custom_templates Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of Custom Templates within the workspace.
 The list can then be accessed via the data object's `templates` field.
 
@@ -20,7 +22,6 @@ output "all_custom_templates" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Upper bound for items returned
-
 
 
 ## Attributes

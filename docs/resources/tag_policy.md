@@ -2,6 +2,8 @@
 subcategory: "Tags"
 ---
 # databricks_tag_policy Resource
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Define tag policies to manage governed tags in your account.
 
 -> **Note** This resource can only be used with an account-level provider!
@@ -42,12 +44,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = tag_key
+  id = "tag_key"
   to = databricks_tag_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_tag_policy tag_key
+terraform import databricks_tag_policy "tag_key"
 ```

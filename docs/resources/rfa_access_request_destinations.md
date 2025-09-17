@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_rfa_access_request_destinations Resource
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Request for Access (RFA) access request destinations allow you to configure where notifications are sent when users request access to securable objects in Unity Catalog. This resource enables you to manage access request destinations for specific securable objects, such as tables, catalogs, or schemas.
 
 When a user requests access to a securable object, notifications can be sent to various destinations including email addresses, Slack channels, or Microsoft Teams channels. This resource allows you to configure these destinations to ensure that the appropriate stakeholders are notified of access requests.
@@ -71,12 +73,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = 
+  id = ""
   to = databricks_rfa_access_request_destinations.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_rfa_access_request_destinations 
+terraform import databricks_rfa_access_request_destinations ""
 ```

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type DatabaseInstanceDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// DatabaseInstanceDataExtended extends the main model with additional fields.
-type DatabaseInstanceDataExtended struct {
+// DatabaseInstanceData extends the main model with additional fields.
+type DatabaseInstanceData struct {
 	database_tf.DatabaseInstance
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// DatabaseInstanceDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// DatabaseInstanceData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m DatabaseInstanceDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DatabaseInstanceData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.DatabaseInstance.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m DatabaseInstanceDataExtended) GetComplexFieldTypes(ctx context.Context) 
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceData
 // only implements ToObjectValue() and Type().
-func (m DatabaseInstanceDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.DatabaseInstance.ToObjectValue(ctx)
+func (m DatabaseInstanceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.DatabaseInstance.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m DatabaseInstanceDataExtended) Type(ctx context.Context) attr.Type {
-	return m.DatabaseInstance.Type(ctx)
+func (m DatabaseInstanceData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseInstanceDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceDataExtended) {
+func (m *DatabaseInstanceData) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceData) {
 	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
 }
 
@@ -75,7 +85,9 @@ func (r *DatabaseInstanceDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *DatabaseInstanceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstanceDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstanceData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseInstance",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var config DatabaseInstanceDataExtended
+	var config DatabaseInstanceData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var newState DatabaseInstanceDataExtended
+	var newState DatabaseInstanceData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

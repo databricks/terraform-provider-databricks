@@ -26,18 +26,12 @@ func DataSourceOnlineStores() datasource.DataSource {
 	return &OnlineStoresDataSource{}
 }
 
-// OnlineStoresDataExtended extends the main model with additional fields.
-type OnlineStoresDataExtended struct {
-	ml_tf.ListOnlineStoresRequest
+// OnlineStoresData extends the main model with additional fields.
+type OnlineStoresData struct {
 	FeatureStore types.List `tfsdk:"online_stores"`
 }
 
-func (c OnlineStoresDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["online_stores"] = attrs["online_stores"].SetComputed()
-	return attrs
-}
-
-func (OnlineStoresDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"online_stores": reflect.TypeOf(ml_tf.OnlineStore{}),
 	}
@@ -52,7 +46,10 @@ func (r *OnlineStoresDataSource) Metadata(ctx context.Context, req datasource.Me
 }
 
 func (r *OnlineStoresDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("online_stores")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks OnlineStore",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	var config OnlineStoresDataExtended
+	var config OnlineStoresData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		results = append(results, online_store.ToObjectValue(ctx))
 	}
 
-	var newState OnlineStoresDataExtended
+	var newState OnlineStoresData
 	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

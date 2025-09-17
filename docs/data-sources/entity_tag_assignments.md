@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_entity_tag_assignments Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source allows you to retrieve tag assignments that have been applied to a particular entity in Unity Catalog.
 
 ## Example Usage
@@ -39,7 +41,6 @@ The following arguments are supported:
 * `entity_name` (string, required) - The fully qualified name of the entity to which the tag is assigned
 * `entity_type` (string, required) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
 * `max_results` (integer, optional) - Optional. Maximum number of tag assignments to return in a single page
-
 
 
 ## Attributes

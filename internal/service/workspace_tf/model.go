@@ -160,6 +160,22 @@ type CreateCredentialsRequest struct {
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
 }
 
+func (toState *CreateCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCredentialsRequest) {
+}
+
+func (toState *CreateCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateCredentialsRequest) {
+}
+
+func (c CreateCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
+	attrs["is_default_for_provider"] = attrs["is_default_for_provider"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -284,6 +300,37 @@ type CreateRepoRequest struct {
 	SparseCheckout types.Object `tfsdk:"sparse_checkout"`
 	// URL of the Git repository to be linked.
 	Url types.String `tfsdk:"url"`
+}
+
+func (toState *CreateRepoRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateRepoRequest) {
+	if !fromPlan.SparseCheckout.IsNull() && !fromPlan.SparseCheckout.IsUnknown() {
+		if toStateSparseCheckout, ok := toState.GetSparseCheckout(ctx); ok {
+			if fromPlanSparseCheckout, ok := fromPlan.GetSparseCheckout(ctx); ok {
+				toStateSparseCheckout.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparseCheckout)
+				toState.SetSparseCheckout(ctx, toStateSparseCheckout)
+			}
+		}
+	}
+}
+
+func (toState *CreateRepoRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateRepoRequest) {
+	if !fromState.SparseCheckout.IsNull() && !fromState.SparseCheckout.IsUnknown() {
+		if toStateSparseCheckout, ok := toState.GetSparseCheckout(ctx); ok {
+			if fromStateSparseCheckout, ok := fromState.GetSparseCheckout(ctx); ok {
+				toStateSparseCheckout.SyncFieldsDuringRead(ctx, fromStateSparseCheckout)
+				toState.SetSparseCheckout(ctx, toStateSparseCheckout)
+			}
+		}
+	}
+}
+
+func (c CreateRepoRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["url"] = attrs["url"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRepoRequest.
@@ -485,6 +532,37 @@ type CreateScope struct {
 	ScopeBackendType types.String `tfsdk:"scope_backend_type"`
 }
 
+func (toState *CreateScope) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateScope) {
+	if !fromPlan.BackendAzureKeyvault.IsNull() && !fromPlan.BackendAzureKeyvault.IsUnknown() {
+		if toStateBackendAzureKeyvault, ok := toState.GetBackendAzureKeyvault(ctx); ok {
+			if fromPlanBackendAzureKeyvault, ok := fromPlan.GetBackendAzureKeyvault(ctx); ok {
+				toStateBackendAzureKeyvault.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanBackendAzureKeyvault)
+				toState.SetBackendAzureKeyvault(ctx, toStateBackendAzureKeyvault)
+			}
+		}
+	}
+}
+
+func (toState *CreateScope) SyncFieldsDuringRead(ctx context.Context, fromState CreateScope) {
+	if !fromState.BackendAzureKeyvault.IsNull() && !fromState.BackendAzureKeyvault.IsUnknown() {
+		if toStateBackendAzureKeyvault, ok := toState.GetBackendAzureKeyvault(ctx); ok {
+			if fromStateBackendAzureKeyvault, ok := fromState.GetBackendAzureKeyvault(ctx); ok {
+				toStateBackendAzureKeyvault.SyncFieldsDuringRead(ctx, fromStateBackendAzureKeyvault)
+				toState.SetBackendAzureKeyvault(ctx, toStateBackendAzureKeyvault)
+			}
+		}
+	}
+}
+
+func (c CreateScope) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["backend_azure_keyvault"] = attrs["backend_azure_keyvault"].SetOptional()
+	attrs["initial_manage_principal"] = attrs["initial_manage_principal"].SetOptional()
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["scope_backend_type"] = attrs["scope_backend_type"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScope.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -547,36 +625,6 @@ func (o *CreateScope) GetBackendAzureKeyvault(ctx context.Context) (AzureKeyVaul
 func (o *CreateScope) SetBackendAzureKeyvault(ctx context.Context, v AzureKeyVaultSecretScopeMetadata) {
 	vs := v.ToObjectValue(ctx)
 	o.BackendAzureKeyvault = vs
-}
-
-type CreateScopeResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScopeResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateScopeResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateScopeResponse
-// only implements ToObjectValue() and Type().
-func (o CreateScopeResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 type CredentialInfo struct {
@@ -659,6 +707,19 @@ type Delete struct {
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
+func (toState *Delete) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Delete) {
+}
+
+func (toState *Delete) SyncFieldsDuringRead(ctx context.Context, fromState Delete) {
+}
+
+func (c Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["recursive"] = attrs["recursive"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -699,6 +760,19 @@ type DeleteAcl struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
+func (toState *DeleteAcl) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteAcl) {
+}
+
+func (toState *DeleteAcl) SyncFieldsDuringRead(ctx context.Context, fromState DeleteAcl) {
+}
+
+func (c DeleteAcl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAcl.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -732,39 +806,21 @@ func (o DeleteAcl) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteAclResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAclResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteAclResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAclResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteAclResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *DeleteCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCredentialsRequest) {
+}
+
+func (toState *DeleteCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCredentialsRequest) {
+}
+
+func (c DeleteCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCredentialsRequest.
@@ -842,6 +898,18 @@ func (o DeleteCredentialsResponse) Type(ctx context.Context) attr.Type {
 type DeleteRepoRequest struct {
 	// The ID for the corresponding repo to delete.
 	RepoId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *DeleteRepoRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteRepoRequest) {
+}
+
+func (toState *DeleteRepoRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteRepoRequest) {
+}
+
+func (c DeleteRepoRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRepoRequest.
@@ -962,6 +1030,18 @@ type DeleteScope struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
+func (toState *DeleteScope) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteScope) {
+}
+
+func (toState *DeleteScope) SyncFieldsDuringRead(ctx context.Context, fromState DeleteScope) {
+}
+
+func (c DeleteScope) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScope.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -993,41 +1073,24 @@ func (o DeleteScope) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteScopeResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScopeResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteScopeResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteScopeResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteScopeResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteSecret struct {
 	// Name of the secret to delete.
 	Key types.String `tfsdk:"key"`
 	// The name of the scope that contains the secret to delete.
 	Scope types.String `tfsdk:"scope"`
+}
+
+func (toState *DeleteSecret) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteSecret) {
+}
+
+func (toState *DeleteSecret) SyncFieldsDuringRead(ctx context.Context, fromState DeleteSecret) {
+}
+
+func (c DeleteSecret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSecret.
@@ -1123,6 +1186,19 @@ type ExportRequest struct {
 	// The absolute path of the object or directory. Exporting a directory is
 	// only supported for the `DBC`, `SOURCE`, and `AUTO` format.
 	Path types.String `tfsdk:"-"`
+}
+
+func (toState *ExportRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportRequest) {
+}
+
+func (toState *ExportRequest) SyncFieldsDuringRead(ctx context.Context, fromState ExportRequest) {
+}
+
+func (c ExportRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["format"] = attrs["format"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRequest.
@@ -1221,6 +1297,19 @@ type GetAclRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
+func (toState *GetAclRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetAclRequest) {
+}
+
+func (toState *GetAclRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetAclRequest) {
+}
+
+func (c GetAclRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAclRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1257,6 +1346,18 @@ func (o GetAclRequest) Type(ctx context.Context) attr.Type {
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetCredentialsRequest) {
+}
+
+func (toState *GetCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetCredentialsRequest) {
+}
+
+func (c GetCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsRequest.
@@ -1363,6 +1464,18 @@ func (o GetCredentialsResponse) Type(ctx context.Context) attr.Type {
 type GetRepoPermissionLevelsRequest struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
+}
+
+func (toState *GetRepoPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRepoPermissionLevelsRequest) {
+}
+
+func (toState *GetRepoPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetRepoPermissionLevelsRequest) {
+}
+
+func (c GetRepoPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRepoPermissionLevelsRequest.
@@ -1479,6 +1592,18 @@ type GetRepoPermissionsRequest struct {
 	RepoId types.String `tfsdk:"-"`
 }
 
+func (toState *GetRepoPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRepoPermissionsRequest) {
+}
+
+func (toState *GetRepoPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetRepoPermissionsRequest) {
+}
+
+func (c GetRepoPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRepoPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1513,6 +1638,18 @@ func (o GetRepoPermissionsRequest) Type(ctx context.Context) attr.Type {
 type GetRepoRequest struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetRepoRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRepoRequest) {
+}
+
+func (toState *GetRepoRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetRepoRequest) {
+}
+
+func (c GetRepoRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRepoRequest.
@@ -1674,6 +1811,19 @@ type GetSecretRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
+func (toState *GetSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetSecretRequest) {
+}
+
+func (toState *GetSecretRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetSecretRequest) {
+}
+
+func (c GetSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["key"] = attrs["key"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSecretRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1765,6 +1915,18 @@ type GetStatusRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (toState *GetStatusRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetStatusRequest) {
+}
+
+func (toState *GetStatusRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetStatusRequest) {
+}
+
+func (c GetStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatusRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1801,6 +1963,19 @@ type GetWorkspaceObjectPermissionLevelsRequest struct {
 	WorkspaceObjectId types.String `tfsdk:"-"`
 	// The workspace object type for which to get or manage permissions.
 	WorkspaceObjectType types.String `tfsdk:"-"`
+}
+
+func (toState *GetWorkspaceObjectPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceObjectPermissionLevelsRequest) {
+}
+
+func (toState *GetWorkspaceObjectPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceObjectPermissionLevelsRequest) {
+}
+
+func (c GetWorkspaceObjectPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_object_type"] = attrs["workspace_object_type"].SetRequired()
+	attrs["workspace_object_id"] = attrs["workspace_object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceObjectPermissionLevelsRequest.
@@ -1921,6 +2096,19 @@ type GetWorkspaceObjectPermissionsRequest struct {
 	WorkspaceObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *GetWorkspaceObjectPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceObjectPermissionsRequest) {
+}
+
+func (toState *GetWorkspaceObjectPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceObjectPermissionsRequest) {
+}
+
+func (c GetWorkspaceObjectPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_object_type"] = attrs["workspace_object_type"].SetRequired()
+	attrs["workspace_object_id"] = attrs["workspace_object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceObjectPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1985,6 +2173,22 @@ type Import struct {
 	// The absolute path of the object or directory. Importing a directory is
 	// only supported for the `DBC` and `SOURCE` formats.
 	Path types.String `tfsdk:"path"`
+}
+
+func (toState *Import) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Import) {
+}
+
+func (toState *Import) SyncFieldsDuringRead(ctx context.Context, fromState Import) {
+}
+
+func (c Import) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["language"] = attrs["language"].SetOptional()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Import.
@@ -2070,6 +2274,18 @@ func (o ImportResponse) Type(ctx context.Context) attr.Type {
 type ListAclsRequest struct {
 	// The name of the scope to fetch ACL information from.
 	Scope types.String `tfsdk:"-"`
+}
+
+func (toState *ListAclsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAclsRequest) {
+}
+
+func (toState *ListAclsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListAclsRequest) {
+}
+
+func (c ListAclsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAclsRequest.
@@ -2182,6 +2398,17 @@ func (o *ListAclsResponse) SetItems(ctx context.Context, v []AclItem) {
 }
 
 type ListCredentialsRequest struct {
+}
+
+func (toState *ListCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCredentialsRequest) {
+}
+
+func (toState *ListCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListCredentialsRequest) {
+}
+
+func (c ListCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCredentialsRequest.
@@ -2298,6 +2525,19 @@ type ListReposRequest struct {
 	// provided or when provided an effectively empty prefix (`/` or
 	// `/Workspace`) Git folders (repos) from `/Workspace/Repos` will be served.
 	PathPrefix types.String `tfsdk:"-"`
+}
+
+func (toState *ListReposRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListReposRequest) {
+}
+
+func (toState *ListReposRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListReposRequest) {
+}
+
+func (c ListReposRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path_prefix"] = attrs["path_prefix"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListReposRequest.
@@ -2498,6 +2738,17 @@ func (o *ListResponse) SetObjects(ctx context.Context, v []ObjectInfo) {
 type ListScopesRequest struct {
 }
 
+func (toState *ListScopesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListScopesRequest) {
+}
+
+func (toState *ListScopesRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListScopesRequest) {
+}
+
+func (c ListScopesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListScopesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2606,6 +2857,18 @@ func (o *ListScopesResponse) SetScopes(ctx context.Context, v []SecretScope) {
 type ListSecretsRequest struct {
 	// The name of the scope to list secrets within.
 	Scope types.String `tfsdk:"-"`
+}
+
+func (toState *ListSecretsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListSecretsRequest) {
+}
+
+func (toState *ListSecretsRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListSecretsRequest) {
+}
+
+func (c ListSecretsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSecretsRequest.
@@ -2724,6 +2987,19 @@ type ListWorkspaceRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (toState *ListWorkspaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListWorkspaceRequest) {
+}
+
+func (toState *ListWorkspaceRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListWorkspaceRequest) {
+}
+
+func (c ListWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["notebooks_modified_after"] = attrs["notebooks_modified_after"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2762,6 +3038,18 @@ type Mkdirs struct {
 	// exist, it will also create them. If the directory already exists, this
 	// command will do nothing and succeed.
 	Path types.String `tfsdk:"path"`
+}
+
+func (toState *Mkdirs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Mkdirs) {
+}
+
+func (toState *Mkdirs) SyncFieldsDuringRead(ctx context.Context, fromState Mkdirs) {
+}
+
+func (c Mkdirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Mkdirs.
@@ -2936,6 +3224,20 @@ type PutAcl struct {
 	Scope types.String `tfsdk:"scope"`
 }
 
+func (toState *PutAcl) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutAcl) {
+}
+
+func (toState *PutAcl) SyncFieldsDuringRead(ctx context.Context, fromState PutAcl) {
+}
+
+func (c PutAcl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAcl.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2971,36 +3273,6 @@ func (o PutAcl) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type PutAclResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAclResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PutAclResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PutAclResponse
-// only implements ToObjectValue() and Type().
-func (o PutAclResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PutAclResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type PutSecret struct {
 	// If specified, value will be stored as bytes.
 	BytesValue types.String `tfsdk:"bytes_value"`
@@ -3010,6 +3282,21 @@ type PutSecret struct {
 	Scope types.String `tfsdk:"scope"`
 	// If specified, note that the value will be stored in UTF-8 (MB4) form.
 	StringValue types.String `tfsdk:"string_value"`
+}
+
+func (toState *PutSecret) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutSecret) {
+}
+
+func (toState *PutSecret) SyncFieldsDuringRead(ctx context.Context, fromState PutSecret) {
+}
+
+func (c PutSecret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bytes_value"] = attrs["bytes_value"].SetOptional()
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["string_value"] = attrs["string_value"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutSecret.
@@ -3046,36 +3333,6 @@ func (o PutSecret) Type(ctx context.Context) attr.Type {
 			"scope":        types.StringType,
 			"string_value": types.StringType,
 		},
-	}
-}
-
-type PutSecretResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutSecretResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a PutSecretResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PutSecretResponse
-// only implements ToObjectValue() and Type().
-func (o PutSecretResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o PutSecretResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -3594,6 +3851,19 @@ type RepoPermissionsRequest struct {
 	RepoId types.String `tfsdk:"-"`
 }
 
+func (toState *RepoPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepoPermissionsRequest) {
+}
+
+func (toState *RepoPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState RepoPermissionsRequest) {
+}
+
+func (c RepoPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4009,6 +4279,23 @@ type UpdateCredentialsRequest struct {
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
 }
 
+func (toState *UpdateCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateCredentialsRequest) {
+}
+
+func (toState *UpdateCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateCredentialsRequest) {
+}
+
+func (c UpdateCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
+	attrs["is_default_for_provider"] = attrs["is_default_for_provider"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCredentialsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4104,6 +4391,37 @@ type UpdateRepoRequest struct {
 	// new changes, you must update the repo to a branch instead of the detached
 	// HEAD.
 	Tag types.String `tfsdk:"tag"`
+}
+
+func (toState *UpdateRepoRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateRepoRequest) {
+	if !fromPlan.SparseCheckout.IsNull() && !fromPlan.SparseCheckout.IsUnknown() {
+		if toStateSparseCheckout, ok := toState.GetSparseCheckout(ctx); ok {
+			if fromPlanSparseCheckout, ok := fromPlan.GetSparseCheckout(ctx); ok {
+				toStateSparseCheckout.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparseCheckout)
+				toState.SetSparseCheckout(ctx, toStateSparseCheckout)
+			}
+		}
+	}
+}
+
+func (toState *UpdateRepoRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateRepoRequest) {
+	if !fromState.SparseCheckout.IsNull() && !fromState.SparseCheckout.IsUnknown() {
+		if toStateSparseCheckout, ok := toState.GetSparseCheckout(ctx); ok {
+			if fromStateSparseCheckout, ok := fromState.GetSparseCheckout(ctx); ok {
+				toStateSparseCheckout.SyncFieldsDuringRead(ctx, fromStateSparseCheckout)
+				toState.SetSparseCheckout(ctx, toStateSparseCheckout)
+			}
+		}
+	}
+}
+
+func (c UpdateRepoRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["tag"] = attrs["tag"].SetOptional()
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRepoRequest.
@@ -4604,6 +4922,20 @@ type WorkspaceObjectPermissionsRequest struct {
 	WorkspaceObjectId types.String `tfsdk:"-"`
 	// The workspace object type for which to get or manage permissions.
 	WorkspaceObjectType types.String `tfsdk:"-"`
+}
+
+func (toState *WorkspaceObjectPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WorkspaceObjectPermissionsRequest) {
+}
+
+func (toState *WorkspaceObjectPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, fromState WorkspaceObjectPermissionsRequest) {
+}
+
+func (c WorkspaceObjectPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["workspace_object_type"] = attrs["workspace_object_type"].SetRequired()
+	attrs["workspace_object_id"] = attrs["workspace_object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectPermissionsRequest.

@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_infos Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -16,7 +18,6 @@ The following arguments are supported:
 * `max_results` (integer, optional) - Optional.  Maximum number of policies to return on a single page (page length).
   - When not set or set to 0, the page length is set to a server configured value (recommended);
   - When set to a value greater than 0, the page length is the minimum of this value and a server configured value;
-
 
 
 ## Attributes

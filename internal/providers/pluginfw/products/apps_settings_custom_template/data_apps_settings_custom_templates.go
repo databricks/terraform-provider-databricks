@@ -26,18 +26,12 @@ func DataSourceCustomTemplates() datasource.DataSource {
 	return &CustomTemplatesDataSource{}
 }
 
-// CustomTemplatesDataExtended extends the main model with additional fields.
-type CustomTemplatesDataExtended struct {
-	apps_tf.ListCustomTemplatesRequest
+// CustomTemplatesData extends the main model with additional fields.
+type CustomTemplatesData struct {
 	AppsSettings types.List `tfsdk:"templates"`
 }
 
-func (c CustomTemplatesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["templates"] = attrs["templates"].SetComputed()
-	return attrs
-}
-
-func (CustomTemplatesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"templates": reflect.TypeOf(apps_tf.CustomTemplate{}),
 	}
@@ -52,7 +46,10 @@ func (r *CustomTemplatesDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *CustomTemplatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplatesDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplatesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("templates")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CustomTemplate",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	var config CustomTemplatesDataExtended
+	var config CustomTemplatesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, custom_template.ToObjectValue(ctx))
 	}
 
-	var newState CustomTemplatesDataExtended
+	var newState CustomTemplatesData
 	newState.AppsSettings = types.ListValueMust(apps_tf.CustomTemplate{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

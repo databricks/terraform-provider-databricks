@@ -36,19 +36,19 @@ type AccessRequestDestinationResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// AccessRequestDestinationsExtended extends the main model with additional fields.
-type AccessRequestDestinationsExtended struct {
+// AccessRequestDestinations extends the main model with additional fields.
+type AccessRequestDestinations struct {
 	catalog_tf.AccessRequestDestinations
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AccessRequestDestinationsExtended struct. Container types (types.Map, types.List, types.Set) and
+// AccessRequestDestinations struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m AccessRequestDestinationsExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccessRequestDestinations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.AccessRequestDestinations.GetComplexFieldTypes(ctx)
 }
 
@@ -56,9 +56,9 @@ func (m AccessRequestDestinationsExtended) GetComplexFieldTypes(ctx context.Cont
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinationsExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinations
 // only implements ToObjectValue() and Type().
-func (m AccessRequestDestinationsExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccessRequestDestinations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.AccessRequestDestinations.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -70,7 +70,7 @@ func (m AccessRequestDestinationsExtended) ToObjectValue(ctx context.Context) ba
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m AccessRequestDestinationsExtended) Type(ctx context.Context) attr.Type {
+func (m AccessRequestDestinations) Type(ctx context.Context) attr.Type {
 	embeddedType := m.AccessRequestDestinations.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -80,14 +80,14 @@ func (m AccessRequestDestinationsExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *AccessRequestDestinationsExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AccessRequestDestinationsExtended) {
+func (m *AccessRequestDestinations) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AccessRequestDestinations) {
 	m.AccessRequestDestinations.SyncFieldsDuringCreateOrUpdate(ctx, plan.AccessRequestDestinations)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AccessRequestDestinationsExtended) SyncFieldsDuringRead(ctx context.Context, existingState AccessRequestDestinationsExtended) {
+func (m *AccessRequestDestinations) SyncFieldsDuringRead(ctx context.Context, existingState AccessRequestDestinations) {
 	m.AccessRequestDestinations.SyncFieldsDuringRead(ctx, existingState.AccessRequestDestinations)
 }
 
@@ -96,7 +96,7 @@ func (r *AccessRequestDestinationResource) Metadata(ctx context.Context, req res
 }
 
 func (r *AccessRequestDestinationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AccessRequestDestinationsExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AccessRequestDestinations{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -110,7 +110,7 @@ func (r *AccessRequestDestinationResource) Configure(ctx context.Context, req re
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AccessRequestDestinationResource) update(ctx context.Context, plan AccessRequestDestinationsExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *AccessRequestDestinationResource) update(ctx context.Context, plan AccessRequestDestinations, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -135,7 +135,7 @@ func (r *AccessRequestDestinationResource) update(ctx context.Context, plan Acce
 		return
 	}
 
-	var newState AccessRequestDestinationsExtended
+	var newState AccessRequestDestinations
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -148,7 +148,7 @@ func (r *AccessRequestDestinationResource) update(ctx context.Context, plan Acce
 func (r *AccessRequestDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan AccessRequestDestinationsExtended
+	var plan AccessRequestDestinations
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,7 +166,7 @@ func (r *AccessRequestDestinationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	var existingState AccessRequestDestinationsExtended
+	var existingState AccessRequestDestinations
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,7 +189,7 @@ func (r *AccessRequestDestinationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	var newState AccessRequestDestinationsExtended
+	var newState AccessRequestDestinations
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -203,7 +203,7 @@ func (r *AccessRequestDestinationResource) Read(ctx context.Context, req resourc
 func (r *AccessRequestDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan AccessRequestDestinationsExtended
+	var plan AccessRequestDestinations
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -2,6 +2,8 @@
 subcategory: "OAuth"
 ---
 # databricks_account_federation_policies Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of account federation policies.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -17,7 +19,6 @@ data "databricks_account_federation_policies" "all" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
-
 
 
 ## Attributes

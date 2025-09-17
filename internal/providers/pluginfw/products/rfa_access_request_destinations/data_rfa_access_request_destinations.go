@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type AccessRequestDestinationDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// AccessRequestDestinationsDataExtended extends the main model with additional fields.
-type AccessRequestDestinationsDataExtended struct {
+// AccessRequestDestinationsData extends the main model with additional fields.
+type AccessRequestDestinationsData struct {
 	catalog_tf.AccessRequestDestinations
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AccessRequestDestinationsDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// AccessRequestDestinationsData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m AccessRequestDestinationsDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.AccessRequestDestinations.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m AccessRequestDestinationsDataExtended) GetComplexFieldTypes(ctx context.
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinationsDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinationsData
 // only implements ToObjectValue() and Type().
-func (m AccessRequestDestinationsDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.AccessRequestDestinations.ToObjectValue(ctx)
+func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.AccessRequestDestinations.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m AccessRequestDestinationsDataExtended) Type(ctx context.Context) attr.Type {
-	return m.AccessRequestDestinations.Type(ctx)
+func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.AccessRequestDestinations.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AccessRequestDestinationsDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState AccessRequestDestinationsDataExtended) {
+func (m *AccessRequestDestinationsData) SyncFieldsDuringRead(ctx context.Context, existingState AccessRequestDestinationsData) {
 	m.AccessRequestDestinations.SyncFieldsDuringRead(ctx, existingState.AccessRequestDestinations)
 }
 
@@ -75,7 +85,9 @@ func (r *AccessRequestDestinationDataSource) Metadata(ctx context.Context, req d
 }
 
 func (r *AccessRequestDestinationDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccessRequestDestinationsDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccessRequestDestinationsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AccessRequestDestinations",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	var config AccessRequestDestinationsDataExtended
+	var config AccessRequestDestinationsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	var newState AccessRequestDestinationsDataExtended
+	var newState AccessRequestDestinationsData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

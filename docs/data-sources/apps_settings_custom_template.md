@@ -2,6 +2,8 @@
 subcategory: "Apps"
 ---
 # databricks_apps_settings_custom_template Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Custom Template.
 
 

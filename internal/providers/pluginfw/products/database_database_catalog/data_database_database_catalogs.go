@@ -26,18 +26,12 @@ func DataSourceDatabaseCatalogs() datasource.DataSource {
 	return &DatabaseCatalogsDataSource{}
 }
 
-// DatabaseCatalogsDataExtended extends the main model with additional fields.
-type DatabaseCatalogsDataExtended struct {
-	database_tf.ListDatabaseCatalogsRequest
+// DatabaseCatalogsData extends the main model with additional fields.
+type DatabaseCatalogsData struct {
 	Database types.List `tfsdk:"database_catalogs"`
 }
 
-func (c DatabaseCatalogsDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_catalogs"] = attrs["database_catalogs"].SetComputed()
-	return attrs
-}
-
-func (DatabaseCatalogsDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database_catalogs": reflect.TypeOf(database_tf.DatabaseCatalog{}),
 	}
@@ -52,7 +46,10 @@ func (r *DatabaseCatalogsDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *DatabaseCatalogsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogsDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("database_catalogs")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseCatalog",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var config DatabaseCatalogsDataExtended
+	var config DatabaseCatalogsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		results = append(results, database_catalog.ToObjectValue(ctx))
 	}
 
-	var newState DatabaseCatalogsDataExtended
+	var newState DatabaseCatalogsData
 	newState.Database = types.ListValueMust(database_tf.DatabaseCatalog{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

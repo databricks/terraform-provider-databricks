@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_entity_tag_assignment Resource
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This resource allows you to create, update, list, and delete tag assignments on Unity Catalog entities.
 
 ## Example Usage
@@ -58,12 +60,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = entity_type,entity_name,tag_key
+  id = "entity_type,entity_name,tag_key"
   to = databricks_entity_tag_assignment.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_entity_tag_assignment entity_type,entity_name,tag_key
+terraform import databricks_entity_tag_assignment "entity_type,entity_name,tag_key"
 ```

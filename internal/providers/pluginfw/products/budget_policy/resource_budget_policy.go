@@ -38,19 +38,19 @@ type BudgetPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// BudgetPolicyExtended extends the main model with additional fields.
-type BudgetPolicyExtended struct {
+// BudgetPolicy extends the main model with additional fields.
+type BudgetPolicy struct {
 	billing_tf.BudgetPolicy
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// BudgetPolicyExtended struct. Container types (types.Map, types.List, types.Set) and
+// BudgetPolicy struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m BudgetPolicyExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.BudgetPolicy.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m BudgetPolicyExtended) GetComplexFieldTypes(ctx context.Context) map[stri
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetPolicyExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetPolicy
 // only implements ToObjectValue() and Type().
-func (m BudgetPolicyExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.BudgetPolicy.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m BudgetPolicyExtended) ToObjectValue(ctx context.Context) basetypes.Objec
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m BudgetPolicyExtended) Type(ctx context.Context) attr.Type {
+func (m BudgetPolicy) Type(ctx context.Context) attr.Type {
 	embeddedType := m.BudgetPolicy.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m BudgetPolicyExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *BudgetPolicyExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan BudgetPolicyExtended) {
+func (m *BudgetPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan BudgetPolicy) {
 	m.BudgetPolicy.SyncFieldsDuringCreateOrUpdate(ctx, plan.BudgetPolicy)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *BudgetPolicyExtended) SyncFieldsDuringRead(ctx context.Context, existingState BudgetPolicyExtended) {
+func (m *BudgetPolicy) SyncFieldsDuringRead(ctx context.Context, existingState BudgetPolicy) {
 	m.BudgetPolicy.SyncFieldsDuringRead(ctx, existingState.BudgetPolicy)
 }
 
@@ -98,7 +98,7 @@ func (r *BudgetPolicyResource) Metadata(ctx context.Context, req resource.Metada
 }
 
 func (r *BudgetPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, BudgetPolicyExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, BudgetPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "policy_id")
 		return c
 	})
@@ -113,7 +113,7 @@ func (r *BudgetPolicyResource) Configure(ctx context.Context, req resource.Confi
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicyExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetAccountClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -138,7 +138,7 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicyExte
 		return
 	}
 
-	var newState BudgetPolicyExtended
+	var newState BudgetPolicy
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -156,7 +156,7 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan BudgetPolicyExtended
+	var plan BudgetPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -178,7 +178,7 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	var newState BudgetPolicyExtended
+	var newState BudgetPolicy
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -203,7 +203,7 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	var existingState BudgetPolicyExtended
+	var existingState BudgetPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,7 +226,7 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	var newState BudgetPolicyExtended
+	var newState BudgetPolicy
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -240,7 +240,7 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 func (r *BudgetPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan BudgetPolicyExtended
+	var plan BudgetPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -258,7 +258,7 @@ func (r *BudgetPolicyResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	var state BudgetPolicyExtended
+	var state BudgetPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

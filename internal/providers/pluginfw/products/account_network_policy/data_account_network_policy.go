@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type AccountNetworkPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// AccountNetworkPolicyDataExtended extends the main model with additional fields.
-type AccountNetworkPolicyDataExtended struct {
+// AccountNetworkPolicyData extends the main model with additional fields.
+type AccountNetworkPolicyData struct {
 	settings_tf.AccountNetworkPolicy
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AccountNetworkPolicyDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// AccountNetworkPolicyData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m AccountNetworkPolicyDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccountNetworkPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.AccountNetworkPolicy.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m AccountNetworkPolicyDataExtended) GetComplexFieldTypes(ctx context.Conte
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, AccountNetworkPolicyDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AccountNetworkPolicyData
 // only implements ToObjectValue() and Type().
-func (m AccountNetworkPolicyDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.AccountNetworkPolicy.ToObjectValue(ctx)
+func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.AccountNetworkPolicy.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m AccountNetworkPolicyDataExtended) Type(ctx context.Context) attr.Type {
-	return m.AccountNetworkPolicy.Type(ctx)
+func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.AccountNetworkPolicy.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AccountNetworkPolicyDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState AccountNetworkPolicyDataExtended) {
+func (m *AccountNetworkPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState AccountNetworkPolicyData) {
 	m.AccountNetworkPolicy.SyncFieldsDuringRead(ctx, existingState.AccountNetworkPolicy)
 }
 
@@ -75,7 +85,9 @@ func (r *AccountNetworkPolicyDataSource) Metadata(ctx context.Context, req datas
 }
 
 func (r *AccountNetworkPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPolicyDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AccountNetworkPolicy",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	var config AccountNetworkPolicyDataExtended
+	var config AccountNetworkPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	var newState AccountNetworkPolicyDataExtended
+	var newState AccountNetworkPolicyData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

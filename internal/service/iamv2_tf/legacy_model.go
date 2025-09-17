@@ -31,6 +31,19 @@ type GetWorkspaceAccessDetailLocalRequest_SdkV2 struct {
 	View types.String `tfsdk:"-"`
 }
 
+func (toState *GetWorkspaceAccessDetailLocalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceAccessDetailLocalRequest_SdkV2) {
+}
+
+func (toState *GetWorkspaceAccessDetailLocalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceAccessDetailLocalRequest_SdkV2) {
+}
+
+func (c GetWorkspaceAccessDetailLocalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["view"] = attrs["view"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAccessDetailLocalRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -73,6 +86,21 @@ type GetWorkspaceAccessDetailRequest_SdkV2 struct {
 	// Required. The workspace ID for which the access details are being
 	// requested.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceAccessDetailRequest_SdkV2) {
+}
+
+func (toState *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceAccessDetailRequest_SdkV2) {
+}
+
+func (c GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["view"] = attrs["view"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAccessDetailRequest.
@@ -182,6 +210,18 @@ type ResolveGroupProxyRequest_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
+func (toState *ResolveGroupProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveGroupProxyRequest_SdkV2) {
+}
+
+func (toState *ResolveGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveGroupProxyRequest_SdkV2) {
+}
+
+func (c ResolveGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveGroupProxyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -219,6 +259,19 @@ func (o ResolveGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ResolveGroupRequest_SdkV2 struct {
 	// Required. The external ID of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+}
+
+func (toState *ResolveGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveGroupRequest_SdkV2) {
+}
+
+func (toState *ResolveGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveGroupRequest_SdkV2) {
+}
+
+func (c ResolveGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveGroupRequest.
@@ -355,6 +408,18 @@ type ResolveServicePrincipalProxyRequest_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
+func (toState *ResolveServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveServicePrincipalProxyRequest_SdkV2) {
+}
+
+func (toState *ResolveServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveServicePrincipalProxyRequest_SdkV2) {
+}
+
+func (c ResolveServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveServicePrincipalProxyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -392,6 +457,19 @@ func (o ResolveServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) att
 type ResolveServicePrincipalRequest_SdkV2 struct {
 	// Required. The external ID of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+}
+
+func (toState *ResolveServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveServicePrincipalRequest_SdkV2) {
+}
+
+func (toState *ResolveServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveServicePrincipalRequest_SdkV2) {
+}
+
+func (c ResolveServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveServicePrincipalRequest.
@@ -528,6 +606,18 @@ type ResolveUserProxyRequest_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
+func (toState *ResolveUserProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveUserProxyRequest_SdkV2) {
+}
+
+func (toState *ResolveUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveUserProxyRequest_SdkV2) {
+}
+
+func (c ResolveUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveUserProxyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -565,6 +655,19 @@ func (o ResolveUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ResolveUserRequest_SdkV2 struct {
 	// Required. The external ID of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+}
+
+func (toState *ResolveUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolveUserRequest_SdkV2) {
+}
+
+func (toState *ResolveUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResolveUserRequest_SdkV2) {
+}
+
+func (c ResolveUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolveUserRequest.

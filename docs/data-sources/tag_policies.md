@@ -2,6 +2,8 @@
 subcategory: "Tags"
 ---
 # databricks_tag_policies Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to list all tag policies in the account.
 
 -> **Note** This resource can only be used with an account-level provider!
@@ -22,7 +24,6 @@ The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return in this request. Fewer results may be returned than requested. If
   unspecified or set to 0, this defaults to 1000. The maximum value is 1000; values above 1000 will be coerced down
   to 1000
-
 
 
 ## Attributes

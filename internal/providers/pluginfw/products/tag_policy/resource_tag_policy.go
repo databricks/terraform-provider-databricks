@@ -38,19 +38,19 @@ type TagPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// TagPolicyExtended extends the main model with additional fields.
-type TagPolicyExtended struct {
+// TagPolicy extends the main model with additional fields.
+type TagPolicy struct {
 	tags_tf.TagPolicy
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagPolicyExtended struct. Container types (types.Map, types.List, types.Set) and
+// TagPolicy struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m TagPolicyExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.TagPolicy.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m TagPolicyExtended) GetComplexFieldTypes(ctx context.Context) map[string]
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicyExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicy
 // only implements ToObjectValue() and Type().
-func (m TagPolicyExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TagPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.TagPolicy.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m TagPolicyExtended) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m TagPolicyExtended) Type(ctx context.Context) attr.Type {
+func (m TagPolicy) Type(ctx context.Context) attr.Type {
 	embeddedType := m.TagPolicy.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m TagPolicyExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *TagPolicyExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan TagPolicyExtended) {
+func (m *TagPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan TagPolicy) {
 	m.TagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, plan.TagPolicy)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *TagPolicyExtended) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicyExtended) {
+func (m *TagPolicy) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicy) {
 	m.TagPolicy.SyncFieldsDuringRead(ctx, existingState.TagPolicy)
 }
 
@@ -98,7 +98,7 @@ func (r *TagPolicyResource) Metadata(ctx context.Context, req resource.MetadataR
 }
 
 func (r *TagPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagPolicyExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "tag_key")
 		return c
 	})
@@ -113,7 +113,7 @@ func (r *TagPolicyResource) Configure(ctx context.Context, req resource.Configur
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicyExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -139,7 +139,7 @@ func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicyExtended, 
 		return
 	}
 
-	var newState TagPolicyExtended
+	var newState TagPolicy
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -157,7 +157,7 @@ func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan TagPolicyExtended
+	var plan TagPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -179,7 +179,7 @@ func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	var newState TagPolicyExtended
+	var newState TagPolicy
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -204,7 +204,7 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var existingState TagPolicyExtended
+	var existingState TagPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,7 +227,7 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var newState TagPolicyExtended
+	var newState TagPolicy
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -241,7 +241,7 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *TagPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan TagPolicyExtended
+	var plan TagPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -259,7 +259,7 @@ func (r *TagPolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	var state TagPolicyExtended
+	var state TagPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

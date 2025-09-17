@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type PolicyInfoDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// PolicyInfoDataExtended extends the main model with additional fields.
-type PolicyInfoDataExtended struct {
+// PolicyInfoData extends the main model with additional fields.
+type PolicyInfoData struct {
 	catalog_tf.PolicyInfo
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// PolicyInfoDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// PolicyInfoData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m PolicyInfoDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PolicyInfoData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.PolicyInfo.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m PolicyInfoDataExtended) GetComplexFieldTypes(ctx context.Context) map[st
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfoDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfoData
 // only implements ToObjectValue() and Type().
-func (m PolicyInfoDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.PolicyInfo.ToObjectValue(ctx)
+func (m PolicyInfoData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.PolicyInfo.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m PolicyInfoDataExtended) Type(ctx context.Context) attr.Type {
-	return m.PolicyInfo.Type(ctx)
+func (m PolicyInfoData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.PolicyInfo.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *PolicyInfoDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfoDataExtended) {
+func (m *PolicyInfoData) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfoData) {
 	m.PolicyInfo.SyncFieldsDuringRead(ctx, existingState.PolicyInfo)
 }
 
@@ -75,7 +85,9 @@ func (r *PolicyInfoDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *PolicyInfoDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfoDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfoData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks PolicyInfo",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *PolicyInfoDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var config PolicyInfoDataExtended
+	var config PolicyInfoData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *PolicyInfoDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var newState PolicyInfoDataExtended
+	var newState PolicyInfoData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

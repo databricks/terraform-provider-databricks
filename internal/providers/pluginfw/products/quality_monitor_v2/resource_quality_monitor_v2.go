@@ -38,19 +38,19 @@ type QualityMonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// QualityMonitorExtended extends the main model with additional fields.
-type QualityMonitorExtended struct {
+// QualityMonitor extends the main model with additional fields.
+type QualityMonitor struct {
 	qualitymonitorv2_tf.QualityMonitor
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// QualityMonitorExtended struct. Container types (types.Map, types.List, types.Set) and
+// QualityMonitor struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m QualityMonitorExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.QualityMonitor.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m QualityMonitorExtended) GetComplexFieldTypes(ctx context.Context) map[st
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitorExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitor
 // only implements ToObjectValue() and Type().
-func (m QualityMonitorExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.QualityMonitor.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m QualityMonitorExtended) ToObjectValue(ctx context.Context) basetypes.Obj
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m QualityMonitorExtended) Type(ctx context.Context) attr.Type {
+func (m QualityMonitor) Type(ctx context.Context) attr.Type {
 	embeddedType := m.QualityMonitor.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m QualityMonitorExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *QualityMonitorExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan QualityMonitorExtended) {
+func (m *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan QualityMonitor) {
 	m.QualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, plan.QualityMonitor)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *QualityMonitorExtended) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitorExtended) {
+func (m *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitor) {
 	m.QualityMonitor.SyncFieldsDuringRead(ctx, existingState.QualityMonitor)
 }
 
@@ -98,7 +98,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitorExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitor{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_id")
 		return c
@@ -114,7 +114,7 @@ func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitorExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -140,7 +140,7 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor
 		return
 	}
 
-	var newState QualityMonitorExtended
+	var newState QualityMonitor
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan QualityMonitorExtended
+	var plan QualityMonitor
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,7 +180,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	var newState QualityMonitorExtended
+	var newState QualityMonitor
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -205,7 +205,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var existingState QualityMonitorExtended
+	var existingState QualityMonitor
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,7 +228,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var newState QualityMonitorExtended
+	var newState QualityMonitor
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -242,7 +242,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan QualityMonitorExtended
+	var plan QualityMonitor
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -260,7 +260,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var state QualityMonitorExtended
+	var state QualityMonitor
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

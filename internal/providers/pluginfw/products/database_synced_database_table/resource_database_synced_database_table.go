@@ -38,19 +38,19 @@ type SyncedDatabaseTableResource struct {
 	Client *autogen.DatabricksClient
 }
 
-// SyncedDatabaseTableExtended extends the main model with additional fields.
-type SyncedDatabaseTableExtended struct {
+// SyncedDatabaseTable extends the main model with additional fields.
+type SyncedDatabaseTable struct {
 	database_tf.SyncedDatabaseTable
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// SyncedDatabaseTableExtended struct. Container types (types.Map, types.List, types.Set) and
+// SyncedDatabaseTable struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m SyncedDatabaseTableExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SyncedDatabaseTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.SyncedDatabaseTable.GetComplexFieldTypes(ctx)
 }
 
@@ -58,9 +58,9 @@ func (m SyncedDatabaseTableExtended) GetComplexFieldTypes(ctx context.Context) m
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedDatabaseTableExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedDatabaseTable
 // only implements ToObjectValue() and Type().
-func (m SyncedDatabaseTableExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SyncedDatabaseTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.SyncedDatabaseTable.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 
@@ -72,7 +72,7 @@ func (m SyncedDatabaseTableExtended) ToObjectValue(ctx context.Context) basetype
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m SyncedDatabaseTableExtended) Type(ctx context.Context) attr.Type {
+func (m SyncedDatabaseTable) Type(ctx context.Context) attr.Type {
 	embeddedType := m.SyncedDatabaseTable.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 
@@ -82,14 +82,14 @@ func (m SyncedDatabaseTableExtended) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *SyncedDatabaseTableExtended) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan SyncedDatabaseTableExtended) {
+func (m *SyncedDatabaseTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan SyncedDatabaseTable) {
 	m.SyncedDatabaseTable.SyncFieldsDuringCreateOrUpdate(ctx, plan.SyncedDatabaseTable)
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *SyncedDatabaseTableExtended) SyncFieldsDuringRead(ctx context.Context, existingState SyncedDatabaseTableExtended) {
+func (m *SyncedDatabaseTable) SyncFieldsDuringRead(ctx context.Context, existingState SyncedDatabaseTable) {
 	m.SyncedDatabaseTable.SyncFieldsDuringRead(ctx, existingState.SyncedDatabaseTable)
 }
 
@@ -98,7 +98,7 @@ func (r *SyncedDatabaseTableResource) Metadata(ctx context.Context, req resource
 }
 
 func (r *SyncedDatabaseTableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, SyncedDatabaseTableExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, SyncedDatabaseTable{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
@@ -113,7 +113,7 @@ func (r *SyncedDatabaseTableResource) Configure(ctx context.Context, req resourc
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDatabaseTableExtended, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDatabaseTable, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -139,7 +139,7 @@ func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDat
 		return
 	}
 
-	var newState SyncedDatabaseTableExtended
+	var newState SyncedDatabaseTable
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -157,7 +157,7 @@ func (r *SyncedDatabaseTableResource) Create(ctx context.Context, req resource.C
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan SyncedDatabaseTableExtended
+	var plan SyncedDatabaseTable
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -179,7 +179,7 @@ func (r *SyncedDatabaseTableResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var newState SyncedDatabaseTableExtended
+	var newState SyncedDatabaseTable
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -204,7 +204,7 @@ func (r *SyncedDatabaseTableResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var existingState SyncedDatabaseTableExtended
+	var existingState SyncedDatabaseTable
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,7 +227,7 @@ func (r *SyncedDatabaseTableResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState SyncedDatabaseTableExtended
+	var newState SyncedDatabaseTable
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -241,7 +241,7 @@ func (r *SyncedDatabaseTableResource) Read(ctx context.Context, req resource.Rea
 func (r *SyncedDatabaseTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan SyncedDatabaseTableExtended
+	var plan SyncedDatabaseTable
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -259,7 +259,7 @@ func (r *SyncedDatabaseTableResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	var state SyncedDatabaseTableExtended
+	var state SyncedDatabaseTable
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

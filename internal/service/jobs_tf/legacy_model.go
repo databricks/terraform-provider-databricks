@@ -17,9 +17,10 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf" // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -985,6 +986,19 @@ type CancelAllRuns_SdkV2 struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
+func (toState *CancelAllRuns_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CancelAllRuns_SdkV2) {
+}
+
+func (toState *CancelAllRuns_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CancelAllRuns_SdkV2) {
+}
+
+func (c CancelAllRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1018,39 +1032,21 @@ func (o CancelAllRuns_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CancelAllRunsResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRunsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelAllRunsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelAllRunsResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o CancelAllRunsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type CancelRun_SdkV2 struct {
 	// This field is required.
 	RunId types.Int64 `tfsdk:"run_id"`
+}
+
+func (toState *CancelRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CancelRun_SdkV2) {
+}
+
+func (toState *CancelRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CancelRun_SdkV2) {
+}
+
+func (c CancelRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
@@ -1081,36 +1077,6 @@ func (o CancelRun_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
 		},
-	}
-}
-
-type CancelRunResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRunResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelRunResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o CancelRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -1978,6 +1944,230 @@ type CreateJob_SdkV2 struct {
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.List `tfsdk:"webhook_notifications"`
+}
+
+func (toState *CreateJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateJob_SdkV2) {
+	if !fromPlan.Continuous.IsNull() && !fromPlan.Continuous.IsUnknown() {
+		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
+			if fromPlanContinuous, ok := fromPlan.GetContinuous(ctx); ok {
+				toStateContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuous)
+				toState.SetContinuous(ctx, toStateContinuous)
+			}
+		}
+	}
+	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.Queue.IsNull() && !fromPlan.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromPlanQueue, ok := fromPlan.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (toState *CreateJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateJob_SdkV2) {
+	if !fromState.Continuous.IsNull() && !fromState.Continuous.IsUnknown() {
+		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
+			if fromStateContinuous, ok := fromState.GetContinuous(ctx); ok {
+				toStateContinuous.SyncFieldsDuringRead(ctx, fromStateContinuous)
+				toState.SetContinuous(ctx, toStateContinuous)
+			}
+		}
+	}
+	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
+		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
+			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
+				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
+				toState.SetDeployment(ctx, toStateDeployment)
+			}
+		}
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.Queue.IsNull() && !fromState.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromStateQueue, ok := fromState.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringRead(ctx, fromStateQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
+		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
+			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
+				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
+				toState.SetSchedule(ctx, toStateSchedule)
+			}
+		}
+	}
+	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
+		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
+			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
+				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
+				toState.SetTrigger(ctx, toStateTrigger)
+			}
+		}
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
+	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
@@ -3590,6 +3780,18 @@ type DeleteJob_SdkV2 struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
+func (toState *DeleteJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteJob_SdkV2) {
+}
+
+func (toState *DeleteJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteJob_SdkV2) {
+}
+
+func (c DeleteJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3621,39 +3823,21 @@ func (o DeleteJob_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteRun_SdkV2 struct {
 	// ID of the run to delete.
 	RunId types.Int64 `tfsdk:"run_id"`
+}
+
+func (toState *DeleteRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteRun_SdkV2) {
+}
+
+func (toState *DeleteRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteRun_SdkV2) {
+}
+
+func (c DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -3684,36 +3868,6 @@ func (o DeleteRun_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
 		},
-	}
-}
-
-type DeleteRunResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRunResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DeleteRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -3790,6 +3944,19 @@ type EnforcePolicyComplianceRequest_SdkV2 struct {
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
+}
+
+func (toState *EnforcePolicyComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforcePolicyComplianceRequest_SdkV2) {
+}
+
+func (toState *EnforcePolicyComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EnforcePolicyComplianceRequest_SdkV2) {
+}
+
+func (c EnforcePolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
@@ -4055,6 +4222,19 @@ type ExportRunRequest_SdkV2 struct {
 	RunId types.Int64 `tfsdk:"-"`
 	// Which views to export (CODE, DASHBOARDS, or ALL). Defaults to CODE.
 	ViewsToExport types.String `tfsdk:"-"`
+}
+
+func (toState *ExportRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportRunRequest_SdkV2) {
+}
+
+func (toState *ExportRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExportRunRequest_SdkV2) {
+}
+
+func (c ExportRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["views_to_export"] = attrs["views_to_export"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunRequest.
@@ -4723,6 +4903,18 @@ type GetJobPermissionLevelsRequest_SdkV2 struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (toState *GetJobPermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetJobPermissionLevelsRequest_SdkV2) {
+}
+
+func (toState *GetJobPermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetJobPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetJobPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4837,6 +5029,18 @@ type GetJobPermissionsRequest_SdkV2 struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (toState *GetJobPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetJobPermissionsRequest_SdkV2) {
+}
+
+func (toState *GetJobPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetJobPermissionsRequest_SdkV2) {
+}
+
+func (c GetJobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4877,6 +5081,19 @@ type GetJobRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (toState *GetJobRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetJobRequest_SdkV2) {
+}
+
+func (toState *GetJobRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetJobRequest_SdkV2) {
+}
+
+func (c GetJobRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4913,6 +5130,18 @@ func (o GetJobRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetPolicyComplianceRequest_SdkV2 struct {
 	// The ID of the job whose compliance status you are requesting.
 	JobId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetPolicyComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPolicyComplianceRequest_SdkV2) {
+}
+
+func (toState *GetPolicyComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetPolicyComplianceRequest_SdkV2) {
+}
+
+func (c GetPolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceRequest.
@@ -5041,6 +5270,18 @@ type GetRunOutputRequest_SdkV2 struct {
 	RunId types.Int64 `tfsdk:"-"`
 }
 
+func (toState *GetRunOutputRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRunOutputRequest_SdkV2) {
+}
+
+func (toState *GetRunOutputRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetRunOutputRequest_SdkV2) {
+}
+
+func (c GetRunOutputRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunOutputRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5083,6 +5324,21 @@ type GetRunRequest_SdkV2 struct {
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (toState *GetRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetRunRequest_SdkV2) {
+}
+
+func (toState *GetRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GetRunRequest_SdkV2) {
+}
+
+func (c GetRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["include_history"] = attrs["include_history"].SetOptional()
+	attrs["include_resolved_values"] = attrs["include_resolved_values"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunRequest.
@@ -6714,6 +6970,19 @@ type JobPermissionsRequest_SdkV2 struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (toState *JobPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermissionsRequest_SdkV2) {
+}
+
+func (toState *JobPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState JobPermissionsRequest_SdkV2) {
+}
+
+func (c JobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8032,6 +8301,20 @@ type ListJobComplianceRequest_SdkV2 struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (toState *ListJobComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobComplianceRequest_SdkV2) {
+}
+
+func (toState *ListJobComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListJobComplianceRequest_SdkV2) {
+}
+
+func (c ListJobComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8084,6 +8367,22 @@ type ListJobsRequest_SdkV2 struct {
 	// Use `next_page_token` or `prev_page_token` returned from the previous
 	// request to list the next or previous page of jobs respectively.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListJobsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobsRequest_SdkV2) {
+}
+
+func (toState *ListJobsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListJobsRequest_SdkV2) {
+}
+
+func (c ListJobsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsRequest.
@@ -8261,6 +8560,27 @@ type ListRunsRequest_SdkV2 struct {
 	// timestamp in milliseconds. Can be combined with _start_time_from_ to
 	// filter by a time range.
 	StartTimeTo types.Int64 `tfsdk:"-"`
+}
+
+func (toState *ListRunsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListRunsRequest_SdkV2) {
+}
+
+func (toState *ListRunsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListRunsRequest_SdkV2) {
+}
+
+func (c ListRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["active_only"] = attrs["active_only"].SetOptional()
+	attrs["completed_only"] = attrs["completed_only"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["start_time_from"] = attrs["start_time_from"].SetOptional()
+	attrs["start_time_to"] = attrs["start_time_to"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsRequest.
@@ -9635,6 +9955,49 @@ type RepairRun_SdkV2 struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
+func (toState *RepairRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepairRun_SdkV2) {
+	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
+}
+
+func (toState *RepairRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RepairRun_SdkV2) {
+	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
+}
+
+func (c RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["rerun_all_failed_tasks"] = attrs["rerun_all_failed_tasks"].SetOptional()
+	attrs["rerun_dependent_tasks"] = attrs["rerun_dependent_tasks"].SetOptional()
+	attrs["rerun_tasks"] = attrs["rerun_tasks"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10046,6 +10409,36 @@ type ResetJob_SdkV2 struct {
 	NewSettings types.List `tfsdk:"new_settings"`
 }
 
+func (toState *ResetJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResetJob_SdkV2) {
+	if !fromPlan.NewSettings.IsNull() && !fromPlan.NewSettings.IsUnknown() {
+		if toStateNewSettings, ok := toState.GetNewSettings(ctx); ok {
+			if fromPlanNewSettings, ok := fromPlan.GetNewSettings(ctx); ok {
+				toStateNewSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewSettings)
+				toState.SetNewSettings(ctx, toStateNewSettings)
+			}
+		}
+	}
+}
+
+func (toState *ResetJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResetJob_SdkV2) {
+	if !fromState.NewSettings.IsNull() && !fromState.NewSettings.IsUnknown() {
+		if toStateNewSettings, ok := toState.GetNewSettings(ctx); ok {
+			if fromStateNewSettings, ok := fromState.GetNewSettings(ctx); ok {
+				toStateNewSettings.SyncFieldsDuringRead(ctx, fromStateNewSettings)
+				toState.SetNewSettings(ctx, toStateNewSettings)
+			}
+		}
+	}
+}
+
+func (c ResetJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10107,36 +10500,6 @@ func (o *ResetJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV2
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
 	o.NewSettings = types.ListValueMust(t, vs)
-}
-
-type ResetResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ResetResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ResetResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ResetResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ResetResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 type ResolvedConditionTaskValues_SdkV2 struct {
@@ -12918,6 +13281,65 @@ type RunNow_SdkV2 struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams types.Map `tfsdk:"sql_params"`
+}
+
+func (toState *RunNow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunNow_SdkV2) {
+	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
+	if !fromPlan.Queue.IsNull() && !fromPlan.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromPlanQueue, ok := fromPlan.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+}
+
+func (toState *RunNow_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RunNow_SdkV2) {
+	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
+		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
+			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
+				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
+				toState.SetPipelineParams(ctx, toStatePipelineParams)
+			}
+		}
+	}
+	if !fromState.Queue.IsNull() && !fromState.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromStateQueue, ok := fromState.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringRead(ctx, fromStateQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+}
+
+func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["only"] = attrs["only"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
@@ -17846,6 +18268,171 @@ type SubmitRun_SdkV2 struct {
 	WebhookNotifications types.List `tfsdk:"webhook_notifications"`
 }
 
+func (toState *SubmitRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubmitRun_SdkV2) {
+	if !fromPlan.BudgetPolicyId.IsUnknown() && !fromPlan.BudgetPolicyId.IsNull() {
+		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.BudgetPolicyId = fromPlan.BudgetPolicyId
+	}
+	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromPlan.Queue.IsNull() && !fromPlan.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromPlanQueue, ok := fromPlan.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromPlan.UsagePolicyId.IsUnknown() && !fromPlan.UsagePolicyId.IsNull() {
+		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the plan.
+		toState.UsagePolicyId = fromPlan.UsagePolicyId
+	}
+	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (toState *SubmitRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SubmitRun_SdkV2) {
+	if !fromState.BudgetPolicyId.IsUnknown() && !fromState.BudgetPolicyId.IsNull() {
+		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.BudgetPolicyId = fromState.BudgetPolicyId
+	}
+	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
+		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
+			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
+				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
+				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+			}
+		}
+	}
+	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
+		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
+			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
+				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
+				toState.SetGitSource(ctx, toStateGitSource)
+			}
+		}
+	}
+	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
+		if toStateHealth, ok := toState.GetHealth(ctx); ok {
+			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
+				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
+				toState.SetHealth(ctx, toStateHealth)
+			}
+		}
+	}
+	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
+		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
+			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
+				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
+				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+			}
+		}
+	}
+	if !fromState.Queue.IsNull() && !fromState.Queue.IsUnknown() {
+		if toStateQueue, ok := toState.GetQueue(ctx); ok {
+			if fromStateQueue, ok := fromState.GetQueue(ctx); ok {
+				toStateQueue.SyncFieldsDuringRead(ctx, fromStateQueue)
+				toState.SetQueue(ctx, toStateQueue)
+			}
+		}
+	}
+	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
+		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
+			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
+				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
+				toState.SetRunAs(ctx, toStateRunAs)
+			}
+		}
+	}
+	if !fromState.UsagePolicyId.IsUnknown() && !fromState.UsagePolicyId.IsNull() {
+		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the existing state.
+		toState.UsagePolicyId = fromState.UsagePolicyId
+	}
+	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
+		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
+			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
+				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
+				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (c SubmitRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["environments"] = attrs["environments"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["run_name"] = attrs["run_name"].SetOptional()
+	attrs["tasks"] = attrs["tasks"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -22187,6 +22774,37 @@ type UpdateJob_SdkV2 struct {
 	NewSettings types.List `tfsdk:"new_settings"`
 }
 
+func (toState *UpdateJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateJob_SdkV2) {
+	if !fromPlan.NewSettings.IsNull() && !fromPlan.NewSettings.IsUnknown() {
+		if toStateNewSettings, ok := toState.GetNewSettings(ctx); ok {
+			if fromPlanNewSettings, ok := fromPlan.GetNewSettings(ctx); ok {
+				toStateNewSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewSettings)
+				toState.SetNewSettings(ctx, toStateNewSettings)
+			}
+		}
+	}
+}
+
+func (toState *UpdateJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateJob_SdkV2) {
+	if !fromState.NewSettings.IsNull() && !fromState.NewSettings.IsUnknown() {
+		if toStateNewSettings, ok := toState.GetNewSettings(ctx); ok {
+			if fromStateNewSettings, ok := fromState.GetNewSettings(ctx); ok {
+				toStateNewSettings.SyncFieldsDuringRead(ctx, fromStateNewSettings)
+				toState.SetNewSettings(ctx, toStateNewSettings)
+			}
+		}
+	}
+}
+
+func (c UpdateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetOptional()
+	attrs["new_settings"] = attrs["new_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -22279,36 +22897,6 @@ func (o *UpdateJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
 	o.NewSettings = types.ListValueMust(t, vs)
-}
-
-type UpdateResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpdateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 type ViewItem_SdkV2 struct {

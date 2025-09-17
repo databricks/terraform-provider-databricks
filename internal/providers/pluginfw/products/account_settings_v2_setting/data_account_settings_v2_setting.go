@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -31,19 +32,19 @@ type SettingDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// SettingDataExtended extends the main model with additional fields.
-type SettingDataExtended struct {
+// SettingData extends the main model with additional fields.
+type SettingData struct {
 	settingsv2_tf.Setting
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// SettingDataExtended struct. Container types (types.Map, types.List, types.Set) and
+// SettingData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m SettingDataExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.Setting.GetComplexFieldTypes(ctx)
 }
 
@@ -51,22 +52,31 @@ func (m SettingDataExtended) GetComplexFieldTypes(ctx context.Context) map[strin
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SettingDataExtended
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SettingData
 // only implements ToObjectValue() and Type().
-func (m SettingDataExtended) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return m.Setting.ToObjectValue(ctx)
+func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.Setting.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m SettingDataExtended) Type(ctx context.Context) attr.Type {
-	return m.Setting.Type(ctx)
+func (m SettingData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.Setting.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *SettingDataExtended) SyncFieldsDuringRead(ctx context.Context, existingState SettingDataExtended) {
+func (m *SettingData) SyncFieldsDuringRead(ctx context.Context, existingState SettingData) {
 	m.Setting.SyncFieldsDuringRead(ctx, existingState.Setting)
 }
 
@@ -75,7 +85,9 @@ func (r *SettingDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (r *SettingDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SettingDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SettingData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Setting",
 		Attributes:  attrs,
@@ -96,7 +108,7 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var config SettingDataExtended
+	var config SettingData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +131,7 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var newState SettingDataExtended
+	var newState SettingData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -2,6 +2,8 @@
 subcategory: "OAuth"
 ---
 # databricks_service_principal_federation_policy Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single service principal federation policy.
 
 -> **Note** This data source can only be used with an account-level provider!

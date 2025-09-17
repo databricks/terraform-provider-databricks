@@ -26,18 +26,12 @@ func DataSourceTagPolicies() datasource.DataSource {
 	return &TagPoliciesDataSource{}
 }
 
-// TagPoliciesDataExtended extends the main model with additional fields.
-type TagPoliciesDataExtended struct {
-	tags_tf.ListTagPoliciesRequest
+// TagPoliciesData extends the main model with additional fields.
+type TagPoliciesData struct {
 	TagPolicies types.List `tfsdk:"tag_policies"`
 }
 
-func (c TagPoliciesDataExtended) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["tag_policies"] = attrs["tag_policies"].SetComputed()
-	return attrs
-}
-
-func (TagPoliciesDataExtended) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_policies": reflect.TypeOf(tags_tf.TagPolicy{}),
 	}
@@ -52,7 +46,10 @@ func (r *TagPoliciesDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *TagPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPoliciesDataExtended{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("tag_policies")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks TagPolicy",
 		Attributes:  attrs,
@@ -73,7 +70,7 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	var config TagPoliciesDataExtended
+	var config TagPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,7 +98,7 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, tag_policy.ToObjectValue(ctx))
 	}
 
-	var newState TagPoliciesDataExtended
+	var newState TagPoliciesData
 	newState.TagPolicies = types.ListValueMust(tags_tf.TagPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

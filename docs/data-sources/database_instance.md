@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Database Instance.
 
 

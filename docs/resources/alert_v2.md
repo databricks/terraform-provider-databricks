@@ -2,6 +2,8 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
 Alerts run on a schedule and evaluate query results against defined thresholds. When an alert is triggered, notifications can be sent to specified users or destinations.
@@ -143,12 +145,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = id
+  id = "id"
   to = databricks_alert_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_alert_v2 id
+terraform import databricks_alert_v2 "id"
 ```

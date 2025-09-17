@@ -79,6 +79,34 @@ type CreateQualityMonitorRequest struct {
 	QualityMonitor types.Object `tfsdk:"quality_monitor"`
 }
 
+func (toState *CreateQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateQualityMonitorRequest) {
+	if !fromPlan.QualityMonitor.IsNull() && !fromPlan.QualityMonitor.IsUnknown() {
+		if toStateQualityMonitor, ok := toState.GetQualityMonitor(ctx); ok {
+			if fromPlanQualityMonitor, ok := fromPlan.GetQualityMonitor(ctx); ok {
+				toStateQualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQualityMonitor)
+				toState.SetQualityMonitor(ctx, toStateQualityMonitor)
+			}
+		}
+	}
+}
+
+func (toState *CreateQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, fromState CreateQualityMonitorRequest) {
+	if !fromState.QualityMonitor.IsNull() && !fromState.QualityMonitor.IsUnknown() {
+		if toStateQualityMonitor, ok := toState.GetQualityMonitor(ctx); ok {
+			if fromStateQualityMonitor, ok := fromState.GetQualityMonitor(ctx); ok {
+				toStateQualityMonitor.SyncFieldsDuringRead(ctx, fromStateQualityMonitor)
+				toState.SetQualityMonitor(ctx, toStateQualityMonitor)
+			}
+		}
+	}
+}
+
+func (c CreateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQualityMonitorRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -144,6 +172,19 @@ type DeleteQualityMonitorRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *DeleteQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteQualityMonitorRequest) {
+}
+
+func (toState *DeleteQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, fromState DeleteQualityMonitorRequest) {
+}
+
+func (c DeleteQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQualityMonitorRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -184,6 +225,19 @@ type GetQualityMonitorRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (toState *GetQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetQualityMonitorRequest) {
+}
+
+func (toState *GetQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, fromState GetQualityMonitorRequest) {
+}
+
+func (c GetQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQualityMonitorRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -221,6 +275,19 @@ type ListQualityMonitorRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (toState *ListQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQualityMonitorRequest) {
+}
+
+func (toState *ListQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, fromState ListQualityMonitorRequest) {
+}
+
+func (c ListQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQualityMonitorRequest.
@@ -445,6 +512,36 @@ type UpdateQualityMonitorRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 
 	QualityMonitor types.Object `tfsdk:"quality_monitor"`
+}
+
+func (toState *UpdateQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateQualityMonitorRequest) {
+	if !fromPlan.QualityMonitor.IsNull() && !fromPlan.QualityMonitor.IsUnknown() {
+		if toStateQualityMonitor, ok := toState.GetQualityMonitor(ctx); ok {
+			if fromPlanQualityMonitor, ok := fromPlan.GetQualityMonitor(ctx); ok {
+				toStateQualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQualityMonitor)
+				toState.SetQualityMonitor(ctx, toStateQualityMonitor)
+			}
+		}
+	}
+}
+
+func (toState *UpdateQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, fromState UpdateQualityMonitorRequest) {
+	if !fromState.QualityMonitor.IsNull() && !fromState.QualityMonitor.IsUnknown() {
+		if toStateQualityMonitor, ok := toState.GetQualityMonitor(ctx); ok {
+			if fromStateQualityMonitor, ok := fromState.GetQualityMonitor(ctx); ok {
+				toStateQualityMonitor.SyncFieldsDuringRead(ctx, fromStateQualityMonitor)
+				toState.SetQualityMonitor(ctx, toStateQualityMonitor)
+			}
+		}
+	}
+}
+
+func (c UpdateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateQualityMonitorRequest.

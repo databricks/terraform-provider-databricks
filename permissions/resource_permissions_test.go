@@ -1373,7 +1373,9 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockJobsAPI().EXPECT().GetByJobId(mock.Anything, int64(123)).Return(&jobs.Job{
+		mwc.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{
+			JobId: int64(123),
+		}).Return(&jobs.Job{
 			CreatorUserName: "creator@example.com",
 		}, nil)
 		e := mwc.GetMockPermissionsAPI().EXPECT()
@@ -1445,7 +1447,9 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 				},
 			},
 		}, nil)
-		mwc.GetMockJobsAPI().EXPECT().GetByJobId(mock.Anything, int64(123)).Return(nil, &apierr.APIError{
+		mwc.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{
+			JobId: int64(123),
+		}).Return(nil, &apierr.APIError{
 			StatusCode: 400,
 			Message:    "Job 123 does not exist.",
 			ErrorCode:  "INVALID_PARAMETER_VALUE",

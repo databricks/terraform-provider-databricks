@@ -426,7 +426,9 @@ func TestAccPeriodicTrigger(t *testing.T) {
 			jobID, err := strconv.ParseInt(id, 10, 64)
 			assert.NoError(t, err)
 
-			res, err := w.Jobs.GetByJobId(ctx, jobID)
+			res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+				JobId: jobID,
+			})
 			assert.NoError(t, err)
 
 			assert.Equal(t, jobs.PauseStatus("UNPAUSED"), res.Settings.Trigger.PauseStatus)

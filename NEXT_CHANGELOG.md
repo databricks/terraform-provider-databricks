@@ -12,6 +12,7 @@
 
 * Remove incorrect customization for `databricks_catalog` ([#5021](https://github.com/databricks/terraform-provider-databricks/pull/5021))
 * Fix filling of `active` attribute in `databricks_user` data source ([#5026](https://github.com/databricks/terraform-provider-databricks/pull/5026))
+* Add support for share resource in plugin framework implementation to be SDKv2 compatible ([#4965](https://github.com/databricks/terraform-provider-databricks/pull/4965))
 
 ### Documentation
 

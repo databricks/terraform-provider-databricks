@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Allow update `managed_services_customer_managed_key_id` in `databricks_mws_workspaces` ([#5034](https://github.com/databricks/terraform-provider-databricks/pull/5034))
+
 ### Documentation
 
 ### Exporter

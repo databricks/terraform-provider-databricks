@@ -736,9 +736,10 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				ExpectedRequest: map[string]any{
-					"credentials_id":                  "bcd",
-					"network_id":                      "fgh",
-					"storage_customer_managed_key_id": "def",
+					"credentials_id":                           "bcd",
+					"network_id":                               "fgh",
+					"storage_customer_managed_key_id":          "def",
+					"managed_services_customer_managed_key_id": "def",
 				},
 			},
 			{
@@ -1616,10 +1617,11 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				ExpectedRequest: map[string]any{
-					"credentials_id":                  "bcd",
-					"network_id":                      "fgh",
-					"storage_customer_managed_key_id": "def",
-					"private_access_settings_id":      "pas",
+					"credentials_id":                           "bcd",
+					"network_id":                               "fgh",
+					"storage_customer_managed_key_id":          "def",
+					"managed_services_customer_managed_key_id": "def",
+					"private_access_settings_id":               "pas",
 				},
 			},
 			{

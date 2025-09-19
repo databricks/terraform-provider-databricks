@@ -315,6 +315,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
 	}
+	if ws.ManagedServicesCustomerManagedKeyID != "" {
+		request["managed_services_customer_managed_key_id"] = ws.ManagedServicesCustomerManagedKeyID
+	}
 	if ws.CustomTags != nil {
 		if !a.client.IsAws() {
 			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")

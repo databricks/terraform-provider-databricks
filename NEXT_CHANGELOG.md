@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
+
 ### Bug Fixes
 
 * Allow update `managed_services_customer_managed_key_id` in `databricks_mws_workspaces` ([#5034](https://github.com/databricks/terraform-provider-databricks/pull/5034))
@@ -17,3 +19,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Use `Jobs.Get` instead of `JobsGetByJobId` ([#5029](https://github.com/databricks/terraform-provider-databricks/pull/5029))

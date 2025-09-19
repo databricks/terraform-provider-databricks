@@ -247,16 +247,24 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 // If expected_workspace_status is specified, WaitForExpectedStatus will wait until workspace is in the expected status.
 // If not, it will wait until workspace is running, and otherwise will try to explain why it failed.
 func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, timeout time.Duration) error {
+	// expected status should only ever be PROVISIONING or RUNNING
+	expected := ws.ExpectedWorkspaceStatus
+	if expected == "" {
+		expected = WorkspaceStatusRunning
+	}
+
+	// Skip waiting entirely if expected status is PROVISIONING since we cannot read the workspace while it is provisioning
+	if expected == WorkspaceStatusProvisioning {
+		log.Printf("[INFO] Expected status is PROVISIONING, skipping wait since workspace API is not available during provisioning")
+		return nil
+	}
+
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		// expected status should only ever be PROVISIONING or RUNNING
-		expected := ws.ExpectedWorkspaceStatus
-		if expected == "" {
-			expected = WorkspaceStatusRunning
-		}
+
 		switch workspace.WorkspaceStatus {
 		case expected:
 			log.Printf("[INFO] Workspace is now in expected status %s", expected)
@@ -282,7 +290,7 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, timeout time.Duration
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags", "expected_workspace_status"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -659,7 +667,16 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err = common.StructToData(workspace, workspaceSchema, d); err != nil {
 				return err
 			}
-			err = workspacesAPI.WaitForExpectedStatus(workspace, d.Timeout(schema.TimeoutRead))
+			// The workspace returned from the API call does not have the expected_status field
+			// Therefore, we need to check the original Terraform configuration to not try to read workspace
+			// if the expected status is PROVISIONING
+			expectedStatus := d.Get("expected_workspace_status").(string)
+			if expectedStatus == WorkspaceStatusProvisioning {
+				log.Printf("[INFO] Expected status is PROVISIONING, skipping wait in read function")
+				err = nil
+			} else {
+				err = workspacesAPI.WaitForExpectedStatus(workspace, d.Timeout(schema.TimeoutRead))
+			}
 			if err != nil {
 				return err
 			}

@@ -91,7 +91,7 @@ func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID strin
 	if groupInfo.initialized {
 		delete(groupInfo.members, memberID)
 	}
-	return err
+	return nil
 }
 
 func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
@@ -106,7 +106,7 @@ func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) 
 	if groupInfo.initialized {
 		groupInfo.members[memberID] = struct{}{}
 	}
-	return err
+	return nil
 }
 
 func hasMember(members map[string]struct{}, memberID string) bool {

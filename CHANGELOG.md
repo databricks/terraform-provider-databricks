@@ -1,5 +1,44 @@
 # Version changelog
 
+## Release v1.90.0
+
+### New Features and Improvements
+
+* Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation ([#5014](https://github.com/databricks/terraform-provider-databricks/pull/5014))
+
+### Bug Fixes
+
+* Remove incorrect customization for `databricks_catalog` ([#5021](https://github.com/databricks/terraform-provider-databricks/pull/5021))
+* Fix filling of `active` attribute in `databricks_user` data source ([#5026](https://github.com/databricks/terraform-provider-databricks/pull/5026))
+* Add support for share resource in plugin framework implementation to be SDKv2 compatible ([#4965](https://github.com/databricks/terraform-provider-databricks/pull/4965))
+
+### Internal Changes
+* Use `Jobs.Get` instead of `JobsGetByJobId` ([#5029](https://github.com/databricks/terraform-provider-databricks/pull/5029))
+
+
+## Release v1.89.0
+
+### New Features and Improvements
+
+* Document and handle additional Microsoft Teams options in `databricks_notification_destination` ([#4990](https://github.com/databricks/terraform-provider-databricks/pull/4990))
+
+### Bug Fixes
+
+* Fix regression with `databricks_group` data source introduced by a recent change ([#4995](https://github.com/databricks/terraform-provider-databricks/pull/4995))
+
+* Fix drift detection for `databricks_connection` with HTTP OAuth M2M
+
+### Documentation
+
+* Document `continuous.task_retry_mode` in `databricks_job` ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))
+
+### Exporter
+
+* Improve handling of dependencies for vector search index ([#4989](https://github.com/databricks/terraform-provider-databricks/pull/4989)).
+* Handle new attributes for Slack and MS Teams in `databricks_notification_destination` ([#5008](https://github.com/databricks/terraform-provider-databricks/pull/5008)).
+* Emit permission assignment and users/SPs/groups when processing `databricks_mws_workspaces` ([#5012](https://github.com/databricks/terraform-provider-databricks/pull/5012)).
+
+
 ## Release v1.88.0
 
 ### New Features and Improvements

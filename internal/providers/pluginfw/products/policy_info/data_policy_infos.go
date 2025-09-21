@@ -29,9 +29,8 @@ func DataSourcePolicyInfos() datasource.DataSource {
 // PolicyInfosData extends the main model with additional fields.
 type PolicyInfosData struct {
 	Policies            types.List   `tfsdk:"policies"`
-	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
 	OnSecurableType     types.String `tfsdk:"on_securable_type"`
-	WorkspaceID         types.String `tfsdk:"workspace_id"`
+	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
 }
 
 func (PolicyInfosData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -51,9 +50,8 @@ func (r *PolicyInfosDataSource) Metadata(ctx context.Context, req datasource.Met
 func (r *PolicyInfosDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfosData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("policies")
-		c.SetRequired("on_securable_fullname")
 		c.SetRequired("on_securable_type")
-		c.SetOptional("workspace_id")
+		c.SetRequired("on_securable_fullname")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -106,6 +104,5 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var newState PolicyInfosData
 	newState.Policies = types.ListValueMust(catalog_tf.PolicyInfo{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

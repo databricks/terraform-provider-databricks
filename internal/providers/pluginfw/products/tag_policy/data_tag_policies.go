@@ -28,8 +28,7 @@ func DataSourceTagPolicies() datasource.DataSource {
 
 // TagPoliciesData extends the main model with additional fields.
 type TagPoliciesData struct {
-	TagPolicies types.List   `tfsdk:"tag_policies"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	TagPolicies types.List `tfsdk:"tag_policies"`
 }
 
 func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *TagPoliciesDataSource) Metadata(ctx context.Context, req datasource.Met
 func (r *TagPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("tag_policies")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var newState TagPoliciesData
 	newState.TagPolicies = types.ListValueMust(tags_tf.TagPolicy{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

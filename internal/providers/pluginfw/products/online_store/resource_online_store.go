@@ -41,7 +41,6 @@ type OnlineStoreResource struct {
 // OnlineStore extends the main model with additional fields.
 type OnlineStore struct {
 	ml_tf.OnlineStore
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.OnlineStore.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m OnlineStore) Type(ctx context.Context) attr.Type {
 	embeddedType := m.OnlineStore.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan OnlineStore) {
 	m.OnlineStore.SyncFieldsDuringCreateOrUpdate(ctx, plan.OnlineStore)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan O
 // during read.
 func (m *OnlineStore) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStore) {
 	m.OnlineStore.SyncFieldsDuringRead(ctx, existingState.OnlineStore)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.Metadat
 func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

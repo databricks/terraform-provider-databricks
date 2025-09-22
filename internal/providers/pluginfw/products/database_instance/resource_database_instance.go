@@ -41,8 +41,7 @@ type DatabaseInstanceResource struct {
 // DatabaseInstance extends the main model with additional fields.
 type DatabaseInstance struct {
 	database_tf.DatabaseInstance
-	PurgeOnDelete types.Bool   `tfsdk:"purge_on_delete"`
-	WorkspaceID   types.String `tfsdk:"workspace_id"`
+	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -66,7 +65,6 @@ func (m DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	embeddedObj := m.DatabaseInstance.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
 	embeddedAttrs["purge_on_delete"] = m.PurgeOnDelete
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -80,7 +78,6 @@ func (m DatabaseInstance) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
 	attrTypes["purge_on_delete"] = types.BoolType
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -91,7 +88,6 @@ func (m DatabaseInstance) Type(ctx context.Context) attr.Type {
 func (m *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstance) {
 	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseInstance)
 	m.PurgeOnDelete = plan.PurgeOnDelete
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -100,7 +96,6 @@ func (m *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, p
 func (m *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstance) {
 	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
 	m.PurgeOnDelete = existingState.PurgeOnDelete
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -111,7 +106,6 @@ func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.Sche
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		c.SetOptional("purge_on_delete")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -142,7 +136,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 	updateRequest := database.UpdateDatabaseInstanceRequest{
 		DatabaseInstance: database_instance,
 		Name:             plan.Name.ValueString(),
-		UpdateMask:       "capacity,enable_pg_native_login,enable_readable_secondaries,node_count,parent_instance_ref,retention_window_in_days,stopped",
+		UpdateMask:       "capacity,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped",
 	}
 
 	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)

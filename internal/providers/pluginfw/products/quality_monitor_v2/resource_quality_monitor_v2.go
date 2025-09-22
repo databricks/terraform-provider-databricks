@@ -41,7 +41,6 @@ type QualityMonitorResource struct {
 // QualityMonitor extends the main model with additional fields.
 type QualityMonitor struct {
 	qualitymonitorv2_tf.QualityMonitor
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]ref
 func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.QualityMonitor.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m QualityMonitor) Type(ctx context.Context) attr.Type {
 	embeddedType := m.QualityMonitor.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m QualityMonitor) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan QualityMonitor) {
 	m.QualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, plan.QualityMonitor)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, pla
 // during read.
 func (m *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitor) {
 	m.QualityMonitor.SyncFieldsDuringRead(ctx, existingState.QualityMonitor)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -106,7 +101,6 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitor{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_id")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

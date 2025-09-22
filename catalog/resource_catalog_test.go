@@ -630,7 +630,7 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 }
 
 func TestCatalogCreateForeign(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockCatalogsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateCatalog{
@@ -665,12 +665,65 @@ func TestCatalogCreateForeign(t *testing.T) {
 		}
 		connection_name = "foo"
 		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "foreign_catalog", d.Get("name"))
-	assert.Equal(t, "foo", d.Get("connection_name"))
-	assert.Equal(t, "b", d.Get("comment"))
-	assert.Equal(t, map[string]interface{}{"database": "abcd"}, d.Get("options"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":            "foreign_catalog",
+		"comment":         "b",
+		"connection_name": "foo",
+		"options": map[string]any{
+			"database": "abcd",
+		},
+	})
+}
+
+func TestCatalogCreateForeignIceberg(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:           "foreign_catalog",
+				Comment:        "b",
+				Options:        map[string]string{"database": "abcd"},
+				ConnectionName: "foo",
+				StorageRoot:    "s3://my-bucket/warehouse",
+			}).Return(&catalog.CatalogInfo{
+				Name:           "foreign_catalog",
+				Comment:        "b",
+				Options:        map[string]string{"database": "abcd"},
+				ConnectionName: "foo",
+				MetastoreId:    "e",
+				StorageRoot:    "s3://my-bucket/warehouse",
+				Owner:          "f",
+			}, nil)
+			e.GetByName(mock.Anything, "foreign_catalog").Return(&catalog.CatalogInfo{
+				Name:           "foreign_catalog",
+				Comment:        "b",
+				Options:        map[string]string{"database": "abcd"},
+				ConnectionName: "foo",
+				MetastoreId:    "e",
+				StorageRoot:    "s3://my-bucket/warehouse",
+				Owner:          "f",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "foreign_catalog"
+		comment = "b"
+		options = {
+			database = "abcd"
+		}
+		connection_name = "foo"
+		storage_root = "s3://my-bucket/warehouse"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":            "foreign_catalog",
+		"comment":         "b",
+		"connection_name": "foo",
+		"options": map[string]any{
+			"database": "abcd",
+		},
+		"storage_root": "s3://my-bucket/warehouse",
+	})
 }
 
 func TestCatalogCreateIsolated(t *testing.T) {

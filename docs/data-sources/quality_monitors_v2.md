@@ -2,6 +2,8 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitors_v2 Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of quality monitors v2.
 
 -> **Note** This data source can only be used with an workspace-level provider!
@@ -18,7 +20,6 @@ data "databricks_quality_monitors_v2" "all" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 
 ## Attributes

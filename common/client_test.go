@@ -460,6 +460,7 @@ func TestUnifiedTerraformProvider_AccountConfigured__WorkspaceNotInCache(t *test
 		},
 	}
 	dc.SetAccountClient(mockAcc.AccountClient)
+	assert.True(t, dc.Config.IsAccountClient())
 
 	// Call the method with the workspace ID
 	workspaceClient, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
@@ -499,7 +500,7 @@ func TestUnifiedTerraformProvider_WorkspaceConfigured__WorkspaceNotInCache(t *te
 		WorkspaceId: 12345,
 	}).Return(mockWorkspace, nil)
 
-	// Create a DatabricksClient with the mock account client
+	// Create a DatabricksClient with the mock workspace client
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{},
@@ -508,6 +509,7 @@ func TestUnifiedTerraformProvider_WorkspaceConfigured__WorkspaceNotInCache(t *te
 
 	mockWorkspaceClient := mocks.NewMockWorkspaceClient(t)
 	dc.SetWorkspaceClient(mockWorkspaceClient.WorkspaceClient)
+	assert.False(t, dc.Config.IsAccountClient())
 
 	// Call the method with the workspace ID
 	workspaceClient, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")

@@ -28,8 +28,7 @@ func DataSourceQualityMonitors() datasource.DataSource {
 
 // QualityMonitorsData extends the main model with additional fields.
 type QualityMonitorsData struct {
-	QualityMonitorV2 types.List   `tfsdk:"quality_monitors"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
 }
 
 func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *QualityMonitorsDataSource) Metadata(ctx context.Context, req datasource
 func (r *QualityMonitorsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("quality_monitors")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var newState QualityMonitorsData
 	newState.QualityMonitorV2 = types.ListValueMust(qualitymonitorv2_tf.QualityMonitor{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

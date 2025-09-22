@@ -41,7 +41,6 @@ type EntityTagAssignmentResource struct {
 // EntityTagAssignment extends the main model with additional fields.
 type EntityTagAssignment struct {
 	catalog_tf.EntityTagAssignment
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.EntityTagAssignment.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
 	embeddedType := m.EntityTagAssignment.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan EntityTagAssignment) {
 	m.EntityTagAssignment.SyncFieldsDuringCreateOrUpdate(ctx, plan.EntityTagAssignment)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 // during read.
 func (m *EntityTagAssignment) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignment) {
 	m.EntityTagAssignment.SyncFieldsDuringRead(ctx, existingState.EntityTagAssignment)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -107,7 +102,6 @@ func (r *EntityTagAssignmentResource) Schema(ctx context.Context, req resource.S
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_type")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_name")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "tag_key")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

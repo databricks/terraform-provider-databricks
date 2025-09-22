@@ -35,7 +35,6 @@ type SettingDataSource struct {
 // SettingData extends the main model with additional fields.
 type SettingData struct {
 	settingsv2_tf.Setting
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.Setting.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m SettingData) Type(ctx context.Context) attr.Type {
 	embeddedType := m.Setting.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *SettingDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (r *SettingDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SettingData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

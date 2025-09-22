@@ -41,7 +41,6 @@ type DatabaseCatalogResource struct {
 // DatabaseCatalog extends the main model with additional fields.
 type DatabaseCatalog struct {
 	database_tf.DatabaseCatalog
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]re
 func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.DatabaseCatalog.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
 	embeddedType := m.DatabaseCatalog.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseCatalog) {
 	m.DatabaseCatalog.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseCatalog)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, pl
 // during read.
 func (m *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalog) {
 	m.DatabaseCatalog.SyncFieldsDuringRead(ctx, existingState.DatabaseCatalog)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.Met
 func (r *DatabaseCatalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

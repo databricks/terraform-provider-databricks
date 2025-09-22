@@ -28,8 +28,7 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 
 // ExternalMetadatasData extends the main model with additional fields.
 type ExternalMetadatasData struct {
-	ExternalMetadata types.List   `tfsdk:"external_metadata"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
 }
 
 func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *ExternalMetadatasDataSource) Metadata(ctx context.Context, req datasour
 func (r *ExternalMetadatasDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("external_metadata")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 
 	var newState ExternalMetadatasData
 	newState.ExternalMetadata = types.ListValueMust(catalog_tf.ExternalMetadata{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

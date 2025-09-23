@@ -209,6 +209,8 @@ func (o *CreateDatabaseInstanceRequest) SetDatabaseInstance(ctx context.Context,
 }
 
 type CreateDatabaseInstanceRoleRequest struct {
+	DatabaseInstanceName types.String `tfsdk:"-"`
+
 	DatabaseInstanceRole types.Object `tfsdk:"database_instance_role"`
 
 	InstanceName types.String `tfsdk:"-"`
@@ -240,6 +242,7 @@ func (to *CreateDatabaseInstanceRoleRequest) SyncFieldsDuringRead(ctx context.Co
 func (c CreateDatabaseInstanceRoleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["database_instance_role"] = attrs["database_instance_role"].SetRequired()
 	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 
 	return attrs
 }
@@ -264,6 +267,7 @@ func (o CreateDatabaseInstanceRoleRequest) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database_instance_name": o.DatabaseInstanceName,
 			"database_instance_role": o.DatabaseInstanceRole,
 			"instance_name":          o.InstanceName,
 		})
@@ -273,6 +277,7 @@ func (o CreateDatabaseInstanceRoleRequest) ToObjectValue(ctx context.Context) ba
 func (o CreateDatabaseInstanceRoleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database_instance_name": types.StringType,
 			"database_instance_role": DatabaseInstanceRole{}.Type(ctx),
 			"instance_name":          types.StringType,
 		},
@@ -969,10 +974,15 @@ func (o DatabaseInstanceRef) Type(ctx context.Context) attr.Type {
 
 // A DatabaseInstanceRole represents a Postgres role in a database instance.
 type DatabaseInstanceRole struct {
-	// API-exposed Postgres role attributes
+	// The desired API-exposed Postgres role attribute to associate with the
+	// role. Optional.
 	Attributes types.Object `tfsdk:"attributes"`
+	// The attributes that are applied to the role.
+	EffectiveAttributes types.Object `tfsdk:"effective_attributes"`
 	// The type of the role.
 	IdentityType types.String `tfsdk:"identity_type"`
+
+	InstanceName types.String `tfsdk:"instance_name"`
 	// An enum value for a standard role that this role is a member of.
 	MembershipRole types.String `tfsdk:"membership_role"`
 	// The name of the role. This is the unique identifier for the role in an
@@ -990,6 +1000,15 @@ func (to *DatabaseInstanceRole) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 			}
 		}
 	}
+	if !from.EffectiveAttributes.IsNull() && !from.EffectiveAttributes.IsUnknown() {
+		if toEffectiveAttributes, ok := to.GetEffectiveAttributes(ctx); ok {
+			if fromEffectiveAttributes, ok := from.GetEffectiveAttributes(ctx); ok {
+				// Recursively sync the fields of EffectiveAttributes
+				toEffectiveAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveAttributes)
+				to.SetEffectiveAttributes(ctx, toEffectiveAttributes)
+			}
+		}
+	}
 }
 
 func (to *DatabaseInstanceRole) SyncFieldsDuringRead(ctx context.Context, from DatabaseInstanceRole) {
@@ -1001,13 +1020,23 @@ func (to *DatabaseInstanceRole) SyncFieldsDuringRead(ctx context.Context, from D
 			}
 		}
 	}
+	if !from.EffectiveAttributes.IsNull() && !from.EffectiveAttributes.IsUnknown() {
+		if toEffectiveAttributes, ok := to.GetEffectiveAttributes(ctx); ok {
+			if fromEffectiveAttributes, ok := from.GetEffectiveAttributes(ctx); ok {
+				toEffectiveAttributes.SyncFieldsDuringRead(ctx, fromEffectiveAttributes)
+				to.SetEffectiveAttributes(ctx, toEffectiveAttributes)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstanceRole) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["effective_attributes"] = attrs["effective_attributes"].SetComputed()
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["instance_name"] = attrs["instance_name"].SetOptional()
 	attrs["membership_role"] = attrs["membership_role"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1021,7 +1050,8 @@ func (c DatabaseInstanceRole) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (a DatabaseInstanceRole) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"attributes": reflect.TypeOf(DatabaseInstanceRoleAttributes{}),
+		"attributes":           reflect.TypeOf(DatabaseInstanceRoleAttributes{}),
+		"effective_attributes": reflect.TypeOf(DatabaseInstanceRoleAttributes{}),
 	}
 }
 
@@ -1032,10 +1062,12 @@ func (o DatabaseInstanceRole) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":      o.Attributes,
-			"identity_type":   o.IdentityType,
-			"membership_role": o.MembershipRole,
-			"name":            o.Name,
+			"attributes":           o.Attributes,
+			"effective_attributes": o.EffectiveAttributes,
+			"identity_type":        o.IdentityType,
+			"instance_name":        o.InstanceName,
+			"membership_role":      o.MembershipRole,
+			"name":                 o.Name,
 		})
 }
 
@@ -1043,10 +1075,12 @@ func (o DatabaseInstanceRole) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o DatabaseInstanceRole) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":      DatabaseInstanceRoleAttributes{}.Type(ctx),
-			"identity_type":   types.StringType,
-			"membership_role": types.StringType,
-			"name":            types.StringType,
+			"attributes":           DatabaseInstanceRoleAttributes{}.Type(ctx),
+			"effective_attributes": DatabaseInstanceRoleAttributes{}.Type(ctx),
+			"identity_type":        types.StringType,
+			"instance_name":        types.StringType,
+			"membership_role":      types.StringType,
+			"name":                 types.StringType,
 		},
 	}
 }
@@ -1074,6 +1108,31 @@ func (o *DatabaseInstanceRole) GetAttributes(ctx context.Context) (DatabaseInsta
 func (o *DatabaseInstanceRole) SetAttributes(ctx context.Context, v DatabaseInstanceRoleAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.Attributes = vs
+}
+
+// GetEffectiveAttributes returns the value of the EffectiveAttributes field in DatabaseInstanceRole as
+// a DatabaseInstanceRoleAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DatabaseInstanceRole) GetEffectiveAttributes(ctx context.Context) (DatabaseInstanceRoleAttributes, bool) {
+	var e DatabaseInstanceRoleAttributes
+	if o.EffectiveAttributes.IsNull() || o.EffectiveAttributes.IsUnknown() {
+		return e, false
+	}
+	var v DatabaseInstanceRoleAttributes
+	d := o.EffectiveAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveAttributes sets the value of the EffectiveAttributes field in DatabaseInstanceRole.
+func (o *DatabaseInstanceRole) SetEffectiveAttributes(ctx context.Context, v DatabaseInstanceRoleAttributes) {
+	vs := v.ToObjectValue(ctx)
+	o.EffectiveAttributes = vs
 }
 
 // Attributes that can be granted to a Postgres role. We are only implementing a
@@ -2206,8 +2265,8 @@ func (to *ListDatabaseInstanceRolesResponse) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (c ListDatabaseInstanceRolesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_instance_roles"] = attrs["database_instance_roles"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["database_instance_roles"] = attrs["database_instance_roles"].SetComputed()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
 
 	return attrs
 }

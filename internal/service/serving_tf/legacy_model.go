@@ -10633,6 +10633,209 @@ func (o *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 	o.Routes = types.ListValueMust(t, vs)
 }
 
+type UpdateInferenceEndpointNotifications_SdkV2 struct {
+	// The email notification settings to update. Specify email addresses to
+	// notify when endpoint state changes occur.
+	EmailNotifications types.List `tfsdk:"email_notifications"`
+	// The name of the serving endpoint whose notifications are being updated.
+	// This field is required.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UpdateInferenceEndpointNotifications_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateInferenceEndpointNotifications_SdkV2) {
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+}
+
+func (to *UpdateInferenceEndpointNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateInferenceEndpointNotifications_SdkV2) {
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+}
+
+func (c UpdateInferenceEndpointNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInferenceEndpointNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateInferenceEndpointNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateInferenceEndpointNotifications_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateInferenceEndpointNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"email_notifications": o.EmailNotifications,
+			"name":                o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateInferenceEndpointNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"email_notifications": basetypes.ListType{
+				ElemType: EmailNotifications_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in UpdateInferenceEndpointNotifications_SdkV2 as
+// a EmailNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInferenceEndpointNotifications_SdkV2) GetEmailNotifications(ctx context.Context) (EmailNotifications_SdkV2, bool) {
+	var e EmailNotifications_SdkV2
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []EmailNotifications_SdkV2
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in UpdateInferenceEndpointNotifications_SdkV2.
+func (o *UpdateInferenceEndpointNotifications_SdkV2) SetEmailNotifications(ctx context.Context, v EmailNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+type UpdateInferenceEndpointNotificationsResponse_SdkV2 struct {
+	EmailNotifications types.List `tfsdk:"email_notifications"`
+
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *UpdateInferenceEndpointNotificationsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateInferenceEndpointNotificationsResponse_SdkV2) {
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+}
+
+func (to *UpdateInferenceEndpointNotificationsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateInferenceEndpointNotificationsResponse_SdkV2) {
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+}
+
+func (c UpdateInferenceEndpointNotificationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInferenceEndpointNotificationsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateInferenceEndpointNotificationsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateInferenceEndpointNotificationsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateInferenceEndpointNotificationsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"email_notifications": o.EmailNotifications,
+			"name":                o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateInferenceEndpointNotificationsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"email_notifications": basetypes.ListType{
+				ElemType: EmailNotifications_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in UpdateInferenceEndpointNotificationsResponse_SdkV2 as
+// a EmailNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInferenceEndpointNotificationsResponse_SdkV2) GetEmailNotifications(ctx context.Context) (EmailNotifications_SdkV2, bool) {
+	var e EmailNotifications_SdkV2
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []EmailNotifications_SdkV2
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in UpdateInferenceEndpointNotificationsResponse_SdkV2.
+func (o *UpdateInferenceEndpointNotificationsResponse_SdkV2) SetEmailNotifications(ctx context.Context, v EmailNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
 type UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// The name of the pt endpoint to update. This field is required.

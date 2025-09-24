@@ -36,6 +36,53 @@ The following arguments are required:
 * `securable_type` - Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`. Change forces creation of a new resource.
 * `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`.
 
+## Migration from databricks_catalog_workspace_binding
+
+You can migrate from the deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` without re-binding catalog.
+
+### For Terraform version >= 1.7.0
+
+Terraform 1.7 introduced the [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block in addition to the [import](https://developer.hashicorp.com/terraform/language/import) block introduced in Terraform 1.5.  Together they make import and removal of resources easier, avoiding manual execution of `terraform import` and `terraform state rm` commands.
+
+So with Terraform 1.7+, the migration looks as the following:
+
+* remove the `databricks_catalog_workspace_binding` resource and and replace it with the `databricks_workspace_binding`.
+* Add `import` and `removed` blocks like this:
+
+```hcl
+locals {
+  workspace_id = 1234567890
+}
+
+removed {
+  from = databricks_catalog_workspace_binding.sandbox
+  lifecycle {
+    destroy = false
+  }
+}
+
+resource "databricks_workspace_binding" "sandbox" {
+  securable_name = databricks_catalog.sandbox.name
+  workspace_id   = local.workspace_id
+}
+
+import {
+  to = databricks_workspace_binding.sandbox
+  id = "${local.workspace_id}|catalog|${databricks_catalog.sandbox.name}"
+}
+```
+
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
+* Run the `terraform apply` command to apply changes.
+* Remove the `import` and `removed` blocks from the code.
+
+### For Terraform version < 1.7.0
+
+* remove the `databricks_catalog_workspace_binding` resource and and replace it with the `databricks_workspace_binding`.
+* Remove the old resource from the state with the `terraform state rm databricks_catalog_workspace_binding.sandbox` command.
+* Import new resource with the `terraform import databricks_workspace_binding.sandbox "<workspace_id>|<securable_type>|<securable_name>"` command.
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
+
 ## Import
 
 This resource can be imported by using combination of workspace ID, securable type and name:

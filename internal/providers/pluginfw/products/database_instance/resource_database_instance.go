@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,8 +43,67 @@ type DatabaseInstanceResource struct {
 
 // DatabaseInstance extends the main model with additional fields.
 type DatabaseInstance struct {
-	database_tf.DatabaseInstance
-	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
+	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+	Capacity types.String `tfsdk:"capacity"`
+	// The refs of the child instances. This is only available if the instance
+	// is parent instance.
+	ChildInstanceRefs types.List `tfsdk:"child_instance_refs"`
+	// The timestamp when the instance was created.
+	CreationTime types.String `tfsdk:"creation_time"`
+	// The email of the creator of the instance.
+	Creator types.String `tfsdk:"creator"`
+	// Deprecated. The sku of the instance; this field will always match the
+	// value of capacity.
+	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
+	// Whether the instance has PG native password login enabled.
+	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
+	// Whether secondaries serving read-only traffic are enabled. Defaults to
+	// false.
+	EffectiveEnableReadableSecondaries types.Bool `tfsdk:"effective_enable_readable_secondaries"`
+	// The number of nodes in the instance, composed of 1 primary and 0 or more
+	// secondaries. Defaults to 1 primary and 0 secondaries.
+	EffectiveNodeCount types.Int64 `tfsdk:"effective_node_count"`
+	// The retention window for the instance. This is the time window in days
+	// for which the historical data is retained.
+	EffectiveRetentionWindowInDays types.Int64 `tfsdk:"effective_retention_window_in_days"`
+	// Whether the instance is stopped.
+	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
+	// Whether to enable PG native password login on the instance. Defaults to
+	// false.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
+	// Whether to enable secondaries to serve read-only traffic. Defaults to
+	// false.
+	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
+	// The name of the instance. This is the unique identifier for the instance.
+	Name types.String `tfsdk:"name"`
+	// The number of nodes in the instance, composed of 1 primary and 0 or more
+	// secondaries. Defaults to 1 primary and 0 secondaries. This field is input
+	// only, see effective_node_count for the output.
+	NodeCount types.Int64 `tfsdk:"node_count"`
+	// The ref of the parent instance. This is only available if the instance is
+	// child instance. Input: For specifying the parent instance to create a
+	// child instance. Optional. Output: Only populated if provided as input to
+	// create a child instance.
+	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
+	// The version of Postgres running on the instance.
+	PgVersion types.String `tfsdk:"pg_version"`
+	// The DNS endpoint to connect to the instance for read only access. This is
+	// only available if enable_readable_secondaries is true.
+	ReadOnlyDns types.String `tfsdk:"read_only_dns"`
+	// The DNS endpoint to connect to the instance for read+write access.
+	ReadWriteDns types.String `tfsdk:"read_write_dns"`
+	// The retention window for the instance. This is the time window in days
+	// for which the historical data is retained. The default value is 7 days.
+	// Valid values are 2 to 35 days.
+	RetentionWindowInDays types.Int64 `tfsdk:"retention_window_in_days"`
+	// The current state of the instance.
+	State types.String `tfsdk:"state"`
+	// Whether to stop the instance. An input only param, see effective_stopped
+	// for the output.
+	Stopped types.Bool `tfsdk:"stopped"`
+	// An immutable UUID identifier for the instance.
+	Uid           types.String `tfsdk:"uid"`
+	PurgeOnDelete types.Bool   `tfsdk:"purge_on_delete"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -52,7 +114,10 @@ type DatabaseInstance struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DatabaseInstance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.DatabaseInstance.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"child_instance_refs": reflect.TypeOf(database_tf.DatabaseInstanceRef{}),
+		"parent_instance_ref": reflect.TypeOf(database_tf.DatabaseInstanceRef{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -62,40 +127,202 @@ func (m DatabaseInstance) GetComplexFieldTypes(ctx context.Context) map[string]r
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstance
 // only implements ToObjectValue() and Type().
 func (m DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.DatabaseInstance.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["purge_on_delete"] = m.PurgeOnDelete
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"capacity": m.Capacity,
+			"child_instance_refs":                   m.ChildInstanceRefs,
+			"creation_time":                         m.CreationTime,
+			"creator":                               m.Creator,
+			"effective_capacity":                    m.EffectiveCapacity,
+			"effective_enable_pg_native_login":      m.EffectiveEnablePgNativeLogin,
+			"effective_enable_readable_secondaries": m.EffectiveEnableReadableSecondaries,
+			"effective_node_count":                  m.EffectiveNodeCount,
+			"effective_retention_window_in_days":    m.EffectiveRetentionWindowInDays,
+			"effective_stopped":                     m.EffectiveStopped,
+			"enable_pg_native_login":                m.EnablePgNativeLogin,
+			"enable_readable_secondaries":           m.EnableReadableSecondaries,
+			"name":                                  m.Name,
+			"node_count":                            m.NodeCount,
+			"parent_instance_ref":                   m.ParentInstanceRef,
+			"pg_version":                            m.PgVersion,
+			"read_only_dns":                         m.ReadOnlyDns,
+			"read_write_dns":                        m.ReadWriteDns,
+			"retention_window_in_days":              m.RetentionWindowInDays,
+			"state":                                 m.State,
+			"stopped":                               m.Stopped,
+			"uid":                                   m.Uid,
+
+			"purge_on_delete": m.PurgeOnDelete,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DatabaseInstance) Type(ctx context.Context) attr.Type {
-	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["purge_on_delete"] = types.BoolType
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+			"child_instance_refs": basetypes.ListType{
+				ElemType: database_tf.DatabaseInstanceRef{}.Type(ctx),
+			},
+			"creation_time":                         types.StringType,
+			"creator":                               types.StringType,
+			"effective_capacity":                    types.StringType,
+			"effective_enable_pg_native_login":      types.BoolType,
+			"effective_enable_readable_secondaries": types.BoolType,
+			"effective_node_count":                  types.Int64Type,
+			"effective_retention_window_in_days":    types.Int64Type,
+			"effective_stopped":                     types.BoolType,
+			"enable_pg_native_login":                types.BoolType,
+			"enable_readable_secondaries":           types.BoolType,
+			"name":                                  types.StringType,
+			"node_count":                            types.Int64Type,
+			"parent_instance_ref":                   database_tf.DatabaseInstanceRef{}.Type(ctx),
+			"pg_version":                            types.StringType,
+			"read_only_dns":                         types.StringType,
+			"read_write_dns":                        types.StringType,
+			"retention_window_in_days":              types.Int64Type,
+			"state":                                 types.StringType,
+			"stopped":                               types.BoolType,
+			"uid":                                   types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"purge_on_delete": types.BoolType,
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseInstance) {
-	m.DatabaseInstance.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseInstance)
-	m.PurgeOnDelete = plan.PurgeOnDelete
+func (to *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseInstance) {
+	if !from.ChildInstanceRefs.IsNull() && !from.ChildInstanceRefs.IsUnknown() && to.ChildInstanceRefs.IsNull() && len(from.ChildInstanceRefs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ChildInstanceRefs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ChildInstanceRefs = from.ChildInstanceRefs
+	}
+	if !from.EnablePgNativeLogin.IsUnknown() && !from.EnablePgNativeLogin.IsNull() {
+		// EnablePgNativeLogin is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.EnablePgNativeLogin = from.EnablePgNativeLogin
+	}
+	if !from.ParentInstanceRef.IsNull() && !from.ParentInstanceRef.IsUnknown() {
+		if toParentInstanceRef, ok := to.GetParentInstanceRef(ctx); ok {
+			if fromParentInstanceRef, ok := from.GetParentInstanceRef(ctx); ok {
+				// Recursively sync the fields of ParentInstanceRef
+				toParentInstanceRef.SyncFieldsDuringCreateOrUpdate(ctx, fromParentInstanceRef)
+				to.SetParentInstanceRef(ctx, toParentInstanceRef)
+			}
+		}
+	}
+	to.PurgeOnDelete = from.PurgeOnDelete
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstance) {
-	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
-	m.PurgeOnDelete = existingState.PurgeOnDelete
+func (to *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, from DatabaseInstance) {
+	if !from.ChildInstanceRefs.IsNull() && !from.ChildInstanceRefs.IsUnknown() && to.ChildInstanceRefs.IsNull() && len(from.ChildInstanceRefs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ChildInstanceRefs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ChildInstanceRefs = from.ChildInstanceRefs
+	}
+	if !from.EnablePgNativeLogin.IsUnknown() && !from.EnablePgNativeLogin.IsNull() {
+		// EnablePgNativeLogin is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.EnablePgNativeLogin = from.EnablePgNativeLogin
+	}
+	if !from.ParentInstanceRef.IsNull() && !from.ParentInstanceRef.IsUnknown() {
+		if toParentInstanceRef, ok := to.GetParentInstanceRef(ctx); ok {
+			if fromParentInstanceRef, ok := from.GetParentInstanceRef(ctx); ok {
+				toParentInstanceRef.SyncFieldsDuringRead(ctx, fromParentInstanceRef)
+				to.SetParentInstanceRef(ctx, toParentInstanceRef)
+			}
+		}
+	}
+	to.PurgeOnDelete = from.PurgeOnDelete
+}
+
+func (m DatabaseInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetOptional()
+	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["effective_capacity"] = attrs["effective_capacity"].SetComputed()
+	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
+	attrs["effective_enable_readable_secondaries"] = attrs["effective_enable_readable_secondaries"].SetComputed()
+	attrs["effective_node_count"] = attrs["effective_node_count"].SetComputed()
+	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
+	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["node_count"] = attrs["node_count"].SetOptional()
+	attrs["parent_instance_ref"] = attrs["parent_instance_ref"].SetOptional()
+	attrs["parent_instance_ref"] = attrs["parent_instance_ref"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["read_only_dns"] = attrs["read_only_dns"].SetComputed()
+	attrs["read_write_dns"] = attrs["read_write_dns"].SetComputed()
+	attrs["retention_window_in_days"] = attrs["retention_window_in_days"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["stopped"] = attrs["stopped"].SetOptional()
+	attrs["uid"] = attrs["uid"].SetComputed()
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
+	return attrs
+}
+
+// GetChildInstanceRefs returns the value of the ChildInstanceRefs field in DatabaseInstance as
+// a slice of database_tf.DatabaseInstanceRef values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DatabaseInstance) GetChildInstanceRefs(ctx context.Context) ([]database_tf.DatabaseInstanceRef, bool) {
+	if m.ChildInstanceRefs.IsNull() || m.ChildInstanceRefs.IsUnknown() {
+		return nil, false
+	}
+	var v []database_tf.DatabaseInstanceRef
+	d := m.ChildInstanceRefs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChildInstanceRefs sets the value of the ChildInstanceRefs field in DatabaseInstance.
+func (m *DatabaseInstance) SetChildInstanceRefs(ctx context.Context, v []database_tf.DatabaseInstanceRef) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["child_instance_refs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ChildInstanceRefs = types.ListValueMust(t, vs)
+}
+
+// GetParentInstanceRef returns the value of the ParentInstanceRef field in DatabaseInstance as
+// a database_tf.DatabaseInstanceRef value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DatabaseInstance) GetParentInstanceRef(ctx context.Context) (database_tf.DatabaseInstanceRef, bool) {
+	var e database_tf.DatabaseInstanceRef
+	if m.ParentInstanceRef.IsNull() || m.ParentInstanceRef.IsUnknown() {
+		return e, false
+	}
+	var v database_tf.DatabaseInstanceRef
+	d := m.ParentInstanceRef.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParentInstanceRef sets the value of the ParentInstanceRef field in DatabaseInstance.
+func (m *DatabaseInstance) SetParentInstanceRef(ctx context.Context, v database_tf.DatabaseInstanceRef) {
+	vs := v.ToObjectValue(ctx)
+	m.ParentInstanceRef = vs
 }
 
 func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,11 +330,7 @@ func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.Me
 }
 
 func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		c.SetOptional("purge_on_delete")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseInstance{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks database_instance",
 		Attributes:  attrs,

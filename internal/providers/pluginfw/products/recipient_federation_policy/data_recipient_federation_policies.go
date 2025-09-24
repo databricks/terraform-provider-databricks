@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type FederationPoliciesData struct {
 
 func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(sharing_tf.FederationPolicy{}),
+		"policies": reflect.TypeOf(FederationPolicyData{}),
 	}
+}
+
+func (m FederationPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policies"] = attrs["policies"].SetComputed()
+	return attrs
 }
 
 type FederationPoliciesDataSource struct {
@@ -46,10 +50,7 @@ func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasou
 }
 
 func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("policies")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,
@@ -90,7 +91,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var federation_policy sharing_tf.FederationPolicy
+		var federation_policy FederationPolicyData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &federation_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +100,6 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 	}
 
 	var newState FederationPoliciesData
-	newState.RecipientFederationPolicies = types.ListValueMust(sharing_tf.FederationPolicy{}.Type(ctx), results)
+	newState.RecipientFederationPolicies = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

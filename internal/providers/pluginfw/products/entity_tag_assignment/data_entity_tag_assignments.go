@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -35,8 +34,15 @@ type EntityTagAssignmentsData struct {
 
 func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tag_assignments": reflect.TypeOf(catalog_tf.EntityTagAssignment{}),
+		"tag_assignments": reflect.TypeOf(EntityTagAssignmentData{}),
 	}
+}
+
+func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_assignments"] = attrs["tag_assignments"].SetComputed()
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	return attrs
 }
 
 type EntityTagAssignmentsDataSource struct {
@@ -48,12 +54,7 @@ func (r *EntityTagAssignmentsDataSource) Metadata(ctx context.Context, req datas
 }
 
 func (r *EntityTagAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("tag_assignments")
-		c.SetRequired("entity_type")
-		c.SetRequired("entity_name")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks EntityTagAssignment",
 		Attributes:  attrs,
@@ -94,7 +95,7 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var entity_tag_assignment catalog_tf.EntityTagAssignment
+		var entity_tag_assignment EntityTagAssignmentData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &entity_tag_assignment)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -103,6 +104,6 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var newState EntityTagAssignmentsData
-	newState.EntityTagAssignments = types.ListValueMust(catalog_tf.EntityTagAssignment{}.Type(ctx), results)
+	newState.EntityTagAssignments = types.ListValueMust(EntityTagAssignmentData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

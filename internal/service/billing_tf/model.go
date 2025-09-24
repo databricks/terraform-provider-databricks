@@ -38,7 +38,7 @@ func (to *ActionConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *ActionConfiguration) SyncFieldsDuringRead(ctx context.Context, from ActionConfiguration) {
 }
 
-func (c ActionConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ActionConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_configuration_id"] = attrs["action_configuration_id"].SetOptional()
 	attrs["action_type"] = attrs["action_type"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
@@ -53,25 +53,25 @@ func (c ActionConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ActionConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ActionConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ActionConfiguration
 // only implements ToObjectValue() and Type().
-func (o ActionConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ActionConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"action_configuration_id": o.ActionConfigurationId,
-			"action_type":             o.ActionType,
-			"target":                  o.Target,
+			"action_configuration_id": m.ActionConfigurationId,
+			"action_type":             m.ActionType,
+			"target":                  m.Target,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ActionConfiguration) Type(ctx context.Context) attr.Type {
+func (m ActionConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configuration_id": types.StringType,
@@ -118,7 +118,7 @@ func (to *AlertConfiguration) SyncFieldsDuringRead(ctx context.Context, from Ale
 	}
 }
 
-func (c AlertConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AlertConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_configurations"] = attrs["action_configurations"].SetOptional()
 	attrs["alert_configuration_id"] = attrs["alert_configuration_id"].SetOptional()
 	attrs["quantity_threshold"] = attrs["quantity_threshold"].SetOptional()
@@ -136,7 +136,7 @@ func (c AlertConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AlertConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AlertConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"action_configurations": reflect.TypeOf(ActionConfiguration{}),
 	}
@@ -145,21 +145,21 @@ func (a AlertConfiguration) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AlertConfiguration
 // only implements ToObjectValue() and Type().
-func (o AlertConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AlertConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"action_configurations":  o.ActionConfigurations,
-			"alert_configuration_id": o.AlertConfigurationId,
-			"quantity_threshold":     o.QuantityThreshold,
-			"quantity_type":          o.QuantityType,
-			"time_period":            o.TimePeriod,
-			"trigger_type":           o.TriggerType,
+			"action_configurations":  m.ActionConfigurations,
+			"alert_configuration_id": m.AlertConfigurationId,
+			"quantity_threshold":     m.QuantityThreshold,
+			"quantity_type":          m.QuantityType,
+			"time_period":            m.TimePeriod,
+			"trigger_type":           m.TriggerType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AlertConfiguration) Type(ctx context.Context) attr.Type {
+func (m AlertConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
@@ -177,12 +177,12 @@ func (o AlertConfiguration) Type(ctx context.Context) attr.Type {
 // GetActionConfigurations returns the value of the ActionConfigurations field in AlertConfiguration as
 // a slice of ActionConfiguration values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AlertConfiguration) GetActionConfigurations(ctx context.Context) ([]ActionConfiguration, bool) {
-	if o.ActionConfigurations.IsNull() || o.ActionConfigurations.IsUnknown() {
+func (m *AlertConfiguration) GetActionConfigurations(ctx context.Context) ([]ActionConfiguration, bool) {
+	if m.ActionConfigurations.IsNull() || m.ActionConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []ActionConfiguration
-	d := o.ActionConfigurations.ElementsAs(ctx, &v, true)
+	d := m.ActionConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -190,14 +190,14 @@ func (o *AlertConfiguration) GetActionConfigurations(ctx context.Context) ([]Act
 }
 
 // SetActionConfigurations sets the value of the ActionConfigurations field in AlertConfiguration.
-func (o *AlertConfiguration) SetActionConfigurations(ctx context.Context, v []ActionConfiguration) {
+func (m *AlertConfiguration) SetActionConfigurations(ctx context.Context, v []ActionConfiguration) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.ActionConfigurations = types.ListValueMust(t, vs)
+	m.ActionConfigurations = types.ListValueMust(t, vs)
 }
 
 type BudgetConfiguration struct {
@@ -256,7 +256,7 @@ func (to *BudgetConfiguration) SyncFieldsDuringRead(ctx context.Context, from Bu
 	}
 }
 
-func (c BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["budget_configuration_id"] = attrs["budget_configuration_id"].SetOptional()
@@ -275,7 +275,7 @@ func (c BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(AlertConfiguration{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -285,22 +285,22 @@ func (a BudgetConfiguration) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetConfiguration
 // only implements ToObjectValue() and Type().
-func (o BudgetConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":              o.AccountId,
-			"alert_configurations":    o.AlertConfigurations,
-			"budget_configuration_id": o.BudgetConfigurationId,
-			"create_time":             o.CreateTime,
-			"display_name":            o.DisplayName,
-			"filter":                  o.Filter,
-			"update_time":             o.UpdateTime,
+			"account_id":              m.AccountId,
+			"alert_configurations":    m.AlertConfigurations,
+			"budget_configuration_id": m.BudgetConfigurationId,
+			"create_time":             m.CreateTime,
+			"display_name":            m.DisplayName,
+			"filter":                  m.Filter,
+			"update_time":             m.UpdateTime,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetConfiguration) Type(ctx context.Context) attr.Type {
+func (m BudgetConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
@@ -319,12 +319,12 @@ func (o BudgetConfiguration) Type(ctx context.Context) attr.Type {
 // GetAlertConfigurations returns the value of the AlertConfigurations field in BudgetConfiguration as
 // a slice of AlertConfiguration values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfiguration) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
-	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+func (m *BudgetConfiguration) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
+	if m.AlertConfigurations.IsNull() || m.AlertConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []AlertConfiguration
-	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	d := m.AlertConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -332,26 +332,26 @@ func (o *BudgetConfiguration) GetAlertConfigurations(ctx context.Context) ([]Ale
 }
 
 // SetAlertConfigurations sets the value of the AlertConfigurations field in BudgetConfiguration.
-func (o *BudgetConfiguration) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
+func (m *BudgetConfiguration) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AlertConfigurations = types.ListValueMust(t, vs)
+	m.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
 // GetFilter returns the value of the Filter field in BudgetConfiguration as
 // a BudgetConfigurationFilter value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+func (m *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
 	var e BudgetConfigurationFilter
-	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+	if m.Filter.IsNull() || m.Filter.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfigurationFilter
-	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -362,9 +362,9 @@ func (o *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfiguratio
 }
 
 // SetFilter sets the value of the Filter field in BudgetConfiguration.
-func (o *BudgetConfiguration) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+func (m *BudgetConfiguration) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
 	vs := v.ToObjectValue(ctx)
-	o.Filter = vs
+	m.Filter = vs
 }
 
 type BudgetConfigurationFilter struct {
@@ -411,7 +411,7 @@ func (to *BudgetConfigurationFilter) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c BudgetConfigurationFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetConfigurationFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
@@ -425,7 +425,7 @@ func (c BudgetConfigurationFilter) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetConfigurationFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetConfigurationFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tags":         reflect.TypeOf(BudgetConfigurationFilterTagClause{}),
 		"workspace_id": reflect.TypeOf(BudgetConfigurationFilterWorkspaceIdClause{}),
@@ -435,17 +435,17 @@ func (a BudgetConfigurationFilter) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetConfigurationFilter
 // only implements ToObjectValue() and Type().
-func (o BudgetConfigurationFilter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetConfigurationFilter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"tags":         o.Tags,
-			"workspace_id": o.WorkspaceId,
+			"tags":         m.Tags,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetConfigurationFilter) Type(ctx context.Context) attr.Type {
+func (m BudgetConfigurationFilter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tags": basetypes.ListType{
@@ -459,12 +459,12 @@ func (o BudgetConfigurationFilter) Type(ctx context.Context) attr.Type {
 // GetTags returns the value of the Tags field in BudgetConfigurationFilter as
 // a slice of BudgetConfigurationFilterTagClause values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfigurationFilter) GetTags(ctx context.Context) ([]BudgetConfigurationFilterTagClause, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+func (m *BudgetConfigurationFilter) GetTags(ctx context.Context) ([]BudgetConfigurationFilterTagClause, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
 		return nil, false
 	}
 	var v []BudgetConfigurationFilterTagClause
-	d := o.Tags.ElementsAs(ctx, &v, true)
+	d := m.Tags.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -472,26 +472,26 @@ func (o *BudgetConfigurationFilter) GetTags(ctx context.Context) ([]BudgetConfig
 }
 
 // SetTags sets the value of the Tags field in BudgetConfigurationFilter.
-func (o *BudgetConfigurationFilter) SetTags(ctx context.Context, v []BudgetConfigurationFilterTagClause) {
+func (m *BudgetConfigurationFilter) SetTags(ctx context.Context, v []BudgetConfigurationFilterTagClause) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.ListValueMust(t, vs)
+	m.Tags = types.ListValueMust(t, vs)
 }
 
 // GetWorkspaceId returns the value of the WorkspaceId field in BudgetConfigurationFilter as
 // a BudgetConfigurationFilterWorkspaceIdClause value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetConfigurationFilterWorkspaceIdClause, bool) {
+func (m *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetConfigurationFilterWorkspaceIdClause, bool) {
 	var e BudgetConfigurationFilterWorkspaceIdClause
-	if o.WorkspaceId.IsNull() || o.WorkspaceId.IsUnknown() {
+	if m.WorkspaceId.IsNull() || m.WorkspaceId.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfigurationFilterWorkspaceIdClause
-	d := o.WorkspaceId.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.WorkspaceId.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -502,9 +502,9 @@ func (o *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetC
 }
 
 // SetWorkspaceId sets the value of the WorkspaceId field in BudgetConfigurationFilter.
-func (o *BudgetConfigurationFilter) SetWorkspaceId(ctx context.Context, v BudgetConfigurationFilterWorkspaceIdClause) {
+func (m *BudgetConfigurationFilter) SetWorkspaceId(ctx context.Context, v BudgetConfigurationFilterWorkspaceIdClause) {
 	vs := v.ToObjectValue(ctx)
-	o.WorkspaceId = vs
+	m.WorkspaceId = vs
 }
 
 type BudgetConfigurationFilterClause struct {
@@ -531,7 +531,7 @@ func (to *BudgetConfigurationFilterClause) SyncFieldsDuringRead(ctx context.Cont
 	}
 }
 
-func (c BudgetConfigurationFilterClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetConfigurationFilterClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operator"] = attrs["operator"].SetOptional()
 	attrs["values"] = attrs["values"].SetOptional()
 
@@ -545,7 +545,7 @@ func (c BudgetConfigurationFilterClause) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(types.String{}),
 	}
@@ -554,17 +554,17 @@ func (a BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Contex
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetConfigurationFilterClause
 // only implements ToObjectValue() and Type().
-func (o BudgetConfigurationFilterClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetConfigurationFilterClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"operator": o.Operator,
-			"values":   o.Values,
+			"operator": m.Operator,
+			"values":   m.Values,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetConfigurationFilterClause) Type(ctx context.Context) attr.Type {
+func (m BudgetConfigurationFilterClause) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"operator": types.StringType,
@@ -578,12 +578,12 @@ func (o BudgetConfigurationFilterClause) Type(ctx context.Context) attr.Type {
 // GetValues returns the value of the Values field in BudgetConfigurationFilterClause as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfigurationFilterClause) GetValues(ctx context.Context) ([]types.String, bool) {
-	if o.Values.IsNull() || o.Values.IsUnknown() {
+func (m *BudgetConfigurationFilterClause) GetValues(ctx context.Context) ([]types.String, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Values.ElementsAs(ctx, &v, true)
+	d := m.Values.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -591,14 +591,14 @@ func (o *BudgetConfigurationFilterClause) GetValues(ctx context.Context) ([]type
 }
 
 // SetValues sets the value of the Values field in BudgetConfigurationFilterClause.
-func (o *BudgetConfigurationFilterClause) SetValues(ctx context.Context, v []types.String) {
+func (m *BudgetConfigurationFilterClause) SetValues(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Values = types.ListValueMust(t, vs)
+	m.Values = types.ListValueMust(t, vs)
 }
 
 type BudgetConfigurationFilterTagClause struct {
@@ -630,7 +630,7 @@ func (to *BudgetConfigurationFilterTagClause) SyncFieldsDuringRead(ctx context.C
 	}
 }
 
-func (c BudgetConfigurationFilterTagClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetConfigurationFilterTagClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["key"] = attrs["key"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
 
@@ -644,7 +644,7 @@ func (c BudgetConfigurationFilterTagClause) ApplySchemaCustomizations(attrs map[
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetConfigurationFilterTagClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"value": reflect.TypeOf(BudgetConfigurationFilterClause{}),
 	}
@@ -653,17 +653,17 @@ func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes(ctx context.Con
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetConfigurationFilterTagClause
 // only implements ToObjectValue() and Type().
-func (o BudgetConfigurationFilterTagClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetConfigurationFilterTagClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":   o.Key,
-			"value": o.Value,
+			"key":   m.Key,
+			"value": m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetConfigurationFilterTagClause) Type(ctx context.Context) attr.Type {
+func (m BudgetConfigurationFilterTagClause) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
@@ -675,13 +675,13 @@ func (o BudgetConfigurationFilterTagClause) Type(ctx context.Context) attr.Type 
 // GetValue returns the value of the Value field in BudgetConfigurationFilterTagClause as
 // a BudgetConfigurationFilterClause value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (BudgetConfigurationFilterClause, bool) {
+func (m *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (BudgetConfigurationFilterClause, bool) {
 	var e BudgetConfigurationFilterClause
-	if o.Value.IsNull() || o.Value.IsUnknown() {
+	if m.Value.IsNull() || m.Value.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfigurationFilterClause
-	d := o.Value.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Value.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -692,9 +692,9 @@ func (o *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (Budg
 }
 
 // SetValue sets the value of the Value field in BudgetConfigurationFilterTagClause.
-func (o *BudgetConfigurationFilterTagClause) SetValue(ctx context.Context, v BudgetConfigurationFilterClause) {
+func (m *BudgetConfigurationFilterTagClause) SetValue(ctx context.Context, v BudgetConfigurationFilterClause) {
 	vs := v.ToObjectValue(ctx)
-	o.Value = vs
+	m.Value = vs
 }
 
 type BudgetConfigurationFilterWorkspaceIdClause struct {
@@ -721,7 +721,7 @@ func (to *BudgetConfigurationFilterWorkspaceIdClause) SyncFieldsDuringRead(ctx c
 	}
 }
 
-func (c BudgetConfigurationFilterWorkspaceIdClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetConfigurationFilterWorkspaceIdClause) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operator"] = attrs["operator"].SetOptional()
 	attrs["values"] = attrs["values"].SetOptional()
 
@@ -735,7 +735,7 @@ func (c BudgetConfigurationFilterWorkspaceIdClause) ApplySchemaCustomizations(at
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(types.Int64{}),
 	}
@@ -744,17 +744,17 @@ func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx con
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetConfigurationFilterWorkspaceIdClause
 // only implements ToObjectValue() and Type().
-func (o BudgetConfigurationFilterWorkspaceIdClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetConfigurationFilterWorkspaceIdClause) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"operator": o.Operator,
-			"values":   o.Values,
+			"operator": m.Operator,
+			"values":   m.Values,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetConfigurationFilterWorkspaceIdClause) Type(ctx context.Context) attr.Type {
+func (m BudgetConfigurationFilterWorkspaceIdClause) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"operator": types.StringType,
@@ -768,12 +768,12 @@ func (o BudgetConfigurationFilterWorkspaceIdClause) Type(ctx context.Context) at
 // GetValues returns the value of the Values field in BudgetConfigurationFilterWorkspaceIdClause as
 // a slice of types.Int64 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetConfigurationFilterWorkspaceIdClause) GetValues(ctx context.Context) ([]types.Int64, bool) {
-	if o.Values.IsNull() || o.Values.IsUnknown() {
+func (m *BudgetConfigurationFilterWorkspaceIdClause) GetValues(ctx context.Context) ([]types.Int64, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
 		return nil, false
 	}
 	var v []types.Int64
-	d := o.Values.ElementsAs(ctx, &v, true)
+	d := m.Values.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -781,14 +781,14 @@ func (o *BudgetConfigurationFilterWorkspaceIdClause) GetValues(ctx context.Conte
 }
 
 // SetValues sets the value of the Values field in BudgetConfigurationFilterWorkspaceIdClause.
-func (o *BudgetConfigurationFilterWorkspaceIdClause) SetValues(ctx context.Context, v []types.Int64) {
+func (m *BudgetConfigurationFilterWorkspaceIdClause) SetValues(ctx context.Context, v []types.Int64) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Values = types.ListValueMust(t, vs)
+	m.Values = types.ListValueMust(t, vs)
 }
 
 // Contains the BudgetPolicy details.
@@ -839,11 +839,10 @@ func (to *BudgetPolicy) SyncFieldsDuringRead(ctx context.Context, from BudgetPol
 	}
 }
 
-func (c BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["binding_workspace_ids"] = attrs["binding_workspace_ids"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
-	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["policy_name"] = attrs["policy_name"].SetOptional()
 
 	return attrs
@@ -856,7 +855,7 @@ func (c BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BudgetPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BudgetPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"binding_workspace_ids": reflect.TypeOf(types.Int64{}),
 		"custom_tags":           reflect.TypeOf(compute_tf.CustomPolicyTag{}),
@@ -866,19 +865,19 @@ func (a BudgetPolicy) GetComplexFieldTypes(ctx context.Context) map[string]refle
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetPolicy
 // only implements ToObjectValue() and Type().
-func (o BudgetPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BudgetPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"binding_workspace_ids": o.BindingWorkspaceIds,
-			"custom_tags":           o.CustomTags,
-			"policy_id":             o.PolicyId,
-			"policy_name":           o.PolicyName,
+			"binding_workspace_ids": m.BindingWorkspaceIds,
+			"custom_tags":           m.CustomTags,
+			"policy_id":             m.PolicyId,
+			"policy_name":           m.PolicyName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BudgetPolicy) Type(ctx context.Context) attr.Type {
+func (m BudgetPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"binding_workspace_ids": basetypes.ListType{
@@ -896,12 +895,12 @@ func (o BudgetPolicy) Type(ctx context.Context) attr.Type {
 // GetBindingWorkspaceIds returns the value of the BindingWorkspaceIds field in BudgetPolicy as
 // a slice of types.Int64 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetPolicy) GetBindingWorkspaceIds(ctx context.Context) ([]types.Int64, bool) {
-	if o.BindingWorkspaceIds.IsNull() || o.BindingWorkspaceIds.IsUnknown() {
+func (m *BudgetPolicy) GetBindingWorkspaceIds(ctx context.Context) ([]types.Int64, bool) {
+	if m.BindingWorkspaceIds.IsNull() || m.BindingWorkspaceIds.IsUnknown() {
 		return nil, false
 	}
 	var v []types.Int64
-	d := o.BindingWorkspaceIds.ElementsAs(ctx, &v, true)
+	d := m.BindingWorkspaceIds.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -909,25 +908,25 @@ func (o *BudgetPolicy) GetBindingWorkspaceIds(ctx context.Context) ([]types.Int6
 }
 
 // SetBindingWorkspaceIds sets the value of the BindingWorkspaceIds field in BudgetPolicy.
-func (o *BudgetPolicy) SetBindingWorkspaceIds(ctx context.Context, v []types.Int64) {
+func (m *BudgetPolicy) SetBindingWorkspaceIds(ctx context.Context, v []types.Int64) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["binding_workspace_ids"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["binding_workspace_ids"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.BindingWorkspaceIds = types.ListValueMust(t, vs)
+	m.BindingWorkspaceIds = types.ListValueMust(t, vs)
 }
 
 // GetCustomTags returns the value of the CustomTags field in BudgetPolicy as
 // a slice of compute_tf.CustomPolicyTag values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BudgetPolicy) GetCustomTags(ctx context.Context) ([]compute_tf.CustomPolicyTag, bool) {
-	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+func (m *BudgetPolicy) GetCustomTags(ctx context.Context) ([]compute_tf.CustomPolicyTag, bool) {
+	if m.CustomTags.IsNull() || m.CustomTags.IsUnknown() {
 		return nil, false
 	}
 	var v []compute_tf.CustomPolicyTag
-	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	d := m.CustomTags.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -935,14 +934,14 @@ func (o *BudgetPolicy) GetCustomTags(ctx context.Context) ([]compute_tf.CustomPo
 }
 
 // SetCustomTags sets the value of the CustomTags field in BudgetPolicy.
-func (o *BudgetPolicy) SetCustomTags(ctx context.Context, v []compute_tf.CustomPolicyTag) {
+func (m *BudgetPolicy) SetCustomTags(ctx context.Context, v []compute_tf.CustomPolicyTag) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.CustomTags = types.ListValueMust(t, vs)
+	m.CustomTags = types.ListValueMust(t, vs)
 }
 
 type CreateBillingUsageDashboardRequest struct {
@@ -961,7 +960,7 @@ func (to *CreateBillingUsageDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx
 func (to *CreateBillingUsageDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from CreateBillingUsageDashboardRequest) {
 }
 
-func (c CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -976,24 +975,24 @@ func (c CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBillingUsageDashboardRequest
 // only implements ToObjectValue() and Type().
-func (o CreateBillingUsageDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBillingUsageDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard_type": o.DashboardType,
-			"workspace_id":   o.WorkspaceId,
+			"dashboard_type": m.DashboardType,
+			"workspace_id":   m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type {
+func (m CreateBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_type": types.StringType,
@@ -1013,7 +1012,7 @@ func (to *CreateBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(ct
 func (to *CreateBillingUsageDashboardResponse) SyncFieldsDuringRead(ctx context.Context, from CreateBillingUsageDashboardResponse) {
 }
 
-func (c CreateBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetOptional()
 
 	return attrs
@@ -1026,23 +1025,23 @@ func (c CreateBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBillingUsageDashboardResponse
 // only implements ToObjectValue() and Type().
-func (o CreateBillingUsageDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBillingUsageDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard_id": o.DashboardId,
+			"dashboard_id": m.DashboardId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
+func (m CreateBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -1100,7 +1099,7 @@ func (to *CreateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Cont
 	}
 }
 
-func (c CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -1116,7 +1115,7 @@ func (c CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(CreateBudgetConfigurationBudgetAlertConfigurations{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -1126,19 +1125,19 @@ func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Contex
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetConfigurationBudget
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":           o.AccountId,
-			"alert_configurations": o.AlertConfigurations,
-			"display_name":         o.DisplayName,
-			"filter":               o.Filter,
+			"account_id":           m.AccountId,
+			"alert_configurations": m.AlertConfigurations,
+			"display_name":         m.DisplayName,
+			"filter":               m.Filter,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
@@ -1154,12 +1153,12 @@ func (o CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 // GetAlertConfigurations returns the value of the AlertConfigurations field in CreateBudgetConfigurationBudget as
 // a slice of CreateBudgetConfigurationBudgetAlertConfigurations values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetAlertConfigurations, bool) {
-	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+func (m *CreateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetAlertConfigurations, bool) {
+	if m.AlertConfigurations.IsNull() || m.AlertConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []CreateBudgetConfigurationBudgetAlertConfigurations
-	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	d := m.AlertConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1167,26 +1166,26 @@ func (o *CreateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Con
 }
 
 // SetAlertConfigurations sets the value of the AlertConfigurations field in CreateBudgetConfigurationBudget.
-func (o *CreateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetAlertConfigurations) {
+func (m *CreateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetAlertConfigurations) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AlertConfigurations = types.ListValueMust(t, vs)
+	m.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
 // GetFilter returns the value of the Filter field in CreateBudgetConfigurationBudget as
 // a BudgetConfigurationFilter value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+func (m *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
 	var e BudgetConfigurationFilter
-	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+	if m.Filter.IsNull() || m.Filter.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfigurationFilter
-	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1197,9 +1196,9 @@ func (o *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 }
 
 // SetFilter sets the value of the Filter field in CreateBudgetConfigurationBudget.
-func (o *CreateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+func (m *CreateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
 	vs := v.ToObjectValue(ctx)
-	o.Filter = vs
+	m.Filter = vs
 }
 
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
@@ -1215,7 +1214,7 @@ func (to *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringC
 func (to *CreateBudgetConfigurationBudgetActionConfigurations) SyncFieldsDuringRead(ctx context.Context, from CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
-func (c CreateBudgetConfigurationBudgetActionConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetConfigurationBudgetActionConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_type"] = attrs["action_type"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 
@@ -1229,24 +1228,24 @@ func (c CreateBudgetConfigurationBudgetActionConfigurations) ApplySchemaCustomiz
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetConfigurationBudgetActionConfigurations
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetConfigurationBudgetActionConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetConfigurationBudgetActionConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"action_type": o.ActionType,
-			"target":      o.Target,
+			"action_type": m.ActionType,
+			"target":      m.Target,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetConfigurationBudgetActionConfigurations) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetConfigurationBudgetActionConfigurations) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_type": types.StringType,
@@ -1290,7 +1289,7 @@ func (to *CreateBudgetConfigurationBudgetAlertConfigurations) SyncFieldsDuringRe
 	}
 }
 
-func (c CreateBudgetConfigurationBudgetAlertConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetConfigurationBudgetAlertConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_configurations"] = attrs["action_configurations"].SetOptional()
 	attrs["quantity_threshold"] = attrs["quantity_threshold"].SetOptional()
 	attrs["quantity_type"] = attrs["quantity_type"].SetOptional()
@@ -1307,7 +1306,7 @@ func (c CreateBudgetConfigurationBudgetAlertConfigurations) ApplySchemaCustomiza
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"action_configurations": reflect.TypeOf(CreateBudgetConfigurationBudgetActionConfigurations{}),
 	}
@@ -1316,20 +1315,20 @@ func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetConfigurationBudgetAlertConfigurations
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetConfigurationBudgetAlertConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetConfigurationBudgetAlertConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"action_configurations": o.ActionConfigurations,
-			"quantity_threshold":    o.QuantityThreshold,
-			"quantity_type":         o.QuantityType,
-			"time_period":           o.TimePeriod,
-			"trigger_type":          o.TriggerType,
+			"action_configurations": m.ActionConfigurations,
+			"quantity_threshold":    m.QuantityThreshold,
+			"quantity_type":         m.QuantityType,
+			"time_period":           m.TimePeriod,
+			"trigger_type":          m.TriggerType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetConfigurationBudgetAlertConfigurations) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetConfigurationBudgetAlertConfigurations) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
@@ -1346,12 +1345,12 @@ func (o CreateBudgetConfigurationBudgetAlertConfigurations) Type(ctx context.Con
 // GetActionConfigurations returns the value of the ActionConfigurations field in CreateBudgetConfigurationBudgetAlertConfigurations as
 // a slice of CreateBudgetConfigurationBudgetActionConfigurations values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetConfigurationBudgetAlertConfigurations) GetActionConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetActionConfigurations, bool) {
-	if o.ActionConfigurations.IsNull() || o.ActionConfigurations.IsUnknown() {
+func (m *CreateBudgetConfigurationBudgetAlertConfigurations) GetActionConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetActionConfigurations, bool) {
+	if m.ActionConfigurations.IsNull() || m.ActionConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []CreateBudgetConfigurationBudgetActionConfigurations
-	d := o.ActionConfigurations.ElementsAs(ctx, &v, true)
+	d := m.ActionConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1359,14 +1358,14 @@ func (o *CreateBudgetConfigurationBudgetAlertConfigurations) GetActionConfigurat
 }
 
 // SetActionConfigurations sets the value of the ActionConfigurations field in CreateBudgetConfigurationBudgetAlertConfigurations.
-func (o *CreateBudgetConfigurationBudgetAlertConfigurations) SetActionConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetActionConfigurations) {
+func (m *CreateBudgetConfigurationBudgetAlertConfigurations) SetActionConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetActionConfigurations) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.ActionConfigurations = types.ListValueMust(t, vs)
+	m.ActionConfigurations = types.ListValueMust(t, vs)
 }
 
 type CreateBudgetConfigurationRequest struct {
@@ -1397,7 +1396,7 @@ func (to *CreateBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -1411,7 +1410,7 @@ func (c CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(CreateBudgetConfigurationBudget{}),
 	}
@@ -1420,16 +1419,16 @@ func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetConfigurationRequest
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget": o.Budget,
+			"budget": m.Budget,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": CreateBudgetConfigurationBudget{}.Type(ctx),
@@ -1440,13 +1439,13 @@ func (o CreateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 // GetBudget returns the value of the Budget field in CreateBudgetConfigurationRequest as
 // a CreateBudgetConfigurationBudget value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (CreateBudgetConfigurationBudget, bool) {
+func (m *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (CreateBudgetConfigurationBudget, bool) {
 	var e CreateBudgetConfigurationBudget
-	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+	if m.Budget.IsNull() || m.Budget.IsUnknown() {
 		return e, false
 	}
 	var v CreateBudgetConfigurationBudget
-	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1457,9 +1456,9 @@ func (o *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Creat
 }
 
 // SetBudget sets the value of the Budget field in CreateBudgetConfigurationRequest.
-func (o *CreateBudgetConfigurationRequest) SetBudget(ctx context.Context, v CreateBudgetConfigurationBudget) {
+func (m *CreateBudgetConfigurationRequest) SetBudget(ctx context.Context, v CreateBudgetConfigurationBudget) {
 	vs := v.ToObjectValue(ctx)
-	o.Budget = vs
+	m.Budget = vs
 }
 
 type CreateBudgetConfigurationResponse struct {
@@ -1490,7 +1489,7 @@ func (to *CreateBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Co
 	}
 }
 
-func (c CreateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetOptional()
 
 	return attrs
@@ -1503,7 +1502,7 @@ func (c CreateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -1512,16 +1511,16 @@ func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetConfigurationResponse
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget": o.Budget,
+			"budget": m.Budget,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": BudgetConfiguration{}.Type(ctx),
@@ -1532,13 +1531,13 @@ func (o CreateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 // GetBudget returns the value of the Budget field in CreateBudgetConfigurationResponse as
 // a BudgetConfiguration value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+func (m *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
 	var e BudgetConfiguration
-	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+	if m.Budget.IsNull() || m.Budget.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfiguration
-	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1549,9 +1548,9 @@ func (o *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 }
 
 // SetBudget sets the value of the Budget field in CreateBudgetConfigurationResponse.
-func (o *CreateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+func (m *CreateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
 	vs := v.ToObjectValue(ctx)
-	o.Budget = vs
+	m.Budget = vs
 }
 
 // A request to create a BudgetPolicy.
@@ -1589,7 +1588,7 @@ func (to *CreateBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetOptional()
 	attrs["request_id"] = attrs["request_id"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -1604,7 +1603,7 @@ func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policy": reflect.TypeOf(BudgetPolicy{}),
 	}
@@ -1613,17 +1612,17 @@ func (a CreateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBudgetPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o CreateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"policy":     o.Policy,
-			"request_id": o.RequestId,
+			"policy":     m.Policy,
+			"request_id": m.RequestId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m CreateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy":     BudgetPolicy{}.Type(ctx),
@@ -1635,13 +1634,13 @@ func (o CreateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 // GetPolicy returns the value of the Policy field in CreateBudgetPolicyRequest as
 // a BudgetPolicy value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy, bool) {
+func (m *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy, bool) {
 	var e BudgetPolicy
-	if o.Policy.IsNull() || o.Policy.IsUnknown() {
+	if m.Policy.IsNull() || m.Policy.IsUnknown() {
 		return e, false
 	}
 	var v BudgetPolicy
-	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1652,9 +1651,9 @@ func (o *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 }
 
 // SetPolicy sets the value of the Policy field in CreateBudgetPolicyRequest.
-func (o *CreateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolicy) {
+func (m *CreateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolicy) {
 	vs := v.ToObjectValue(ctx)
-	o.Policy = vs
+	m.Policy = vs
 }
 
 // * Log Delivery Configuration
@@ -1744,7 +1743,7 @@ func (to *CreateLogDeliveryConfigurationParams) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c CreateLogDeliveryConfigurationParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateLogDeliveryConfigurationParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["config_name"] = attrs["config_name"].SetOptional()
 	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
 	attrs["delivery_path_prefix"] = attrs["delivery_path_prefix"].SetOptional()
@@ -1765,7 +1764,7 @@ func (c CreateLogDeliveryConfigurationParams) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"workspace_ids_filter": reflect.TypeOf(types.Int64{}),
 	}
@@ -1774,24 +1773,24 @@ func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateLogDeliveryConfigurationParams
 // only implements ToObjectValue() and Type().
-func (o CreateLogDeliveryConfigurationParams) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateLogDeliveryConfigurationParams) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"config_name":              o.ConfigName,
-			"credentials_id":           o.CredentialsId,
-			"delivery_path_prefix":     o.DeliveryPathPrefix,
-			"delivery_start_time":      o.DeliveryStartTime,
-			"log_type":                 o.LogType,
-			"output_format":            o.OutputFormat,
-			"status":                   o.Status,
-			"storage_configuration_id": o.StorageConfigurationId,
-			"workspace_ids_filter":     o.WorkspaceIdsFilter,
+			"config_name":              m.ConfigName,
+			"credentials_id":           m.CredentialsId,
+			"delivery_path_prefix":     m.DeliveryPathPrefix,
+			"delivery_start_time":      m.DeliveryStartTime,
+			"log_type":                 m.LogType,
+			"output_format":            m.OutputFormat,
+			"status":                   m.Status,
+			"storage_configuration_id": m.StorageConfigurationId,
+			"workspace_ids_filter":     m.WorkspaceIdsFilter,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateLogDeliveryConfigurationParams) Type(ctx context.Context) attr.Type {
+func (m CreateLogDeliveryConfigurationParams) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"config_name":              types.StringType,
@@ -1812,12 +1811,12 @@ func (o CreateLogDeliveryConfigurationParams) Type(ctx context.Context) attr.Typ
 // GetWorkspaceIdsFilter returns the value of the WorkspaceIdsFilter field in CreateLogDeliveryConfigurationParams as
 // a slice of types.Int64 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateLogDeliveryConfigurationParams) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
-	if o.WorkspaceIdsFilter.IsNull() || o.WorkspaceIdsFilter.IsUnknown() {
+func (m *CreateLogDeliveryConfigurationParams) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
+	if m.WorkspaceIdsFilter.IsNull() || m.WorkspaceIdsFilter.IsUnknown() {
 		return nil, false
 	}
 	var v []types.Int64
-	d := o.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
+	d := m.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1825,14 +1824,14 @@ func (o *CreateLogDeliveryConfigurationParams) GetWorkspaceIdsFilter(ctx context
 }
 
 // SetWorkspaceIdsFilter sets the value of the WorkspaceIdsFilter field in CreateLogDeliveryConfigurationParams.
-func (o *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
+func (m *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
+	m.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
 type DeleteBudgetConfigurationRequest struct {
@@ -1846,7 +1845,7 @@ func (to *DeleteBudgetConfigurationRequest) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *DeleteBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteBudgetConfigurationRequest) {
 }
 
-func (c DeleteBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
 
@@ -1860,23 +1859,23 @@ func (c DeleteBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteBudgetConfigurationRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_id": o.BudgetId,
+			"budget_id": m.BudgetId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_id": types.StringType,
@@ -1893,7 +1892,7 @@ func (to *DeleteBudgetConfigurationResponse) SyncFieldsDuringCreateOrUpdate(ctx 
 func (to *DeleteBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteBudgetConfigurationResponse) {
 }
 
-func (c DeleteBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -1905,21 +1904,21 @@ func (c DeleteBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteBudgetConfigurationResponse
 // only implements ToObjectValue() and Type().
-func (o DeleteBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
+func (m DeleteBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1936,7 +1935,7 @@ func (to *DeleteBudgetPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *DeleteBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteBudgetPolicyRequest) {
 }
 
-func (c DeleteBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
@@ -1950,23 +1949,23 @@ func (c DeleteBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteBudgetPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"policy_id": o.PolicyId,
+			"policy_id": m.PolicyId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy_id": types.StringType,
@@ -1995,7 +1994,7 @@ func (to *DownloadRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *DownloadRequest) SyncFieldsDuringRead(ctx context.Context, from DownloadRequest) {
 }
 
-func (c DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["start_month"] = attrs["start_month"].SetRequired()
 	attrs["end_month"] = attrs["end_month"].SetRequired()
@@ -2011,25 +2010,25 @@ func (c DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadRequest
 // only implements ToObjectValue() and Type().
-func (o DownloadRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DownloadRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"end_month":     o.EndMonth,
-			"personal_data": o.PersonalData,
-			"start_month":   o.StartMonth,
+			"end_month":     m.EndMonth,
+			"personal_data": m.PersonalData,
+			"start_month":   m.StartMonth,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DownloadRequest) Type(ctx context.Context) attr.Type {
+func (m DownloadRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"end_month":     types.StringType,
@@ -2049,7 +2048,7 @@ func (to *DownloadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *DownloadResponse) SyncFieldsDuringRead(ctx context.Context, from DownloadResponse) {
 }
 
-func (c DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["contents"] = attrs["contents"].SetOptional()
 
 	return attrs
@@ -2062,23 +2061,23 @@ func (c DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadResponse
 // only implements ToObjectValue() and Type().
-func (o DownloadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DownloadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"contents": o.Contents,
+			"contents": m.Contents,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DownloadResponse) Type(ctx context.Context) attr.Type {
+func (m DownloadResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents": types.ObjectType{},
@@ -2106,7 +2105,7 @@ func (to *Filter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Filte
 func (to *Filter) SyncFieldsDuringRead(ctx context.Context, from Filter) {
 }
 
-func (c Filter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Filter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creator_user_id"] = attrs["creator_user_id"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["policy_name"] = attrs["policy_name"].SetOptional()
@@ -2121,25 +2120,25 @@ func (c Filter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Filter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Filter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Filter
 // only implements ToObjectValue() and Type().
-func (o Filter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Filter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creator_user_id":   o.CreatorUserId,
-			"creator_user_name": o.CreatorUserName,
-			"policy_name":       o.PolicyName,
+			"creator_user_id":   m.CreatorUserId,
+			"creator_user_name": m.CreatorUserName,
+			"policy_name":       m.PolicyName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Filter) Type(ctx context.Context) attr.Type {
+func (m Filter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creator_user_id":   types.Int64Type,
@@ -2165,7 +2164,7 @@ func (to *GetBillingUsageDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx co
 func (to *GetBillingUsageDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from GetBillingUsageDashboardRequest) {
 }
 
-func (c GetBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
@@ -2180,24 +2179,24 @@ func (c GetBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetBillingUsageDashboardRequest
 // only implements ToObjectValue() and Type().
-func (o GetBillingUsageDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetBillingUsageDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard_type": o.DashboardType,
-			"workspace_id":   o.WorkspaceId,
+			"dashboard_type": m.DashboardType,
+			"workspace_id":   m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type {
+func (m GetBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_type": types.StringType,
@@ -2219,7 +2218,7 @@ func (to *GetBillingUsageDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *GetBillingUsageDashboardResponse) SyncFieldsDuringRead(ctx context.Context, from GetBillingUsageDashboardResponse) {
 }
 
-func (c GetBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetOptional()
 	attrs["dashboard_url"] = attrs["dashboard_url"].SetOptional()
 
@@ -2233,24 +2232,24 @@ func (c GetBillingUsageDashboardResponse) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetBillingUsageDashboardResponse
 // only implements ToObjectValue() and Type().
-func (o GetBillingUsageDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetBillingUsageDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard_id":  o.DashboardId,
-			"dashboard_url": o.DashboardUrl,
+			"dashboard_id":  m.DashboardId,
+			"dashboard_url": m.DashboardUrl,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
+func (m GetBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id":  types.StringType,
@@ -2270,7 +2269,7 @@ func (to *GetBudgetConfigurationRequest) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *GetBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Context, from GetBudgetConfigurationRequest) {
 }
 
-func (c GetBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
 
@@ -2284,23 +2283,23 @@ func (c GetBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetBudgetConfigurationRequest
 // only implements ToObjectValue() and Type().
-func (o GetBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_id": o.BudgetId,
+			"budget_id": m.BudgetId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
+func (m GetBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_id": types.StringType,
@@ -2335,7 +2334,7 @@ func (to *GetBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Conte
 	}
 }
 
-func (c GetBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetOptional()
 
 	return attrs
@@ -2348,7 +2347,7 @@ func (c GetBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -2357,16 +2356,16 @@ func (a GetBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetBudgetConfigurationResponse
 // only implements ToObjectValue() and Type().
-func (o GetBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget": o.Budget,
+			"budget": m.Budget,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
+func (m GetBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": BudgetConfiguration{}.Type(ctx),
@@ -2377,13 +2376,13 @@ func (o GetBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 // GetBudget returns the value of the Budget field in GetBudgetConfigurationResponse as
 // a BudgetConfiguration value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+func (m *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
 	var e BudgetConfiguration
-	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+	if m.Budget.IsNull() || m.Budget.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfiguration
-	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -2394,9 +2393,9 @@ func (o *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetC
 }
 
 // SetBudget sets the value of the Budget field in GetBudgetConfigurationResponse.
-func (o *GetBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+func (m *GetBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
 	vs := v.ToObjectValue(ctx)
-	o.Budget = vs
+	m.Budget = vs
 }
 
 type GetBudgetPolicyRequest struct {
@@ -2410,7 +2409,7 @@ func (to *GetBudgetPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *GetBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from GetBudgetPolicyRequest) {
 }
 
-func (c GetBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
@@ -2424,23 +2423,23 @@ func (c GetBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetBudgetPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o GetBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"policy_id": o.PolicyId,
+			"policy_id": m.PolicyId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m GetBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy_id": types.StringType,
@@ -2476,7 +2475,7 @@ func (to *GetLogDeliveryConfigurationResponse) SyncFieldsDuringRead(ctx context.
 	}
 }
 
-func (c GetLogDeliveryConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetLogDeliveryConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
 
 	return attrs
@@ -2489,7 +2488,7 @@ func (c GetLogDeliveryConfigurationResponse) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetLogDeliveryConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetLogDeliveryConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configuration": reflect.TypeOf(LogDeliveryConfiguration{}),
 	}
@@ -2498,16 +2497,16 @@ func (a GetLogDeliveryConfigurationResponse) GetComplexFieldTypes(ctx context.Co
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetLogDeliveryConfigurationResponse
 // only implements ToObjectValue() and Type().
-func (o GetLogDeliveryConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetLogDeliveryConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configuration": o.LogDeliveryConfiguration,
+			"log_delivery_configuration": m.LogDeliveryConfiguration,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetLogDeliveryConfigurationResponse) Type(ctx context.Context) attr.Type {
+func (m GetLogDeliveryConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": LogDeliveryConfiguration{}.Type(ctx),
@@ -2518,13 +2517,13 @@ func (o GetLogDeliveryConfigurationResponse) Type(ctx context.Context) attr.Type
 // GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse as
 // a LogDeliveryConfiguration value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetLogDeliveryConfigurationResponse) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
+func (m *GetLogDeliveryConfigurationResponse) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
 	var e LogDeliveryConfiguration
-	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+	if m.LogDeliveryConfiguration.IsNull() || m.LogDeliveryConfiguration.IsUnknown() {
 		return e, false
 	}
 	var v LogDeliveryConfiguration
-	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -2535,9 +2534,9 @@ func (o *GetLogDeliveryConfigurationResponse) GetLogDeliveryConfiguration(ctx co
 }
 
 // SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in GetLogDeliveryConfigurationResponse.
-func (o *GetLogDeliveryConfigurationResponse) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
+func (m *GetLogDeliveryConfigurationResponse) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
 	vs := v.ToObjectValue(ctx)
-	o.LogDeliveryConfiguration = vs
+	m.LogDeliveryConfiguration = vs
 }
 
 type GetLogDeliveryRequest struct {
@@ -2551,7 +2550,7 @@ func (to *GetLogDeliveryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *GetLogDeliveryRequest) SyncFieldsDuringRead(ctx context.Context, from GetLogDeliveryRequest) {
 }
 
-func (c GetLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
 
@@ -2565,23 +2564,23 @@ func (c GetLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetLogDeliveryRequest
 // only implements ToObjectValue() and Type().
-func (o GetLogDeliveryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetLogDeliveryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configuration_id": o.LogDeliveryConfigurationId,
+			"log_delivery_configuration_id": m.LogDeliveryConfigurationId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetLogDeliveryRequest) Type(ctx context.Context) attr.Type {
+func (m GetLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration_id": types.StringType,
@@ -2600,7 +2599,7 @@ func (to *LimitConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 func (to *LimitConfig) SyncFieldsDuringRead(ctx context.Context, from LimitConfig) {
 }
 
-func (c LimitConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m LimitConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -2612,21 +2611,21 @@ func (c LimitConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a LimitConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m LimitConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, LimitConfig
 // only implements ToObjectValue() and Type().
-func (o LimitConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m LimitConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o LimitConfig) Type(ctx context.Context) attr.Type {
+func (m LimitConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -2645,7 +2644,7 @@ func (to *ListBudgetConfigurationsRequest) SyncFieldsDuringCreateOrUpdate(ctx co
 func (to *ListBudgetConfigurationsRequest) SyncFieldsDuringRead(ctx context.Context, from ListBudgetConfigurationsRequest) {
 }
 
-func (c ListBudgetConfigurationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListBudgetConfigurationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -2659,23 +2658,23 @@ func (c ListBudgetConfigurationsRequest) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListBudgetConfigurationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListBudgetConfigurationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetConfigurationsRequest
 // only implements ToObjectValue() and Type().
-func (o ListBudgetConfigurationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListBudgetConfigurationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_token": o.PageToken,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListBudgetConfigurationsRequest) Type(ctx context.Context) attr.Type {
+func (m ListBudgetConfigurationsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_token": types.StringType,
@@ -2708,7 +2707,7 @@ func (to *ListBudgetConfigurationsResponse) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c ListBudgetConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListBudgetConfigurationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budgets"] = attrs["budgets"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
@@ -2722,7 +2721,7 @@ func (c ListBudgetConfigurationsResponse) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListBudgetConfigurationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budgets": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -2731,17 +2730,17 @@ func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetConfigurationsResponse
 // only implements ToObjectValue() and Type().
-func (o ListBudgetConfigurationsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListBudgetConfigurationsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budgets":         o.Budgets,
-			"next_page_token": o.NextPageToken,
+			"budgets":         m.Budgets,
+			"next_page_token": m.NextPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListBudgetConfigurationsResponse) Type(ctx context.Context) attr.Type {
+func (m ListBudgetConfigurationsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budgets": basetypes.ListType{
@@ -2755,12 +2754,12 @@ func (o ListBudgetConfigurationsResponse) Type(ctx context.Context) attr.Type {
 // GetBudgets returns the value of the Budgets field in ListBudgetConfigurationsResponse as
 // a slice of BudgetConfiguration values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListBudgetConfigurationsResponse) GetBudgets(ctx context.Context) ([]BudgetConfiguration, bool) {
-	if o.Budgets.IsNull() || o.Budgets.IsUnknown() {
+func (m *ListBudgetConfigurationsResponse) GetBudgets(ctx context.Context) ([]BudgetConfiguration, bool) {
+	if m.Budgets.IsNull() || m.Budgets.IsUnknown() {
 		return nil, false
 	}
 	var v []BudgetConfiguration
-	d := o.Budgets.ElementsAs(ctx, &v, true)
+	d := m.Budgets.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2768,14 +2767,14 @@ func (o *ListBudgetConfigurationsResponse) GetBudgets(ctx context.Context) ([]Bu
 }
 
 // SetBudgets sets the value of the Budgets field in ListBudgetConfigurationsResponse.
-func (o *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []BudgetConfiguration) {
+func (m *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []BudgetConfiguration) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budgets"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["budgets"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Budgets = types.ListValueMust(t, vs)
+	m.Budgets = types.ListValueMust(t, vs)
 }
 
 type ListBudgetPoliciesRequest struct {
@@ -2837,7 +2836,7 @@ func (to *ListBudgetPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c ListBudgetPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListBudgetPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
@@ -2854,7 +2853,7 @@ func (c ListBudgetPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListBudgetPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListBudgetPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"filter_by": reflect.TypeOf(Filter{}),
 		"sort_spec": reflect.TypeOf(SortSpec{}),
@@ -2864,19 +2863,19 @@ func (a ListBudgetPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetPoliciesRequest
 // only implements ToObjectValue() and Type().
-func (o ListBudgetPoliciesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListBudgetPoliciesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"filter_by":  o.FilterBy,
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
-			"sort_spec":  o.SortSpec,
+			"filter_by":  m.FilterBy,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"sort_spec":  m.SortSpec,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListBudgetPoliciesRequest) Type(ctx context.Context) attr.Type {
+func (m ListBudgetPoliciesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter_by":  Filter{}.Type(ctx),
@@ -2890,13 +2889,13 @@ func (o ListBudgetPoliciesRequest) Type(ctx context.Context) attr.Type {
 // GetFilterBy returns the value of the FilterBy field in ListBudgetPoliciesRequest as
 // a Filter value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListBudgetPoliciesRequest) GetFilterBy(ctx context.Context) (Filter, bool) {
+func (m *ListBudgetPoliciesRequest) GetFilterBy(ctx context.Context) (Filter, bool) {
 	var e Filter
-	if o.FilterBy.IsNull() || o.FilterBy.IsUnknown() {
+	if m.FilterBy.IsNull() || m.FilterBy.IsUnknown() {
 		return e, false
 	}
 	var v Filter
-	d := o.FilterBy.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.FilterBy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -2907,21 +2906,21 @@ func (o *ListBudgetPoliciesRequest) GetFilterBy(ctx context.Context) (Filter, bo
 }
 
 // SetFilterBy sets the value of the FilterBy field in ListBudgetPoliciesRequest.
-func (o *ListBudgetPoliciesRequest) SetFilterBy(ctx context.Context, v Filter) {
+func (m *ListBudgetPoliciesRequest) SetFilterBy(ctx context.Context, v Filter) {
 	vs := v.ToObjectValue(ctx)
-	o.FilterBy = vs
+	m.FilterBy = vs
 }
 
 // GetSortSpec returns the value of the SortSpec field in ListBudgetPoliciesRequest as
 // a SortSpec value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListBudgetPoliciesRequest) GetSortSpec(ctx context.Context) (SortSpec, bool) {
+func (m *ListBudgetPoliciesRequest) GetSortSpec(ctx context.Context) (SortSpec, bool) {
 	var e SortSpec
-	if o.SortSpec.IsNull() || o.SortSpec.IsUnknown() {
+	if m.SortSpec.IsNull() || m.SortSpec.IsUnknown() {
 		return e, false
 	}
 	var v SortSpec
-	d := o.SortSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.SortSpec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -2932,9 +2931,9 @@ func (o *ListBudgetPoliciesRequest) GetSortSpec(ctx context.Context) (SortSpec, 
 }
 
 // SetSortSpec sets the value of the SortSpec field in ListBudgetPoliciesRequest.
-func (o *ListBudgetPoliciesRequest) SetSortSpec(ctx context.Context, v SortSpec) {
+func (m *ListBudgetPoliciesRequest) SetSortSpec(ctx context.Context, v SortSpec) {
 	vs := v.ToObjectValue(ctx)
-	o.SortSpec = vs
+	m.SortSpec = vs
 }
 
 // A list of policies.
@@ -2967,7 +2966,7 @@ func (to *ListBudgetPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c ListBudgetPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListBudgetPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["policies"] = attrs["policies"].SetOptional()
 	attrs["previous_page_token"] = attrs["previous_page_token"].SetOptional()
@@ -2982,7 +2981,7 @@ func (c ListBudgetPoliciesResponse) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListBudgetPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListBudgetPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policies": reflect.TypeOf(BudgetPolicy{}),
 	}
@@ -2991,18 +2990,18 @@ func (a ListBudgetPoliciesResponse) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetPoliciesResponse
 // only implements ToObjectValue() and Type().
-func (o ListBudgetPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListBudgetPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"next_page_token":     o.NextPageToken,
-			"policies":            o.Policies,
-			"previous_page_token": o.PreviousPageToken,
+			"next_page_token":     m.NextPageToken,
+			"policies":            m.Policies,
+			"previous_page_token": m.PreviousPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListBudgetPoliciesResponse) Type(ctx context.Context) attr.Type {
+func (m ListBudgetPoliciesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
@@ -3017,12 +3016,12 @@ func (o ListBudgetPoliciesResponse) Type(ctx context.Context) attr.Type {
 // GetPolicies returns the value of the Policies field in ListBudgetPoliciesResponse as
 // a slice of BudgetPolicy values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListBudgetPoliciesResponse) GetPolicies(ctx context.Context) ([]BudgetPolicy, bool) {
-	if o.Policies.IsNull() || o.Policies.IsUnknown() {
+func (m *ListBudgetPoliciesResponse) GetPolicies(ctx context.Context) ([]BudgetPolicy, bool) {
+	if m.Policies.IsNull() || m.Policies.IsUnknown() {
 		return nil, false
 	}
 	var v []BudgetPolicy
-	d := o.Policies.ElementsAs(ctx, &v, true)
+	d := m.Policies.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3030,14 +3029,14 @@ func (o *ListBudgetPoliciesResponse) GetPolicies(ctx context.Context) ([]BudgetP
 }
 
 // SetPolicies sets the value of the Policies field in ListBudgetPoliciesResponse.
-func (o *ListBudgetPoliciesResponse) SetPolicies(ctx context.Context, v []BudgetPolicy) {
+func (m *ListBudgetPoliciesResponse) SetPolicies(ctx context.Context, v []BudgetPolicy) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Policies = types.ListValueMust(t, vs)
+	m.Policies = types.ListValueMust(t, vs)
 }
 
 type ListLogDeliveryRequest struct {
@@ -3059,7 +3058,7 @@ func (to *ListLogDeliveryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *ListLogDeliveryRequest) SyncFieldsDuringRead(ctx context.Context, from ListLogDeliveryRequest) {
 }
 
-func (c ListLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
@@ -3076,26 +3075,26 @@ func (c ListLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListLogDeliveryRequest
 // only implements ToObjectValue() and Type().
-func (o ListLogDeliveryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListLogDeliveryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"credentials_id":           o.CredentialsId,
-			"page_token":               o.PageToken,
-			"status":                   o.Status,
-			"storage_configuration_id": o.StorageConfigurationId,
+			"credentials_id":           m.CredentialsId,
+			"page_token":               m.PageToken,
+			"status":                   m.Status,
+			"storage_configuration_id": m.StorageConfigurationId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListLogDeliveryRequest) Type(ctx context.Context) attr.Type {
+func (m ListLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credentials_id":           types.StringType,
@@ -3222,7 +3221,7 @@ func (to *LogDeliveryConfiguration) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["config_id"] = attrs["config_id"].SetOptional()
 	attrs["config_name"] = attrs["config_name"].SetOptional()
@@ -3248,7 +3247,7 @@ func (c LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_status":  reflect.TypeOf(LogDeliveryStatus{}),
 		"workspace_ids_filter": reflect.TypeOf(types.Int64{}),
@@ -3258,29 +3257,29 @@ func (a LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, LogDeliveryConfiguration
 // only implements ToObjectValue() and Type().
-func (o LogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m LogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":               o.AccountId,
-			"config_id":                o.ConfigId,
-			"config_name":              o.ConfigName,
-			"creation_time":            o.CreationTime,
-			"credentials_id":           o.CredentialsId,
-			"delivery_path_prefix":     o.DeliveryPathPrefix,
-			"delivery_start_time":      o.DeliveryStartTime,
-			"log_delivery_status":      o.LogDeliveryStatus,
-			"log_type":                 o.LogType,
-			"output_format":            o.OutputFormat,
-			"status":                   o.Status,
-			"storage_configuration_id": o.StorageConfigurationId,
-			"update_time":              o.UpdateTime,
-			"workspace_ids_filter":     o.WorkspaceIdsFilter,
+			"account_id":               m.AccountId,
+			"config_id":                m.ConfigId,
+			"config_name":              m.ConfigName,
+			"creation_time":            m.CreationTime,
+			"credentials_id":           m.CredentialsId,
+			"delivery_path_prefix":     m.DeliveryPathPrefix,
+			"delivery_start_time":      m.DeliveryStartTime,
+			"log_delivery_status":      m.LogDeliveryStatus,
+			"log_type":                 m.LogType,
+			"output_format":            m.OutputFormat,
+			"status":                   m.Status,
+			"storage_configuration_id": m.StorageConfigurationId,
+			"update_time":              m.UpdateTime,
+			"workspace_ids_filter":     m.WorkspaceIdsFilter,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
+func (m LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":               types.StringType,
@@ -3306,13 +3305,13 @@ func (o LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 // GetLogDeliveryStatus returns the value of the LogDeliveryStatus field in LogDeliveryConfiguration as
 // a LogDeliveryStatus value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (LogDeliveryStatus, bool) {
+func (m *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (LogDeliveryStatus, bool) {
 	var e LogDeliveryStatus
-	if o.LogDeliveryStatus.IsNull() || o.LogDeliveryStatus.IsUnknown() {
+	if m.LogDeliveryStatus.IsNull() || m.LogDeliveryStatus.IsUnknown() {
 		return e, false
 	}
 	var v LogDeliveryStatus
-	d := o.LogDeliveryStatus.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.LogDeliveryStatus.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -3323,20 +3322,20 @@ func (o *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (Lo
 }
 
 // SetLogDeliveryStatus sets the value of the LogDeliveryStatus field in LogDeliveryConfiguration.
-func (o *LogDeliveryConfiguration) SetLogDeliveryStatus(ctx context.Context, v LogDeliveryStatus) {
+func (m *LogDeliveryConfiguration) SetLogDeliveryStatus(ctx context.Context, v LogDeliveryStatus) {
 	vs := v.ToObjectValue(ctx)
-	o.LogDeliveryStatus = vs
+	m.LogDeliveryStatus = vs
 }
 
 // GetWorkspaceIdsFilter returns the value of the WorkspaceIdsFilter field in LogDeliveryConfiguration as
 // a slice of types.Int64 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *LogDeliveryConfiguration) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
-	if o.WorkspaceIdsFilter.IsNull() || o.WorkspaceIdsFilter.IsUnknown() {
+func (m *LogDeliveryConfiguration) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
+	if m.WorkspaceIdsFilter.IsNull() || m.WorkspaceIdsFilter.IsUnknown() {
 		return nil, false
 	}
 	var v []types.Int64
-	d := o.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
+	d := m.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3344,14 +3343,14 @@ func (o *LogDeliveryConfiguration) GetWorkspaceIdsFilter(ctx context.Context) ([
 }
 
 // SetWorkspaceIdsFilter sets the value of the WorkspaceIdsFilter field in LogDeliveryConfiguration.
-func (o *LogDeliveryConfiguration) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
+func (m *LogDeliveryConfiguration) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
+	m.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
 type LogDeliveryStatus struct {
@@ -3382,7 +3381,7 @@ func (to *LogDeliveryStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *LogDeliveryStatus) SyncFieldsDuringRead(ctx context.Context, from LogDeliveryStatus) {
 }
 
-func (c LogDeliveryStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m LogDeliveryStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["last_attempt_time"] = attrs["last_attempt_time"].SetOptional()
 	attrs["last_successful_attempt_time"] = attrs["last_successful_attempt_time"].SetOptional()
 	attrs["message"] = attrs["message"].SetRequired()
@@ -3398,26 +3397,26 @@ func (c LogDeliveryStatus) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a LogDeliveryStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m LogDeliveryStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, LogDeliveryStatus
 // only implements ToObjectValue() and Type().
-func (o LogDeliveryStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m LogDeliveryStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"last_attempt_time":            o.LastAttemptTime,
-			"last_successful_attempt_time": o.LastSuccessfulAttemptTime,
-			"message":                      o.Message,
-			"status":                       o.Status,
+			"last_attempt_time":            m.LastAttemptTime,
+			"last_successful_attempt_time": m.LastSuccessfulAttemptTime,
+			"message":                      m.Message,
+			"status":                       m.Status,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o LogDeliveryStatus) Type(ctx context.Context) attr.Type {
+func (m LogDeliveryStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_attempt_time":            types.StringType,
@@ -3437,7 +3436,7 @@ func (to *PatchStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *PatchStatusResponse) SyncFieldsDuringRead(ctx context.Context, from PatchStatusResponse) {
 }
 
-func (c PatchStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -3449,21 +3448,21 @@ func (c PatchStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchStatusResponse
 // only implements ToObjectValue() and Type().
-func (o PatchStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchStatusResponse) Type(ctx context.Context) attr.Type {
+func (m PatchStatusResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -3482,7 +3481,7 @@ func (to *SortSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sor
 func (to *SortSpec) SyncFieldsDuringRead(ctx context.Context, from SortSpec) {
 }
 
-func (c SortSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SortSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["descending"] = attrs["descending"].SetOptional()
 	attrs["field"] = attrs["field"].SetOptional()
 
@@ -3496,24 +3495,24 @@ func (c SortSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SortSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SortSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SortSpec
 // only implements ToObjectValue() and Type().
-func (o SortSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SortSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"descending": o.Descending,
-			"field":      o.Field,
+			"descending": m.Descending,
+			"field":      m.Field,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SortSpec) Type(ctx context.Context) attr.Type {
+func (m SortSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"descending": types.BoolType,
@@ -3574,7 +3573,7 @@ func (to *UpdateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Cont
 	}
 }
 
-func (c UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["budget_configuration_id"] = attrs["budget_configuration_id"].SetOptional()
@@ -3591,7 +3590,7 @@ func (c UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(AlertConfiguration{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -3601,20 +3600,20 @@ func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Contex
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateBudgetConfigurationBudget
 // only implements ToObjectValue() and Type().
-func (o UpdateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":              o.AccountId,
-			"alert_configurations":    o.AlertConfigurations,
-			"budget_configuration_id": o.BudgetConfigurationId,
-			"display_name":            o.DisplayName,
-			"filter":                  o.Filter,
+			"account_id":              m.AccountId,
+			"alert_configurations":    m.AlertConfigurations,
+			"budget_configuration_id": m.BudgetConfigurationId,
+			"display_name":            m.DisplayName,
+			"filter":                  m.Filter,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
+func (m UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
@@ -3631,12 +3630,12 @@ func (o UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 // GetAlertConfigurations returns the value of the AlertConfigurations field in UpdateBudgetConfigurationBudget as
 // a slice of AlertConfiguration values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
-	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+func (m *UpdateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
+	if m.AlertConfigurations.IsNull() || m.AlertConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []AlertConfiguration
-	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	d := m.AlertConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3644,26 +3643,26 @@ func (o *UpdateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Con
 }
 
 // SetAlertConfigurations sets the value of the AlertConfigurations field in UpdateBudgetConfigurationBudget.
-func (o *UpdateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
+func (m *UpdateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AlertConfigurations = types.ListValueMust(t, vs)
+	m.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
 // GetFilter returns the value of the Filter field in UpdateBudgetConfigurationBudget as
 // a BudgetConfigurationFilter value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+func (m *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
 	var e BudgetConfigurationFilter
-	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+	if m.Filter.IsNull() || m.Filter.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfigurationFilter
-	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -3674,9 +3673,9 @@ func (o *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (Budget
 }
 
 // SetFilter sets the value of the Filter field in UpdateBudgetConfigurationBudget.
-func (o *UpdateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+func (m *UpdateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
 	vs := v.ToObjectValue(ctx)
-	o.Filter = vs
+	m.Filter = vs
 }
 
 type UpdateBudgetConfigurationRequest struct {
@@ -3710,7 +3709,7 @@ func (to *UpdateBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
@@ -3725,7 +3724,7 @@ func (c UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(UpdateBudgetConfigurationBudget{}),
 	}
@@ -3734,17 +3733,17 @@ func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateBudgetConfigurationRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget":    o.Budget,
-			"budget_id": o.BudgetId,
+			"budget":    m.Budget,
+			"budget_id": m.BudgetId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget":    UpdateBudgetConfigurationBudget{}.Type(ctx),
@@ -3756,13 +3755,13 @@ func (o UpdateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 // GetBudget returns the value of the Budget field in UpdateBudgetConfigurationRequest as
 // a UpdateBudgetConfigurationBudget value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (UpdateBudgetConfigurationBudget, bool) {
+func (m *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (UpdateBudgetConfigurationBudget, bool) {
 	var e UpdateBudgetConfigurationBudget
-	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+	if m.Budget.IsNull() || m.Budget.IsUnknown() {
 		return e, false
 	}
 	var v UpdateBudgetConfigurationBudget
-	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -3773,9 +3772,9 @@ func (o *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (Updat
 }
 
 // SetBudget sets the value of the Budget field in UpdateBudgetConfigurationRequest.
-func (o *UpdateBudgetConfigurationRequest) SetBudget(ctx context.Context, v UpdateBudgetConfigurationBudget) {
+func (m *UpdateBudgetConfigurationRequest) SetBudget(ctx context.Context, v UpdateBudgetConfigurationBudget) {
 	vs := v.ToObjectValue(ctx)
-	o.Budget = vs
+	m.Budget = vs
 }
 
 type UpdateBudgetConfigurationResponse struct {
@@ -3806,7 +3805,7 @@ func (to *UpdateBudgetConfigurationResponse) SyncFieldsDuringRead(ctx context.Co
 	}
 }
 
-func (c UpdateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetOptional()
 
 	return attrs
@@ -3819,7 +3818,7 @@ func (c UpdateBudgetConfigurationResponse) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -3828,16 +3827,16 @@ func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateBudgetConfigurationResponse
 // only implements ToObjectValue() and Type().
-func (o UpdateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget": o.Budget,
+			"budget": m.Budget,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
+func (m UpdateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": BudgetConfiguration{}.Type(ctx),
@@ -3848,13 +3847,13 @@ func (o UpdateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 // GetBudget returns the value of the Budget field in UpdateBudgetConfigurationResponse as
 // a BudgetConfiguration value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+func (m *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
 	var e BudgetConfiguration
-	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+	if m.Budget.IsNull() || m.Budget.IsUnknown() {
 		return e, false
 	}
 	var v BudgetConfiguration
-	d := o.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Budget.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -3865,9 +3864,9 @@ func (o *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (Budg
 }
 
 // SetBudget sets the value of the Budget field in UpdateBudgetConfigurationResponse.
-func (o *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+func (m *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
 	vs := v.ToObjectValue(ctx)
-	o.Budget = vs
+	m.Budget = vs
 }
 
 type UpdateBudgetPolicyRequest struct {
@@ -3923,7 +3922,7 @@ func (to *UpdateBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c UpdateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
@@ -3939,7 +3938,7 @@ func (c UpdateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"limit_config": reflect.TypeOf(LimitConfig{}),
 		"policy":       reflect.TypeOf(BudgetPolicy{}),
@@ -3949,18 +3948,18 @@ func (a UpdateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateBudgetPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"limit_config": o.LimitConfig,
-			"policy":       o.Policy,
-			"policy_id":    o.PolicyId,
+			"limit_config": m.LimitConfig,
+			"policy":       m.Policy,
+			"policy_id":    m.PolicyId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"limit_config": LimitConfig{}.Type(ctx),
@@ -3973,13 +3972,13 @@ func (o UpdateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 // GetLimitConfig returns the value of the LimitConfig field in UpdateBudgetPolicyRequest as
 // a LimitConfig value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetPolicyRequest) GetLimitConfig(ctx context.Context) (LimitConfig, bool) {
+func (m *UpdateBudgetPolicyRequest) GetLimitConfig(ctx context.Context) (LimitConfig, bool) {
 	var e LimitConfig
-	if o.LimitConfig.IsNull() || o.LimitConfig.IsUnknown() {
+	if m.LimitConfig.IsNull() || m.LimitConfig.IsUnknown() {
 		return e, false
 	}
 	var v LimitConfig
-	d := o.LimitConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.LimitConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -3990,21 +3989,21 @@ func (o *UpdateBudgetPolicyRequest) GetLimitConfig(ctx context.Context) (LimitCo
 }
 
 // SetLimitConfig sets the value of the LimitConfig field in UpdateBudgetPolicyRequest.
-func (o *UpdateBudgetPolicyRequest) SetLimitConfig(ctx context.Context, v LimitConfig) {
+func (m *UpdateBudgetPolicyRequest) SetLimitConfig(ctx context.Context, v LimitConfig) {
 	vs := v.ToObjectValue(ctx)
-	o.LimitConfig = vs
+	m.LimitConfig = vs
 }
 
 // GetPolicy returns the value of the Policy field in UpdateBudgetPolicyRequest as
 // a BudgetPolicy value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy, bool) {
+func (m *UpdateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy, bool) {
 	var e BudgetPolicy
-	if o.Policy.IsNull() || o.Policy.IsUnknown() {
+	if m.Policy.IsNull() || m.Policy.IsUnknown() {
 		return e, false
 	}
 	var v BudgetPolicy
-	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -4015,9 +4014,9 @@ func (o *UpdateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy
 }
 
 // SetPolicy sets the value of the Policy field in UpdateBudgetPolicyRequest.
-func (o *UpdateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolicy) {
+func (m *UpdateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolicy) {
 	vs := v.ToObjectValue(ctx)
-	o.Policy = vs
+	m.Policy = vs
 }
 
 // * Update Log Delivery Configuration
@@ -4038,7 +4037,7 @@ func (to *UpdateLogDeliveryConfigurationStatusRequest) SyncFieldsDuringCreateOrU
 func (to *UpdateLogDeliveryConfigurationStatusRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateLogDeliveryConfigurationStatusRequest) {
 }
 
-func (c UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["status"] = attrs["status"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
@@ -4053,24 +4052,24 @@ func (c UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(a
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateLogDeliveryConfigurationStatusRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateLogDeliveryConfigurationStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateLogDeliveryConfigurationStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configuration_id": o.LogDeliveryConfigurationId,
-			"status":                        o.Status,
+			"log_delivery_configuration_id": m.LogDeliveryConfigurationId,
+			"status":                        m.Status,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateLogDeliveryConfigurationStatusRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateLogDeliveryConfigurationStatusRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration_id": types.StringType,
@@ -4107,7 +4106,7 @@ func (to *WrappedCreateLogDeliveryConfiguration) SyncFieldsDuringRead(ctx contex
 	}
 }
 
-func (c WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -4121,7 +4120,7 @@ func (c WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configuration": reflect.TypeOf(CreateLogDeliveryConfigurationParams{}),
 	}
@@ -4130,16 +4129,16 @@ func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WrappedCreateLogDeliveryConfiguration
 // only implements ToObjectValue() and Type().
-func (o WrappedCreateLogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WrappedCreateLogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configuration": o.LogDeliveryConfiguration,
+			"log_delivery_configuration": m.LogDeliveryConfiguration,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WrappedCreateLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
+func (m WrappedCreateLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": CreateLogDeliveryConfigurationParams{}.Type(ctx),
@@ -4150,13 +4149,13 @@ func (o WrappedCreateLogDeliveryConfiguration) Type(ctx context.Context) attr.Ty
 // GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in WrappedCreateLogDeliveryConfiguration as
 // a CreateLogDeliveryConfigurationParams value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (CreateLogDeliveryConfigurationParams, bool) {
+func (m *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (CreateLogDeliveryConfigurationParams, bool) {
 	var e CreateLogDeliveryConfigurationParams
-	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+	if m.LogDeliveryConfiguration.IsNull() || m.LogDeliveryConfiguration.IsUnknown() {
 		return e, false
 	}
 	var v CreateLogDeliveryConfigurationParams
-	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -4167,9 +4166,9 @@ func (o *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx 
 }
 
 // SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedCreateLogDeliveryConfiguration.
-func (o *WrappedCreateLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v CreateLogDeliveryConfigurationParams) {
+func (m *WrappedCreateLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v CreateLogDeliveryConfigurationParams) {
 	vs := v.ToObjectValue(ctx)
-	o.LogDeliveryConfiguration = vs
+	m.LogDeliveryConfiguration = vs
 }
 
 type WrappedLogDeliveryConfiguration struct {
@@ -4200,7 +4199,7 @@ func (to *WrappedLogDeliveryConfiguration) SyncFieldsDuringRead(ctx context.Cont
 	}
 }
 
-func (c WrappedLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WrappedLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetOptional()
 
 	return attrs
@@ -4213,7 +4212,7 @@ func (c WrappedLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WrappedLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configuration": reflect.TypeOf(LogDeliveryConfiguration{}),
 	}
@@ -4222,16 +4221,16 @@ func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Contex
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WrappedLogDeliveryConfiguration
 // only implements ToObjectValue() and Type().
-func (o WrappedLogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WrappedLogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configuration": o.LogDeliveryConfiguration,
+			"log_delivery_configuration": m.LogDeliveryConfiguration,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WrappedLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
+func (m WrappedLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": LogDeliveryConfiguration{}.Type(ctx),
@@ -4242,13 +4241,13 @@ func (o WrappedLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 // GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in WrappedLogDeliveryConfiguration as
 // a LogDeliveryConfiguration value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
+func (m *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
 	var e LogDeliveryConfiguration
-	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+	if m.LogDeliveryConfiguration.IsNull() || m.LogDeliveryConfiguration.IsUnknown() {
 		return e, false
 	}
 	var v LogDeliveryConfiguration
-	d := o.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.LogDeliveryConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -4259,9 +4258,9 @@ func (o *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx contex
 }
 
 // SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedLogDeliveryConfiguration.
-func (o *WrappedLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
+func (m *WrappedLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
 	vs := v.ToObjectValue(ctx)
-	o.LogDeliveryConfiguration = vs
+	m.LogDeliveryConfiguration = vs
 }
 
 type WrappedLogDeliveryConfigurations struct {
@@ -4290,7 +4289,7 @@ func (to *WrappedLogDeliveryConfigurations) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c WrappedLogDeliveryConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WrappedLogDeliveryConfigurations) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configurations"] = attrs["log_delivery_configurations"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
@@ -4304,7 +4303,7 @@ func (c WrappedLogDeliveryConfigurations) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WrappedLogDeliveryConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configurations": reflect.TypeOf(LogDeliveryConfiguration{}),
 	}
@@ -4313,17 +4312,17 @@ func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WrappedLogDeliveryConfigurations
 // only implements ToObjectValue() and Type().
-func (o WrappedLogDeliveryConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WrappedLogDeliveryConfigurations) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"log_delivery_configurations": o.LogDeliveryConfigurations,
-			"next_page_token":             o.NextPageToken,
+			"log_delivery_configurations": m.LogDeliveryConfigurations,
+			"next_page_token":             m.NextPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WrappedLogDeliveryConfigurations) Type(ctx context.Context) attr.Type {
+func (m WrappedLogDeliveryConfigurations) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configurations": basetypes.ListType{
@@ -4337,12 +4336,12 @@ func (o WrappedLogDeliveryConfigurations) Type(ctx context.Context) attr.Type {
 // GetLogDeliveryConfigurations returns the value of the LogDeliveryConfigurations field in WrappedLogDeliveryConfigurations as
 // a slice of LogDeliveryConfiguration values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WrappedLogDeliveryConfigurations) GetLogDeliveryConfigurations(ctx context.Context) ([]LogDeliveryConfiguration, bool) {
-	if o.LogDeliveryConfigurations.IsNull() || o.LogDeliveryConfigurations.IsUnknown() {
+func (m *WrappedLogDeliveryConfigurations) GetLogDeliveryConfigurations(ctx context.Context) ([]LogDeliveryConfiguration, bool) {
+	if m.LogDeliveryConfigurations.IsNull() || m.LogDeliveryConfigurations.IsUnknown() {
 		return nil, false
 	}
 	var v []LogDeliveryConfiguration
-	d := o.LogDeliveryConfigurations.ElementsAs(ctx, &v, true)
+	d := m.LogDeliveryConfigurations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4350,12 +4349,12 @@ func (o *WrappedLogDeliveryConfigurations) GetLogDeliveryConfigurations(ctx cont
 }
 
 // SetLogDeliveryConfigurations sets the value of the LogDeliveryConfigurations field in WrappedLogDeliveryConfigurations.
-func (o *WrappedLogDeliveryConfigurations) SetLogDeliveryConfigurations(ctx context.Context, v []LogDeliveryConfiguration) {
+func (m *WrappedLogDeliveryConfigurations) SetLogDeliveryConfigurations(ctx context.Context, v []LogDeliveryConfiguration) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configurations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configurations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.LogDeliveryConfigurations = types.ListValueMust(t, vs)
+	m.LogDeliveryConfigurations = types.ListValueMust(t, vs)
 }

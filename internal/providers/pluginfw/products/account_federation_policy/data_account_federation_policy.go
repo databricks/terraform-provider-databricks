@@ -34,7 +34,29 @@ type FederationPolicyDataSource struct {
 
 // FederationPolicyData extends the main model with additional fields.
 type FederationPolicyData struct {
-	oauth2_tf.FederationPolicy
+	// Creation time of the federation policy.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Description of the federation policy.
+	Description types.String `tfsdk:"description"`
+	// Resource name for the federation policy. Example values include
+	// `accounts/<account-id>/federationPolicies/my-federation-policy` for
+	// Account Federation Policies, and
+	// `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
+	// for Service Principal Federation Policies. Typically an output parameter,
+	// which does not need to be specified in create or update requests. If
+	// specified in a request, must match the value in the request URL.
+	Name types.String `tfsdk:"name"`
+
+	OidcPolicy types.Object `tfsdk:"oidc_policy"`
+	// The ID of the federation policy. Output only.
+	PolicyId types.String `tfsdk:"policy_id"`
+	// The service principal ID that this federation policy applies to. Output
+	// only. Only set for service principal federation policies.
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
+	// Unique, immutable id of the federation policy.
+	Uid types.String `tfsdk:"uid"`
+	// Last update time of the federation policy.
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +67,9 @@ type FederationPolicyData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.FederationPolicy.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"oidc_policy": reflect.TypeOf(oauth2_tf.OidcFederationPolicy{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +79,53 @@ func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[stri
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FederationPolicyData
 // only implements ToObjectValue() and Type().
 func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.FederationPolicy.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"description":          m.Description,
+			"name":                 m.Name,
+			"oidc_policy":          m.OidcPolicy,
+			"policy_id":            m.PolicyId,
+			"service_principal_id": m.ServicePrincipalId,
+			"uid":                  m.Uid,
+			"update_time":          m.UpdateTime,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.FederationPolicy.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+			"description":          types.StringType,
+			"name":                 types.StringType,
+			"oidc_policy":          oauth2_tf.OidcFederationPolicy{}.Type(ctx),
+			"policy_id":            types.StringType,
+			"service_principal_id": types.Int64Type,
+			"uid":                  types.StringType,
+			"update_time":          types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *FederationPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState FederationPolicyData) {
-	m.FederationPolicy.SyncFieldsDuringRead(ctx, existingState.FederationPolicy)
+func (to *FederationPolicyData) SyncFieldsDuringRead(ctx context.Context, from FederationPolicyData) {
+}
+
+func (m FederationPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
 }
 
 func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +133,7 @@ func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *FederationPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPolicyData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,

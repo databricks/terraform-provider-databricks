@@ -14,7 +14,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -40,7 +39,20 @@ type OnlineStoreResource struct {
 
 // OnlineStore extends the main model with additional fields.
 type OnlineStore struct {
-	ml_tf.OnlineStore
+	// The capacity of the online store. Valid values are "CU_1", "CU_2",
+	// "CU_4", "CU_8".
+	Capacity types.String `tfsdk:"capacity"`
+	// The timestamp when the online store was created.
+	CreationTime types.String `tfsdk:"creation_time"`
+	// The email of the creator of the online store.
+	Creator types.String `tfsdk:"creator"`
+	// The name of the online store. This is the unique identifier for the
+	// online store.
+	Name types.String `tfsdk:"name"`
+	// The number of read replicas for the online store. Defaults to 0.
+	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
+	// The current state of the online store.
+	State types.String `tfsdk:"state"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +63,7 @@ type OnlineStore struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.OnlineStore.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +73,54 @@ func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 // interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStore
 // only implements ToObjectValue() and Type().
 func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.OnlineStore.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"capacity": m.Capacity,
+			"creation_time":      m.CreationTime,
+			"creator":            m.Creator,
+			"name":               m.Name,
+			"read_replica_count": m.ReadReplicaCount,
+			"state":              m.State,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m OnlineStore) Type(ctx context.Context) attr.Type {
-	embeddedType := m.OnlineStore.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+			"creation_time":      types.StringType,
+			"creator":            types.StringType,
+			"name":               types.StringType,
+			"read_replica_count": types.Int64Type,
+			"state":              types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan OnlineStore) {
-	m.OnlineStore.SyncFieldsDuringCreateOrUpdate(ctx, plan.OnlineStore)
+func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *OnlineStore) SyncFieldsDuringRead(ctx context.Context, existingState OnlineStore) {
-	m.OnlineStore.SyncFieldsDuringRead(ctx, existingState.OnlineStore)
+func (to *OnlineStore) SyncFieldsDuringRead(ctx context.Context, from OnlineStore) {
+}
+
+func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetRequired()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	return attrs
 }
 
 func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +128,7 @@ func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks online_store",
 		Attributes:  attrs,

@@ -14,7 +14,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -40,7 +39,15 @@ type EntityTagAssignmentResource struct {
 
 // EntityTagAssignment extends the main model with additional fields.
 type EntityTagAssignment struct {
-	catalog_tf.EntityTagAssignment
+	// The fully qualified name of the entity to which the tag is assigned
+	EntityName types.String `tfsdk:"entity_name"`
+	// The type of the entity to which the tag is assigned. Allowed values are:
+	// catalogs, schemas, tables, columns, volumes.
+	EntityType types.String `tfsdk:"entity_type"`
+	// The key of the tag
+	TagKey types.String `tfsdk:"tag_key"`
+	// The value of the tag
+	TagValue types.String `tfsdk:"tag_value"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +58,7 @@ type EntityTagAssignment struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.EntityTagAssignment.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +68,53 @@ func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[strin
 // interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignment
 // only implements ToObjectValue() and Type().
 func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.EntityTagAssignment.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"entity_name": m.EntityName,
+			"entity_type": m.EntityType,
+			"tag_key":     m.TagKey,
+			"tag_value":   m.TagValue,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
-	embeddedType := m.EntityTagAssignment.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"entity_name": types.StringType,
+			"entity_type": types.StringType,
+			"tag_key":     types.StringType,
+			"tag_value":   types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan EntityTagAssignment) {
-	m.EntityTagAssignment.SyncFieldsDuringCreateOrUpdate(ctx, plan.EntityTagAssignment)
+func (to *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EntityTagAssignment) {
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *EntityTagAssignment) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignment) {
-	m.EntityTagAssignment.SyncFieldsDuringRead(ctx, existingState.EntityTagAssignment)
+func (to *EntityTagAssignment) SyncFieldsDuringRead(ctx context.Context, from EntityTagAssignment) {
+}
+
+func (m EntityTagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+
+	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	return attrs
 }
 
 func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,12 +122,7 @@ func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource
 }
 
 func (r *EntityTagAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, EntityTagAssignment{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_type")
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "entity_name")
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "tag_key")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, EntityTagAssignment{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks entity_tag_assignment",
 		Attributes:  attrs,

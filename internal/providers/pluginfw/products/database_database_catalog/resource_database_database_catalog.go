@@ -14,12 +14,12 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,7 +40,15 @@ type DatabaseCatalogResource struct {
 
 // DatabaseCatalog extends the main model with additional fields.
 type DatabaseCatalog struct {
-	database_tf.DatabaseCatalog
+	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
+	// The name of the DatabaseInstance housing the database.
+	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
+	// The name of the database (in a instance) associated with the catalog.
+	DatabaseName types.String `tfsdk:"database_name"`
+	// The name of the catalog in UC.
+	Name types.String `tfsdk:"name"`
+
+	Uid types.String `tfsdk:"uid"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +59,7 @@ type DatabaseCatalog struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.DatabaseCatalog.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +69,61 @@ func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]re
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCatalog
 // only implements ToObjectValue() and Type().
 func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.DatabaseCatalog.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_database_if_not_exists": m.CreateDatabaseIfNotExists,
+			"database_instance_name": m.DatabaseInstanceName,
+			"database_name":          m.DatabaseName,
+			"name":                   m.Name,
+			"uid":                    m.Uid,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
-	embeddedType := m.DatabaseCatalog.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_database_if_not_exists": types.BoolType,
+			"database_instance_name": types.StringType,
+			"database_name":          types.StringType,
+			"name":                   types.StringType,
+			"uid":                    types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseCatalog) {
-	m.DatabaseCatalog.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseCatalog)
+func (to *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseCatalog) {
+	if !from.CreateDatabaseIfNotExists.IsUnknown() && !from.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfNotExists = from.CreateDatabaseIfNotExists
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalog) {
-	m.DatabaseCatalog.SyncFieldsDuringRead(ctx, existingState.DatabaseCatalog)
+func (to *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, from DatabaseCatalog) {
+	if !from.CreateDatabaseIfNotExists.IsUnknown() && !from.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfNotExists = from.CreateDatabaseIfNotExists
+	}
+}
+
+func (m DatabaseCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetOptional()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetComputed()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetRequired()
+	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["uid"] = attrs["uid"].SetComputed()
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	return attrs
 }
 
 func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +131,7 @@ func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.Met
 }
 
 func (r *DatabaseCatalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks database_database_catalog",
 		Attributes:  attrs,

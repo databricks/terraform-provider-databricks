@@ -34,7 +34,15 @@ type AccessRequestDestinationDataSource struct {
 
 // AccessRequestDestinationsData extends the main model with additional fields.
 type AccessRequestDestinationsData struct {
-	catalog_tf.AccessRequestDestinations
+	// Indicates whether any destinations are hidden from the caller due to a
+	// lack of permissions. This value is true if the caller does not have
+	// permission to see all destinations.
+	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
+	// The access request destinations for the securable.
+	Destinations types.List `tfsdk:"destinations"`
+	// The securable for which the access request destinations are being
+	// retrieved.
+	Securable types.Object `tfsdk:"securable"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +53,10 @@ type AccessRequestDestinationsData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.AccessRequestDestinations.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"destinations": reflect.TypeOf(catalog_tf.NotificationDestination{}),
+		"securable":    reflect.TypeOf(catalog_tf.Securable{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +66,40 @@ func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context)
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccessRequestDestinationsData
 // only implements ToObjectValue() and Type().
 func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.AccessRequestDestinations.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"are_any_destinations_hidden": m.AreAnyDestinationsHidden,
+			"destinations": m.Destinations,
+			"securable":    m.Securable,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.AccessRequestDestinations.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"are_any_destinations_hidden": types.BoolType,
+			"destinations": basetypes.ListType{
+				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
+			},
+			"securable": catalog_tf.Securable{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AccessRequestDestinationsData) SyncFieldsDuringRead(ctx context.Context, existingState AccessRequestDestinationsData) {
-	m.AccessRequestDestinations.SyncFieldsDuringRead(ctx, existingState.AccessRequestDestinations)
+func (to *AccessRequestDestinationsData) SyncFieldsDuringRead(ctx context.Context, from AccessRequestDestinationsData) {
+}
+
+func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
+	attrs["destinations"] = attrs["destinations"].SetRequired()
+	attrs["securable"] = attrs["securable"].SetRequired()
+
+	return attrs
 }
 
 func (r *AccessRequestDestinationDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +107,7 @@ func (r *AccessRequestDestinationDataSource) Metadata(ctx context.Context, req d
 }
 
 func (r *AccessRequestDestinationDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccessRequestDestinationsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccessRequestDestinationsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AccessRequestDestinations",
 		Attributes:  attrs,

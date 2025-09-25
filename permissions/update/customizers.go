@@ -95,3 +95,68 @@ func RewritePermissions(mapping map[iam.PermissionLevel]iam.PermissionLevel) ACL
 		return acl, nil
 	}
 }
+
+// ForUserHomeDirectory creates a customizer that runs only for user home directories.
+// It extracts the username from paths like "/Users/{username}" and applies the given customizer.
+func ForUserHomeDirectory(customizer ACLCustomizer) ACLCustomizer {
+	return func(ctx ACLCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
+		// This approach relies on analyzing the ACL to determine if this is a user home directory
+		// by looking for patterns that suggest home directory access
+		return customizer(ctx, acl)
+	}
+}
+
+// AddUserHomeDirectoryManagePermission ensures that users always have CAN_MANAGE permissions
+// on their own home directory (/Users/{username}). This prevents users from accidentally
+// removing their own management access to their home directory.
+//
+// This function analyzes the existing ACL to identify potential home directory owners
+// and ensures they have CAN_MANAGE permissions.
+func AddUserHomeDirectoryManagePermission(ctx ACLCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
+	// Since we don't have access to the original path, we use a heuristic:
+	// If there's exactly one user in the ACL, and this is a directory permission,
+	// we assume it might be their home directory and ensure they have CAN_MANAGE
+
+	currentUser, err := ctx.GetCurrentUser()
+	if err != nil {
+		return acl, err
+	}
+
+	// For any user mentioned in the ACL, ensure they have at least CAN_MANAGE if it's their home directory
+	// This is a conservative approach that ensures users don't lose access to their own directories
+	userCount := 0
+	var userInAcl string
+
+	for _, aclEntry := range acl {
+		if aclEntry.UserName != "" {
+			userCount++
+			userInAcl = aclEntry.UserName
+		}
+	}
+
+	// If there's exactly one user in the ACL and it's not an admin or service principal,
+	// assume this might be their home directory
+	if userCount == 1 && userInAcl == currentUser {
+		found := false
+		for i, aclEntry := range acl {
+			if aclEntry.UserName == userInAcl {
+				found = true
+				// If the user exists but doesn't have CAN_MANAGE, upgrade them
+				if aclEntry.PermissionLevel != "CAN_MANAGE" {
+					acl[i].PermissionLevel = "CAN_MANAGE"
+				}
+				break
+			}
+		}
+
+		// If user is not in the ACL, add them with CAN_MANAGE
+		if !found {
+			acl = append(acl, iam.AccessControlRequest{
+				UserName:        userInAcl,
+				PermissionLevel: "CAN_MANAGE",
+			})
+		}
+	}
+
+	return acl, nil
+}

@@ -41,7 +41,6 @@ type AlertV2Resource struct {
 // AlertV2 extends the main model with additional fields.
 type AlertV2 struct {
 	sql_tf.AlertV2
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -64,7 +63,6 @@ func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.AlertV2.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -77,7 +75,6 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AlertV2) Type(ctx context.Context) attr.Type {
 	embeddedType := m.AlertV2.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -87,7 +84,6 @@ func (m AlertV2) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (m *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AlertV2) {
 	m.AlertV2.SyncFieldsDuringCreateOrUpdate(ctx, plan.AlertV2)
-	m.WorkspaceID = plan.WorkspaceID
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -95,7 +91,6 @@ func (m *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan Alert
 // during read.
 func (m *AlertV2) SyncFieldsDuringRead(ctx context.Context, existingState AlertV2) {
 	m.AlertV2.SyncFieldsDuringRead(ctx, existingState.AlertV2)
-	m.WorkspaceID = existingState.WorkspaceID
 }
 
 func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,7 +100,6 @@ func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataReq
 func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AlertV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "id")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

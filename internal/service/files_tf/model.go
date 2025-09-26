@@ -30,6 +30,19 @@ type AddBlock struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
+func (to *AddBlock) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AddBlock) {
+}
+
+func (to *AddBlock) SyncFieldsDuringRead(ctx context.Context, from AddBlock) {
+}
+
+func (c AddBlock) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetRequired()
+	attrs["handle"] = attrs["handle"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -66,10 +79,10 @@ func (o AddBlock) Type(ctx context.Context) attr.Type {
 type AddBlockResponse struct {
 }
 
-func (toState *AddBlockResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AddBlockResponse) {
+func (to *AddBlockResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AddBlockResponse) {
 }
 
-func (toState *AddBlockResponse) SyncFieldsDuringRead(ctx context.Context, fromState AddBlockResponse) {
+func (to *AddBlockResponse) SyncFieldsDuringRead(ctx context.Context, from AddBlockResponse) {
 }
 
 func (c AddBlockResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -109,6 +122,18 @@ type Close struct {
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
+func (to *Close) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Close) {
+}
+
+func (to *Close) SyncFieldsDuringRead(ctx context.Context, from Close) {
+}
+
+func (c Close) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["handle"] = attrs["handle"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -143,10 +168,10 @@ func (o Close) Type(ctx context.Context) attr.Type {
 type CloseResponse struct {
 }
 
-func (toState *CloseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloseResponse) {
+func (to *CloseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CloseResponse) {
 }
 
-func (toState *CloseResponse) SyncFieldsDuringRead(ctx context.Context, fromState CloseResponse) {
+func (to *CloseResponse) SyncFieldsDuringRead(ctx context.Context, from CloseResponse) {
 }
 
 func (c CloseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -188,6 +213,19 @@ type Create struct {
 	Path types.String `tfsdk:"path"`
 }
 
+func (to *Create) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Create) {
+}
+
+func (to *Create) SyncFieldsDuringRead(ctx context.Context, from Create) {
+}
+
+func (c Create) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -226,6 +264,18 @@ type CreateDirectoryRequest struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (to *CreateDirectoryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDirectoryRequest) {
+}
+
+func (to *CreateDirectoryRequest) SyncFieldsDuringRead(ctx context.Context, from CreateDirectoryRequest) {
+}
+
+func (c CreateDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -257,46 +307,16 @@ func (o CreateDirectoryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CreateDirectoryResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CreateDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDirectoryResponse
-// only implements ToObjectValue() and Type().
-func (o CreateDirectoryResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CreateDirectoryResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type CreateResponse struct {
 	// Handle which should subsequently be passed into the AddBlock and Close
 	// calls when writing to a file through a stream.
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
-func (toState *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse) {
+func (to *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateResponse) {
 }
 
-func (toState *CreateResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse) {
+func (to *CreateResponse) SyncFieldsDuringRead(ctx context.Context, from CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -345,6 +365,19 @@ type Delete struct {
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
+func (to *Delete) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Delete) {
+}
+
+func (to *Delete) SyncFieldsDuringRead(ctx context.Context, from Delete) {
+}
+
+func (c Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["recursive"] = attrs["recursive"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -383,6 +416,18 @@ type DeleteDirectoryRequest struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (to *DeleteDirectoryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDirectoryRequest) {
+}
+
+func (to *DeleteDirectoryRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteDirectoryRequest) {
+}
+
+func (c DeleteDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDirectoryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -414,39 +459,21 @@ func (o DeleteDirectoryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteDirectoryResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDirectoryResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDirectoryResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteDirectoryResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteDirectoryResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteFileRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
+}
+
+func (to *DeleteFileRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteFileRequest) {
+}
+
+func (to *DeleteFileRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteFileRequest) {
+}
+
+func (c DeleteFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_path"] = attrs["file_path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileRequest.
@@ -483,10 +510,10 @@ func (o DeleteFileRequest) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (toState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse) {
+func (to *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteResponse) {
 }
 
-func (toState *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse) {
+func (to *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -535,10 +562,10 @@ type DirectoryEntry struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (toState *DirectoryEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DirectoryEntry) {
+func (to *DirectoryEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DirectoryEntry) {
 }
 
-func (toState *DirectoryEntry) SyncFieldsDuringRead(ctx context.Context, fromState DirectoryEntry) {
+func (to *DirectoryEntry) SyncFieldsDuringRead(ctx context.Context, from DirectoryEntry) {
 }
 
 func (c DirectoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -595,6 +622,18 @@ type DownloadRequest struct {
 	FilePath types.String `tfsdk:"-"`
 }
 
+func (to *DownloadRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadRequest) {
+}
+
+func (to *DownloadRequest) SyncFieldsDuringRead(ctx context.Context, from DownloadRequest) {
+}
+
+func (c DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_path"] = attrs["file_path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -637,6 +676,21 @@ type DownloadResponse struct {
 	LastModified types.String `tfsdk:"-"`
 }
 
+func (to *DownloadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadResponse) {
+}
+
+func (to *DownloadResponse) SyncFieldsDuringRead(ctx context.Context, from DownloadResponse) {
+}
+
+func (c DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["content_length"] = attrs["content_length"].SetOptional()
+	attrs["content_type"] = attrs["content_type"].SetOptional()
+	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -655,10 +709,10 @@ func (o DownloadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content-length": o.ContentLength,
-			"content-type":   o.ContentType,
+			"content_length": o.ContentLength,
+			"content_type":   o.ContentType,
 			"contents":       o.Contents,
-			"last-modified":  o.LastModified,
+			"last_modified":  o.LastModified,
 		})
 }
 
@@ -666,10 +720,10 @@ func (o DownloadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o DownloadResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"content-length": types.Int64Type,
-			"content-type":   types.StringType,
+			"content_length": types.Int64Type,
+			"content_type":   types.StringType,
 			"contents":       types.ObjectType{},
-			"last-modified":  types.StringType,
+			"last_modified":  types.StringType,
 		},
 	}
 }
@@ -685,10 +739,10 @@ type FileInfo struct {
 	Path types.String `tfsdk:"path"`
 }
 
-func (toState *FileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileInfo) {
+func (to *FileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FileInfo) {
 }
 
-func (toState *FileInfo) SyncFieldsDuringRead(ctx context.Context, fromState FileInfo) {
+func (to *FileInfo) SyncFieldsDuringRead(ctx context.Context, from FileInfo) {
 }
 
 func (c FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -742,6 +796,18 @@ type GetDirectoryMetadataRequest struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (to *GetDirectoryMetadataRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDirectoryMetadataRequest) {
+}
+
+func (to *GetDirectoryMetadataRequest) SyncFieldsDuringRead(ctx context.Context, from GetDirectoryMetadataRequest) {
+}
+
+func (c GetDirectoryMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDirectoryMetadataRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -773,39 +839,21 @@ func (o GetDirectoryMetadataRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type GetDirectoryMetadataResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDirectoryMetadataResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GetDirectoryMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDirectoryMetadataResponse
-// only implements ToObjectValue() and Type().
-func (o GetDirectoryMetadataResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GetDirectoryMetadataResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type GetMetadataRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
+}
+
+func (to *GetMetadataRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMetadataRequest) {
+}
+
+func (to *GetMetadataRequest) SyncFieldsDuringRead(ctx context.Context, from GetMetadataRequest) {
+}
+
+func (c GetMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_path"] = attrs["file_path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataRequest.
@@ -848,6 +896,20 @@ type GetMetadataResponse struct {
 	LastModified types.String `tfsdk:"-"`
 }
 
+func (to *GetMetadataResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMetadataResponse) {
+}
+
+func (to *GetMetadataResponse) SyncFieldsDuringRead(ctx context.Context, from GetMetadataResponse) {
+}
+
+func (c GetMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content_length"] = attrs["content_length"].SetOptional()
+	attrs["content_type"] = attrs["content_type"].SetOptional()
+	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -866,9 +928,9 @@ func (o GetMetadataResponse) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content-length": o.ContentLength,
-			"content-type":   o.ContentType,
-			"last-modified":  o.LastModified,
+			"content_length": o.ContentLength,
+			"content_type":   o.ContentType,
+			"last_modified":  o.LastModified,
 		})
 }
 
@@ -876,9 +938,9 @@ func (o GetMetadataResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetMetadataResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"content-length": types.Int64Type,
-			"content-type":   types.StringType,
-			"last-modified":  types.StringType,
+			"content_length": types.Int64Type,
+			"content_type":   types.StringType,
+			"last_modified":  types.StringType,
 		},
 	}
 }
@@ -887,6 +949,18 @@ type GetStatusRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
 	Path types.String `tfsdk:"-"`
+}
+
+func (to *GetStatusRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetStatusRequest) {
+}
+
+func (to *GetStatusRequest) SyncFieldsDuringRead(ctx context.Context, from GetStatusRequest) {
+}
+
+func (c GetStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatusRequest.
@@ -924,6 +998,18 @@ type ListDbfsRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
 	Path types.String `tfsdk:"-"`
+}
+
+func (to *ListDbfsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDbfsRequest) {
+}
+
+func (to *ListDbfsRequest) SyncFieldsDuringRead(ctx context.Context, from ListDbfsRequest) {
+}
+
+func (c ListDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDbfsRequest.
@@ -982,6 +1068,20 @@ type ListDirectoryContentsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListDirectoryContentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectoryContentsRequest) {
+}
+
+func (to *ListDirectoryContentsRequest) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryContentsRequest) {
+}
+
+func (c ListDirectoryContentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryContentsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1024,10 +1124,22 @@ type ListDirectoryResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (toState *ListDirectoryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListDirectoryResponse) {
+func (to *ListDirectoryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectoryResponse) {
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Contents = from.Contents
+	}
 }
 
-func (toState *ListDirectoryResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListDirectoryResponse) {
+func (to *ListDirectoryResponse) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryResponse) {
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Contents = from.Contents
+	}
 }
 
 func (c ListDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1106,10 +1218,22 @@ type ListStatusResponse struct {
 	Files types.List `tfsdk:"files"`
 }
 
-func (toState *ListStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListStatusResponse) {
+func (to *ListStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListStatusResponse) {
+	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Files = from.Files
+	}
 }
 
-func (toState *ListStatusResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListStatusResponse) {
+func (to *ListStatusResponse) SyncFieldsDuringRead(ctx context.Context, from ListStatusResponse) {
+	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Files = from.Files
+	}
 }
 
 func (c ListStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1184,6 +1308,18 @@ type MkDirs struct {
 	Path types.String `tfsdk:"path"`
 }
 
+func (to *MkDirs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MkDirs) {
+}
+
+func (to *MkDirs) SyncFieldsDuringRead(ctx context.Context, from MkDirs) {
+}
+
+func (c MkDirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1218,10 +1354,10 @@ func (o MkDirs) Type(ctx context.Context) attr.Type {
 type MkDirsResponse struct {
 }
 
-func (toState *MkDirsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MkDirsResponse) {
+func (to *MkDirsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MkDirsResponse) {
 }
 
-func (toState *MkDirsResponse) SyncFieldsDuringRead(ctx context.Context, fromState MkDirsResponse) {
+func (to *MkDirsResponse) SyncFieldsDuringRead(ctx context.Context, from MkDirsResponse) {
 }
 
 func (c MkDirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1265,6 +1401,19 @@ type Move struct {
 	SourcePath types.String `tfsdk:"source_path"`
 }
 
+func (to *Move) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Move) {
+}
+
+func (to *Move) SyncFieldsDuringRead(ctx context.Context, from Move) {
+}
+
+func (c Move) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_path"] = attrs["destination_path"].SetRequired()
+	attrs["source_path"] = attrs["source_path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1301,10 +1450,10 @@ func (o Move) Type(ctx context.Context) attr.Type {
 type MoveResponse struct {
 }
 
-func (toState *MoveResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MoveResponse) {
+func (to *MoveResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MoveResponse) {
 }
 
-func (toState *MoveResponse) SyncFieldsDuringRead(ctx context.Context, fromState MoveResponse) {
+func (to *MoveResponse) SyncFieldsDuringRead(ctx context.Context, from MoveResponse) {
 }
 
 func (c MoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1348,6 +1497,20 @@ type Put struct {
 	Path types.String `tfsdk:"path"`
 }
 
+func (to *Put) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Put) {
+}
+
+func (to *Put) SyncFieldsDuringRead(ctx context.Context, from Put) {
+}
+
+func (c Put) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1386,10 +1549,10 @@ func (o Put) Type(ctx context.Context) attr.Type {
 type PutResponse struct {
 }
 
-func (toState *PutResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PutResponse) {
+func (to *PutResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PutResponse) {
 }
 
-func (toState *PutResponse) SyncFieldsDuringRead(ctx context.Context, fromState PutResponse) {
+func (to *PutResponse) SyncFieldsDuringRead(ctx context.Context, from PutResponse) {
 }
 
 func (c PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1432,6 +1595,20 @@ type ReadDbfsRequest struct {
 	Offset types.Int64 `tfsdk:"-"`
 	// The path of the file to read. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"-"`
+}
+
+func (to *ReadDbfsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReadDbfsRequest) {
+}
+
+func (to *ReadDbfsRequest) SyncFieldsDuringRead(ctx context.Context, from ReadDbfsRequest) {
+}
+
+func (c ReadDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["length"] = attrs["length"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadDbfsRequest.
@@ -1478,10 +1655,10 @@ type ReadResponse struct {
 	Data types.String `tfsdk:"data"`
 }
 
-func (toState *ReadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ReadResponse) {
+func (to *ReadResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReadResponse) {
 }
 
-func (toState *ReadResponse) SyncFieldsDuringRead(ctx context.Context, fromState ReadResponse) {
+func (to *ReadResponse) SyncFieldsDuringRead(ctx context.Context, from ReadResponse) {
 }
 
 func (c ReadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1533,6 +1710,20 @@ type UploadRequest struct {
 	Overwrite types.Bool `tfsdk:"-"`
 }
 
+func (to *UploadRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UploadRequest) {
+}
+
+func (to *UploadRequest) SyncFieldsDuringRead(ctx context.Context, from UploadRequest) {
+}
+
+func (c UploadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetRequired()
+	attrs["file_path"] = attrs["file_path"].SetRequired()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1565,35 +1756,5 @@ func (o UploadRequest) Type(ctx context.Context) attr.Type {
 			"file_path": types.StringType,
 			"overwrite": types.BoolType,
 		},
-	}
-}
-
-type UploadResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UploadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UploadResponse
-// only implements ToObjectValue() and Type().
-func (o UploadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UploadResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
 	}
 }

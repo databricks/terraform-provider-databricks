@@ -30,10 +30,10 @@ type AnomalyDetectionConfig_SdkV2 struct {
 	LatestRunStatus types.String `tfsdk:"latest_run_status"`
 }
 
-func (toState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AnomalyDetectionConfig_SdkV2) {
+func (to *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AnomalyDetectionConfig_SdkV2) {
 }
 
-func (toState *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AnomalyDetectionConfig_SdkV2) {
+func (to *AnomalyDetectionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AnomalyDetectionConfig_SdkV2) {
 }
 
 func (c AnomalyDetectionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -78,6 +78,36 @@ func (o AnomalyDetectionConfig_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateQualityMonitorRequest_SdkV2 struct {
 	QualityMonitor types.List `tfsdk:"quality_monitor"`
+}
+
+func (to *CreateQualityMonitorRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateQualityMonitorRequest_SdkV2) {
+	if !from.QualityMonitor.IsNull() && !from.QualityMonitor.IsUnknown() {
+		if toQualityMonitor, ok := to.GetQualityMonitor(ctx); ok {
+			if fromQualityMonitor, ok := from.GetQualityMonitor(ctx); ok {
+				// Recursively sync the fields of QualityMonitor
+				toQualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, fromQualityMonitor)
+				to.SetQualityMonitor(ctx, toQualityMonitor)
+			}
+		}
+	}
+}
+
+func (to *CreateQualityMonitorRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateQualityMonitorRequest_SdkV2) {
+	if !from.QualityMonitor.IsNull() && !from.QualityMonitor.IsUnknown() {
+		if toQualityMonitor, ok := to.GetQualityMonitor(ctx); ok {
+			if fromQualityMonitor, ok := from.GetQualityMonitor(ctx); ok {
+				toQualityMonitor.SyncFieldsDuringRead(ctx, fromQualityMonitor)
+				to.SetQualityMonitor(ctx, toQualityMonitor)
+			}
+		}
+	}
+}
+
+func (c CreateQualityMonitorRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
+	attrs["quality_monitor"] = attrs["quality_monitor"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQualityMonitorRequest.
@@ -148,6 +178,19 @@ type DeleteQualityMonitorRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (to *DeleteQualityMonitorRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteQualityMonitorRequest_SdkV2) {
+}
+
+func (to *DeleteQualityMonitorRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteQualityMonitorRequest_SdkV2) {
+}
+
+func (c DeleteQualityMonitorRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQualityMonitorRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -186,6 +229,19 @@ type GetQualityMonitorRequest_SdkV2 struct {
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: schema.
 	ObjectType types.String `tfsdk:"-"`
+}
+
+func (to *GetQualityMonitorRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetQualityMonitorRequest_SdkV2) {
+}
+
+func (to *GetQualityMonitorRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetQualityMonitorRequest_SdkV2) {
+}
+
+func (c GetQualityMonitorRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQualityMonitorRequest.
@@ -227,6 +283,19 @@ type ListQualityMonitorRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListQualityMonitorRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQualityMonitorRequest_SdkV2) {
+}
+
+func (to *ListQualityMonitorRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListQualityMonitorRequest_SdkV2) {
+}
+
+func (c ListQualityMonitorRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQualityMonitorRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -266,10 +335,22 @@ type ListQualityMonitorResponse_SdkV2 struct {
 	QualityMonitors types.List `tfsdk:"quality_monitors"`
 }
 
-func (toState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQualityMonitorResponse_SdkV2) {
+func (to *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQualityMonitorResponse_SdkV2) {
+	if !from.QualityMonitors.IsNull() && !from.QualityMonitors.IsUnknown() && to.QualityMonitors.IsNull() && len(from.QualityMonitors.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QualityMonitors, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QualityMonitors = from.QualityMonitors
+	}
 }
 
-func (toState *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListQualityMonitorResponse_SdkV2) {
+func (to *ListQualityMonitorResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListQualityMonitorResponse_SdkV2) {
+	if !from.QualityMonitors.IsNull() && !from.QualityMonitors.IsUnknown() && to.QualityMonitors.IsNull() && len(from.QualityMonitors.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QualityMonitors, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QualityMonitors = from.QualityMonitors
+	}
 }
 
 func (c ListQualityMonitorResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -350,23 +431,24 @@ type QualityMonitor_SdkV2 struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (toState *QualityMonitor_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QualityMonitor_SdkV2) {
-	if !fromPlan.AnomalyDetectionConfig.IsNull() && !fromPlan.AnomalyDetectionConfig.IsUnknown() {
-		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
-			if fromPlanAnomalyDetectionConfig, ok := fromPlan.GetAnomalyDetectionConfig(ctx); ok {
-				toStateAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAnomalyDetectionConfig)
-				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+func (to *QualityMonitor_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QualityMonitor_SdkV2) {
+	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+				// Recursively sync the fields of AnomalyDetectionConfig
+				toAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAnomalyDetectionConfig)
+				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
 			}
 		}
 	}
 }
 
-func (toState *QualityMonitor_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QualityMonitor_SdkV2) {
-	if !fromState.AnomalyDetectionConfig.IsNull() && !fromState.AnomalyDetectionConfig.IsUnknown() {
-		if toStateAnomalyDetectionConfig, ok := toState.GetAnomalyDetectionConfig(ctx); ok {
-			if fromStateAnomalyDetectionConfig, ok := fromState.GetAnomalyDetectionConfig(ctx); ok {
-				toStateAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromStateAnomalyDetectionConfig)
-				toState.SetAnomalyDetectionConfig(ctx, toStateAnomalyDetectionConfig)
+func (to *QualityMonitor_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QualityMonitor_SdkV2) {
+	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+				toAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromAnomalyDetectionConfig)
+				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
 			}
 		}
 	}
@@ -453,6 +535,38 @@ type UpdateQualityMonitorRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 
 	QualityMonitor types.List `tfsdk:"quality_monitor"`
+}
+
+func (to *UpdateQualityMonitorRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateQualityMonitorRequest_SdkV2) {
+	if !from.QualityMonitor.IsNull() && !from.QualityMonitor.IsUnknown() {
+		if toQualityMonitor, ok := to.GetQualityMonitor(ctx); ok {
+			if fromQualityMonitor, ok := from.GetQualityMonitor(ctx); ok {
+				// Recursively sync the fields of QualityMonitor
+				toQualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, fromQualityMonitor)
+				to.SetQualityMonitor(ctx, toQualityMonitor)
+			}
+		}
+	}
+}
+
+func (to *UpdateQualityMonitorRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateQualityMonitorRequest_SdkV2) {
+	if !from.QualityMonitor.IsNull() && !from.QualityMonitor.IsUnknown() {
+		if toQualityMonitor, ok := to.GetQualityMonitor(ctx); ok {
+			if fromQualityMonitor, ok := from.GetQualityMonitor(ctx); ok {
+				toQualityMonitor.SyncFieldsDuringRead(ctx, fromQualityMonitor)
+				to.SetQualityMonitor(ctx, toQualityMonitor)
+			}
+		}
+	}
+}
+
+func (c UpdateQualityMonitorRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
+	attrs["quality_monitor"] = attrs["quality_monitor"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateQualityMonitorRequest.

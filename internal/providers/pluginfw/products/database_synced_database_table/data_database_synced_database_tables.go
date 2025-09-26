@@ -28,8 +28,7 @@ func DataSourceSyncedDatabaseTables() datasource.DataSource {
 
 // SyncedDatabaseTablesData extends the main model with additional fields.
 type SyncedDatabaseTablesData struct {
-	Database    types.List   `tfsdk:"synced_tables"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	Database types.List `tfsdk:"synced_tables"`
 }
 
 func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *SyncedDatabaseTablesDataSource) Metadata(ctx context.Context, req datas
 func (r *SyncedDatabaseTablesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SyncedDatabaseTablesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("synced_tables")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 
 	var newState SyncedDatabaseTablesData
 	newState.Database = types.ListValueMust(database_tf.SyncedDatabaseTable{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

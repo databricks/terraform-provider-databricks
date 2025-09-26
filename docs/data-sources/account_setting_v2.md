@@ -2,10 +2,21 @@
 subcategory: "Settings"
 ---
 # databricks_account_setting_v2 Data Source
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source can be used to get a single account setting. 
 
 ## Example Usage
+Referring to a setting by id
 
+```hcl
+data "databricks_account_setting_v2" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:
@@ -15,14 +26,12 @@ The following arguments are supported:
 The following attributes are exported:
 * `aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy)
 * `aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains)
-* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage) - todo: Mark these Public after onboarded to DSL
+* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage)
 * `boolean_val` (BooleanMessage)
-* `default_data_security_mode` (DefaultDataSecurityModeMessage)
 * `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy)
 * `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains)
 * `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage)
 * `effective_boolean_val` (BooleanMessage)
-* `effective_default_data_security_mode` (DefaultDataSecurityModeMessage)
 * `effective_integer_val` (IntegerMessage)
 * `effective_personal_compute` (PersonalComputeMessage)
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage)
@@ -65,9 +74,6 @@ The following attributes are exported:
 ### ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
 * `hours` (integer)
 * `minutes` (integer)
-
-### DefaultDataSecurityModeMessage
-* `status` (string) - . Possible values are: `NOT_SET`, `SINGLE_USER`, `USER_ISOLATION`
 
 ### IntegerMessage
 * `value` (integer)

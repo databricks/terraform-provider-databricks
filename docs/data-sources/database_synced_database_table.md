@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_synced_database_table Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Synced Database Table.
 
 
@@ -18,7 +20,6 @@ data "databricks_database_synced_database_table" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Full three-part (catalog, schema, table) name of the table
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

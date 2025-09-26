@@ -6,7 +6,7 @@
 
 ### New Features and Improvements
 
- * Add `table_id` to the output of `databricks_sql_table` resource ([]()).
+ * Add `table_id` to the output of `databricks_sql_table` resource ([#5058](https://github.com/databricks/terraform-provider-databricks/pull/5058)).
 
 ### Bug Fixes
 

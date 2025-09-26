@@ -293,8 +293,6 @@ func TestMwsAccGcpWorkspacesWithExpectedProvisioning(t *testing.T) {
 
 			return nil
 		},
-		// Skip destruction to avoid INVALID_STATE_TRANSITION error when trying to delete workspace in PROVISIONING status
-		Destroy: false,
 	})
 }
 

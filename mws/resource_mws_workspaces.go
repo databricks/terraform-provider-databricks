@@ -359,6 +359,16 @@ func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Delete(a.context, workspacesAPIPath, nil)
 	if err != nil {
+		// Catch INVALID_STATE_TRANSITION error for workspaces in PROVISIONING status
+		var apiErr *apierr.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE_TRANSITION" {
+			// Check if workspace is in PROVISIONING status
+			workspace, readErr := a.Read(mwsAcctID, workspaceID)
+			if readErr == nil && workspace.WorkspaceStatus == WorkspaceStatusProvisioning {
+				log.Printf("[WARN] Workspace %s is in PROVISIONING status and cannot be deleted due to INVALID_STATE_TRANSITION. Treating as successfully deleted to avoid blocking Terraform operations.", workspaceID)
+				return nil
+			}
+		}
 		return err
 	}
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {

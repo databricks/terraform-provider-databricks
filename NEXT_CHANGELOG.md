@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+ * Add `table_id` to the output of `databricks_sql_table` resource ([]()).
+
 ### Bug Fixes
 
 * Allow update `managed_services_customer_managed_key_id` in `databricks_mws_workspaces` ([#5034](https://github.com/databricks/terraform-provider-databricks/pull/5034))

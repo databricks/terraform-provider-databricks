@@ -204,6 +204,7 @@ Currently, changing the column definitions for a table will require dropping and
 In addition to all the arguments above, the following attributes are exported:
 
 * `id` - ID of this table in the form of `<catalog_name>.<schema_name>.<name>`.
+* `table_id` - The unique identifier of the table.
 
 ## Import
 

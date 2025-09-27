@@ -688,6 +688,21 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 	return false
 }
 
+// isStructEmpty checks if a struct has all zero values
+func isStructEmpty(v reflect.Value) bool {
+	if v.Kind() != reflect.Struct {
+		return false
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		if !field.IsZero() {
+			return false
+		}
+	}
+	return true
+}
+
 // StructToData reads result using schema onto resource data
 func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
 	aliases := getAliasesMapFromStruct(result)
@@ -922,10 +937,9 @@ func readListFromData(path []string, d attributeGetter,
 		return nil
 	case reflect.Slice:
 		k := valueField.Type().Elem().Kind()
-		newSlice := reflect.MakeSlice(valueField.Type(), len(rawList), len(rawList))
-		valueField.Set(newSlice)
+		var validItems []reflect.Value
+
 		for i, elem := range rawList {
-			item := newSlice.Index(i)
 			switch k {
 			case reflect.Struct:
 				// here we rely on Terraform SDK to perform validation, so we don't to it twice
@@ -937,14 +951,27 @@ func readListFromData(path []string, d attributeGetter,
 				if err != nil {
 					return err
 				}
-				item.Set(ve)
+				// Only add non-empty structs to avoid sending empty objects to the API
+				if !isStructEmpty(ve) {
+					validItems = append(validItems, ve)
+				}
 			default:
-				err := setPrimitiveValueOfKind(fieldPath, k, item, elem)
+				// For non-struct types, create a temporary item to check if it's valid
+				tempItem := reflect.New(valueField.Type().Elem()).Elem()
+				err := setPrimitiveValueOfKind(fieldPath, k, tempItem, elem)
 				if err != nil {
 					return err
 				}
+				validItems = append(validItems, tempItem)
 			}
 		}
+
+		// Create slice with only valid items
+		newSlice := reflect.MakeSlice(valueField.Type(), len(validItems), len(validItems))
+		for i, item := range validItems {
+			newSlice.Index(i).Set(item)
+		}
+		valueField.Set(newSlice)
 	default:
 		return fmt.Errorf("%s[%v] unknown collection field", fieldPath, rawList)
 	}

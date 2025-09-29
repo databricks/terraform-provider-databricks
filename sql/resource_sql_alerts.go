@@ -30,6 +30,7 @@ type AlertEntity struct {
 	Parent    string        `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 	CreatedAt string        `json:"created_at,omitempty" tf:"computed"`
 	UpdatedAt string        `json:"updated_at,omitempty" tf:"computed"`
+	common.ProviderConfig
 }
 
 func (a *AlertEntity) toCreateAlertApiObject(s map[string]*schema.Schema, data *schema.ResourceData) (sql.CreateAlert, error) {
@@ -125,6 +126,11 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.LegacyAlert, s map[string]*sch
 func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.MustSchemaPath(m, "options", "op").ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
+
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
+
 		return m
 	})
 

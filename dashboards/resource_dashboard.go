@@ -18,6 +18,7 @@ type Dashboard struct {
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
 	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
+	common.ProviderConfig
 }
 
 func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) bool {
@@ -55,6 +56,10 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 
 	// DiffSuppressFunc
 	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
+
+	// Provider config customizations
+	s.SchemaPath("provider_config").SetOptional()
+	s.SchemaPath("provider_config", "workspace_id").SetRequired()
 
 	return s
 }

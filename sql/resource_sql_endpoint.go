@@ -26,6 +26,7 @@ type SqlWarehouse struct {
 	// We manually resolve it by retrieving the list of data sources
 	// and matching this entity's endpoint ID.
 	DataSourceId string `json:"data_source_id,omitempty" tf:"computed"`
+	common.ProviderConfig
 }
 
 func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id string) (*SqlWarehouse, error) {
@@ -97,6 +98,10 @@ func ResourceSqlEndpoint() common.Resource {
 				return old == new
 			},
 		}
+
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
 
 		return m
 	})

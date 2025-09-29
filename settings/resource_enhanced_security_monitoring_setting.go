@@ -18,6 +18,21 @@ var enhancedSecurityMonitoringSetting = workspaceSetting[settings.EnhancedSecuri
 	settingStruct: settings.EnhancedSecurityMonitoringSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "enhanced_security_monitoring_workspace", "is_enabled").SetRequired()
+
+		// Add provider_config customizations by adding the fields manually
+		s["provider_config"] = &schema.Schema{
+			Type: schema.TypeMap,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+			Optional: true,
+		}
+
 		return s
 	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.EnhancedSecurityMonitoringSetting, error) {

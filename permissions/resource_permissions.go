@@ -174,6 +174,11 @@ func ResourcePermissions() common.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
+
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(s, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(s, "provider_config", "workspace_id").SetRequired()
+
 		return s
 	})
 	return common.Resource{

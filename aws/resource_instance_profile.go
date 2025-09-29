@@ -22,6 +22,7 @@ type InstanceProfileInfo struct {
 	IamRoleArn            string `json:"iam_role_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
 	SkipValidation        bool   `json:"skip_validation,omitempty" tf:"computed"`
+	common.ProviderConfig
 }
 
 // InstanceProfileList ...
@@ -157,6 +158,11 @@ func ResourceInstanceProfile() common.Resource {
 				}
 				return false
 			}
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
+
 			return m
 		})
 	return common.Resource{

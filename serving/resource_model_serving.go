@@ -131,9 +131,15 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// ModelServingStruct embeds SDK type with ProviderConfig
+type ModelServingStruct struct {
+	serving.CreateServingEndpoint
+	common.ProviderConfig
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		ModelServingStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			// Use the newer CustomizeSchemaPath approach for better maintainability
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
@@ -182,6 +188,11 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
+
 			return m
 		})
 
@@ -191,7 +202,7 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
-			var e serving.CreateServingEndpoint
+			var e ModelServingStruct
 			common.DataToStructPointer(d, s, &e)
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {

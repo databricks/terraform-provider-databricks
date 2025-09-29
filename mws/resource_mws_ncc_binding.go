@@ -14,8 +14,14 @@ func ResourceMwsNccBinding() common.Resource {
 	type binding struct {
 		WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
 		NccId       string `json:"network_connectivity_config_id"`
+		common.ProviderConfig
 	}
-	s := common.StructToSchema(binding{}, common.NoCustomize)
+	s := common.StructToSchema(binding{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
+		return m
+	})
 	p := common.NewPairSeparatedID("workspace_id", "network_connectivity_config_id", "/")
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		acc, err := c.AccountClient()

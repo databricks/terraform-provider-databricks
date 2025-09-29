@@ -28,6 +28,7 @@ type SqlPermissions struct {
 	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty" tf:"slice_set"`
 
 	exec common.CommandExecutor
+	common.ProviderConfig
 }
 
 // PrivilegeAssignment ...
@@ -332,6 +333,11 @@ func ResourceSqlPermissions() common.Resource {
 			return false
 		}
 		s["cluster_id"].Computed = true
+
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(s, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(s, "provider_config", "workspace_id").SetRequired()
+
 		return s
 	})
 	return common.Resource{

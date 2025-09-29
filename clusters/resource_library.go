@@ -15,6 +15,7 @@ import (
 
 type LibraryResource struct {
 	compute.Library
+	common.ProviderConfig
 }
 
 func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -29,6 +30,11 @@ const EggDeprecationWarning = "The `egg` library type is deprecated. Please use 
 
 func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	s.SchemaPath("egg").SetDeprecated(EggDeprecationWarning)
+
+	// Add provider_config customizations
+	s.SchemaPath("provider_config").SetOptional()
+	s.SchemaPath("provider_config", "workspace_id").SetRequired()
+
 	return s
 }
 

@@ -14,6 +14,7 @@ import (
 type sqlWarehouseDataParams struct {
 	Id   string `json:"id" tf:"computed,optional"`
 	Name string `json:"name" tf:"computed,optional"`
+	common.ProviderConfig
 }
 
 func DataSourceWarehouse() common.Resource {

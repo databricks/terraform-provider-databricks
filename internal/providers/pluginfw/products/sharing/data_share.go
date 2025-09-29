@@ -14,6 +14,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShare = "share"
@@ -30,7 +32,7 @@ type ShareDataSource struct {
 
 type ShareData struct {
 	sharing_tf.ShareInfo
-	ProviderConfig tfschema.ProviderConfigData `tfsdk:"provider_config"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -44,7 +46,7 @@ func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataR
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sharing_tf.ShareInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ShareData{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,
@@ -59,14 +61,22 @@ func (d *ShareDataSource) Configure(_ context.Context, req datasource.ConfigureR
 
 func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameShare)
-	w, diags := d.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var config ShareData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var config sharing_tf.ShareInfo
-	diags = req.Config.Get(ctx, &config)
+	var namespace tfschema.ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

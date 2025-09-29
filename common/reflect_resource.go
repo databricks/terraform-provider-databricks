@@ -853,9 +853,7 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		case schema.TypeList:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
 			rawList := raw.([]any)
-			return readListFromData(path, d, rawList, valueField, fieldSchema, aliases, func(i int) string {
-				return strconv.Itoa(i)
-			})
+			return readListFromData(path, d, rawList, valueField, fieldSchema, aliases, strconv.Itoa)
 		default:
 			return fmt.Errorf("%s[%v] unsupported field type", fieldPath, raw)
 		}

@@ -433,3 +433,54 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
 }
+
+func TestUnifiedTerraformProvider_AccountConfigured__WorkspaceNotInCache(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockAcc.AccountClient.Config = &config.Config{
+		Token: "dapi123",
+	}
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+
+	testWorkspaceID := int64(12345)
+	// Create a mock workspace
+	mockWorkspace := &provisioning.Workspace{
+		WorkspaceId:    testWorkspaceID,
+		WorkspaceName:  "test-workspace",
+		DeploymentName: "test-deployment",
+	}
+
+	// Setup the mock to return the workspace
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: testWorkspaceID,
+	}).Return(mockWorkspace, nil)
+
+	// Create a DatabricksClient with the mock account client
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				AccountID: "123",
+				Host:      "https://accounts.test.databricks.com",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+	assert.True(t, dc.Config.IsAccountClient())
+
+	// Get the unified client for the workspace ID
+	workspaceClient, diags := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
+
+	// Verify no error and client is returned
+	assert.False(t, diags.HasError())
+	assert.NotNil(t, workspaceClient)
+
+	// Verify the workspace client is configured correctly
+	assert.Equal(t, fmt.Sprintf("https://%s.cloud.databricks.com", mockWorkspace.DeploymentName), workspaceClient.Config.Host)
+
+	// Verify the client is cached
+	dc.mu.Lock()
+	cachedClient, exists := dc.cachedWorkspaceClients[testWorkspaceID]
+	dc.mu.Unlock()
+
+	assert.True(t, exists)
+	assert.Equal(t, workspaceClient, cachedClient)
+}

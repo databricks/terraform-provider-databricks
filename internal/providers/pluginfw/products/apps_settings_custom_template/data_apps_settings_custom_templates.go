@@ -28,8 +28,7 @@ func DataSourceCustomTemplates() datasource.DataSource {
 
 // CustomTemplatesData extends the main model with additional fields.
 type CustomTemplatesData struct {
-	AppsSettings types.List   `tfsdk:"templates"`
-	WorkspaceID  types.String `tfsdk:"workspace_id"`
+	AppsSettings types.List `tfsdk:"templates"`
 }
 
 func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *CustomTemplatesDataSource) Metadata(ctx context.Context, req datasource
 func (r *CustomTemplatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplatesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("templates")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var newState CustomTemplatesData
 	newState.AppsSettings = types.ListValueMust(apps_tf.CustomTemplate{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

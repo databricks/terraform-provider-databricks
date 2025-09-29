@@ -2,6 +2,8 @@
 subcategory: "Delta Sharing"
 ---
 # databricks_recipient_federation_policy Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -13,7 +15,6 @@ The following arguments are supported:
 * `name` (string, optional) - Name of the federation policy. A recipient can have multiple policies with different names.
   The name must contain only lowercase alphanumeric characters, numbers, and hyphens
 * `oidc_policy` (OidcFederationPolicy, optional) - Specifies the policy to use for validating OIDC claims in the federated tokens
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### OidcFederationPolicy
 * `issuer` (string, required) - The required token issuer, as specified in the 'iss' claim of federated tokens

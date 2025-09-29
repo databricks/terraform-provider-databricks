@@ -35,7 +35,6 @@ type FederationPolicyDataSource struct {
 // FederationPolicyData extends the main model with additional fields.
 type FederationPolicyData struct {
 	sharing_tf.FederationPolicy
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[stri
 func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.FederationPolicy.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
 	embeddedType := m.FederationPolicy.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasourc
 
 func (r *FederationPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,36 @@ import (
 
 type CreateTagPolicyRequest_SdkV2 struct {
 	TagPolicy types.List `tfsdk:"tag_policy"`
+}
+
+func (to *CreateTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateTagPolicyRequest_SdkV2) {
+	if !from.TagPolicy.IsNull() && !from.TagPolicy.IsUnknown() {
+		if toTagPolicy, ok := to.GetTagPolicy(ctx); ok {
+			if fromTagPolicy, ok := from.GetTagPolicy(ctx); ok {
+				// Recursively sync the fields of TagPolicy
+				toTagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromTagPolicy)
+				to.SetTagPolicy(ctx, toTagPolicy)
+			}
+		}
+	}
+}
+
+func (to *CreateTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateTagPolicyRequest_SdkV2) {
+	if !from.TagPolicy.IsNull() && !from.TagPolicy.IsUnknown() {
+		if toTagPolicy, ok := to.GetTagPolicy(ctx); ok {
+			if fromTagPolicy, ok := from.GetTagPolicy(ctx); ok {
+				toTagPolicy.SyncFieldsDuringRead(ctx, fromTagPolicy)
+				to.SetTagPolicy(ctx, toTagPolicy)
+			}
+		}
+	}
+}
+
+func (c CreateTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
+	attrs["tag_policy"] = attrs["tag_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTagPolicyRequest.
@@ -92,6 +123,18 @@ type DeleteTagPolicyRequest_SdkV2 struct {
 	TagKey types.String `tfsdk:"-"`
 }
 
+func (to *DeleteTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteTagPolicyRequest_SdkV2) {
+}
+
+func (to *DeleteTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteTagPolicyRequest_SdkV2) {
+}
+
+func (c DeleteTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTagPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -125,6 +168,18 @@ func (o DeleteTagPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetTagPolicyRequest_SdkV2 struct {
 	TagKey types.String `tfsdk:"-"`
+}
+
+func (to *GetTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetTagPolicyRequest_SdkV2) {
+}
+
+func (to *GetTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetTagPolicyRequest_SdkV2) {
+}
+
+func (c GetTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTagPolicyRequest.
@@ -168,6 +223,19 @@ type ListTagPoliciesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListTagPoliciesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTagPoliciesRequest_SdkV2) {
+}
+
+func (to *ListTagPoliciesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTagPoliciesRequest_SdkV2) {
+}
+
+func (c ListTagPoliciesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTagPoliciesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -207,10 +275,22 @@ type ListTagPoliciesResponse_SdkV2 struct {
 	TagPolicies types.List `tfsdk:"tag_policies"`
 }
 
-func (toState *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListTagPoliciesResponse_SdkV2) {
+func (to *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTagPoliciesResponse_SdkV2) {
+	if !from.TagPolicies.IsNull() && !from.TagPolicies.IsUnknown() && to.TagPolicies.IsNull() && len(from.TagPolicies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagPolicies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagPolicies = from.TagPolicies
+	}
 }
 
-func (toState *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListTagPoliciesResponse_SdkV2) {
+func (to *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTagPoliciesResponse_SdkV2) {
+	if !from.TagPolicies.IsNull() && !from.TagPolicies.IsUnknown() && to.TagPolicies.IsNull() && len(from.TagPolicies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagPolicies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagPolicies = from.TagPolicies
+	}
 }
 
 func (c ListTagPoliciesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -284,26 +364,45 @@ func (o *ListTagPoliciesResponse_SdkV2) SetTagPolicies(ctx context.Context, v []
 }
 
 type TagPolicy_SdkV2 struct {
+	// Timestamp when the tag policy was created
+	CreateTime types.String `tfsdk:"create_time"`
+
 	Description types.String `tfsdk:"description"`
 
 	Id types.String `tfsdk:"id"`
 
 	TagKey types.String `tfsdk:"tag_key"`
+	// Timestamp when the tag policy was last updated
+	UpdateTime types.String `tfsdk:"update_time"`
 
 	Values types.List `tfsdk:"values"`
 }
 
-func (toState *TagPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TagPolicy_SdkV2) {
+func (to *TagPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagPolicy_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
-func (toState *TagPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState TagPolicy_SdkV2) {
+func (to *TagPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagPolicy_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
 func (c TagPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["values"] = attrs["values"].SetOptional()
 
 	return attrs
@@ -329,9 +428,11 @@ func (o TagPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"create_time": o.CreateTime,
 			"description": o.Description,
 			"id":          o.Id,
 			"tag_key":     o.TagKey,
+			"update_time": o.UpdateTime,
 			"values":      o.Values,
 		})
 }
@@ -340,9 +441,11 @@ func (o TagPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o TagPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"create_time": types.StringType,
 			"description": types.StringType,
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
+			"update_time": types.StringType,
 			"values": basetypes.ListType{
 				ElemType: Value_SdkV2{}.Type(ctx),
 			},
@@ -392,6 +495,39 @@ type UpdateTagPolicyRequest_SdkV2 struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateTagPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateTagPolicyRequest_SdkV2) {
+	if !from.TagPolicy.IsNull() && !from.TagPolicy.IsUnknown() {
+		if toTagPolicy, ok := to.GetTagPolicy(ctx); ok {
+			if fromTagPolicy, ok := from.GetTagPolicy(ctx); ok {
+				// Recursively sync the fields of TagPolicy
+				toTagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromTagPolicy)
+				to.SetTagPolicy(ctx, toTagPolicy)
+			}
+		}
+	}
+}
+
+func (to *UpdateTagPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateTagPolicyRequest_SdkV2) {
+	if !from.TagPolicy.IsNull() && !from.TagPolicy.IsUnknown() {
+		if toTagPolicy, ok := to.GetTagPolicy(ctx); ok {
+			if fromTagPolicy, ok := from.GetTagPolicy(ctx); ok {
+				toTagPolicy.SyncFieldsDuringRead(ctx, fromTagPolicy)
+				to.SetTagPolicy(ctx, toTagPolicy)
+			}
+		}
+	}
+}
+
+func (c UpdateTagPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
+	attrs["tag_policy"] = attrs["tag_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTagPolicyRequest.
@@ -463,10 +599,10 @@ type Value_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *Value_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Value_SdkV2) {
+func (to *Value_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Value_SdkV2) {
 }
 
-func (toState *Value_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Value_SdkV2) {
+func (to *Value_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Value_SdkV2) {
 }
 
 func (c Value_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

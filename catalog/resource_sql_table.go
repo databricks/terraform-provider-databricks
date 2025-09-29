@@ -64,6 +64,7 @@ type SqlTableInfo struct {
 	ClusterID           string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID         string            `json:"warehouse_id,omitempty"`
 	Owner               string            `json:"owner,omitempty" tf:"computed"`
+	TableID             string            `json:"table_id" tf:"computed"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface

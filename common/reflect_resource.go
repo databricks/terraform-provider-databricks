@@ -853,7 +853,9 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		case schema.TypeList:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
 			rawList := raw.([]any)
-			return readListFromData(path, d, rawList, valueField, fieldSchema, aliases, strconv.Itoa)
+			return readListFromData(path, d, rawList, valueField, fieldSchema, aliases, func(i int) string {
+				return strconv.Itoa(i)
+			})
 		default:
 			return fmt.Errorf("%s[%v] unsupported field type", fieldPath, raw)
 		}
@@ -956,7 +958,7 @@ func readListFromData(path []string, d attributeGetter,
 					validItems = append(validItems, ve)
 				}
 			default:
-				// For non-struct types, create a temporary item to check if it's valid
+				// For non-struct types, add all primitive values
 				tempItem := reflect.New(valueField.Type().Elem()).Elem()
 				err := setPrimitiveValueOfKind(fieldPath, k, tempItem, elem)
 				if err != nil {

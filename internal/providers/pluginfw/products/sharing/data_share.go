@@ -2,6 +2,7 @@ package sharing
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
@@ -25,6 +26,17 @@ var _ datasource.DataSourceWithConfigure = &ShareDataSource{}
 
 type ShareDataSource struct {
 	Client *common.DatabricksClient
+}
+
+type ShareData struct {
+	sharing_tf.ShareInfo
+	ProviderConfig tfschema.ProviderConfigData `tfsdk:"provider_config"`
+}
+
+func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	types := s.ShareInfo.GetComplexFieldTypes(ctx)
+	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfigData{})
+	return types
 }
 
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

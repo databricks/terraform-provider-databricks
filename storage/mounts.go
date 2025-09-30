@@ -147,8 +147,10 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 			LongTermSupport: true,
 		}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			compute.NodeTypeRequest{
-				LocalDisk: true,
+			clusters.NodeTypeRequest{
+				NodeTypeRequest: compute.NodeTypeRequest{
+					LocalDisk: true,
+				},
 			}),
 		AutoterminationMinutes: 10,
 		SparkConf: map[string]string{

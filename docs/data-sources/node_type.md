@@ -56,10 +56,11 @@ Data source allows you to pick groups by the following attributes
   * `GPU Accelerated` (AWS, Azure)
 * `photon_worker_capable` - (Optional) Pick only nodes that can run Photon workers. Defaults to _false_.
 * `photon_driver_capable` - (Optional) Pick only nodes that can run Photon driver. Defaults to _false_.
-* `graviton` - (boolean, optional)  if we should limit the search only to nodes with AWS Graviton or Azure Cobalt CPUs. Default to _false_.
+* `arm` - (boolean, optional)  if we should limit the search only to nodes with AWS Graviton or Azure Cobalt CPUs. Default to _false_.
 * `fleet` - (boolean, optional)  if we should limit the search only to [AWS fleet instance types](https://docs.databricks.com/compute/aws-fleet-instances.html). Default to _false_.
 * `is_io_cache_enabled` - (Optional) . Pick only nodes that have IO Cache. Defaults to _false_.
 * `support_port_forwarding` - (Optional) Pick only nodes that support port forwarding. Defaults to _false_.
+* `graviton` - (Deprecated. boolean, optional) if we should limit the search only to nodes with AWS Graviton or Azure Cobalt CPUs. Default to _false_. *Use `arm` instead!*
 
 ## Attribute Reference
 

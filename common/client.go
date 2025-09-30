@@ -269,6 +269,10 @@ func (c *DatabricksClient) Put(ctx context.Context, path string, request any) er
 	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
+// Put on path
+func (c *DatabricksClient) PutWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodPut, path, nil, nil, request, response, c.addApiPrefix)
+}
 type ApiVersion string
 
 const (

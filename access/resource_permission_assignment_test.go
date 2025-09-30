@@ -15,15 +15,21 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 				ExpectedRequest: Permissions{
 					Permissions: []string{"USER"},
 				},
+				Response: permissionAssignmentResponseItem{
+					Permissions: []string{"USER"},
+					Principal: principalInfo{
+						PrincipalID: 345,
+					},
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/permissionassignments",
-				Response: PermissionAssignmentList{
-					PermissionAssignments: []PermissionAssignment{
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
 						{
 							Permissions: []string{"USER"},
-							Principal: Principal{
+							Principal: principalInfo{
 								PrincipalID: 345,
 							},
 						},
@@ -33,11 +39,212 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 		},
 		Resource: ResourcePermissionAssignment(),
 		Create:   true,
+		New:      true,
 		HCL: `
 		principal_id = 345
 		permissions  = ["USER"]
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentCreateWithUserName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								UserName: "test.user@databricks.com",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+								UserName:    "test.user@databricks.com",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+								UserName:    "test.user@databricks.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		user_name   = "test.user@databricks.com"
+		permissions = ["USER"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentCreateWithServicePrincipalName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								ServicePrincipalName: "spn-123",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID:          456,
+								ServicePrincipalName: "spn-123",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID:          456,
+								ServicePrincipalName: "spn-123",
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		service_principal_name = "spn-123"
+		permissions            = ["USER"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentCreateWithGroupName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								GroupName: "admins",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 789,
+								GroupName:   "admins",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 789,
+								GroupName:   "admins",
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		group_name  = "admins"
+		permissions = ["USER"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentCreateWithNonExistingGroup(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								GroupName: "nonexistent-group",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Principal: principalInfo{
+								GroupName: "nonexistent-group",
+							},
+							Error: "RESOURCE_DOES_NOT_EXIST: Principal not found in account.",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		group_name  = "nonexistent-group"
+		permissions = ["USER"]
+		`,
+	}.ExpectError(t, "RESOURCE_DOES_NOT_EXIST: Principal not found in account.")
 }
 
 func TestPermissionAssignmentRead(t *testing.T) {
@@ -46,11 +253,11 @@ func TestPermissionAssignmentRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/permissionassignments",
-				Response: PermissionAssignmentList{
-					PermissionAssignments: []PermissionAssignment{
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
 						{
 							Permissions: []string{"USER"},
-							Principal: Principal{
+							Principal: principalInfo{
 								PrincipalID: 345,
 							},
 						},
@@ -74,11 +281,11 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/permissionassignments",
-				Response: PermissionAssignmentList{
-					PermissionAssignments: []PermissionAssignment{
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
 						{
 							Permissions: []string{"USER"},
-							Principal: Principal{
+							Principal: principalInfo{
 								PrincipalID: 345,
 							},
 						},

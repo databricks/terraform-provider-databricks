@@ -142,8 +142,8 @@ func AddUserHomeDirectoryManagePermission(ctx ACLCustomizerContext, acl []iam.Ac
 			if aclEntry.UserName == userInAcl {
 				found = true
 				// If the user exists but doesn't have CAN_MANAGE, upgrade them
-				if aclEntry.PermissionLevel != "CAN_MANAGE" {
-					acl[i].PermissionLevel = "CAN_MANAGE"
+				if aclEntry.PermissionLevel != iam.PermissionLevelCanManage {
+					acl[i].PermissionLevel = iam.PermissionLevelCanManage
 				}
 				break
 			}
@@ -153,7 +153,7 @@ func AddUserHomeDirectoryManagePermission(ctx ACLCustomizerContext, acl []iam.Ac
 		if !found {
 			acl = append(acl, iam.AccessControlRequest{
 				UserName:        userInAcl,
-				PermissionLevel: "CAN_MANAGE",
+				PermissionLevel: iam.PermissionLevelCanManage,
 			})
 		}
 	}

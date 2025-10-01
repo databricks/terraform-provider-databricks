@@ -14,6 +14,7 @@ func DataSourceWarehouses() common.Resource {
 	type warehousesData struct {
 		WarehouseNameContains string   `json:"warehouse_name_contains,omitempty"`
 		Ids                   []string `json:"ids,omitempty" tf:"computed,slice_set"`
+		common.ProviderConfig
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *warehousesData, w *databricks.WorkspaceClient) error {
 		list, err := w.Warehouses.ListAll(ctx, sql.ListWarehousesRequest{})

@@ -14,6 +14,7 @@ import (
 // Need a struct for Query because there are aliases we need and it'll be needed in the create method.
 type QueryStruct struct {
 	sql.Query
+	common.ProviderConfig
 }
 
 var queryAliasMap = map[string]string{
@@ -46,6 +47,10 @@ func (QueryStruct) CustomizeSchema(m *common.CustomizableSchema) *common.Customi
 	m.SchemaPath("parameter", "query_backed_value", "query_id").SetRequired()
 	m.SchemaPath("parameter", "text_value", "value").SetRequired()
 	m.SchemaPath("parameter", "numeric_value", "value").SetRequired()
+
+	m.SchemaPath("provider_config").SetOptional()
+	m.SchemaPath("provider_config", "workspace_id").SetRequired()
+
 	// TODO: fix setting of AtLeastOneOf
 	// valuesAlof := []string{
 	// 	"parameter.0.date_range_value",

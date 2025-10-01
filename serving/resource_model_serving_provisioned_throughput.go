@@ -14,9 +14,15 @@ const (
 	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
+// ModelServingProvisionedThroughputStruct embeds SDK type with ProviderConfig
+type ModelServingProvisionedThroughputStruct struct {
+	serving.CreatePtEndpointRequest
+	common.ProviderConfig
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -34,6 +40,11 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
+
 			return m
 		})
 
@@ -43,7 +54,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
-			var e serving.CreatePtEndpointRequest
+			var e ModelServingProvisionedThroughputStruct
 			common.DataToStructPointer(d, s, &e)
 			wait, err := w.ServingEndpoints.CreateProvisionedThroughputEndpoint(ctx, e)
 			if err != nil {

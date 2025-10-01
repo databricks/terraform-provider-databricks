@@ -26,6 +26,8 @@ type WidgetEntity struct {
 
 	Position  *WidgetPosition   `json:"position,omitempty"`
 	Parameter []WidgetParameter `json:"parameter,omitempty" tf:"slice_set"`
+
+	common.ProviderConfig
 }
 
 // WidgetPosition ...
@@ -267,6 +269,10 @@ func ResourceSqlWidget() common.Resource {
 			m["visualization_id"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
 				return extractVisualizationID(old) == extractVisualizationID(new)
 			}
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
 
 			return m
 		})

@@ -12,6 +12,7 @@ import (
 
 type ShareInfo struct {
 	sharing.ShareInfo
+	common.ProviderConfig
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -37,6 +38,9 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("object", "added_by").SetComputed()
 	s.SchemaPath("object", "partition", "value", "op").SetRequired()
 	s.SchemaPath("object", "partition", "value", "name").SetRequired()
+
+	s.SchemaPath("provider_config").SetOptional()
+	s.SchemaPath("provider_config", "workspace_id").SetRequired()
 
 	return s
 }

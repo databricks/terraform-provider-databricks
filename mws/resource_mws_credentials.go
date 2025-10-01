@@ -43,6 +43,7 @@ type CredentialInfo struct {
 	// The external ID that needs to be trusted by the cross-account role. This
 	// is always your Databricks account ID.
 	ExternalId string `json:"external_id,omitempty" tf:"computed"`
+	common.ProviderConfig
 }
 
 func ResourceMwsCredentials() common.Resource {
@@ -108,6 +109,11 @@ func ResourceMwsCredentials() common.Resource {
 		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(s, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(s, "provider_config", "workspace_id").SetRequired()
+
 			return s
 		}),
 	}

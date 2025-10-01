@@ -17,6 +17,7 @@ func DataSourceInstanceProfiles() common.Resource {
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		InstanceProfiles []instanceProfileData `json:"instance_profiles,omitempty" tf:"computed"`
+		common.ProviderConfig
 	}, w *databricks.WorkspaceClient) error {
 		instanceProfiles, err := w.InstanceProfiles.ListAll(ctx)
 		if err != nil {

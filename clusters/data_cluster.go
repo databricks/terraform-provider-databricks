@@ -15,6 +15,7 @@ func DataSourceCluster() common.Resource {
 		ClusterId   string                  `json:"cluster_id,omitempty" tf:"computed"`
 		Name        string                  `json:"cluster_name,omitempty" tf:"computed"`
 		ClusterInfo *compute.ClusterDetails `json:"cluster_info,omitempty" tf:"computed"`
+		common.ProviderConfig
 	}, w *databricks.WorkspaceClient) error {
 		if data.Name != "" {
 			clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})

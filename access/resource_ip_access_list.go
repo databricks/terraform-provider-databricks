@@ -15,6 +15,7 @@ type ipAccessListUpdateRequest struct {
 	ListType    settings.ListType `json:"list_type"`
 	IpAddresses []string          `json:"ip_addresses"`
 	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
+	common.ProviderConfig
 }
 
 // ResourceIPAccessList manages IP access lists
@@ -26,6 +27,11 @@ func ResourceIPAccessList() common.Resource {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
 		}
+
+		// Add provider_config customizations
+		common.CustomizeSchemaPath(s, "provider_config").SetOptional()
+		common.CustomizeSchemaPath(s, "provider_config", "workspace_id").SetRequired()
+
 		return s
 	})
 	return common.Resource{

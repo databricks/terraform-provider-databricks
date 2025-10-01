@@ -24,6 +24,7 @@ type GenericMount struct {
 	MountName      string `json:"name,omitempty" tf:"computed,force_new"`
 	ResourceID     string `json:"resource_id,omitempty" tf:"force_new"`
 	EncryptionType string `json:"encryption_type,omitempty" tf:"force_new"`
+	common.ProviderConfig
 }
 
 func (m GenericMount) getBlock() Mount {

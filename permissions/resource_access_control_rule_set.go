@@ -12,15 +12,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// AccessControlRuleSetStruct embeds SDK type with ProviderConfig
+type AccessControlRuleSetStruct struct {
+	iam.RuleSetUpdateRequest
+	common.ProviderConfig
+}
+
 func ResourceAccessControlRuleSet() common.Resource {
 	s := common.StructToSchema(
-		iam.RuleSetUpdateRequest{},
+		AccessControlRuleSetStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["etag"].Required = false
 			m["etag"].Computed = true
 			m["grant_rules"].Type = schema.TypeSet
 			common.MustSchemaPath(m, "grant_rules", "principals").Type = schema.TypeSet
 			m["name"].ForceNew = true
+
+			// Add provider_config customizations
+			common.CustomizeSchemaPath(m, "provider_config").SetOptional()
+			common.CustomizeSchemaPath(m, "provider_config", "workspace_id").SetRequired()
 
 			return m
 		})
@@ -100,8 +110,9 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ruleSetUpdateReq iam.UpdateRuleSetRequest
-			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
+			var acr AccessControlRuleSetStruct
+			common.DataToStructPointer(d, s, &acr)
+			ruleSetUpdateReq := iam.UpdateRuleSetRequest{RuleSet: acr.RuleSetUpdateRequest}
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
 			response, err := updateRuleSet(ctx, c, ruleSetUpdateReq)
 			if err != nil {

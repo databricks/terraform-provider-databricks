@@ -11,42 +11,54 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// AlertStruct embeds the SDK Alert with ProviderConfig
+type AlertStruct struct {
+	sql.Alert
+	common.ProviderConfig
+}
+
+func (AlertStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("display_name").SetRequired()
+	s.SchemaPath("query_id").SetRequired()
+	s.SchemaPath("condition").SetRequired()
+	// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
+	s.SchemaPath("condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
+		"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL"}, true))
+	s.SchemaPath("parent_path").SetCustomSuppressDiff(common.WorkspaceOrEmptyPathPrefixDiffSuppress).SetForceNew()
+	s.SchemaPath("condition", "operand").SetRequired()
+	s.SchemaPath("condition", "operand", "column").SetRequired()
+	s.SchemaPath("condition", "operand", "column", "name").SetRequired()
+	s.SchemaPath("condition", "empty_result_state").SetValidateFunc(
+		validation.StringInSlice([]string{"UNKNOWN", "OK", "TRIGGERED"}, true))
+	// We may not need it for some conditions
+	// s.SchemaPath("condition", "threshold").SetRequired()
+	s.SchemaPath("condition", "threshold", "value").SetRequired()
+	alof := []string{
+		"condition.0.threshold.0.value.0.string_value",
+		"condition.0.threshold.0.value.0.double_value",
+		"condition.0.threshold.0.value.0.bool_value",
+	}
+	for _, f := range alof {
+		s.SchemaPath("condition", "threshold", "value",
+			strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetExactlyOneOf(alof)
+	}
+	s.SchemaPath("owner_user_name").SetSuppressDiff()
+	s.SchemaPath("notify_on_ok").SetDefault(true)
+	s.SchemaPath("id").SetReadOnly()
+	s.SchemaPath("create_time").SetReadOnly()
+	s.SchemaPath("lifecycle_state").SetReadOnly()
+	s.SchemaPath("state").SetReadOnly()
+	s.SchemaPath("trigger_time").SetReadOnly()
+	s.SchemaPath("update_time").SetReadOnly()
+
+	s.SchemaPath("provider_config").SetOptional()
+	s.SchemaPath("provider_config", "workspace_id").SetRequired()
+
+	return s
+}
+
 func ResourceAlert() common.Resource {
-	s := common.StructToSchema(sql.Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		common.CustomizeSchemaPath(m, "display_name").SetRequired()
-		common.CustomizeSchemaPath(m, "query_id").SetRequired()
-		common.CustomizeSchemaPath(m, "condition").SetRequired()
-		// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
-		common.CustomizeSchemaPath(m, "condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
-			"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL"}, true))
-		common.CustomizeSchemaPath(m, "parent_path").SetCustomSuppressDiff(common.WorkspaceOrEmptyPathPrefixDiffSuppress).SetForceNew()
-		common.CustomizeSchemaPath(m, "condition", "operand").SetRequired()
-		common.CustomizeSchemaPath(m, "condition", "operand", "column").SetRequired()
-		common.CustomizeSchemaPath(m, "condition", "operand", "column", "name").SetRequired()
-		common.CustomizeSchemaPath(m, "condition", "empty_result_state").SetValidateFunc(
-			validation.StringInSlice([]string{"UNKNOWN", "OK", "TRIGGERED"}, true))
-		// We may not need it for some conditions
-		// common.CustomizeSchemaPath(m, "condition", "threshold").SetRequired()
-		common.CustomizeSchemaPath(m, "condition", "threshold", "value").SetRequired()
-		alof := []string{
-			"condition.0.threshold.0.value.0.string_value",
-			"condition.0.threshold.0.value.0.double_value",
-			"condition.0.threshold.0.value.0.bool_value",
-		}
-		for _, f := range alof {
-			common.CustomizeSchemaPath(m, "condition", "threshold", "value",
-				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetExactlyOneOf(alof)
-		}
-		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
-		common.CustomizeSchemaPath(m, "notify_on_ok").SetDefault(true)
-		common.CustomizeSchemaPath(m, "id").SetReadOnly()
-		common.CustomizeSchemaPath(m, "create_time").SetReadOnly()
-		common.CustomizeSchemaPath(m, "lifecycle_state").SetReadOnly()
-		common.CustomizeSchemaPath(m, "state").SetReadOnly()
-		common.CustomizeSchemaPath(m, "trigger_time").SetReadOnly()
-		common.CustomizeSchemaPath(m, "update_time").SetReadOnly()
-		return m
-	})
+	s := common.StructToSchema(AlertStruct{}, nil)
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -13,6 +13,7 @@ type ShareDetail struct {
 	Objects   []sharing.SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`
 	CreatedAt int64                      `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string                     `json:"created_by,omitempty" tf:"computed"`
+	common.ProviderConfig
 }
 
 func (ShareDetail) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -24,6 +25,9 @@ func (ShareDetail) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("object", "partition", "value", "op").SetRequired()
 	s.SchemaPath("object", "partition", "value", "name").SetRequired()
 	s.SchemaPath("object", "partition", "value").SetMinItems(1)
+
+	s.SchemaPath("provider_config").SetOptional()
+	s.SchemaPath("provider_config", "workspace_id").SetRequired()
 
 	return s
 }

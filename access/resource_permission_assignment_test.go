@@ -247,6 +247,85 @@ func TestPermissionAssignmentCreateWithNonExistingGroup(t *testing.T) {
 	}.ExpectError(t, "RESOURCE_DOES_NOT_EXIST: Principal not found in account.")
 }
 
+func TestPermissionAssignmentUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				// Simulate updating permissions for a principal by principal_id
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/permissionassignments/principals/123",
+				ExpectedRequest: Permissions{
+					Permissions: []string{"ADMIN"},
+				},
+				Response: permissionAssignmentResponseItem{
+					Principal: principalInfo{
+						PrincipalID: 123,
+					},
+					Permissions: []string{"ADMIN"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"ADMIN"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Update:   true,
+		ID:       "123",
+		InstanceState: map[string]string{
+			"principal_id": "123",
+			"permissions":  "[\"USER\"]",
+		},
+		HCL: `
+		principal_id = 123
+		permissions  = ["ADMIN"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentUpdateWithError(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/permissionassignments/principals/123",
+				ExpectedRequest: Permissions{
+					Permissions: []string{"ADMIN"},
+				},
+				Status: 200,
+				Response: permissionAssignmentResponseItem{
+					Principal: principalInfo{
+						PrincipalID: 123,
+					},
+					Permissions: []string{"ADMIN"},
+					Error:       "Invalid permission",
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Update:   true,
+		ID:       "123",
+		InstanceState: map[string]string{
+			"principal_id": "123",
+			"permissions":  "USER",
+		},
+		HCL: `
+		principal_id = 123
+		permissions  = ["ADMIN"]
+		`,
+	}.ExpectError(t, "Invalid permission")
+}
+
 func TestPermissionAssignmentRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

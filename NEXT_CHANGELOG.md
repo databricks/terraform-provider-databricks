@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.91.0
+## Release v1.92.0
 
 ### Breaking Changes
 
@@ -8,12 +8,11 @@
 
 ### Bug Fixes
 
-* Allow update `managed_services_customer_managed_key_id` in `databricks_mws_workspaces` ([#5034](https://github.com/databricks/terraform-provider-databricks/pull/5034))
 * Add implicit CAN_MANAGE permission for users on their home directories to prevent Terraform from removing Databricks-assigned permissions
 
 ### Documentation
 
-* Clarify the use of `workspace-consume` entitlement and access to Databricks One ([#5043](https://github.com/databricks/terraform-provider-databricks/pull/5043))
+* Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
 
 ### Exporter
 

@@ -104,7 +104,7 @@ resource "databricks_permission_assignment" "this" {
 
 ## Argument Reference
 
-The following arguments are supported (exactly one of `principal_id`, `user_name`, `group_name`, or `service_principal_name` is required):
+The following arguments are supported (exactly one of `principal_id`, `user_name`, `group_name`, or `service_principal_name` is required. Change of them triggers recreation):
 
 * `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the account-level SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources with account API (and has to be an account admin). A more sensible approach is to retrieve the list of `principal_id` as outputs from another Terraform stack.
 * `user_name` - the user name (email) to assign to a workspace.

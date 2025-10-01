@@ -32,6 +32,9 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 		if err != nil {
 			return principalInfo{}, err
 		}
+		if resp.Error != "" {
+			return principalInfo{}, errors.New(resp.Error)
+		}
 		return resp.Principal, nil
 	} else {
 		var principal permissionAssignmentResponse
@@ -121,10 +124,10 @@ func (a PermissionAssignmentAPI) List() (list permissionAssignmentResponse, err 
 }
 
 type permissionAssignmentEntity struct {
-	PrincipalId          int64    `json:"principal_id,omitempty" tf:"computed"`
-	ServicePrincipalName string   `json:"service_principal_name,omitempty" tf:"computed"`
-	UserName             string   `json:"user_name,omitempty" tf:"computed"`
-	GroupName            string   `json:"group_name,omitempty" tf:"computed"`
+	PrincipalId          int64    `json:"principal_id,omitempty" tf:"computed,force_new"`
+	ServicePrincipalName string   `json:"service_principal_name,omitempty" tf:"computed,force_new"`
+	UserName             string   `json:"user_name,omitempty" tf:"computed,force_new"`
+	GroupName            string   `json:"group_name,omitempty" tf:"computed,force_new"`
 	Permissions          []string `json:"permissions" tf:"slice_as_set"`
 	DisplayName          string   `json:"display_name,omitempty" tf:"computed"`
 }
@@ -164,6 +167,13 @@ func ResourcePermissionAssignment() common.Resource {
 				return err
 			}
 			return common.StructToData(data, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var assignment permissionAssignmentEntity
+			common.DataToStructPointer(d, s, &assignment)
+			api := NewPermissionAssignmentAPI(ctx, c)
+			_, err := api.CreateOrUpdate(assignment)
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())

@@ -218,6 +218,8 @@ func (o *CreateDatabaseInstanceRequest_SdkV2) SetDatabaseInstance(ctx context.Co
 }
 
 type CreateDatabaseInstanceRoleRequest_SdkV2 struct {
+	DatabaseInstanceName types.String `tfsdk:"-"`
+
 	DatabaseInstanceRole types.List `tfsdk:"database_instance_role"`
 
 	InstanceName types.String `tfsdk:"-"`
@@ -250,6 +252,7 @@ func (c CreateDatabaseInstanceRoleRequest_SdkV2) ApplySchemaCustomizations(attrs
 	attrs["database_instance_role"] = attrs["database_instance_role"].SetRequired()
 	attrs["database_instance_role"] = attrs["database_instance_role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 
 	return attrs
 }
@@ -274,6 +277,7 @@ func (o CreateDatabaseInstanceRoleRequest_SdkV2) ToObjectValue(ctx context.Conte
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database_instance_name": o.DatabaseInstanceName,
 			"database_instance_role": o.DatabaseInstanceRole,
 			"instance_name":          o.InstanceName,
 		})
@@ -283,6 +287,7 @@ func (o CreateDatabaseInstanceRoleRequest_SdkV2) ToObjectValue(ctx context.Conte
 func (o CreateDatabaseInstanceRoleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database_instance_name": types.StringType,
 			"database_instance_role": basetypes.ListType{
 				ElemType: DatabaseInstanceRole_SdkV2{}.Type(ctx),
 			},
@@ -994,10 +999,15 @@ func (o DatabaseInstanceRef_SdkV2) Type(ctx context.Context) attr.Type {
 
 // A DatabaseInstanceRole represents a Postgres role in a database instance.
 type DatabaseInstanceRole_SdkV2 struct {
-	// API-exposed Postgres role attributes
+	// The desired API-exposed Postgres role attribute to associate with the
+	// role. Optional.
 	Attributes types.List `tfsdk:"attributes"`
+	// The attributes that are applied to the role.
+	EffectiveAttributes types.List `tfsdk:"effective_attributes"`
 	// The type of the role.
 	IdentityType types.String `tfsdk:"identity_type"`
+
+	InstanceName types.String `tfsdk:"instance_name"`
 	// An enum value for a standard role that this role is a member of.
 	MembershipRole types.String `tfsdk:"membership_role"`
 	// The name of the role. This is the unique identifier for the role in an
@@ -1015,6 +1025,15 @@ func (to *DatabaseInstanceRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 			}
 		}
 	}
+	if !from.EffectiveAttributes.IsNull() && !from.EffectiveAttributes.IsUnknown() {
+		if toEffectiveAttributes, ok := to.GetEffectiveAttributes(ctx); ok {
+			if fromEffectiveAttributes, ok := from.GetEffectiveAttributes(ctx); ok {
+				// Recursively sync the fields of EffectiveAttributes
+				toEffectiveAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveAttributes)
+				to.SetEffectiveAttributes(ctx, toEffectiveAttributes)
+			}
+		}
+	}
 }
 
 func (to *DatabaseInstanceRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabaseInstanceRole_SdkV2) {
@@ -1026,14 +1045,25 @@ func (to *DatabaseInstanceRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 			}
 		}
 	}
+	if !from.EffectiveAttributes.IsNull() && !from.EffectiveAttributes.IsUnknown() {
+		if toEffectiveAttributes, ok := to.GetEffectiveAttributes(ctx); ok {
+			if fromEffectiveAttributes, ok := from.GetEffectiveAttributes(ctx); ok {
+				toEffectiveAttributes.SyncFieldsDuringRead(ctx, fromEffectiveAttributes)
+				to.SetEffectiveAttributes(ctx, toEffectiveAttributes)
+			}
+		}
+	}
 }
 
 func (c DatabaseInstanceRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["attributes"] = attrs["attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["effective_attributes"] = attrs["effective_attributes"].SetComputed()
+	attrs["effective_attributes"] = attrs["effective_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["instance_name"] = attrs["instance_name"].SetOptional()
 	attrs["membership_role"] = attrs["membership_role"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1047,7 +1077,8 @@ func (c DatabaseInstanceRole_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a DatabaseInstanceRole_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"attributes": reflect.TypeOf(DatabaseInstanceRoleAttributes_SdkV2{}),
+		"attributes":           reflect.TypeOf(DatabaseInstanceRoleAttributes_SdkV2{}),
+		"effective_attributes": reflect.TypeOf(DatabaseInstanceRoleAttributes_SdkV2{}),
 	}
 }
 
@@ -1058,10 +1089,12 @@ func (o DatabaseInstanceRole_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":      o.Attributes,
-			"identity_type":   o.IdentityType,
-			"membership_role": o.MembershipRole,
-			"name":            o.Name,
+			"attributes":           o.Attributes,
+			"effective_attributes": o.EffectiveAttributes,
+			"identity_type":        o.IdentityType,
+			"instance_name":        o.InstanceName,
+			"membership_role":      o.MembershipRole,
+			"name":                 o.Name,
 		})
 }
 
@@ -1072,7 +1105,11 @@ func (o DatabaseInstanceRole_SdkV2) Type(ctx context.Context) attr.Type {
 			"attributes": basetypes.ListType{
 				ElemType: DatabaseInstanceRoleAttributes_SdkV2{}.Type(ctx),
 			},
+			"effective_attributes": basetypes.ListType{
+				ElemType: DatabaseInstanceRoleAttributes_SdkV2{}.Type(ctx),
+			},
 			"identity_type":   types.StringType,
+			"instance_name":   types.StringType,
 			"membership_role": types.StringType,
 			"name":            types.StringType,
 		},
@@ -1103,6 +1140,32 @@ func (o *DatabaseInstanceRole_SdkV2) SetAttributes(ctx context.Context, v Databa
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["attributes"]
 	o.Attributes = types.ListValueMust(t, vs)
+}
+
+// GetEffectiveAttributes returns the value of the EffectiveAttributes field in DatabaseInstanceRole_SdkV2 as
+// a DatabaseInstanceRoleAttributes_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DatabaseInstanceRole_SdkV2) GetEffectiveAttributes(ctx context.Context) (DatabaseInstanceRoleAttributes_SdkV2, bool) {
+	var e DatabaseInstanceRoleAttributes_SdkV2
+	if o.EffectiveAttributes.IsNull() || o.EffectiveAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []DatabaseInstanceRoleAttributes_SdkV2
+	d := o.EffectiveAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveAttributes sets the value of the EffectiveAttributes field in DatabaseInstanceRole_SdkV2.
+func (o *DatabaseInstanceRole_SdkV2) SetEffectiveAttributes(ctx context.Context, v DatabaseInstanceRoleAttributes_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_attributes"]
+	o.EffectiveAttributes = types.ListValueMust(t, vs)
 }
 
 // Attributes that can be granted to a Postgres role. We are only implementing a
@@ -2235,8 +2298,8 @@ func (to *ListDatabaseInstanceRolesResponse_SdkV2) SyncFieldsDuringRead(ctx cont
 }
 
 func (c ListDatabaseInstanceRolesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_instance_roles"] = attrs["database_instance_roles"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["database_instance_roles"] = attrs["database_instance_roles"].SetComputed()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
 
 	return attrs
 }

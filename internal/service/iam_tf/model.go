@@ -3417,8 +3417,8 @@ type GetPermissionLevelsRequest struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -3564,8 +3564,8 @@ type GetPermissionRequest struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -8464,8 +8464,8 @@ type SetObjectPermissions struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -9434,8 +9434,8 @@ type UpdateObjectPermissions struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }

@@ -581,6 +581,47 @@ func TestShareGrantUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestShareGrantCreateNoChange(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			// No PATCH request should be made since permissions are already correct
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		share = "myshare"
+
+		grant {
+			principal = "recipient1"
+			privileges = ["SELECT"]
+		}`,
+	}.ApplyNoError(t)
+}
+
 func TestConnectionGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

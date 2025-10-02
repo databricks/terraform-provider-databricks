@@ -80,7 +80,11 @@ func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable s
 	if err != nil {
 		return err
 	}
-	err = a.UpdatePermissions(securableType, name, diffPermissions(list.PrivilegeAssignments, existing.PrivilegeAssignments))
+	diff := diffPermissions(list.PrivilegeAssignments, existing.PrivilegeAssignments)
+	if len(diff) == 0 {
+		return nil
+	}
+	err = a.UpdatePermissions(securableType, name, diff)
 	if err != nil {
 		return err
 	}

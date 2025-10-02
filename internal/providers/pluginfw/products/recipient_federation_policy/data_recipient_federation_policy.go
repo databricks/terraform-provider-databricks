@@ -34,7 +34,21 @@ type FederationPolicyDataSource struct {
 
 // FederationPolicyData extends the main model with additional fields.
 type FederationPolicyData struct {
-	sharing_tf.FederationPolicy
+	// Description of the policy. This is a user-provided description.
+	Comment types.String `tfsdk:"comment"`
+	// System-generated timestamp indicating when the policy was created.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Unique, immutable system-generated identifier for the federation policy.
+	Id types.String `tfsdk:"id"`
+	// Name of the federation policy. A recipient can have multiple policies
+	// with different names. The name must contain only lowercase alphanumeric
+	// characters, numbers, and hyphens.
+	Name types.String `tfsdk:"name"`
+	// Specifies the policy to use for validating OIDC claims in the federated
+	// tokens.
+	OidcPolicy types.Object `tfsdk:"oidc_policy"`
+	// System-generated timestamp indicating when the policy was last updated.
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +59,9 @@ type FederationPolicyData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.FederationPolicy.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"oidc_policy": reflect.TypeOf(sharing_tf.OidcFederationPolicy{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +71,47 @@ func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[stri
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FederationPolicyData
 // only implements ToObjectValue() and Type().
 func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.FederationPolicy.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"comment": m.Comment,
+			"create_time": m.CreateTime,
+			"id":          m.Id,
+			"name":        m.Name,
+			"oidc_policy": m.OidcPolicy,
+			"update_time": m.UpdateTime,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.FederationPolicy.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"comment": types.StringType,
+			"create_time": types.StringType,
+			"id":          types.StringType,
+			"name":        types.StringType,
+			"oidc_policy": sharing_tf.OidcFederationPolicy{}.Type(ctx),
+			"update_time": types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *FederationPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState FederationPolicyData) {
-	m.FederationPolicy.SyncFieldsDuringRead(ctx, existingState.FederationPolicy)
+func (to *FederationPolicyData) SyncFieldsDuringRead(ctx context.Context, from FederationPolicyData) {
+}
+
+func (m FederationPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
 }
 
 func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +119,7 @@ func (r *FederationPolicyDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *FederationPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPolicyData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,

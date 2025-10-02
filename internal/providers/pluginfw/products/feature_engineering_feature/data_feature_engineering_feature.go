@@ -34,7 +34,18 @@ type FeatureDataSource struct {
 
 // FeatureData extends the main model with additional fields.
 type FeatureData struct {
-	ml_tf.Feature
+	// The description of the feature.
+	Description types.String `tfsdk:"description"`
+	// The full three-part name (catalog, schema, name) of the feature.
+	FullName types.String `tfsdk:"full_name"`
+	// The function by which the feature is computed.
+	Function types.Object `tfsdk:"function"`
+	// The input columns from which the feature is computed.
+	Inputs types.List `tfsdk:"inputs"`
+	// The data source of the feature.
+	Source types.Object `tfsdk:"source"`
+	// The time window in which the feature is computed.
+	TimeWindow types.Object `tfsdk:"time_window"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +56,12 @@ type FeatureData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.Feature.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"function":    reflect.TypeOf(ml_tf.Function{}),
+		"inputs":      reflect.TypeOf(types.String{}),
+		"source":      reflect.TypeOf(ml_tf.DataSource{}),
+		"time_window": reflect.TypeOf(ml_tf.TimeWindow{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +71,49 @@ func (m FeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureData
 // only implements ToObjectValue() and Type().
 func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.Feature.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"description": m.Description,
+			"full_name":   m.FullName,
+			"function":    m.Function,
+			"inputs":      m.Inputs,
+			"source":      m.Source,
+			"time_window": m.TimeWindow,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m FeatureData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.Feature.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"description": types.StringType,
+			"full_name": types.StringType,
+			"function":  ml_tf.Function{}.Type(ctx),
+			"inputs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"source":      ml_tf.DataSource{}.Type(ctx),
+			"time_window": ml_tf.TimeWindow{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *FeatureData) SyncFieldsDuringRead(ctx context.Context, existingState FeatureData) {
-	m.Feature.SyncFieldsDuringRead(ctx, existingState.Feature)
+func (to *FeatureData) SyncFieldsDuringRead(ctx context.Context, from FeatureData) {
+}
+
+func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["function"] = attrs["function"].SetRequired()
+	attrs["inputs"] = attrs["inputs"].SetRequired()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["time_window"] = attrs["time_window"].SetRequired()
+
+	return attrs
 }
 
 func (r *FeatureDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +121,7 @@ func (r *FeatureDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (r *FeatureDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Feature",
 		Attributes:  attrs,

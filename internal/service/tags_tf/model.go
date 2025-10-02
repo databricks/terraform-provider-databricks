@@ -50,7 +50,7 @@ func (to *CreateTagPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c CreateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
 
 	return attrs
@@ -63,7 +63,7 @@ func (c CreateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_policy": reflect.TypeOf(TagPolicy{}),
 	}
@@ -72,16 +72,16 @@ func (a CreateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateTagPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o CreateTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"tag_policy": o.TagPolicy,
+			"tag_policy": m.TagPolicy,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateTagPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m CreateTagPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tag_policy": TagPolicy{}.Type(ctx),
@@ -92,13 +92,13 @@ func (o CreateTagPolicyRequest) Type(ctx context.Context) attr.Type {
 // GetTagPolicy returns the value of the TagPolicy field in CreateTagPolicyRequest as
 // a TagPolicy value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, bool) {
+func (m *CreateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, bool) {
 	var e TagPolicy
-	if o.TagPolicy.IsNull() || o.TagPolicy.IsUnknown() {
+	if m.TagPolicy.IsNull() || m.TagPolicy.IsUnknown() {
 		return e, false
 	}
 	var v TagPolicy
-	d := o.TagPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.TagPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -109,9 +109,9 @@ func (o *CreateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, b
 }
 
 // SetTagPolicy sets the value of the TagPolicy field in CreateTagPolicyRequest.
-func (o *CreateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) {
+func (m *CreateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) {
 	vs := v.ToObjectValue(ctx)
-	o.TagPolicy = vs
+	m.TagPolicy = vs
 }
 
 type DeleteTagPolicyRequest struct {
@@ -124,7 +124,7 @@ func (to *DeleteTagPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *DeleteTagPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteTagPolicyRequest) {
 }
 
-func (c DeleteTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 
 	return attrs
@@ -137,23 +137,23 @@ func (c DeleteTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteTagPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"tag_key": o.TagKey,
+			"tag_key": m.TagKey,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteTagPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteTagPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tag_key": types.StringType,
@@ -171,7 +171,7 @@ func (to *GetTagPolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *GetTagPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from GetTagPolicyRequest) {
 }
 
-func (c GetTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 
 	return attrs
@@ -184,23 +184,23 @@ func (c GetTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetTagPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o GetTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"tag_key": o.TagKey,
+			"tag_key": m.TagKey,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetTagPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m GetTagPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tag_key": types.StringType,
@@ -224,7 +224,7 @@ func (to *ListTagPoliciesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *ListTagPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, from ListTagPoliciesRequest) {
 }
 
-func (c ListTagPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListTagPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -238,24 +238,24 @@ func (c ListTagPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListTagPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListTagPoliciesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListTagPoliciesRequest
 // only implements ToObjectValue() and Type().
-func (o ListTagPoliciesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListTagPoliciesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListTagPoliciesRequest) Type(ctx context.Context) attr.Type {
+func (m ListTagPoliciesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -288,7 +288,7 @@ func (to *ListTagPoliciesResponse) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c ListTagPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListTagPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["tag_policies"] = attrs["tag_policies"].SetOptional()
 
@@ -302,7 +302,7 @@ func (c ListTagPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListTagPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListTagPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_policies": reflect.TypeOf(TagPolicy{}),
 	}
@@ -311,17 +311,17 @@ func (a ListTagPoliciesResponse) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListTagPoliciesResponse
 // only implements ToObjectValue() and Type().
-func (o ListTagPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListTagPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"next_page_token": o.NextPageToken,
-			"tag_policies":    o.TagPolicies,
+			"next_page_token": m.NextPageToken,
+			"tag_policies":    m.TagPolicies,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListTagPoliciesResponse) Type(ctx context.Context) attr.Type {
+func (m ListTagPoliciesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
@@ -335,12 +335,12 @@ func (o ListTagPoliciesResponse) Type(ctx context.Context) attr.Type {
 // GetTagPolicies returns the value of the TagPolicies field in ListTagPoliciesResponse as
 // a slice of TagPolicy values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListTagPoliciesResponse) GetTagPolicies(ctx context.Context) ([]TagPolicy, bool) {
-	if o.TagPolicies.IsNull() || o.TagPolicies.IsUnknown() {
+func (m *ListTagPoliciesResponse) GetTagPolicies(ctx context.Context) ([]TagPolicy, bool) {
+	if m.TagPolicies.IsNull() || m.TagPolicies.IsUnknown() {
 		return nil, false
 	}
 	var v []TagPolicy
-	d := o.TagPolicies.ElementsAs(ctx, &v, true)
+	d := m.TagPolicies.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -348,14 +348,14 @@ func (o *ListTagPoliciesResponse) GetTagPolicies(ctx context.Context) ([]TagPoli
 }
 
 // SetTagPolicies sets the value of the TagPolicies field in ListTagPoliciesResponse.
-func (o *ListTagPoliciesResponse) SetTagPolicies(ctx context.Context, v []TagPolicy) {
+func (m *ListTagPoliciesResponse) SetTagPolicies(ctx context.Context, v []TagPolicy) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_policies"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_policies"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.TagPolicies = types.ListValueMust(t, vs)
+	m.TagPolicies = types.ListValueMust(t, vs)
 }
 
 type TagPolicy struct {
@@ -391,7 +391,7 @@ func (to *TagPolicy) SyncFieldsDuringRead(ctx context.Context, from TagPolicy) {
 	}
 }
 
-func (c TagPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TagPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
@@ -410,7 +410,7 @@ func (c TagPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(Value{}),
 	}
@@ -419,21 +419,21 @@ func (a TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicy
 // only implements ToObjectValue() and Type().
-func (o TagPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TagPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": o.CreateTime,
-			"description": o.Description,
-			"id":          o.Id,
-			"tag_key":     o.TagKey,
-			"update_time": o.UpdateTime,
-			"values":      o.Values,
+			"create_time": m.CreateTime,
+			"description": m.Description,
+			"id":          m.Id,
+			"tag_key":     m.TagKey,
+			"update_time": m.UpdateTime,
+			"values":      m.Values,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TagPolicy) Type(ctx context.Context) attr.Type {
+func (m TagPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
@@ -451,12 +451,12 @@ func (o TagPolicy) Type(ctx context.Context) attr.Type {
 // GetValues returns the value of the Values field in TagPolicy as
 // a slice of Value values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TagPolicy) GetValues(ctx context.Context) ([]Value, bool) {
-	if o.Values.IsNull() || o.Values.IsUnknown() {
+func (m *TagPolicy) GetValues(ctx context.Context) ([]Value, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
 		return nil, false
 	}
 	var v []Value
-	d := o.Values.ElementsAs(ctx, &v, true)
+	d := m.Values.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -464,14 +464,14 @@ func (o *TagPolicy) GetValues(ctx context.Context) ([]Value, bool) {
 }
 
 // SetValues sets the value of the Values field in TagPolicy.
-func (o *TagPolicy) SetValues(ctx context.Context, v []Value) {
+func (m *TagPolicy) SetValues(ctx context.Context, v []Value) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Values = types.ListValueMust(t, vs)
+	m.Values = types.ListValueMust(t, vs)
 }
 
 type UpdateTagPolicyRequest struct {
@@ -515,7 +515,7 @@ func (to *UpdateTagPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c UpdateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tag_policy"] = attrs["tag_policy"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -531,7 +531,7 @@ func (c UpdateTagPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_policy": reflect.TypeOf(TagPolicy{}),
 	}
@@ -540,18 +540,18 @@ func (a UpdateTagPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateTagPolicyRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateTagPolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"tag_key":     o.TagKey,
-			"tag_policy":  o.TagPolicy,
-			"update_mask": o.UpdateMask,
+			"tag_key":     m.TagKey,
+			"tag_policy":  m.TagPolicy,
+			"update_mask": m.UpdateMask,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateTagPolicyRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateTagPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tag_key":     types.StringType,
@@ -564,13 +564,13 @@ func (o UpdateTagPolicyRequest) Type(ctx context.Context) attr.Type {
 // GetTagPolicy returns the value of the TagPolicy field in UpdateTagPolicyRequest as
 // a TagPolicy value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, bool) {
+func (m *UpdateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, bool) {
 	var e TagPolicy
-	if o.TagPolicy.IsNull() || o.TagPolicy.IsUnknown() {
+	if m.TagPolicy.IsNull() || m.TagPolicy.IsUnknown() {
 		return e, false
 	}
 	var v TagPolicy
-	d := o.TagPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.TagPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -581,9 +581,9 @@ func (o *UpdateTagPolicyRequest) GetTagPolicy(ctx context.Context) (TagPolicy, b
 }
 
 // SetTagPolicy sets the value of the TagPolicy field in UpdateTagPolicyRequest.
-func (o *UpdateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) {
+func (m *UpdateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) {
 	vs := v.ToObjectValue(ctx)
-	o.TagPolicy = vs
+	m.TagPolicy = vs
 }
 
 type Value struct {
@@ -596,7 +596,7 @@ func (to *Value) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Value)
 func (to *Value) SyncFieldsDuringRead(ctx context.Context, from Value) {
 }
 
-func (c Value) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Value) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -609,23 +609,23 @@ func (c Value) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Value) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Value) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Value
 // only implements ToObjectValue() and Type().
-func (o Value) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Value) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Value) Type(ctx context.Context) attr.Type {
+func (m Value) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,

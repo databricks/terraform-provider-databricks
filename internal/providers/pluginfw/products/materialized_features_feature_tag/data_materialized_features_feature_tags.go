@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type FeatureTagsData struct {
 
 func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"feature_tags": reflect.TypeOf(ml_tf.FeatureTag{}),
+		"feature_tags": reflect.TypeOf(FeatureTagData{}),
 	}
+}
+
+func (m FeatureTagsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_tags"] = attrs["feature_tags"].SetComputed()
+	return attrs
 }
 
 type FeatureTagsDataSource struct {
@@ -46,10 +50,7 @@ func (r *FeatureTagsDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *FeatureTagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("feature_tags")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,
@@ -90,7 +91,7 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var feature_tag ml_tf.FeatureTag
+		var feature_tag FeatureTagData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &feature_tag)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +100,6 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	var newState FeatureTagsData
-	newState.MaterializedFeatures = types.ListValueMust(ml_tf.FeatureTag{}.Type(ctx), results)
+	newState.MaterializedFeatures = types.ListValueMust(FeatureTagData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

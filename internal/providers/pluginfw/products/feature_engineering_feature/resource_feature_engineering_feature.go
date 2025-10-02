@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,7 +43,18 @@ type FeatureResource struct {
 
 // Feature extends the main model with additional fields.
 type Feature struct {
-	ml_tf.Feature
+	// The description of the feature.
+	Description types.String `tfsdk:"description"`
+	// The full three-part name (catalog, schema, name) of the feature.
+	FullName types.String `tfsdk:"full_name"`
+	// The function by which the feature is computed.
+	Function types.Object `tfsdk:"function"`
+	// The input columns from which the feature is computed.
+	Inputs types.List `tfsdk:"inputs"`
+	// The data source of the feature.
+	Source types.Object `tfsdk:"source"`
+	// The time window in which the feature is computed.
+	TimeWindow types.Object `tfsdk:"time_window"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +65,12 @@ type Feature struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.Feature.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"function":    reflect.TypeOf(ml_tf.Function{}),
+		"inputs":      reflect.TypeOf(types.String{}),
+		"source":      reflect.TypeOf(ml_tf.DataSource{}),
+		"time_window": reflect.TypeOf(ml_tf.TimeWindow{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +80,213 @@ func (m Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Feature
 // only implements ToObjectValue() and Type().
 func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.Feature.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"description": m.Description,
+			"full_name":   m.FullName,
+			"function":    m.Function,
+			"inputs":      m.Inputs,
+			"source":      m.Source,
+			"time_window": m.TimeWindow,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m Feature) Type(ctx context.Context) attr.Type {
-	embeddedType := m.Feature.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"description": types.StringType,
+			"full_name": types.StringType,
+			"function":  ml_tf.Function{}.Type(ctx),
+			"inputs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"source":      ml_tf.DataSource{}.Type(ctx),
+			"time_window": ml_tf.TimeWindow{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan Feature) {
-	m.Feature.SyncFieldsDuringCreateOrUpdate(ctx, plan.Feature)
+func (to *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Feature) {
+	if !from.Function.IsNull() && !from.Function.IsUnknown() {
+		if toFunction, ok := to.GetFunction(ctx); ok {
+			if fromFunction, ok := from.GetFunction(ctx); ok {
+				// Recursively sync the fields of Function
+				toFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromFunction)
+				to.SetFunction(ctx, toFunction)
+			}
+		}
+	}
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				// Recursively sync the fields of Source
+				toSource.SyncFieldsDuringCreateOrUpdate(ctx, fromSource)
+				to.SetSource(ctx, toSource)
+			}
+		}
+	}
+	if !from.TimeWindow.IsNull() && !from.TimeWindow.IsUnknown() {
+		if toTimeWindow, ok := to.GetTimeWindow(ctx); ok {
+			if fromTimeWindow, ok := from.GetTimeWindow(ctx); ok {
+				// Recursively sync the fields of TimeWindow
+				toTimeWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromTimeWindow)
+				to.SetTimeWindow(ctx, toTimeWindow)
+			}
+		}
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *Feature) SyncFieldsDuringRead(ctx context.Context, existingState Feature) {
-	m.Feature.SyncFieldsDuringRead(ctx, existingState.Feature)
+func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
+	if !from.Function.IsNull() && !from.Function.IsUnknown() {
+		if toFunction, ok := to.GetFunction(ctx); ok {
+			if fromFunction, ok := from.GetFunction(ctx); ok {
+				toFunction.SyncFieldsDuringRead(ctx, fromFunction)
+				to.SetFunction(ctx, toFunction)
+			}
+		}
+	}
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				toSource.SyncFieldsDuringRead(ctx, fromSource)
+				to.SetSource(ctx, toSource)
+			}
+		}
+	}
+	if !from.TimeWindow.IsNull() && !from.TimeWindow.IsUnknown() {
+		if toTimeWindow, ok := to.GetTimeWindow(ctx); ok {
+			if fromTimeWindow, ok := from.GetTimeWindow(ctx); ok {
+				toTimeWindow.SyncFieldsDuringRead(ctx, fromTimeWindow)
+				to.SetTimeWindow(ctx, toTimeWindow)
+			}
+		}
+	}
+}
+
+func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["function"] = attrs["function"].SetRequired()
+	attrs["function"] = attrs["function"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["inputs"] = attrs["inputs"].SetRequired()
+	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["time_window"] = attrs["time_window"].SetRequired()
+	attrs["time_window"] = attrs["time_window"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	return attrs
+}
+
+// GetFunction returns the value of the Function field in Feature as
+// a ml_tf.Function value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetFunction(ctx context.Context) (ml_tf.Function, bool) {
+	var e ml_tf.Function
+	if m.Function.IsNull() || m.Function.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.Function
+	d := m.Function.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFunction sets the value of the Function field in Feature.
+func (m *Feature) SetFunction(ctx context.Context, v ml_tf.Function) {
+	vs := v.ToObjectValue(ctx)
+	m.Function = vs
+}
+
+// GetInputs returns the value of the Inputs field in Feature as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetInputs(ctx context.Context) ([]types.String, bool) {
+	if m.Inputs.IsNull() || m.Inputs.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Inputs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInputs sets the value of the Inputs field in Feature.
+func (m *Feature) SetInputs(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inputs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Inputs = types.ListValueMust(t, vs)
+}
+
+// GetSource returns the value of the Source field in Feature as
+// a ml_tf.DataSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetSource(ctx context.Context) (ml_tf.DataSource, bool) {
+	var e ml_tf.DataSource
+	if m.Source.IsNull() || m.Source.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.DataSource
+	d := m.Source.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSource sets the value of the Source field in Feature.
+func (m *Feature) SetSource(ctx context.Context, v ml_tf.DataSource) {
+	vs := v.ToObjectValue(ctx)
+	m.Source = vs
+}
+
+// GetTimeWindow returns the value of the TimeWindow field in Feature as
+// a ml_tf.TimeWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetTimeWindow(ctx context.Context) (ml_tf.TimeWindow, bool) {
+	var e ml_tf.TimeWindow
+	if m.TimeWindow.IsNull() || m.TimeWindow.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.TimeWindow
+	d := m.TimeWindow.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTimeWindow sets the value of the TimeWindow field in Feature.
+func (m *Feature) SetTimeWindow(ctx context.Context, v ml_tf.TimeWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.TimeWindow = vs
 }
 
 func (r *FeatureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +294,7 @@ func (r *FeatureResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *FeatureResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Feature{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "full_name")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Feature{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks feature_engineering_feature",
 		Attributes:  attrs,

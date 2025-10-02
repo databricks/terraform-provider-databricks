@@ -12,7 +12,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -34,7 +33,9 @@ type FeatureTagDataSource struct {
 
 // FeatureTagData extends the main model with additional fields.
 type FeatureTagData struct {
-	ml_tf.FeatureTag
+	Key types.String `tfsdk:"key"`
+
+	Value types.String `tfsdk:"value"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +46,7 @@ type FeatureTagData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.FeatureTag.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +56,35 @@ func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureTagData
 // only implements ToObjectValue() and Type().
 func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"key": m.Key,
+			"value": m.Value,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m FeatureTagData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"key": types.StringType,
+			"value": types.StringType,
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *FeatureTagData) SyncFieldsDuringRead(ctx context.Context, existingState FeatureTagData) {
-	m.FeatureTag.SyncFieldsDuringRead(ctx, existingState.FeatureTag)
+func (to *FeatureTagData) SyncFieldsDuringRead(ctx context.Context, from FeatureTagData) {
+}
+
+func (m FeatureTagData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
 }
 
 func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +92,7 @@ func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *FeatureTagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,

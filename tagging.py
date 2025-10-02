@@ -16,8 +16,8 @@ CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
 """
-This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
-It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
+This script tags the release of the SDKs using a combination of the GitHub API and Git commands.  
+It reads the local repository to determine necessary changes, updates changelogs, and creates tags.  
 
 ### How it Works:
 - It does **not** modify the local repository directly.
@@ -51,8 +51,7 @@ class GitHubRepo:
         new_tree = self.repo.create_git_tree(self.changed_files, base_tree)
         parent_commit = self.repo.get_git_commit(head_ref.object.sha)
 
-        new_commit = self.repo.create_git_commit(
-            message=message, tree=new_tree, parents=[parent_commit])
+        new_commit = self.repo.create_git_commit(message=message, tree=new_tree, parents=[parent_commit])
         # Update branch reference
         head_ref.edit(new_commit.sha)
         self.sha = new_commit.sha
@@ -70,11 +69,10 @@ class GitHubRepo:
         # The email MUST be the GitHub Apps email.
         # Otherwise, the tag will not be verified.
         tagger = InputGitAuthor(
-            name="Databricks SDK Release Bot",
-            email="DECO-SDK-Tagging[bot]@users.noreply.github.com")
+            name="Databricks SDK Release Bot", email="DECO-SDK-Tagging[bot]@users.noreply.github.com"
+        )
 
-        tag = self.repo.create_git_tag(
-            tag=tag_name, message=tag_message, object=self.sha, type="commit", tagger=tagger)
+        tag = self.repo.create_git_tag(tag=tag_name, message=tag_message, object=self.sha, type="commit", tagger=tagger)
         # Create a Git ref (the actual reference for the tag in the repo)
         self.repo.create_git_ref(ref=f"refs/tags/{tag_name}", sha=tag.sha)
 
@@ -89,6 +87,7 @@ class Package:
     :name: The package name.
     :path: The path to the package relative to the repository root.
     """
+
     name: str
     path: str
 
@@ -140,7 +139,7 @@ def get_package_name(package_path: str) -> str:
     }
     """
     filepath = os.path.join(os.getcwd(), package_path, PACKAGE_FILE_NAME)
-    with open(filepath, 'r') as file:
+    with open(filepath, "r") as file:
         content = json.load(file)
     if "package" in content:
         return content["package"]
@@ -156,21 +155,21 @@ def update_version_references(tag_info: TagInfo) -> None:
 
     # Load version patterns from '.codegen.json' file at the top level of the repository
     package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
-    with open(package_file_path, 'r') as file:
+    with open(package_file_path, "r") as file:
         package_file = json.load(file)
 
-    version = package_file.get('version')
+    version = package_file.get("version")
     if not version:
-        print(f"`version` not found in .codegen.json. Nothing to update.")
+        print("`version` not found in .codegen.json. Nothing to update.")
         return
 
     # Update the versions
     for filename, pattern in version.items():
         loc = os.path.join(os.getcwd(), tag_info.package.path, filename)
-        previous_version = re.sub(r'\$VERSION', r"\\d+\\.\\d+\\.\\d+", pattern)
-        new_version = re.sub(r'\$VERSION', tag_info.version, pattern)
+        previous_version = re.sub(r"\$VERSION", r"\\d+\\.\\d+\\.\\d+", pattern)
+        new_version = re.sub(r"\$VERSION", tag_info.version, pattern)
 
-        with open(loc, 'r') as file:
+        with open(loc, "r") as file:
             content = file.read()
 
         # Replace the version in the file content
@@ -188,15 +187,15 @@ def clean_next_changelog(package_path: str) -> None:
     """
 
     file_path = os.path.join(os.getcwd(), package_path, NEXT_CHANGELOG_FILE_NAME)
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         content = file.read()
 
     # Remove content between ### sections
-    cleaned_content = re.sub(r'(### [^\n]+\n)(?:.*?\n?)*?(?=###|$)', r'\1', content)
+    cleaned_content = re.sub(r"(### [^\n]+\n)(?:.*?\n?)*?(?=###|$)", r"\1", content)
     # Ensure there is exactly one empty line before each section
-    cleaned_content = re.sub(r'(\n*)(###[^\n]+)', r'\n\n\2', cleaned_content)
+    cleaned_content = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", cleaned_content)
     # Find the version number
-    version_match = re.search(r'Release v(\d+)\.(\d+)\.(\d+)', cleaned_content)
+    version_match = re.search(r"Release v(\d+)\.(\d+)\.(\d+)", cleaned_content)
     if not version_match:
         raise Exception("Version not found in the changelog")
     major, minor, patch = map(int, version_match.groups())
@@ -206,7 +205,7 @@ def clean_next_changelog(package_path: str) -> None:
     # are more common than patch or major version releases.
     minor += 1
     patch = 0
-    new_version = f'Release v{major}.{minor}.{patch}'
+    new_version = f"Release v{major}.{minor}.{patch}"
     cleaned_content = cleaned_content.replace(version_match.group(0), new_version)
 
     # Update file with cleaned content
@@ -220,19 +219,18 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     """
     changelog_path = os.path.join(os.getcwd(), package.path, CHANGELOG_FILE_NAME)
 
-    with open(changelog_path, 'r') as f:
+    with open(changelog_path, "r") as f:
         changelog = f.read()
 
     # Extract the latest release section using regex
-    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)",
-                      changelog, re.S)
+    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
 
     # E.g., for new packages.
     if not match:
         return None
 
     latest_release = match.group(0)
-    version_match = re.search(r'## (\[Release\] )?Release v(\d+\.\d+\.\d+)', latest_release)
+    version_match = re.search(r"## (\[Release\] )?Release v(\d+\.\d+\.\d+)", latest_release)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
@@ -247,22 +245,22 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     """
     next_changelog_path = os.path.join(os.getcwd(), package.path, NEXT_CHANGELOG_FILE_NAME)
     # Read NEXT_CHANGELOG.md
-    with open(next_changelog_path, 'r') as f:
+    with open(next_changelog_path, "r") as f:
         next_changelog = f.read()
 
     # Remove "# NEXT CHANGELOG" line
-    next_changelog = re.sub(r'^# NEXT CHANGELOG(\n+)', '', next_changelog, flags=re.MULTILINE)
+    next_changelog = re.sub(r"^# NEXT CHANGELOG(\n+)", "", next_changelog, flags=re.MULTILINE)
 
     # Remove empty sections
-    next_changelog = re.sub(r'###[^\n]+\n+(?=##|\Z)', '', next_changelog)
+    next_changelog = re.sub(r"###[^\n]+\n+(?=##|\Z)", "", next_changelog)
     # Ensure there is exactly one empty line before each section
-    next_changelog = re.sub(r'(\n*)(###[^\n]+)', r'\n\n\2', next_changelog)
+    next_changelog = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", next_changelog)
 
-    if not re.search(r'###', next_changelog):
+    if not re.search(r"###", next_changelog):
         print("All sections are empty. No changes will be made to the changelog.")
         return None
 
-    version_match = re.search(r'## Release v(\d+\.\d+\.\d+)', next_changelog)
+    version_match = re.search(r"## Release v(\d+\.\d+\.\d+)", next_changelog)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
@@ -275,10 +273,9 @@ def write_changelog(tag_info: TagInfo) -> None:
     Updates the changelog with a new tag info.
     """
     changelog_path = os.path.join(os.getcwd(), tag_info.package.path, CHANGELOG_FILE_NAME)
-    with open(changelog_path, 'r') as f:
+    with open(changelog_path, "r") as f:
         changelog = f.read()
-    updated_changelog = re.sub(r'(# Version changelog\n\n)', f'\\1{tag_info.content.strip()}\n\n\n',
-                               changelog)
+    updated_changelog = re.sub(r"(# Version changelog\n\n)", f"\\1{tag_info.content.strip()}\n\n\n", changelog)
     gh.add_file(changelog_path, updated_changelog)
 
 
@@ -333,8 +330,7 @@ def is_tag_applied(tag: TagInfo) -> bool:
     """
     try:
         # Check if the specific tag exists
-        result = subprocess.check_output(
-            ['git', 'tag', '--list', tag.tag_name()], stderr=subprocess.PIPE, text=True)
+        result = subprocess.check_output(["git", "tag", "--list", tag.tag_name()], stderr=subprocess.PIPE, text=True)
         return result.strip() == tag.tag_name()
     except subprocess.CalledProcessError as e:
         # Raise a exception for git command errors
@@ -349,10 +345,7 @@ def find_last_tags() -> List[TagInfo]:
     """
     packages = find_packages()
 
-    return [
-        info for info in (get_previous_tag_info(package) for package in packages)
-        if info is not None
-    ]
+    return [info for info in (get_previous_tag_info(package) for package in packages) if info is not None]
 
 
 def find_pending_tags() -> List[TagInfo]:
@@ -379,8 +372,9 @@ def generate_commit_message(tag_infos: List[TagInfo]) -> str:
 
     # Sort tag_infos by package name for consistency
     tag_infos.sort(key=lambda info: info.package.name)
-    return 'Release\n\n' + '\n\n'.join(f"## {info.package.name}/v{info.version}\n\n{info.content}"
-                                       for info in tag_infos)
+    return "Release\n\n" + "\n\n".join(
+        f"## {info.package.name}/v{info.version}\n\n{info.content}" for info in tag_infos
+    )
 
 
 def push_changes(tag_infos: List[TagInfo]) -> None:
@@ -404,25 +398,24 @@ def reset_repository(hash: Optional[str] = None) -> None:
     :param hash: The commit hash to reset to. If None, it resets to HEAD.
     """
     # Fetch the latest changes from the remote repository
-    subprocess.run(['git', 'fetch'])
+    subprocess.run(["git", "fetch"])
 
     # Determine the commit hash (default to origin/main if none is provided)
-    commit_hash = hash or 'origin/main'
+    commit_hash = hash or "origin/main"
 
     # Reset in memory changed files and the commit hash
     gh.reset(hash)
 
     # Construct the Git reset command
-    command = ['git', 'reset', '--hard', commit_hash]
+    command = ["git", "reset", "--hard", commit_hash]
 
     # Execute the git reset command
     subprocess.run(command, check=True)
 
 
-def retry_function(func: Callable[[], List[TagInfo]],
-                   cleanup: Callable[[], None],
-                   max_attempts: int = 5,
-                   delay: int = 5) -> List[TagInfo]:
+def retry_function(
+    func: Callable[[], List[TagInfo]], cleanup: Callable[[], None], max_attempts: int = 5, delay: int = 5
+) -> List[TagInfo]:
     """
     Calls a function call up to `max_attempts` times if an exception occurs.
 
@@ -451,9 +444,7 @@ def update_changelogs(packages: List[Package]) -> List[TagInfo]:
     """
     Updates changelogs and pushes the commits.
     """
-    tag_infos = [
-        info for info in (process_package(package) for package in packages) if info is not None
-    ]
+    tag_infos = [info for info in (process_package(package) for package in packages) if info is not None]
     # If any package was changed, push the changes.
     if tag_infos:
         push_changes(tag_infos)
@@ -483,8 +474,8 @@ def pull_last_release_commit() -> None:
     Uses commit for last change to .release_metadata.json, since it's only updated on releases.
     """
     commit_hash = subprocess.check_output(
-        ['git', 'log', '-n', '1', '--format=%H', '--', '.release_metadata.json'],
-        text=True).strip()
+        ["git", "log", "-n", "1", "--format=%H", "--", ".release_metadata.json"], text=True
+    ).strip()
 
     # If no commit is found, raise an exception
     if not commit_hash:
@@ -499,15 +490,15 @@ def get_package_from_args() -> Optional[str]:
     Retrieves an optional package
     python3 ./tagging.py --package <name>
     """
-    parser = argparse.ArgumentParser(description='Update changelogs and tag the release.')
-    parser.add_argument('--package', '-p', type=str, help='Tag a single package')
+    parser = argparse.ArgumentParser(description="Update changelogs and tag the release.")
+    parser.add_argument("--package", "-p", type=str, help="Tag a single package")
     args = parser.parse_args()
     return args.package
 
 
 def init_github():
-    token = os.environ['GITHUB_TOKEN']
-    repo_name = os.environ['GITHUB_REPOSITORY']
+    token = os.environ["GITHUB_TOKEN"]
+    repo_name = os.environ["GITHUB_REPOSITORY"]
     g = Github(token)
     repo = g.get_repo(repo_name)
     global gh
@@ -536,8 +527,7 @@ def process():
     # Therefore, we don't support specifying the package until the previously started process has been successfully completed.
     if pending_tags and package_name:
         pending_packages = [tag.package.name for tag in pending_tags]
-        raise Exception(
-            f"Cannot release package {package_name}. Pending release for {pending_packages}")
+        raise Exception(f"Cannot release package {package_name}. Pending release for {pending_packages}")
 
     if pending_tags:
         print("Found pending tags from previous executions, entering recovery mode.")
@@ -550,8 +540,7 @@ def process():
     if package_name:
         packages = [package for package in packages if package.name == package_name]
 
-    pending_tags = retry_function(
-        func=lambda: update_changelogs(packages), cleanup=reset_repository)
+    pending_tags = retry_function(func=lambda: update_changelogs(packages), cleanup=reset_repository)
     push_tags(pending_tags)
 
 
@@ -559,8 +548,7 @@ def validate_git_root():
     """
     Validate that the script is run from the root of the repository.
     """
-    repo_root = subprocess.check_output(["git", "rev-parse",
-                                         "--show-toplevel"]).strip().decode("utf-8")
+    repo_root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip().decode("utf-8")
     current_dir = subprocess.check_output(["pwd"]).strip().decode("utf-8")
     if repo_root != current_dir:
         raise Exception("Please run this script from the root of the repository.")

@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type OnlineStoresData struct {
 
 func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"online_stores": reflect.TypeOf(ml_tf.OnlineStore{}),
+		"online_stores": reflect.TypeOf(OnlineStoreData{}),
 	}
+}
+
+func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["online_stores"] = attrs["online_stores"].SetComputed()
+	return attrs
 }
 
 type OnlineStoresDataSource struct {
@@ -46,10 +50,7 @@ func (r *OnlineStoresDataSource) Metadata(ctx context.Context, req datasource.Me
 }
 
 func (r *OnlineStoresDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("online_stores")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks OnlineStore",
 		Attributes:  attrs,
@@ -90,7 +91,7 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var online_store ml_tf.OnlineStore
+		var online_store OnlineStoreData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &online_store)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +100,6 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	var newState OnlineStoresData
-	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), results)
+	newState.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

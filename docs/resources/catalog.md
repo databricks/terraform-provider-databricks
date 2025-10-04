@@ -44,6 +44,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this catalog - same as the `name`.
 * `metastore_id` - ID of the parent metastore.
+* `storage_location` - effective storage Location URL (full path) for managed tables within catalog.
+* `catalog_type` - the type of the catalog.
+* `created_at` - time at which this catalog was created, in epoch milliseconds.
+* `created_by` - username of catalog creator.
+* `securable_type` - the type of Unity Catalog securable.
+* `updated_at` - time at which this catalog was last modified, in epoch milliseconds..
+* `updated_by` - username of user who last modified catalog.
 
 ## Import
 

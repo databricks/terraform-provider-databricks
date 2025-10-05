@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `databricks_compliance_security_profile_account_setting` for account-level compliance security profile defaults.
+
 ### Bug Fixes
 
 ### Documentation

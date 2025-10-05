@@ -34,18 +34,21 @@ type VolumesList struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	SchemaName  types.String `tfsdk:"schema_name"`
 	Ids         types.List   `tfsdk:"ids"`
+	ProviderConfigData types.List `tfsdk:"provider_config"`
 }
 
 func (VolumesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
 	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 	attrs["ids"] = attrs["ids"].SetOptional().SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"ids": reflect.TypeOf(types.String{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -69,20 +72,28 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	var volumesList VolumesList
-	diags = req.Config.Get(ctx, &volumesList)
+	diags := req.Config.Get(ctx, &volumesList)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	var listVolumesRequest catalog.ListVolumesRequest
 	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
+
+
+	var namespace tfschema.ProviderConfigData
+	resp.Diagnostics.Append(volumesList.ProviderConfigData.ElementsAs(ctx, &namespace, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	volumes, err := w.Volumes.ListAll(ctx, listVolumesRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {

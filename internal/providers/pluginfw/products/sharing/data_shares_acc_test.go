@@ -19,6 +19,7 @@ func checkSharesDataSourcePopulated(t *testing.T) func(s *terraform.State) error
 		return nil
 	}
 }
+
 func TestUcAccDataSourceShares(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `

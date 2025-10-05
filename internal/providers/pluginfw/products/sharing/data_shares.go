@@ -13,14 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShares = "shares"
 
 type SharesList struct {
-	Shares             types.List   `tfsdk:"shares"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	Shares             types.List `tfsdk:"shares"`
+	ProviderConfigData types.List `tfsdk:"provider_config"`
 }
 
 func (s SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -82,15 +81,16 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	var namespace tfschema.ProviderConfigData
-	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !config.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(config.ProviderConfigData.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -108,5 +108,9 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		shareNames[i] = types.StringValue(share.Name)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, SharesList{Shares: types.ListValueMust(types.StringType, shareNames)})...)
+	newState := SharesList{
+		Shares:             types.ListValueMust(types.StringType, shareNames),
+		ProviderConfigData: config.ProviderConfigData,
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

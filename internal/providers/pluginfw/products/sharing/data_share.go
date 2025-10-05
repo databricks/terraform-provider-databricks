@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShare = "share"
@@ -32,13 +31,19 @@ type ShareDataSource struct {
 
 type ShareData struct {
 	sharing_tf.ShareInfo
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	ProviderConfig types.List `tfsdk:"provider_config"`
 }
 
 func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	types := s.ShareInfo.GetComplexFieldTypes(ctx)
 	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfigData{})
 	return types
+}
+
+func (s ShareData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	s.ShareInfo.ApplySchemaCustomizations(attrs)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	return attrs
 }
 
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -68,15 +73,16 @@ func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	var namespace tfschema.ProviderConfigData
-	resp.Diagnostics.Append(config.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !config.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(config.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, diags := d.Client.GetWorkspaceClient()
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

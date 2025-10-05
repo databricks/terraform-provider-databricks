@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "share"
@@ -34,7 +33,7 @@ func ResourceShare() resource.Resource {
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
 	ID             types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	ProviderConfig types.List   `tfsdk:"provider_config"`
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
@@ -151,6 +150,9 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		// Set provider_config as optional BEFORE ConfigureAsSdkV2Compatible() converts it to a block
+		c.SetOptional("provider_config")
+
 		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("name")
 
@@ -163,8 +165,6 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "partition", "value", "name")
 
 		c.SetComputed("id")
-
-		c.SetOptional("provider_config")
 
 		return c
 	})
@@ -202,15 +202,16 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	var namespace tfschema.ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !plan.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfig
+		resp.Diagnostics.Append(plan.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -276,15 +277,16 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	var namespace tfschema.ProviderConfig
-	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !existingState.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfig
+		resp.Diagnostics.Append(existingState.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -343,15 +345,16 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	var namespace tfschema.ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !plan.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfig
+		resp.Diagnostics.Append(plan.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -441,20 +444,21 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	var deleteShareRequest sharing_tf.DeleteShareRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteShareRequest)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &deleteShareRequest.Name)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var namespace tfschema.ProviderConfig
-	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !state.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfig
+		resp.Diagnostics.Append(state.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -502,5 +506,6 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state Sha
 		finalObjects = append(finalObjects, stateObjects[i])
 	}
 	state.SetObjects(ctx, finalObjects)
+	state.ProviderConfig = plan.ProviderConfig // Preserve provider_config from plan
 	return state, d
 }

@@ -9,11 +9,12 @@ import (
 
 func DataSourceJob() common.Resource {
 	type queryableJobData struct {
-		Id      string `json:"id,omitempty" tf:"computed"`
-		JobId   string `json:"job_id,omitempty" tf:"computed"`
-		Name    string `json:"name,omitempty" tf:"computed"`
-		JobName string `json:"job_name,omitempty" tf:"computed"`
-		Job     *Job   `json:"job_settings,omitempty" tf:"computed"`
+		Id                 string                    `json:"id,omitempty" tf:"computed"`
+		JobId              string                    `json:"job_id,omitempty" tf:"computed"`
+		Name               string                    `json:"name,omitempty" tf:"computed"`
+		JobName            string                    `json:"job_name,omitempty" tf:"computed"`
+		Job                *Job                      `json:"job_settings,omitempty" tf:"computed"`
+		ProviderConfigData common.ProviderConfigData `json:"provider_config,omitempty"`
 	}
 	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)

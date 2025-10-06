@@ -244,6 +244,50 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	}
 }
 
+// extractWorkspaceIDFromProviderConfig uses reflection to extract the WorkspaceID from ProviderConfigData field
+func extractWorkspaceIDFromProviderConfig(data any) string {
+	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return ""
+	}
+
+	// Look for ProviderConfigData field
+	field := v.FieldByName("ProviderConfigData")
+	if !field.IsValid() {
+		return ""
+	}
+
+	// Get WorkspaceID from ProviderConfigData
+	workspaceIDField := field.FieldByName("WorkspaceID")
+	if !workspaceIDField.IsValid() {
+		return ""
+	}
+
+	if workspaceIDField.Kind() == reflect.String {
+		return workspaceIDField.String()
+	}
+	return ""
+}
+
+// WorkspaceDataWithUnifiedProvider is a generic way to define workspace data resources in Terraform provider.
+// The provider config is used to get the workspace client for the workspace ID specified in the provider config.
+// The type T must include a field: ProviderConfigData common.ProviderConfigData `json:"provider_config,omitempty"`
+func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.WorkspaceClient, error) {
+			return client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+		},
+		func(data T) string {
+			return extractWorkspaceIDFromProviderConfig(data)
+		},
+		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
+			return read(ctx, t, wc)
+		}, false, NoCustomize)
+}
+
 // WorkspaceData is a generic way to define workspace data resources in Terraform provider.
 //
 // Example usage:
@@ -256,9 +300,14 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
-	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
-		return read(ctx, t, wc)
-	}, false, NoCustomize)
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClient()
+		},
+		func(data struct{}) string { return "" },
+		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+			return read(ctx, t, wc)
+		}, false, NoCustomize)
 }
 
 // WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
@@ -293,14 +342,19 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //	         ...
 //	     })
 func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
-	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
-		res, err := read(ctx, o, w)
-		if err != nil {
-			return err
-		}
-		*s = *res
-		return nil
-	}, true, NoCustomize)
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClient()
+		},
+		func(data P) string { return "" },
+		func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
+			res, err := read(ctx, o, w)
+			if err != nil {
+				return err
+			}
+			*s = *res
+			return nil
+		}, true, NoCustomize)
 }
 
 // WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.
@@ -312,9 +366,14 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 func WorkspaceDataWithCustomizeFunc[T any](
 	read func(context.Context, *T, *databricks.WorkspaceClient) error,
 	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
-	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
-		return read(ctx, t, wc)
-	}, false, customizeSchemaFunc)
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClient()
+		},
+		func(data struct{}) string { return "" },
+		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+			return read(ctx, t, wc)
+		}, false, customizeSchemaFunc)
 }
 
 // AccountData is a generic way to define account data resources in Terraform provider.
@@ -329,9 +388,14 @@ func WorkspaceDataWithCustomizeFunc[T any](
 //		...
 //	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
-		return read(ctx, t, ac)
-	}, false, NoCustomize)
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.AccountClient, error) {
+			return client.AccountClient()
+		},
+		func(data struct{}) string { return "" },
+		func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
+			return read(ctx, t, ac)
+		}, false, NoCustomize)
 }
 
 // AccountDataWithParams defines a data source that can be used to read data from the account API.
@@ -366,14 +430,19 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 //	         ...
 //		  })
 func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.AccountClient) (*T, error)) Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
-		res, err := read(ctx, o, a)
-		if err != nil {
-			return err
-		}
-		*s = *res
-		return nil
-	}, true, NoCustomize)
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.AccountClient, error) {
+			return client.AccountClient()
+		},
+		func(data P) string { return "" },
+		func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
+			res, err := read(ctx, o, a)
+			if err != nil {
+				return err
+			}
+			*s = *res
+			return nil
+		}, true, NoCustomize)
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.
@@ -382,7 +451,8 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 // from OtherFields will be overlaid on top of the schema generated by SdkType. Otherwise, the schema generated by
 // SdkType will be used directly.
 func genericDatabricksData[T, P, C any](
-	getClient func(*DatabricksClient) (C, error),
+	getClient func(*DatabricksClient, context.Context, string) (C, error),
+	extractWorkspaceID func(P) string,
 	read func(context.Context, P, *T, C) error,
 	hasOther bool,
 	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
@@ -427,7 +497,8 @@ func genericDatabricksData[T, P, C any](
 			var other P
 			DataToStructPointer(d, s, &other)
 			DataToStructPointer(d, s, &dummy)
-			c, err := getClient(client)
+			workspaceID := extractWorkspaceID(other)
+			c, err := getClient(client, ctx, workspaceID)
 			if err != nil {
 				return nicerError(ctx, err, "get client")
 			}
@@ -494,7 +565,9 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 // NoClientData is a generic way to define data resources in Terraform provider that doesn't require any client.
 // usage is similar to AccountData and WorkspaceData, but the read function doesn't take a client.
 func NoClientData[T any](read func(context.Context, *T) error) Resource {
-	return genericDatabricksData(func(*DatabricksClient) (any, error) { return nil, nil },
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, workspaceID string) (any, error) { return nil, nil },
+		func(data struct{}) string { return "" },
 		func(ctx context.Context, s struct{}, t *T, ac any) error {
 			return read(ctx, t)
 		}, false, NoCustomize)

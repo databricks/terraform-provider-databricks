@@ -81,7 +81,7 @@ func (a *dataSourceApps) Read(ctx context.Context, req datasource.ReadRequest, r
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

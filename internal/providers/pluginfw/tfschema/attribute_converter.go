@@ -7,8 +7,8 @@ type Blockable interface {
 	ToBlock() BlockBuilder
 }
 
-// convertAttributesToBlocks converts all attributes implementing the Blockable interface to blocks, returning
-// a new NestedBlockObject with the converted attributes and the original blocks.
+// convertAttributesToBlocks converts all attributes implementing the Blockable interface to blocks except for "provider_config",
+// returning a new NestedBlockObject with the converted attributes and the original blocks.
 func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks map[string]BlockBuilder) NestedBlockObject {
 	newAttributes := make(map[string]AttributeBuilder)
 	newBlocks := make(map[string]BlockBuilder)

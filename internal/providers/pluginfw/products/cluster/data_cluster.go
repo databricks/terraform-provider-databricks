@@ -96,7 +96,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

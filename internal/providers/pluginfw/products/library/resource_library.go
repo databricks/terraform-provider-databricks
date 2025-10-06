@@ -153,7 +153,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,7 +220,7 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -278,7 +278,7 @@ func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -137,7 +137,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,7 +196,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -267,7 +267,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -321,7 +321,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

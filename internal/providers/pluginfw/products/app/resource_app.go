@@ -122,7 +122,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -240,7 +240,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -287,7 +287,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -342,7 +342,7 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

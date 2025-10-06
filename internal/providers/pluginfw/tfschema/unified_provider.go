@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// ProviderConfig is used to store the provider configurations for unified terraform provider
+// across resources onboarded to plugin framework.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
@@ -41,6 +43,8 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// ProviderConfigData is used to store the provider configurations for unified terraform provider
+// across data sources onboarded to plugin framework.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 }

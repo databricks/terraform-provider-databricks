@@ -94,7 +94,7 @@ func (d *DashboardsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -98,7 +98,7 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 		workspaceID = namespace.WorkspaceID.ValueString()
 	}
 
-	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -37,6 +37,10 @@ func TestAccJobTasks(t *testing.T) {
 		resource "databricks_job" "this" {
 			name = "{var.RANDOM}"
 
+			provider_config {
+				workspace_id = ""
+			}
+
 			job_cluster {
 				job_cluster_key = "j"
 				new_cluster {

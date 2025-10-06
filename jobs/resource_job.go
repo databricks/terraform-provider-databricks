@@ -486,6 +486,7 @@ func (JobCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 
 type JobSettingsResource struct {
 	jobs.JobSettings
+	ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
 
 	// BEGIN Jobs API 2.0
 	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
@@ -1095,7 +1096,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClient()
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
 				if err != nil {
 					return err
 				}
@@ -1131,7 +1132,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClient()
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
 				if err != nil {
 					return err
 				}
@@ -1173,7 +1174,7 @@ func ResourceJob() common.Resource {
 				if err != nil {
 					return err
 				}
-				w, err := c.WorkspaceClient()
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
 				if err != nil {
 					return err
 				}
@@ -1200,7 +1201,9 @@ func ResourceJob() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			w, err := c.WorkspaceClient()
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
 			if err != nil {
 				return err
 			}

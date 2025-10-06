@@ -1,75 +1,24 @@
 package jobs
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
-func commonFixtures(name string) []qa.HTTPFixture {
-	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25"
-	if name != "" {
-		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s", name)
-	}
-	return []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: resource,
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 123,
-						Settings: &JobSettings{
-							Name: "First",
-						},
-					},
-					{
-						JobID: 234,
-						Settings: &JobSettings{
-							Name: "Second",
-						},
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: resource,
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 123,
-						Settings: &JobSettings{
-							Name: "First",
-						},
-					},
-					{
-						JobID: 234,
-						Settings: &JobSettings{
-							Name: "Second",
-						},
-					},
-				},
-			},
-		},
-	}
-
-}
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=234",
-				Response: Job{
-					JobID: 234,
-					Settings: &JobSettings{
-						Name: "Second",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 234}).Return(&jobs.Job{
+				JobId: 234,
+				Settings: &jobs.JobSettings{
+					Name: "Second",
 				},
-			},
+			}, nil)
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
@@ -87,19 +36,18 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 func TestDataSourceQueryableJobRunAsSP(t *testing.T) {
 	spID := "3f670caf-9a4b-4479-8143-1a0878da8f57"
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=234",
-				Response: Job{
-					JobID: 234,
-					Settings: &JobSettings{
-						Name: "Second",
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 234}).Return(&jobs.Job{
+				JobId: 234,
+				Settings: &jobs.JobSettings{
+					Name: "Second",
+					RunAs: &jobs.JobRunAs{
+						ServicePrincipalName: spID,
 					},
-					CreatorUserName: "user@domain.com",
-					RunAsUserName:   spID,
 				},
-			},
+				CreatorUserName: "user@domain.com",
+				RunAsUserName:   spID,
+			}, nil)
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
@@ -117,19 +65,18 @@ func TestDataSourceQueryableJobRunAsSP(t *testing.T) {
 
 func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=234",
-				Response: Job{
-					JobID: 234,
-					Settings: &JobSettings{
-						Name: "Second",
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 234}).Return(&jobs.Job{
+				JobId: 234,
+				Settings: &jobs.JobSettings{
+					Name: "Second",
+					RunAs: &jobs.JobRunAs{
+						UserName: "user@domain.com",
 					},
-					CreatorUserName: "user@domain.com",
-					RunAsUserName:   "user@domain.com",
 				},
-			},
+				CreatorUserName: "user@domain.com",
+				RunAsUserName:   "user@domain.com",
+			}, nil)
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
@@ -147,19 +94,18 @@ func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
 
 func TestDataSourceQueryableJobRunAsAnotherUser(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=234",
-				Response: Job{
-					JobID: 234,
-					Settings: &JobSettings{
-						Name: "Second",
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 234}).Return(&jobs.Job{
+				JobId: 234,
+				Settings: &jobs.JobSettings{
+					Name: "Second",
+					RunAs: &jobs.JobRunAs{
+						UserName: "user2@domain.com",
 					},
-					CreatorUserName: "user1@domain.com",
-					RunAsUserName:   "user2@domain.com",
 				},
-			},
+				CreatorUserName: "user1@domain.com",
+				RunAsUserName:   "user2@domain.com",
+			}, nil)
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
@@ -177,7 +123,32 @@ func TestDataSourceQueryableJobRunAsAnotherUser(t *testing.T) {
 
 func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures("First"),
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().ListAll(mock.Anything, jobs.ListJobsRequest{
+				ExpandTasks: false,
+				Name:        "First",
+				Limit:       100,
+			}).Return([]jobs.BaseJob{
+				{
+					JobId: 123,
+					Settings: &jobs.JobSettings{
+						Name: "First",
+					},
+				},
+				{
+					JobId: 234,
+					Settings: &jobs.JobSettings{
+						Name: "Second",
+					},
+				},
+			}, nil)
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 123}).Return(&jobs.Job{
+				JobId: 123,
+				Settings: &jobs.JobSettings{
+					Name: "First",
+				},
+			}, nil)
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
@@ -192,40 +163,34 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 
 func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third",
-				Response: JobListResponse{
-					Jobs: []Job{},
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().ListAll(mock.Anything, jobs.ListJobsRequest{
+				ExpandTasks: false,
+				Name:        "Third",
+				Limit:       100,
+			}).Return([]jobs.BaseJob{}, nil)
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
-		HCL:         `job_name= "Third"`,
+		HCL:         `job_name = "Third"`,
 		ID:          "_",
 	}.ExpectError(t, "no job found with specified name")
 }
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=567",
-				Response: apierr.APIError{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Job 567 does not exist.",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().Get(mock.Anything, jobs.GetJobRequest{JobId: 567}).Return(nil, &apierr.APIError{
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    "Job 567 does not exist.",
+				StatusCode: 404,
+			})
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
-		HCL:         `id= "567"`,
+		HCL:         `id = "567"`,
 		ID:          "_",
 	}.ExpectError(t, "Job 567 does not exist.")
 }

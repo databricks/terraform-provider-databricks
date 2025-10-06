@@ -15,3 +15,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Rewrite `databricks_job` data source to use Go SDK ([#5078](https://github.com/databricks/terraform-provider-databricks/pull/5078))

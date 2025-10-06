@@ -21,6 +21,11 @@ func TestAccDataSourcesJob(t *testing.T) {
 				workspace_id = ""
 			}
 		}`,
+	}, acceptance.Step{
+		Template: `
+		data "databricks_jobs" "all" {
+			key = "id"
+		}`,
 	})
 }
 

@@ -20,38 +20,53 @@ func checkDataSourceVolumesPopulated(t *testing.T) func(s *terraform.State) erro
 	}
 }
 
+const volumesTemplate = `
+	resource "databricks_catalog" "sandbox" {
+		name         = "sandbox{var.STICKY_RANDOM}"
+		comment      = "this catalog is managed by terraform"
+		properties = {
+			purpose = "testing"
+		}
+	}
+
+	resource "databricks_schema" "things" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "things{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_volume" "this" {
+		name         = "volume_data_source_test"
+		catalog_name = databricks_catalog.sandbox.name
+		schema_name  = databricks_schema.things.name
+		volume_type  = "MANAGED"
+	}
+	output "volumes" {
+		value = length(data.databricks_volumes.this.ids)
+	}
+`
+
 func TestUcAccDataSourceVolumes(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: `
-		resource "databricks_catalog" "sandbox" {
-			name         = "sandbox{var.RANDOM}"
-			comment      = "this catalog is managed by terraform"
-			properties = {
-				purpose = "testing"
-			}
-		}
-
-		resource "databricks_schema" "things" {
-			catalog_name = databricks_catalog.sandbox.id
-			name         = "things{var.RANDOM}"
-			comment      = "this database is managed by terraform"
-			properties = {
-				kind = "various"
-			}
-		}
-		resource "databricks_volume" "this" {
-			name         = "volume_data_source_test"
-			catalog_name = databricks_catalog.sandbox.name
-			schema_name  = databricks_schema.things.name
-			volume_type  = "MANAGED"
-		}
+		Template: volumesTemplate + `
 		data "databricks_volumes" "this" {
 			catalog_name = databricks_catalog.sandbox.name
 			schema_name = databricks_schema.things.name
 			depends_on = [ databricks_volume.this ]
 		}
-		output "volumes" {
-			value = length(data.databricks_volumes.this.ids)
+		`,
+		Check: checkDataSourceVolumesPopulated(t),
+	}, acceptance.Step{
+		Template: volumesTemplate + `
+		data "databricks_volumes" "this" {
+			catalog_name = databricks_catalog.sandbox.name
+			schema_name = databricks_schema.things.name
+			depends_on = [ databricks_volume.this ]
+			provider_config = {
+				workspace_id = "{env.THIS_WORKSPACE_ID}"
+			}
 		}
 		`,
 		Check: checkDataSourceVolumesPopulated(t),

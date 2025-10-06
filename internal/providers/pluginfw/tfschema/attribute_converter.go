@@ -13,6 +13,10 @@ func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks ma
 	newAttributes := make(map[string]AttributeBuilder)
 	newBlocks := make(map[string]BlockBuilder)
 	for name, attr := range attributes {
+		if name == "provider_config" {
+			newAttributes[name] = attr
+			continue
+		}
 		if lnab, ok := attr.(Blockable); ok {
 			newBlocks[name] = lnab.ToBlock()
 		} else {

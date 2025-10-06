@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func DataSourceServingEndpoints() datasource.DataSource {
@@ -27,18 +28,20 @@ type ServingEndpointsDataSource struct {
 }
 
 type ServingEndpointsData struct {
-	Endpoints types.List `tfsdk:"endpoints"`
+	Endpoints          types.List   `tfsdk:"endpoints"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (ServingEndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoints"] = attrs["endpoints"].SetOptional().SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"endpoints": reflect.TypeOf(serving_tf.ServingEndpoint_SdkV2{}),
+		"endpoints":       reflect.TypeOf(serving_tf.ServingEndpoint_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -61,18 +64,32 @@ func (d *ServingEndpointsDataSource) Configure(_ context.Context, req datasource
 }
 
 func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	w, diags := d.Client.GetWorkspaceClient()
+	var endpoints ServingEndpointsData
+	diags := req.Config.Get(ctx, &endpoints)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var endpoints ServingEndpointsData
-	diags = req.Config.Get(ctx, &endpoints)
+	var workspaceID string
+	if !endpoints.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(endpoints.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	endpointsInfoSdk, err := w.ServingEndpoints.ListAll(ctx)
 	if err != nil {
 		if apierr.IsMissing(err) {

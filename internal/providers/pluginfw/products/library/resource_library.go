@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/databricks/databricks-sdk-go"
 )
@@ -74,8 +76,15 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 
 type LibraryExtended struct {
 	compute_tf.Library_SdkV2
-	ClusterId types.String `tfsdk:"cluster_id"`
-	ID        types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	ClusterId      types.String `tfsdk:"cluster_id"`
+	ID             types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	ProviderConfig types.Object `tfsdk:"provider_config"`
+}
+
+func (l LibraryExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	attrs := l.Library_SdkV2.GetComplexFieldTypes(ctx)
+	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return attrs
 }
 
 type LibraryResource struct {
@@ -105,6 +114,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		}
 		c.SetRequired("cluster_id")
 		c.SetOptional("id")
+		c.SetOptional("provider_config")
 		c.SetComputed("id")
 		c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
 		return c
@@ -124,13 +134,27 @@ func (r *LibraryResource) Configure(ctx context.Context, req resource.ConfigureR
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+	var libraryTfSDK LibraryExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &libraryTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var libraryTfSDK LibraryExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &libraryTfSDK)...)
+
+	var workspaceID string
+	if !libraryTfSDK.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -171,21 +195,37 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	installedLib.ID = types.StringValue(libGoSDK.String())
+	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var libraryTfSDK LibraryExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &libraryTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	var workspaceID string
+	if !libraryTfSDK.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	var libGoSDK compute.Library
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, libraryTfSDK, &libGoSDK)...)
 	if resp.Diagnostics.HasError() {
@@ -209,6 +249,7 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
 }
 
@@ -218,16 +259,31 @@ func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest
 
 func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var libraryTfSDK LibraryExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &libraryTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	var workspaceID string
+	if !libraryTfSDK.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	clusterID := libraryTfSDK.ClusterId.ValueString()
 	var libGoSDK compute.Library
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, libraryTfSDK, &libGoSDK)...)

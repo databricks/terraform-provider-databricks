@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func DataSourceRegisteredModelVersions() datasource.DataSource {
@@ -27,19 +28,22 @@ type RegisteredModelVersionsDataSource struct {
 }
 
 type RegisteredModelVersionsData struct {
-	FullName      types.String `tfsdk:"full_name"`
-	ModelVersions types.List   `tfsdk:"model_versions"`
+	FullName           types.String `tfsdk:"full_name"`
+	ModelVersions      types.List   `tfsdk:"model_versions"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (RegisteredModelVersionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["model_versions"] = attrs["model_versions"].SetOptional().SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (RegisteredModelVersionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_versions": reflect.TypeOf(catalog_tf.ModelVersionInfo_SdkV2{}),
+		"model_versions":  reflect.TypeOf(catalog_tf.ModelVersionInfo_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -62,18 +66,32 @@ func (d *RegisteredModelVersionsDataSource) Configure(_ context.Context, req dat
 }
 
 func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	w, diags := d.Client.GetWorkspaceClient()
+	var registeredModelVersions RegisteredModelVersionsData
+	diags := req.Config.Get(ctx, &registeredModelVersions)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var registeredModelVersions RegisteredModelVersionsData
-	diags = req.Config.Get(ctx, &registeredModelVersions)
+	var workspaceID string
+	if !registeredModelVersions.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(registeredModelVersions.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	modelFullName := registeredModelVersions.FullName.ValueString()
 	modelVersions, err := w.ModelVersions.ListByFullName(ctx, modelFullName)
 	if err != nil {

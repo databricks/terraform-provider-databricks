@@ -17,4 +17,3 @@
 ### Exporter
 
 ### Internal Changes
-* Add unified terraform provider support to resources and data sources onboarded to plugin framework ([#5061](https://github.com/databricks/terraform-provider-databricks/pull/5061))

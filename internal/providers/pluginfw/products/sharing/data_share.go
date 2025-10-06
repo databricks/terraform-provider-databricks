@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShare = "share"
@@ -31,7 +32,7 @@ type ShareDataSource struct {
 
 type ShareData struct {
 	sharing_tf.ShareInfo
-	ProviderConfig types.List `tfsdk:"provider_config"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -74,9 +75,12 @@ func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	var workspaceID string
-	if !config.ProviderConfig.IsNull() {
+	if !config.ProviderConfigData.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(config.ProviderConfig.ElementsAs(ctx, &namespace, false)...)
+		resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

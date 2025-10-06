@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "volumes"
@@ -31,10 +32,10 @@ type VolumesDataSource struct {
 }
 
 type VolumesList struct {
-	CatalogName types.String `tfsdk:"catalog_name"`
-	SchemaName  types.String `tfsdk:"schema_name"`
-	Ids         types.List   `tfsdk:"ids"`
-	ProviderConfigData types.List `tfsdk:"provider_config"`
+	CatalogName        types.String `tfsdk:"catalog_name"`
+	SchemaName         types.String `tfsdk:"schema_name"`
+	Ids                types.List   `tfsdk:"ids"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (VolumesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -47,7 +48,7 @@ func (VolumesList) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 
 func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ids": reflect.TypeOf(types.String{}),
+		"ids":             reflect.TypeOf(types.String{}),
 		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
@@ -82,13 +83,19 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	var listVolumesRequest catalog.ListVolumesRequest
 	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
 
-
-	var namespace tfschema.ProviderConfigData
-	resp.Diagnostics.Append(volumesList.ProviderConfigData.ElementsAs(ctx, &namespace, false)...)
-	if resp.Diagnostics.HasError() {
-		return
+	var workspaceID string
+	if !volumesList.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(volumesList.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
 	}
-	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "cluster"
@@ -34,22 +35,24 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	ClusterId   types.String `tfsdk:"cluster_id"`
-	Name        types.String `tfsdk:"cluster_name"`
-	ClusterInfo types.List   `tfsdk:"cluster_info"`
+	ClusterId          types.String `tfsdk:"cluster_id"`
+	Name               types.String `tfsdk:"cluster_name"`
+	ClusterInfo        types.List   `tfsdk:"cluster_info"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (ClusterInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional().SetComputed()
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional().SetComputed()
 	attrs["cluster_info"] = attrs["cluster_info"].SetOptional().SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails_SdkV2{}),
+		"cluster_info":    reflect.TypeOf(compute_tf.ClusterDetails_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -73,14 +76,28 @@ func (d *ClusterDataSource) Configure(_ context.Context, req datasource.Configur
 
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var clusterInfo ClusterInfo
+	resp.Diagnostics.Append(req.Config.Get(ctx, &clusterInfo)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var clusterInfo ClusterInfo
-	resp.Diagnostics.Append(req.Config.Get(ctx, &clusterInfo)...)
+	var workspaceID string
+	if !clusterInfo.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(clusterInfo.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

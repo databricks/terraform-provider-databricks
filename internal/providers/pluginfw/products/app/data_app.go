@@ -11,8 +11,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func DataSourceApp() datasource.DataSource {
@@ -24,20 +24,22 @@ type dataSourceApp struct {
 }
 
 type dataApp struct {
-	Name types.String `tfsdk:"name"`
-	App  types.Object `tfsdk:"app"`
+	Name               types.String `tfsdk:"name"`
+	App                types.Object `tfsdk:"app"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (dataApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["app"] = attrs["app"].SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (dataApp) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"app": reflect.TypeOf(apps_tf.App{}),
+		"app":             reflect.TypeOf(apps_tf.App{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -59,19 +61,33 @@ func (a *dataSourceApp) Configure(ctx context.Context, req datasource.ConfigureR
 
 func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
+
+	var config dataApp
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var workspaceID string
+	if !config.ProviderConfigData.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var name types.String
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &name)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	appGoSdk, err := w.Apps.GetByName(ctx, name.ValueString())
+	appGoSdk, err := w.Apps.GetByName(ctx, config.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("failed to read app", err.Error())
 		return
@@ -82,7 +98,7 @@ func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	dataApp := dataApp{Name: name, App: newApp.ToObjectValue(ctx)}
+	dataApp := dataApp{Name: config.Name, App: newApp.ToObjectValue(ctx), ProviderConfigData: config.ProviderConfigData}
 	resp.Diagnostics.Append(resp.State.Set(ctx, dataApp)...)
 	if resp.Diagnostics.HasError() {
 		return

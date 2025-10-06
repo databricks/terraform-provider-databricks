@@ -63,9 +63,6 @@ func DataSourceJob() common.Resource {
 		data.Name = job.Settings.Name
 		data.JobName = job.Settings.Name
 		data.JobId = data.Id
-		if data.Job == nil {
-			return fmt.Errorf("no job found with specified name")
-		}
 
 		return nil
 	}, func(s map[string]*schema.Schema) map[string]*schema.Schema {

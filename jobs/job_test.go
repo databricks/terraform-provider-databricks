@@ -113,6 +113,16 @@ func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+	})
+}
+
 func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(`
@@ -125,6 +135,20 @@ func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 
 func TestAccJobCluster_ProviderConfig_EmptyBlock(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_EmptyUpdate(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+	}, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	})
 }

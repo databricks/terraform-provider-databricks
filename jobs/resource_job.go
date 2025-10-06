@@ -486,7 +486,7 @@ func (JobCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 
 type JobSettingsResource struct {
 	jobs.JobSettings
-	ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
+	ProviderConfig *common.ProviderConfig `json:"provider_config,omitempty"`
 
 	// BEGIN Jobs API 2.0
 	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
@@ -1096,7 +1096,11 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
+				var workspaceID string
+				if jsr.ProviderConfig != nil {
+					workspaceID = jsr.ProviderConfig.WorkspaceID
+				}
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 				if err != nil {
 					return err
 				}
@@ -1132,7 +1136,13 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
+
+				var workspaceID string
+				if jsr.ProviderConfig != nil {
+					workspaceID = jsr.ProviderConfig.WorkspaceID
+				}
+
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 				if err != nil {
 					return err
 				}
@@ -1149,6 +1159,7 @@ func ResourceJob() common.Resource {
 				res := JobSettingsResource{
 					JobSettings: *job.Settings,
 				}
+				res.ProviderConfig = jsr.ProviderConfig
 				return common.StructToData(res, jobsGoSdkSchema, d)
 			} else {
 				// Api 2.0
@@ -1174,7 +1185,11 @@ func ResourceJob() common.Resource {
 				if err != nil {
 					return err
 				}
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
+				var workspaceID string
+				if jsr.ProviderConfig != nil {
+					workspaceID = jsr.ProviderConfig.WorkspaceID
+				}
+				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 				if err != nil {
 					return err
 				}
@@ -1203,7 +1218,13 @@ func ResourceJob() common.Resource {
 			ctx = getReadCtx(ctx, d)
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
-			w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, jsr.ProviderConfig.WorkspaceID)
+
+			var workspaceID string
+			if jsr.ProviderConfig != nil {
+				workspaceID = jsr.ProviderConfig.WorkspaceID
+			}
+
+			w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 			if err != nil {
 				return err
 			}

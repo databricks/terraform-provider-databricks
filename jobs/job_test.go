@@ -3,6 +3,8 @@ package jobs_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
@@ -14,6 +16,118 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
+
+func jobClusterTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+	data "databricks_current_user" "me" {}
+	data "databricks_spark_version" "latest" {}
+	data "databricks_node_type" "smallest" {
+		local_disk = true
+	}
+
+	resource "databricks_notebook" "this" {
+		path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+		language = "PYTHON"
+		content_base64 = base64encode(<<-EOT
+			# created from ${abspath(path.module)}
+			display(spark.range(10))
+			EOT
+		)
+	}
+
+	resource "databricks_job" "this" {
+		name = "{var.RANDOM}"
+
+		%s
+
+		job_cluster {
+			job_cluster_key = "j"
+			new_cluster {
+				num_workers   = 0  // Setting it to zero intentionally to cover edge case.
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+				custom_tags = {
+					"ResourceClass" = "SingleNode"
+				}
+				spark_conf = {
+					"spark.databricks.cluster.profile" : "singleNode"
+					"spark.master" : "local[*,4]"
+				}
+			}
+		}
+
+		task {
+			task_key = "a"
+
+			new_cluster {
+				num_workers   = 1
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+			}
+
+			notebook_task {
+				notebook_path = databricks_notebook.this.path
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			new_cluster {
+				num_workers   = 8
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+			}
+
+			notebook_task {
+				notebook_path = databricks_notebook.this.path
+			}
+		}
+	}
+`, provider_config)
+}
+
+func TestAccJobCluster_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`failed to parse workspace_id.*invalid syntax`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_EmptyBlock(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	})
+}
 
 func TestAccJobTasks(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
@@ -36,10 +150,6 @@ func TestAccJobTasks(t *testing.T) {
 
 		resource "databricks_job" "this" {
 			name = "{var.RANDOM}"
-
-			provider_config {
-				workspace_id = ""
-			}
 
 			job_cluster {
 				job_cluster_key = "j"

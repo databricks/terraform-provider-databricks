@@ -59,6 +59,19 @@ func DataSourceJob() common.Resource {
 		if err != nil {
 			return err
 		}
+		// Populate Job.Settings.RunAs from Job.RunAsUserName if not already set
+		if job != nil && job.Settings != nil && job.Settings.RunAs == nil && job.RunAsUserName != "" {
+			if common.StringIsUUID(job.RunAsUserName) {
+				job.Settings.RunAs = &sdk_jobs.JobRunAs{
+					ServicePrincipalName: job.RunAsUserName,
+				}
+			} else {
+				job.Settings.RunAs = &sdk_jobs.JobRunAs{
+					UserName: job.RunAsUserName,
+				}
+			}
+		}
+
 		data.Job = job
 		data.Name = job.Settings.Name
 		data.JobName = job.Settings.Name

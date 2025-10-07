@@ -22,8 +22,8 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 		},
 		Resource:    DataSourceJob(),
 		Read:        true,
-		New:         true,
 		NonWritable: true,
+		New:         true,
 		HCL:         `job_id = "234"`,
 		ID:          "234",
 	}.ApplyAndExpectData(t, map[string]any{

@@ -1183,7 +1183,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 			err := a.WaitForExpectedStatus(Workspace{
 				AccountID:   "abc",
 				WorkspaceID: 1234,
-			}, 1*time.Second)
+			}, WorkspaceStatusRunning, 1*time.Second)
 			assert.NoError(t, err)
 		})
 	})

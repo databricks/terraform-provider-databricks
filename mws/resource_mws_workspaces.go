@@ -150,7 +150,7 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	// For now, only translate provisioning status
 	if w.ExpectedWorkspaceStatus == WorkspaceStatusProvisioning {
-		workspaceCreationRequest["workspace_state"] = "WORKSPACE_STATE_PROVISIONING"
+		workspaceCreationRequest["expected_workspace_status"] = WorkspaceStatusProvisioning
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -166,7 +166,7 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	if err != nil {
 		return err
 	}
-	if err = a.WaitForExpectedStatus(*ws, timeout); err != nil {
+	if err = a.WaitForExpectedStatus(*ws, ws.ExpectedWorkspaceStatus, timeout); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
 		if derr := a.Delete(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID)); derr != nil {
 			return fmt.Errorf("%s - %s", err, derr)
@@ -246,19 +246,7 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 
 // If expected_workspace_status is specified, WaitForExpectedStatus will wait until workspace is in the expected status.
 // If not, it will wait until workspace is running, and otherwise will try to explain why it failed.
-func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, timeout time.Duration) error {
-	// expected status should only ever be PROVISIONING or RUNNING
-	expected := ws.ExpectedWorkspaceStatus
-	if expected == "" {
-		expected = WorkspaceStatusRunning
-	}
-
-	// Skip waiting entirely if expected status is PROVISIONING since we cannot read the workspace while it is provisioning
-	if expected == WorkspaceStatusProvisioning {
-		log.Printf("[INFO] Expected status is PROVISIONING, skipping wait since workspace API is not available during provisioning")
-		return nil
-	}
-
+func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expected_status string, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
@@ -333,7 +321,7 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if err != nil {
 		return err
 	}
-	return a.WaitForExpectedStatus(ws, timeout)
+	return a.WaitForExpectedStatus(ws, WorkspaceStatusRunning, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
@@ -359,16 +347,6 @@ func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Delete(a.context, workspacesAPIPath, nil)
 	if err != nil {
-		// Catch INVALID_STATE_TRANSITION error for workspaces in PROVISIONING status
-		var apiErr *apierr.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE_TRANSITION" {
-			// Check if workspace is in PROVISIONING status
-			workspace, readErr := a.Read(mwsAcctID, workspaceID)
-			if readErr == nil && workspace.WorkspaceStatus == WorkspaceStatusProvisioning {
-				log.Printf("[WARN] Workspace %s is in PROVISIONING status and cannot be deleted due to INVALID_STATE_TRANSITION. Treating as successfully deleted to avoid blocking Terraform operations.", workspaceID)
-				return nil
-			}
-		}
 		return err
 	}
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
@@ -680,15 +658,12 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err = common.StructToData(workspace, workspaceSchema, d); err != nil {
 				return err
 			}
-			// The workspace returned from the API call does not have the expected_status field
-			// Therefore, we need to check the original Terraform configuration to not try to read workspace
-			// if the expected status is PROVISIONING
+			// The expected_workspace_status field is input only.
+			// Therefore, we need to read it from the original Terraform configuration.
 			expectedStatus := d.Get("expected_workspace_status").(string)
-			if expectedStatus == WorkspaceStatusProvisioning {
-				log.Printf("[INFO] Expected status is PROVISIONING, skipping wait in read function")
-				err = nil
-			} else {
-				err = workspacesAPI.WaitForExpectedStatus(workspace, d.Timeout(schema.TimeoutRead))
+			err = workspacesAPI.WaitForExpectedStatus(workspace, expectedStatus, d.Timeout(schema.TimeoutRead))
+			if err != nil {
+				return err
 			}
 			if err != nil {
 				return err

@@ -286,11 +286,6 @@ func TestMwsAccGcpWorkspacesWithExpectedProvisioning(t *testing.T) {
 			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
 				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
 			}
-
-			if expectedAttr := rs.Primary.Attributes["expected_workspace_status"]; expectedAttr != expectedStatus {
-				return fmt.Errorf("expected expected_workspace_status to be %s, got %s", expectedStatus, expectedAttr)
-			}
-
 			return nil
 		},
 	})

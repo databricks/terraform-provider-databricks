@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Correctly handling tags update in `databricks_sql_endpoint` ([#5060](https://github.com/databricks/terraform-provider-databricks/pull/5060))
+
 ### Documentation
 
 * Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))

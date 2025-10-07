@@ -285,7 +285,7 @@ func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *dat
 		},
 		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)
-		}, false, NoCustomize)
+		}, false, ProviderConfigCustomizeSchema)
 }
 
 // WorkspaceData is a generic way to define workspace data resources in Terraform provider.

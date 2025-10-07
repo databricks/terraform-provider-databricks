@@ -1,9 +1,11 @@
 package jobs_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const jobDataSourceTemplate = `
@@ -66,5 +68,16 @@ func TestAccDataSourceJob(t *testing.T) {
 				workspace_id = ""
 			}
 		}`,
+		Check: func(s *terraform.State) error {
+			r, ok := s.RootModule().Resources["data.databricks_job.this"]
+			if !ok {
+				return fmt.Errorf("data not found in state")
+			}
+			policy := r.Primary.Attributes["provider_config.0.workspace_id"]
+			if policy == "" {
+				return fmt.Errorf("Provider Config Workspace ID is empty: %v", r.Primary.Attributes)
+			}
+			return nil
+		},
 	})
 }

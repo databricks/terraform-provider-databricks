@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -91,6 +95,164 @@ func jobClusterTemplate(provider_config string) string {
 `, provider_config)
 }
 
+type checkResourceNoCreate struct {
+	address string
+}
+
+func (c checkResourceNoCreate) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	for _, action := range change.Change.Actions {
+		if action == tfjson.ActionCreate {
+			plannedActions := make([]string, 0, len(change.Change.Actions))
+			for _, action := range change.Change.Actions {
+				plannedActions = append(plannedActions, string(action))
+			}
+			resp.Error = fmt.Errorf("create is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+		}
+	}
+}
+
+type checkResourceNoDelete struct {
+	address string
+}
+
+func (c checkResourceNoDelete) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	for _, action := range change.Change.Actions {
+		if action == tfjson.ActionDelete {
+			plannedActions := make([]string, 0, len(change.Change.Actions))
+			for _, action := range change.Change.Actions {
+				plannedActions = append(plannedActions, string(action))
+			}
+			resp.Error = fmt.Errorf("delete is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+		}
+	}
+}
+
+type checkResourceUpdate struct {
+	address string
+}
+
+func (c checkResourceUpdate) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	for _, action := range change.Change.Actions {
+		if action == tfjson.ActionUpdate {
+			return
+		}
+	}
+	plannedActions := make([]string, 0, len(change.Change.Actions))
+	for _, action := range change.Change.Actions {
+		plannedActions = append(plannedActions, string(action))
+	}
+	resp.Error = fmt.Errorf("no update is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+}
+
+type checkResourceCreate struct {
+	address string
+}
+
+func (c checkResourceCreate) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	for _, action := range change.Change.Actions {
+		if action == tfjson.ActionCreate {
+			return
+		}
+	}
+	plannedActions := make([]string, 0, len(change.Change.Actions))
+	for _, action := range change.Change.Actions {
+		plannedActions = append(plannedActions, string(action))
+	}
+	resp.Error = fmt.Errorf("no create is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+}
+
+type checkResourceDelete struct {
+	address string
+}
+
+func (c checkResourceDelete) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	for _, action := range change.Change.Actions {
+		if action == tfjson.ActionDelete {
+			return
+		}
+	}
+	plannedActions := make([]string, 0, len(change.Change.Actions))
+	for _, action := range change.Change.Actions {
+		plannedActions = append(plannedActions, string(action))
+	}
+	resp.Error = fmt.Errorf("no delete is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+}
+
 func TestAccJobCluster_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(`
@@ -130,26 +292,78 @@ func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 				workspace_id = ""
 			}
 		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
 	})
 }
 
-func TestAccJobCluster_ProviderConfig_EmptyBlock(t *testing.T) {
+func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	})
 }
 
-func TestAccJobCluster_ProviderConfig_EmptyUpdate(t *testing.T) {
+func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	}, acceptance.Step{
 		Template: jobClusterTemplate(`
 			provider_config {
-				workspace_id = ""
+				workspace_id = "1142582526922259"
+			}
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceUpdate{address: "databricks_job.this"},
+				checkResourceNoDelete{address: "databricks_job.this"},
+				checkResourceNoCreate{address: "databricks_job.this"},
+			},
+		},
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "1142582526922259"
+			}
+		`),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceCreate{address: "databricks_job.this"},
+				checkResourceDelete{address: "databricks_job.this"},
+			},
+		},
+		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "1142582526922259"
 			}
 		`),
 	}, acceptance.Step{
 		Template: jobClusterTemplate(""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceUpdate{address: "databricks_job.this"},
+				checkResourceNoDelete{address: "databricks_job.this"},
+				checkResourceNoCreate{address: "databricks_job.this"},
+			},
+		},
 	})
 }
 

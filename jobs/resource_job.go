@@ -658,6 +658,8 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
 	s.SchemaPath("git_source", "provider").SetOptional()
 
+	s.SchemaPath("provider_config", "workspace_id").SetValidateFunc(validation.StringIsNotEmpty)
+
 	return s
 }
 
@@ -1087,6 +1089,13 @@ func ResourceJob() common.Resource {
 				}
 				if jsr.MaxConcurrentRuns > 1 {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
+				}
+			}
+			workspaceIDKey := "provider_config.0.workspace_id"
+			oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
+			if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
+				if err := d.ForceNew(workspaceIDKey); err != nil {
+					return err
 				}
 			}
 			return nil

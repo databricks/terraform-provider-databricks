@@ -1091,14 +1091,7 @@ func ResourceJob() common.Resource {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
-			workspaceIDKey := "provider_config.0.workspace_id"
-			oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
-			if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
-				if err := d.ForceNew(workspaceIDKey); err != nil {
-					return err
-				}
-			}
-			return nil
+			return common.ProviderConfigCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource

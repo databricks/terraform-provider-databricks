@@ -244,7 +244,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	}
 }
 
-// extractWorkspaceIDFromProviderConfig uses reflection to extract the WorkspaceID from ProviderConfigData field
+// extractWorkspaceIDFromProviderConfig uses reflection to extract the WorkspaceID from ProviderConfig field
 func extractWorkspaceIDFromProviderConfig(data any) string {
 	v := reflect.ValueOf(data)
 	if v.Kind() == reflect.Ptr {
@@ -254,13 +254,13 @@ func extractWorkspaceIDFromProviderConfig(data any) string {
 		return ""
 	}
 
-	// Look for ProviderConfigData field
-	field := v.FieldByName("ProviderConfigData")
+	// Look for ProviderConfig field
+	field := v.FieldByName("ProviderConfig")
 	if !field.IsValid() {
 		return ""
 	}
 
-	// Get WorkspaceID from ProviderConfigData
+	// Get WorkspaceID from ProviderConfig
 	workspaceIDField := field.FieldByName("WorkspaceID")
 	if !workspaceIDField.IsValid() {
 		return ""
@@ -274,7 +274,7 @@ func extractWorkspaceIDFromProviderConfig(data any) string {
 
 // WorkspaceDataWithUnifiedProvider is a generic way to define workspace data resources in Terraform provider.
 // The provider config is used to get the workspace client for the workspace ID specified in the provider config.
-// The type T must include a field: ProviderConfigData common.ProviderConfigData `json:"provider_config,omitempty"`
+// The type T must include a field: ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
 func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, workspaceID string) (*databricks.WorkspaceClient, error) {

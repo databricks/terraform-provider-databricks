@@ -219,9 +219,7 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
-	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		return m
-	})
+	s := StructToSchema(sc, ProviderConfigCustomizeSchema)
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {

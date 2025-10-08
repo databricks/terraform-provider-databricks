@@ -143,6 +143,8 @@ func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
 }
 
 func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	// get workspace id here from workspace
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	}, acceptance.Step{

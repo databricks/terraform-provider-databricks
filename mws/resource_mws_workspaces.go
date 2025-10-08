@@ -148,9 +148,8 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.ComputeMode != "" {
 		workspaceCreationRequest["compute_mode"] = w.ComputeMode
 	}
-	// For now, only translate provisioning status
-	if w.ExpectedWorkspaceStatus == WorkspaceStatusProvisioning {
-		workspaceCreationRequest["expected_workspace_status"] = WorkspaceStatusProvisioning
+	if w.ExpectedWorkspaceStatus != "" {
+		workspaceCreationRequest["expected_workspace_status"] = w.ExpectedWorkspaceStatus
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -247,17 +246,24 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 // If expected_workspace_status is specified, WaitForExpectedStatus will wait until workspace is in the expected status.
 // If not, it will wait until workspace is running, and otherwise will try to explain why it failed.
 func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expected_status string, timeout time.Duration) error {
+	// If expected_status is empty, default to RUNNING
+	if expected_status == "" {
+		expected_status = WorkspaceStatusRunning
+		log.Printf("[INFO] No expected_workspace_status specified, defaulting to %s", expected_status)
+	}
+	
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
+		
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		switch workspace.WorkspaceStatus {
-		case expected:
-			log.Printf("[INFO] Workspace is now in expected status %s", expected)
+		case expected_status:
+			log.Printf("[INFO] Workspace is now in expected status %s", expected_status)
 			// only verify that workspace is reachable if expected status is RUNNING
-			if expected == WorkspaceStatusRunning {
+			if expected_status == WorkspaceStatusRunning {
 				if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
 					// nobody would probably name workspace as 900150983cd24fb0,
 					// so we'll use it as unit testing shim
@@ -312,6 +318,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		}
 		request["custom_tags"] = ws.CustomTags
 	}
+	if ws.expected_workspace_status != "" {
+		request["expected_workspace_status"] = ws.expected_workspace_status
+	}
 
 	if len(request) == 0 {
 		return nil
@@ -321,7 +330,7 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if err != nil {
 		return err
 	}
-	return a.WaitForExpectedStatus(ws, WorkspaceStatusRunning, timeout)
+	return a.WaitForExpectedStatus(ws, ws.expected_workspace_status, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
@@ -662,9 +671,6 @@ func ResourceMwsWorkspaces() common.Resource {
 			// Therefore, we need to read it from the original Terraform configuration.
 			expectedStatus := d.Get("expected_workspace_status").(string)
 			err = workspacesAPI.WaitForExpectedStatus(workspace, expectedStatus, d.Timeout(schema.TimeoutRead))
-			if err != nil {
-				return err
-			}
 			if err != nil {
 				return err
 			}

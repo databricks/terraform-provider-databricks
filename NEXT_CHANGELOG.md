@@ -19,5 +19,3 @@
 ### Exporter
 
 ### Internal Changes
-
-* Use `Jobs.Get` instead of `JobsGetByJobId` ([#5029](https://github.com/databricks/terraform-provider-databricks/pull/5029))

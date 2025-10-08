@@ -1,11 +1,17 @@
 package sharing_test
 
 import (
+	"context"
 	"fmt"
+	"maps"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const preTestTemplate = `
@@ -267,5 +273,120 @@ func TestUcAccUpdateShareName(t *testing.T) {
 	}, acceptance.Step{
 		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-after"),
 		Check:    shareCheckStateforID(),
+	})
+}
+
+const preTestTemplateSchema = `
+	resource "databricks_catalog" "sandbox" {
+		name         = "sandbox{var.STICKY_RANDOM}"
+		comment      = "this catalog is managed by terraform"
+		properties = {
+			purpose = "testing"
+		}
+	}
+	resource "databricks_schema" "schema1" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema1{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema2" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema2{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema3" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema3{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+`
+
+func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
+	shareName := ""
+	sharedObjectNameToAdd := ""
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+		Check: func(s *terraform.State) error {
+			resources := s.RootModule().Resources
+			share := resources["databricks_share_pluginframework.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected to find databricks_share_pluginframework.myshare in resources keys: %v", maps.Keys(resources))
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+
+			schema := resources["databricks_schema.schema2"]
+			if schema == nil {
+				return fmt.Errorf("expected to find databricks_schema.schema2 in resources keys: %v", maps.Keys(resources))
+			}
+			sharedObjectNameToAdd = schema.Primary.Attributes["id"]
+			assert.NotEmpty(t, sharedObjectNameToAdd)
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+
+			// 3 objects in share before deletion
+			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
+				Name: shareName,
+			})
+			require.NoError(t, err)
+			// assert.Equal(t, 3, len(shareInfo.Objects))
+
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name: shareName,
+				Updates: []sharing.SharedDataObjectUpdate{
+					{
+						Action: sharing.SharedDataObjectUpdateActionAdd,
+						DataObject: &sharing.SharedDataObject{
+							Name:           sharedObjectNameToAdd,
+							DataObjectType: "SCHEMA",
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			// 2 objects in share after deletion
+			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
+				Name: shareName,
+			})
+			require.NoError(t, err)
+			// assert.Equal(t, 2, len(shareInfo.Objects))
+		},
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
 	})
 }

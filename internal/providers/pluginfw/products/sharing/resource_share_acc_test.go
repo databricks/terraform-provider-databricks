@@ -284,7 +284,6 @@ const preTestTemplateSchema = `
 			purpose = "testing"
 		}
 	}
-
 	resource "databricks_schema" "schema1" {
 		catalog_name = databricks_catalog.sandbox.id
 		name         = "schema1{var.STICKY_RANDOM}"
@@ -293,7 +292,6 @@ const preTestTemplateSchema = `
 			kind = "various"
 		}
 	}
-
 	resource "databricks_schema" "schema2" {
 		catalog_name = databricks_catalog.sandbox.id
 		name         = "schema2{var.STICKY_RANDOM}"
@@ -302,7 +300,6 @@ const preTestTemplateSchema = `
 			kind = "various"
 		}
 	}
-
 	resource "databricks_schema" "schema3" {
 		catalog_name = databricks_catalog.sandbox.id
 		name         = "schema3{var.STICKY_RANDOM}"
@@ -315,17 +312,13 @@ const preTestTemplateSchema = `
 
 func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	shareName := ""
-	sharedObjectNameToRemove := ""
+	sharedObjectNameToAdd := ""
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + `
 		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
 			object {
 				name = databricks_schema.schema1.id
-				data_object_type = "SCHEMA"
-			}
-			object {
-				name = databricks_schema.schema2.id
 				data_object_type = "SCHEMA"
 			}
 			object {
@@ -341,9 +334,13 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 			}
 			shareName = share.Primary.Attributes["name"]
 			assert.NotEmpty(t, shareName)
-			// middle share to be removed
-			sharedObjectNameToRemove = share.Primary.Attributes["object.1.name"]
-			assert.NotEmpty(t, sharedObjectNameToRemove)
+
+			schema := resources["databricks_schema.schema2"]
+			if schema == nil {
+				return fmt.Errorf("expected to find databricks_schema.schema2 in resources keys: %v", maps.Keys(resources))
+			}
+			sharedObjectNameToAdd = schema.Primary.Attributes["id"]
+			assert.NotEmpty(t, sharedObjectNameToAdd)
 			return nil
 		},
 	}, acceptance.Step{
@@ -351,39 +348,26 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 
-			// 3 objects in share before deletion
-			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
-				Name: shareName,
-			})
-			require.NoError(t, err)
-			// assert.Equal(t, 3, len(shareInfo.Objects))
-
+			// add object to share outside terraform
 			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
 				Name: shareName,
 				Updates: []sharing.SharedDataObjectUpdate{
 					{
-						Action: sharing.SharedDataObjectUpdateActionRemove,
+						Action: sharing.SharedDataObjectUpdateActionAdd,
 						DataObject: &sharing.SharedDataObject{
-							Name:           sharedObjectNameToRemove,
+							Name:           sharedObjectNameToAdd,
 							DataObjectType: "SCHEMA",
 						},
 					},
 				},
 			})
 			require.NoError(t, err)
-
-			// 2 objects in share after deletion
-			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
-				Name: shareName,
-			})
-			require.NoError(t, err)
-			// assert.Equal(t, 2, len(shareInfo.Objects))
 		},
 		Template: preTestTemplateSchema + `
 		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
 			object {
-				name = databricks_schema.schema2.id
+				name = databricks_schema.schema1.id
 				data_object_type = "SCHEMA"
 			}
 			object {

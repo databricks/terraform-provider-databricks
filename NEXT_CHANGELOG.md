@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
+
 ### Bug Fixes
 
 ### Documentation

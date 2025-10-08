@@ -348,13 +348,7 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 
-			// 3 objects in share before deletion
-			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
-				Name: shareName,
-			})
-			require.NoError(t, err)
-			// assert.Equal(t, 3, len(shareInfo.Objects))
-
+			// add object to share outside terraform
 			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
 				Name: shareName,
 				Updates: []sharing.SharedDataObjectUpdate{
@@ -368,13 +362,6 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 				},
 			})
 			require.NoError(t, err)
-
-			// 2 objects in share after deletion
-			_, err = w.Shares.Get(context.Background(), sharing.GetShareRequest{
-				Name: shareName,
-			})
-			require.NoError(t, err)
-			// assert.Equal(t, 2, len(shareInfo.Objects))
 		},
 		Template: preTestTemplateSchema + `
 		resource "databricks_share_pluginframework" "myshare" {

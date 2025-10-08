@@ -258,12 +258,12 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 	})
 }
 
-func TestMwsAccGcpWorkspacesWithExpectedProvisioning(t *testing.T) {
+func TestMwsAccGcpWorkspacesProvisioningToRunning(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_mws_workspaces" "this" {
 			account_id                = "{env.DATABRICKS_ACCOUNT_ID}"
-			workspace_name            = "{env.TEST_PREFIX}-{var.RANDOM}"
+			workspace_name            = "{env.TEST_PREFIX}-{var.STICKY_RANDOM}"
 			location                  = "{env.GOOGLE_REGION}"
 			expected_workspace_status = "PROVISIONING"
 
@@ -283,6 +283,120 @@ func TestMwsAccGcpWorkspacesWithExpectedProvisioning(t *testing.T) {
 			}
 
 			expectedStatus := "PROVISIONING"
+			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
+				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
+			}
+			return nil
+		},
+	}, acceptance.Step{
+		Template: `
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-{var.STICKY_RANDOM}"
+			gcp_network_info {
+				network_project_id = "{env.GOOGLE_PROJECT}"
+				vpc_id = "{env.TEST_VPC_ID}"
+				subnet_id = "{env.TEST_SUBNET_ID}"
+				subnet_region = "{env.GOOGLE_REGION}"
+			}
+		}
+		resource "databricks_mws_workspaces" "this" {
+			account_id                = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name            = "{env.TEST_PREFIX}-{var.STICKY_RANDOM}"
+			location                  = "{env.GOOGLE_REGION}"
+			expected_workspace_status = "RUNNING"
+
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+
+			network_id = databricks_mws_networks.this.network_id
+		}`,
+		Check: func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("databricks_mws_workspaces.this not found")
+			}
+			if rs.Primary.Attributes["workspace_id"] == "" {
+				return fmt.Errorf("workspace_id is empty")
+			}
+
+			expectedStatus := "RUNNING"
+			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
+				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
+			}
+			return nil
+		},
+	})
+}
+
+func TestMwsAccGcpWorkspacesUnsetExpectedState(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_mws_workspaces" "this" {
+			account_id                = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name            = "{env.TEST_PREFIX}-{var.STICKY_RANDOM}"
+			location                  = "{env.GOOGLE_REGION}"
+			expected_workspace_status = "PROVISIONING"
+
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+		}`,
+		Check: func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("databricks_mws_workspaces.this not found")
+			}
+			if rs.Primary.Attributes["workspace_id"] == "" {
+				return fmt.Errorf("workspace_id is empty")
+			}
+
+			expectedStatus := "PROVISIONING"
+			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
+				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
+			}
+			return nil
+		},
+	}, acceptance.Step{
+		Template: `
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-{var.STICKY_RANDOM}"
+			gcp_network_info {
+				network_project_id = "{env.GOOGLE_PROJECT}"
+				vpc_id = "{env.TEST_VPC_ID}"
+				subnet_id = "{env.TEST_SUBNET_ID}"
+				subnet_region = "{env.GOOGLE_REGION}"
+			}
+		}
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "{env.TEST_PREFIX}-{var.STICKY_RANDOM}"
+			location        = "{env.GOOGLE_REGION}"
+
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+
+			network_id = databricks_mws_networks.this.network_id
+		}`,
+		Check: func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("databricks_mws_workspaces.this not found")
+			}
+			if rs.Primary.Attributes["workspace_id"] == "" {
+				return fmt.Errorf("workspace_id is empty")
+			}
+
+			expectedStatus := "RUNNING"
 			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
 				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
 			}

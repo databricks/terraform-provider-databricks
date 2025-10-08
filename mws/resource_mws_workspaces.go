@@ -318,8 +318,8 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		}
 		request["custom_tags"] = ws.CustomTags
 	}
-	if ws.expected_workspace_status != "" {
-		request["expected_workspace_status"] = ws.expected_workspace_status
+	if ws.ExpectedWorkspaceStatus != "" {
+		request["expected_workspace_status"] = ws.ExpectedWorkspaceStatus
 	}
 
 	if len(request) == 0 {
@@ -330,7 +330,7 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if err != nil {
 		return err
 	}
-	return a.WaitForExpectedStatus(ws, ws.expected_workspace_status, timeout)
+	return a.WaitForExpectedStatus(ws, ws.ExpectedWorkspaceStatus, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment

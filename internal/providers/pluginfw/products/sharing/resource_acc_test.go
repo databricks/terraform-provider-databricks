@@ -269,3 +269,85 @@ func TestUcAccUpdateShareName(t *testing.T) {
 		Check:    shareCheckStateforID(),
 	})
 }
+
+const preTestTemplateSchema = `
+	resource "databricks_catalog" "sandbox" {
+		name         = "sandbox{var.STICKY_RANDOM}"
+		comment      = "this catalog is managed by terraform"
+		properties = {
+			purpose = "testing"
+		}
+	}
+	resource "databricks_schema" "schema1" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema1{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema2" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema2{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema3" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema3{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+`
+
+func TestUcAccShareReorderObject(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+		PlanOnly: true,
+	}, acceptance.Step{
+		// Changing order of objects in the config leads to changes show up in plan as updates
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+
+		}`,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
+	})
+}

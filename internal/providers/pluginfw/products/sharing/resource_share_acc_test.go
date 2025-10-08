@@ -348,7 +348,7 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 
-			// add object to share outside terraform
+			// Add object to share outside terraform
 			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
 				Name: shareName,
 				Updates: []sharing.SharedDataObjectUpdate{
@@ -375,5 +375,53 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 				data_object_type = "SCHEMA"
 			}
 		}`,
+	})
+}
+
+func TestUcAccShareReorderObject(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+		PlanOnly: true,
+	}, acceptance.Step{
+		// Changing order of objects in the config leads to changes show up in plan as updates
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+
+		}`,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }

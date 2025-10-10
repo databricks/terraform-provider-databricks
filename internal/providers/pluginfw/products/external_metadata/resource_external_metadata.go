@@ -5,6 +5,7 @@ package external_metadata
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "external_metadata"
@@ -34,12 +38,67 @@ type ExternalMetadataResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ExternalMetadata extends the main model with additional fields.
+type ExternalMetadata struct {
+	catalog_tf.ExternalMetadata
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ExternalMetadata struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m ExternalMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.ExternalMetadata.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalMetadata
+// only implements ToObjectValue() and Type().
+func (m ExternalMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.ExternalMetadata.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m ExternalMetadata) Type(ctx context.Context) attr.Type {
+	embeddedType := m.ExternalMetadata.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *ExternalMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan ExternalMetadata) {
+	m.ExternalMetadata.SyncFieldsDuringCreateOrUpdate(ctx, plan.ExternalMetadata)
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *ExternalMetadata) SyncFieldsDuringRead(ctx context.Context, existingState ExternalMetadata) {
+	m.ExternalMetadata.SyncFieldsDuringRead(ctx, existingState.ExternalMetadata)
+}
+
 func (r *ExternalMetadataResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *ExternalMetadataResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, catalog_tf.ExternalMetadata{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ExternalMetadata{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
@@ -54,7 +113,7 @@ func (r *ExternalMetadataResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *ExternalMetadataResource) update(ctx context.Context, plan catalog_tf.ExternalMetadata, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *ExternalMetadataResource) update(ctx context.Context, plan ExternalMetadata, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -80,7 +139,7 @@ func (r *ExternalMetadataResource) update(ctx context.Context, plan catalog_tf.E
 		return
 	}
 
-	var newState catalog_tf.ExternalMetadata
+	var newState ExternalMetadata
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -98,7 +157,7 @@ func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan catalog_tf.ExternalMetadata
+	var plan ExternalMetadata
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,7 +179,7 @@ func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	var newState catalog_tf.ExternalMetadata
+	var newState ExternalMetadata
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -145,7 +204,7 @@ func (r *ExternalMetadataResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var existingState catalog_tf.ExternalMetadata
+	var existingState ExternalMetadata
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,7 +227,7 @@ func (r *ExternalMetadataResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	var newState catalog_tf.ExternalMetadata
+	var newState ExternalMetadata
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +241,7 @@ func (r *ExternalMetadataResource) Read(ctx context.Context, req resource.ReadRe
 func (r *ExternalMetadataResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan catalog_tf.ExternalMetadata
+	var plan ExternalMetadata
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,7 +259,7 @@ func (r *ExternalMetadataResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	var state catalog_tf.ExternalMetadata
+	var state ExternalMetadata
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

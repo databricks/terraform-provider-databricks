@@ -16,6 +16,7 @@ The following arguments are supported:
   
   For notebooks, the name is the notebook file name.
   For jar analyses, the name is the jar analysis name
+* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:
@@ -62,7 +63,7 @@ The following attributes are exported:
   This is the same format as returned by :method:workspace/export with the format of **HTML**
 * `review_state` (string) - Top-level status derived from all reviews. Possible values are: `APPROVED`, `PENDING`, `REJECTED`
 * `reviews` (list of CleanRoomNotebookReview) - All existing approvals or rejections
-* `runner_collaborator_aliases` (list of string) - collaborators that can run the notebook
+* `runner_collaborator_aliases` (list of string) - Aliases of collaborators that can run the notebook
 
 ### CleanRoomAssetTable
 * `columns` (list of ColumnInfo) - The metadata information of the columns in the table

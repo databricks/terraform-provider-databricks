@@ -28,10 +28,10 @@ type ColumnInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *ColumnInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnInfo_SdkV2) {
+func (to *ColumnInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnInfo_SdkV2) {
 }
 
-func (toState *ColumnInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ColumnInfo_SdkV2) {
+func (to *ColumnInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnInfo_SdkV2) {
 }
 
 func (c ColumnInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -78,6 +78,20 @@ type CreateEndpoint_SdkV2 struct {
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Name of the vector search endpoint
 	Name types.String `tfsdk:"name"`
+}
+
+func (to *CreateEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateEndpoint_SdkV2) {
+}
+
+func (to *CreateEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateEndpoint_SdkV2) {
+}
+
+func (c CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateEndpoint.
@@ -130,6 +144,59 @@ type CreateVectorIndexRequest_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key"`
+}
+
+func (to *CreateVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateVectorIndexRequest_SdkV2) {
+	if !from.DeltaSyncIndexSpec.IsNull() && !from.DeltaSyncIndexSpec.IsUnknown() {
+		if toDeltaSyncIndexSpec, ok := to.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromDeltaSyncIndexSpec, ok := from.GetDeltaSyncIndexSpec(ctx); ok {
+				// Recursively sync the fields of DeltaSyncIndexSpec
+				toDeltaSyncIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaSyncIndexSpec)
+				to.SetDeltaSyncIndexSpec(ctx, toDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !from.DirectAccessIndexSpec.IsNull() && !from.DirectAccessIndexSpec.IsUnknown() {
+		if toDirectAccessIndexSpec, ok := to.GetDirectAccessIndexSpec(ctx); ok {
+			if fromDirectAccessIndexSpec, ok := from.GetDirectAccessIndexSpec(ctx); ok {
+				// Recursively sync the fields of DirectAccessIndexSpec
+				toDirectAccessIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectAccessIndexSpec)
+				to.SetDirectAccessIndexSpec(ctx, toDirectAccessIndexSpec)
+			}
+		}
+	}
+}
+
+func (to *CreateVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateVectorIndexRequest_SdkV2) {
+	if !from.DeltaSyncIndexSpec.IsNull() && !from.DeltaSyncIndexSpec.IsUnknown() {
+		if toDeltaSyncIndexSpec, ok := to.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromDeltaSyncIndexSpec, ok := from.GetDeltaSyncIndexSpec(ctx); ok {
+				toDeltaSyncIndexSpec.SyncFieldsDuringRead(ctx, fromDeltaSyncIndexSpec)
+				to.SetDeltaSyncIndexSpec(ctx, toDeltaSyncIndexSpec)
+			}
+		}
+	}
+	if !from.DirectAccessIndexSpec.IsNull() && !from.DirectAccessIndexSpec.IsUnknown() {
+		if toDirectAccessIndexSpec, ok := to.GetDirectAccessIndexSpec(ctx); ok {
+			if fromDirectAccessIndexSpec, ok := from.GetDirectAccessIndexSpec(ctx); ok {
+				toDirectAccessIndexSpec.SyncFieldsDuringRead(ctx, fromDirectAccessIndexSpec)
+				to.SetDirectAccessIndexSpec(ctx, toDirectAccessIndexSpec)
+			}
+		}
+	}
+}
+
+func (c CreateVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].SetOptional()
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["index_type"] = attrs["index_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["primary_key"] = attrs["primary_key"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexRequest.
@@ -239,10 +306,10 @@ type CustomTag_SdkV2 struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *CustomTag_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomTag_SdkV2) {
+func (to *CustomTag_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomTag_SdkV2) {
 }
 
-func (toState *CustomTag_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomTag_SdkV2) {
+func (to *CustomTag_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomTag_SdkV2) {
 }
 
 func (c CustomTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -292,10 +359,22 @@ type DeleteDataResult_SdkV2 struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (toState *DeleteDataResult_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDataResult_SdkV2) {
+func (to *DeleteDataResult_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDataResult_SdkV2) {
+	if !from.FailedPrimaryKeys.IsNull() && !from.FailedPrimaryKeys.IsUnknown() && to.FailedPrimaryKeys.IsNull() && len(from.FailedPrimaryKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FailedPrimaryKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FailedPrimaryKeys = from.FailedPrimaryKeys
+	}
 }
 
-func (toState *DeleteDataResult_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDataResult_SdkV2) {
+func (to *DeleteDataResult_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteDataResult_SdkV2) {
+	if !from.FailedPrimaryKeys.IsNull() && !from.FailedPrimaryKeys.IsUnknown() && to.FailedPrimaryKeys.IsNull() && len(from.FailedPrimaryKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FailedPrimaryKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FailedPrimaryKeys = from.FailedPrimaryKeys
+	}
 }
 
 func (c DeleteDataResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -376,6 +455,19 @@ type DeleteDataVectorIndexRequest_SdkV2 struct {
 	PrimaryKeys types.List `tfsdk:"-"`
 }
 
+func (to *DeleteDataVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDataVectorIndexRequest_SdkV2) {
+}
+
+func (to *DeleteDataVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteDataVectorIndexRequest_SdkV2) {
+}
+
+func (c DeleteDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["primary_keys"] = attrs["primary_keys"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -446,23 +538,24 @@ type DeleteDataVectorIndexResponse_SdkV2 struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (toState *DeleteDataVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteDataVectorIndexResponse_SdkV2) {
-	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
-				toState.SetResult(ctx, toStateResult)
+func (to *DeleteDataVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDataVectorIndexResponse_SdkV2) {
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				// Recursively sync the fields of Result
+				toResult.SyncFieldsDuringCreateOrUpdate(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
 }
 
-func (toState *DeleteDataVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteDataVectorIndexResponse_SdkV2) {
-	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromStateResult, ok := fromState.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
-				toState.SetResult(ctx, toStateResult)
+func (to *DeleteDataVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteDataVectorIndexResponse_SdkV2) {
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				toResult.SyncFieldsDuringRead(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
@@ -544,6 +637,18 @@ type DeleteEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (to *DeleteEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteEndpointRequest_SdkV2) {
+}
+
+func (to *DeleteEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteEndpointRequest_SdkV2) {
+}
+
+func (c DeleteEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -578,10 +683,10 @@ func (o DeleteEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteEndpointResponse_SdkV2 struct {
 }
 
-func (toState *DeleteEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteEndpointResponse_SdkV2) {
+func (to *DeleteEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteEndpointResponse_SdkV2) {
 }
 
-func (toState *DeleteEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteEndpointResponse_SdkV2) {
+func (to *DeleteEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteEndpointResponse_SdkV2) {
 }
 
 func (c DeleteEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -621,6 +726,18 @@ type DeleteIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
+func (to *DeleteIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteIndexRequest_SdkV2) {
+}
+
+func (to *DeleteIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteIndexRequest_SdkV2) {
+}
+
+func (c DeleteIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -655,10 +772,10 @@ func (o DeleteIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexResponse_SdkV2 struct {
 }
 
-func (toState *DeleteIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteIndexResponse_SdkV2) {
+func (to *DeleteIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteIndexResponse_SdkV2) {
 }
 
-func (toState *DeleteIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteIndexResponse_SdkV2) {
+func (to *DeleteIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteIndexResponse_SdkV2) {
 }
 
 func (c DeleteIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -718,10 +835,46 @@ type DeltaSyncVectorIndexSpecRequest_SdkV2 struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (toState *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSyncVectorIndexSpecRequest_SdkV2) {
+func (to *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaSyncVectorIndexSpecRequest_SdkV2) {
+	if !from.ColumnsToSync.IsNull() && !from.ColumnsToSync.IsUnknown() && to.ColumnsToSync.IsNull() && len(from.ColumnsToSync.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToSync, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToSync = from.ColumnsToSync
+	}
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
-func (toState *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSyncVectorIndexSpecRequest_SdkV2) {
+func (to *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeltaSyncVectorIndexSpecRequest_SdkV2) {
+	if !from.ColumnsToSync.IsNull() && !from.ColumnsToSync.IsUnknown() && to.ColumnsToSync.IsNull() && len(from.ColumnsToSync.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToSync, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToSync = from.ColumnsToSync
+	}
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
 func (c DeltaSyncVectorIndexSpecRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -886,10 +1039,34 @@ type DeltaSyncVectorIndexSpecResponse_SdkV2 struct {
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
-func (toState *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeltaSyncVectorIndexSpecResponse_SdkV2) {
+func (to *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaSyncVectorIndexSpecResponse_SdkV2) {
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
-func (toState *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeltaSyncVectorIndexSpecResponse_SdkV2) {
+func (to *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeltaSyncVectorIndexSpecResponse_SdkV2) {
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
 func (c DeltaSyncVectorIndexSpecResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1016,10 +1193,34 @@ type DirectAccessVectorIndexSpec_SdkV2 struct {
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
-func (toState *DirectAccessVectorIndexSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DirectAccessVectorIndexSpec_SdkV2) {
+func (to *DirectAccessVectorIndexSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DirectAccessVectorIndexSpec_SdkV2) {
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
-func (toState *DirectAccessVectorIndexSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DirectAccessVectorIndexSpec_SdkV2) {
+func (to *DirectAccessVectorIndexSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DirectAccessVectorIndexSpec_SdkV2) {
+	if !from.EmbeddingSourceColumns.IsNull() && !from.EmbeddingSourceColumns.IsUnknown() && to.EmbeddingSourceColumns.IsNull() && len(from.EmbeddingSourceColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingSourceColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingSourceColumns = from.EmbeddingSourceColumns
+	}
+	if !from.EmbeddingVectorColumns.IsNull() && !from.EmbeddingVectorColumns.IsUnknown() && to.EmbeddingVectorColumns.IsNull() && len(from.EmbeddingVectorColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmbeddingVectorColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmbeddingVectorColumns = from.EmbeddingVectorColumns
+	}
 }
 
 func (c DirectAccessVectorIndexSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1125,20 +1326,25 @@ func (o *DirectAccessVectorIndexSpec_SdkV2) SetEmbeddingVectorColumns(ctx contex
 }
 
 type EmbeddingSourceColumn_SdkV2 struct {
-	// Name of the embedding model endpoint
+	// Name of the embedding model endpoint, used by default for both ingestion
+	// and querying.
 	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name"`
+	// Name of the embedding model endpoint which, if specified, is used for
+	// querying (not ingestion).
+	ModelEndpointNameForQuery types.String `tfsdk:"model_endpoint_name_for_query"`
 	// Name of the column
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmbeddingSourceColumn_SdkV2) {
+func (to *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EmbeddingSourceColumn_SdkV2) {
 }
 
-func (toState *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EmbeddingSourceColumn_SdkV2) {
+func (to *EmbeddingSourceColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EmbeddingSourceColumn_SdkV2) {
 }
 
 func (c EmbeddingSourceColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["embedding_model_endpoint_name"] = attrs["embedding_model_endpoint_name"].SetOptional()
+	attrs["model_endpoint_name_for_query"] = attrs["model_endpoint_name_for_query"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 
 	return attrs
@@ -1163,6 +1369,7 @@ func (o EmbeddingSourceColumn_SdkV2) ToObjectValue(ctx context.Context) basetype
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"embedding_model_endpoint_name": o.EmbeddingModelEndpointName,
+			"model_endpoint_name_for_query": o.ModelEndpointNameForQuery,
 			"name":                          o.Name,
 		})
 }
@@ -1172,6 +1379,7 @@ func (o EmbeddingSourceColumn_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_model_endpoint_name": types.StringType,
+			"model_endpoint_name_for_query": types.StringType,
 			"name":                          types.StringType,
 		},
 	}
@@ -1184,10 +1392,10 @@ type EmbeddingVectorColumn_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *EmbeddingVectorColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EmbeddingVectorColumn_SdkV2) {
+func (to *EmbeddingVectorColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EmbeddingVectorColumn_SdkV2) {
 }
 
-func (toState *EmbeddingVectorColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EmbeddingVectorColumn_SdkV2) {
+func (to *EmbeddingVectorColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EmbeddingVectorColumn_SdkV2) {
 }
 
 func (c EmbeddingVectorColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1255,23 +1463,36 @@ type EndpointInfo_SdkV2 struct {
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
 }
 
-func (toState *EndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointInfo_SdkV2) {
-	if !fromPlan.EndpointStatus.IsNull() && !fromPlan.EndpointStatus.IsUnknown() {
-		if toStateEndpointStatus, ok := toState.GetEndpointStatus(ctx); ok {
-			if fromPlanEndpointStatus, ok := fromPlan.GetEndpointStatus(ctx); ok {
-				toStateEndpointStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEndpointStatus)
-				toState.SetEndpointStatus(ctx, toStateEndpointStatus)
+func (to *EndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointInfo_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.EndpointStatus.IsNull() && !from.EndpointStatus.IsUnknown() {
+		if toEndpointStatus, ok := to.GetEndpointStatus(ctx); ok {
+			if fromEndpointStatus, ok := from.GetEndpointStatus(ctx); ok {
+				// Recursively sync the fields of EndpointStatus
+				toEndpointStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromEndpointStatus)
+				to.SetEndpointStatus(ctx, toEndpointStatus)
 			}
 		}
 	}
 }
 
-func (toState *EndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointInfo_SdkV2) {
-	if !fromState.EndpointStatus.IsNull() && !fromState.EndpointStatus.IsUnknown() {
-		if toStateEndpointStatus, ok := toState.GetEndpointStatus(ctx); ok {
-			if fromStateEndpointStatus, ok := fromState.GetEndpointStatus(ctx); ok {
-				toStateEndpointStatus.SyncFieldsDuringRead(ctx, fromStateEndpointStatus)
-				toState.SetEndpointStatus(ctx, toStateEndpointStatus)
+func (to *EndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EndpointInfo_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.EndpointStatus.IsNull() && !from.EndpointStatus.IsUnknown() {
+		if toEndpointStatus, ok := to.GetEndpointStatus(ctx); ok {
+			if fromEndpointStatus, ok := from.GetEndpointStatus(ctx); ok {
+				toEndpointStatus.SyncFieldsDuringRead(ctx, fromEndpointStatus)
+				to.SetEndpointStatus(ctx, toEndpointStatus)
 			}
 		}
 	}
@@ -1412,10 +1633,10 @@ type EndpointStatus_SdkV2 struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (toState *EndpointStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointStatus_SdkV2) {
+func (to *EndpointStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointStatus_SdkV2) {
 }
 
-func (toState *EndpointStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState EndpointStatus_SdkV2) {
+func (to *EndpointStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EndpointStatus_SdkV2) {
 }
 
 func (c EndpointStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1463,6 +1684,18 @@ type GetEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (to *GetEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetEndpointRequest_SdkV2) {
+}
+
+func (to *GetEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetEndpointRequest_SdkV2) {
+}
+
+func (c GetEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1495,8 +1728,27 @@ func (o GetEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetIndexRequest_SdkV2 struct {
+	// If true, the URL returned for the index is guaranteed to be compatible
+	// with the reranker. Currently this means we return the CP URL regardless
+	// of how the index is being accessed. If not set or set to false, the URL
+	// may still be compatible with the reranker depending on what URL we
+	// return.
+	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
+}
+
+func (to *GetIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetIndexRequest_SdkV2) {
+}
+
+func (to *GetIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetIndexRequest_SdkV2) {
+}
+
+func (c GetIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["ensure_reranker_compatible"] = attrs["ensure_reranker_compatible"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIndexRequest.
@@ -1517,7 +1769,8 @@ func (o GetIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index_name": o.IndexName,
+			"ensure_reranker_compatible": o.EnsureRerankerCompatible,
+			"index_name":                 o.IndexName,
 		})
 }
 
@@ -1525,7 +1778,8 @@ func (o GetIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o GetIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"index_name": types.StringType,
+			"ensure_reranker_compatible": types.BoolType,
+			"index_name":                 types.StringType,
 		},
 	}
 }
@@ -1538,10 +1792,22 @@ type ListEndpointResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (toState *ListEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListEndpointResponse_SdkV2) {
+func (to *ListEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListEndpointResponse_SdkV2) {
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() && to.Endpoints.IsNull() && len(from.Endpoints.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Endpoints = from.Endpoints
+	}
 }
 
-func (toState *ListEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListEndpointResponse_SdkV2) {
+func (to *ListEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEndpointResponse_SdkV2) {
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() && to.Endpoints.IsNull() && len(from.Endpoints.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Endpoints = from.Endpoints
+	}
 }
 
 func (c ListEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1619,6 +1885,18 @@ type ListEndpointsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListEndpointsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListEndpointsRequest_SdkV2) {
+}
+
+func (to *ListEndpointsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEndpointsRequest_SdkV2) {
+}
+
+func (c ListEndpointsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1655,6 +1933,19 @@ type ListIndexesRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListIndexesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListIndexesRequest_SdkV2) {
+}
+
+func (to *ListIndexesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListIndexesRequest_SdkV2) {
+}
+
+func (c ListIndexesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIndexesRequest.
@@ -1695,10 +1986,22 @@ type ListValue_SdkV2 struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (toState *ListValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListValue_SdkV2) {
+func (to *ListValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListValue_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
-func (toState *ListValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListValue_SdkV2) {
+func (to *ListValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListValue_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
 func (c ListValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1776,10 +2079,22 @@ type ListVectorIndexesResponse_SdkV2 struct {
 	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
-func (toState *ListVectorIndexesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListVectorIndexesResponse_SdkV2) {
+func (to *ListVectorIndexesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListVectorIndexesResponse_SdkV2) {
+	if !from.VectorIndexes.IsNull() && !from.VectorIndexes.IsUnknown() && to.VectorIndexes.IsNull() && len(from.VectorIndexes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for VectorIndexes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.VectorIndexes = from.VectorIndexes
+	}
 }
 
-func (toState *ListVectorIndexesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListVectorIndexesResponse_SdkV2) {
+func (to *ListVectorIndexesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListVectorIndexesResponse_SdkV2) {
+	if !from.VectorIndexes.IsNull() && !from.VectorIndexes.IsUnknown() && to.VectorIndexes.IsNull() && len(from.VectorIndexes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for VectorIndexes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.VectorIndexes = from.VectorIndexes
+	}
 }
 
 func (c ListVectorIndexesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1860,23 +2175,24 @@ type MapStringValueEntry_SdkV2 struct {
 	Value types.List `tfsdk:"value"`
 }
 
-func (toState *MapStringValueEntry_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MapStringValueEntry_SdkV2) {
-	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
-				toState.SetValue(ctx, toStateValue)
+func (to *MapStringValueEntry_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MapStringValueEntry_SdkV2) {
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				// Recursively sync the fields of Value
+				toValue.SyncFieldsDuringCreateOrUpdate(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
 }
 
-func (toState *MapStringValueEntry_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MapStringValueEntry_SdkV2) {
-	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromStateValue, ok := fromState.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
-				toState.SetValue(ctx, toStateValue)
+func (to *MapStringValueEntry_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MapStringValueEntry_SdkV2) {
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				toValue.SyncFieldsDuringRead(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
@@ -1966,10 +2282,10 @@ type MiniVectorIndex_SdkV2 struct {
 	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
-func (toState *MiniVectorIndex_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MiniVectorIndex_SdkV2) {
+func (to *MiniVectorIndex_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MiniVectorIndex_SdkV2) {
 }
 
-func (toState *MiniVectorIndex_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState MiniVectorIndex_SdkV2) {
+func (to *MiniVectorIndex_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MiniVectorIndex_SdkV2) {
 }
 
 func (c MiniVectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2022,10 +2338,24 @@ func (o MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
-	// The budget policy id to be applied
+	// The budget policy id to be applied (hima-sheth) TODO: remove this once
+	// we've migrated to usage policies
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *PatchEndpointBudgetPolicyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (to *PatchEndpointBudgetPolicyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchEndpointBudgetPolicyRequest_SdkV2) {
+}
+
+func (c PatchEndpointBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointBudgetPolicyRequest.
@@ -2066,10 +2396,10 @@ type PatchEndpointBudgetPolicyResponse_SdkV2 struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 }
 
-func (toState *PatchEndpointBudgetPolicyResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PatchEndpointBudgetPolicyResponse_SdkV2) {
+func (to *PatchEndpointBudgetPolicyResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchEndpointBudgetPolicyResponse_SdkV2) {
 }
 
-func (toState *PatchEndpointBudgetPolicyResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PatchEndpointBudgetPolicyResponse_SdkV2) {
+func (to *PatchEndpointBudgetPolicyResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchEndpointBudgetPolicyResponse_SdkV2) {
 }
 
 func (c PatchEndpointBudgetPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2118,6 +2448,20 @@ type QueryVectorIndexNextPageRequest_SdkV2 struct {
 	// Page token returned from previous `QueryVectorIndex` or
 	// `QueryVectorIndexNextPage` API.
 	PageToken types.String `tfsdk:"page_token"`
+}
+
+func (to *QueryVectorIndexNextPageRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryVectorIndexNextPageRequest_SdkV2) {
+}
+
+func (to *QueryVectorIndexNextPageRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QueryVectorIndexNextPageRequest_SdkV2) {
+}
+
+func (c QueryVectorIndexNextPageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexNextPageRequest.
@@ -2180,8 +2524,73 @@ type QueryVectorIndexRequest_SdkV2 struct {
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
+
+	Reranker types.List `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
+}
+
+func (to *QueryVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryVectorIndexRequest_SdkV2) {
+	if !from.ColumnsToRerank.IsNull() && !from.ColumnsToRerank.IsUnknown() && to.ColumnsToRerank.IsNull() && len(from.ColumnsToRerank.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToRerank, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToRerank = from.ColumnsToRerank
+	}
+	if !from.QueryVector.IsNull() && !from.QueryVector.IsUnknown() && to.QueryVector.IsNull() && len(from.QueryVector.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryVector, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryVector = from.QueryVector
+	}
+	if !from.Reranker.IsNull() && !from.Reranker.IsUnknown() {
+		if toReranker, ok := to.GetReranker(ctx); ok {
+			if fromReranker, ok := from.GetReranker(ctx); ok {
+				// Recursively sync the fields of Reranker
+				toReranker.SyncFieldsDuringCreateOrUpdate(ctx, fromReranker)
+				to.SetReranker(ctx, toReranker)
+			}
+		}
+	}
+}
+
+func (to *QueryVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QueryVectorIndexRequest_SdkV2) {
+	if !from.ColumnsToRerank.IsNull() && !from.ColumnsToRerank.IsUnknown() && to.ColumnsToRerank.IsNull() && len(from.ColumnsToRerank.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToRerank, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToRerank = from.ColumnsToRerank
+	}
+	if !from.QueryVector.IsNull() && !from.QueryVector.IsUnknown() && to.QueryVector.IsNull() && len(from.QueryVector.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryVector, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryVector = from.QueryVector
+	}
+	if !from.Reranker.IsNull() && !from.Reranker.IsUnknown() {
+		if toReranker, ok := to.GetReranker(ctx); ok {
+			if fromReranker, ok := from.GetReranker(ctx); ok {
+				toReranker.SyncFieldsDuringRead(ctx, fromReranker)
+				to.SetReranker(ctx, toReranker)
+			}
+		}
+	}
+}
+
+func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetRequired()
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+	attrs["filters_json"] = attrs["filters_json"].SetOptional()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["query_type"] = attrs["query_type"].SetOptional()
+	attrs["query_vector"] = attrs["query_vector"].SetOptional()
+	attrs["reranker"] = attrs["reranker"].SetOptional()
+	attrs["reranker"] = attrs["reranker"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["score_threshold"] = attrs["score_threshold"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexRequest.
@@ -2196,6 +2605,7 @@ func (a QueryVectorIndexRequest_SdkV2) GetComplexFieldTypes(ctx context.Context)
 		"columns":           reflect.TypeOf(types.String{}),
 		"columns_to_rerank": reflect.TypeOf(types.String{}),
 		"query_vector":      reflect.TypeOf(types.Float64{}),
+		"reranker":          reflect.TypeOf(RerankerConfig_SdkV2{}),
 	}
 }
 
@@ -2214,6 +2624,7 @@ func (o QueryVectorIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 			"query_text":        o.QueryText,
 			"query_type":        o.QueryType,
 			"query_vector":      o.QueryVector,
+			"reranker":          o.Reranker,
 			"score_threshold":   o.ScoreThreshold,
 		})
 }
@@ -2235,6 +2646,9 @@ func (o QueryVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_type":   types.StringType,
 			"query_vector": basetypes.ListType{
 				ElemType: types.Float64Type,
+			},
+			"reranker": basetypes.ListType{
+				ElemType: RerankerConfig_SdkV2{}.Type(ctx),
 			},
 			"score_threshold": types.Float64Type,
 		},
@@ -2319,6 +2733,32 @@ func (o *QueryVectorIndexRequest_SdkV2) SetQueryVector(ctx context.Context, v []
 	o.QueryVector = types.ListValueMust(t, vs)
 }
 
+// GetReranker returns the value of the Reranker field in QueryVectorIndexRequest_SdkV2 as
+// a RerankerConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest_SdkV2) GetReranker(ctx context.Context) (RerankerConfig_SdkV2, bool) {
+	var e RerankerConfig_SdkV2
+	if o.Reranker.IsNull() || o.Reranker.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfig_SdkV2
+	d := o.Reranker.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReranker sets the value of the Reranker field in QueryVectorIndexRequest_SdkV2.
+func (o *QueryVectorIndexRequest_SdkV2) SetReranker(ctx context.Context, v RerankerConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reranker"]
+	o.Reranker = types.ListValueMust(t, vs)
+}
+
 type QueryVectorIndexResponse_SdkV2 struct {
 	// Metadata about the result set.
 	Manifest types.List `tfsdk:"manifest"`
@@ -2331,39 +2771,41 @@ type QueryVectorIndexResponse_SdkV2 struct {
 	Result types.List `tfsdk:"result"`
 }
 
-func (toState *QueryVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryVectorIndexResponse_SdkV2) {
-	if !fromPlan.Manifest.IsNull() && !fromPlan.Manifest.IsUnknown() {
-		if toStateManifest, ok := toState.GetManifest(ctx); ok {
-			if fromPlanManifest, ok := fromPlan.GetManifest(ctx); ok {
-				toStateManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManifest)
-				toState.SetManifest(ctx, toStateManifest)
+func (to *QueryVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryVectorIndexResponse_SdkV2) {
+	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+		if toManifest, ok := to.GetManifest(ctx); ok {
+			if fromManifest, ok := from.GetManifest(ctx); ok {
+				// Recursively sync the fields of Manifest
+				toManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromManifest)
+				to.SetManifest(ctx, toManifest)
 			}
 		}
 	}
-	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
-				toState.SetResult(ctx, toStateResult)
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				// Recursively sync the fields of Result
+				toResult.SyncFieldsDuringCreateOrUpdate(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
 }
 
-func (toState *QueryVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState QueryVectorIndexResponse_SdkV2) {
-	if !fromState.Manifest.IsNull() && !fromState.Manifest.IsUnknown() {
-		if toStateManifest, ok := toState.GetManifest(ctx); ok {
-			if fromStateManifest, ok := fromState.GetManifest(ctx); ok {
-				toStateManifest.SyncFieldsDuringRead(ctx, fromStateManifest)
-				toState.SetManifest(ctx, toStateManifest)
+func (to *QueryVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QueryVectorIndexResponse_SdkV2) {
+	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+		if toManifest, ok := to.GetManifest(ctx); ok {
+			if fromManifest, ok := from.GetManifest(ctx); ok {
+				toManifest.SyncFieldsDuringRead(ctx, fromManifest)
+				to.SetManifest(ctx, toManifest)
 			}
 		}
 	}
-	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromStateResult, ok := fromState.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
-				toState.SetResult(ctx, toStateResult)
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				toResult.SyncFieldsDuringRead(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
@@ -2473,6 +2915,195 @@ func (o *QueryVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v Result
 	o.Result = types.ListValueMust(t, vs)
 }
 
+type RerankerConfig_SdkV2 struct {
+	Model types.String `tfsdk:"model"`
+
+	Parameters types.List `tfsdk:"parameters"`
+}
+
+func (to *RerankerConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RerankerConfig_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				// Recursively sync the fields of Parameters
+				toParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromParameters)
+				to.SetParameters(ctx, toParameters)
+			}
+		}
+	}
+}
+
+func (to *RerankerConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RerankerConfig_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				toParameters.SyncFieldsDuringRead(ctx, fromParameters)
+				to.SetParameters(ctx, toParameters)
+			}
+		}
+	}
+}
+
+func (c RerankerConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(RerankerConfigRerankerParameters_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RerankerConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model":      o.Model,
+			"parameters": o.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model": types.StringType,
+			"parameters": basetypes.ListType{
+				ElemType: RerankerConfigRerankerParameters_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in RerankerConfig_SdkV2 as
+// a RerankerConfigRerankerParameters_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfig_SdkV2) GetParameters(ctx context.Context) (RerankerConfigRerankerParameters_SdkV2, bool) {
+	var e RerankerConfigRerankerParameters_SdkV2
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return e, false
+	}
+	var v []RerankerConfigRerankerParameters_SdkV2
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetParameters sets the value of the Parameters field in RerankerConfig_SdkV2.
+func (o *RerankerConfig_SdkV2) SetParameters(ctx context.Context, v RerankerConfigRerankerParameters_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+type RerankerConfigRerankerParameters_SdkV2 struct {
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
+}
+
+func (to *RerankerConfigRerankerParameters_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RerankerConfigRerankerParameters_SdkV2) {
+	if !from.ColumnsToRerank.IsNull() && !from.ColumnsToRerank.IsUnknown() && to.ColumnsToRerank.IsNull() && len(from.ColumnsToRerank.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToRerank, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToRerank = from.ColumnsToRerank
+	}
+}
+
+func (to *RerankerConfigRerankerParameters_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RerankerConfigRerankerParameters_SdkV2) {
+	if !from.ColumnsToRerank.IsNull() && !from.ColumnsToRerank.IsUnknown() && to.ColumnsToRerank.IsNull() && len(from.ColumnsToRerank.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ColumnsToRerank, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ColumnsToRerank = from.ColumnsToRerank
+	}
+}
+
+func (c RerankerConfigRerankerParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RerankerConfigRerankerParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RerankerConfigRerankerParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RerankerConfigRerankerParameters_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RerankerConfigRerankerParameters_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns_to_rerank": o.ColumnsToRerank,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RerankerConfigRerankerParameters_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns_to_rerank": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in RerankerConfigRerankerParameters_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RerankerConfigRerankerParameters_SdkV2) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in RerankerConfigRerankerParameters_SdkV2.
+func (o *RerankerConfigRerankerParameters_SdkV2) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
+}
+
 // Data returned in the query result.
 type ResultData_SdkV2 struct {
 	// Data rows returned in the query.
@@ -2481,10 +3112,22 @@ type ResultData_SdkV2 struct {
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
-func (toState *ResultData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultData_SdkV2) {
+func (to *ResultData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResultData_SdkV2) {
+	if !from.DataArray.IsNull() && !from.DataArray.IsUnknown() && to.DataArray.IsNull() && len(from.DataArray.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataArray, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataArray = from.DataArray
+	}
 }
 
-func (toState *ResultData_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResultData_SdkV2) {
+func (to *ResultData_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResultData_SdkV2) {
+	if !from.DataArray.IsNull() && !from.DataArray.IsUnknown() && to.DataArray.IsNull() && len(from.DataArray.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataArray, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataArray = from.DataArray
+	}
 }
 
 func (c ResultData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2567,10 +3210,22 @@ type ResultManifest_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (toState *ResultManifest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultManifest_SdkV2) {
+func (to *ResultManifest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResultManifest_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
-func (toState *ResultManifest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ResultManifest_SdkV2) {
+func (to *ResultManifest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResultManifest_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
 func (c ResultManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2652,6 +3307,20 @@ type ScanVectorIndexRequest_SdkV2 struct {
 	NumResults types.Int64 `tfsdk:"num_results"`
 }
 
+func (to *ScanVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ScanVectorIndexRequest_SdkV2) {
+}
+
+func (to *ScanVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ScanVectorIndexRequest_SdkV2) {
+}
+
+func (c ScanVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_primary_key"] = attrs["last_primary_key"].SetOptional()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ScanVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2695,10 +3364,22 @@ type ScanVectorIndexResponse_SdkV2 struct {
 	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 }
 
-func (toState *ScanVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ScanVectorIndexResponse_SdkV2) {
+func (to *ScanVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ScanVectorIndexResponse_SdkV2) {
+	if !from.Data.IsNull() && !from.Data.IsUnknown() && to.Data.IsNull() && len(from.Data.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Data, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Data = from.Data
+	}
 }
 
-func (toState *ScanVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ScanVectorIndexResponse_SdkV2) {
+func (to *ScanVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ScanVectorIndexResponse_SdkV2) {
+	if !from.Data.IsNull() && !from.Data.IsUnknown() && to.Data.IsNull() && len(from.Data.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Data, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Data = from.Data
+	}
 }
 
 func (c ScanVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2776,10 +3457,22 @@ type Struct_SdkV2 struct {
 	Fields types.List `tfsdk:"fields"`
 }
 
-func (toState *Struct_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Struct_SdkV2) {
+func (to *Struct_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Struct_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() && to.Fields.IsNull() && len(from.Fields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Fields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Fields = from.Fields
+	}
 }
 
-func (toState *Struct_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Struct_SdkV2) {
+func (to *Struct_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Struct_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() && to.Fields.IsNull() && len(from.Fields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Fields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Fields = from.Fields
+	}
 }
 
 func (c Struct_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2854,6 +3547,18 @@ type SyncIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
+func (to *SyncIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncIndexRequest_SdkV2) {
+}
+
+func (to *SyncIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncIndexRequest_SdkV2) {
+}
+
+func (c SyncIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2888,10 +3593,10 @@ func (o SyncIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type SyncIndexResponse_SdkV2 struct {
 }
 
-func (toState *SyncIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SyncIndexResponse_SdkV2) {
+func (to *SyncIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncIndexResponse_SdkV2) {
 }
 
-func (toState *SyncIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState SyncIndexResponse_SdkV2) {
+func (to *SyncIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncIndexResponse_SdkV2) {
 }
 
 func (c SyncIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2931,6 +3636,19 @@ type UpdateEndpointCustomTagsRequest_SdkV2 struct {
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *UpdateEndpointCustomTagsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (to *UpdateEndpointCustomTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateEndpointCustomTagsRequest_SdkV2) {
+}
+
+func (c UpdateEndpointCustomTagsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEndpointCustomTagsRequest.
@@ -3003,10 +3721,22 @@ type UpdateEndpointCustomTagsResponse_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *UpdateEndpointCustomTagsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateEndpointCustomTagsResponse_SdkV2) {
+func (to *UpdateEndpointCustomTagsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateEndpointCustomTagsResponse_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
-func (toState *UpdateEndpointCustomTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpdateEndpointCustomTagsResponse_SdkV2) {
+func (to *UpdateEndpointCustomTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateEndpointCustomTagsResponse_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
 func (c UpdateEndpointCustomTagsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3086,10 +3816,22 @@ type UpsertDataResult_SdkV2 struct {
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
-func (toState *UpsertDataResult_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpsertDataResult_SdkV2) {
+func (to *UpsertDataResult_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpsertDataResult_SdkV2) {
+	if !from.FailedPrimaryKeys.IsNull() && !from.FailedPrimaryKeys.IsUnknown() && to.FailedPrimaryKeys.IsNull() && len(from.FailedPrimaryKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FailedPrimaryKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FailedPrimaryKeys = from.FailedPrimaryKeys
+	}
 }
 
-func (toState *UpsertDataResult_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpsertDataResult_SdkV2) {
+func (to *UpsertDataResult_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpsertDataResult_SdkV2) {
+	if !from.FailedPrimaryKeys.IsNull() && !from.FailedPrimaryKeys.IsUnknown() && to.FailedPrimaryKeys.IsNull() && len(from.FailedPrimaryKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FailedPrimaryKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FailedPrimaryKeys = from.FailedPrimaryKeys
+	}
 }
 
 func (c UpsertDataResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3170,6 +3912,19 @@ type UpsertDataVectorIndexRequest_SdkV2 struct {
 	InputsJson types.String `tfsdk:"inputs_json"`
 }
 
+func (to *UpsertDataVectorIndexRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpsertDataVectorIndexRequest_SdkV2) {
+}
+
+func (to *UpsertDataVectorIndexRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpsertDataVectorIndexRequest_SdkV2) {
+}
+
+func (c UpsertDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inputs_json"] = attrs["inputs_json"].SetRequired()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3210,23 +3965,24 @@ type UpsertDataVectorIndexResponse_SdkV2 struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (toState *UpsertDataVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpsertDataVectorIndexResponse_SdkV2) {
-	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
-				toState.SetResult(ctx, toStateResult)
+func (to *UpsertDataVectorIndexResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpsertDataVectorIndexResponse_SdkV2) {
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				// Recursively sync the fields of Result
+				toResult.SyncFieldsDuringCreateOrUpdate(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
 }
 
-func (toState *UpsertDataVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState UpsertDataVectorIndexResponse_SdkV2) {
-	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromStateResult, ok := fromState.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
-				toState.SetResult(ctx, toStateResult)
+func (to *UpsertDataVectorIndexResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpsertDataVectorIndexResponse_SdkV2) {
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				toResult.SyncFieldsDuringRead(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
@@ -3315,39 +4071,41 @@ type Value_SdkV2 struct {
 	StructValue types.List `tfsdk:"struct_value"`
 }
 
-func (toState *Value_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Value_SdkV2) {
-	if !fromPlan.ListValue.IsNull() && !fromPlan.ListValue.IsUnknown() {
-		if toStateListValue, ok := toState.GetListValue(ctx); ok {
-			if fromPlanListValue, ok := fromPlan.GetListValue(ctx); ok {
-				toStateListValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanListValue)
-				toState.SetListValue(ctx, toStateListValue)
+func (to *Value_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Value_SdkV2) {
+	if !from.ListValue.IsNull() && !from.ListValue.IsUnknown() {
+		if toListValue, ok := to.GetListValue(ctx); ok {
+			if fromListValue, ok := from.GetListValue(ctx); ok {
+				// Recursively sync the fields of ListValue
+				toListValue.SyncFieldsDuringCreateOrUpdate(ctx, fromListValue)
+				to.SetListValue(ctx, toListValue)
 			}
 		}
 	}
-	if !fromPlan.StructValue.IsNull() && !fromPlan.StructValue.IsUnknown() {
-		if toStateStructValue, ok := toState.GetStructValue(ctx); ok {
-			if fromPlanStructValue, ok := fromPlan.GetStructValue(ctx); ok {
-				toStateStructValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStructValue)
-				toState.SetStructValue(ctx, toStateStructValue)
+	if !from.StructValue.IsNull() && !from.StructValue.IsUnknown() {
+		if toStructValue, ok := to.GetStructValue(ctx); ok {
+			if fromStructValue, ok := from.GetStructValue(ctx); ok {
+				// Recursively sync the fields of StructValue
+				toStructValue.SyncFieldsDuringCreateOrUpdate(ctx, fromStructValue)
+				to.SetStructValue(ctx, toStructValue)
 			}
 		}
 	}
 }
 
-func (toState *Value_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Value_SdkV2) {
-	if !fromState.ListValue.IsNull() && !fromState.ListValue.IsUnknown() {
-		if toStateListValue, ok := toState.GetListValue(ctx); ok {
-			if fromStateListValue, ok := fromState.GetListValue(ctx); ok {
-				toStateListValue.SyncFieldsDuringRead(ctx, fromStateListValue)
-				toState.SetListValue(ctx, toStateListValue)
+func (to *Value_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Value_SdkV2) {
+	if !from.ListValue.IsNull() && !from.ListValue.IsUnknown() {
+		if toListValue, ok := to.GetListValue(ctx); ok {
+			if fromListValue, ok := from.GetListValue(ctx); ok {
+				toListValue.SyncFieldsDuringRead(ctx, fromListValue)
+				to.SetListValue(ctx, toListValue)
 			}
 		}
 	}
-	if !fromState.StructValue.IsNull() && !fromState.StructValue.IsUnknown() {
-		if toStateStructValue, ok := toState.GetStructValue(ctx); ok {
-			if fromStateStructValue, ok := fromState.GetStructValue(ctx); ok {
-				toStateStructValue.SyncFieldsDuringRead(ctx, fromStateStructValue)
-				toState.SetStructValue(ctx, toStateStructValue)
+	if !from.StructValue.IsNull() && !from.StructValue.IsUnknown() {
+		if toStructValue, ok := to.GetStructValue(ctx); ok {
+			if fromStructValue, ok := from.GetStructValue(ctx); ok {
+				toStructValue.SyncFieldsDuringRead(ctx, fromStructValue)
+				to.SetStructValue(ctx, toStructValue)
 			}
 		}
 	}
@@ -3482,55 +4240,58 @@ type VectorIndex_SdkV2 struct {
 	Status types.List `tfsdk:"status"`
 }
 
-func (toState *VectorIndex_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VectorIndex_SdkV2) {
-	if !fromPlan.DeltaSyncIndexSpec.IsNull() && !fromPlan.DeltaSyncIndexSpec.IsUnknown() {
-		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
-			if fromPlanDeltaSyncIndexSpec, ok := fromPlan.GetDeltaSyncIndexSpec(ctx); ok {
-				toStateDeltaSyncIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeltaSyncIndexSpec)
-				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+func (to *VectorIndex_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VectorIndex_SdkV2) {
+	if !from.DeltaSyncIndexSpec.IsNull() && !from.DeltaSyncIndexSpec.IsUnknown() {
+		if toDeltaSyncIndexSpec, ok := to.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromDeltaSyncIndexSpec, ok := from.GetDeltaSyncIndexSpec(ctx); ok {
+				// Recursively sync the fields of DeltaSyncIndexSpec
+				toDeltaSyncIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaSyncIndexSpec)
+				to.SetDeltaSyncIndexSpec(ctx, toDeltaSyncIndexSpec)
 			}
 		}
 	}
-	if !fromPlan.DirectAccessIndexSpec.IsNull() && !fromPlan.DirectAccessIndexSpec.IsUnknown() {
-		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
-			if fromPlanDirectAccessIndexSpec, ok := fromPlan.GetDirectAccessIndexSpec(ctx); ok {
-				toStateDirectAccessIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDirectAccessIndexSpec)
-				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+	if !from.DirectAccessIndexSpec.IsNull() && !from.DirectAccessIndexSpec.IsUnknown() {
+		if toDirectAccessIndexSpec, ok := to.GetDirectAccessIndexSpec(ctx); ok {
+			if fromDirectAccessIndexSpec, ok := from.GetDirectAccessIndexSpec(ctx); ok {
+				// Recursively sync the fields of DirectAccessIndexSpec
+				toDirectAccessIndexSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectAccessIndexSpec)
+				to.SetDirectAccessIndexSpec(ctx, toDirectAccessIndexSpec)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
 }
 
-func (toState *VectorIndex_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState VectorIndex_SdkV2) {
-	if !fromState.DeltaSyncIndexSpec.IsNull() && !fromState.DeltaSyncIndexSpec.IsUnknown() {
-		if toStateDeltaSyncIndexSpec, ok := toState.GetDeltaSyncIndexSpec(ctx); ok {
-			if fromStateDeltaSyncIndexSpec, ok := fromState.GetDeltaSyncIndexSpec(ctx); ok {
-				toStateDeltaSyncIndexSpec.SyncFieldsDuringRead(ctx, fromStateDeltaSyncIndexSpec)
-				toState.SetDeltaSyncIndexSpec(ctx, toStateDeltaSyncIndexSpec)
+func (to *VectorIndex_SdkV2) SyncFieldsDuringRead(ctx context.Context, from VectorIndex_SdkV2) {
+	if !from.DeltaSyncIndexSpec.IsNull() && !from.DeltaSyncIndexSpec.IsUnknown() {
+		if toDeltaSyncIndexSpec, ok := to.GetDeltaSyncIndexSpec(ctx); ok {
+			if fromDeltaSyncIndexSpec, ok := from.GetDeltaSyncIndexSpec(ctx); ok {
+				toDeltaSyncIndexSpec.SyncFieldsDuringRead(ctx, fromDeltaSyncIndexSpec)
+				to.SetDeltaSyncIndexSpec(ctx, toDeltaSyncIndexSpec)
 			}
 		}
 	}
-	if !fromState.DirectAccessIndexSpec.IsNull() && !fromState.DirectAccessIndexSpec.IsUnknown() {
-		if toStateDirectAccessIndexSpec, ok := toState.GetDirectAccessIndexSpec(ctx); ok {
-			if fromStateDirectAccessIndexSpec, ok := fromState.GetDirectAccessIndexSpec(ctx); ok {
-				toStateDirectAccessIndexSpec.SyncFieldsDuringRead(ctx, fromStateDirectAccessIndexSpec)
-				toState.SetDirectAccessIndexSpec(ctx, toStateDirectAccessIndexSpec)
+	if !from.DirectAccessIndexSpec.IsNull() && !from.DirectAccessIndexSpec.IsUnknown() {
+		if toDirectAccessIndexSpec, ok := to.GetDirectAccessIndexSpec(ctx); ok {
+			if fromDirectAccessIndexSpec, ok := from.GetDirectAccessIndexSpec(ctx); ok {
+				toDirectAccessIndexSpec.SyncFieldsDuringRead(ctx, fromDirectAccessIndexSpec)
+				to.SetDirectAccessIndexSpec(ctx, toDirectAccessIndexSpec)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
@@ -3696,10 +4457,10 @@ type VectorIndexStatus_SdkV2 struct {
 	Ready types.Bool `tfsdk:"ready"`
 }
 
-func (toState *VectorIndexStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VectorIndexStatus_SdkV2) {
+func (to *VectorIndexStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VectorIndexStatus_SdkV2) {
 }
 
-func (toState *VectorIndexStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState VectorIndexStatus_SdkV2) {
+func (to *VectorIndexStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from VectorIndexStatus_SdkV2) {
 }
 
 func (c VectorIndexStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

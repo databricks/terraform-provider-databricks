@@ -4,6 +4,7 @@ package materialized_features_feature_tag
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -12,8 +13,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "materialized_features_feature_tag"
@@ -28,12 +32,62 @@ type FeatureTagDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+// FeatureTagData extends the main model with additional fields.
+type FeatureTagData struct {
+	ml_tf.FeatureTag
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// FeatureTagData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.FeatureTag.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureTagData
+// only implements ToObjectValue() and Type().
+func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m FeatureTagData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *FeatureTagData) SyncFieldsDuringRead(ctx context.Context, existingState FeatureTagData) {
+	m.FeatureTag.SyncFieldsDuringRead(ctx, existingState.FeatureTag)
+}
+
 func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
 func (r *FeatureTagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ml_tf.FeatureTag{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,
@@ -54,7 +108,7 @@ func (r *FeatureTagDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var config ml_tf.FeatureTag
+	var config FeatureTagData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -77,7 +131,7 @@ func (r *FeatureTagDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	var newState ml_tf.FeatureTag
+	var newState FeatureTagData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

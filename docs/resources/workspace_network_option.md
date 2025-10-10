@@ -2,6 +2,8 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_network_option Resource
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Workspace network options allow configuration of network settings for Databricks workspaces by selecting which network policy to associate with the workspace.
 
 Each workspace is always associated with exactly one network policy that controls which network destinations can be accessed from the Databricks environment. By default, workspaces are associated with the `default-policy` network policy.
@@ -37,12 +39,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = workspace_id
+  id = "workspace_id"
   to = databricks_workspace_network_option.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_network_option workspace_id
+terraform import databricks_workspace_network_option "workspace_id"
 ```

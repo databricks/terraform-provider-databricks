@@ -18,8 +18,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
-	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
-	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"     // .tmpl
+	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf" // .tmpl
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -50,7 +50,7 @@ type CleanRoom_SdkV2 struct {
 	// catalog is manipulated using the separate CreateCleanRoomOutputCatalog
 	// API.
 	OutputCatalog types.List `tfsdk:"output_catalog"`
-	// This is Databricks username of the owner of the local clean room
+	// This is the Databricks username of the owner of the local clean room
 	// securable for permission management.
 	Owner types.String `tfsdk:"owner"`
 	// Central clean room details. During creation, users need to specify
@@ -63,39 +63,41 @@ type CleanRoom_SdkV2 struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
-func (toState *CleanRoom_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoom_SdkV2) {
-	if !fromPlan.OutputCatalog.IsNull() && !fromPlan.OutputCatalog.IsUnknown() {
-		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
-			if fromPlanOutputCatalog, ok := fromPlan.GetOutputCatalog(ctx); ok {
-				toStateOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputCatalog)
-				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+func (to *CleanRoom_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoom_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				// Recursively sync the fields of OutputCatalog
+				toOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
 			}
 		}
 	}
-	if !fromPlan.RemoteDetailedInfo.IsNull() && !fromPlan.RemoteDetailedInfo.IsUnknown() {
-		if toStateRemoteDetailedInfo, ok := toState.GetRemoteDetailedInfo(ctx); ok {
-			if fromPlanRemoteDetailedInfo, ok := fromPlan.GetRemoteDetailedInfo(ctx); ok {
-				toStateRemoteDetailedInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRemoteDetailedInfo)
-				toState.SetRemoteDetailedInfo(ctx, toStateRemoteDetailedInfo)
+	if !from.RemoteDetailedInfo.IsNull() && !from.RemoteDetailedInfo.IsUnknown() {
+		if toRemoteDetailedInfo, ok := to.GetRemoteDetailedInfo(ctx); ok {
+			if fromRemoteDetailedInfo, ok := from.GetRemoteDetailedInfo(ctx); ok {
+				// Recursively sync the fields of RemoteDetailedInfo
+				toRemoteDetailedInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromRemoteDetailedInfo)
+				to.SetRemoteDetailedInfo(ctx, toRemoteDetailedInfo)
 			}
 		}
 	}
 }
 
-func (toState *CleanRoom_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoom_SdkV2) {
-	if !fromState.OutputCatalog.IsNull() && !fromState.OutputCatalog.IsUnknown() {
-		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
-			if fromStateOutputCatalog, ok := fromState.GetOutputCatalog(ctx); ok {
-				toStateOutputCatalog.SyncFieldsDuringRead(ctx, fromStateOutputCatalog)
-				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+func (to *CleanRoom_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoom_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				toOutputCatalog.SyncFieldsDuringRead(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
 			}
 		}
 	}
-	if !fromState.RemoteDetailedInfo.IsNull() && !fromState.RemoteDetailedInfo.IsUnknown() {
-		if toStateRemoteDetailedInfo, ok := toState.GetRemoteDetailedInfo(ctx); ok {
-			if fromStateRemoteDetailedInfo, ok := fromState.GetRemoteDetailedInfo(ctx); ok {
-				toStateRemoteDetailedInfo.SyncFieldsDuringRead(ctx, fromStateRemoteDetailedInfo)
-				toState.SetRemoteDetailedInfo(ctx, toStateRemoteDetailedInfo)
+	if !from.RemoteDetailedInfo.IsNull() && !from.RemoteDetailedInfo.IsUnknown() {
+		if toRemoteDetailedInfo, ok := to.GetRemoteDetailedInfo(ctx); ok {
+			if fromRemoteDetailedInfo, ok := from.GetRemoteDetailedInfo(ctx); ok {
+				toRemoteDetailedInfo.SyncFieldsDuringRead(ctx, fromRemoteDetailedInfo)
+				to.SetRemoteDetailedInfo(ctx, toRemoteDetailedInfo)
 			}
 		}
 	}
@@ -275,135 +277,143 @@ type CleanRoomAsset_SdkV2 struct {
 	VolumeLocalDetails types.List `tfsdk:"volume_local_details"`
 }
 
-func (toState *CleanRoomAsset_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAsset_SdkV2) {
-	if !fromPlan.ForeignTable.IsNull() && !fromPlan.ForeignTable.IsUnknown() {
-		if toStateForeignTable, ok := toState.GetForeignTable(ctx); ok {
-			if fromPlanForeignTable, ok := fromPlan.GetForeignTable(ctx); ok {
-				toStateForeignTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForeignTable)
-				toState.SetForeignTable(ctx, toStateForeignTable)
+func (to *CleanRoomAsset_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAsset_SdkV2) {
+	if !from.ForeignTable.IsNull() && !from.ForeignTable.IsUnknown() {
+		if toForeignTable, ok := to.GetForeignTable(ctx); ok {
+			if fromForeignTable, ok := from.GetForeignTable(ctx); ok {
+				// Recursively sync the fields of ForeignTable
+				toForeignTable.SyncFieldsDuringCreateOrUpdate(ctx, fromForeignTable)
+				to.SetForeignTable(ctx, toForeignTable)
 			}
 		}
 	}
-	if !fromPlan.ForeignTableLocalDetails.IsNull() && !fromPlan.ForeignTableLocalDetails.IsUnknown() {
-		if toStateForeignTableLocalDetails, ok := toState.GetForeignTableLocalDetails(ctx); ok {
-			if fromPlanForeignTableLocalDetails, ok := fromPlan.GetForeignTableLocalDetails(ctx); ok {
-				toStateForeignTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForeignTableLocalDetails)
-				toState.SetForeignTableLocalDetails(ctx, toStateForeignTableLocalDetails)
+	if !from.ForeignTableLocalDetails.IsNull() && !from.ForeignTableLocalDetails.IsUnknown() {
+		if toForeignTableLocalDetails, ok := to.GetForeignTableLocalDetails(ctx); ok {
+			if fromForeignTableLocalDetails, ok := from.GetForeignTableLocalDetails(ctx); ok {
+				// Recursively sync the fields of ForeignTableLocalDetails
+				toForeignTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromForeignTableLocalDetails)
+				to.SetForeignTableLocalDetails(ctx, toForeignTableLocalDetails)
 			}
 		}
 	}
-	if !fromPlan.Notebook.IsNull() && !fromPlan.Notebook.IsUnknown() {
-		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
-			if fromPlanNotebook, ok := fromPlan.GetNotebook(ctx); ok {
-				toStateNotebook.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebook)
-				toState.SetNotebook(ctx, toStateNotebook)
+	if !from.Notebook.IsNull() && !from.Notebook.IsUnknown() {
+		if toNotebook, ok := to.GetNotebook(ctx); ok {
+			if fromNotebook, ok := from.GetNotebook(ctx); ok {
+				// Recursively sync the fields of Notebook
+				toNotebook.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebook)
+				to.SetNotebook(ctx, toNotebook)
 			}
 		}
 	}
-	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				// Recursively sync the fields of Table
+				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
-	if !fromPlan.TableLocalDetails.IsNull() && !fromPlan.TableLocalDetails.IsUnknown() {
-		if toStateTableLocalDetails, ok := toState.GetTableLocalDetails(ctx); ok {
-			if fromPlanTableLocalDetails, ok := fromPlan.GetTableLocalDetails(ctx); ok {
-				toStateTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableLocalDetails)
-				toState.SetTableLocalDetails(ctx, toStateTableLocalDetails)
+	if !from.TableLocalDetails.IsNull() && !from.TableLocalDetails.IsUnknown() {
+		if toTableLocalDetails, ok := to.GetTableLocalDetails(ctx); ok {
+			if fromTableLocalDetails, ok := from.GetTableLocalDetails(ctx); ok {
+				// Recursively sync the fields of TableLocalDetails
+				toTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromTableLocalDetails)
+				to.SetTableLocalDetails(ctx, toTableLocalDetails)
 			}
 		}
 	}
-	if !fromPlan.View.IsNull() && !fromPlan.View.IsUnknown() {
-		if toStateView, ok := toState.GetView(ctx); ok {
-			if fromPlanView, ok := fromPlan.GetView(ctx); ok {
-				toStateView.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanView)
-				toState.SetView(ctx, toStateView)
+	if !from.View.IsNull() && !from.View.IsUnknown() {
+		if toView, ok := to.GetView(ctx); ok {
+			if fromView, ok := from.GetView(ctx); ok {
+				// Recursively sync the fields of View
+				toView.SyncFieldsDuringCreateOrUpdate(ctx, fromView)
+				to.SetView(ctx, toView)
 			}
 		}
 	}
-	if !fromPlan.ViewLocalDetails.IsNull() && !fromPlan.ViewLocalDetails.IsUnknown() {
-		if toStateViewLocalDetails, ok := toState.GetViewLocalDetails(ctx); ok {
-			if fromPlanViewLocalDetails, ok := fromPlan.GetViewLocalDetails(ctx); ok {
-				toStateViewLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanViewLocalDetails)
-				toState.SetViewLocalDetails(ctx, toStateViewLocalDetails)
+	if !from.ViewLocalDetails.IsNull() && !from.ViewLocalDetails.IsUnknown() {
+		if toViewLocalDetails, ok := to.GetViewLocalDetails(ctx); ok {
+			if fromViewLocalDetails, ok := from.GetViewLocalDetails(ctx); ok {
+				// Recursively sync the fields of ViewLocalDetails
+				toViewLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromViewLocalDetails)
+				to.SetViewLocalDetails(ctx, toViewLocalDetails)
 			}
 		}
 	}
-	if !fromPlan.VolumeLocalDetails.IsNull() && !fromPlan.VolumeLocalDetails.IsUnknown() {
-		if toStateVolumeLocalDetails, ok := toState.GetVolumeLocalDetails(ctx); ok {
-			if fromPlanVolumeLocalDetails, ok := fromPlan.GetVolumeLocalDetails(ctx); ok {
-				toStateVolumeLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVolumeLocalDetails)
-				toState.SetVolumeLocalDetails(ctx, toStateVolumeLocalDetails)
+	if !from.VolumeLocalDetails.IsNull() && !from.VolumeLocalDetails.IsUnknown() {
+		if toVolumeLocalDetails, ok := to.GetVolumeLocalDetails(ctx); ok {
+			if fromVolumeLocalDetails, ok := from.GetVolumeLocalDetails(ctx); ok {
+				// Recursively sync the fields of VolumeLocalDetails
+				toVolumeLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromVolumeLocalDetails)
+				to.SetVolumeLocalDetails(ctx, toVolumeLocalDetails)
 			}
 		}
 	}
 }
 
-func (toState *CleanRoomAsset_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAsset_SdkV2) {
-	if !fromState.ForeignTable.IsNull() && !fromState.ForeignTable.IsUnknown() {
-		if toStateForeignTable, ok := toState.GetForeignTable(ctx); ok {
-			if fromStateForeignTable, ok := fromState.GetForeignTable(ctx); ok {
-				toStateForeignTable.SyncFieldsDuringRead(ctx, fromStateForeignTable)
-				toState.SetForeignTable(ctx, toStateForeignTable)
+func (to *CleanRoomAsset_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAsset_SdkV2) {
+	if !from.ForeignTable.IsNull() && !from.ForeignTable.IsUnknown() {
+		if toForeignTable, ok := to.GetForeignTable(ctx); ok {
+			if fromForeignTable, ok := from.GetForeignTable(ctx); ok {
+				toForeignTable.SyncFieldsDuringRead(ctx, fromForeignTable)
+				to.SetForeignTable(ctx, toForeignTable)
 			}
 		}
 	}
-	if !fromState.ForeignTableLocalDetails.IsNull() && !fromState.ForeignTableLocalDetails.IsUnknown() {
-		if toStateForeignTableLocalDetails, ok := toState.GetForeignTableLocalDetails(ctx); ok {
-			if fromStateForeignTableLocalDetails, ok := fromState.GetForeignTableLocalDetails(ctx); ok {
-				toStateForeignTableLocalDetails.SyncFieldsDuringRead(ctx, fromStateForeignTableLocalDetails)
-				toState.SetForeignTableLocalDetails(ctx, toStateForeignTableLocalDetails)
+	if !from.ForeignTableLocalDetails.IsNull() && !from.ForeignTableLocalDetails.IsUnknown() {
+		if toForeignTableLocalDetails, ok := to.GetForeignTableLocalDetails(ctx); ok {
+			if fromForeignTableLocalDetails, ok := from.GetForeignTableLocalDetails(ctx); ok {
+				toForeignTableLocalDetails.SyncFieldsDuringRead(ctx, fromForeignTableLocalDetails)
+				to.SetForeignTableLocalDetails(ctx, toForeignTableLocalDetails)
 			}
 		}
 	}
-	if !fromState.Notebook.IsNull() && !fromState.Notebook.IsUnknown() {
-		if toStateNotebook, ok := toState.GetNotebook(ctx); ok {
-			if fromStateNotebook, ok := fromState.GetNotebook(ctx); ok {
-				toStateNotebook.SyncFieldsDuringRead(ctx, fromStateNotebook)
-				toState.SetNotebook(ctx, toStateNotebook)
+	if !from.Notebook.IsNull() && !from.Notebook.IsUnknown() {
+		if toNotebook, ok := to.GetNotebook(ctx); ok {
+			if fromNotebook, ok := from.GetNotebook(ctx); ok {
+				toNotebook.SyncFieldsDuringRead(ctx, fromNotebook)
+				to.SetNotebook(ctx, toNotebook)
 			}
 		}
 	}
-	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromStateTable, ok := fromState.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				toTable.SyncFieldsDuringRead(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
-	if !fromState.TableLocalDetails.IsNull() && !fromState.TableLocalDetails.IsUnknown() {
-		if toStateTableLocalDetails, ok := toState.GetTableLocalDetails(ctx); ok {
-			if fromStateTableLocalDetails, ok := fromState.GetTableLocalDetails(ctx); ok {
-				toStateTableLocalDetails.SyncFieldsDuringRead(ctx, fromStateTableLocalDetails)
-				toState.SetTableLocalDetails(ctx, toStateTableLocalDetails)
+	if !from.TableLocalDetails.IsNull() && !from.TableLocalDetails.IsUnknown() {
+		if toTableLocalDetails, ok := to.GetTableLocalDetails(ctx); ok {
+			if fromTableLocalDetails, ok := from.GetTableLocalDetails(ctx); ok {
+				toTableLocalDetails.SyncFieldsDuringRead(ctx, fromTableLocalDetails)
+				to.SetTableLocalDetails(ctx, toTableLocalDetails)
 			}
 		}
 	}
-	if !fromState.View.IsNull() && !fromState.View.IsUnknown() {
-		if toStateView, ok := toState.GetView(ctx); ok {
-			if fromStateView, ok := fromState.GetView(ctx); ok {
-				toStateView.SyncFieldsDuringRead(ctx, fromStateView)
-				toState.SetView(ctx, toStateView)
+	if !from.View.IsNull() && !from.View.IsUnknown() {
+		if toView, ok := to.GetView(ctx); ok {
+			if fromView, ok := from.GetView(ctx); ok {
+				toView.SyncFieldsDuringRead(ctx, fromView)
+				to.SetView(ctx, toView)
 			}
 		}
 	}
-	if !fromState.ViewLocalDetails.IsNull() && !fromState.ViewLocalDetails.IsUnknown() {
-		if toStateViewLocalDetails, ok := toState.GetViewLocalDetails(ctx); ok {
-			if fromStateViewLocalDetails, ok := fromState.GetViewLocalDetails(ctx); ok {
-				toStateViewLocalDetails.SyncFieldsDuringRead(ctx, fromStateViewLocalDetails)
-				toState.SetViewLocalDetails(ctx, toStateViewLocalDetails)
+	if !from.ViewLocalDetails.IsNull() && !from.ViewLocalDetails.IsUnknown() {
+		if toViewLocalDetails, ok := to.GetViewLocalDetails(ctx); ok {
+			if fromViewLocalDetails, ok := from.GetViewLocalDetails(ctx); ok {
+				toViewLocalDetails.SyncFieldsDuringRead(ctx, fromViewLocalDetails)
+				to.SetViewLocalDetails(ctx, toViewLocalDetails)
 			}
 		}
 	}
-	if !fromState.VolumeLocalDetails.IsNull() && !fromState.VolumeLocalDetails.IsUnknown() {
-		if toStateVolumeLocalDetails, ok := toState.GetVolumeLocalDetails(ctx); ok {
-			if fromStateVolumeLocalDetails, ok := fromState.GetVolumeLocalDetails(ctx); ok {
-				toStateVolumeLocalDetails.SyncFieldsDuringRead(ctx, fromStateVolumeLocalDetails)
-				toState.SetVolumeLocalDetails(ctx, toStateVolumeLocalDetails)
+	if !from.VolumeLocalDetails.IsNull() && !from.VolumeLocalDetails.IsUnknown() {
+		if toVolumeLocalDetails, ok := to.GetVolumeLocalDetails(ctx); ok {
+			if fromVolumeLocalDetails, ok := from.GetVolumeLocalDetails(ctx); ok {
+				toVolumeLocalDetails.SyncFieldsDuringRead(ctx, fromVolumeLocalDetails)
+				to.SetVolumeLocalDetails(ctx, toVolumeLocalDetails)
 			}
 		}
 	}
@@ -731,10 +741,22 @@ type CleanRoomAssetForeignTable_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (toState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetForeignTable_SdkV2) {
+func (to *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetForeignTable_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
-func (toState *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetForeignTable_SdkV2) {
+func (to *CleanRoomAssetForeignTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetForeignTable_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
 func (c CleanRoomAssetForeignTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -810,10 +832,10 @@ type CleanRoomAssetForeignTableLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (toState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetForeignTableLocalDetails_SdkV2) {
+func (to *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
-func (toState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetForeignTableLocalDetails_SdkV2) {
+func (to *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetForeignTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -863,14 +885,38 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	ReviewState types.String `tfsdk:"review_state"`
 	// All existing approvals or rejections
 	Reviews types.List `tfsdk:"reviews"`
-	// collaborators that can run the notebook
+	// Aliases of collaborators that can run the notebook.
 	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
-func (toState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetNotebook_SdkV2) {
+func (to *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetNotebook_SdkV2) {
+	if !from.Reviews.IsNull() && !from.Reviews.IsUnknown() && to.Reviews.IsNull() && len(from.Reviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Reviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Reviews = from.Reviews
+	}
+	if !from.RunnerCollaboratorAliases.IsNull() && !from.RunnerCollaboratorAliases.IsUnknown() && to.RunnerCollaboratorAliases.IsNull() && len(from.RunnerCollaboratorAliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RunnerCollaboratorAliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RunnerCollaboratorAliases = from.RunnerCollaboratorAliases
+	}
 }
 
-func (toState *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetNotebook_SdkV2) {
+func (to *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetNotebook_SdkV2) {
+	if !from.Reviews.IsNull() && !from.Reviews.IsUnknown() && to.Reviews.IsNull() && len(from.Reviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Reviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Reviews = from.Reviews
+	}
+	if !from.RunnerCollaboratorAliases.IsNull() && !from.RunnerCollaboratorAliases.IsUnknown() && to.RunnerCollaboratorAliases.IsNull() && len(from.RunnerCollaboratorAliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RunnerCollaboratorAliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RunnerCollaboratorAliases = from.RunnerCollaboratorAliases
+	}
 }
 
 func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -986,10 +1032,22 @@ type CleanRoomAssetTable_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (toState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetTable_SdkV2) {
+func (to *CleanRoomAssetTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetTable_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
-func (toState *CleanRoomAssetTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetTable_SdkV2) {
+func (to *CleanRoomAssetTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetTable_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
 func (c CleanRoomAssetTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1067,10 +1125,22 @@ type CleanRoomAssetTableLocalDetails_SdkV2 struct {
 	Partitions types.List `tfsdk:"partitions"`
 }
 
-func (toState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetTableLocalDetails_SdkV2) {
+func (to *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetTableLocalDetails_SdkV2) {
+	if !from.Partitions.IsNull() && !from.Partitions.IsUnknown() && to.Partitions.IsNull() && len(from.Partitions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Partitions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Partitions = from.Partitions
+	}
 }
 
-func (toState *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetTableLocalDetails_SdkV2) {
+func (to *CleanRoomAssetTableLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetTableLocalDetails_SdkV2) {
+	if !from.Partitions.IsNull() && !from.Partitions.IsUnknown() && to.Partitions.IsNull() && len(from.Partitions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Partitions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Partitions = from.Partitions
+	}
 }
 
 func (c CleanRoomAssetTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1148,10 +1218,22 @@ type CleanRoomAssetView_SdkV2 struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (toState *CleanRoomAssetView_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetView_SdkV2) {
+func (to *CleanRoomAssetView_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetView_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
-func (toState *CleanRoomAssetView_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetView_SdkV2) {
+func (to *CleanRoomAssetView_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetView_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
 func (c CleanRoomAssetView_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1227,10 +1309,10 @@ type CleanRoomAssetViewLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (toState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetViewLocalDetails_SdkV2) {
+func (to *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
-func (toState *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetViewLocalDetails_SdkV2) {
+func (to *CleanRoomAssetViewLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetViewLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1276,10 +1358,10 @@ type CleanRoomAssetVolumeLocalDetails_SdkV2 struct {
 	LocalName types.String `tfsdk:"local_name"`
 }
 
-func (toState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAssetVolumeLocalDetails_SdkV2) {
+func (to *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
-func (toState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAssetVolumeLocalDetails_SdkV2) {
+func (to *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
 func (c CleanRoomAssetVolumeLocalDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1338,10 +1420,10 @@ type CleanRoomAutoApprovalRule_SdkV2 struct {
 	RunnerCollaboratorAlias types.String `tfsdk:"runner_collaborator_alias"`
 }
 
-func (toState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomAutoApprovalRule_SdkV2) {
+func (to *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAutoApprovalRule_SdkV2) {
 }
 
-func (toState *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomAutoApprovalRule_SdkV2) {
+func (to *CleanRoomAutoApprovalRule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAutoApprovalRule_SdkV2) {
 }
 
 func (c CleanRoomAutoApprovalRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1414,7 +1496,7 @@ type CleanRoomCollaborator_SdkV2 struct {
 	// rooms, it is the organization name of the metastore. It is not restricted
 	// to these values and could change in the future
 	DisplayName types.String `tfsdk:"display_name"`
-	// The global Unity Catalog metastore id of the collaborator. The identifier
+	// The global Unity Catalog metastore ID of the collaborator. The identifier
 	// is of format cloud:region:metastore-uuid.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id"`
 	// Email of the user who is receiving the clean room "invitation". It should
@@ -1432,17 +1514,17 @@ type CleanRoomCollaborator_SdkV2 struct {
 	OrganizationName types.String `tfsdk:"organization_name"`
 }
 
-func (toState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomCollaborator_SdkV2) {
-	if !fromPlan.InviteRecipientWorkspaceId.IsUnknown() && !fromPlan.InviteRecipientWorkspaceId.IsNull() {
-		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the plan.
-		toState.InviteRecipientWorkspaceId = fromPlan.InviteRecipientWorkspaceId
+func (to *CleanRoomCollaborator_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomCollaborator_SdkV2) {
+	if !from.InviteRecipientWorkspaceId.IsUnknown() && !from.InviteRecipientWorkspaceId.IsNull() {
+		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InviteRecipientWorkspaceId = from.InviteRecipientWorkspaceId
 	}
 }
 
-func (toState *CleanRoomCollaborator_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomCollaborator_SdkV2) {
-	if !fromState.InviteRecipientWorkspaceId.IsUnknown() && !fromState.InviteRecipientWorkspaceId.IsNull() {
-		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the existing state.
-		toState.InviteRecipientWorkspaceId = fromState.InviteRecipientWorkspaceId
+func (to *CleanRoomCollaborator_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomCollaborator_SdkV2) {
+	if !from.InviteRecipientWorkspaceId.IsUnknown() && !from.InviteRecipientWorkspaceId.IsNull() {
+		// InviteRecipientWorkspaceId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InviteRecipientWorkspaceId = from.InviteRecipientWorkspaceId
 	}
 }
 
@@ -1515,10 +1597,10 @@ type CleanRoomNotebookReview_SdkV2 struct {
 	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
 }
 
-func (toState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomNotebookReview_SdkV2) {
+func (to *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomNotebookReview_SdkV2) {
 }
 
-func (toState *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomNotebookReview_SdkV2) {
+func (to *CleanRoomNotebookReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomNotebookReview_SdkV2) {
 }
 
 func (c CleanRoomNotebookReview_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1598,39 +1680,41 @@ type CleanRoomNotebookTaskRun_SdkV2 struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
-func (toState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomNotebookTaskRun_SdkV2) {
-	if !fromPlan.CollaboratorJobRunInfo.IsNull() && !fromPlan.CollaboratorJobRunInfo.IsUnknown() {
-		if toStateCollaboratorJobRunInfo, ok := toState.GetCollaboratorJobRunInfo(ctx); ok {
-			if fromPlanCollaboratorJobRunInfo, ok := fromPlan.GetCollaboratorJobRunInfo(ctx); ok {
-				toStateCollaboratorJobRunInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCollaboratorJobRunInfo)
-				toState.SetCollaboratorJobRunInfo(ctx, toStateCollaboratorJobRunInfo)
+func (to *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomNotebookTaskRun_SdkV2) {
+	if !from.CollaboratorJobRunInfo.IsNull() && !from.CollaboratorJobRunInfo.IsUnknown() {
+		if toCollaboratorJobRunInfo, ok := to.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromCollaboratorJobRunInfo, ok := from.GetCollaboratorJobRunInfo(ctx); ok {
+				// Recursively sync the fields of CollaboratorJobRunInfo
+				toCollaboratorJobRunInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromCollaboratorJobRunInfo)
+				to.SetCollaboratorJobRunInfo(ctx, toCollaboratorJobRunInfo)
 			}
 		}
 	}
-	if !fromPlan.NotebookJobRunState.IsNull() && !fromPlan.NotebookJobRunState.IsUnknown() {
-		if toStateNotebookJobRunState, ok := toState.GetNotebookJobRunState(ctx); ok {
-			if fromPlanNotebookJobRunState, ok := fromPlan.GetNotebookJobRunState(ctx); ok {
-				toStateNotebookJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookJobRunState)
-				toState.SetNotebookJobRunState(ctx, toStateNotebookJobRunState)
+	if !from.NotebookJobRunState.IsNull() && !from.NotebookJobRunState.IsUnknown() {
+		if toNotebookJobRunState, ok := to.GetNotebookJobRunState(ctx); ok {
+			if fromNotebookJobRunState, ok := from.GetNotebookJobRunState(ctx); ok {
+				// Recursively sync the fields of NotebookJobRunState
+				toNotebookJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookJobRunState)
+				to.SetNotebookJobRunState(ctx, toNotebookJobRunState)
 			}
 		}
 	}
 }
 
-func (toState *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomNotebookTaskRun_SdkV2) {
-	if !fromState.CollaboratorJobRunInfo.IsNull() && !fromState.CollaboratorJobRunInfo.IsUnknown() {
-		if toStateCollaboratorJobRunInfo, ok := toState.GetCollaboratorJobRunInfo(ctx); ok {
-			if fromStateCollaboratorJobRunInfo, ok := fromState.GetCollaboratorJobRunInfo(ctx); ok {
-				toStateCollaboratorJobRunInfo.SyncFieldsDuringRead(ctx, fromStateCollaboratorJobRunInfo)
-				toState.SetCollaboratorJobRunInfo(ctx, toStateCollaboratorJobRunInfo)
+func (to *CleanRoomNotebookTaskRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomNotebookTaskRun_SdkV2) {
+	if !from.CollaboratorJobRunInfo.IsNull() && !from.CollaboratorJobRunInfo.IsUnknown() {
+		if toCollaboratorJobRunInfo, ok := to.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromCollaboratorJobRunInfo, ok := from.GetCollaboratorJobRunInfo(ctx); ok {
+				toCollaboratorJobRunInfo.SyncFieldsDuringRead(ctx, fromCollaboratorJobRunInfo)
+				to.SetCollaboratorJobRunInfo(ctx, toCollaboratorJobRunInfo)
 			}
 		}
 	}
-	if !fromState.NotebookJobRunState.IsNull() && !fromState.NotebookJobRunState.IsUnknown() {
-		if toStateNotebookJobRunState, ok := toState.GetNotebookJobRunState(ctx); ok {
-			if fromStateNotebookJobRunState, ok := fromState.GetNotebookJobRunState(ctx); ok {
-				toStateNotebookJobRunState.SyncFieldsDuringRead(ctx, fromStateNotebookJobRunState)
-				toState.SetNotebookJobRunState(ctx, toStateNotebookJobRunState)
+	if !from.NotebookJobRunState.IsNull() && !from.NotebookJobRunState.IsUnknown() {
+		if toNotebookJobRunState, ok := to.GetNotebookJobRunState(ctx); ok {
+			if fromNotebookJobRunState, ok := from.GetNotebookJobRunState(ctx); ok {
+				toNotebookJobRunState.SyncFieldsDuringRead(ctx, fromNotebookJobRunState)
+				to.SetNotebookJobRunState(ctx, toNotebookJobRunState)
 			}
 		}
 	}
@@ -1768,10 +1852,10 @@ type CleanRoomOutputCatalog_SdkV2 struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (toState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomOutputCatalog_SdkV2) {
+func (to *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomOutputCatalog_SdkV2) {
 }
 
-func (toState *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomOutputCatalog_SdkV2) {
+func (to *CleanRoomOutputCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomOutputCatalog_SdkV2) {
 }
 
 func (c CleanRoomOutputCatalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1838,55 +1922,70 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (toState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomRemoteDetail_SdkV2) {
-	if !fromPlan.ComplianceSecurityProfile.IsNull() && !fromPlan.ComplianceSecurityProfile.IsUnknown() {
-		if toStateComplianceSecurityProfile, ok := toState.GetComplianceSecurityProfile(ctx); ok {
-			if fromPlanComplianceSecurityProfile, ok := fromPlan.GetComplianceSecurityProfile(ctx); ok {
-				toStateComplianceSecurityProfile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanComplianceSecurityProfile)
-				toState.SetComplianceSecurityProfile(ctx, toStateComplianceSecurityProfile)
+func (to *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomRemoteDetail_SdkV2) {
+	if !from.Collaborators.IsNull() && !from.Collaborators.IsUnknown() && to.Collaborators.IsNull() && len(from.Collaborators.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Collaborators, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Collaborators = from.Collaborators
+	}
+	if !from.ComplianceSecurityProfile.IsNull() && !from.ComplianceSecurityProfile.IsUnknown() {
+		if toComplianceSecurityProfile, ok := to.GetComplianceSecurityProfile(ctx); ok {
+			if fromComplianceSecurityProfile, ok := from.GetComplianceSecurityProfile(ctx); ok {
+				// Recursively sync the fields of ComplianceSecurityProfile
+				toComplianceSecurityProfile.SyncFieldsDuringCreateOrUpdate(ctx, fromComplianceSecurityProfile)
+				to.SetComplianceSecurityProfile(ctx, toComplianceSecurityProfile)
 			}
 		}
 	}
-	if !fromPlan.Creator.IsNull() && !fromPlan.Creator.IsUnknown() {
-		if toStateCreator, ok := toState.GetCreator(ctx); ok {
-			if fromPlanCreator, ok := fromPlan.GetCreator(ctx); ok {
-				toStateCreator.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCreator)
-				toState.SetCreator(ctx, toStateCreator)
+	if !from.Creator.IsNull() && !from.Creator.IsUnknown() {
+		if toCreator, ok := to.GetCreator(ctx); ok {
+			if fromCreator, ok := from.GetCreator(ctx); ok {
+				// Recursively sync the fields of Creator
+				toCreator.SyncFieldsDuringCreateOrUpdate(ctx, fromCreator)
+				to.SetCreator(ctx, toCreator)
 			}
 		}
 	}
-	if !fromPlan.EgressNetworkPolicy.IsNull() && !fromPlan.EgressNetworkPolicy.IsUnknown() {
-		if toStateEgressNetworkPolicy, ok := toState.GetEgressNetworkPolicy(ctx); ok {
-			if fromPlanEgressNetworkPolicy, ok := fromPlan.GetEgressNetworkPolicy(ctx); ok {
-				toStateEgressNetworkPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEgressNetworkPolicy)
-				toState.SetEgressNetworkPolicy(ctx, toStateEgressNetworkPolicy)
+	if !from.EgressNetworkPolicy.IsNull() && !from.EgressNetworkPolicy.IsUnknown() {
+		if toEgressNetworkPolicy, ok := to.GetEgressNetworkPolicy(ctx); ok {
+			if fromEgressNetworkPolicy, ok := from.GetEgressNetworkPolicy(ctx); ok {
+				// Recursively sync the fields of EgressNetworkPolicy
+				toEgressNetworkPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromEgressNetworkPolicy)
+				to.SetEgressNetworkPolicy(ctx, toEgressNetworkPolicy)
 			}
 		}
 	}
 }
 
-func (toState *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomRemoteDetail_SdkV2) {
-	if !fromState.ComplianceSecurityProfile.IsNull() && !fromState.ComplianceSecurityProfile.IsUnknown() {
-		if toStateComplianceSecurityProfile, ok := toState.GetComplianceSecurityProfile(ctx); ok {
-			if fromStateComplianceSecurityProfile, ok := fromState.GetComplianceSecurityProfile(ctx); ok {
-				toStateComplianceSecurityProfile.SyncFieldsDuringRead(ctx, fromStateComplianceSecurityProfile)
-				toState.SetComplianceSecurityProfile(ctx, toStateComplianceSecurityProfile)
+func (to *CleanRoomRemoteDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomRemoteDetail_SdkV2) {
+	if !from.Collaborators.IsNull() && !from.Collaborators.IsUnknown() && to.Collaborators.IsNull() && len(from.Collaborators.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Collaborators, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Collaborators = from.Collaborators
+	}
+	if !from.ComplianceSecurityProfile.IsNull() && !from.ComplianceSecurityProfile.IsUnknown() {
+		if toComplianceSecurityProfile, ok := to.GetComplianceSecurityProfile(ctx); ok {
+			if fromComplianceSecurityProfile, ok := from.GetComplianceSecurityProfile(ctx); ok {
+				toComplianceSecurityProfile.SyncFieldsDuringRead(ctx, fromComplianceSecurityProfile)
+				to.SetComplianceSecurityProfile(ctx, toComplianceSecurityProfile)
 			}
 		}
 	}
-	if !fromState.Creator.IsNull() && !fromState.Creator.IsUnknown() {
-		if toStateCreator, ok := toState.GetCreator(ctx); ok {
-			if fromStateCreator, ok := fromState.GetCreator(ctx); ok {
-				toStateCreator.SyncFieldsDuringRead(ctx, fromStateCreator)
-				toState.SetCreator(ctx, toStateCreator)
+	if !from.Creator.IsNull() && !from.Creator.IsUnknown() {
+		if toCreator, ok := to.GetCreator(ctx); ok {
+			if fromCreator, ok := from.GetCreator(ctx); ok {
+				toCreator.SyncFieldsDuringRead(ctx, fromCreator)
+				to.SetCreator(ctx, toCreator)
 			}
 		}
 	}
-	if !fromState.EgressNetworkPolicy.IsNull() && !fromState.EgressNetworkPolicy.IsUnknown() {
-		if toStateEgressNetworkPolicy, ok := toState.GetEgressNetworkPolicy(ctx); ok {
-			if fromStateEgressNetworkPolicy, ok := fromState.GetEgressNetworkPolicy(ctx); ok {
-				toStateEgressNetworkPolicy.SyncFieldsDuringRead(ctx, fromStateEgressNetworkPolicy)
-				toState.SetEgressNetworkPolicy(ctx, toStateEgressNetworkPolicy)
+	if !from.EgressNetworkPolicy.IsNull() && !from.EgressNetworkPolicy.IsUnknown() {
+		if toEgressNetworkPolicy, ok := to.GetEgressNetworkPolicy(ctx); ok {
+			if fromEgressNetworkPolicy, ok := from.GetEgressNetworkPolicy(ctx); ok {
+				toEgressNetworkPolicy.SyncFieldsDuringRead(ctx, fromEgressNetworkPolicy)
+				to.SetEgressNetworkPolicy(ctx, toEgressNetworkPolicy)
 			}
 		}
 	}
@@ -2084,10 +2183,10 @@ type CollaboratorJobRunInfo_SdkV2 struct {
 	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id"`
 }
 
-func (toState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CollaboratorJobRunInfo_SdkV2) {
+func (to *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CollaboratorJobRunInfo_SdkV2) {
 }
 
-func (toState *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CollaboratorJobRunInfo_SdkV2) {
+func (to *CollaboratorJobRunInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CollaboratorJobRunInfo_SdkV2) {
 }
 
 func (c CollaboratorJobRunInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2149,10 +2248,22 @@ type ComplianceSecurityProfile_SdkV2 struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
-func (toState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComplianceSecurityProfile_SdkV2) {
+func (to *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComplianceSecurityProfile_SdkV2) {
+	if !from.ComplianceStandards.IsNull() && !from.ComplianceStandards.IsUnknown() && to.ComplianceStandards.IsNull() && len(from.ComplianceStandards.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ComplianceStandards, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ComplianceStandards = from.ComplianceStandards
+	}
 }
 
-func (toState *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ComplianceSecurityProfile_SdkV2) {
+func (to *ComplianceSecurityProfile_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComplianceSecurityProfile_SdkV2) {
+	if !from.ComplianceStandards.IsNull() && !from.ComplianceStandards.IsUnknown() && to.ComplianceStandards.IsNull() && len(from.ComplianceStandards.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ComplianceStandards, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ComplianceStandards = from.ComplianceStandards
+	}
 }
 
 func (c ComplianceSecurityProfile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2232,6 +2343,37 @@ type CreateCleanRoomAssetRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
+func (to *CreateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAssetRequest_SdkV2) {
+	if !from.Asset.IsNull() && !from.Asset.IsUnknown() {
+		if toAsset, ok := to.GetAsset(ctx); ok {
+			if fromAsset, ok := from.GetAsset(ctx); ok {
+				// Recursively sync the fields of Asset
+				toAsset.SyncFieldsDuringCreateOrUpdate(ctx, fromAsset)
+				to.SetAsset(ctx, toAsset)
+			}
+		}
+	}
+}
+
+func (to *CreateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAssetRequest_SdkV2) {
+	if !from.Asset.IsNull() && !from.Asset.IsUnknown() {
+		if toAsset, ok := to.GetAsset(ctx); ok {
+			if fromAsset, ok := from.GetAsset(ctx); ok {
+				toAsset.SyncFieldsDuringRead(ctx, fromAsset)
+				to.SetAsset(ctx, toAsset)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["asset"] = attrs["asset"].SetRequired()
+	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2296,7 +2438,7 @@ func (o *CreateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v Clea
 }
 
 type CreateCleanRoomAssetReviewRequest_SdkV2 struct {
-	// Asset type. Can only be NOTEBOOK_FILE.
+	// Asset type. Can either be NOTEBOOK_FILE or JAR_ANALYSIS.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room
 	CleanRoomName types.String `tfsdk:"-"`
@@ -2304,6 +2446,39 @@ type CreateCleanRoomAssetReviewRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 
 	NotebookReview types.List `tfsdk:"notebook_review"`
+}
+
+func (to *CreateCleanRoomAssetReviewRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAssetReviewRequest_SdkV2) {
+	if !from.NotebookReview.IsNull() && !from.NotebookReview.IsUnknown() {
+		if toNotebookReview, ok := to.GetNotebookReview(ctx); ok {
+			if fromNotebookReview, ok := from.GetNotebookReview(ctx); ok {
+				// Recursively sync the fields of NotebookReview
+				toNotebookReview.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookReview)
+				to.SetNotebookReview(ctx, toNotebookReview)
+			}
+		}
+	}
+}
+
+func (to *CreateCleanRoomAssetReviewRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAssetReviewRequest_SdkV2) {
+	if !from.NotebookReview.IsNull() && !from.NotebookReview.IsUnknown() {
+		if toNotebookReview, ok := to.GetNotebookReview(ctx); ok {
+			if fromNotebookReview, ok := from.GetNotebookReview(ctx); ok {
+				toNotebookReview.SyncFieldsDuringRead(ctx, fromNotebookReview)
+				to.SetNotebookReview(ctx, toNotebookReview)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAssetReviewRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["notebook_review"] = attrs["notebook_review"].SetOptional()
+	attrs["notebook_review"] = attrs["notebook_review"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetReviewRequest.
@@ -2380,10 +2555,22 @@ type CreateCleanRoomAssetReviewResponse_SdkV2 struct {
 	NotebookReviews types.List `tfsdk:"notebook_reviews"`
 }
 
-func (toState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomAssetReviewResponse_SdkV2) {
+func (to *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAssetReviewResponse_SdkV2) {
+	if !from.NotebookReviews.IsNull() && !from.NotebookReviews.IsUnknown() && to.NotebookReviews.IsNull() && len(from.NotebookReviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for NotebookReviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.NotebookReviews = from.NotebookReviews
+	}
 }
 
-func (toState *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomAssetReviewResponse_SdkV2) {
+func (to *CreateCleanRoomAssetReviewResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAssetReviewResponse_SdkV2) {
+	if !from.NotebookReviews.IsNull() && !from.NotebookReviews.IsUnknown() && to.NotebookReviews.IsNull() && len(from.NotebookReviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for NotebookReviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.NotebookReviews = from.NotebookReviews
+	}
 }
 
 func (c CreateCleanRoomAssetReviewResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2462,6 +2649,37 @@ type CreateCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
+func (to *CreateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !from.AutoApprovalRule.IsNull() && !from.AutoApprovalRule.IsUnknown() {
+		if toAutoApprovalRule, ok := to.GetAutoApprovalRule(ctx); ok {
+			if fromAutoApprovalRule, ok := from.GetAutoApprovalRule(ctx); ok {
+				// Recursively sync the fields of AutoApprovalRule
+				toAutoApprovalRule.SyncFieldsDuringCreateOrUpdate(ctx, fromAutoApprovalRule)
+				to.SetAutoApprovalRule(ctx, toAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (to *CreateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !from.AutoApprovalRule.IsNull() && !from.AutoApprovalRule.IsUnknown() {
+		if toAutoApprovalRule, ok := to.GetAutoApprovalRule(ctx); ok {
+			if fromAutoApprovalRule, ok := from.GetAutoApprovalRule(ctx); ok {
+				toAutoApprovalRule.SyncFieldsDuringRead(ctx, fromAutoApprovalRule)
+				to.SetAutoApprovalRule(ctx, toAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].SetRequired()
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2532,6 +2750,37 @@ type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	OutputCatalog types.List `tfsdk:"output_catalog"`
 }
 
+func (to *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomOutputCatalogRequest_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				// Recursively sync the fields of OutputCatalog
+				toOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
+			}
+		}
+	}
+}
+
+func (to *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomOutputCatalogRequest_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				toOutputCatalog.SyncFieldsDuringRead(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomOutputCatalogRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["output_catalog"] = attrs["output_catalog"].SetRequired()
+	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2599,23 +2848,24 @@ type CreateCleanRoomOutputCatalogResponse_SdkV2 struct {
 	OutputCatalog types.List `tfsdk:"output_catalog"`
 }
 
-func (toState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCleanRoomOutputCatalogResponse_SdkV2) {
-	if !fromPlan.OutputCatalog.IsNull() && !fromPlan.OutputCatalog.IsUnknown() {
-		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
-			if fromPlanOutputCatalog, ok := fromPlan.GetOutputCatalog(ctx); ok {
-				toStateOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputCatalog)
-				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+func (to *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomOutputCatalogResponse_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				// Recursively sync the fields of OutputCatalog
+				toOutputCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
 			}
 		}
 	}
 }
 
-func (toState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCleanRoomOutputCatalogResponse_SdkV2) {
-	if !fromState.OutputCatalog.IsNull() && !fromState.OutputCatalog.IsUnknown() {
-		if toStateOutputCatalog, ok := toState.GetOutputCatalog(ctx); ok {
-			if fromStateOutputCatalog, ok := fromState.GetOutputCatalog(ctx); ok {
-				toStateOutputCatalog.SyncFieldsDuringRead(ctx, fromStateOutputCatalog)
-				toState.SetOutputCatalog(ctx, toStateOutputCatalog)
+func (to *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomOutputCatalogResponse_SdkV2) {
+	if !from.OutputCatalog.IsNull() && !from.OutputCatalog.IsUnknown() {
+		if toOutputCatalog, ok := to.GetOutputCatalog(ctx); ok {
+			if fromOutputCatalog, ok := from.GetOutputCatalog(ctx); ok {
+				toOutputCatalog.SyncFieldsDuringRead(ctx, fromOutputCatalog)
+				to.SetOutputCatalog(ctx, toOutputCatalog)
 			}
 		}
 	}
@@ -2693,6 +2943,36 @@ type CreateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 }
 
+func (to *CreateCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomRequest_SdkV2) {
+	if !from.CleanRoom.IsNull() && !from.CleanRoom.IsUnknown() {
+		if toCleanRoom, ok := to.GetCleanRoom(ctx); ok {
+			if fromCleanRoom, ok := from.GetCleanRoom(ctx); ok {
+				// Recursively sync the fields of CleanRoom
+				toCleanRoom.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoom)
+				to.SetCleanRoom(ctx, toCleanRoom)
+			}
+		}
+	}
+}
+
+func (to *CreateCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomRequest_SdkV2) {
+	if !from.CleanRoom.IsNull() && !from.CleanRoom.IsUnknown() {
+		if toCleanRoom, ok := to.GetCleanRoom(ctx); ok {
+			if fromCleanRoom, ok := from.GetCleanRoom(ctx); ok {
+				toCleanRoom.SyncFieldsDuringRead(ctx, fromCleanRoom)
+				to.SetCleanRoom(ctx, toCleanRoom)
+			}
+		}
+	}
+}
+
+func (c CreateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room"] = attrs["clean_room"].SetRequired()
+	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2764,6 +3044,20 @@ type DeleteCleanRoomAssetRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (to *DeleteCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCleanRoomAssetRequest_SdkV2) {
+}
+
+func (to *DeleteCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCleanRoomAssetRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2804,10 +3098,10 @@ func (o DeleteCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteCleanRoomAssetResponse_SdkV2 struct {
 }
 
-func (toState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteCleanRoomAssetResponse_SdkV2) {
+func (to *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
-func (toState *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState DeleteCleanRoomAssetResponse_SdkV2) {
+func (to *DeleteCleanRoomAssetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
 func (c DeleteCleanRoomAssetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2848,6 +3142,19 @@ type DeleteCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (to *DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (to *DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2884,6 +3191,18 @@ func (o DeleteCleanRoomAutoApprovalRuleRequest_SdkV2) Type(ctx context.Context) 
 type DeleteCleanRoomRequest_SdkV2 struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCleanRoomRequest_SdkV2) {
+}
+
+func (to *DeleteCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCleanRoomRequest_SdkV2) {
+}
+
+func (c DeleteCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
@@ -2925,6 +3244,20 @@ type GetCleanRoomAssetRequest_SdkV2 struct {
 	// The fully qualified name of the asset, it is same as the name field in
 	// CleanRoomAsset.
 	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCleanRoomAssetRequest_SdkV2) {
+}
+
+func (to *GetCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCleanRoomAssetRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2974,6 +3307,21 @@ type GetCleanRoomAssetRevisionRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (to *GetCleanRoomAssetRevisionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCleanRoomAssetRevisionRequest_SdkV2) {
+}
+
+func (to *GetCleanRoomAssetRevisionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCleanRoomAssetRevisionRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAssetRevisionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRevisionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3017,6 +3365,19 @@ type GetCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (to *GetCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (to *GetCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCleanRoomAutoApprovalRuleRequest_SdkV2) {
+}
+
+func (c GetCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3052,6 +3413,18 @@ func (o GetCleanRoomAutoApprovalRuleRequest_SdkV2) Type(ctx context.Context) att
 
 type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCleanRoomRequest_SdkV2) {
+}
+
+func (to *GetCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCleanRoomRequest_SdkV2) {
+}
+
+func (c GetCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
@@ -3096,6 +3469,22 @@ type ListCleanRoomAssetRevisionsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on the previous query.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListCleanRoomAssetRevisionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAssetRevisionsRequest_SdkV2) {
+}
+
+func (to *ListCleanRoomAssetRevisionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAssetRevisionsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAssetRevisionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetRevisionsRequest.
@@ -3143,10 +3532,22 @@ type ListCleanRoomAssetRevisionsResponse_SdkV2 struct {
 	Revisions types.List `tfsdk:"revisions"`
 }
 
-func (toState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetRevisionsResponse_SdkV2) {
+func (to *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAssetRevisionsResponse_SdkV2) {
+	if !from.Revisions.IsNull() && !from.Revisions.IsUnknown() && to.Revisions.IsNull() && len(from.Revisions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Revisions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Revisions = from.Revisions
+	}
 }
 
-func (toState *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetRevisionsResponse_SdkV2) {
+func (to *ListCleanRoomAssetRevisionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAssetRevisionsResponse_SdkV2) {
+	if !from.Revisions.IsNull() && !from.Revisions.IsUnknown() && to.Revisions.IsNull() && len(from.Revisions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Revisions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Revisions = from.Revisions
+	}
 }
 
 func (c ListCleanRoomAssetRevisionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3226,6 +3627,19 @@ type ListCleanRoomAssetsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListCleanRoomAssetsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAssetsRequest_SdkV2) {
+}
+
+func (to *ListCleanRoomAssetsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAssetsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAssetsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3268,10 +3682,22 @@ type ListCleanRoomAssetsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (toState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAssetsResponse_SdkV2) {
+func (to *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAssetsResponse_SdkV2) {
+	if !from.Assets.IsNull() && !from.Assets.IsUnknown() && to.Assets.IsNull() && len(from.Assets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Assets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Assets = from.Assets
+	}
 }
 
-func (toState *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAssetsResponse_SdkV2) {
+func (to *ListCleanRoomAssetsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAssetsResponse_SdkV2) {
+	if !from.Assets.IsNull() && !from.Assets.IsUnknown() && to.Assets.IsNull() && len(from.Assets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Assets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Assets = from.Assets
+	}
 }
 
 func (c ListCleanRoomAssetsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3352,6 +3778,20 @@ type ListCleanRoomAutoApprovalRulesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListCleanRoomAutoApprovalRulesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAutoApprovalRulesRequest_SdkV2) {
+}
+
+func (to *ListCleanRoomAutoApprovalRulesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAutoApprovalRulesRequest_SdkV2) {
+}
+
+func (c ListCleanRoomAutoApprovalRulesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAutoApprovalRulesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3396,10 +3836,22 @@ type ListCleanRoomAutoApprovalRulesResponse_SdkV2 struct {
 	Rules types.List `tfsdk:"rules"`
 }
 
-func (toState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+func (to *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() && to.Rules.IsNull() && len(from.Rules.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rules, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rules = from.Rules
+	}
 }
 
-func (toState *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+func (to *ListCleanRoomAutoApprovalRulesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomAutoApprovalRulesResponse_SdkV2) {
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() && to.Rules.IsNull() && len(from.Rules.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rules, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rules = from.Rules
+	}
 }
 
 func (c ListCleanRoomAutoApprovalRulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3484,6 +3936,21 @@ type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
+}
+
+func (to *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomNotebookTaskRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3530,10 +3997,22 @@ type ListCleanRoomNotebookTaskRunsResponse_SdkV2 struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (toState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+func (to *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
 }
 
-func (toState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+func (to *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
 }
 
 func (c ListCleanRoomNotebookTaskRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3614,6 +4093,19 @@ type ListCleanRoomsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListCleanRoomsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomsRequest_SdkV2) {
+}
+
+func (to *ListCleanRoomsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomsRequest_SdkV2) {
+}
+
+func (c ListCleanRoomsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3655,10 +4147,22 @@ type ListCleanRoomsResponse_SdkV2 struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
-func (toState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListCleanRoomsResponse_SdkV2) {
+func (to *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomsResponse_SdkV2) {
+	if !from.CleanRooms.IsNull() && !from.CleanRooms.IsUnknown() && to.CleanRooms.IsNull() && len(from.CleanRooms.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CleanRooms, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CleanRooms = from.CleanRooms
+	}
 }
 
-func (toState *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ListCleanRoomsResponse_SdkV2) {
+func (to *ListCleanRoomsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomsResponse_SdkV2) {
+	if !from.CleanRooms.IsNull() && !from.CleanRooms.IsUnknown() && to.CleanRooms.IsNull() && len(from.CleanRooms.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CleanRooms, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CleanRooms = from.CleanRooms
+	}
 }
 
 func (c ListCleanRoomsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3740,10 +4244,10 @@ type NotebookVersionReview_SdkV2 struct {
 	ReviewState types.String `tfsdk:"review_state"`
 }
 
-func (toState *NotebookVersionReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookVersionReview_SdkV2) {
+func (to *NotebookVersionReview_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NotebookVersionReview_SdkV2) {
 }
 
-func (toState *NotebookVersionReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NotebookVersionReview_SdkV2) {
+func (to *NotebookVersionReview_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NotebookVersionReview_SdkV2) {
 }
 
 func (c NotebookVersionReview_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3806,6 +4310,39 @@ type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	// For notebooks, the name is the notebook file name. For jar analyses, the
 	// name is the jar analysis name.
 	Name types.String `tfsdk:"-"`
+}
+
+func (to *UpdateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCleanRoomAssetRequest_SdkV2) {
+	if !from.Asset.IsNull() && !from.Asset.IsUnknown() {
+		if toAsset, ok := to.GetAsset(ctx); ok {
+			if fromAsset, ok := from.GetAsset(ctx); ok {
+				// Recursively sync the fields of Asset
+				toAsset.SyncFieldsDuringCreateOrUpdate(ctx, fromAsset)
+				to.SetAsset(ctx, toAsset)
+			}
+		}
+	}
+}
+
+func (to *UpdateCleanRoomAssetRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateCleanRoomAssetRequest_SdkV2) {
+	if !from.Asset.IsNull() && !from.Asset.IsUnknown() {
+		if toAsset, ok := to.GetAsset(ctx); ok {
+			if fromAsset, ok := from.GetAsset(ctx); ok {
+				toAsset.SyncFieldsDuringRead(ctx, fromAsset)
+				to.SetAsset(ctx, toAsset)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["asset"] = attrs["asset"].SetRequired()
+	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["asset_type"] = attrs["asset_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.
@@ -3885,6 +4422,38 @@ type UpdateCleanRoomAutoApprovalRuleRequest_SdkV2 struct {
 	RuleId types.String `tfsdk:"-"`
 }
 
+func (to *UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !from.AutoApprovalRule.IsNull() && !from.AutoApprovalRule.IsUnknown() {
+		if toAutoApprovalRule, ok := to.GetAutoApprovalRule(ctx); ok {
+			if fromAutoApprovalRule, ok := from.GetAutoApprovalRule(ctx); ok {
+				// Recursively sync the fields of AutoApprovalRule
+				toAutoApprovalRule.SyncFieldsDuringCreateOrUpdate(ctx, fromAutoApprovalRule)
+				to.SetAutoApprovalRule(ctx, toAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (to *UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) {
+	if !from.AutoApprovalRule.IsNull() && !from.AutoApprovalRule.IsUnknown() {
+		if toAutoApprovalRule, ok := to.GetAutoApprovalRule(ctx); ok {
+			if fromAutoApprovalRule, ok := from.GetAutoApprovalRule(ctx); ok {
+				toAutoApprovalRule.SyncFieldsDuringRead(ctx, fromAutoApprovalRule)
+				to.SetAutoApprovalRule(ctx, toAutoApprovalRule)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].SetRequired()
+	attrs["auto_approval_rule"] = attrs["auto_approval_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetComputed()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAutoApprovalRuleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3954,6 +4523,37 @@ type UpdateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
+}
+
+func (to *UpdateCleanRoomRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCleanRoomRequest_SdkV2) {
+	if !from.CleanRoom.IsNull() && !from.CleanRoom.IsUnknown() {
+		if toCleanRoom, ok := to.GetCleanRoom(ctx); ok {
+			if fromCleanRoom, ok := from.GetCleanRoom(ctx); ok {
+				// Recursively sync the fields of CleanRoom
+				toCleanRoom.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoom)
+				to.SetCleanRoom(ctx, toCleanRoom)
+			}
+		}
+	}
+}
+
+func (to *UpdateCleanRoomRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateCleanRoomRequest_SdkV2) {
+	if !from.CleanRoom.IsNull() && !from.CleanRoom.IsUnknown() {
+		if toCleanRoom, ok := to.GetCleanRoom(ctx); ok {
+			if fromCleanRoom, ok := from.GetCleanRoom(ctx); ok {
+				toCleanRoom.SyncFieldsDuringRead(ctx, fromCleanRoom)
+				to.SetCleanRoom(ctx, toCleanRoom)
+			}
+		}
+	}
+}
+
+func (c UpdateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room"] = attrs["clean_room"].SetOptional()
+	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.

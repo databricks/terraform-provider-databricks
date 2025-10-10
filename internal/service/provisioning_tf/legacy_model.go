@@ -27,23 +27,24 @@ type AwsCredentials_SdkV2 struct {
 	StsRole types.List `tfsdk:"sts_role"`
 }
 
-func (toState *AwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsCredentials_SdkV2) {
-	if !fromPlan.StsRole.IsNull() && !fromPlan.StsRole.IsUnknown() {
-		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
-			if fromPlanStsRole, ok := fromPlan.GetStsRole(ctx); ok {
-				toStateStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStsRole)
-				toState.SetStsRole(ctx, toStateStsRole)
+func (to *AwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AwsCredentials_SdkV2) {
+	if !from.StsRole.IsNull() && !from.StsRole.IsUnknown() {
+		if toStsRole, ok := to.GetStsRole(ctx); ok {
+			if fromStsRole, ok := from.GetStsRole(ctx); ok {
+				// Recursively sync the fields of StsRole
+				toStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromStsRole)
+				to.SetStsRole(ctx, toStsRole)
 			}
 		}
 	}
 }
 
-func (toState *AwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AwsCredentials_SdkV2) {
-	if !fromState.StsRole.IsNull() && !fromState.StsRole.IsUnknown() {
-		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
-			if fromStateStsRole, ok := fromState.GetStsRole(ctx); ok {
-				toStateStsRole.SyncFieldsDuringRead(ctx, fromStateStsRole)
-				toState.SetStsRole(ctx, toStateStsRole)
+func (to *AwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AwsCredentials_SdkV2) {
+	if !from.StsRole.IsNull() && !from.StsRole.IsUnknown() {
+		if toStsRole, ok := to.GetStsRole(ctx); ok {
+			if fromStsRole, ok := from.GetStsRole(ctx); ok {
+				toStsRole.SyncFieldsDuringRead(ctx, fromStsRole)
+				to.SetStsRole(ctx, toStsRole)
 			}
 		}
 	}
@@ -131,10 +132,10 @@ type AwsKeyInfo_SdkV2 struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (toState *AwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AwsKeyInfo_SdkV2) {
+func (to *AwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AwsKeyInfo_SdkV2) {
 }
 
-func (toState *AwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AwsKeyInfo_SdkV2) {
+func (to *AwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AwsKeyInfo_SdkV2) {
 }
 
 func (c AwsKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -190,10 +191,10 @@ type AzureWorkspaceInfo_SdkV2 struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (toState *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AzureWorkspaceInfo_SdkV2) {
+func (to *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AzureWorkspaceInfo_SdkV2) {
 }
 
-func (toState *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState AzureWorkspaceInfo_SdkV2) {
+func (to *AzureWorkspaceInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AzureWorkspaceInfo_SdkV2) {
 }
 
 func (c AzureWorkspaceInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -241,23 +242,24 @@ type CloudResourceContainer_SdkV2 struct {
 	Gcp types.List `tfsdk:"gcp"`
 }
 
-func (toState *CloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CloudResourceContainer_SdkV2) {
-	if !fromPlan.Gcp.IsNull() && !fromPlan.Gcp.IsUnknown() {
-		if toStateGcp, ok := toState.GetGcp(ctx); ok {
-			if fromPlanGcp, ok := fromPlan.GetGcp(ctx); ok {
-				toStateGcp.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcp)
-				toState.SetGcp(ctx, toStateGcp)
+func (to *CloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CloudResourceContainer_SdkV2) {
+	if !from.Gcp.IsNull() && !from.Gcp.IsUnknown() {
+		if toGcp, ok := to.GetGcp(ctx); ok {
+			if fromGcp, ok := from.GetGcp(ctx); ok {
+				// Recursively sync the fields of Gcp
+				toGcp.SyncFieldsDuringCreateOrUpdate(ctx, fromGcp)
+				to.SetGcp(ctx, toGcp)
 			}
 		}
 	}
 }
 
-func (toState *CloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CloudResourceContainer_SdkV2) {
-	if !fromState.Gcp.IsNull() && !fromState.Gcp.IsUnknown() {
-		if toStateGcp, ok := toState.GetGcp(ctx); ok {
-			if fromStateGcp, ok := fromState.GetGcp(ctx); ok {
-				toStateGcp.SyncFieldsDuringRead(ctx, fromStateGcp)
-				toState.SetGcp(ctx, toStateGcp)
+func (to *CloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CloudResourceContainer_SdkV2) {
+	if !from.Gcp.IsNull() && !from.Gcp.IsUnknown() {
+		if toGcp, ok := to.GetGcp(ctx); ok {
+			if fromGcp, ok := from.GetGcp(ctx); ok {
+				toGcp.SyncFieldsDuringRead(ctx, fromGcp)
+				to.SetGcp(ctx, toGcp)
 			}
 		}
 	}
@@ -344,10 +346,10 @@ type CreateAwsKeyInfo_SdkV2 struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes"`
 }
 
-func (toState *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAwsKeyInfo_SdkV2) {
+func (to *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAwsKeyInfo_SdkV2) {
 }
 
-func (toState *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateAwsKeyInfo_SdkV2) {
+func (to *CreateAwsKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateAwsKeyInfo_SdkV2) {
 }
 
 func (c CreateAwsKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -397,23 +399,24 @@ type CreateCredentialAwsCredentials_SdkV2 struct {
 	StsRole types.List `tfsdk:"sts_role"`
 }
 
-func (toState *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCredentialAwsCredentials_SdkV2) {
-	if !fromPlan.StsRole.IsNull() && !fromPlan.StsRole.IsUnknown() {
-		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
-			if fromPlanStsRole, ok := fromPlan.GetStsRole(ctx); ok {
-				toStateStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStsRole)
-				toState.SetStsRole(ctx, toStateStsRole)
+func (to *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCredentialAwsCredentials_SdkV2) {
+	if !from.StsRole.IsNull() && !from.StsRole.IsUnknown() {
+		if toStsRole, ok := to.GetStsRole(ctx); ok {
+			if fromStsRole, ok := from.GetStsRole(ctx); ok {
+				// Recursively sync the fields of StsRole
+				toStsRole.SyncFieldsDuringCreateOrUpdate(ctx, fromStsRole)
+				to.SetStsRole(ctx, toStsRole)
 			}
 		}
 	}
 }
 
-func (toState *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCredentialAwsCredentials_SdkV2) {
-	if !fromState.StsRole.IsNull() && !fromState.StsRole.IsUnknown() {
-		if toStateStsRole, ok := toState.GetStsRole(ctx); ok {
-			if fromStateStsRole, ok := fromState.GetStsRole(ctx); ok {
-				toStateStsRole.SyncFieldsDuringRead(ctx, fromStateStsRole)
-				toState.SetStsRole(ctx, toStateStsRole)
+func (to *CreateCredentialAwsCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCredentialAwsCredentials_SdkV2) {
+	if !from.StsRole.IsNull() && !from.StsRole.IsUnknown() {
+		if toStsRole, ok := to.GetStsRole(ctx); ok {
+			if fromStsRole, ok := from.GetStsRole(ctx); ok {
+				toStsRole.SyncFieldsDuringRead(ctx, fromStsRole)
+				to.SetStsRole(ctx, toStsRole)
 			}
 		}
 	}
@@ -493,6 +496,38 @@ type CreateCredentialRequest_SdkV2 struct {
 	CredentialsName types.String `tfsdk:"credentials_name"`
 }
 
+func (to *CreateCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCredentialRequest_SdkV2) {
+	if !from.AwsCredentials.IsNull() && !from.AwsCredentials.IsUnknown() {
+		if toAwsCredentials, ok := to.GetAwsCredentials(ctx); ok {
+			if fromAwsCredentials, ok := from.GetAwsCredentials(ctx); ok {
+				// Recursively sync the fields of AwsCredentials
+				toAwsCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsCredentials)
+				to.SetAwsCredentials(ctx, toAwsCredentials)
+			}
+		}
+	}
+}
+
+func (to *CreateCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCredentialRequest_SdkV2) {
+	if !from.AwsCredentials.IsNull() && !from.AwsCredentials.IsUnknown() {
+		if toAwsCredentials, ok := to.GetAwsCredentials(ctx); ok {
+			if fromAwsCredentials, ok := from.GetAwsCredentials(ctx); ok {
+				toAwsCredentials.SyncFieldsDuringRead(ctx, fromAwsCredentials)
+				to.SetAwsCredentials(ctx, toAwsCredentials)
+			}
+		}
+	}
+}
+
+func (c CreateCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_credentials"] = attrs["aws_credentials"].SetRequired()
+	attrs["aws_credentials"] = attrs["aws_credentials"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["credentials_name"] = attrs["credentials_name"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -561,10 +596,10 @@ type CreateCredentialStsRole_SdkV2 struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (toState *CreateCredentialStsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateCredentialStsRole_SdkV2) {
+func (to *CreateCredentialStsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCredentialStsRole_SdkV2) {
 }
 
-func (toState *CreateCredentialStsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateCredentialStsRole_SdkV2) {
+func (to *CreateCredentialStsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCredentialStsRole_SdkV2) {
 }
 
 func (c CreateCredentialStsRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -610,6 +645,57 @@ type CreateCustomerManagedKeyRequest_SdkV2 struct {
 	GcpKeyInfo types.List `tfsdk:"gcp_key_info"`
 	// The cases that the key can be used for.
 	UseCases types.List `tfsdk:"use_cases"`
+}
+
+func (to *CreateCustomerManagedKeyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCustomerManagedKeyRequest_SdkV2) {
+	if !from.AwsKeyInfo.IsNull() && !from.AwsKeyInfo.IsUnknown() {
+		if toAwsKeyInfo, ok := to.GetAwsKeyInfo(ctx); ok {
+			if fromAwsKeyInfo, ok := from.GetAwsKeyInfo(ctx); ok {
+				// Recursively sync the fields of AwsKeyInfo
+				toAwsKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsKeyInfo)
+				to.SetAwsKeyInfo(ctx, toAwsKeyInfo)
+			}
+		}
+	}
+	if !from.GcpKeyInfo.IsNull() && !from.GcpKeyInfo.IsUnknown() {
+		if toGcpKeyInfo, ok := to.GetGcpKeyInfo(ctx); ok {
+			if fromGcpKeyInfo, ok := from.GetGcpKeyInfo(ctx); ok {
+				// Recursively sync the fields of GcpKeyInfo
+				toGcpKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpKeyInfo)
+				to.SetGcpKeyInfo(ctx, toGcpKeyInfo)
+			}
+		}
+	}
+}
+
+func (to *CreateCustomerManagedKeyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCustomerManagedKeyRequest_SdkV2) {
+	if !from.AwsKeyInfo.IsNull() && !from.AwsKeyInfo.IsUnknown() {
+		if toAwsKeyInfo, ok := to.GetAwsKeyInfo(ctx); ok {
+			if fromAwsKeyInfo, ok := from.GetAwsKeyInfo(ctx); ok {
+				toAwsKeyInfo.SyncFieldsDuringRead(ctx, fromAwsKeyInfo)
+				to.SetAwsKeyInfo(ctx, toAwsKeyInfo)
+			}
+		}
+	}
+	if !from.GcpKeyInfo.IsNull() && !from.GcpKeyInfo.IsUnknown() {
+		if toGcpKeyInfo, ok := to.GetGcpKeyInfo(ctx); ok {
+			if fromGcpKeyInfo, ok := from.GetGcpKeyInfo(ctx); ok {
+				toGcpKeyInfo.SyncFieldsDuringRead(ctx, fromGcpKeyInfo)
+				to.SetGcpKeyInfo(ctx, toGcpKeyInfo)
+			}
+		}
+	}
+}
+
+func (c CreateCustomerManagedKeyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_key_info"] = attrs["aws_key_info"].SetOptional()
+	attrs["aws_key_info"] = attrs["aws_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gcp_key_info"] = attrs["gcp_key_info"].SetOptional()
+	attrs["gcp_key_info"] = attrs["gcp_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["use_cases"] = attrs["use_cases"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomerManagedKeyRequest.
@@ -740,10 +826,10 @@ type CreateGcpKeyInfo_SdkV2 struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (toState *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateGcpKeyInfo_SdkV2) {
+func (to *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGcpKeyInfo_SdkV2) {
 }
 
-func (toState *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CreateGcpKeyInfo_SdkV2) {
+func (to *CreateGcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateGcpKeyInfo_SdkV2) {
 }
 
 func (c CreateGcpKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -798,6 +884,84 @@ type CreateNetworkRequest_SdkV2 struct {
 	// The ID of the VPC associated with this network. VPC IDs can be used in
 	// multiple network configurations.
 	VpcId types.String `tfsdk:"vpc_id"`
+}
+
+func (to *CreateNetworkRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateNetworkRequest_SdkV2) {
+	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
+		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
+			if fromGcpNetworkInfo, ok := from.GetGcpNetworkInfo(ctx); ok {
+				// Recursively sync the fields of GcpNetworkInfo
+				toGcpNetworkInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpNetworkInfo)
+				to.SetGcpNetworkInfo(ctx, toGcpNetworkInfo)
+			}
+		}
+	}
+	if !from.SecurityGroupIds.IsNull() && !from.SecurityGroupIds.IsUnknown() && to.SecurityGroupIds.IsNull() && len(from.SecurityGroupIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SecurityGroupIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SecurityGroupIds = from.SecurityGroupIds
+	}
+	if !from.SubnetIds.IsNull() && !from.SubnetIds.IsUnknown() && to.SubnetIds.IsNull() && len(from.SubnetIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubnetIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubnetIds = from.SubnetIds
+	}
+	if !from.VpcEndpoints.IsNull() && !from.VpcEndpoints.IsUnknown() {
+		if toVpcEndpoints, ok := to.GetVpcEndpoints(ctx); ok {
+			if fromVpcEndpoints, ok := from.GetVpcEndpoints(ctx); ok {
+				// Recursively sync the fields of VpcEndpoints
+				toVpcEndpoints.SyncFieldsDuringCreateOrUpdate(ctx, fromVpcEndpoints)
+				to.SetVpcEndpoints(ctx, toVpcEndpoints)
+			}
+		}
+	}
+}
+
+func (to *CreateNetworkRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateNetworkRequest_SdkV2) {
+	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
+		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
+			if fromGcpNetworkInfo, ok := from.GetGcpNetworkInfo(ctx); ok {
+				toGcpNetworkInfo.SyncFieldsDuringRead(ctx, fromGcpNetworkInfo)
+				to.SetGcpNetworkInfo(ctx, toGcpNetworkInfo)
+			}
+		}
+	}
+	if !from.SecurityGroupIds.IsNull() && !from.SecurityGroupIds.IsUnknown() && to.SecurityGroupIds.IsNull() && len(from.SecurityGroupIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SecurityGroupIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SecurityGroupIds = from.SecurityGroupIds
+	}
+	if !from.SubnetIds.IsNull() && !from.SubnetIds.IsUnknown() && to.SubnetIds.IsNull() && len(from.SubnetIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubnetIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubnetIds = from.SubnetIds
+	}
+	if !from.VpcEndpoints.IsNull() && !from.VpcEndpoints.IsUnknown() {
+		if toVpcEndpoints, ok := to.GetVpcEndpoints(ctx); ok {
+			if fromVpcEndpoints, ok := from.GetVpcEndpoints(ctx); ok {
+				toVpcEndpoints.SyncFieldsDuringRead(ctx, fromVpcEndpoints)
+				to.SetVpcEndpoints(ctx, toVpcEndpoints)
+			}
+		}
+	}
+}
+
+func (c CreateNetworkRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gcp_network_info"] = attrs["gcp_network_info"].SetOptional()
+	attrs["gcp_network_info"] = attrs["gcp_network_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["network_name"] = attrs["network_name"].SetRequired()
+	attrs["security_group_ids"] = attrs["security_group_ids"].SetOptional()
+	attrs["subnet_ids"] = attrs["subnet_ids"].SetOptional()
+	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetOptional()
+	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNetworkRequest.
@@ -989,6 +1153,35 @@ type CreatePrivateAccessSettingsRequest_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
+func (to *CreatePrivateAccessSettingsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreatePrivateAccessSettingsRequest_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
+}
+
+func (to *CreatePrivateAccessSettingsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreatePrivateAccessSettingsRequest_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
+}
+
+func (c CreatePrivateAccessSettingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
+	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
+	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetRequired()
+	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
+	attrs["region"] = attrs["region"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePrivateAccessSettingsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1064,6 +1257,38 @@ type CreateStorageConfigurationRequest_SdkV2 struct {
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name"`
 }
 
+func (to *CreateStorageConfigurationRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateStorageConfigurationRequest_SdkV2) {
+	if !from.RootBucketInfo.IsNull() && !from.RootBucketInfo.IsUnknown() {
+		if toRootBucketInfo, ok := to.GetRootBucketInfo(ctx); ok {
+			if fromRootBucketInfo, ok := from.GetRootBucketInfo(ctx); ok {
+				// Recursively sync the fields of RootBucketInfo
+				toRootBucketInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromRootBucketInfo)
+				to.SetRootBucketInfo(ctx, toRootBucketInfo)
+			}
+		}
+	}
+}
+
+func (to *CreateStorageConfigurationRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateStorageConfigurationRequest_SdkV2) {
+	if !from.RootBucketInfo.IsNull() && !from.RootBucketInfo.IsUnknown() {
+		if toRootBucketInfo, ok := to.GetRootBucketInfo(ctx); ok {
+			if fromRootBucketInfo, ok := from.GetRootBucketInfo(ctx); ok {
+				toRootBucketInfo.SyncFieldsDuringRead(ctx, fromRootBucketInfo)
+				to.SetRootBucketInfo(ctx, toRootBucketInfo)
+			}
+		}
+	}
+}
+
+func (c CreateStorageConfigurationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["root_bucket_info"] = attrs["root_bucket_info"].SetRequired()
+	attrs["root_bucket_info"] = attrs["root_bucket_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["storage_configuration_name"] = attrs["storage_configuration_name"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateStorageConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1136,6 +1361,40 @@ type CreateVpcEndpointRequest_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 	// The human-readable name of the storage configuration.
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name"`
+}
+
+func (to *CreateVpcEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateVpcEndpointRequest_SdkV2) {
+	if !from.GcpVpcEndpointInfo.IsNull() && !from.GcpVpcEndpointInfo.IsUnknown() {
+		if toGcpVpcEndpointInfo, ok := to.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromGcpVpcEndpointInfo, ok := from.GetGcpVpcEndpointInfo(ctx); ok {
+				// Recursively sync the fields of GcpVpcEndpointInfo
+				toGcpVpcEndpointInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpVpcEndpointInfo)
+				to.SetGcpVpcEndpointInfo(ctx, toGcpVpcEndpointInfo)
+			}
+		}
+	}
+}
+
+func (to *CreateVpcEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateVpcEndpointRequest_SdkV2) {
+	if !from.GcpVpcEndpointInfo.IsNull() && !from.GcpVpcEndpointInfo.IsUnknown() {
+		if toGcpVpcEndpointInfo, ok := to.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromGcpVpcEndpointInfo, ok := from.GetGcpVpcEndpointInfo(ctx); ok {
+				toGcpVpcEndpointInfo.SyncFieldsDuringRead(ctx, fromGcpVpcEndpointInfo)
+				to.SetGcpVpcEndpointInfo(ctx, toGcpVpcEndpointInfo)
+			}
+		}
+	}
+}
+
+func (c CreateVpcEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_vpc_endpoint_id"] = attrs["aws_vpc_endpoint_id"].SetOptional()
+	attrs["gcp_vpc_endpoint_info"] = attrs["gcp_vpc_endpoint_info"].SetOptional()
+	attrs["gcp_vpc_endpoint_info"] = attrs["gcp_vpc_endpoint_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["region"] = attrs["region"].SetOptional()
+	attrs["vpc_endpoint_name"] = attrs["vpc_endpoint_name"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVpcEndpointRequest.
@@ -1290,6 +1549,89 @@ type CreateWorkspaceRequest_SdkV2 struct {
 	StorageCustomerManagedKeyId types.String `tfsdk:"storage_customer_managed_key_id"`
 	// The workspace's human-readable name.
 	WorkspaceName types.String `tfsdk:"workspace_name"`
+}
+
+func (to *CreateWorkspaceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWorkspaceRequest_SdkV2) {
+	if !from.CloudResourceContainer.IsNull() && !from.CloudResourceContainer.IsUnknown() {
+		if toCloudResourceContainer, ok := to.GetCloudResourceContainer(ctx); ok {
+			if fromCloudResourceContainer, ok := from.GetCloudResourceContainer(ctx); ok {
+				// Recursively sync the fields of CloudResourceContainer
+				toCloudResourceContainer.SyncFieldsDuringCreateOrUpdate(ctx, fromCloudResourceContainer)
+				to.SetCloudResourceContainer(ctx, toCloudResourceContainer)
+			}
+		}
+	}
+	if !from.GcpManagedNetworkConfig.IsNull() && !from.GcpManagedNetworkConfig.IsUnknown() {
+		if toGcpManagedNetworkConfig, ok := to.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromGcpManagedNetworkConfig, ok := from.GetGcpManagedNetworkConfig(ctx); ok {
+				// Recursively sync the fields of GcpManagedNetworkConfig
+				toGcpManagedNetworkConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpManagedNetworkConfig)
+				to.SetGcpManagedNetworkConfig(ctx, toGcpManagedNetworkConfig)
+			}
+		}
+	}
+	if !from.GkeConfig.IsNull() && !from.GkeConfig.IsUnknown() {
+		if toGkeConfig, ok := to.GetGkeConfig(ctx); ok {
+			if fromGkeConfig, ok := from.GetGkeConfig(ctx); ok {
+				// Recursively sync the fields of GkeConfig
+				toGkeConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromGkeConfig)
+				to.SetGkeConfig(ctx, toGkeConfig)
+			}
+		}
+	}
+}
+
+func (to *CreateWorkspaceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateWorkspaceRequest_SdkV2) {
+	if !from.CloudResourceContainer.IsNull() && !from.CloudResourceContainer.IsUnknown() {
+		if toCloudResourceContainer, ok := to.GetCloudResourceContainer(ctx); ok {
+			if fromCloudResourceContainer, ok := from.GetCloudResourceContainer(ctx); ok {
+				toCloudResourceContainer.SyncFieldsDuringRead(ctx, fromCloudResourceContainer)
+				to.SetCloudResourceContainer(ctx, toCloudResourceContainer)
+			}
+		}
+	}
+	if !from.GcpManagedNetworkConfig.IsNull() && !from.GcpManagedNetworkConfig.IsUnknown() {
+		if toGcpManagedNetworkConfig, ok := to.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromGcpManagedNetworkConfig, ok := from.GetGcpManagedNetworkConfig(ctx); ok {
+				toGcpManagedNetworkConfig.SyncFieldsDuringRead(ctx, fromGcpManagedNetworkConfig)
+				to.SetGcpManagedNetworkConfig(ctx, toGcpManagedNetworkConfig)
+			}
+		}
+	}
+	if !from.GkeConfig.IsNull() && !from.GkeConfig.IsUnknown() {
+		if toGkeConfig, ok := to.GetGkeConfig(ctx); ok {
+			if fromGkeConfig, ok := from.GetGkeConfig(ctx); ok {
+				toGkeConfig.SyncFieldsDuringRead(ctx, fromGkeConfig)
+				to.SetGkeConfig(ctx, toGkeConfig)
+			}
+		}
+	}
+}
+
+func (c CreateWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_region"] = attrs["aws_region"].SetOptional()
+	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].SetOptional()
+	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["deployment_name"] = attrs["deployment_name"].SetOptional()
+	attrs["gcp_managed_network_config"] = attrs["gcp_managed_network_config"].SetOptional()
+	attrs["gcp_managed_network_config"] = attrs["gcp_managed_network_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gke_config"] = attrs["gke_config"].SetOptional()
+	attrs["gke_config"] = attrs["gke_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["is_no_public_ip_enabled"] = attrs["is_no_public_ip_enabled"].SetOptional()
+	attrs["location"] = attrs["location"].SetOptional()
+	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
+	attrs["network_id"] = attrs["network_id"].SetOptional()
+	attrs["pricing_tier"] = attrs["pricing_tier"].SetOptional()
+	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
+	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
+	attrs["workspace_name"] = attrs["workspace_name"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWorkspaceRequest.
@@ -1485,23 +1827,24 @@ type Credential_SdkV2 struct {
 	CredentialsName types.String `tfsdk:"credentials_name"`
 }
 
-func (toState *Credential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Credential_SdkV2) {
-	if !fromPlan.AwsCredentials.IsNull() && !fromPlan.AwsCredentials.IsUnknown() {
-		if toStateAwsCredentials, ok := toState.GetAwsCredentials(ctx); ok {
-			if fromPlanAwsCredentials, ok := fromPlan.GetAwsCredentials(ctx); ok {
-				toStateAwsCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsCredentials)
-				toState.SetAwsCredentials(ctx, toStateAwsCredentials)
+func (to *Credential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Credential_SdkV2) {
+	if !from.AwsCredentials.IsNull() && !from.AwsCredentials.IsUnknown() {
+		if toAwsCredentials, ok := to.GetAwsCredentials(ctx); ok {
+			if fromAwsCredentials, ok := from.GetAwsCredentials(ctx); ok {
+				// Recursively sync the fields of AwsCredentials
+				toAwsCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsCredentials)
+				to.SetAwsCredentials(ctx, toAwsCredentials)
 			}
 		}
 	}
 }
 
-func (toState *Credential_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Credential_SdkV2) {
-	if !fromState.AwsCredentials.IsNull() && !fromState.AwsCredentials.IsUnknown() {
-		if toStateAwsCredentials, ok := toState.GetAwsCredentials(ctx); ok {
-			if fromStateAwsCredentials, ok := fromState.GetAwsCredentials(ctx); ok {
-				toStateAwsCredentials.SyncFieldsDuringRead(ctx, fromStateAwsCredentials)
-				toState.SetAwsCredentials(ctx, toStateAwsCredentials)
+func (to *Credential_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Credential_SdkV2) {
+	if !from.AwsCredentials.IsNull() && !from.AwsCredentials.IsUnknown() {
+		if toAwsCredentials, ok := to.GetAwsCredentials(ctx); ok {
+			if fromAwsCredentials, ok := from.GetAwsCredentials(ctx); ok {
+				toAwsCredentials.SyncFieldsDuringRead(ctx, fromAwsCredentials)
+				to.SetAwsCredentials(ctx, toAwsCredentials)
 			}
 		}
 	}
@@ -1594,10 +1937,10 @@ type CustomerFacingGcpCloudResourceContainer_SdkV2 struct {
 	ProjectId types.String `tfsdk:"project_id"`
 }
 
-func (toState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomerFacingGcpCloudResourceContainer_SdkV2) {
+func (to *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerFacingGcpCloudResourceContainer_SdkV2) {
 }
 
-func (toState *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomerFacingGcpCloudResourceContainer_SdkV2) {
+func (to *CustomerFacingGcpCloudResourceContainer_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerFacingGcpCloudResourceContainer_SdkV2) {
 }
 
 func (c CustomerFacingGcpCloudResourceContainer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1652,41 +1995,55 @@ type CustomerManagedKey_SdkV2 struct {
 	UseCases types.List `tfsdk:"use_cases"`
 }
 
-func (toState *CustomerManagedKey_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CustomerManagedKey_SdkV2) {
-	if !fromPlan.AwsKeyInfo.IsNull() && !fromPlan.AwsKeyInfo.IsUnknown() {
-		if toStateAwsKeyInfo, ok := toState.GetAwsKeyInfo(ctx); ok {
-			if fromPlanAwsKeyInfo, ok := fromPlan.GetAwsKeyInfo(ctx); ok {
-				toStateAwsKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAwsKeyInfo)
-				toState.SetAwsKeyInfo(ctx, toStateAwsKeyInfo)
+func (to *CustomerManagedKey_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerManagedKey_SdkV2) {
+	if !from.AwsKeyInfo.IsNull() && !from.AwsKeyInfo.IsUnknown() {
+		if toAwsKeyInfo, ok := to.GetAwsKeyInfo(ctx); ok {
+			if fromAwsKeyInfo, ok := from.GetAwsKeyInfo(ctx); ok {
+				// Recursively sync the fields of AwsKeyInfo
+				toAwsKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsKeyInfo)
+				to.SetAwsKeyInfo(ctx, toAwsKeyInfo)
 			}
 		}
 	}
-	if !fromPlan.GcpKeyInfo.IsNull() && !fromPlan.GcpKeyInfo.IsUnknown() {
-		if toStateGcpKeyInfo, ok := toState.GetGcpKeyInfo(ctx); ok {
-			if fromPlanGcpKeyInfo, ok := fromPlan.GetGcpKeyInfo(ctx); ok {
-				toStateGcpKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpKeyInfo)
-				toState.SetGcpKeyInfo(ctx, toStateGcpKeyInfo)
+	if !from.GcpKeyInfo.IsNull() && !from.GcpKeyInfo.IsUnknown() {
+		if toGcpKeyInfo, ok := to.GetGcpKeyInfo(ctx); ok {
+			if fromGcpKeyInfo, ok := from.GetGcpKeyInfo(ctx); ok {
+				// Recursively sync the fields of GcpKeyInfo
+				toGcpKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpKeyInfo)
+				to.SetGcpKeyInfo(ctx, toGcpKeyInfo)
 			}
 		}
+	}
+	if !from.UseCases.IsNull() && !from.UseCases.IsUnknown() && to.UseCases.IsNull() && len(from.UseCases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UseCases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UseCases = from.UseCases
 	}
 }
 
-func (toState *CustomerManagedKey_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState CustomerManagedKey_SdkV2) {
-	if !fromState.AwsKeyInfo.IsNull() && !fromState.AwsKeyInfo.IsUnknown() {
-		if toStateAwsKeyInfo, ok := toState.GetAwsKeyInfo(ctx); ok {
-			if fromStateAwsKeyInfo, ok := fromState.GetAwsKeyInfo(ctx); ok {
-				toStateAwsKeyInfo.SyncFieldsDuringRead(ctx, fromStateAwsKeyInfo)
-				toState.SetAwsKeyInfo(ctx, toStateAwsKeyInfo)
+func (to *CustomerManagedKey_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerManagedKey_SdkV2) {
+	if !from.AwsKeyInfo.IsNull() && !from.AwsKeyInfo.IsUnknown() {
+		if toAwsKeyInfo, ok := to.GetAwsKeyInfo(ctx); ok {
+			if fromAwsKeyInfo, ok := from.GetAwsKeyInfo(ctx); ok {
+				toAwsKeyInfo.SyncFieldsDuringRead(ctx, fromAwsKeyInfo)
+				to.SetAwsKeyInfo(ctx, toAwsKeyInfo)
 			}
 		}
 	}
-	if !fromState.GcpKeyInfo.IsNull() && !fromState.GcpKeyInfo.IsUnknown() {
-		if toStateGcpKeyInfo, ok := toState.GetGcpKeyInfo(ctx); ok {
-			if fromStateGcpKeyInfo, ok := fromState.GetGcpKeyInfo(ctx); ok {
-				toStateGcpKeyInfo.SyncFieldsDuringRead(ctx, fromStateGcpKeyInfo)
-				toState.SetGcpKeyInfo(ctx, toStateGcpKeyInfo)
+	if !from.GcpKeyInfo.IsNull() && !from.GcpKeyInfo.IsUnknown() {
+		if toGcpKeyInfo, ok := to.GetGcpKeyInfo(ctx); ok {
+			if fromGcpKeyInfo, ok := from.GetGcpKeyInfo(ctx); ok {
+				toGcpKeyInfo.SyncFieldsDuringRead(ctx, fromGcpKeyInfo)
+				to.SetGcpKeyInfo(ctx, toGcpKeyInfo)
 			}
 		}
+	}
+	if !from.UseCases.IsNull() && !from.UseCases.IsUnknown() && to.UseCases.IsNull() && len(from.UseCases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UseCases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UseCases = from.UseCases
 	}
 }
 
@@ -1837,6 +2194,19 @@ type DeleteCredentialRequest_SdkV2 struct {
 	CredentialsId types.String `tfsdk:"-"`
 }
 
+func (to *DeleteCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCredentialRequest_SdkV2) {
+}
+
+func (to *DeleteCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCredentialRequest_SdkV2) {
+}
+
+func (c DeleteCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1871,6 +2241,19 @@ func (o DeleteCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
+}
+
+func (to *DeleteEncryptionKeyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteEncryptionKeyRequest_SdkV2) {
+}
+
+func (to *DeleteEncryptionKeyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteEncryptionKeyRequest_SdkV2) {
+}
+
+func (c DeleteEncryptionKeyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["customer_managed_key_id"] = attrs["customer_managed_key_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEncryptionKeyRequest.
@@ -1909,6 +2292,19 @@ type DeleteNetworkRequest_SdkV2 struct {
 	NetworkId types.String `tfsdk:"-"`
 }
 
+func (to *DeleteNetworkRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteNetworkRequest_SdkV2) {
+}
+
+func (to *DeleteNetworkRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteNetworkRequest_SdkV2) {
+}
+
+func (c DeleteNetworkRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["network_id"] = attrs["network_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteNetworkRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1945,6 +2341,19 @@ type DeletePrivateAccesRequest_SdkV2 struct {
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
 }
 
+func (to *DeletePrivateAccesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeletePrivateAccesRequest_SdkV2) {
+}
+
+func (to *DeletePrivateAccesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeletePrivateAccesRequest_SdkV2) {
+}
+
+func (c DeletePrivateAccesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePrivateAccesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1976,39 +2385,22 @@ func (o DeletePrivateAccesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteStorageRequest_SdkV2 struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
+}
+
+func (to *DeleteStorageRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteStorageRequest_SdkV2) {
+}
+
+func (to *DeleteStorageRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteStorageRequest_SdkV2) {
+}
+
+func (c DeleteStorageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteStorageRequest.
@@ -2047,6 +2439,19 @@ type DeleteVpcEndpointRequest_SdkV2 struct {
 	VpcEndpointId types.String `tfsdk:"-"`
 }
 
+func (to *DeleteVpcEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteVpcEndpointRequest_SdkV2) {
+}
+
+func (to *DeleteVpcEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteVpcEndpointRequest_SdkV2) {
+}
+
+func (c DeleteVpcEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteVpcEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2081,6 +2486,19 @@ func (o DeleteVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *DeleteWorkspaceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWorkspaceRequest_SdkV2) {
+}
+
+func (to *DeleteWorkspaceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteWorkspaceRequest_SdkV2) {
+}
+
+func (c DeleteWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceRequest.
@@ -2123,10 +2541,10 @@ type ExternalCustomerInfo_SdkV2 struct {
 	CustomerName types.String `tfsdk:"customer_name"`
 }
 
-func (toState *ExternalCustomerInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalCustomerInfo_SdkV2) {
+func (to *ExternalCustomerInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalCustomerInfo_SdkV2) {
 }
 
-func (toState *ExternalCustomerInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState ExternalCustomerInfo_SdkV2) {
+func (to *ExternalCustomerInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExternalCustomerInfo_SdkV2) {
 }
 
 func (c ExternalCustomerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2177,10 +2595,10 @@ type GcpKeyInfo_SdkV2 struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
-func (toState *GcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpKeyInfo_SdkV2) {
+func (to *GcpKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpKeyInfo_SdkV2) {
 }
 
-func (toState *GcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpKeyInfo_SdkV2) {
+func (to *GcpKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GcpKeyInfo_SdkV2) {
 }
 
 func (c GcpKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2255,10 +2673,10 @@ type GcpManagedNetworkConfig_SdkV2 struct {
 	SubnetCidr types.String `tfsdk:"subnet_cidr"`
 }
 
-func (toState *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpManagedNetworkConfig_SdkV2) {
+func (to *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpManagedNetworkConfig_SdkV2) {
 }
 
-func (toState *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpManagedNetworkConfig_SdkV2) {
+func (to *GcpManagedNetworkConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GcpManagedNetworkConfig_SdkV2) {
 }
 
 func (c GcpManagedNetworkConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2327,10 +2745,10 @@ type GcpNetworkInfo_SdkV2 struct {
 	VpcId types.String `tfsdk:"vpc_id"`
 }
 
-func (toState *GcpNetworkInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpNetworkInfo_SdkV2) {
+func (to *GcpNetworkInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpNetworkInfo_SdkV2) {
 }
 
-func (toState *GcpNetworkInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpNetworkInfo_SdkV2) {
+func (to *GcpNetworkInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GcpNetworkInfo_SdkV2) {
 }
 
 func (c GcpNetworkInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2401,10 +2819,10 @@ type GcpVpcEndpointInfo_SdkV2 struct {
 	ServiceAttachmentId types.String `tfsdk:"service_attachment_id"`
 }
 
-func (toState *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GcpVpcEndpointInfo_SdkV2) {
+func (to *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpVpcEndpointInfo_SdkV2) {
 }
 
-func (toState *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GcpVpcEndpointInfo_SdkV2) {
+func (to *GcpVpcEndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GcpVpcEndpointInfo_SdkV2) {
 }
 
 func (c GcpVpcEndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2461,6 +2879,19 @@ type GetCredentialRequest_SdkV2 struct {
 	CredentialsId types.String `tfsdk:"-"`
 }
 
+func (to *GetCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCredentialRequest_SdkV2) {
+}
+
+func (to *GetCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCredentialRequest_SdkV2) {
+}
+
+func (c GetCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2495,6 +2926,19 @@ func (o GetCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetEncryptionKeyRequest_SdkV2 struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
+}
+
+func (to *GetEncryptionKeyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetEncryptionKeyRequest_SdkV2) {
+}
+
+func (to *GetEncryptionKeyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetEncryptionKeyRequest_SdkV2) {
+}
+
+func (c GetEncryptionKeyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["customer_managed_key_id"] = attrs["customer_managed_key_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEncryptionKeyRequest.
@@ -2533,6 +2977,19 @@ type GetNetworkRequest_SdkV2 struct {
 	NetworkId types.String `tfsdk:"-"`
 }
 
+func (to *GetNetworkRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetNetworkRequest_SdkV2) {
+}
+
+func (to *GetNetworkRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetNetworkRequest_SdkV2) {
+}
+
+func (c GetNetworkRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["network_id"] = attrs["network_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetNetworkRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2567,6 +3024,19 @@ func (o GetNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetPrivateAccesRequest_SdkV2 struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
+}
+
+func (to *GetPrivateAccesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPrivateAccesRequest_SdkV2) {
+}
+
+func (to *GetPrivateAccesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPrivateAccesRequest_SdkV2) {
+}
+
+func (c GetPrivateAccesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPrivateAccesRequest.
@@ -2605,6 +3075,19 @@ type GetStorageRequest_SdkV2 struct {
 	StorageConfigurationId types.String `tfsdk:"-"`
 }
 
+func (to *GetStorageRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetStorageRequest_SdkV2) {
+}
+
+func (to *GetStorageRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetStorageRequest_SdkV2) {
+}
+
+func (c GetStorageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStorageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2641,6 +3124,19 @@ type GetVpcEndpointRequest_SdkV2 struct {
 	VpcEndpointId types.String `tfsdk:"-"`
 }
 
+func (to *GetVpcEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetVpcEndpointRequest_SdkV2) {
+}
+
+func (to *GetVpcEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetVpcEndpointRequest_SdkV2) {
+}
+
+func (c GetVpcEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetVpcEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2675,6 +3171,19 @@ func (o GetVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetWorkspaceRequest_SdkV2 struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *GetWorkspaceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceRequest_SdkV2) {
+}
+
+func (to *GetWorkspaceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceRequest_SdkV2) {
+}
+
+func (c GetWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceRequest.
@@ -2726,10 +3235,10 @@ type GkeConfig_SdkV2 struct {
 	MasterIpRange types.String `tfsdk:"master_ip_range"`
 }
 
-func (toState *GkeConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GkeConfig_SdkV2) {
+func (to *GkeConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GkeConfig_SdkV2) {
 }
 
-func (toState *GkeConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState GkeConfig_SdkV2) {
+func (to *GkeConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GkeConfig_SdkV2) {
 }
 
 func (c GkeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2775,6 +3284,18 @@ func (o GkeConfig_SdkV2) Type(ctx context.Context) attr.Type {
 type ListCredentialsRequest_SdkV2 struct {
 }
 
+func (to *ListCredentialsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCredentialsRequest_SdkV2) {
+}
+
+func (to *ListCredentialsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCredentialsRequest_SdkV2) {
+}
+
+func (c ListCredentialsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCredentialsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2803,6 +3324,18 @@ func (o ListCredentialsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListEncryptionKeysRequest_SdkV2 struct {
+}
+
+func (to *ListEncryptionKeysRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListEncryptionKeysRequest_SdkV2) {
+}
+
+func (to *ListEncryptionKeysRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEncryptionKeysRequest_SdkV2) {
+}
+
+func (c ListEncryptionKeysRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEncryptionKeysRequest.
@@ -2835,6 +3368,18 @@ func (o ListEncryptionKeysRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListNetworksRequest_SdkV2 struct {
 }
 
+func (to *ListNetworksRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListNetworksRequest_SdkV2) {
+}
+
+func (to *ListNetworksRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListNetworksRequest_SdkV2) {
+}
+
+func (c ListNetworksRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNetworksRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2863,6 +3408,18 @@ func (o ListNetworksRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListPrivateAccessRequest_SdkV2 struct {
+}
+
+func (to *ListPrivateAccessRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListPrivateAccessRequest_SdkV2) {
+}
+
+func (to *ListPrivateAccessRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListPrivateAccessRequest_SdkV2) {
+}
+
+func (c ListPrivateAccessRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPrivateAccessRequest.
@@ -2895,6 +3452,18 @@ func (o ListPrivateAccessRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListStorageRequest_SdkV2 struct {
 }
 
+func (to *ListStorageRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListStorageRequest_SdkV2) {
+}
+
+func (to *ListStorageRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStorageRequest_SdkV2) {
+}
+
+func (c ListStorageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStorageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2925,6 +3494,18 @@ func (o ListStorageRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListVpcEndpointsRequest_SdkV2 struct {
 }
 
+func (to *ListVpcEndpointsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListVpcEndpointsRequest_SdkV2) {
+}
+
+func (to *ListVpcEndpointsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListVpcEndpointsRequest_SdkV2) {
+}
+
+func (c ListVpcEndpointsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVpcEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2953,6 +3534,18 @@ func (o ListVpcEndpointsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListWorkspacesRequest_SdkV2 struct {
+}
+
+func (to *ListWorkspacesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspacesRequest_SdkV2) {
+}
+
+func (to *ListWorkspacesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListWorkspacesRequest_SdkV2) {
+}
+
+func (c ListWorkspacesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspacesRequest.
@@ -3012,41 +3605,91 @@ type Network_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
-func (toState *Network_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Network_SdkV2) {
-	if !fromPlan.GcpNetworkInfo.IsNull() && !fromPlan.GcpNetworkInfo.IsUnknown() {
-		if toStateGcpNetworkInfo, ok := toState.GetGcpNetworkInfo(ctx); ok {
-			if fromPlanGcpNetworkInfo, ok := fromPlan.GetGcpNetworkInfo(ctx); ok {
-				toStateGcpNetworkInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpNetworkInfo)
-				toState.SetGcpNetworkInfo(ctx, toStateGcpNetworkInfo)
+func (to *Network_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Network_SdkV2) {
+	if !from.ErrorMessages.IsNull() && !from.ErrorMessages.IsUnknown() && to.ErrorMessages.IsNull() && len(from.ErrorMessages.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ErrorMessages, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ErrorMessages = from.ErrorMessages
+	}
+	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
+		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
+			if fromGcpNetworkInfo, ok := from.GetGcpNetworkInfo(ctx); ok {
+				// Recursively sync the fields of GcpNetworkInfo
+				toGcpNetworkInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpNetworkInfo)
+				to.SetGcpNetworkInfo(ctx, toGcpNetworkInfo)
 			}
 		}
 	}
-	if !fromPlan.VpcEndpoints.IsNull() && !fromPlan.VpcEndpoints.IsUnknown() {
-		if toStateVpcEndpoints, ok := toState.GetVpcEndpoints(ctx); ok {
-			if fromPlanVpcEndpoints, ok := fromPlan.GetVpcEndpoints(ctx); ok {
-				toStateVpcEndpoints.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVpcEndpoints)
-				toState.SetVpcEndpoints(ctx, toStateVpcEndpoints)
+	if !from.SecurityGroupIds.IsNull() && !from.SecurityGroupIds.IsUnknown() && to.SecurityGroupIds.IsNull() && len(from.SecurityGroupIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SecurityGroupIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SecurityGroupIds = from.SecurityGroupIds
+	}
+	if !from.SubnetIds.IsNull() && !from.SubnetIds.IsUnknown() && to.SubnetIds.IsNull() && len(from.SubnetIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubnetIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubnetIds = from.SubnetIds
+	}
+	if !from.VpcEndpoints.IsNull() && !from.VpcEndpoints.IsUnknown() {
+		if toVpcEndpoints, ok := to.GetVpcEndpoints(ctx); ok {
+			if fromVpcEndpoints, ok := from.GetVpcEndpoints(ctx); ok {
+				// Recursively sync the fields of VpcEndpoints
+				toVpcEndpoints.SyncFieldsDuringCreateOrUpdate(ctx, fromVpcEndpoints)
+				to.SetVpcEndpoints(ctx, toVpcEndpoints)
 			}
 		}
+	}
+	if !from.WarningMessages.IsNull() && !from.WarningMessages.IsUnknown() && to.WarningMessages.IsNull() && len(from.WarningMessages.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WarningMessages, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WarningMessages = from.WarningMessages
 	}
 }
 
-func (toState *Network_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Network_SdkV2) {
-	if !fromState.GcpNetworkInfo.IsNull() && !fromState.GcpNetworkInfo.IsUnknown() {
-		if toStateGcpNetworkInfo, ok := toState.GetGcpNetworkInfo(ctx); ok {
-			if fromStateGcpNetworkInfo, ok := fromState.GetGcpNetworkInfo(ctx); ok {
-				toStateGcpNetworkInfo.SyncFieldsDuringRead(ctx, fromStateGcpNetworkInfo)
-				toState.SetGcpNetworkInfo(ctx, toStateGcpNetworkInfo)
+func (to *Network_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Network_SdkV2) {
+	if !from.ErrorMessages.IsNull() && !from.ErrorMessages.IsUnknown() && to.ErrorMessages.IsNull() && len(from.ErrorMessages.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ErrorMessages, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ErrorMessages = from.ErrorMessages
+	}
+	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
+		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
+			if fromGcpNetworkInfo, ok := from.GetGcpNetworkInfo(ctx); ok {
+				toGcpNetworkInfo.SyncFieldsDuringRead(ctx, fromGcpNetworkInfo)
+				to.SetGcpNetworkInfo(ctx, toGcpNetworkInfo)
 			}
 		}
 	}
-	if !fromState.VpcEndpoints.IsNull() && !fromState.VpcEndpoints.IsUnknown() {
-		if toStateVpcEndpoints, ok := toState.GetVpcEndpoints(ctx); ok {
-			if fromStateVpcEndpoints, ok := fromState.GetVpcEndpoints(ctx); ok {
-				toStateVpcEndpoints.SyncFieldsDuringRead(ctx, fromStateVpcEndpoints)
-				toState.SetVpcEndpoints(ctx, toStateVpcEndpoints)
+	if !from.SecurityGroupIds.IsNull() && !from.SecurityGroupIds.IsUnknown() && to.SecurityGroupIds.IsNull() && len(from.SecurityGroupIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SecurityGroupIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SecurityGroupIds = from.SecurityGroupIds
+	}
+	if !from.SubnetIds.IsNull() && !from.SubnetIds.IsUnknown() && to.SubnetIds.IsNull() && len(from.SubnetIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubnetIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubnetIds = from.SubnetIds
+	}
+	if !from.VpcEndpoints.IsNull() && !from.VpcEndpoints.IsUnknown() {
+		if toVpcEndpoints, ok := to.GetVpcEndpoints(ctx); ok {
+			if fromVpcEndpoints, ok := from.GetVpcEndpoints(ctx); ok {
+				toVpcEndpoints.SyncFieldsDuringRead(ctx, fromVpcEndpoints)
+				to.SetVpcEndpoints(ctx, toVpcEndpoints)
 			}
 		}
+	}
+	if !from.WarningMessages.IsNull() && !from.WarningMessages.IsUnknown() && to.WarningMessages.IsNull() && len(from.WarningMessages.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WarningMessages, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WarningMessages = from.WarningMessages
 	}
 }
 
@@ -3307,10 +3950,10 @@ type NetworkHealth_SdkV2 struct {
 	ErrorType types.String `tfsdk:"error_type"`
 }
 
-func (toState *NetworkHealth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkHealth_SdkV2) {
+func (to *NetworkHealth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NetworkHealth_SdkV2) {
 }
 
-func (toState *NetworkHealth_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkHealth_SdkV2) {
+func (to *NetworkHealth_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NetworkHealth_SdkV2) {
 }
 
 func (c NetworkHealth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3366,10 +4009,10 @@ type NetworkVpcEndpoints_SdkV2 struct {
 	RestApi types.List `tfsdk:"rest_api"`
 }
 
-func (toState *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkVpcEndpoints_SdkV2) {
+func (to *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NetworkVpcEndpoints_SdkV2) {
 }
 
-func (toState *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkVpcEndpoints_SdkV2) {
+func (to *NetworkVpcEndpoints_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NetworkVpcEndpoints_SdkV2) {
 }
 
 func (c NetworkVpcEndpoints_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3478,10 +4121,10 @@ type NetworkWarning_SdkV2 struct {
 	WarningType types.String `tfsdk:"warning_type"`
 }
 
-func (toState *NetworkWarning_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NetworkWarning_SdkV2) {
+func (to *NetworkWarning_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NetworkWarning_SdkV2) {
 }
 
-func (toState *NetworkWarning_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState NetworkWarning_SdkV2) {
+func (to *NetworkWarning_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NetworkWarning_SdkV2) {
 }
 
 func (c NetworkWarning_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3546,10 +4189,22 @@ type PrivateAccessSettings_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func (toState *PrivateAccessSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PrivateAccessSettings_SdkV2) {
+func (to *PrivateAccessSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PrivateAccessSettings_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
 }
 
-func (toState *PrivateAccessSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState PrivateAccessSettings_SdkV2) {
+func (to *PrivateAccessSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PrivateAccessSettings_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
 }
 
 func (c PrivateAccessSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3670,6 +4325,36 @@ type ReplacePrivateAccessSettingsRequest_SdkV2 struct {
 	Region types.String `tfsdk:"region"`
 }
 
+func (to *ReplacePrivateAccessSettingsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReplacePrivateAccessSettingsRequest_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
+}
+
+func (to *ReplacePrivateAccessSettingsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ReplacePrivateAccessSettingsRequest_SdkV2) {
+	if !from.AllowedVpcEndpointIds.IsNull() && !from.AllowedVpcEndpointIds.IsUnknown() && to.AllowedVpcEndpointIds.IsNull() && len(from.AllowedVpcEndpointIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllowedVpcEndpointIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllowedVpcEndpointIds = from.AllowedVpcEndpointIds
+	}
+}
+
+func (c ReplacePrivateAccessSettingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
+	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
+	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetRequired()
+	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
+	attrs["region"] = attrs["region"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplacePrivateAccessSettingsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3741,46 +4426,16 @@ func (o *ReplacePrivateAccessSettingsRequest_SdkV2) SetAllowedVpcEndpointIds(ctx
 	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
-type ReplaceResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplaceResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ReplaceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ReplaceResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ReplaceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ReplaceResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Root S3 bucket information.
 type RootBucketInfo_SdkV2 struct {
 	// The name of the S3 bucket.
 	BucketName types.String `tfsdk:"bucket_name"`
 }
 
-func (toState *RootBucketInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RootBucketInfo_SdkV2) {
+func (to *RootBucketInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RootBucketInfo_SdkV2) {
 }
 
-func (toState *RootBucketInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState RootBucketInfo_SdkV2) {
+func (to *RootBucketInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RootBucketInfo_SdkV2) {
 }
 
 func (c RootBucketInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3833,23 +4488,24 @@ type StorageConfiguration_SdkV2 struct {
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name"`
 }
 
-func (toState *StorageConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StorageConfiguration_SdkV2) {
-	if !fromPlan.RootBucketInfo.IsNull() && !fromPlan.RootBucketInfo.IsUnknown() {
-		if toStateRootBucketInfo, ok := toState.GetRootBucketInfo(ctx); ok {
-			if fromPlanRootBucketInfo, ok := fromPlan.GetRootBucketInfo(ctx); ok {
-				toStateRootBucketInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRootBucketInfo)
-				toState.SetRootBucketInfo(ctx, toStateRootBucketInfo)
+func (to *StorageConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StorageConfiguration_SdkV2) {
+	if !from.RootBucketInfo.IsNull() && !from.RootBucketInfo.IsUnknown() {
+		if toRootBucketInfo, ok := to.GetRootBucketInfo(ctx); ok {
+			if fromRootBucketInfo, ok := from.GetRootBucketInfo(ctx); ok {
+				// Recursively sync the fields of RootBucketInfo
+				toRootBucketInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromRootBucketInfo)
+				to.SetRootBucketInfo(ctx, toRootBucketInfo)
 			}
 		}
 	}
 }
 
-func (toState *StorageConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StorageConfiguration_SdkV2) {
-	if !fromState.RootBucketInfo.IsNull() && !fromState.RootBucketInfo.IsUnknown() {
-		if toStateRootBucketInfo, ok := toState.GetRootBucketInfo(ctx); ok {
-			if fromStateRootBucketInfo, ok := fromState.GetRootBucketInfo(ctx); ok {
-				toStateRootBucketInfo.SyncFieldsDuringRead(ctx, fromStateRootBucketInfo)
-				toState.SetRootBucketInfo(ctx, toStateRootBucketInfo)
+func (to *StorageConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StorageConfiguration_SdkV2) {
+	if !from.RootBucketInfo.IsNull() && !from.RootBucketInfo.IsUnknown() {
+		if toRootBucketInfo, ok := to.GetRootBucketInfo(ctx); ok {
+			if fromRootBucketInfo, ok := from.GetRootBucketInfo(ctx); ok {
+				toRootBucketInfo.SyncFieldsDuringRead(ctx, fromRootBucketInfo)
+				to.SetRootBucketInfo(ctx, toRootBucketInfo)
 			}
 		}
 	}
@@ -3943,10 +4599,10 @@ type StsRole_SdkV2 struct {
 	RoleArn types.String `tfsdk:"role_arn"`
 }
 
-func (toState *StsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StsRole_SdkV2) {
+func (to *StsRole_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StsRole_SdkV2) {
 }
 
-func (toState *StsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState StsRole_SdkV2) {
+func (to *StsRole_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StsRole_SdkV2) {
 }
 
 func (c StsRole_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3989,36 +4645,6 @@ func (o StsRole_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type UpdateResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpdateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type UpdateWorkspaceRequest_SdkV2 struct {
 	// The AWS region of the workspace's data plane (for example, `us-west-2`).
 	// This parameter is available only for updating failed workspaces.
@@ -4052,6 +4678,28 @@ type UpdateWorkspaceRequest_SdkV2 struct {
 	StorageCustomerManagedKeyId types.String `tfsdk:"storage_customer_managed_key_id"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *UpdateWorkspaceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWorkspaceRequest_SdkV2) {
+}
+
+func (to *UpdateWorkspaceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateWorkspaceRequest_SdkV2) {
+}
+
+func (c UpdateWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_region"] = attrs["aws_region"].SetOptional()
+	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
+	attrs["network_id"] = attrs["network_id"].SetOptional()
+	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
+	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
+	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceRequest.
@@ -4167,23 +4815,24 @@ type VpcEndpoint_SdkV2 struct {
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name"`
 }
 
-func (toState *VpcEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan VpcEndpoint_SdkV2) {
-	if !fromPlan.GcpVpcEndpointInfo.IsNull() && !fromPlan.GcpVpcEndpointInfo.IsUnknown() {
-		if toStateGcpVpcEndpointInfo, ok := toState.GetGcpVpcEndpointInfo(ctx); ok {
-			if fromPlanGcpVpcEndpointInfo, ok := fromPlan.GetGcpVpcEndpointInfo(ctx); ok {
-				toStateGcpVpcEndpointInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpVpcEndpointInfo)
-				toState.SetGcpVpcEndpointInfo(ctx, toStateGcpVpcEndpointInfo)
+func (to *VpcEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VpcEndpoint_SdkV2) {
+	if !from.GcpVpcEndpointInfo.IsNull() && !from.GcpVpcEndpointInfo.IsUnknown() {
+		if toGcpVpcEndpointInfo, ok := to.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromGcpVpcEndpointInfo, ok := from.GetGcpVpcEndpointInfo(ctx); ok {
+				// Recursively sync the fields of GcpVpcEndpointInfo
+				toGcpVpcEndpointInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpVpcEndpointInfo)
+				to.SetGcpVpcEndpointInfo(ctx, toGcpVpcEndpointInfo)
 			}
 		}
 	}
 }
 
-func (toState *VpcEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState VpcEndpoint_SdkV2) {
-	if !fromState.GcpVpcEndpointInfo.IsNull() && !fromState.GcpVpcEndpointInfo.IsUnknown() {
-		if toStateGcpVpcEndpointInfo, ok := toState.GetGcpVpcEndpointInfo(ctx); ok {
-			if fromStateGcpVpcEndpointInfo, ok := fromState.GetGcpVpcEndpointInfo(ctx); ok {
-				toStateGcpVpcEndpointInfo.SyncFieldsDuringRead(ctx, fromStateGcpVpcEndpointInfo)
-				toState.SetGcpVpcEndpointInfo(ctx, toStateGcpVpcEndpointInfo)
+func (to *VpcEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from VpcEndpoint_SdkV2) {
+	if !from.GcpVpcEndpointInfo.IsNull() && !from.GcpVpcEndpointInfo.IsUnknown() {
+		if toGcpVpcEndpointInfo, ok := to.GetGcpVpcEndpointInfo(ctx); ok {
+			if fromGcpVpcEndpointInfo, ok := from.GetGcpVpcEndpointInfo(ctx); ok {
+				toGcpVpcEndpointInfo.SyncFieldsDuringRead(ctx, fromGcpVpcEndpointInfo)
+				to.SetGcpVpcEndpointInfo(ctx, toGcpVpcEndpointInfo)
 			}
 		}
 	}
@@ -4356,87 +5005,92 @@ type Workspace_SdkV2 struct {
 	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message"`
 }
 
-func (toState *Workspace_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Workspace_SdkV2) {
-	if !fromPlan.AzureWorkspaceInfo.IsNull() && !fromPlan.AzureWorkspaceInfo.IsUnknown() {
-		if toStateAzureWorkspaceInfo, ok := toState.GetAzureWorkspaceInfo(ctx); ok {
-			if fromPlanAzureWorkspaceInfo, ok := fromPlan.GetAzureWorkspaceInfo(ctx); ok {
-				toStateAzureWorkspaceInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAzureWorkspaceInfo)
-				toState.SetAzureWorkspaceInfo(ctx, toStateAzureWorkspaceInfo)
+func (to *Workspace_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Workspace_SdkV2) {
+	if !from.AzureWorkspaceInfo.IsNull() && !from.AzureWorkspaceInfo.IsUnknown() {
+		if toAzureWorkspaceInfo, ok := to.GetAzureWorkspaceInfo(ctx); ok {
+			if fromAzureWorkspaceInfo, ok := from.GetAzureWorkspaceInfo(ctx); ok {
+				// Recursively sync the fields of AzureWorkspaceInfo
+				toAzureWorkspaceInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureWorkspaceInfo)
+				to.SetAzureWorkspaceInfo(ctx, toAzureWorkspaceInfo)
 			}
 		}
 	}
-	if !fromPlan.CloudResourceContainer.IsNull() && !fromPlan.CloudResourceContainer.IsUnknown() {
-		if toStateCloudResourceContainer, ok := toState.GetCloudResourceContainer(ctx); ok {
-			if fromPlanCloudResourceContainer, ok := fromPlan.GetCloudResourceContainer(ctx); ok {
-				toStateCloudResourceContainer.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCloudResourceContainer)
-				toState.SetCloudResourceContainer(ctx, toStateCloudResourceContainer)
+	if !from.CloudResourceContainer.IsNull() && !from.CloudResourceContainer.IsUnknown() {
+		if toCloudResourceContainer, ok := to.GetCloudResourceContainer(ctx); ok {
+			if fromCloudResourceContainer, ok := from.GetCloudResourceContainer(ctx); ok {
+				// Recursively sync the fields of CloudResourceContainer
+				toCloudResourceContainer.SyncFieldsDuringCreateOrUpdate(ctx, fromCloudResourceContainer)
+				to.SetCloudResourceContainer(ctx, toCloudResourceContainer)
 			}
 		}
 	}
-	if !fromPlan.ExternalCustomerInfo.IsNull() && !fromPlan.ExternalCustomerInfo.IsUnknown() {
-		if toStateExternalCustomerInfo, ok := toState.GetExternalCustomerInfo(ctx); ok {
-			if fromPlanExternalCustomerInfo, ok := fromPlan.GetExternalCustomerInfo(ctx); ok {
-				toStateExternalCustomerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanExternalCustomerInfo)
-				toState.SetExternalCustomerInfo(ctx, toStateExternalCustomerInfo)
+	if !from.ExternalCustomerInfo.IsNull() && !from.ExternalCustomerInfo.IsUnknown() {
+		if toExternalCustomerInfo, ok := to.GetExternalCustomerInfo(ctx); ok {
+			if fromExternalCustomerInfo, ok := from.GetExternalCustomerInfo(ctx); ok {
+				// Recursively sync the fields of ExternalCustomerInfo
+				toExternalCustomerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromExternalCustomerInfo)
+				to.SetExternalCustomerInfo(ctx, toExternalCustomerInfo)
 			}
 		}
 	}
-	if !fromPlan.GcpManagedNetworkConfig.IsNull() && !fromPlan.GcpManagedNetworkConfig.IsUnknown() {
-		if toStateGcpManagedNetworkConfig, ok := toState.GetGcpManagedNetworkConfig(ctx); ok {
-			if fromPlanGcpManagedNetworkConfig, ok := fromPlan.GetGcpManagedNetworkConfig(ctx); ok {
-				toStateGcpManagedNetworkConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGcpManagedNetworkConfig)
-				toState.SetGcpManagedNetworkConfig(ctx, toStateGcpManagedNetworkConfig)
+	if !from.GcpManagedNetworkConfig.IsNull() && !from.GcpManagedNetworkConfig.IsUnknown() {
+		if toGcpManagedNetworkConfig, ok := to.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromGcpManagedNetworkConfig, ok := from.GetGcpManagedNetworkConfig(ctx); ok {
+				// Recursively sync the fields of GcpManagedNetworkConfig
+				toGcpManagedNetworkConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpManagedNetworkConfig)
+				to.SetGcpManagedNetworkConfig(ctx, toGcpManagedNetworkConfig)
 			}
 		}
 	}
-	if !fromPlan.GkeConfig.IsNull() && !fromPlan.GkeConfig.IsUnknown() {
-		if toStateGkeConfig, ok := toState.GetGkeConfig(ctx); ok {
-			if fromPlanGkeConfig, ok := fromPlan.GetGkeConfig(ctx); ok {
-				toStateGkeConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGkeConfig)
-				toState.SetGkeConfig(ctx, toStateGkeConfig)
+	if !from.GkeConfig.IsNull() && !from.GkeConfig.IsUnknown() {
+		if toGkeConfig, ok := to.GetGkeConfig(ctx); ok {
+			if fromGkeConfig, ok := from.GetGkeConfig(ctx); ok {
+				// Recursively sync the fields of GkeConfig
+				toGkeConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromGkeConfig)
+				to.SetGkeConfig(ctx, toGkeConfig)
 			}
 		}
 	}
 }
 
-func (toState *Workspace_SdkV2) SyncFieldsDuringRead(ctx context.Context, fromState Workspace_SdkV2) {
-	if !fromState.AzureWorkspaceInfo.IsNull() && !fromState.AzureWorkspaceInfo.IsUnknown() {
-		if toStateAzureWorkspaceInfo, ok := toState.GetAzureWorkspaceInfo(ctx); ok {
-			if fromStateAzureWorkspaceInfo, ok := fromState.GetAzureWorkspaceInfo(ctx); ok {
-				toStateAzureWorkspaceInfo.SyncFieldsDuringRead(ctx, fromStateAzureWorkspaceInfo)
-				toState.SetAzureWorkspaceInfo(ctx, toStateAzureWorkspaceInfo)
+func (to *Workspace_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Workspace_SdkV2) {
+	if !from.AzureWorkspaceInfo.IsNull() && !from.AzureWorkspaceInfo.IsUnknown() {
+		if toAzureWorkspaceInfo, ok := to.GetAzureWorkspaceInfo(ctx); ok {
+			if fromAzureWorkspaceInfo, ok := from.GetAzureWorkspaceInfo(ctx); ok {
+				toAzureWorkspaceInfo.SyncFieldsDuringRead(ctx, fromAzureWorkspaceInfo)
+				to.SetAzureWorkspaceInfo(ctx, toAzureWorkspaceInfo)
 			}
 		}
 	}
-	if !fromState.CloudResourceContainer.IsNull() && !fromState.CloudResourceContainer.IsUnknown() {
-		if toStateCloudResourceContainer, ok := toState.GetCloudResourceContainer(ctx); ok {
-			if fromStateCloudResourceContainer, ok := fromState.GetCloudResourceContainer(ctx); ok {
-				toStateCloudResourceContainer.SyncFieldsDuringRead(ctx, fromStateCloudResourceContainer)
-				toState.SetCloudResourceContainer(ctx, toStateCloudResourceContainer)
+	if !from.CloudResourceContainer.IsNull() && !from.CloudResourceContainer.IsUnknown() {
+		if toCloudResourceContainer, ok := to.GetCloudResourceContainer(ctx); ok {
+			if fromCloudResourceContainer, ok := from.GetCloudResourceContainer(ctx); ok {
+				toCloudResourceContainer.SyncFieldsDuringRead(ctx, fromCloudResourceContainer)
+				to.SetCloudResourceContainer(ctx, toCloudResourceContainer)
 			}
 		}
 	}
-	if !fromState.ExternalCustomerInfo.IsNull() && !fromState.ExternalCustomerInfo.IsUnknown() {
-		if toStateExternalCustomerInfo, ok := toState.GetExternalCustomerInfo(ctx); ok {
-			if fromStateExternalCustomerInfo, ok := fromState.GetExternalCustomerInfo(ctx); ok {
-				toStateExternalCustomerInfo.SyncFieldsDuringRead(ctx, fromStateExternalCustomerInfo)
-				toState.SetExternalCustomerInfo(ctx, toStateExternalCustomerInfo)
+	if !from.ExternalCustomerInfo.IsNull() && !from.ExternalCustomerInfo.IsUnknown() {
+		if toExternalCustomerInfo, ok := to.GetExternalCustomerInfo(ctx); ok {
+			if fromExternalCustomerInfo, ok := from.GetExternalCustomerInfo(ctx); ok {
+				toExternalCustomerInfo.SyncFieldsDuringRead(ctx, fromExternalCustomerInfo)
+				to.SetExternalCustomerInfo(ctx, toExternalCustomerInfo)
 			}
 		}
 	}
-	if !fromState.GcpManagedNetworkConfig.IsNull() && !fromState.GcpManagedNetworkConfig.IsUnknown() {
-		if toStateGcpManagedNetworkConfig, ok := toState.GetGcpManagedNetworkConfig(ctx); ok {
-			if fromStateGcpManagedNetworkConfig, ok := fromState.GetGcpManagedNetworkConfig(ctx); ok {
-				toStateGcpManagedNetworkConfig.SyncFieldsDuringRead(ctx, fromStateGcpManagedNetworkConfig)
-				toState.SetGcpManagedNetworkConfig(ctx, toStateGcpManagedNetworkConfig)
+	if !from.GcpManagedNetworkConfig.IsNull() && !from.GcpManagedNetworkConfig.IsUnknown() {
+		if toGcpManagedNetworkConfig, ok := to.GetGcpManagedNetworkConfig(ctx); ok {
+			if fromGcpManagedNetworkConfig, ok := from.GetGcpManagedNetworkConfig(ctx); ok {
+				toGcpManagedNetworkConfig.SyncFieldsDuringRead(ctx, fromGcpManagedNetworkConfig)
+				to.SetGcpManagedNetworkConfig(ctx, toGcpManagedNetworkConfig)
 			}
 		}
 	}
-	if !fromState.GkeConfig.IsNull() && !fromState.GkeConfig.IsUnknown() {
-		if toStateGkeConfig, ok := toState.GetGkeConfig(ctx); ok {
-			if fromStateGkeConfig, ok := fromState.GetGkeConfig(ctx); ok {
-				toStateGkeConfig.SyncFieldsDuringRead(ctx, fromStateGkeConfig)
-				toState.SetGkeConfig(ctx, toStateGkeConfig)
+	if !from.GkeConfig.IsNull() && !from.GkeConfig.IsUnknown() {
+		if toGkeConfig, ok := to.GetGkeConfig(ctx); ok {
+			if fromGkeConfig, ok := from.GetGkeConfig(ctx); ok {
+				toGkeConfig.SyncFieldsDuringRead(ctx, fromGkeConfig)
+				to.SetGkeConfig(ctx, toGkeConfig)
 			}
 		}
 	}

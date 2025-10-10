@@ -1,0 +1,64 @@
+---
+subcategory: "OAuth"
+---
+# databricks_service_principal_federation_policies Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+This data source can be used to fetch the list of federation policies for a service principal.
+
+-> **Note** This data source can only be used with an account-level provider!
+
+## Example Usage
+Getting a list of all service principal federation policies:
+
+```hcl
+data "databricks_service_principal_federation_policies" "all" {
+  service_principal_id = 1234
+}
+```
+
+## Arguments
+The following arguments are supported:
+* `service_principal_id` (integer, required) - The service principal id for the federation policy
+* `page_size` (integer, optional)
+
+
+## Attributes
+This data source exports a single attribute, `policies`. It is a list of resources, each with the following attributes:
+* `create_time` (string) - Creation time of the federation policy
+* `description` (string) - Description of the federation policy
+* `name` (string) - Resource name for the federation policy. Example values include
+  `accounts/<account-id>/federationPolicies/my-federation-policy` for Account Federation Policies, and
+  `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
+  for Service Principal Federation Policies. Typically an output parameter, which does not need to be
+  specified in create or update requests. If specified in a request, must match the value in the
+  request URL
+* `oidc_policy` (OidcFederationPolicy)
+* `policy_id` (string) - The ID of the federation policy. Output only
+* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
+* `uid` (string) - Unique, immutable id of the federation policy
+* `update_time` (string) - Last update time of the federation policy
+
+### OidcFederationPolicy
+* `audiences` (list of string) - The allowed token audiences, as specified in the 'aud' claim of federated tokens.
+  The audience identifier is intended to represent the recipient of the token.
+  Can be any non-empty string value. As long as the audience in the token matches
+  at least one audience in the policy, the token is considered a match. If audiences
+  is unspecified, defaults to your Databricks account id
+* `issuer` (string) - The required token issuer, as specified in the 'iss' claim of federated tokens
+* `jwks_json` (string) - The public keys used to validate the signature of federated tokens, in JWKS format.
+  Most use cases should not need to specify this field. If jwks_uri and jwks_json
+  are both unspecified (recommended), Databricks automatically fetches the public
+  keys from your issuer’s well known endpoint. Databricks strongly recommends
+  relying on your issuer’s well known endpoint for discovering public keys
+* `jwks_uri` (string) - URL of the public keys used to validate the signature of federated tokens, in
+  JWKS format. Most use cases should not need to specify this field. If jwks_uri
+  and jwks_json are both unspecified (recommended), Databricks automatically
+  fetches the public keys from your issuer’s well known endpoint. Databricks
+  strongly recommends relying on your issuer’s well known endpoint for discovering
+  public keys
+* `subject` (string) - The required token subject, as specified in the subject claim of federated tokens.
+  Must be specified for service principal federation policies. Must not be specified
+  for account federation policies
+* `subject_claim` (string) - The claim that contains the subject of the token. If unspecified, the default value
+  is 'sub'

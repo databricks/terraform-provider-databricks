@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_external_metadatas Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of external metadata objects.
 
 -> **Note** This resource can only be used with an workspace-level provider!
@@ -10,7 +12,7 @@ This data source can be used to fetch the list of external metadata objects.
 Getting a list of all external metadata objects:
 
 ```hcl
-data "databricks_external_metadatas" "all" 
+data "databricks_external_metadatas" "all" {
 }
 ```
 
@@ -18,7 +20,6 @@ data "databricks_external_metadatas" "all"
 The following arguments are supported:
 * `page_size` (integer, optional) - Specifies the maximum number of external metadata objects to return in a single response.
   The value must be less than or equal to 1000
-
 
 
 ## Attributes

@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -321,7 +322,9 @@ func TestAccPermissions_Job(t *testing.T) {
 			assert.NoError(t, err)
 			idInt, err := strconv.Atoi(jobId)
 			assert.NoError(t, err)
-			job, err := w.Jobs.GetByJobId(context.Background(), int64(idInt))
+			job, err := w.Jobs.Get(context.Background(), jobs.GetJobRequest{
+				JobId: int64(idInt),
+			})
 			assert.NoError(t, err)
 			assertContainsPermission(t, permissions, currentPrincipalType(t), job.CreatorUserName, iam.PermissionLevelIsOwner)
 			return nil

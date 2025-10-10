@@ -5,6 +5,7 @@ package clean_rooms_clean_room
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -14,12 +15,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/cleanrooms_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "clean_rooms_clean_room"
@@ -34,13 +38,74 @@ type CleanRoomResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// CleanRoom extends the main model with additional fields.
+type CleanRoom struct {
+	cleanrooms_tf.CleanRoom
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// CleanRoom struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m CleanRoom) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.CleanRoom.GetComplexFieldTypes(ctx)
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoom
+// only implements ToObjectValue() and Type().
+func (m CleanRoom) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.CleanRoom.ToObjectValue(ctx)
+	embeddedAttrs := embeddedObj.Attributes()
+	embeddedAttrs["workspace_id"] = m.WorkspaceID
+
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		embeddedAttrs,
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m CleanRoom) Type(ctx context.Context) attr.Type {
+	embeddedType := m.CleanRoom.Type(ctx).(basetypes.ObjectType)
+	attrTypes := embeddedType.AttributeTypes()
+	attrTypes["workspace_id"] = types.StringType
+
+	return types.ObjectType{AttrTypes: attrTypes}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (m *CleanRoom) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan CleanRoom) {
+	m.CleanRoom.SyncFieldsDuringCreateOrUpdate(ctx, plan.CleanRoom)
+	m.WorkspaceID = plan.WorkspaceID
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (m *CleanRoom) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoom) {
+	m.CleanRoom.SyncFieldsDuringRead(ctx, existingState.CleanRoom)
+	m.WorkspaceID = existingState.WorkspaceID
+}
+
 func (r *CleanRoomResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *CleanRoomResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, cleanrooms_tf.CleanRoom{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CleanRoom{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
+		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -54,7 +119,7 @@ func (r *CleanRoomResource) Configure(ctx context.Context, req resource.Configur
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *CleanRoomResource) update(ctx context.Context, plan cleanrooms_tf.CleanRoom, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *CleanRoomResource) update(ctx context.Context, plan CleanRoom, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -79,7 +144,7 @@ func (r *CleanRoomResource) update(ctx context.Context, plan cleanrooms_tf.Clean
 		return
 	}
 
-	var newState cleanrooms_tf.CleanRoom
+	var newState CleanRoom
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -97,7 +162,7 @@ func (r *CleanRoomResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var plan cleanrooms_tf.CleanRoom
+	var plan CleanRoom
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +184,7 @@ func (r *CleanRoomResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	var newState cleanrooms_tf.CleanRoom
+	var newState CleanRoom
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response.Response, &newState)...)
 	if resp.Diagnostics.HasError() {
@@ -160,7 +225,7 @@ func (r *CleanRoomResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var existingState cleanrooms_tf.CleanRoom
+	var existingState CleanRoom
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,7 +248,7 @@ func (r *CleanRoomResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var newState cleanrooms_tf.CleanRoom
+	var newState CleanRoom
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -197,7 +262,7 @@ func (r *CleanRoomResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *CleanRoomResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan cleanrooms_tf.CleanRoom
+	var plan CleanRoom
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -215,7 +280,7 @@ func (r *CleanRoomResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	var state cleanrooms_tf.CleanRoom
+	var state CleanRoom
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

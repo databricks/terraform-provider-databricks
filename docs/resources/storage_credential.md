@@ -119,17 +119,30 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by name:
+When using a workspace-level provider to manage storage credentials, this resource can be imported by name:
 
 ```hcl
 import {
   to = databricks_storage_credential.this
-  id = "<name>"
+  id = "<storage_credential_name>"
+}
+```
+
+When using an account-level provider to manage storage credentials, use the format `<metastore_id>|<storage_credential_name>`:
+
+```hcl
+import {
+  to = databricks_storage_credential.this
+  id = "<metastore_id>|<storage_credential_name>"
 }
 ```
 
 Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_storage_credential.this <name>
+# When using a workspace-level provider
+terraform import databricks_storage_credential.this <storage_credential_name>
+
+# When using an account-level provider
+terraform import databricks_storage_credential.this <metastore_id>|<storage_credential_name>
 ```

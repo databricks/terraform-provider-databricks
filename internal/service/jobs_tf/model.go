@@ -17,8 +17,9 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf" // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -37,6 +38,9 @@ type BaseJob struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The id of the usage policy used by this job for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
@@ -51,39 +55,41 @@ type BaseJob struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (toState *BaseJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseJob) {
-	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *BaseJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BaseJob) {
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				// Recursively sync the fields of Settings
+				toSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
-	if !fromPlan.TriggerState.IsNull() && !fromPlan.TriggerState.IsUnknown() {
-		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
-			if fromPlanTriggerState, ok := fromPlan.GetTriggerState(ctx); ok {
-				toStateTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerState)
-				toState.SetTriggerState(ctx, toStateTriggerState)
+	if !from.TriggerState.IsNull() && !from.TriggerState.IsUnknown() {
+		if toTriggerState, ok := to.GetTriggerState(ctx); ok {
+			if fromTriggerState, ok := from.GetTriggerState(ctx); ok {
+				// Recursively sync the fields of TriggerState
+				toTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromTriggerState)
+				to.SetTriggerState(ctx, toTriggerState)
 			}
 		}
 	}
 }
 
-func (toState *BaseJob) SyncFieldsDuringRead(ctx context.Context, fromState BaseJob) {
-	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *BaseJob) SyncFieldsDuringRead(ctx context.Context, from BaseJob) {
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				toSettings.SyncFieldsDuringRead(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
-	if !fromState.TriggerState.IsNull() && !fromState.TriggerState.IsUnknown() {
-		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
-			if fromStateTriggerState, ok := fromState.GetTriggerState(ctx); ok {
-				toStateTriggerState.SyncFieldsDuringRead(ctx, fromStateTriggerState)
-				toState.SetTriggerState(ctx, toStateTriggerState)
+	if !from.TriggerState.IsNull() && !from.TriggerState.IsUnknown() {
+		if toTriggerState, ok := to.GetTriggerState(ctx); ok {
+			if fromTriggerState, ok := from.GetTriggerState(ctx); ok {
+				toTriggerState.SyncFieldsDuringRead(ctx, fromTriggerState)
+				to.SetTriggerState(ctx, toTriggerState)
 			}
 		}
 	}
@@ -93,6 +99,7 @@ func (c BaseJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
@@ -125,6 +132,7 @@ func (o BaseJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
 			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
 			"settings":                   o.Settings,
@@ -139,6 +147,7 @@ func (o BaseJob) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
 			"settings":                   JobSettings{}.Type(ctx),
@@ -233,6 +242,9 @@ type BaseRun struct {
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
 	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
+	// The id of the usage policy used by this run for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -332,135 +344,191 @@ type BaseRun struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (toState *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseRun) {
-	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BaseRun) {
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				// Recursively sync the fields of ClusterInstance
+				toClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromPlan.ClusterSpec.IsNull() && !fromPlan.ClusterSpec.IsUnknown() {
-		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
-			if fromPlanClusterSpec, ok := fromPlan.GetClusterSpec(ctx); ok {
-				toStateClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterSpec)
-				toState.SetClusterSpec(ctx, toStateClusterSpec)
+	if !from.ClusterSpec.IsNull() && !from.ClusterSpec.IsUnknown() {
+		if toClusterSpec, ok := to.GetClusterSpec(ctx); ok {
+			if fromClusterSpec, ok := from.GetClusterSpec(ctx); ok {
+				// Recursively sync the fields of ClusterSpec
+				toClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterSpec)
+				to.SetClusterSpec(ctx, toClusterSpec)
 			}
 		}
 	}
-	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromPlan.OverridingParameters.IsNull() && !fromPlan.OverridingParameters.IsUnknown() {
-		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
-			if fromPlanOverridingParameters, ok := fromPlan.GetOverridingParameters(ctx); ok {
-				toStateOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOverridingParameters)
-				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobParameters = from.JobParameters
+	}
+	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
+		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
+			if fromOverridingParameters, ok := from.GetOverridingParameters(ctx); ok {
+				// Recursively sync the fields of OverridingParameters
+				toOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromOverridingParameters)
+				to.SetOverridingParameters(ctx, toOverridingParameters)
 			}
 		}
 	}
-	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() && to.RepairHistory.IsNull() && len(from.RepairHistory.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RepairHistory = from.RepairHistory
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				// Recursively sync the fields of State
+				toState.SyncFieldsDuringCreateOrUpdate(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromPlan.TriggerInfo.IsNull() && !fromPlan.TriggerInfo.IsUnknown() {
-		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
-			if fromPlanTriggerInfo, ok := fromPlan.GetTriggerInfo(ctx); ok {
-				toStateTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerInfo)
-				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
+		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
+			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
+				// Recursively sync the fields of TriggerInfo
+				toTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromTriggerInfo)
+				to.SetTriggerInfo(ctx, toTriggerInfo)
 			}
 		}
 	}
 }
 
-func (toState *BaseRun) SyncFieldsDuringRead(ctx context.Context, fromState BaseRun) {
-	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+func (to *BaseRun) SyncFieldsDuringRead(ctx context.Context, from BaseRun) {
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				toClusterInstance.SyncFieldsDuringRead(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromState.ClusterSpec.IsNull() && !fromState.ClusterSpec.IsUnknown() {
-		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
-			if fromStateClusterSpec, ok := fromState.GetClusterSpec(ctx); ok {
-				toStateClusterSpec.SyncFieldsDuringRead(ctx, fromStateClusterSpec)
-				toState.SetClusterSpec(ctx, toStateClusterSpec)
+	if !from.ClusterSpec.IsNull() && !from.ClusterSpec.IsUnknown() {
+		if toClusterSpec, ok := to.GetClusterSpec(ctx); ok {
+			if fromClusterSpec, ok := from.GetClusterSpec(ctx); ok {
+				toClusterSpec.SyncFieldsDuringRead(ctx, fromClusterSpec)
+				to.SetClusterSpec(ctx, toClusterSpec)
 			}
 		}
 	}
-	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromState.OverridingParameters.IsNull() && !fromState.OverridingParameters.IsUnknown() {
-		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
-			if fromStateOverridingParameters, ok := fromState.GetOverridingParameters(ctx); ok {
-				toStateOverridingParameters.SyncFieldsDuringRead(ctx, fromStateOverridingParameters)
-				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobParameters = from.JobParameters
+	}
+	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
+		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
+			if fromOverridingParameters, ok := from.GetOverridingParameters(ctx); ok {
+				toOverridingParameters.SyncFieldsDuringRead(ctx, fromOverridingParameters)
+				to.SetOverridingParameters(ctx, toOverridingParameters)
 			}
 		}
 	}
-	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() && to.RepairHistory.IsNull() && len(from.RepairHistory.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RepairHistory = from.RepairHistory
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromStateState, ok := fromState.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				toState.SyncFieldsDuringRead(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromState.TriggerInfo.IsNull() && !fromState.TriggerInfo.IsUnknown() {
-		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
-			if fromStateTriggerInfo, ok := fromState.GetTriggerInfo(ctx); ok {
-				toStateTriggerInfo.SyncFieldsDuringRead(ctx, fromStateTriggerInfo)
-				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
+		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
+			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
+				toTriggerInfo.SyncFieldsDuringRead(ctx, fromTriggerInfo)
+				to.SetTriggerInfo(ctx, toTriggerInfo)
 			}
 		}
 	}
@@ -474,6 +542,7 @@ func (c BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -542,6 +611,7 @@ func (o BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            o.CreatorUserName,
 			"description":                  o.Description,
 			"effective_performance_target": o.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
 			"end_time":                     o.EndTime,
 			"execution_duration":           o.ExecutionDuration,
 			"git_source":                   o.GitSource,
@@ -582,6 +652,7 @@ func (o BaseRun) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
+			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
 			"execution_duration":           types.Int64Type,
 			"git_source":                   GitSource{}.Type(ctx),
@@ -932,6 +1003,19 @@ type CancelAllRuns struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
+func (to *CancelAllRuns) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelAllRuns) {
+}
+
+func (to *CancelAllRuns) SyncFieldsDuringRead(ctx context.Context, from CancelAllRuns) {
+}
+
+func (c CancelAllRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -965,39 +1049,21 @@ func (o CancelAllRuns) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CancelAllRunsResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRunsResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelAllRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelAllRunsResponse
-// only implements ToObjectValue() and Type().
-func (o CancelAllRunsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type CancelRun struct {
 	// This field is required.
 	RunId types.Int64 `tfsdk:"run_id"`
+}
+
+func (to *CancelRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelRun) {
+}
+
+func (to *CancelRun) SyncFieldsDuringRead(ctx context.Context, from CancelRun) {
+}
+
+func (c CancelRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
@@ -1031,36 +1097,6 @@ func (o CancelRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CancelRunResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRunResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelRunResponse
-// only implements ToObjectValue() and Type().
-func (o CancelRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelRunResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Stores the run state of the clean rooms notebook task.
 type CleanRoomTaskRunState struct {
 	// A value indicating the run's current lifecycle state. This field is
@@ -1073,10 +1109,10 @@ type CleanRoomTaskRunState struct {
 	ResultState types.String `tfsdk:"result_state"`
 }
 
-func (toState *CleanRoomTaskRunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomTaskRunState) {
+func (to *CleanRoomTaskRunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomTaskRunState) {
 }
 
-func (toState *CleanRoomTaskRunState) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomTaskRunState) {
+func (to *CleanRoomTaskRunState) SyncFieldsDuringRead(ctx context.Context, from CleanRoomTaskRunState) {
 }
 
 func (c CleanRoomTaskRunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1132,10 +1168,10 @@ type CleanRoomsNotebookTask struct {
 	NotebookName types.String `tfsdk:"notebook_name"`
 }
 
-func (toState *CleanRoomsNotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomsNotebookTask) {
+func (to *CleanRoomsNotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomsNotebookTask) {
 }
 
-func (toState *CleanRoomsNotebookTask) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomsNotebookTask) {
+func (to *CleanRoomsNotebookTask) SyncFieldsDuringRead(ctx context.Context, from CleanRoomsNotebookTask) {
 }
 
 func (c CleanRoomsNotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1223,55 +1259,58 @@ type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput struct {
 	OutputSchemaInfo types.Object `tfsdk:"output_schema_info"`
 }
 
-func (toState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
-	if !fromPlan.CleanRoomJobRunState.IsNull() && !fromPlan.CleanRoomJobRunState.IsUnknown() {
-		if toStateCleanRoomJobRunState, ok := toState.GetCleanRoomJobRunState(ctx); ok {
-			if fromPlanCleanRoomJobRunState, ok := fromPlan.GetCleanRoomJobRunState(ctx); ok {
-				toStateCleanRoomJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomJobRunState)
-				toState.SetCleanRoomJobRunState(ctx, toStateCleanRoomJobRunState)
+func (to *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+	if !from.CleanRoomJobRunState.IsNull() && !from.CleanRoomJobRunState.IsUnknown() {
+		if toCleanRoomJobRunState, ok := to.GetCleanRoomJobRunState(ctx); ok {
+			if fromCleanRoomJobRunState, ok := from.GetCleanRoomJobRunState(ctx); ok {
+				// Recursively sync the fields of CleanRoomJobRunState
+				toCleanRoomJobRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomJobRunState)
+				to.SetCleanRoomJobRunState(ctx, toCleanRoomJobRunState)
 			}
 		}
 	}
-	if !fromPlan.NotebookOutput.IsNull() && !fromPlan.NotebookOutput.IsUnknown() {
-		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
-			if fromPlanNotebookOutput, ok := fromPlan.GetNotebookOutput(ctx); ok {
-				toStateNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookOutput)
-				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+	if !from.NotebookOutput.IsNull() && !from.NotebookOutput.IsUnknown() {
+		if toNotebookOutput, ok := to.GetNotebookOutput(ctx); ok {
+			if fromNotebookOutput, ok := from.GetNotebookOutput(ctx); ok {
+				// Recursively sync the fields of NotebookOutput
+				toNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookOutput)
+				to.SetNotebookOutput(ctx, toNotebookOutput)
 			}
 		}
 	}
-	if !fromPlan.OutputSchemaInfo.IsNull() && !fromPlan.OutputSchemaInfo.IsUnknown() {
-		if toStateOutputSchemaInfo, ok := toState.GetOutputSchemaInfo(ctx); ok {
-			if fromPlanOutputSchemaInfo, ok := fromPlan.GetOutputSchemaInfo(ctx); ok {
-				toStateOutputSchemaInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOutputSchemaInfo)
-				toState.SetOutputSchemaInfo(ctx, toStateOutputSchemaInfo)
+	if !from.OutputSchemaInfo.IsNull() && !from.OutputSchemaInfo.IsUnknown() {
+		if toOutputSchemaInfo, ok := to.GetOutputSchemaInfo(ctx); ok {
+			if fromOutputSchemaInfo, ok := from.GetOutputSchemaInfo(ctx); ok {
+				// Recursively sync the fields of OutputSchemaInfo
+				toOutputSchemaInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputSchemaInfo)
+				to.SetOutputSchemaInfo(ctx, toOutputSchemaInfo)
 			}
 		}
 	}
 }
 
-func (toState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
-	if !fromState.CleanRoomJobRunState.IsNull() && !fromState.CleanRoomJobRunState.IsUnknown() {
-		if toStateCleanRoomJobRunState, ok := toState.GetCleanRoomJobRunState(ctx); ok {
-			if fromStateCleanRoomJobRunState, ok := fromState.GetCleanRoomJobRunState(ctx); ok {
-				toStateCleanRoomJobRunState.SyncFieldsDuringRead(ctx, fromStateCleanRoomJobRunState)
-				toState.SetCleanRoomJobRunState(ctx, toStateCleanRoomJobRunState)
+func (to *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncFieldsDuringRead(ctx context.Context, from CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+	if !from.CleanRoomJobRunState.IsNull() && !from.CleanRoomJobRunState.IsUnknown() {
+		if toCleanRoomJobRunState, ok := to.GetCleanRoomJobRunState(ctx); ok {
+			if fromCleanRoomJobRunState, ok := from.GetCleanRoomJobRunState(ctx); ok {
+				toCleanRoomJobRunState.SyncFieldsDuringRead(ctx, fromCleanRoomJobRunState)
+				to.SetCleanRoomJobRunState(ctx, toCleanRoomJobRunState)
 			}
 		}
 	}
-	if !fromState.NotebookOutput.IsNull() && !fromState.NotebookOutput.IsUnknown() {
-		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
-			if fromStateNotebookOutput, ok := fromState.GetNotebookOutput(ctx); ok {
-				toStateNotebookOutput.SyncFieldsDuringRead(ctx, fromStateNotebookOutput)
-				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+	if !from.NotebookOutput.IsNull() && !from.NotebookOutput.IsUnknown() {
+		if toNotebookOutput, ok := to.GetNotebookOutput(ctx); ok {
+			if fromNotebookOutput, ok := from.GetNotebookOutput(ctx); ok {
+				toNotebookOutput.SyncFieldsDuringRead(ctx, fromNotebookOutput)
+				to.SetNotebookOutput(ctx, toNotebookOutput)
 			}
 		}
 	}
-	if !fromState.OutputSchemaInfo.IsNull() && !fromState.OutputSchemaInfo.IsUnknown() {
-		if toStateOutputSchemaInfo, ok := toState.GetOutputSchemaInfo(ctx); ok {
-			if fromStateOutputSchemaInfo, ok := fromState.GetOutputSchemaInfo(ctx); ok {
-				toStateOutputSchemaInfo.SyncFieldsDuringRead(ctx, fromStateOutputSchemaInfo)
-				toState.SetOutputSchemaInfo(ctx, toStateOutputSchemaInfo)
+	if !from.OutputSchemaInfo.IsNull() && !from.OutputSchemaInfo.IsUnknown() {
+		if toOutputSchemaInfo, ok := to.GetOutputSchemaInfo(ctx); ok {
+			if fromOutputSchemaInfo, ok := from.GetOutputSchemaInfo(ctx); ok {
+				toOutputSchemaInfo.SyncFieldsDuringRead(ctx, fromOutputSchemaInfo)
+				to.SetOutputSchemaInfo(ctx, toOutputSchemaInfo)
 			}
 		}
 	}
@@ -1420,10 +1459,10 @@ type ClusterInstance struct {
 	SparkContextId types.String `tfsdk:"spark_context_id"`
 }
 
-func (toState *ClusterInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterInstance) {
+func (to *ClusterInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClusterInstance) {
 }
 
-func (toState *ClusterInstance) SyncFieldsDuringRead(ctx context.Context, fromState ClusterInstance) {
+func (to *ClusterInstance) SyncFieldsDuringRead(ctx context.Context, from ClusterInstance) {
 }
 
 func (c ClusterInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1483,23 +1522,36 @@ type ClusterSpec struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (toState *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClusterSpec) {
-	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+func (to *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClusterSpec) {
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				// Recursively sync the fields of NewCluster
+				toNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
 }
 
-func (toState *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, fromState ClusterSpec) {
-	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+func (to *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, from ClusterSpec) {
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				toNewCluster.SyncFieldsDuringRead(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
@@ -1616,10 +1668,10 @@ type ComputeConfig struct {
 	NumGpus types.Int64 `tfsdk:"num_gpus"`
 }
 
-func (toState *ComputeConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ComputeConfig) {
+func (to *ComputeConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputeConfig) {
 }
 
-func (toState *ComputeConfig) SyncFieldsDuringRead(ctx context.Context, fromState ComputeConfig) {
+func (to *ComputeConfig) SyncFieldsDuringRead(ctx context.Context, from ComputeConfig) {
 }
 
 func (c ComputeConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1685,10 +1737,10 @@ type ConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (toState *ConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ConditionTask) {
+func (to *ConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConditionTask) {
 }
 
-func (toState *ConditionTask) SyncFieldsDuringRead(ctx context.Context, fromState ConditionTask) {
+func (to *ConditionTask) SyncFieldsDuringRead(ctx context.Context, from ConditionTask) {
 }
 
 func (c ConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1738,16 +1790,20 @@ type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
+	// Indicate whether the continuous job is applying task level retries or
+	// not. Defaults to NEVER.
+	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
-func (toState *Continuous) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Continuous) {
+func (to *Continuous) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Continuous) {
 }
 
-func (toState *Continuous) SyncFieldsDuringRead(ctx context.Context, fromState Continuous) {
+func (to *Continuous) SyncFieldsDuringRead(ctx context.Context, from Continuous) {
 }
 
 func (c Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
 }
@@ -1770,7 +1826,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status": o.PauseStatus,
+			"pause_status":    o.PauseStatus,
+			"task_retry_mode": o.TaskRetryMode,
 		})
 }
 
@@ -1778,7 +1835,8 @@ func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Continuous) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status": types.StringType,
+			"pause_status":    types.StringType,
+			"task_retry_mode": types.StringType,
 		},
 	}
 }
@@ -1897,12 +1955,296 @@ type CreateJob struct {
 	Trigger types.Object `tfsdk:"trigger"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
-	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// modifying the job. See `effective_usage_policy_id` for the usage policy
 	// used by this workload.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
+}
+
+func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateJob) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
+		if toContinuous, ok := to.GetContinuous(ctx); ok {
+			if fromContinuous, ok := from.GetContinuous(ctx); ok {
+				// Recursively sync the fields of Continuous
+				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
+				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				// Recursively sync the fields of Deployment
+				toDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
+			}
+		}
+	}
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
+			}
+		}
+	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				// Recursively sync the fields of Queue
+				toQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				// Recursively sync the fields of RunAs
+				toRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
+			}
+		}
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				// Recursively sync the fields of Trigger
+				toTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
+			}
+		}
+	}
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
+		if toContinuous, ok := to.GetContinuous(ctx); ok {
+			if fromContinuous, ok := from.GetContinuous(ctx); ok {
+				toContinuous.SyncFieldsDuringRead(ctx, fromContinuous)
+				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				toDeployment.SyncFieldsDuringRead(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
+			}
+		}
+	}
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
+			}
+		}
+	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				toQueue.SyncFieldsDuringRead(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				toRunAs.SyncFieldsDuringRead(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
+			}
+		}
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				toTrigger.SyncFieldsDuringRead(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
+			}
+		}
+	}
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (c CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
+	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
@@ -2453,10 +2795,10 @@ type CreateResponse struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
-func (toState *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateResponse) {
+func (to *CreateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateResponse) {
 }
 
-func (toState *CreateResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateResponse) {
+func (to *CreateResponse) SyncFieldsDuringRead(ctx context.Context, from CreateResponse) {
 }
 
 func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2511,10 +2853,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (toState *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule) {
+func (to *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CronSchedule) {
 }
 
-func (toState *CronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule) {
+func (to *CronSchedule) SyncFieldsDuringRead(ctx context.Context, from CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2566,10 +2908,22 @@ type DashboardPageSnapshot struct {
 	WidgetErrorDetails types.List `tfsdk:"widget_error_details"`
 }
 
-func (toState *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardPageSnapshot) {
+func (to *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardPageSnapshot) {
+	if !from.WidgetErrorDetails.IsNull() && !from.WidgetErrorDetails.IsUnknown() && to.WidgetErrorDetails.IsNull() && len(from.WidgetErrorDetails.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WidgetErrorDetails, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WidgetErrorDetails = from.WidgetErrorDetails
+	}
 }
 
-func (toState *DashboardPageSnapshot) SyncFieldsDuringRead(ctx context.Context, fromState DashboardPageSnapshot) {
+func (to *DashboardPageSnapshot) SyncFieldsDuringRead(ctx context.Context, from DashboardPageSnapshot) {
+	if !from.WidgetErrorDetails.IsNull() && !from.WidgetErrorDetails.IsUnknown() && to.WidgetErrorDetails.IsNull() && len(from.WidgetErrorDetails.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WidgetErrorDetails, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WidgetErrorDetails = from.WidgetErrorDetails
+	}
 }
 
 func (c DashboardPageSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2654,23 +3008,24 @@ type DashboardTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *DashboardTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardTask) {
-	if !fromPlan.Subscription.IsNull() && !fromPlan.Subscription.IsUnknown() {
-		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
-			if fromPlanSubscription, ok := fromPlan.GetSubscription(ctx); ok {
-				toStateSubscription.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSubscription)
-				toState.SetSubscription(ctx, toStateSubscription)
+func (to *DashboardTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardTask) {
+	if !from.Subscription.IsNull() && !from.Subscription.IsUnknown() {
+		if toSubscription, ok := to.GetSubscription(ctx); ok {
+			if fromSubscription, ok := from.GetSubscription(ctx); ok {
+				// Recursively sync the fields of Subscription
+				toSubscription.SyncFieldsDuringCreateOrUpdate(ctx, fromSubscription)
+				to.SetSubscription(ctx, toSubscription)
 			}
 		}
 	}
 }
 
-func (toState *DashboardTask) SyncFieldsDuringRead(ctx context.Context, fromState DashboardTask) {
-	if !fromState.Subscription.IsNull() && !fromState.Subscription.IsUnknown() {
-		if toStateSubscription, ok := toState.GetSubscription(ctx); ok {
-			if fromStateSubscription, ok := fromState.GetSubscription(ctx); ok {
-				toStateSubscription.SyncFieldsDuringRead(ctx, fromStateSubscription)
-				toState.SetSubscription(ctx, toStateSubscription)
+func (to *DashboardTask) SyncFieldsDuringRead(ctx context.Context, from DashboardTask) {
+	if !from.Subscription.IsNull() && !from.Subscription.IsUnknown() {
+		if toSubscription, ok := to.GetSubscription(ctx); ok {
+			if fromSubscription, ok := from.GetSubscription(ctx); ok {
+				toSubscription.SyncFieldsDuringRead(ctx, fromSubscription)
+				to.SetSubscription(ctx, toSubscription)
 			}
 		}
 	}
@@ -2751,10 +3106,22 @@ type DashboardTaskOutput struct {
 	PageSnapshots types.List `tfsdk:"page_snapshots"`
 }
 
-func (toState *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardTaskOutput) {
+func (to *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardTaskOutput) {
+	if !from.PageSnapshots.IsNull() && !from.PageSnapshots.IsUnknown() && to.PageSnapshots.IsNull() && len(from.PageSnapshots.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageSnapshots, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageSnapshots = from.PageSnapshots
+	}
 }
 
-func (toState *DashboardTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DashboardTaskOutput) {
+func (to *DashboardTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DashboardTaskOutput) {
+	if !from.PageSnapshots.IsNull() && !from.PageSnapshots.IsUnknown() && to.PageSnapshots.IsNull() && len(from.PageSnapshots.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageSnapshots, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageSnapshots = from.PageSnapshots
+	}
 }
 
 func (c DashboardTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2837,10 +3204,10 @@ type DbtCloudJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (toState *DbtCloudJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudJobRunStep) {
+func (to *DbtCloudJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtCloudJobRunStep) {
 }
 
-func (toState *DbtCloudJobRunStep) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudJobRunStep) {
+func (to *DbtCloudJobRunStep) SyncFieldsDuringRead(ctx context.Context, from DbtCloudJobRunStep) {
 }
 
 func (c DbtCloudJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2898,10 +3265,10 @@ type DbtCloudTask struct {
 	DbtCloudJobId types.Int64 `tfsdk:"dbt_cloud_job_id"`
 }
 
-func (toState *DbtCloudTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudTask) {
+func (to *DbtCloudTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtCloudTask) {
 }
 
-func (toState *DbtCloudTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudTask) {
+func (to *DbtCloudTask) SyncFieldsDuringRead(ctx context.Context, from DbtCloudTask) {
 }
 
 func (c DbtCloudTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2954,10 +3321,22 @@ type DbtCloudTaskOutput struct {
 	DbtCloudJobRunUrl types.String `tfsdk:"dbt_cloud_job_run_url"`
 }
 
-func (toState *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtCloudTaskOutput) {
+func (to *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtCloudTaskOutput) {
+	if !from.DbtCloudJobRunOutput.IsNull() && !from.DbtCloudJobRunOutput.IsUnknown() && to.DbtCloudJobRunOutput.IsNull() && len(from.DbtCloudJobRunOutput.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCloudJobRunOutput, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCloudJobRunOutput = from.DbtCloudJobRunOutput
+	}
 }
 
-func (toState *DbtCloudTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtCloudTaskOutput) {
+func (to *DbtCloudTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DbtCloudTaskOutput) {
+	if !from.DbtCloudJobRunOutput.IsNull() && !from.DbtCloudJobRunOutput.IsUnknown() && to.DbtCloudJobRunOutput.IsNull() && len(from.DbtCloudJobRunOutput.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCloudJobRunOutput, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCloudJobRunOutput = from.DbtCloudJobRunOutput
+	}
 }
 
 func (c DbtCloudTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3043,10 +3422,10 @@ type DbtOutput struct {
 	ArtifactsLink types.String `tfsdk:"artifacts_link"`
 }
 
-func (toState *DbtOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtOutput) {
+func (to *DbtOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtOutput) {
 }
 
-func (toState *DbtOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtOutput) {
+func (to *DbtOutput) SyncFieldsDuringRead(ctx context.Context, from DbtOutput) {
 }
 
 func (c DbtOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3137,10 +3516,10 @@ type DbtPlatformJobRunStep struct {
 	Status types.String `tfsdk:"status"`
 }
 
-func (toState *DbtPlatformJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformJobRunStep) {
+func (to *DbtPlatformJobRunStep) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtPlatformJobRunStep) {
 }
 
-func (toState *DbtPlatformJobRunStep) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformJobRunStep) {
+func (to *DbtPlatformJobRunStep) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformJobRunStep) {
 }
 
 func (c DbtPlatformJobRunStep) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3204,10 +3583,10 @@ type DbtPlatformTask struct {
 	DbtPlatformJobId types.String `tfsdk:"dbt_platform_job_id"`
 }
 
-func (toState *DbtPlatformTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformTask) {
+func (to *DbtPlatformTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtPlatformTask) {
 }
 
-func (toState *DbtPlatformTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformTask) {
+func (to *DbtPlatformTask) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformTask) {
 }
 
 func (c DbtPlatformTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3263,10 +3642,22 @@ type DbtPlatformTaskOutput struct {
 	StepsTruncated types.Bool `tfsdk:"steps_truncated"`
 }
 
-func (toState *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtPlatformTaskOutput) {
+func (to *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtPlatformTaskOutput) {
+	if !from.DbtPlatformJobRunOutput.IsNull() && !from.DbtPlatformJobRunOutput.IsUnknown() && to.DbtPlatformJobRunOutput.IsNull() && len(from.DbtPlatformJobRunOutput.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtPlatformJobRunOutput, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtPlatformJobRunOutput = from.DbtPlatformJobRunOutput
+	}
 }
 
-func (toState *DbtPlatformTaskOutput) SyncFieldsDuringRead(ctx context.Context, fromState DbtPlatformTaskOutput) {
+func (to *DbtPlatformTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformTaskOutput) {
+	if !from.DbtPlatformJobRunOutput.IsNull() && !from.DbtPlatformJobRunOutput.IsUnknown() && to.DbtPlatformJobRunOutput.IsNull() && len(from.DbtPlatformJobRunOutput.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtPlatformJobRunOutput, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtPlatformJobRunOutput = from.DbtPlatformJobRunOutput
+	}
 }
 
 func (c DbtPlatformTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3382,10 +3773,10 @@ type DbtTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *DbtTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DbtTask) {
+func (to *DbtTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DbtTask) {
 }
 
-func (toState *DbtTask) SyncFieldsDuringRead(ctx context.Context, fromState DbtTask) {
+func (to *DbtTask) SyncFieldsDuringRead(ctx context.Context, from DbtTask) {
 }
 
 func (c DbtTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3478,6 +3869,18 @@ type DeleteJob struct {
 	JobId types.Int64 `tfsdk:"job_id"`
 }
 
+func (to *DeleteJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteJob) {
+}
+
+func (to *DeleteJob) SyncFieldsDuringRead(ctx context.Context, from DeleteJob) {
+}
+
+func (c DeleteJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3509,39 +3912,21 @@ func (o DeleteJob) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type DeleteRun struct {
 	// ID of the run to delete.
 	RunId types.Int64 `tfsdk:"run_id"`
+}
+
+func (to *DeleteRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteRun) {
+}
+
+func (to *DeleteRun) SyncFieldsDuringRead(ctx context.Context, from DeleteRun) {
+}
+
+func (c DeleteRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -3575,36 +3960,6 @@ func (o DeleteRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteRunResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DeleteRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRunResponse
-// only implements ToObjectValue() and Type().
-func (o DeleteRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Represents a change to the job cluster's settings that would be required for
 // the job clusters to become compliant with their policies.
 type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
@@ -3623,10 +3978,10 @@ type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
-func (toState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (to *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (toState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringRead(ctx context.Context, fromState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+func (to *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
 func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3680,6 +4035,19 @@ type EnforcePolicyComplianceRequest struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
+func (to *EnforcePolicyComplianceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnforcePolicyComplianceRequest) {
+}
+
+func (to *EnforcePolicyComplianceRequest) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceRequest) {
+}
+
+func (c EnforcePolicyComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3730,23 +4098,36 @@ type EnforcePolicyComplianceResponse struct {
 	Settings types.Object `tfsdk:"settings"`
 }
 
-func (toState *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnforcePolicyComplianceResponse) {
-	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnforcePolicyComplianceResponse) {
+	if !from.JobClusterChanges.IsNull() && !from.JobClusterChanges.IsUnknown() && to.JobClusterChanges.IsNull() && len(from.JobClusterChanges.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusterChanges, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusterChanges = from.JobClusterChanges
+	}
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				// Recursively sync the fields of Settings
+				toSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
 }
 
-func (toState *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState EnforcePolicyComplianceResponse) {
-	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceResponse) {
+	if !from.JobClusterChanges.IsNull() && !from.JobClusterChanges.IsUnknown() && to.JobClusterChanges.IsNull() && len(from.JobClusterChanges.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusterChanges, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusterChanges = from.JobClusterChanges
+	}
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				toSettings.SyncFieldsDuringRead(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
@@ -3855,16 +4236,26 @@ func (o *EnforcePolicyComplianceResponse) SetSettings(ctx context.Context, v Job
 type ExportRunOutput struct {
 	// The exported content in HTML format (one for every view item). To extract
 	// the HTML notebook from the JSON response, download and run this [Python
-	// script].
-	//
-	// [Python script]: https://docs.databricks.com/en/_static/examples/extract.py
+	// script](/_static/examples/extract.py).
 	Views types.List `tfsdk:"views"`
 }
 
-func (toState *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExportRunOutput) {
+func (to *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExportRunOutput) {
+	if !from.Views.IsNull() && !from.Views.IsUnknown() && to.Views.IsNull() && len(from.Views.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Views, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Views = from.Views
+	}
 }
 
-func (toState *ExportRunOutput) SyncFieldsDuringRead(ctx context.Context, fromState ExportRunOutput) {
+func (to *ExportRunOutput) SyncFieldsDuringRead(ctx context.Context, from ExportRunOutput) {
+	if !from.Views.IsNull() && !from.Views.IsUnknown() && to.Views.IsNull() && len(from.Views.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Views, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Views = from.Views
+	}
 }
 
 func (c ExportRunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3941,6 +4332,19 @@ type ExportRunRequest struct {
 	ViewsToExport types.String `tfsdk:"-"`
 }
 
+func (to *ExportRunRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExportRunRequest) {
+}
+
+func (to *ExportRunRequest) SyncFieldsDuringRead(ctx context.Context, from ExportRunRequest) {
+}
+
+func (c ExportRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["views_to_export"] = attrs["views_to_export"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3989,10 +4393,10 @@ type FileArrivalTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (toState *FileArrivalTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileArrivalTriggerConfiguration) {
+func (to *FileArrivalTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FileArrivalTriggerConfiguration) {
 }
 
-func (toState *FileArrivalTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState FileArrivalTriggerConfiguration) {
+func (to *FileArrivalTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from FileArrivalTriggerConfiguration) {
 }
 
 func (c FileArrivalTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4044,10 +4448,10 @@ type FileArrivalTriggerState struct {
 	UsingFileEvents types.Bool `tfsdk:"using_file_events"`
 }
 
-func (toState *FileArrivalTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan FileArrivalTriggerState) {
+func (to *FileArrivalTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FileArrivalTriggerState) {
 }
 
-func (toState *FileArrivalTriggerState) SyncFieldsDuringRead(ctx context.Context, fromState FileArrivalTriggerState) {
+func (to *FileArrivalTriggerState) SyncFieldsDuringRead(ctx context.Context, from FileArrivalTriggerState) {
 }
 
 func (c FileArrivalTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4094,23 +4498,36 @@ type ForEachStats struct {
 	TaskRunStats types.Object `tfsdk:"task_run_stats"`
 }
 
-func (toState *ForEachStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachStats) {
-	if !fromPlan.TaskRunStats.IsNull() && !fromPlan.TaskRunStats.IsUnknown() {
-		if toStateTaskRunStats, ok := toState.GetTaskRunStats(ctx); ok {
-			if fromPlanTaskRunStats, ok := fromPlan.GetTaskRunStats(ctx); ok {
-				toStateTaskRunStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTaskRunStats)
-				toState.SetTaskRunStats(ctx, toStateTaskRunStats)
+func (to *ForEachStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ForEachStats) {
+	if !from.ErrorMessageStats.IsNull() && !from.ErrorMessageStats.IsUnknown() && to.ErrorMessageStats.IsNull() && len(from.ErrorMessageStats.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ErrorMessageStats, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ErrorMessageStats = from.ErrorMessageStats
+	}
+	if !from.TaskRunStats.IsNull() && !from.TaskRunStats.IsUnknown() {
+		if toTaskRunStats, ok := to.GetTaskRunStats(ctx); ok {
+			if fromTaskRunStats, ok := from.GetTaskRunStats(ctx); ok {
+				// Recursively sync the fields of TaskRunStats
+				toTaskRunStats.SyncFieldsDuringCreateOrUpdate(ctx, fromTaskRunStats)
+				to.SetTaskRunStats(ctx, toTaskRunStats)
 			}
 		}
 	}
 }
 
-func (toState *ForEachStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachStats) {
-	if !fromState.TaskRunStats.IsNull() && !fromState.TaskRunStats.IsUnknown() {
-		if toStateTaskRunStats, ok := toState.GetTaskRunStats(ctx); ok {
-			if fromStateTaskRunStats, ok := fromState.GetTaskRunStats(ctx); ok {
-				toStateTaskRunStats.SyncFieldsDuringRead(ctx, fromStateTaskRunStats)
-				toState.SetTaskRunStats(ctx, toStateTaskRunStats)
+func (to *ForEachStats) SyncFieldsDuringRead(ctx context.Context, from ForEachStats) {
+	if !from.ErrorMessageStats.IsNull() && !from.ErrorMessageStats.IsUnknown() && to.ErrorMessageStats.IsNull() && len(from.ErrorMessageStats.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ErrorMessageStats, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ErrorMessageStats = from.ErrorMessageStats
+	}
+	if !from.TaskRunStats.IsNull() && !from.TaskRunStats.IsUnknown() {
+		if toTaskRunStats, ok := to.GetTaskRunStats(ctx); ok {
+			if fromTaskRunStats, ok := from.GetTaskRunStats(ctx); ok {
+				toTaskRunStats.SyncFieldsDuringRead(ctx, fromTaskRunStats)
+				to.SetTaskRunStats(ctx, toTaskRunStats)
 			}
 		}
 	}
@@ -4224,23 +4641,24 @@ type ForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (toState *ForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTask) {
-	if !fromPlan.Task.IsNull() && !fromPlan.Task.IsUnknown() {
-		if toStateTask, ok := toState.GetTask(ctx); ok {
-			if fromPlanTask, ok := fromPlan.GetTask(ctx); ok {
-				toStateTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTask)
-				toState.SetTask(ctx, toStateTask)
+func (to *ForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ForEachTask) {
+	if !from.Task.IsNull() && !from.Task.IsUnknown() {
+		if toTask, ok := to.GetTask(ctx); ok {
+			if fromTask, ok := from.GetTask(ctx); ok {
+				// Recursively sync the fields of Task
+				toTask.SyncFieldsDuringCreateOrUpdate(ctx, fromTask)
+				to.SetTask(ctx, toTask)
 			}
 		}
 	}
 }
 
-func (toState *ForEachTask) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTask) {
-	if !fromState.Task.IsNull() && !fromState.Task.IsUnknown() {
-		if toStateTask, ok := toState.GetTask(ctx); ok {
-			if fromStateTask, ok := fromState.GetTask(ctx); ok {
-				toStateTask.SyncFieldsDuringRead(ctx, fromStateTask)
-				toState.SetTask(ctx, toStateTask)
+func (to *ForEachTask) SyncFieldsDuringRead(ctx context.Context, from ForEachTask) {
+	if !from.Task.IsNull() && !from.Task.IsUnknown() {
+		if toTask, ok := to.GetTask(ctx); ok {
+			if fromTask, ok := from.GetTask(ctx); ok {
+				toTask.SyncFieldsDuringRead(ctx, fromTask)
+				to.SetTask(ctx, toTask)
 			}
 		}
 	}
@@ -4326,10 +4744,10 @@ type ForEachTaskErrorMessageStats struct {
 	TerminationCategory types.String `tfsdk:"termination_category"`
 }
 
-func (toState *ForEachTaskErrorMessageStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTaskErrorMessageStats) {
+func (to *ForEachTaskErrorMessageStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ForEachTaskErrorMessageStats) {
 }
 
-func (toState *ForEachTaskErrorMessageStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTaskErrorMessageStats) {
+func (to *ForEachTaskErrorMessageStats) SyncFieldsDuringRead(ctx context.Context, from ForEachTaskErrorMessageStats) {
 }
 
 func (c ForEachTaskErrorMessageStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4391,10 +4809,10 @@ type ForEachTaskTaskRunStats struct {
 	TotalIterations types.Int64 `tfsdk:"total_iterations"`
 }
 
-func (toState *ForEachTaskTaskRunStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ForEachTaskTaskRunStats) {
+func (to *ForEachTaskTaskRunStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ForEachTaskTaskRunStats) {
 }
 
-func (toState *ForEachTaskTaskRunStats) SyncFieldsDuringRead(ctx context.Context, fromState ForEachTaskTaskRunStats) {
+func (to *ForEachTaskTaskRunStats) SyncFieldsDuringRead(ctx context.Context, from ForEachTaskTaskRunStats) {
 }
 
 func (c ForEachTaskTaskRunStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4483,23 +4901,24 @@ type GenAiComputeTask struct {
 	YamlParametersFilePath types.String `tfsdk:"yaml_parameters_file_path"`
 }
 
-func (toState *GenAiComputeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GenAiComputeTask) {
-	if !fromPlan.Compute.IsNull() && !fromPlan.Compute.IsUnknown() {
-		if toStateCompute, ok := toState.GetCompute(ctx); ok {
-			if fromPlanCompute, ok := fromPlan.GetCompute(ctx); ok {
-				toStateCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCompute)
-				toState.SetCompute(ctx, toStateCompute)
+func (to *GenAiComputeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenAiComputeTask) {
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				// Recursively sync the fields of Compute
+				toCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
 			}
 		}
 	}
 }
 
-func (toState *GenAiComputeTask) SyncFieldsDuringRead(ctx context.Context, fromState GenAiComputeTask) {
-	if !fromState.Compute.IsNull() && !fromState.Compute.IsUnknown() {
-		if toStateCompute, ok := toState.GetCompute(ctx); ok {
-			if fromStateCompute, ok := fromState.GetCompute(ctx); ok {
-				toStateCompute.SyncFieldsDuringRead(ctx, fromStateCompute)
-				toState.SetCompute(ctx, toStateCompute)
+func (to *GenAiComputeTask) SyncFieldsDuringRead(ctx context.Context, from GenAiComputeTask) {
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				toCompute.SyncFieldsDuringRead(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
 			}
 		}
 	}
@@ -4595,6 +5014,18 @@ type GetJobPermissionLevelsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (to *GetJobPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetJobPermissionLevelsRequest) {
+}
+
+func (to *GetJobPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionLevelsRequest) {
+}
+
+func (c GetJobPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4631,10 +5062,22 @@ type GetJobPermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (toState *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetJobPermissionLevelsResponse) {
+func (to *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetJobPermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
 }
 
-func (toState *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetJobPermissionLevelsResponse) {
+func (to *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
 }
 
 func (c GetJobPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4709,6 +5152,18 @@ type GetJobPermissionsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (to *GetJobPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetJobPermissionsRequest) {
+}
+
+func (to *GetJobPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionsRequest) {
+}
+
+func (c GetJobPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4749,6 +5204,19 @@ type GetJobRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *GetJobRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetJobRequest) {
+}
+
+func (to *GetJobRequest) SyncFieldsDuringRead(ctx context.Context, from GetJobRequest) {
+}
+
+func (c GetJobRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4785,6 +5253,18 @@ func (o GetJobRequest) Type(ctx context.Context) attr.Type {
 type GetPolicyComplianceRequest struct {
 	// The ID of the job whose compliance status you are requesting.
 	JobId types.Int64 `tfsdk:"-"`
+}
+
+func (to *GetPolicyComplianceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPolicyComplianceRequest) {
+}
+
+func (to *GetPolicyComplianceRequest) SyncFieldsDuringRead(ctx context.Context, from GetPolicyComplianceRequest) {
+}
+
+func (c GetPolicyComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceRequest.
@@ -4832,10 +5312,10 @@ type GetPolicyComplianceResponse struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (toState *GetPolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetPolicyComplianceResponse) {
+func (to *GetPolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPolicyComplianceResponse) {
 }
 
-func (toState *GetPolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetPolicyComplianceResponse) {
+func (to *GetPolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Context, from GetPolicyComplianceResponse) {
 }
 
 func (c GetPolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4913,6 +5393,18 @@ type GetRunOutputRequest struct {
 	RunId types.Int64 `tfsdk:"-"`
 }
 
+func (to *GetRunOutputRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetRunOutputRequest) {
+}
+
+func (to *GetRunOutputRequest) SyncFieldsDuringRead(ctx context.Context, from GetRunOutputRequest) {
+}
+
+func (c GetRunOutputRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunOutputRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4955,6 +5447,21 @@ type GetRunRequest struct {
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (to *GetRunRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetRunRequest) {
+}
+
+func (to *GetRunRequest) SyncFieldsDuringRead(ctx context.Context, from GetRunRequest) {
+}
+
+func (c GetRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["include_history"] = attrs["include_history"].SetOptional()
+	attrs["include_resolved_values"] = attrs["include_resolved_values"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunRequest.
@@ -5003,10 +5510,10 @@ type GitSnapshot struct {
 	UsedCommit types.String `tfsdk:"used_commit"`
 }
 
-func (toState *GitSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GitSnapshot) {
+func (to *GitSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GitSnapshot) {
 }
 
-func (toState *GitSnapshot) SyncFieldsDuringRead(ctx context.Context, fromState GitSnapshot) {
+func (to *GitSnapshot) SyncFieldsDuringRead(ctx context.Context, from GitSnapshot) {
 }
 
 func (c GitSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5078,39 +5585,41 @@ type GitSource struct {
 	JobSource types.Object `tfsdk:"job_source"`
 }
 
-func (toState *GitSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GitSource) {
-	if !fromPlan.GitSnapshot.IsNull() && !fromPlan.GitSnapshot.IsUnknown() {
-		if toStateGitSnapshot, ok := toState.GetGitSnapshot(ctx); ok {
-			if fromPlanGitSnapshot, ok := fromPlan.GetGitSnapshot(ctx); ok {
-				toStateGitSnapshot.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSnapshot)
-				toState.SetGitSnapshot(ctx, toStateGitSnapshot)
+func (to *GitSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GitSource) {
+	if !from.GitSnapshot.IsNull() && !from.GitSnapshot.IsUnknown() {
+		if toGitSnapshot, ok := to.GetGitSnapshot(ctx); ok {
+			if fromGitSnapshot, ok := from.GetGitSnapshot(ctx); ok {
+				// Recursively sync the fields of GitSnapshot
+				toGitSnapshot.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSnapshot)
+				to.SetGitSnapshot(ctx, toGitSnapshot)
 			}
 		}
 	}
-	if !fromPlan.JobSource.IsNull() && !fromPlan.JobSource.IsUnknown() {
-		if toStateJobSource, ok := toState.GetJobSource(ctx); ok {
-			if fromPlanJobSource, ok := fromPlan.GetJobSource(ctx); ok {
-				toStateJobSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJobSource)
-				toState.SetJobSource(ctx, toStateJobSource)
+	if !from.JobSource.IsNull() && !from.JobSource.IsUnknown() {
+		if toJobSource, ok := to.GetJobSource(ctx); ok {
+			if fromJobSource, ok := from.GetJobSource(ctx); ok {
+				// Recursively sync the fields of JobSource
+				toJobSource.SyncFieldsDuringCreateOrUpdate(ctx, fromJobSource)
+				to.SetJobSource(ctx, toJobSource)
 			}
 		}
 	}
 }
 
-func (toState *GitSource) SyncFieldsDuringRead(ctx context.Context, fromState GitSource) {
-	if !fromState.GitSnapshot.IsNull() && !fromState.GitSnapshot.IsUnknown() {
-		if toStateGitSnapshot, ok := toState.GetGitSnapshot(ctx); ok {
-			if fromStateGitSnapshot, ok := fromState.GetGitSnapshot(ctx); ok {
-				toStateGitSnapshot.SyncFieldsDuringRead(ctx, fromStateGitSnapshot)
-				toState.SetGitSnapshot(ctx, toStateGitSnapshot)
+func (to *GitSource) SyncFieldsDuringRead(ctx context.Context, from GitSource) {
+	if !from.GitSnapshot.IsNull() && !from.GitSnapshot.IsUnknown() {
+		if toGitSnapshot, ok := to.GetGitSnapshot(ctx); ok {
+			if fromGitSnapshot, ok := from.GetGitSnapshot(ctx); ok {
+				toGitSnapshot.SyncFieldsDuringRead(ctx, fromGitSnapshot)
+				to.SetGitSnapshot(ctx, toGitSnapshot)
 			}
 		}
 	}
-	if !fromState.JobSource.IsNull() && !fromState.JobSource.IsUnknown() {
-		if toStateJobSource, ok := toState.GetJobSource(ctx); ok {
-			if fromStateJobSource, ok := fromState.GetJobSource(ctx); ok {
-				toStateJobSource.SyncFieldsDuringRead(ctx, fromStateJobSource)
-				toState.SetJobSource(ctx, toStateJobSource)
+	if !from.JobSource.IsNull() && !from.JobSource.IsUnknown() {
+		if toJobSource, ok := to.GetJobSource(ctx); ok {
+			if fromJobSource, ok := from.GetJobSource(ctx); ok {
+				toJobSource.SyncFieldsDuringRead(ctx, fromJobSource)
+				to.SetJobSource(ctx, toJobSource)
 			}
 		}
 	}
@@ -5239,6 +5748,9 @@ type Job struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The id of the usage policy used by this job for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
@@ -5263,39 +5775,41 @@ type Job struct {
 	TriggerState types.Object `tfsdk:"trigger_state"`
 }
 
-func (toState *Job) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Job) {
-	if !fromPlan.Settings.IsNull() && !fromPlan.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromPlanSettings, ok := fromPlan.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *Job) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Job) {
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				// Recursively sync the fields of Settings
+				toSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
-	if !fromPlan.TriggerState.IsNull() && !fromPlan.TriggerState.IsUnknown() {
-		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
-			if fromPlanTriggerState, ok := fromPlan.GetTriggerState(ctx); ok {
-				toStateTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerState)
-				toState.SetTriggerState(ctx, toStateTriggerState)
+	if !from.TriggerState.IsNull() && !from.TriggerState.IsUnknown() {
+		if toTriggerState, ok := to.GetTriggerState(ctx); ok {
+			if fromTriggerState, ok := from.GetTriggerState(ctx); ok {
+				// Recursively sync the fields of TriggerState
+				toTriggerState.SyncFieldsDuringCreateOrUpdate(ctx, fromTriggerState)
+				to.SetTriggerState(ctx, toTriggerState)
 			}
 		}
 	}
 }
 
-func (toState *Job) SyncFieldsDuringRead(ctx context.Context, fromState Job) {
-	if !fromState.Settings.IsNull() && !fromState.Settings.IsUnknown() {
-		if toStateSettings, ok := toState.GetSettings(ctx); ok {
-			if fromStateSettings, ok := fromState.GetSettings(ctx); ok {
-				toStateSettings.SyncFieldsDuringRead(ctx, fromStateSettings)
-				toState.SetSettings(ctx, toStateSettings)
+func (to *Job) SyncFieldsDuringRead(ctx context.Context, from Job) {
+	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
+		if toSettings, ok := to.GetSettings(ctx); ok {
+			if fromSettings, ok := from.GetSettings(ctx); ok {
+				toSettings.SyncFieldsDuringRead(ctx, fromSettings)
+				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
-	if !fromState.TriggerState.IsNull() && !fromState.TriggerState.IsUnknown() {
-		if toStateTriggerState, ok := toState.GetTriggerState(ctx); ok {
-			if fromStateTriggerState, ok := fromState.GetTriggerState(ctx); ok {
-				toStateTriggerState.SyncFieldsDuringRead(ctx, fromStateTriggerState)
-				toState.SetTriggerState(ctx, toStateTriggerState)
+	if !from.TriggerState.IsNull() && !from.TriggerState.IsUnknown() {
+		if toTriggerState, ok := to.GetTriggerState(ctx); ok {
+			if fromTriggerState, ok := from.GetTriggerState(ctx); ok {
+				toTriggerState.SyncFieldsDuringRead(ctx, fromTriggerState)
+				to.SetTriggerState(ctx, toTriggerState)
 			}
 		}
 	}
@@ -5305,6 +5819,7 @@ func (c Job) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
@@ -5339,6 +5854,7 @@ func (o Job) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
 			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
 			"next_page_token":            o.NextPageToken,
@@ -5355,6 +5871,7 @@ func (o Job) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
 			"next_page_token":            types.StringType,
@@ -5426,10 +5943,10 @@ type JobAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *JobAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobAccessControlRequest) {
+func (to *JobAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobAccessControlRequest) {
 }
 
-func (toState *JobAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState JobAccessControlRequest) {
+func (to *JobAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from JobAccessControlRequest) {
 }
 
 func (c JobAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5491,10 +6008,22 @@ type JobAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobAccessControlResponse) {
+func (to *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
 }
 
-func (toState *JobAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState JobAccessControlResponse) {
+func (to *JobAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from JobAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
 }
 
 func (c JobAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5585,23 +6114,24 @@ type JobCluster struct {
 	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
-func (toState *JobCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobCluster) {
-	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+func (to *JobCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCluster) {
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				// Recursively sync the fields of NewCluster
+				toNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
 }
 
-func (toState *JobCluster) SyncFieldsDuringRead(ctx context.Context, fromState JobCluster) {
-	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+func (to *JobCluster) SyncFieldsDuringRead(ctx context.Context, from JobCluster) {
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				toNewCluster.SyncFieldsDuringRead(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
@@ -5687,10 +6217,10 @@ type JobCompliance struct {
 	Violations types.Map `tfsdk:"violations"`
 }
 
-func (toState *JobCompliance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobCompliance) {
+func (to *JobCompliance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompliance) {
 }
 
-func (toState *JobCompliance) SyncFieldsDuringRead(ctx context.Context, fromState JobCompliance) {
+func (to *JobCompliance) SyncFieldsDuringRead(ctx context.Context, from JobCompliance) {
 }
 
 func (c JobCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5775,10 +6305,10 @@ type JobDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
-func (toState *JobDeployment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobDeployment) {
+func (to *JobDeployment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobDeployment) {
 }
 
-func (toState *JobDeployment) SyncFieldsDuringRead(ctx context.Context, fromState JobDeployment) {
+func (to *JobDeployment) SyncFieldsDuringRead(ctx context.Context, from JobDeployment) {
 }
 
 func (c JobDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5857,10 +6387,70 @@ type JobEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (toState *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobEmailNotifications) {
+func (to *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobEmailNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
-func (toState *JobEmailNotifications) SyncFieldsDuringRead(ctx context.Context, fromState JobEmailNotifications) {
+func (to *JobEmailNotifications) SyncFieldsDuringRead(ctx context.Context, from JobEmailNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
 func (c JobEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6068,23 +6658,24 @@ type JobEnvironment struct {
 	Spec types.Object `tfsdk:"spec"`
 }
 
-func (toState *JobEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobEnvironment) {
-	if !fromPlan.Spec.IsNull() && !fromPlan.Spec.IsUnknown() {
-		if toStateSpec, ok := toState.GetSpec(ctx); ok {
-			if fromPlanSpec, ok := fromPlan.GetSpec(ctx); ok {
-				toStateSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSpec)
-				toState.SetSpec(ctx, toStateSpec)
+func (to *JobEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobEnvironment) {
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
 			}
 		}
 	}
 }
 
-func (toState *JobEnvironment) SyncFieldsDuringRead(ctx context.Context, fromState JobEnvironment) {
-	if !fromState.Spec.IsNull() && !fromState.Spec.IsUnknown() {
-		if toStateSpec, ok := toState.GetSpec(ctx); ok {
-			if fromStateSpec, ok := fromState.GetSpec(ctx); ok {
-				toStateSpec.SyncFieldsDuringRead(ctx, fromStateSpec)
-				toState.SetSpec(ctx, toStateSpec)
+func (to *JobEnvironment) SyncFieldsDuringRead(ctx context.Context, from JobEnvironment) {
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
 			}
 		}
 	}
@@ -6166,10 +6757,10 @@ type JobNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (toState *JobNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobNotificationSettings) {
+func (to *JobNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobNotificationSettings) {
 }
 
-func (toState *JobNotificationSettings) SyncFieldsDuringRead(ctx context.Context, fromState JobNotificationSettings) {
+func (to *JobNotificationSettings) SyncFieldsDuringRead(ctx context.Context, from JobNotificationSettings) {
 }
 
 func (c JobNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6221,10 +6812,10 @@ type JobParameter struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *JobParameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobParameter) {
+func (to *JobParameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobParameter) {
 }
 
-func (toState *JobParameter) SyncFieldsDuringRead(ctx context.Context, fromState JobParameter) {
+func (to *JobParameter) SyncFieldsDuringRead(ctx context.Context, from JobParameter) {
 }
 
 func (c JobParameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6278,10 +6869,10 @@ type JobParameterDefinition struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *JobParameterDefinition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobParameterDefinition) {
+func (to *JobParameterDefinition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobParameterDefinition) {
 }
 
-func (toState *JobParameterDefinition) SyncFieldsDuringRead(ctx context.Context, fromState JobParameterDefinition) {
+func (to *JobParameterDefinition) SyncFieldsDuringRead(ctx context.Context, from JobParameterDefinition) {
 }
 
 func (c JobParameterDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6332,10 +6923,22 @@ type JobPermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (toState *JobPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermission) {
+func (to *JobPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobPermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
 }
 
-func (toState *JobPermission) SyncFieldsDuringRead(ctx context.Context, fromState JobPermission) {
+func (to *JobPermission) SyncFieldsDuringRead(ctx context.Context, from JobPermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
 }
 
 func (c JobPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6419,10 +7022,22 @@ type JobPermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (toState *JobPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermissions) {
+func (to *JobPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobPermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
-func (toState *JobPermissions) SyncFieldsDuringRead(ctx context.Context, fromState JobPermissions) {
+func (to *JobPermissions) SyncFieldsDuringRead(ctx context.Context, from JobPermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
 func (c JobPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6504,10 +7119,10 @@ type JobPermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (toState *JobPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobPermissionsDescription) {
+func (to *JobPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobPermissionsDescription) {
 }
 
-func (toState *JobPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState JobPermissionsDescription) {
+func (to *JobPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from JobPermissionsDescription) {
 }
 
 func (c JobPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6554,6 +7169,31 @@ type JobPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (to *JobPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobPermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *JobPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from JobPermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (c JobPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
@@ -6633,10 +7273,10 @@ type JobRunAs struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *JobRunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobRunAs) {
+func (to *JobRunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobRunAs) {
 }
 
-func (toState *JobRunAs) SyncFieldsDuringRead(ctx context.Context, fromState JobRunAs) {
+func (to *JobRunAs) SyncFieldsDuringRead(ctx context.Context, from JobRunAs) {
 }
 
 func (c JobRunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6791,7 +7431,7 @@ type JobSettings struct {
 	Trigger types.Object `tfsdk:"trigger"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
-	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// modifying the job. See `effective_usage_policy_id` for the usage policy
 	// used by this workload.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 	// A collection of system notification IDs to notify when runs of this job
@@ -6799,183 +7439,242 @@ type JobSettings struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (toState *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobSettings) {
-	if !fromPlan.Continuous.IsNull() && !fromPlan.Continuous.IsUnknown() {
-		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
-			if fromPlanContinuous, ok := fromPlan.GetContinuous(ctx); ok {
-				toStateContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanContinuous)
-				toState.SetContinuous(ctx, toStateContinuous)
+func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobSettings) {
+	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
+		if toContinuous, ok := to.GetContinuous(ctx); ok {
+			if fromContinuous, ok := from.GetContinuous(ctx); ok {
+				// Recursively sync the fields of Continuous
+				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
+				to.SetContinuous(ctx, toContinuous)
 			}
 		}
 	}
-	if !fromPlan.Deployment.IsNull() && !fromPlan.Deployment.IsUnknown() {
-		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
-			if fromPlanDeployment, ok := fromPlan.GetDeployment(ctx); ok {
-				toStateDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDeployment)
-				toState.SetDeployment(ctx, toStateDeployment)
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				// Recursively sync the fields of Deployment
+				toDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
 			}
 		}
 	}
-	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromPlan.Queue.IsNull() && !fromPlan.Queue.IsUnknown() {
-		if toStateQueue, ok := toState.GetQueue(ctx); ok {
-			if fromPlanQueue, ok := fromPlan.GetQueue(ctx); ok {
-				toStateQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueue)
-				toState.SetQueue(ctx, toStateQueue)
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				// Recursively sync the fields of Queue
+				toQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
 			}
 		}
 	}
-	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
-		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
-			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
-				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
-				toState.SetRunAs(ctx, toStateRunAs)
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				// Recursively sync the fields of RunAs
+				toRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
 			}
 		}
 	}
-	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromPlan.Trigger.IsNull() && !fromPlan.Trigger.IsUnknown() {
-		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
-			if fromPlanTrigger, ok := fromPlan.GetTrigger(ctx); ok {
-				toStateTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTrigger)
-				toState.SetTrigger(ctx, toStateTrigger)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				// Recursively sync the fields of Trigger
+				toTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
 			}
 		}
 	}
-	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
 }
 
-func (toState *JobSettings) SyncFieldsDuringRead(ctx context.Context, fromState JobSettings) {
-	if !fromState.Continuous.IsNull() && !fromState.Continuous.IsUnknown() {
-		if toStateContinuous, ok := toState.GetContinuous(ctx); ok {
-			if fromStateContinuous, ok := fromState.GetContinuous(ctx); ok {
-				toStateContinuous.SyncFieldsDuringRead(ctx, fromStateContinuous)
-				toState.SetContinuous(ctx, toStateContinuous)
+func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSettings) {
+	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
+		if toContinuous, ok := to.GetContinuous(ctx); ok {
+			if fromContinuous, ok := from.GetContinuous(ctx); ok {
+				toContinuous.SyncFieldsDuringRead(ctx, fromContinuous)
+				to.SetContinuous(ctx, toContinuous)
 			}
 		}
 	}
-	if !fromState.Deployment.IsNull() && !fromState.Deployment.IsUnknown() {
-		if toStateDeployment, ok := toState.GetDeployment(ctx); ok {
-			if fromStateDeployment, ok := fromState.GetDeployment(ctx); ok {
-				toStateDeployment.SyncFieldsDuringRead(ctx, fromStateDeployment)
-				toState.SetDeployment(ctx, toStateDeployment)
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				toDeployment.SyncFieldsDuringRead(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
 			}
 		}
 	}
-	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromState.Queue.IsNull() && !fromState.Queue.IsUnknown() {
-		if toStateQueue, ok := toState.GetQueue(ctx); ok {
-			if fromStateQueue, ok := fromState.GetQueue(ctx); ok {
-				toStateQueue.SyncFieldsDuringRead(ctx, fromStateQueue)
-				toState.SetQueue(ctx, toStateQueue)
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				toQueue.SyncFieldsDuringRead(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
 			}
 		}
 	}
-	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
-		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
-			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
-				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
-				toState.SetRunAs(ctx, toStateRunAs)
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				toRunAs.SyncFieldsDuringRead(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
 			}
 		}
 	}
-	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromState.Trigger.IsNull() && !fromState.Trigger.IsUnknown() {
-		if toStateTrigger, ok := toState.GetTrigger(ctx); ok {
-			if fromStateTrigger, ok := fromState.GetTrigger(ctx); ok {
-				toStateTrigger.SyncFieldsDuringRead(ctx, fromStateTrigger)
-				toState.SetTrigger(ctx, toStateTrigger)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				toTrigger.SyncFieldsDuringRead(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
 			}
 		}
 	}
-	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
@@ -7541,10 +8240,10 @@ type JobSource struct {
 	JobConfigPath types.String `tfsdk:"job_config_path"`
 }
 
-func (toState *JobSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobSource) {
+func (to *JobSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobSource) {
 }
 
-func (toState *JobSource) SyncFieldsDuringRead(ctx context.Context, fromState JobSource) {
+func (to *JobSource) SyncFieldsDuringRead(ctx context.Context, from JobSource) {
 }
 
 func (c JobSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7599,10 +8298,10 @@ type JobsHealthRule struct {
 	Value types.Int64 `tfsdk:"value"`
 }
 
-func (toState *JobsHealthRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobsHealthRule) {
+func (to *JobsHealthRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobsHealthRule) {
 }
 
-func (toState *JobsHealthRule) SyncFieldsDuringRead(ctx context.Context, fromState JobsHealthRule) {
+func (to *JobsHealthRule) SyncFieldsDuringRead(ctx context.Context, from JobsHealthRule) {
 }
 
 func (c JobsHealthRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7653,10 +8352,22 @@ type JobsHealthRules struct {
 	Rules types.List `tfsdk:"rules"`
 }
 
-func (toState *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan JobsHealthRules) {
+func (to *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobsHealthRules) {
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() && to.Rules.IsNull() && len(from.Rules.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rules, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rules = from.Rules
+	}
 }
 
-func (toState *JobsHealthRules) SyncFieldsDuringRead(ctx context.Context, fromState JobsHealthRules) {
+func (to *JobsHealthRules) SyncFieldsDuringRead(ctx context.Context, from JobsHealthRules) {
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() && to.Rules.IsNull() && len(from.Rules.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rules, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rules = from.Rules
+	}
 }
 
 func (c JobsHealthRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7739,10 +8450,22 @@ type ListJobComplianceForPolicyResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (toState *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobComplianceForPolicyResponse) {
+func (to *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListJobComplianceForPolicyResponse) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() && to.Jobs.IsNull() && len(from.Jobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Jobs = from.Jobs
+	}
 }
 
-func (toState *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListJobComplianceForPolicyResponse) {
+func (to *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(ctx context.Context, from ListJobComplianceForPolicyResponse) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() && to.Jobs.IsNull() && len(from.Jobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Jobs = from.Jobs
+	}
 }
 
 func (c ListJobComplianceForPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7830,6 +8553,20 @@ type ListJobComplianceRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (to *ListJobComplianceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListJobComplianceRequest) {
+}
+
+func (to *ListJobComplianceRequest) SyncFieldsDuringRead(ctx context.Context, from ListJobComplianceRequest) {
+}
+
+func (c ListJobComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7882,6 +8619,22 @@ type ListJobsRequest struct {
 	// Use `next_page_token` or `prev_page_token` returned from the previous
 	// request to list the next or previous page of jobs respectively.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListJobsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListJobsRequest) {
+}
+
+func (to *ListJobsRequest) SyncFieldsDuringRead(ctx context.Context, from ListJobsRequest) {
+}
+
+func (c ListJobsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsRequest.
@@ -7938,10 +8691,22 @@ type ListJobsResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
-func (toState *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListJobsResponse) {
+func (to *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListJobsResponse) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() && to.Jobs.IsNull() && len(from.Jobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Jobs = from.Jobs
+	}
 }
 
-func (toState *ListJobsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListJobsResponse) {
+func (to *ListJobsResponse) SyncFieldsDuringRead(ctx context.Context, from ListJobsResponse) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() && to.Jobs.IsNull() && len(from.Jobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Jobs = from.Jobs
+	}
 }
 
 func (c ListJobsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8061,6 +8826,27 @@ type ListRunsRequest struct {
 	StartTimeTo types.Int64 `tfsdk:"-"`
 }
 
+func (to *ListRunsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListRunsRequest) {
+}
+
+func (to *ListRunsRequest) SyncFieldsDuringRead(ctx context.Context, from ListRunsRequest) {
+}
+
+func (c ListRunsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["active_only"] = attrs["active_only"].SetOptional()
+	attrs["completed_only"] = attrs["completed_only"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["start_time_from"] = attrs["start_time_from"].SetOptional()
+	attrs["start_time_to"] = attrs["start_time_to"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8125,10 +8911,22 @@ type ListRunsResponse struct {
 	Runs types.List `tfsdk:"runs"`
 }
 
-func (toState *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListRunsResponse) {
+func (to *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListRunsResponse) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
 }
 
-func (toState *ListRunsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListRunsResponse) {
+func (to *ListRunsResponse) SyncFieldsDuringRead(ctx context.Context, from ListRunsResponse) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
 }
 
 func (c ListRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8219,10 +9017,10 @@ type NotebookOutput struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (toState *NotebookOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookOutput) {
+func (to *NotebookOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NotebookOutput) {
 }
 
-func (toState *NotebookOutput) SyncFieldsDuringRead(ctx context.Context, fromState NotebookOutput) {
+func (to *NotebookOutput) SyncFieldsDuringRead(ctx context.Context, from NotebookOutput) {
 }
 
 func (c NotebookOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8306,10 +9104,10 @@ type NotebookTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *NotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NotebookTask) {
+func (to *NotebookTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NotebookTask) {
 }
 
-func (toState *NotebookTask) SyncFieldsDuringRead(ctx context.Context, fromState NotebookTask) {
+func (to *NotebookTask) SyncFieldsDuringRead(ctx context.Context, from NotebookTask) {
 }
 
 func (c NotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8399,10 +9197,10 @@ type OutputSchemaInfo struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 }
 
-func (toState *OutputSchemaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OutputSchemaInfo) {
+func (to *OutputSchemaInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OutputSchemaInfo) {
 }
 
-func (toState *OutputSchemaInfo) SyncFieldsDuringRead(ctx context.Context, fromState OutputSchemaInfo) {
+func (to *OutputSchemaInfo) SyncFieldsDuringRead(ctx context.Context, from OutputSchemaInfo) {
 }
 
 func (c OutputSchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8455,10 +9253,10 @@ type PeriodicTriggerConfiguration struct {
 	Unit types.String `tfsdk:"unit"`
 }
 
-func (toState *PeriodicTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PeriodicTriggerConfiguration) {
+func (to *PeriodicTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PeriodicTriggerConfiguration) {
 }
 
-func (toState *PeriodicTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState PeriodicTriggerConfiguration) {
+func (to *PeriodicTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from PeriodicTriggerConfiguration) {
 }
 
 func (c PeriodicTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8506,10 +9304,10 @@ type PipelineParams struct {
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 }
 
-func (toState *PipelineParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineParams) {
+func (to *PipelineParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineParams) {
 }
 
-func (toState *PipelineParams) SyncFieldsDuringRead(ctx context.Context, fromState PipelineParams) {
+func (to *PipelineParams) SyncFieldsDuringRead(ctx context.Context, from PipelineParams) {
 }
 
 func (c PipelineParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8556,10 +9354,10 @@ type PipelineTask struct {
 	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
-func (toState *PipelineTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PipelineTask) {
+func (to *PipelineTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineTask) {
 }
 
-func (toState *PipelineTask) SyncFieldsDuringRead(ctx context.Context, fromState PipelineTask) {
+func (to *PipelineTask) SyncFieldsDuringRead(ctx context.Context, from PipelineTask) {
 }
 
 func (c PipelineTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8615,10 +9413,10 @@ type PowerBiModel struct {
 	WorkspaceName types.String `tfsdk:"workspace_name"`
 }
 
-func (toState *PowerBiModel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiModel) {
+func (to *PowerBiModel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PowerBiModel) {
 }
 
-func (toState *PowerBiModel) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiModel) {
+func (to *PowerBiModel) SyncFieldsDuringRead(ctx context.Context, from PowerBiModel) {
 }
 
 func (c PowerBiModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8681,10 +9479,10 @@ type PowerBiTable struct {
 	StorageMode types.String `tfsdk:"storage_mode"`
 }
 
-func (toState *PowerBiTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiTable) {
+func (to *PowerBiTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PowerBiTable) {
 }
 
-func (toState *PowerBiTable) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiTable) {
+func (to *PowerBiTable) SyncFieldsDuringRead(ctx context.Context, from PowerBiTable) {
 }
 
 func (c PowerBiTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8747,25 +9545,38 @@ type PowerBiTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *PowerBiTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PowerBiTask) {
-	if !fromPlan.PowerBiModel.IsNull() && !fromPlan.PowerBiModel.IsUnknown() {
-		if toStatePowerBiModel, ok := toState.GetPowerBiModel(ctx); ok {
-			if fromPlanPowerBiModel, ok := fromPlan.GetPowerBiModel(ctx); ok {
-				toStatePowerBiModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiModel)
-				toState.SetPowerBiModel(ctx, toStatePowerBiModel)
+func (to *PowerBiTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PowerBiTask) {
+	if !from.PowerBiModel.IsNull() && !from.PowerBiModel.IsUnknown() {
+		if toPowerBiModel, ok := to.GetPowerBiModel(ctx); ok {
+			if fromPowerBiModel, ok := from.GetPowerBiModel(ctx); ok {
+				// Recursively sync the fields of PowerBiModel
+				toPowerBiModel.SyncFieldsDuringCreateOrUpdate(ctx, fromPowerBiModel)
+				to.SetPowerBiModel(ctx, toPowerBiModel)
 			}
 		}
 	}
+	if !from.Tables.IsNull() && !from.Tables.IsUnknown() && to.Tables.IsNull() && len(from.Tables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tables = from.Tables
+	}
 }
 
-func (toState *PowerBiTask) SyncFieldsDuringRead(ctx context.Context, fromState PowerBiTask) {
-	if !fromState.PowerBiModel.IsNull() && !fromState.PowerBiModel.IsUnknown() {
-		if toStatePowerBiModel, ok := toState.GetPowerBiModel(ctx); ok {
-			if fromStatePowerBiModel, ok := fromState.GetPowerBiModel(ctx); ok {
-				toStatePowerBiModel.SyncFieldsDuringRead(ctx, fromStatePowerBiModel)
-				toState.SetPowerBiModel(ctx, toStatePowerBiModel)
+func (to *PowerBiTask) SyncFieldsDuringRead(ctx context.Context, from PowerBiTask) {
+	if !from.PowerBiModel.IsNull() && !from.PowerBiModel.IsUnknown() {
+		if toPowerBiModel, ok := to.GetPowerBiModel(ctx); ok {
+			if fromPowerBiModel, ok := from.GetPowerBiModel(ctx); ok {
+				toPowerBiModel.SyncFieldsDuringRead(ctx, fromPowerBiModel)
+				to.SetPowerBiModel(ctx, toPowerBiModel)
 			}
 		}
+	}
+	if !from.Tables.IsNull() && !from.Tables.IsUnknown() && to.Tables.IsNull() && len(from.Tables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tables = from.Tables
 	}
 }
 
@@ -8890,10 +9701,22 @@ type PythonWheelTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (toState *PythonWheelTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan PythonWheelTask) {
+func (to *PythonWheelTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PythonWheelTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *PythonWheelTask) SyncFieldsDuringRead(ctx context.Context, fromState PythonWheelTask) {
+func (to *PythonWheelTask) SyncFieldsDuringRead(ctx context.Context, from PythonWheelTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c PythonWheelTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9008,10 +9831,10 @@ type QueueDetails struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (toState *QueueDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueueDetails) {
+func (to *QueueDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueueDetails) {
 }
 
-func (toState *QueueDetails) SyncFieldsDuringRead(ctx context.Context, fromState QueueDetails) {
+func (to *QueueDetails) SyncFieldsDuringRead(ctx context.Context, from QueueDetails) {
 }
 
 func (c QueueDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9059,10 +9882,10 @@ type QueueSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (toState *QueueSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueueSettings) {
+func (to *QueueSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueueSettings) {
 }
 
-func (toState *QueueSettings) SyncFieldsDuringRead(ctx context.Context, fromState QueueSettings) {
+func (to *QueueSettings) SyncFieldsDuringRead(ctx context.Context, from QueueSettings) {
 }
 
 func (c QueueSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9131,41 +9954,55 @@ type RepairHistoryItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *RepairHistoryItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepairHistoryItem) {
-	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
-				toState.SetState(ctx, toStateState)
+func (to *RepairHistoryItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RepairHistoryItem) {
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				// Recursively sync the fields of State
+				toState.SyncFieldsDuringCreateOrUpdate(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
+	}
+	if !from.TaskRunIds.IsNull() && !from.TaskRunIds.IsUnknown() && to.TaskRunIds.IsNull() && len(from.TaskRunIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TaskRunIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TaskRunIds = from.TaskRunIds
 	}
 }
 
-func (toState *RepairHistoryItem) SyncFieldsDuringRead(ctx context.Context, fromState RepairHistoryItem) {
-	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromStateState, ok := fromState.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
-				toState.SetState(ctx, toStateState)
+func (to *RepairHistoryItem) SyncFieldsDuringRead(ctx context.Context, from RepairHistoryItem) {
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				toState.SyncFieldsDuringRead(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
+	}
+	if !from.TaskRunIds.IsNull() && !from.TaskRunIds.IsUnknown() && to.TaskRunIds.IsNull() && len(from.TaskRunIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TaskRunIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TaskRunIds = from.TaskRunIds
 	}
 }
 
@@ -9419,6 +10256,109 @@ type RepairRun struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams types.Map `tfsdk:"sql_params"`
+}
+
+func (to *RepairRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RepairRun) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				// Recursively sync the fields of PipelineParams
+				toPipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
+			}
+		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.RerunTasks.IsNull() && !from.RerunTasks.IsUnknown() && to.RerunTasks.IsNull() && len(from.RerunTasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RerunTasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RerunTasks = from.RerunTasks
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
+}
+
+func (to *RepairRun) SyncFieldsDuringRead(ctx context.Context, from RepairRun) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				toPipelineParams.SyncFieldsDuringRead(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
+			}
+		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.RerunTasks.IsNull() && !from.RerunTasks.IsUnknown() && to.RerunTasks.IsNull() && len(from.RerunTasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RerunTasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RerunTasks = from.RerunTasks
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
+}
+
+func (c RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["rerun_all_failed_tasks"] = attrs["rerun_all_failed_tasks"].SetOptional()
+	attrs["rerun_dependent_tasks"] = attrs["rerun_dependent_tasks"].SetOptional()
+	attrs["rerun_tasks"] = attrs["rerun_tasks"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
@@ -9775,10 +10715,10 @@ type RepairRunResponse struct {
 	RepairId types.Int64 `tfsdk:"repair_id"`
 }
 
-func (toState *RepairRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepairRunResponse) {
+func (to *RepairRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RepairRunResponse) {
 }
 
-func (toState *RepairRunResponse) SyncFieldsDuringRead(ctx context.Context, fromState RepairRunResponse) {
+func (to *RepairRunResponse) SyncFieldsDuringRead(ctx context.Context, from RepairRunResponse) {
 }
 
 func (c RepairRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9827,6 +10767,36 @@ type ResetJob struct {
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
 	NewSettings types.Object `tfsdk:"new_settings"`
+}
+
+func (to *ResetJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResetJob) {
+	if !from.NewSettings.IsNull() && !from.NewSettings.IsUnknown() {
+		if toNewSettings, ok := to.GetNewSettings(ctx); ok {
+			if fromNewSettings, ok := from.GetNewSettings(ctx); ok {
+				// Recursively sync the fields of NewSettings
+				toNewSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNewSettings)
+				to.SetNewSettings(ctx, toNewSettings)
+			}
+		}
+	}
+}
+
+func (to *ResetJob) SyncFieldsDuringRead(ctx context.Context, from ResetJob) {
+	if !from.NewSettings.IsNull() && !from.NewSettings.IsUnknown() {
+		if toNewSettings, ok := to.GetNewSettings(ctx); ok {
+			if fromNewSettings, ok := from.GetNewSettings(ctx); ok {
+				toNewSettings.SyncFieldsDuringRead(ctx, fromNewSettings)
+				to.SetNewSettings(ctx, toNewSettings)
+			}
+		}
+	}
+}
+
+func (c ResetJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
@@ -9889,46 +10859,16 @@ func (o *ResetJob) SetNewSettings(ctx context.Context, v JobSettings) {
 	o.NewSettings = vs
 }
 
-type ResetResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ResetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ResetResponse
-// only implements ToObjectValue() and Type().
-func (o ResetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ResetResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type ResolvedConditionTaskValues struct {
 	Left types.String `tfsdk:"left"`
 
 	Right types.String `tfsdk:"right"`
 }
 
-func (toState *ResolvedConditionTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedConditionTaskValues) {
+func (to *ResolvedConditionTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedConditionTaskValues) {
 }
 
-func (toState *ResolvedConditionTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedConditionTaskValues) {
+func (to *ResolvedConditionTaskValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedConditionTaskValues) {
 }
 
 func (c ResolvedConditionTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9975,10 +10915,22 @@ type ResolvedDbtTaskValues struct {
 	Commands types.List `tfsdk:"commands"`
 }
 
-func (toState *ResolvedDbtTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedDbtTaskValues) {
+func (to *ResolvedDbtTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedDbtTaskValues) {
+	if !from.Commands.IsNull() && !from.Commands.IsUnknown() && to.Commands.IsNull() && len(from.Commands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Commands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Commands = from.Commands
+	}
 }
 
-func (toState *ResolvedDbtTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedDbtTaskValues) {
+func (to *ResolvedDbtTaskValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedDbtTaskValues) {
+	if !from.Commands.IsNull() && !from.Commands.IsUnknown() && to.Commands.IsNull() && len(from.Commands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Commands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Commands = from.Commands
+	}
 }
 
 func (c ResolvedDbtTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10052,10 +11004,10 @@ type ResolvedNotebookTaskValues struct {
 	BaseParameters types.Map `tfsdk:"base_parameters"`
 }
 
-func (toState *ResolvedNotebookTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedNotebookTaskValues) {
+func (to *ResolvedNotebookTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedNotebookTaskValues) {
 }
 
-func (toState *ResolvedNotebookTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedNotebookTaskValues) {
+func (to *ResolvedNotebookTaskValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedNotebookTaskValues) {
 }
 
 func (c ResolvedNotebookTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10129,10 +11081,10 @@ type ResolvedParamPairValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (toState *ResolvedParamPairValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedParamPairValues) {
+func (to *ResolvedParamPairValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedParamPairValues) {
 }
 
-func (toState *ResolvedParamPairValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedParamPairValues) {
+func (to *ResolvedParamPairValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedParamPairValues) {
 }
 
 func (c ResolvedParamPairValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10208,10 +11160,22 @@ type ResolvedPythonWheelTaskValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (toState *ResolvedPythonWheelTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedPythonWheelTaskValues) {
+func (to *ResolvedPythonWheelTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedPythonWheelTaskValues) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *ResolvedPythonWheelTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedPythonWheelTaskValues) {
+func (to *ResolvedPythonWheelTaskValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedPythonWheelTaskValues) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c ResolvedPythonWheelTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10319,10 +11283,10 @@ type ResolvedRunJobTaskValues struct {
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
-func (toState *ResolvedRunJobTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedRunJobTaskValues) {
+func (to *ResolvedRunJobTaskValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedRunJobTaskValues) {
 }
 
-func (toState *ResolvedRunJobTaskValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedRunJobTaskValues) {
+func (to *ResolvedRunJobTaskValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedRunJobTaskValues) {
 }
 
 func (c ResolvedRunJobTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10428,10 +11392,22 @@ type ResolvedStringParamsValues struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (toState *ResolvedStringParamsValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedStringParamsValues) {
+func (to *ResolvedStringParamsValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedStringParamsValues) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *ResolvedStringParamsValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedStringParamsValues) {
+func (to *ResolvedStringParamsValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedStringParamsValues) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c ResolvedStringParamsValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10523,167 +11499,177 @@ type ResolvedValues struct {
 	SqlTask types.Object `tfsdk:"sql_task"`
 }
 
-func (toState *ResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResolvedValues) {
-	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+func (to *ResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValues) {
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				// Recursively sync the fields of ConditionTask
+				toConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				// Recursively sync the fields of DbtTask
+				toDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				// Recursively sync the fields of NotebookTask
+				toNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				// Recursively sync the fields of PythonWheelTask
+				toPythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				// Recursively sync the fields of RunJobTask
+				toRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromPlan.SimulationTask.IsNull() && !fromPlan.SimulationTask.IsUnknown() {
-		if toStateSimulationTask, ok := toState.GetSimulationTask(ctx); ok {
-			if fromPlanSimulationTask, ok := fromPlan.GetSimulationTask(ctx); ok {
-				toStateSimulationTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSimulationTask)
-				toState.SetSimulationTask(ctx, toStateSimulationTask)
+	if !from.SimulationTask.IsNull() && !from.SimulationTask.IsUnknown() {
+		if toSimulationTask, ok := to.GetSimulationTask(ctx); ok {
+			if fromSimulationTask, ok := from.GetSimulationTask(ctx); ok {
+				// Recursively sync the fields of SimulationTask
+				toSimulationTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSimulationTask)
+				to.SetSimulationTask(ctx, toSimulationTask)
 			}
 		}
 	}
-	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				// Recursively sync the fields of SparkJarTask
+				toSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				// Recursively sync the fields of SparkPythonTask
+				toSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				// Recursively sync the fields of SparkSubmitTask
+				toSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				// Recursively sync the fields of SqlTask
+				toSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
 }
 
-func (toState *ResolvedValues) SyncFieldsDuringRead(ctx context.Context, fromState ResolvedValues) {
-	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+func (to *ResolvedValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedValues) {
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				toConditionTask.SyncFieldsDuringRead(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				toDbtTask.SyncFieldsDuringRead(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				toNotebookTask.SyncFieldsDuringRead(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				toPythonWheelTask.SyncFieldsDuringRead(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				toRunJobTask.SyncFieldsDuringRead(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromState.SimulationTask.IsNull() && !fromState.SimulationTask.IsUnknown() {
-		if toStateSimulationTask, ok := toState.GetSimulationTask(ctx); ok {
-			if fromStateSimulationTask, ok := fromState.GetSimulationTask(ctx); ok {
-				toStateSimulationTask.SyncFieldsDuringRead(ctx, fromStateSimulationTask)
-				toState.SetSimulationTask(ctx, toStateSimulationTask)
+	if !from.SimulationTask.IsNull() && !from.SimulationTask.IsUnknown() {
+		if toSimulationTask, ok := to.GetSimulationTask(ctx); ok {
+			if fromSimulationTask, ok := from.GetSimulationTask(ctx); ok {
+				toSimulationTask.SyncFieldsDuringRead(ctx, fromSimulationTask)
+				to.SetSimulationTask(ctx, toSimulationTask)
 			}
 		}
 	}
-	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				toSparkJarTask.SyncFieldsDuringRead(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				toSparkPythonTask.SyncFieldsDuringRead(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				toSparkSubmitTask.SyncFieldsDuringRead(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				toSqlTask.SyncFieldsDuringRead(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
@@ -11051,6 +12037,9 @@ type Run struct {
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
 	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
+	// The id of the usage policy used by this run for cost attribution
+	// purposes.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -11155,135 +12144,203 @@ type Run struct {
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
-func (toState *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Run) {
-	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				// Recursively sync the fields of ClusterInstance
+				toClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromPlan.ClusterSpec.IsNull() && !fromPlan.ClusterSpec.IsUnknown() {
-		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
-			if fromPlanClusterSpec, ok := fromPlan.GetClusterSpec(ctx); ok {
-				toStateClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterSpec)
-				toState.SetClusterSpec(ctx, toStateClusterSpec)
+	if !from.ClusterSpec.IsNull() && !from.ClusterSpec.IsUnknown() {
+		if toClusterSpec, ok := to.GetClusterSpec(ctx); ok {
+			if fromClusterSpec, ok := from.GetClusterSpec(ctx); ok {
+				// Recursively sync the fields of ClusterSpec
+				toClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterSpec)
+				to.SetClusterSpec(ctx, toClusterSpec)
 			}
 		}
 	}
-	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromPlan.OverridingParameters.IsNull() && !fromPlan.OverridingParameters.IsUnknown() {
-		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
-			if fromPlanOverridingParameters, ok := fromPlan.GetOverridingParameters(ctx); ok {
-				toStateOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOverridingParameters)
-				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+	if !from.Iterations.IsNull() && !from.Iterations.IsUnknown() && to.Iterations.IsNull() && len(from.Iterations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Iterations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Iterations = from.Iterations
+	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobParameters = from.JobParameters
+	}
+	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
+		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
+			if fromOverridingParameters, ok := from.GetOverridingParameters(ctx); ok {
+				// Recursively sync the fields of OverridingParameters
+				toOverridingParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromOverridingParameters)
+				to.SetOverridingParameters(ctx, toOverridingParameters)
 			}
 		}
 	}
-	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() && to.RepairHistory.IsNull() && len(from.RepairHistory.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RepairHistory = from.RepairHistory
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				// Recursively sync the fields of State
+				toState.SyncFieldsDuringCreateOrUpdate(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromPlan.TriggerInfo.IsNull() && !fromPlan.TriggerInfo.IsUnknown() {
-		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
-			if fromPlanTriggerInfo, ok := fromPlan.GetTriggerInfo(ctx); ok {
-				toStateTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTriggerInfo)
-				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
+		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
+			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
+				// Recursively sync the fields of TriggerInfo
+				toTriggerInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromTriggerInfo)
+				to.SetTriggerInfo(ctx, toTriggerInfo)
 			}
 		}
 	}
 }
 
-func (toState *Run) SyncFieldsDuringRead(ctx context.Context, fromState Run) {
-	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+func (to *Run) SyncFieldsDuringRead(ctx context.Context, from Run) {
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				toClusterInstance.SyncFieldsDuringRead(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromState.ClusterSpec.IsNull() && !fromState.ClusterSpec.IsUnknown() {
-		if toStateClusterSpec, ok := toState.GetClusterSpec(ctx); ok {
-			if fromStateClusterSpec, ok := fromState.GetClusterSpec(ctx); ok {
-				toStateClusterSpec.SyncFieldsDuringRead(ctx, fromStateClusterSpec)
-				toState.SetClusterSpec(ctx, toStateClusterSpec)
+	if !from.ClusterSpec.IsNull() && !from.ClusterSpec.IsUnknown() {
+		if toClusterSpec, ok := to.GetClusterSpec(ctx); ok {
+			if fromClusterSpec, ok := from.GetClusterSpec(ctx); ok {
+				toClusterSpec.SyncFieldsDuringRead(ctx, fromClusterSpec)
+				to.SetClusterSpec(ctx, toClusterSpec)
 			}
 		}
 	}
-	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromState.OverridingParameters.IsNull() && !fromState.OverridingParameters.IsUnknown() {
-		if toStateOverridingParameters, ok := toState.GetOverridingParameters(ctx); ok {
-			if fromStateOverridingParameters, ok := fromState.GetOverridingParameters(ctx); ok {
-				toStateOverridingParameters.SyncFieldsDuringRead(ctx, fromStateOverridingParameters)
-				toState.SetOverridingParameters(ctx, toStateOverridingParameters)
+	if !from.Iterations.IsNull() && !from.Iterations.IsUnknown() && to.Iterations.IsNull() && len(from.Iterations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Iterations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Iterations = from.Iterations
+	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobClusters = from.JobClusters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JobParameters = from.JobParameters
+	}
+	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
+		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
+			if fromOverridingParameters, ok := from.GetOverridingParameters(ctx); ok {
+				toOverridingParameters.SyncFieldsDuringRead(ctx, fromOverridingParameters)
+				to.SetOverridingParameters(ctx, toOverridingParameters)
 			}
 		}
 	}
-	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() && to.RepairHistory.IsNull() && len(from.RepairHistory.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RepairHistory = from.RepairHistory
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
-	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromStateState, ok := fromState.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				toState.SyncFieldsDuringRead(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromState.TriggerInfo.IsNull() && !fromState.TriggerInfo.IsUnknown() {
-		if toStateTriggerInfo, ok := toState.GetTriggerInfo(ctx); ok {
-			if fromStateTriggerInfo, ok := fromState.GetTriggerInfo(ctx); ok {
-				toStateTriggerInfo.SyncFieldsDuringRead(ctx, fromStateTriggerInfo)
-				toState.SetTriggerInfo(ctx, toStateTriggerInfo)
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
+		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
+			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
+				toTriggerInfo.SyncFieldsDuringRead(ctx, fromTriggerInfo)
+				to.SetTriggerInfo(ctx, toTriggerInfo)
 			}
 		}
 	}
@@ -11297,6 +12354,7 @@ func (c Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -11368,6 +12426,7 @@ func (o Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            o.CreatorUserName,
 			"description":                  o.Description,
 			"effective_performance_target": o.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
 			"end_time":                     o.EndTime,
 			"execution_duration":           o.ExecutionDuration,
 			"git_source":                   o.GitSource,
@@ -11410,6 +12469,7 @@ func (o Run) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
+			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
 			"execution_duration":           types.Int64Type,
 			"git_source":                   GitSource{}.Type(ctx),
@@ -11805,10 +12865,10 @@ type RunConditionTask struct {
 	Right types.String `tfsdk:"right"`
 }
 
-func (toState *RunConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunConditionTask) {
+func (to *RunConditionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunConditionTask) {
 }
 
-func (toState *RunConditionTask) SyncFieldsDuringRead(ctx context.Context, fromState RunConditionTask) {
+func (to *RunConditionTask) SyncFieldsDuringRead(ctx context.Context, from RunConditionTask) {
 }
 
 func (c RunConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11872,39 +12932,41 @@ type RunForEachTask struct {
 	Task types.Object `tfsdk:"task"`
 }
 
-func (toState *RunForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunForEachTask) {
-	if !fromPlan.Stats.IsNull() && !fromPlan.Stats.IsUnknown() {
-		if toStateStats, ok := toState.GetStats(ctx); ok {
-			if fromPlanStats, ok := fromPlan.GetStats(ctx); ok {
-				toStateStats.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStats)
-				toState.SetStats(ctx, toStateStats)
+func (to *RunForEachTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunForEachTask) {
+	if !from.Stats.IsNull() && !from.Stats.IsUnknown() {
+		if toStats, ok := to.GetStats(ctx); ok {
+			if fromStats, ok := from.GetStats(ctx); ok {
+				// Recursively sync the fields of Stats
+				toStats.SyncFieldsDuringCreateOrUpdate(ctx, fromStats)
+				to.SetStats(ctx, toStats)
 			}
 		}
 	}
-	if !fromPlan.Task.IsNull() && !fromPlan.Task.IsUnknown() {
-		if toStateTask, ok := toState.GetTask(ctx); ok {
-			if fromPlanTask, ok := fromPlan.GetTask(ctx); ok {
-				toStateTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTask)
-				toState.SetTask(ctx, toStateTask)
+	if !from.Task.IsNull() && !from.Task.IsUnknown() {
+		if toTask, ok := to.GetTask(ctx); ok {
+			if fromTask, ok := from.GetTask(ctx); ok {
+				// Recursively sync the fields of Task
+				toTask.SyncFieldsDuringCreateOrUpdate(ctx, fromTask)
+				to.SetTask(ctx, toTask)
 			}
 		}
 	}
 }
 
-func (toState *RunForEachTask) SyncFieldsDuringRead(ctx context.Context, fromState RunForEachTask) {
-	if !fromState.Stats.IsNull() && !fromState.Stats.IsUnknown() {
-		if toStateStats, ok := toState.GetStats(ctx); ok {
-			if fromStateStats, ok := fromState.GetStats(ctx); ok {
-				toStateStats.SyncFieldsDuringRead(ctx, fromStateStats)
-				toState.SetStats(ctx, toStateStats)
+func (to *RunForEachTask) SyncFieldsDuringRead(ctx context.Context, from RunForEachTask) {
+	if !from.Stats.IsNull() && !from.Stats.IsUnknown() {
+		if toStats, ok := to.GetStats(ctx); ok {
+			if fromStats, ok := from.GetStats(ctx); ok {
+				toStats.SyncFieldsDuringRead(ctx, fromStats)
+				to.SetStats(ctx, toStats)
 			}
 		}
 	}
-	if !fromState.Task.IsNull() && !fromState.Task.IsUnknown() {
-		if toStateTask, ok := toState.GetTask(ctx); ok {
-			if fromStateTask, ok := fromState.GetTask(ctx); ok {
-				toStateTask.SyncFieldsDuringRead(ctx, fromStateTask)
-				toState.SetTask(ctx, toStateTask)
+	if !from.Task.IsNull() && !from.Task.IsUnknown() {
+		if toTask, ok := to.GetTask(ctx); ok {
+			if fromTask, ok := from.GetTask(ctx); ok {
+				toTask.SyncFieldsDuringRead(ctx, fromTask)
+				to.SetTask(ctx, toTask)
 			}
 		}
 	}
@@ -12014,10 +13076,10 @@ type RunJobOutput struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (toState *RunJobOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunJobOutput) {
+func (to *RunJobOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunJobOutput) {
 }
 
-func (toState *RunJobOutput) SyncFieldsDuringRead(ctx context.Context, fromState RunJobOutput) {
+func (to *RunJobOutput) SyncFieldsDuringRead(ctx context.Context, from RunJobOutput) {
 }
 
 func (c RunJobOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12146,25 +13208,74 @@ type RunJobTask struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (toState *RunJobTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunJobTask) {
-	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
-		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
-			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
-				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
-				toState.SetPipelineParams(ctx, toStatePipelineParams)
+func (to *RunJobTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunJobTask) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				// Recursively sync the fields of PipelineParams
+				toPipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
 			}
 		}
 	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
 }
 
-func (toState *RunJobTask) SyncFieldsDuringRead(ctx context.Context, fromState RunJobTask) {
-	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
-		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
-			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
-				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
-				toState.SetPipelineParams(ctx, toStatePipelineParams)
+func (to *RunJobTask) SyncFieldsDuringRead(ctx context.Context, from RunJobTask) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				toPipelineParams.SyncFieldsDuringRead(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
 			}
 		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
 	}
 }
 
@@ -12610,6 +13721,125 @@ type RunNow struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
+func (to *RunNow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunNow) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.Only.IsNull() && !from.Only.IsUnknown() && to.Only.IsNull() && len(from.Only.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Only, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Only = from.Only
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				// Recursively sync the fields of PipelineParams
+				toPipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
+			}
+		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				// Recursively sync the fields of Queue
+				toQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
+}
+
+func (to *RunNow) SyncFieldsDuringRead(ctx context.Context, from RunNow) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.Only.IsNull() && !from.Only.IsUnknown() && to.Only.IsNull() && len(from.Only.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Only, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Only = from.Only
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				toPipelineParams.SyncFieldsDuringRead(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
+			}
+		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				toQueue.SyncFieldsDuringRead(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
+}
+
+func (c RunNow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["only"] = attrs["only"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12990,10 +14220,10 @@ type RunNowResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (toState *RunNowResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunNowResponse) {
+func (to *RunNowResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunNowResponse) {
 }
 
-func (toState *RunNowResponse) SyncFieldsDuringRead(ctx context.Context, fromState RunNowResponse) {
+func (to *RunNowResponse) SyncFieldsDuringRead(ctx context.Context, from RunNowResponse) {
 }
 
 func (c RunNowResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13084,151 +14314,160 @@ type RunOutput struct {
 	SqlOutput types.Object `tfsdk:"sql_output"`
 }
 
-func (toState *RunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunOutput) {
-	if !fromPlan.CleanRoomsNotebookOutput.IsNull() && !fromPlan.CleanRoomsNotebookOutput.IsUnknown() {
-		if toStateCleanRoomsNotebookOutput, ok := toState.GetCleanRoomsNotebookOutput(ctx); ok {
-			if fromPlanCleanRoomsNotebookOutput, ok := fromPlan.GetCleanRoomsNotebookOutput(ctx); ok {
-				toStateCleanRoomsNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookOutput)
-				toState.SetCleanRoomsNotebookOutput(ctx, toStateCleanRoomsNotebookOutput)
+func (to *RunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunOutput) {
+	if !from.CleanRoomsNotebookOutput.IsNull() && !from.CleanRoomsNotebookOutput.IsUnknown() {
+		if toCleanRoomsNotebookOutput, ok := to.GetCleanRoomsNotebookOutput(ctx); ok {
+			if fromCleanRoomsNotebookOutput, ok := from.GetCleanRoomsNotebookOutput(ctx); ok {
+				// Recursively sync the fields of CleanRoomsNotebookOutput
+				toCleanRoomsNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookOutput)
+				to.SetCleanRoomsNotebookOutput(ctx, toCleanRoomsNotebookOutput)
 			}
 		}
 	}
-	if !fromPlan.DashboardOutput.IsNull() && !fromPlan.DashboardOutput.IsUnknown() {
-		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
-			if fromPlanDashboardOutput, ok := fromPlan.GetDashboardOutput(ctx); ok {
-				toStateDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardOutput)
-				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+	if !from.DashboardOutput.IsNull() && !from.DashboardOutput.IsUnknown() {
+		if toDashboardOutput, ok := to.GetDashboardOutput(ctx); ok {
+			if fromDashboardOutput, ok := from.GetDashboardOutput(ctx); ok {
+				// Recursively sync the fields of DashboardOutput
+				toDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardOutput)
+				to.SetDashboardOutput(ctx, toDashboardOutput)
 			}
 		}
 	}
-	if !fromPlan.DbtCloudOutput.IsNull() && !fromPlan.DbtCloudOutput.IsUnknown() {
-		if toStateDbtCloudOutput, ok := toState.GetDbtCloudOutput(ctx); ok {
-			if fromPlanDbtCloudOutput, ok := fromPlan.GetDbtCloudOutput(ctx); ok {
-				toStateDbtCloudOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudOutput)
-				toState.SetDbtCloudOutput(ctx, toStateDbtCloudOutput)
+	if !from.DbtCloudOutput.IsNull() && !from.DbtCloudOutput.IsUnknown() {
+		if toDbtCloudOutput, ok := to.GetDbtCloudOutput(ctx); ok {
+			if fromDbtCloudOutput, ok := from.GetDbtCloudOutput(ctx); ok {
+				// Recursively sync the fields of DbtCloudOutput
+				toDbtCloudOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtCloudOutput)
+				to.SetDbtCloudOutput(ctx, toDbtCloudOutput)
 			}
 		}
 	}
-	if !fromPlan.DbtOutput.IsNull() && !fromPlan.DbtOutput.IsUnknown() {
-		if toStateDbtOutput, ok := toState.GetDbtOutput(ctx); ok {
-			if fromPlanDbtOutput, ok := fromPlan.GetDbtOutput(ctx); ok {
-				toStateDbtOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtOutput)
-				toState.SetDbtOutput(ctx, toStateDbtOutput)
+	if !from.DbtOutput.IsNull() && !from.DbtOutput.IsUnknown() {
+		if toDbtOutput, ok := to.GetDbtOutput(ctx); ok {
+			if fromDbtOutput, ok := from.GetDbtOutput(ctx); ok {
+				// Recursively sync the fields of DbtOutput
+				toDbtOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtOutput)
+				to.SetDbtOutput(ctx, toDbtOutput)
 			}
 		}
 	}
-	if !fromPlan.DbtPlatformOutput.IsNull() && !fromPlan.DbtPlatformOutput.IsUnknown() {
-		if toStateDbtPlatformOutput, ok := toState.GetDbtPlatformOutput(ctx); ok {
-			if fromPlanDbtPlatformOutput, ok := fromPlan.GetDbtPlatformOutput(ctx); ok {
-				toStateDbtPlatformOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformOutput)
-				toState.SetDbtPlatformOutput(ctx, toStateDbtPlatformOutput)
+	if !from.DbtPlatformOutput.IsNull() && !from.DbtPlatformOutput.IsUnknown() {
+		if toDbtPlatformOutput, ok := to.GetDbtPlatformOutput(ctx); ok {
+			if fromDbtPlatformOutput, ok := from.GetDbtPlatformOutput(ctx); ok {
+				// Recursively sync the fields of DbtPlatformOutput
+				toDbtPlatformOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtPlatformOutput)
+				to.SetDbtPlatformOutput(ctx, toDbtPlatformOutput)
 			}
 		}
 	}
-	if !fromPlan.Metadata.IsNull() && !fromPlan.Metadata.IsUnknown() {
-		if toStateMetadata, ok := toState.GetMetadata(ctx); ok {
-			if fromPlanMetadata, ok := fromPlan.GetMetadata(ctx); ok {
-				toStateMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetadata)
-				toState.SetMetadata(ctx, toStateMetadata)
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				// Recursively sync the fields of Metadata
+				toMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
 			}
 		}
 	}
-	if !fromPlan.NotebookOutput.IsNull() && !fromPlan.NotebookOutput.IsUnknown() {
-		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
-			if fromPlanNotebookOutput, ok := fromPlan.GetNotebookOutput(ctx); ok {
-				toStateNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookOutput)
-				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+	if !from.NotebookOutput.IsNull() && !from.NotebookOutput.IsUnknown() {
+		if toNotebookOutput, ok := to.GetNotebookOutput(ctx); ok {
+			if fromNotebookOutput, ok := from.GetNotebookOutput(ctx); ok {
+				// Recursively sync the fields of NotebookOutput
+				toNotebookOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookOutput)
+				to.SetNotebookOutput(ctx, toNotebookOutput)
 			}
 		}
 	}
-	if !fromPlan.RunJobOutput.IsNull() && !fromPlan.RunJobOutput.IsUnknown() {
-		if toStateRunJobOutput, ok := toState.GetRunJobOutput(ctx); ok {
-			if fromPlanRunJobOutput, ok := fromPlan.GetRunJobOutput(ctx); ok {
-				toStateRunJobOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobOutput)
-				toState.SetRunJobOutput(ctx, toStateRunJobOutput)
+	if !from.RunJobOutput.IsNull() && !from.RunJobOutput.IsUnknown() {
+		if toRunJobOutput, ok := to.GetRunJobOutput(ctx); ok {
+			if fromRunJobOutput, ok := from.GetRunJobOutput(ctx); ok {
+				// Recursively sync the fields of RunJobOutput
+				toRunJobOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromRunJobOutput)
+				to.SetRunJobOutput(ctx, toRunJobOutput)
 			}
 		}
 	}
-	if !fromPlan.SqlOutput.IsNull() && !fromPlan.SqlOutput.IsUnknown() {
-		if toStateSqlOutput, ok := toState.GetSqlOutput(ctx); ok {
-			if fromPlanSqlOutput, ok := fromPlan.GetSqlOutput(ctx); ok {
-				toStateSqlOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlOutput)
-				toState.SetSqlOutput(ctx, toStateSqlOutput)
+	if !from.SqlOutput.IsNull() && !from.SqlOutput.IsUnknown() {
+		if toSqlOutput, ok := to.GetSqlOutput(ctx); ok {
+			if fromSqlOutput, ok := from.GetSqlOutput(ctx); ok {
+				// Recursively sync the fields of SqlOutput
+				toSqlOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlOutput)
+				to.SetSqlOutput(ctx, toSqlOutput)
 			}
 		}
 	}
 }
 
-func (toState *RunOutput) SyncFieldsDuringRead(ctx context.Context, fromState RunOutput) {
-	if !fromState.CleanRoomsNotebookOutput.IsNull() && !fromState.CleanRoomsNotebookOutput.IsUnknown() {
-		if toStateCleanRoomsNotebookOutput, ok := toState.GetCleanRoomsNotebookOutput(ctx); ok {
-			if fromStateCleanRoomsNotebookOutput, ok := fromState.GetCleanRoomsNotebookOutput(ctx); ok {
-				toStateCleanRoomsNotebookOutput.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookOutput)
-				toState.SetCleanRoomsNotebookOutput(ctx, toStateCleanRoomsNotebookOutput)
+func (to *RunOutput) SyncFieldsDuringRead(ctx context.Context, from RunOutput) {
+	if !from.CleanRoomsNotebookOutput.IsNull() && !from.CleanRoomsNotebookOutput.IsUnknown() {
+		if toCleanRoomsNotebookOutput, ok := to.GetCleanRoomsNotebookOutput(ctx); ok {
+			if fromCleanRoomsNotebookOutput, ok := from.GetCleanRoomsNotebookOutput(ctx); ok {
+				toCleanRoomsNotebookOutput.SyncFieldsDuringRead(ctx, fromCleanRoomsNotebookOutput)
+				to.SetCleanRoomsNotebookOutput(ctx, toCleanRoomsNotebookOutput)
 			}
 		}
 	}
-	if !fromState.DashboardOutput.IsNull() && !fromState.DashboardOutput.IsUnknown() {
-		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
-			if fromStateDashboardOutput, ok := fromState.GetDashboardOutput(ctx); ok {
-				toStateDashboardOutput.SyncFieldsDuringRead(ctx, fromStateDashboardOutput)
-				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+	if !from.DashboardOutput.IsNull() && !from.DashboardOutput.IsUnknown() {
+		if toDashboardOutput, ok := to.GetDashboardOutput(ctx); ok {
+			if fromDashboardOutput, ok := from.GetDashboardOutput(ctx); ok {
+				toDashboardOutput.SyncFieldsDuringRead(ctx, fromDashboardOutput)
+				to.SetDashboardOutput(ctx, toDashboardOutput)
 			}
 		}
 	}
-	if !fromState.DbtCloudOutput.IsNull() && !fromState.DbtCloudOutput.IsUnknown() {
-		if toStateDbtCloudOutput, ok := toState.GetDbtCloudOutput(ctx); ok {
-			if fromStateDbtCloudOutput, ok := fromState.GetDbtCloudOutput(ctx); ok {
-				toStateDbtCloudOutput.SyncFieldsDuringRead(ctx, fromStateDbtCloudOutput)
-				toState.SetDbtCloudOutput(ctx, toStateDbtCloudOutput)
+	if !from.DbtCloudOutput.IsNull() && !from.DbtCloudOutput.IsUnknown() {
+		if toDbtCloudOutput, ok := to.GetDbtCloudOutput(ctx); ok {
+			if fromDbtCloudOutput, ok := from.GetDbtCloudOutput(ctx); ok {
+				toDbtCloudOutput.SyncFieldsDuringRead(ctx, fromDbtCloudOutput)
+				to.SetDbtCloudOutput(ctx, toDbtCloudOutput)
 			}
 		}
 	}
-	if !fromState.DbtOutput.IsNull() && !fromState.DbtOutput.IsUnknown() {
-		if toStateDbtOutput, ok := toState.GetDbtOutput(ctx); ok {
-			if fromStateDbtOutput, ok := fromState.GetDbtOutput(ctx); ok {
-				toStateDbtOutput.SyncFieldsDuringRead(ctx, fromStateDbtOutput)
-				toState.SetDbtOutput(ctx, toStateDbtOutput)
+	if !from.DbtOutput.IsNull() && !from.DbtOutput.IsUnknown() {
+		if toDbtOutput, ok := to.GetDbtOutput(ctx); ok {
+			if fromDbtOutput, ok := from.GetDbtOutput(ctx); ok {
+				toDbtOutput.SyncFieldsDuringRead(ctx, fromDbtOutput)
+				to.SetDbtOutput(ctx, toDbtOutput)
 			}
 		}
 	}
-	if !fromState.DbtPlatformOutput.IsNull() && !fromState.DbtPlatformOutput.IsUnknown() {
-		if toStateDbtPlatformOutput, ok := toState.GetDbtPlatformOutput(ctx); ok {
-			if fromStateDbtPlatformOutput, ok := fromState.GetDbtPlatformOutput(ctx); ok {
-				toStateDbtPlatformOutput.SyncFieldsDuringRead(ctx, fromStateDbtPlatformOutput)
-				toState.SetDbtPlatformOutput(ctx, toStateDbtPlatformOutput)
+	if !from.DbtPlatformOutput.IsNull() && !from.DbtPlatformOutput.IsUnknown() {
+		if toDbtPlatformOutput, ok := to.GetDbtPlatformOutput(ctx); ok {
+			if fromDbtPlatformOutput, ok := from.GetDbtPlatformOutput(ctx); ok {
+				toDbtPlatformOutput.SyncFieldsDuringRead(ctx, fromDbtPlatformOutput)
+				to.SetDbtPlatformOutput(ctx, toDbtPlatformOutput)
 			}
 		}
 	}
-	if !fromState.Metadata.IsNull() && !fromState.Metadata.IsUnknown() {
-		if toStateMetadata, ok := toState.GetMetadata(ctx); ok {
-			if fromStateMetadata, ok := fromState.GetMetadata(ctx); ok {
-				toStateMetadata.SyncFieldsDuringRead(ctx, fromStateMetadata)
-				toState.SetMetadata(ctx, toStateMetadata)
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				toMetadata.SyncFieldsDuringRead(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
 			}
 		}
 	}
-	if !fromState.NotebookOutput.IsNull() && !fromState.NotebookOutput.IsUnknown() {
-		if toStateNotebookOutput, ok := toState.GetNotebookOutput(ctx); ok {
-			if fromStateNotebookOutput, ok := fromState.GetNotebookOutput(ctx); ok {
-				toStateNotebookOutput.SyncFieldsDuringRead(ctx, fromStateNotebookOutput)
-				toState.SetNotebookOutput(ctx, toStateNotebookOutput)
+	if !from.NotebookOutput.IsNull() && !from.NotebookOutput.IsUnknown() {
+		if toNotebookOutput, ok := to.GetNotebookOutput(ctx); ok {
+			if fromNotebookOutput, ok := from.GetNotebookOutput(ctx); ok {
+				toNotebookOutput.SyncFieldsDuringRead(ctx, fromNotebookOutput)
+				to.SetNotebookOutput(ctx, toNotebookOutput)
 			}
 		}
 	}
-	if !fromState.RunJobOutput.IsNull() && !fromState.RunJobOutput.IsUnknown() {
-		if toStateRunJobOutput, ok := toState.GetRunJobOutput(ctx); ok {
-			if fromStateRunJobOutput, ok := fromState.GetRunJobOutput(ctx); ok {
-				toStateRunJobOutput.SyncFieldsDuringRead(ctx, fromStateRunJobOutput)
-				toState.SetRunJobOutput(ctx, toStateRunJobOutput)
+	if !from.RunJobOutput.IsNull() && !from.RunJobOutput.IsUnknown() {
+		if toRunJobOutput, ok := to.GetRunJobOutput(ctx); ok {
+			if fromRunJobOutput, ok := from.GetRunJobOutput(ctx); ok {
+				toRunJobOutput.SyncFieldsDuringRead(ctx, fromRunJobOutput)
+				to.SetRunJobOutput(ctx, toRunJobOutput)
 			}
 		}
 	}
-	if !fromState.SqlOutput.IsNull() && !fromState.SqlOutput.IsUnknown() {
-		if toStateSqlOutput, ok := toState.GetSqlOutput(ctx); ok {
-			if fromStateSqlOutput, ok := fromState.GetSqlOutput(ctx); ok {
-				toStateSqlOutput.SyncFieldsDuringRead(ctx, fromStateSqlOutput)
-				toState.SetSqlOutput(ctx, toStateSqlOutput)
+	if !from.SqlOutput.IsNull() && !from.SqlOutput.IsUnknown() {
+		if toSqlOutput, ok := to.GetSqlOutput(ctx); ok {
+			if fromSqlOutput, ok := from.GetSqlOutput(ctx); ok {
+				toSqlOutput.SyncFieldsDuringRead(ctx, fromSqlOutput)
+				to.SetSqlOutput(ctx, toSqlOutput)
 			}
 		}
 	}
@@ -13630,25 +14869,74 @@ type RunParameters struct {
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
-func (toState *RunParameters) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunParameters) {
-	if !fromPlan.PipelineParams.IsNull() && !fromPlan.PipelineParams.IsUnknown() {
-		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
-			if fromPlanPipelineParams, ok := fromPlan.GetPipelineParams(ctx); ok {
-				toStatePipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineParams)
-				toState.SetPipelineParams(ctx, toStatePipelineParams)
+func (to *RunParameters) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunParameters) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				// Recursively sync the fields of PipelineParams
+				toPipelineParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
 			}
 		}
 	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
+	}
 }
 
-func (toState *RunParameters) SyncFieldsDuringRead(ctx context.Context, fromState RunParameters) {
-	if !fromState.PipelineParams.IsNull() && !fromState.PipelineParams.IsUnknown() {
-		if toStatePipelineParams, ok := toState.GetPipelineParams(ctx); ok {
-			if fromStatePipelineParams, ok := fromState.GetPipelineParams(ctx); ok {
-				toStatePipelineParams.SyncFieldsDuringRead(ctx, fromStatePipelineParams)
-				toState.SetPipelineParams(ctx, toStatePipelineParams)
+func (to *RunParameters) SyncFieldsDuringRead(ctx context.Context, from RunParameters) {
+	if !from.DbtCommands.IsNull() && !from.DbtCommands.IsUnknown() && to.DbtCommands.IsNull() && len(from.DbtCommands.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbtCommands, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbtCommands = from.DbtCommands
+	}
+	if !from.JarParams.IsNull() && !from.JarParams.IsUnknown() && to.JarParams.IsNull() && len(from.JarParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarParams = from.JarParams
+	}
+	if !from.PipelineParams.IsNull() && !from.PipelineParams.IsUnknown() {
+		if toPipelineParams, ok := to.GetPipelineParams(ctx); ok {
+			if fromPipelineParams, ok := from.GetPipelineParams(ctx); ok {
+				toPipelineParams.SyncFieldsDuringRead(ctx, fromPipelineParams)
+				to.SetPipelineParams(ctx, toPipelineParams)
 			}
 		}
+	}
+	if !from.PythonParams.IsNull() && !from.PythonParams.IsUnknown() && to.PythonParams.IsNull() && len(from.PythonParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PythonParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PythonParams = from.PythonParams
+	}
+	if !from.SparkSubmitParams.IsNull() && !from.SparkSubmitParams.IsUnknown() && to.SparkSubmitParams.IsNull() && len(from.SparkSubmitParams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SparkSubmitParams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SparkSubmitParams = from.SparkSubmitParams
 	}
 }
 
@@ -13960,10 +15248,10 @@ type RunState struct {
 	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout"`
 }
 
-func (toState *RunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunState) {
+func (to *RunState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunState) {
 }
 
-func (toState *RunState) SyncFieldsDuringRead(ctx context.Context, fromState RunState) {
+func (to *RunState) SyncFieldsDuringRead(ctx context.Context, from RunState) {
 }
 
 func (c RunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14026,39 +15314,41 @@ type RunStatus struct {
 	TerminationDetails types.Object `tfsdk:"termination_details"`
 }
 
-func (toState *RunStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunStatus) {
-	if !fromPlan.QueueDetails.IsNull() && !fromPlan.QueueDetails.IsUnknown() {
-		if toStateQueueDetails, ok := toState.GetQueueDetails(ctx); ok {
-			if fromPlanQueueDetails, ok := fromPlan.GetQueueDetails(ctx); ok {
-				toStateQueueDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueueDetails)
-				toState.SetQueueDetails(ctx, toStateQueueDetails)
+func (to *RunStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunStatus) {
+	if !from.QueueDetails.IsNull() && !from.QueueDetails.IsUnknown() {
+		if toQueueDetails, ok := to.GetQueueDetails(ctx); ok {
+			if fromQueueDetails, ok := from.GetQueueDetails(ctx); ok {
+				// Recursively sync the fields of QueueDetails
+				toQueueDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromQueueDetails)
+				to.SetQueueDetails(ctx, toQueueDetails)
 			}
 		}
 	}
-	if !fromPlan.TerminationDetails.IsNull() && !fromPlan.TerminationDetails.IsUnknown() {
-		if toStateTerminationDetails, ok := toState.GetTerminationDetails(ctx); ok {
-			if fromPlanTerminationDetails, ok := fromPlan.GetTerminationDetails(ctx); ok {
-				toStateTerminationDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTerminationDetails)
-				toState.SetTerminationDetails(ctx, toStateTerminationDetails)
+	if !from.TerminationDetails.IsNull() && !from.TerminationDetails.IsUnknown() {
+		if toTerminationDetails, ok := to.GetTerminationDetails(ctx); ok {
+			if fromTerminationDetails, ok := from.GetTerminationDetails(ctx); ok {
+				// Recursively sync the fields of TerminationDetails
+				toTerminationDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromTerminationDetails)
+				to.SetTerminationDetails(ctx, toTerminationDetails)
 			}
 		}
 	}
 }
 
-func (toState *RunStatus) SyncFieldsDuringRead(ctx context.Context, fromState RunStatus) {
-	if !fromState.QueueDetails.IsNull() && !fromState.QueueDetails.IsUnknown() {
-		if toStateQueueDetails, ok := toState.GetQueueDetails(ctx); ok {
-			if fromStateQueueDetails, ok := fromState.GetQueueDetails(ctx); ok {
-				toStateQueueDetails.SyncFieldsDuringRead(ctx, fromStateQueueDetails)
-				toState.SetQueueDetails(ctx, toStateQueueDetails)
+func (to *RunStatus) SyncFieldsDuringRead(ctx context.Context, from RunStatus) {
+	if !from.QueueDetails.IsNull() && !from.QueueDetails.IsUnknown() {
+		if toQueueDetails, ok := to.GetQueueDetails(ctx); ok {
+			if fromQueueDetails, ok := from.GetQueueDetails(ctx); ok {
+				toQueueDetails.SyncFieldsDuringRead(ctx, fromQueueDetails)
+				to.SetQueueDetails(ctx, toQueueDetails)
 			}
 		}
 	}
-	if !fromState.TerminationDetails.IsNull() && !fromState.TerminationDetails.IsUnknown() {
-		if toStateTerminationDetails, ok := toState.GetTerminationDetails(ctx); ok {
-			if fromStateTerminationDetails, ok := fromState.GetTerminationDetails(ctx); ok {
-				toStateTerminationDetails.SyncFieldsDuringRead(ctx, fromStateTerminationDetails)
-				toState.SetTerminationDetails(ctx, toStateTerminationDetails)
+	if !from.TerminationDetails.IsNull() && !from.TerminationDetails.IsUnknown() {
+		if toTerminationDetails, ok := to.GetTerminationDetails(ctx); ok {
+			if fromTerminationDetails, ok := from.GetTerminationDetails(ctx); ok {
+				toTerminationDetails.SyncFieldsDuringRead(ctx, fromTerminationDetails)
+				to.SetTerminationDetails(ctx, toTerminationDetails)
 			}
 		}
 	}
@@ -14173,7 +15463,7 @@ type RunTask struct {
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.
 	//
-	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	// [clean rooms]: https://docs.databricks.com/clean-rooms/index.html
 	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
@@ -14208,8 +15498,6 @@ type RunTask struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
-	// Deprecated, field was never used in production.
-	Disabled types.Bool `tfsdk:"disabled"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -14311,24 +15599,9 @@ type RunTask struct {
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
 	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
-	// (Legacy) The task runs the spark-submit script when the
-	// `spark_submit_task` field is present. This task can run only on new
-	// clusters and is not compatible with serverless compute.
-	//
-	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
-	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
-	// libraries and `--conf` to set the Spark configurations.
-	//
-	// `master`, `deploy-mode`, and `executor-cores` are automatically
-	// configured by Databricks; you _cannot_ specify them in parameters.
-	//
-	// By default, the Spark submit job uses all available memory (excluding
-	// reserved memory for Databricks services). You can set `--driver-memory`,
-	// and `--executor-memory` to a smaller value to leave some room for
-	// off-heap usage.
-	//
-	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
-	// paths.
+	// (Legacy) The task runs the spark-submit script when the spark_submit_task
+	// field is present. Databricks recommends using the spark_jar_task instead;
+	// see [Spark Submit task for jobs](/jobs/spark-submit).
 	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
@@ -14356,423 +15629,473 @@ type RunTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (toState *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RunTask) {
-	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunTask) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				// Recursively sync the fields of CleanRoomsNotebookTask
+				toCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.ClusterInstance.IsNull() && !fromPlan.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromPlanClusterInstance, ok := fromPlan.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				// Recursively sync the fields of ClusterInstance
+				toClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				// Recursively sync the fields of ConditionTask
+				toConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				// Recursively sync the fields of DashboardTask
+				toDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				// Recursively sync the fields of DbtCloudTask
+				toDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				// Recursively sync the fields of DbtPlatformTask
+				toDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				// Recursively sync the fields of DbtTask
+				toDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				// Recursively sync the fields of ForEachTask
+				toForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				// Recursively sync the fields of GenAiComputeTask
+				toGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromPlan.GitSource.IsNull() && !fromPlan.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromPlanGitSource, ok := fromPlan.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				// Recursively sync the fields of NewCluster
+				toNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				// Recursively sync the fields of NotebookTask
+				toNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				// Recursively sync the fields of PipelineTask
+				toPipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				// Recursively sync the fields of PowerBiTask
+				toPowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				// Recursively sync the fields of PythonWheelTask
+				toPythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromPlan.ResolvedValues.IsNull() && !fromPlan.ResolvedValues.IsUnknown() {
-		if toStateResolvedValues, ok := toState.GetResolvedValues(ctx); ok {
-			if fromPlanResolvedValues, ok := fromPlan.GetResolvedValues(ctx); ok {
-				toStateResolvedValues.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResolvedValues)
-				toState.SetResolvedValues(ctx, toStateResolvedValues)
+	if !from.ResolvedValues.IsNull() && !from.ResolvedValues.IsUnknown() {
+		if toResolvedValues, ok := to.GetResolvedValues(ctx); ok {
+			if fromResolvedValues, ok := from.GetResolvedValues(ctx); ok {
+				// Recursively sync the fields of ResolvedValues
+				toResolvedValues.SyncFieldsDuringCreateOrUpdate(ctx, fromResolvedValues)
+				to.SetResolvedValues(ctx, toResolvedValues)
 			}
 		}
 	}
-	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				// Recursively sync the fields of RunJobTask
+				toRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				// Recursively sync the fields of SparkJarTask
+				toSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				// Recursively sync the fields of SparkPythonTask
+				toSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				// Recursively sync the fields of SparkSubmitTask
+				toSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				// Recursively sync the fields of SqlTask
+				toSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromPlan.State.IsNull() && !fromPlan.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromPlanState, ok := fromPlan.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				// Recursively sync the fields of State
+				toState.SyncFieldsDuringCreateOrUpdate(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
 }
 
-func (toState *RunTask) SyncFieldsDuringRead(ctx context.Context, fromState RunTask) {
-	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *RunTask) SyncFieldsDuringRead(ctx context.Context, from RunTask) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				toCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromState.ClusterInstance.IsNull() && !fromState.ClusterInstance.IsUnknown() {
-		if toStateClusterInstance, ok := toState.GetClusterInstance(ctx); ok {
-			if fromStateClusterInstance, ok := fromState.GetClusterInstance(ctx); ok {
-				toStateClusterInstance.SyncFieldsDuringRead(ctx, fromStateClusterInstance)
-				toState.SetClusterInstance(ctx, toStateClusterInstance)
+	if !from.ClusterInstance.IsNull() && !from.ClusterInstance.IsUnknown() {
+		if toClusterInstance, ok := to.GetClusterInstance(ctx); ok {
+			if fromClusterInstance, ok := from.GetClusterInstance(ctx); ok {
+				toClusterInstance.SyncFieldsDuringRead(ctx, fromClusterInstance)
+				to.SetClusterInstance(ctx, toClusterInstance)
 			}
 		}
 	}
-	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				toConditionTask.SyncFieldsDuringRead(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				toDashboardTask.SyncFieldsDuringRead(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				toDbtCloudTask.SyncFieldsDuringRead(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				toDbtPlatformTask.SyncFieldsDuringRead(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				toDbtTask.SyncFieldsDuringRead(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				toForEachTask.SyncFieldsDuringRead(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				toGenAiComputeTask.SyncFieldsDuringRead(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromState.GitSource.IsNull() && !fromState.GitSource.IsUnknown() {
-		if toStateGitSource, ok := toState.GetGitSource(ctx); ok {
-			if fromStateGitSource, ok := fromState.GetGitSource(ctx); ok {
-				toStateGitSource.SyncFieldsDuringRead(ctx, fromStateGitSource)
-				toState.SetGitSource(ctx, toStateGitSource)
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
-	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				toNewCluster.SyncFieldsDuringRead(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				toNotebookTask.SyncFieldsDuringRead(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				toPipelineTask.SyncFieldsDuringRead(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				toPowerBiTask.SyncFieldsDuringRead(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				toPythonWheelTask.SyncFieldsDuringRead(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromState.ResolvedValues.IsNull() && !fromState.ResolvedValues.IsUnknown() {
-		if toStateResolvedValues, ok := toState.GetResolvedValues(ctx); ok {
-			if fromStateResolvedValues, ok := fromState.GetResolvedValues(ctx); ok {
-				toStateResolvedValues.SyncFieldsDuringRead(ctx, fromStateResolvedValues)
-				toState.SetResolvedValues(ctx, toStateResolvedValues)
+	if !from.ResolvedValues.IsNull() && !from.ResolvedValues.IsUnknown() {
+		if toResolvedValues, ok := to.GetResolvedValues(ctx); ok {
+			if fromResolvedValues, ok := from.GetResolvedValues(ctx); ok {
+				toResolvedValues.SyncFieldsDuringRead(ctx, fromResolvedValues)
+				to.SetResolvedValues(ctx, toResolvedValues)
 			}
 		}
 	}
-	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				toRunJobTask.SyncFieldsDuringRead(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				toSparkJarTask.SyncFieldsDuringRead(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				toSparkPythonTask.SyncFieldsDuringRead(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				toSparkSubmitTask.SyncFieldsDuringRead(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				toSqlTask.SyncFieldsDuringRead(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromState.State.IsNull() && !fromState.State.IsUnknown() {
-		if toStateState, ok := toState.GetState(ctx); ok {
-			if fromStateState, ok := fromState.GetState(ctx); ok {
-				toStateState.SyncFieldsDuringRead(ctx, fromStateState)
-				toState.SetState(ctx, toStateState)
+	if !from.State.IsNull() && !from.State.IsUnknown() {
+		if toState, ok := to.GetState(ctx); ok {
+			if fromState, ok := from.GetState(ctx); ok {
+				toState.SyncFieldsDuringRead(ctx, fromState)
+				to.SetState(ctx, toState)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
-	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
@@ -14790,7 +16113,6 @@ func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["disabled"] = attrs["disabled"].SetComputed()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -14888,7 +16210,6 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dbt_task":                     o.DbtTask,
 			"depends_on":                   o.DependsOn,
 			"description":                  o.Description,
-			"disabled":                     o.Disabled,
 			"effective_performance_target": o.EffectivePerformanceTarget,
 			"email_notifications":          o.EmailNotifications,
 			"end_time":                     o.EndTime,
@@ -14944,7 +16265,6 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 				ElemType: TaskDependency{}.Type(ctx),
 			},
 			"description":                  types.StringType,
-			"disabled":                     types.BoolType,
 			"effective_performance_target": types.StringType,
 			"email_notifications":          JobEmailNotifications{}.Type(ctx),
 			"end_time":                     types.Int64Type,
@@ -15709,10 +17029,22 @@ type SparkJarTask struct {
 	RunAsRepl types.Bool `tfsdk:"run_as_repl"`
 }
 
-func (toState *SparkJarTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkJarTask) {
+func (to *SparkJarTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SparkJarTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *SparkJarTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkJarTask) {
+func (to *SparkJarTask) SyncFieldsDuringRead(ctx context.Context, from SparkJarTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c SparkJarTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15817,10 +17149,22 @@ type SparkPythonTask struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (toState *SparkPythonTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkPythonTask) {
+func (to *SparkPythonTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SparkPythonTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *SparkPythonTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkPythonTask) {
+func (to *SparkPythonTask) SyncFieldsDuringRead(ctx context.Context, from SparkPythonTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c SparkPythonTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15906,10 +17250,22 @@ type SparkSubmitTask struct {
 	Parameters types.List `tfsdk:"parameters"`
 }
 
-func (toState *SparkSubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SparkSubmitTask) {
+func (to *SparkSubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SparkSubmitTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *SparkSubmitTask) SyncFieldsDuringRead(ctx context.Context, fromState SparkSubmitTask) {
+func (to *SparkSubmitTask) SyncFieldsDuringRead(ctx context.Context, from SparkSubmitTask) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c SparkSubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15992,10 +17348,22 @@ type SqlAlertOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlAlertOutput) {
+func (to *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlAlertOutput) {
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
 }
 
-func (toState *SqlAlertOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlAlertOutput) {
+func (to *SqlAlertOutput) SyncFieldsDuringRead(ctx context.Context, from SqlAlertOutput) {
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
 }
 
 func (c SqlAlertOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16084,10 +17452,22 @@ type SqlDashboardOutput struct {
 	Widgets types.List `tfsdk:"widgets"`
 }
 
-func (toState *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlDashboardOutput) {
+func (to *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlDashboardOutput) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() && to.Widgets.IsNull() && len(from.Widgets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Widgets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Widgets = from.Widgets
+	}
 }
 
-func (toState *SqlDashboardOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlDashboardOutput) {
+func (to *SqlDashboardOutput) SyncFieldsDuringRead(ctx context.Context, from SqlDashboardOutput) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() && to.Widgets.IsNull() && len(from.Widgets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Widgets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Widgets = from.Widgets
+	}
 }
 
 func (c SqlDashboardOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16177,23 +17557,24 @@ type SqlDashboardWidgetOutput struct {
 	WidgetTitle types.String `tfsdk:"widget_title"`
 }
 
-func (toState *SqlDashboardWidgetOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlDashboardWidgetOutput) {
-	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
-		if toStateError, ok := toState.GetError(ctx); ok {
-			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
-				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
-				toState.SetError(ctx, toStateError)
+func (to *SqlDashboardWidgetOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlDashboardWidgetOutput) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
 			}
 		}
 	}
 }
 
-func (toState *SqlDashboardWidgetOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlDashboardWidgetOutput) {
-	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
-		if toStateError, ok := toState.GetError(ctx); ok {
-			if fromStateError, ok := fromState.GetError(ctx); ok {
-				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
-				toState.SetError(ctx, toStateError)
+func (to *SqlDashboardWidgetOutput) SyncFieldsDuringRead(ctx context.Context, from SqlDashboardWidgetOutput) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
 			}
 		}
 	}
@@ -16290,55 +17671,58 @@ type SqlOutput struct {
 	QueryOutput types.Object `tfsdk:"query_output"`
 }
 
-func (toState *SqlOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlOutput) {
-	if !fromPlan.AlertOutput.IsNull() && !fromPlan.AlertOutput.IsUnknown() {
-		if toStateAlertOutput, ok := toState.GetAlertOutput(ctx); ok {
-			if fromPlanAlertOutput, ok := fromPlan.GetAlertOutput(ctx); ok {
-				toStateAlertOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAlertOutput)
-				toState.SetAlertOutput(ctx, toStateAlertOutput)
+func (to *SqlOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlOutput) {
+	if !from.AlertOutput.IsNull() && !from.AlertOutput.IsUnknown() {
+		if toAlertOutput, ok := to.GetAlertOutput(ctx); ok {
+			if fromAlertOutput, ok := from.GetAlertOutput(ctx); ok {
+				// Recursively sync the fields of AlertOutput
+				toAlertOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromAlertOutput)
+				to.SetAlertOutput(ctx, toAlertOutput)
 			}
 		}
 	}
-	if !fromPlan.DashboardOutput.IsNull() && !fromPlan.DashboardOutput.IsUnknown() {
-		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
-			if fromPlanDashboardOutput, ok := fromPlan.GetDashboardOutput(ctx); ok {
-				toStateDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardOutput)
-				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+	if !from.DashboardOutput.IsNull() && !from.DashboardOutput.IsUnknown() {
+		if toDashboardOutput, ok := to.GetDashboardOutput(ctx); ok {
+			if fromDashboardOutput, ok := from.GetDashboardOutput(ctx); ok {
+				// Recursively sync the fields of DashboardOutput
+				toDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardOutput)
+				to.SetDashboardOutput(ctx, toDashboardOutput)
 			}
 		}
 	}
-	if !fromPlan.QueryOutput.IsNull() && !fromPlan.QueryOutput.IsUnknown() {
-		if toStateQueryOutput, ok := toState.GetQueryOutput(ctx); ok {
-			if fromPlanQueryOutput, ok := fromPlan.GetQueryOutput(ctx); ok {
-				toStateQueryOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryOutput)
-				toState.SetQueryOutput(ctx, toStateQueryOutput)
+	if !from.QueryOutput.IsNull() && !from.QueryOutput.IsUnknown() {
+		if toQueryOutput, ok := to.GetQueryOutput(ctx); ok {
+			if fromQueryOutput, ok := from.GetQueryOutput(ctx); ok {
+				// Recursively sync the fields of QueryOutput
+				toQueryOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromQueryOutput)
+				to.SetQueryOutput(ctx, toQueryOutput)
 			}
 		}
 	}
 }
 
-func (toState *SqlOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlOutput) {
-	if !fromState.AlertOutput.IsNull() && !fromState.AlertOutput.IsUnknown() {
-		if toStateAlertOutput, ok := toState.GetAlertOutput(ctx); ok {
-			if fromStateAlertOutput, ok := fromState.GetAlertOutput(ctx); ok {
-				toStateAlertOutput.SyncFieldsDuringRead(ctx, fromStateAlertOutput)
-				toState.SetAlertOutput(ctx, toStateAlertOutput)
+func (to *SqlOutput) SyncFieldsDuringRead(ctx context.Context, from SqlOutput) {
+	if !from.AlertOutput.IsNull() && !from.AlertOutput.IsUnknown() {
+		if toAlertOutput, ok := to.GetAlertOutput(ctx); ok {
+			if fromAlertOutput, ok := from.GetAlertOutput(ctx); ok {
+				toAlertOutput.SyncFieldsDuringRead(ctx, fromAlertOutput)
+				to.SetAlertOutput(ctx, toAlertOutput)
 			}
 		}
 	}
-	if !fromState.DashboardOutput.IsNull() && !fromState.DashboardOutput.IsUnknown() {
-		if toStateDashboardOutput, ok := toState.GetDashboardOutput(ctx); ok {
-			if fromStateDashboardOutput, ok := fromState.GetDashboardOutput(ctx); ok {
-				toStateDashboardOutput.SyncFieldsDuringRead(ctx, fromStateDashboardOutput)
-				toState.SetDashboardOutput(ctx, toStateDashboardOutput)
+	if !from.DashboardOutput.IsNull() && !from.DashboardOutput.IsUnknown() {
+		if toDashboardOutput, ok := to.GetDashboardOutput(ctx); ok {
+			if fromDashboardOutput, ok := from.GetDashboardOutput(ctx); ok {
+				toDashboardOutput.SyncFieldsDuringRead(ctx, fromDashboardOutput)
+				to.SetDashboardOutput(ctx, toDashboardOutput)
 			}
 		}
 	}
-	if !fromState.QueryOutput.IsNull() && !fromState.QueryOutput.IsUnknown() {
-		if toStateQueryOutput, ok := toState.GetQueryOutput(ctx); ok {
-			if fromStateQueryOutput, ok := fromState.GetQueryOutput(ctx); ok {
-				toStateQueryOutput.SyncFieldsDuringRead(ctx, fromStateQueryOutput)
-				toState.SetQueryOutput(ctx, toStateQueryOutput)
+	if !from.QueryOutput.IsNull() && !from.QueryOutput.IsUnknown() {
+		if toQueryOutput, ok := to.GetQueryOutput(ctx); ok {
+			if fromQueryOutput, ok := from.GetQueryOutput(ctx); ok {
+				toQueryOutput.SyncFieldsDuringRead(ctx, fromQueryOutput)
+				to.SetQueryOutput(ctx, toQueryOutput)
 			}
 		}
 	}
@@ -16471,10 +17855,10 @@ type SqlOutputError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (toState *SqlOutputError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlOutputError) {
+func (to *SqlOutputError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlOutputError) {
 }
 
-func (toState *SqlOutputError) SyncFieldsDuringRead(ctx context.Context, fromState SqlOutputError) {
+func (to *SqlOutputError) SyncFieldsDuringRead(ctx context.Context, from SqlOutputError) {
 }
 
 func (c SqlOutputError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16527,10 +17911,22 @@ type SqlQueryOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlQueryOutput) {
+func (to *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlQueryOutput) {
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
 }
 
-func (toState *SqlQueryOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlQueryOutput) {
+func (to *SqlQueryOutput) SyncFieldsDuringRead(ctx context.Context, from SqlQueryOutput) {
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
 }
 
 func (c SqlQueryOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16617,10 +18013,10 @@ type SqlStatementOutput struct {
 	LookupKey types.String `tfsdk:"lookup_key"`
 }
 
-func (toState *SqlStatementOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlStatementOutput) {
+func (to *SqlStatementOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementOutput) {
 }
 
-func (toState *SqlStatementOutput) SyncFieldsDuringRead(ctx context.Context, fromState SqlStatementOutput) {
+func (to *SqlStatementOutput) SyncFieldsDuringRead(ctx context.Context, from SqlStatementOutput) {
 }
 
 func (c SqlStatementOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -16680,71 +18076,75 @@ type SqlTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *SqlTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTask) {
-	if !fromPlan.Alert.IsNull() && !fromPlan.Alert.IsUnknown() {
-		if toStateAlert, ok := toState.GetAlert(ctx); ok {
-			if fromPlanAlert, ok := fromPlan.GetAlert(ctx); ok {
-				toStateAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanAlert)
-				toState.SetAlert(ctx, toStateAlert)
+func (to *SqlTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTask) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				// Recursively sync the fields of Alert
+				toAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
 			}
 		}
 	}
-	if !fromPlan.Dashboard.IsNull() && !fromPlan.Dashboard.IsUnknown() {
-		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
-			if fromPlanDashboard, ok := fromPlan.GetDashboard(ctx); ok {
-				toStateDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboard)
-				toState.SetDashboard(ctx, toStateDashboard)
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				// Recursively sync the fields of Dashboard
+				toDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
 			}
 		}
 	}
-	if !fromPlan.File.IsNull() && !fromPlan.File.IsUnknown() {
-		if toStateFile, ok := toState.GetFile(ctx); ok {
-			if fromPlanFile, ok := fromPlan.GetFile(ctx); ok {
-				toStateFile.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFile)
-				toState.SetFile(ctx, toStateFile)
+	if !from.File.IsNull() && !from.File.IsUnknown() {
+		if toFile, ok := to.GetFile(ctx); ok {
+			if fromFile, ok := from.GetFile(ctx); ok {
+				// Recursively sync the fields of File
+				toFile.SyncFieldsDuringCreateOrUpdate(ctx, fromFile)
+				to.SetFile(ctx, toFile)
 			}
 		}
 	}
-	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
-				toState.SetQuery(ctx, toStateQuery)
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				// Recursively sync the fields of Query
+				toQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
 }
 
-func (toState *SqlTask) SyncFieldsDuringRead(ctx context.Context, fromState SqlTask) {
-	if !fromState.Alert.IsNull() && !fromState.Alert.IsUnknown() {
-		if toStateAlert, ok := toState.GetAlert(ctx); ok {
-			if fromStateAlert, ok := fromState.GetAlert(ctx); ok {
-				toStateAlert.SyncFieldsDuringRead(ctx, fromStateAlert)
-				toState.SetAlert(ctx, toStateAlert)
+func (to *SqlTask) SyncFieldsDuringRead(ctx context.Context, from SqlTask) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				toAlert.SyncFieldsDuringRead(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
 			}
 		}
 	}
-	if !fromState.Dashboard.IsNull() && !fromState.Dashboard.IsUnknown() {
-		if toStateDashboard, ok := toState.GetDashboard(ctx); ok {
-			if fromStateDashboard, ok := fromState.GetDashboard(ctx); ok {
-				toStateDashboard.SyncFieldsDuringRead(ctx, fromStateDashboard)
-				toState.SetDashboard(ctx, toStateDashboard)
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				toDashboard.SyncFieldsDuringRead(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
 			}
 		}
 	}
-	if !fromState.File.IsNull() && !fromState.File.IsUnknown() {
-		if toStateFile, ok := toState.GetFile(ctx); ok {
-			if fromStateFile, ok := fromState.GetFile(ctx); ok {
-				toStateFile.SyncFieldsDuringRead(ctx, fromStateFile)
-				toState.SetFile(ctx, toStateFile)
+	if !from.File.IsNull() && !from.File.IsUnknown() {
+		if toFile, ok := to.GetFile(ctx); ok {
+			if fromFile, ok := from.GetFile(ctx); ok {
+				toFile.SyncFieldsDuringRead(ctx, fromFile)
+				to.SetFile(ctx, toFile)
 			}
 		}
 	}
-	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
-				toState.SetQuery(ctx, toStateQuery)
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				toQuery.SyncFieldsDuringRead(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
@@ -16945,10 +18345,22 @@ type SqlTaskAlert struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (toState *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskAlert) {
+func (to *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskAlert) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
-func (toState *SqlTaskAlert) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskAlert) {
+func (to *SqlTaskAlert) SyncFieldsDuringRead(ctx context.Context, from SqlTaskAlert) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
 func (c SqlTaskAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17036,10 +18448,22 @@ type SqlTaskDashboard struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (toState *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskDashboard) {
+func (to *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskDashboard) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
-func (toState *SqlTaskDashboard) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskDashboard) {
+func (to *SqlTaskDashboard) SyncFieldsDuringRead(ctx context.Context, from SqlTaskDashboard) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
 func (c SqlTaskDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17133,10 +18557,10 @@ type SqlTaskFile struct {
 	Source types.String `tfsdk:"source"`
 }
 
-func (toState *SqlTaskFile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskFile) {
+func (to *SqlTaskFile) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskFile) {
 }
 
-func (toState *SqlTaskFile) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskFile) {
+func (to *SqlTaskFile) SyncFieldsDuringRead(ctx context.Context, from SqlTaskFile) {
 }
 
 func (c SqlTaskFile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17184,10 +18608,10 @@ type SqlTaskQuery struct {
 	QueryId types.String `tfsdk:"query_id"`
 }
 
-func (toState *SqlTaskQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskQuery) {
+func (to *SqlTaskQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskQuery) {
 }
 
-func (toState *SqlTaskQuery) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskQuery) {
+func (to *SqlTaskQuery) SyncFieldsDuringRead(ctx context.Context, from SqlTaskQuery) {
 }
 
 func (c SqlTaskQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17239,10 +18663,10 @@ type SqlTaskSubscription struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *SqlTaskSubscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SqlTaskSubscription) {
+func (to *SqlTaskSubscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskSubscription) {
 }
 
-func (toState *SqlTaskSubscription) SyncFieldsDuringRead(ctx context.Context, fromState SqlTaskSubscription) {
+func (to *SqlTaskSubscription) SyncFieldsDuringRead(ctx context.Context, from SqlTaskSubscription) {
 }
 
 func (c SqlTaskSubscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17349,6 +18773,207 @@ type SubmitRun struct {
 	// A collection of system notification IDs to notify when the run begins or
 	// completes.
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
+}
+
+func (to *SubmitRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubmitRun) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+	if !from.BudgetPolicyId.IsUnknown() && !from.BudgetPolicyId.IsNull() {
+		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BudgetPolicyId = from.BudgetPolicyId
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
+			}
+		}
+	}
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
+			}
+		}
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				// Recursively sync the fields of Queue
+				toQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				// Recursively sync the fields of RunAs
+				toRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.UsagePolicyId.IsUnknown() && !from.UsagePolicyId.IsNull() {
+		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.UsagePolicyId = from.UsagePolicyId
+	}
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (to *SubmitRun) SyncFieldsDuringRead(ctx context.Context, from SubmitRun) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+	if !from.BudgetPolicyId.IsUnknown() && !from.BudgetPolicyId.IsNull() {
+		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BudgetPolicyId = from.BudgetPolicyId
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Environments = from.Environments
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
+			}
+		}
+	}
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
+			}
+		}
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
+	}
+	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
+		if toQueue, ok := to.GetQueue(ctx); ok {
+			if fromQueue, ok := from.GetQueue(ctx); ok {
+				toQueue.SyncFieldsDuringRead(ctx, fromQueue)
+				to.SetQueue(ctx, toQueue)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				toRunAs.SyncFieldsDuringRead(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() && to.Tasks.IsNull() && len(from.Tasks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tasks = from.Tasks
+	}
+	if !from.UsagePolicyId.IsUnknown() && !from.UsagePolicyId.IsNull() {
+		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.UsagePolicyId = from.UsagePolicyId
+	}
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
+			}
+		}
+	}
+}
+
+func (c SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environments"] = attrs["environments"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
+	attrs["tasks"] = attrs["tasks"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
@@ -17686,10 +19311,10 @@ type SubmitRunResponse struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (toState *SubmitRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubmitRunResponse) {
+func (to *SubmitRunResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubmitRunResponse) {
 }
 
-func (toState *SubmitRunResponse) SyncFieldsDuringRead(ctx context.Context, fromState SubmitRunResponse) {
+func (to *SubmitRunResponse) SyncFieldsDuringRead(ctx context.Context, from SubmitRunResponse) {
 }
 
 func (c SubmitRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17733,7 +19358,7 @@ type SubmitTask struct {
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.
 	//
-	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	// [clean rooms]: https://docs.databricks.com/clean-rooms/index.html
 	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
@@ -17810,24 +19435,9 @@ type SubmitTask struct {
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
 	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
-	// (Legacy) The task runs the spark-submit script when the
-	// `spark_submit_task` field is present. This task can run only on new
-	// clusters and is not compatible with serverless compute.
-	//
-	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
-	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
-	// libraries and `--conf` to set the Spark configurations.
-	//
-	// `master`, `deploy-mode`, and `executor-cores` are automatically
-	// configured by Databricks; you _cannot_ specify them in parameters.
-	//
-	// By default, the Spark submit job uses all available memory (excluding
-	// reserved memory for Databricks services). You can set `--driver-memory`,
-	// and `--executor-memory` to a smaller value to leave some room for
-	// off-heap usage.
-	//
-	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
-	// paths.
+	// (Legacy) The task runs the spark-submit script when the spark_submit_task
+	// field is present. Databricks recommends using the spark_jar_task instead;
+	// see [Spark Submit task for jobs](/jobs/spark-submit).
 	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
@@ -17846,359 +19456,405 @@ type SubmitTask struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (toState *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubmitTask) {
-	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubmitTask) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				// Recursively sync the fields of CleanRoomsNotebookTask
+				toCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				// Recursively sync the fields of ConditionTask
+				toConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				// Recursively sync the fields of DashboardTask
+				toDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				// Recursively sync the fields of DbtCloudTask
+				toDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				// Recursively sync the fields of DbtPlatformTask
+				toDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				// Recursively sync the fields of DbtTask
+				toDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				// Recursively sync the fields of ForEachTask
+				toForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				// Recursively sync the fields of GenAiComputeTask
+				toGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				// Recursively sync the fields of NewCluster
+				toNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				// Recursively sync the fields of NotebookTask
+				toNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				// Recursively sync the fields of PipelineTask
+				toPipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				// Recursively sync the fields of PowerBiTask
+				toPowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				// Recursively sync the fields of PythonWheelTask
+				toPythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				// Recursively sync the fields of RunJobTask
+				toRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				// Recursively sync the fields of SparkJarTask
+				toSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				// Recursively sync the fields of SparkPythonTask
+				toSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				// Recursively sync the fields of SparkSubmitTask
+				toSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				// Recursively sync the fields of SqlTask
+				toSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
 }
 
-func (toState *SubmitTask) SyncFieldsDuringRead(ctx context.Context, fromState SubmitTask) {
-	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *SubmitTask) SyncFieldsDuringRead(ctx context.Context, from SubmitTask) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				toCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				toConditionTask.SyncFieldsDuringRead(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				toDashboardTask.SyncFieldsDuringRead(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				toDbtCloudTask.SyncFieldsDuringRead(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				toDbtPlatformTask.SyncFieldsDuringRead(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				toDbtTask.SyncFieldsDuringRead(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				toForEachTask.SyncFieldsDuringRead(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				toGenAiComputeTask.SyncFieldsDuringRead(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				toNewCluster.SyncFieldsDuringRead(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				toNotebookTask.SyncFieldsDuringRead(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				toPipelineTask.SyncFieldsDuringRead(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				toPowerBiTask.SyncFieldsDuringRead(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				toPythonWheelTask.SyncFieldsDuringRead(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				toRunJobTask.SyncFieldsDuringRead(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				toSparkJarTask.SyncFieldsDuringRead(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				toSparkPythonTask.SyncFieldsDuringRead(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				toSparkSubmitTask.SyncFieldsDuringRead(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				toSqlTask.SyncFieldsDuringRead(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
@@ -18969,10 +20625,22 @@ type Subscription struct {
 	Subscribers types.List `tfsdk:"subscribers"`
 }
 
-func (toState *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Subscription) {
+func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Subscription) {
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscribers = from.Subscribers
+	}
 }
 
-func (toState *Subscription) SyncFieldsDuringRead(ctx context.Context, fromState Subscription) {
+func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscription) {
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscribers = from.Subscribers
+	}
 }
 
 func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19057,10 +20725,10 @@ type SubscriptionSubscriber struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *SubscriptionSubscriber) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SubscriptionSubscriber) {
+func (to *SubscriptionSubscriber) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionSubscriber) {
 }
 
-func (toState *SubscriptionSubscriber) SyncFieldsDuringRead(ctx context.Context, fromState SubscriptionSubscriber) {
+func (to *SubscriptionSubscriber) SyncFieldsDuringRead(ctx context.Context, from SubscriptionSubscriber) {
 }
 
 func (c SubscriptionSubscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19112,10 +20780,10 @@ type TableState struct {
 	TableName types.String `tfsdk:"table_name"`
 }
 
-func (toState *TableState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableState) {
+func (to *TableState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableState) {
 }
 
-func (toState *TableState) SyncFieldsDuringRead(ctx context.Context, fromState TableState) {
+func (to *TableState) SyncFieldsDuringRead(ctx context.Context, from TableState) {
 }
 
 func (c TableState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19164,10 +20832,22 @@ type TableTriggerState struct {
 	UsingScalableMonitoring types.Bool `tfsdk:"using_scalable_monitoring"`
 }
 
-func (toState *TableTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableTriggerState) {
+func (to *TableTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableTriggerState) {
+	if !from.LastSeenTableStates.IsNull() && !from.LastSeenTableStates.IsUnknown() && to.LastSeenTableStates.IsNull() && len(from.LastSeenTableStates.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for LastSeenTableStates, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.LastSeenTableStates = from.LastSeenTableStates
+	}
 }
 
-func (toState *TableTriggerState) SyncFieldsDuringRead(ctx context.Context, fromState TableTriggerState) {
+func (to *TableTriggerState) SyncFieldsDuringRead(ctx context.Context, from TableTriggerState) {
+	if !from.LastSeenTableStates.IsNull() && !from.LastSeenTableStates.IsUnknown() && to.LastSeenTableStates.IsNull() && len(from.LastSeenTableStates.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for LastSeenTableStates, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.LastSeenTableStates = from.LastSeenTableStates
+	}
 }
 
 func (c TableTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19257,10 +20937,22 @@ type TableUpdateTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
-func (toState *TableUpdateTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TableUpdateTriggerConfiguration) {
+func (to *TableUpdateTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableUpdateTriggerConfiguration) {
+	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() && to.TableNames.IsNull() && len(from.TableNames.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TableNames, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TableNames = from.TableNames
+	}
 }
 
-func (toState *TableUpdateTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, fromState TableUpdateTriggerConfiguration) {
+func (to *TableUpdateTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from TableUpdateTriggerConfiguration) {
+	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() && to.TableNames.IsNull() && len(from.TableNames.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TableNames, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TableNames = from.TableNames
+	}
 }
 
 func (c TableUpdateTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -19343,7 +21035,7 @@ type Task struct {
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.
 	//
-	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	// [clean rooms]: https://docs.databricks.com/clean-rooms/index.html
 	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
@@ -19370,6 +21062,9 @@ type Task struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
@@ -19443,24 +21138,9 @@ type Task struct {
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
 	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
-	// (Legacy) The task runs the spark-submit script when the
-	// `spark_submit_task` field is present. This task can run only on new
-	// clusters and is not compatible with serverless compute.
-	//
-	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
-	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
-	// libraries and `--conf` to set the Spark configurations.
-	//
-	// `master`, `deploy-mode`, and `executor-cores` are automatically
-	// configured by Databricks; you _cannot_ specify them in parameters.
-	//
-	// By default, the Spark submit job uses all available memory (excluding
-	// reserved memory for Databricks services). You can set `--driver-memory`,
-	// and `--executor-memory` to a smaller value to leave some room for
-	// off-heap usage.
-	//
-	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
-	// paths.
+	// (Legacy) The task runs the spark-submit script when the spark_submit_task
+	// field is present. Databricks recommends using the spark_jar_task instead;
+	// see [Spark Submit task for jobs](/jobs/spark-submit).
 	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
@@ -19479,359 +21159,405 @@ type Task struct {
 	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
-func (toState *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Task) {
-	if !fromPlan.CleanRoomsNotebookTask.IsNull() && !fromPlan.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromPlanCleanRoomsNotebookTask, ok := fromPlan.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				// Recursively sync the fields of CleanRoomsNotebookTask
+				toCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.ConditionTask.IsNull() && !fromPlan.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromPlanConditionTask, ok := fromPlan.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				// Recursively sync the fields of ConditionTask
+				toConditionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromPlan.DashboardTask.IsNull() && !fromPlan.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromPlanDashboardTask, ok := fromPlan.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				// Recursively sync the fields of DashboardTask
+				toDashboardTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromPlan.DbtCloudTask.IsNull() && !fromPlan.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromPlanDbtCloudTask, ok := fromPlan.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				// Recursively sync the fields of DbtCloudTask
+				toDbtCloudTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromPlan.DbtPlatformTask.IsNull() && !fromPlan.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromPlanDbtPlatformTask, ok := fromPlan.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				// Recursively sync the fields of DbtPlatformTask
+				toDbtPlatformTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromPlan.DbtTask.IsNull() && !fromPlan.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromPlanDbtTask, ok := fromPlan.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				// Recursively sync the fields of DbtTask
+				toDbtTask.SyncFieldsDuringCreateOrUpdate(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromPlan.EmailNotifications.IsNull() && !fromPlan.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromPlanEmailNotifications, ok := fromPlan.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				// Recursively sync the fields of EmailNotifications
+				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromPlan.ForEachTask.IsNull() && !fromPlan.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromPlanForEachTask, ok := fromPlan.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				// Recursively sync the fields of ForEachTask
+				toForEachTask.SyncFieldsDuringCreateOrUpdate(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromPlan.GenAiComputeTask.IsNull() && !fromPlan.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromPlanGenAiComputeTask, ok := fromPlan.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				// Recursively sync the fields of GenAiComputeTask
+				toGenAiComputeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromPlan.NewCluster.IsNull() && !fromPlan.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromPlanNewCluster, ok := fromPlan.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				// Recursively sync the fields of NewCluster
+				toNewCluster.SyncFieldsDuringCreateOrUpdate(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromPlan.NotebookTask.IsNull() && !fromPlan.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromPlanNotebookTask, ok := fromPlan.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				// Recursively sync the fields of NotebookTask
+				toNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromPlan.NotificationSettings.IsNull() && !fromPlan.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromPlanNotificationSettings, ok := fromPlan.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromPlan.PipelineTask.IsNull() && !fromPlan.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromPlanPipelineTask, ok := fromPlan.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				// Recursively sync the fields of PipelineTask
+				toPipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromPlan.PowerBiTask.IsNull() && !fromPlan.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromPlanPowerBiTask, ok := fromPlan.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				// Recursively sync the fields of PowerBiTask
+				toPowerBiTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromPlan.PythonWheelTask.IsNull() && !fromPlan.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromPlanPythonWheelTask, ok := fromPlan.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				// Recursively sync the fields of PythonWheelTask
+				toPythonWheelTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromPlan.RunJobTask.IsNull() && !fromPlan.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromPlanRunJobTask, ok := fromPlan.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				// Recursively sync the fields of RunJobTask
+				toRunJobTask.SyncFieldsDuringCreateOrUpdate(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromPlan.SparkJarTask.IsNull() && !fromPlan.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromPlanSparkJarTask, ok := fromPlan.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				// Recursively sync the fields of SparkJarTask
+				toSparkJarTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromPlan.SparkPythonTask.IsNull() && !fromPlan.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromPlanSparkPythonTask, ok := fromPlan.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				// Recursively sync the fields of SparkPythonTask
+				toSparkPythonTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromPlan.SparkSubmitTask.IsNull() && !fromPlan.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromPlanSparkSubmitTask, ok := fromPlan.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				// Recursively sync the fields of SparkSubmitTask
+				toSparkSubmitTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromPlan.SqlTask.IsNull() && !fromPlan.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromPlanSqlTask, ok := fromPlan.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				// Recursively sync the fields of SqlTask
+				toSqlTask.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromPlan.WebhookNotifications.IsNull() && !fromPlan.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromPlanWebhookNotifications, ok := fromPlan.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				// Recursively sync the fields of WebhookNotifications
+				toWebhookNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
 }
 
-func (toState *Task) SyncFieldsDuringRead(ctx context.Context, fromState Task) {
-	if !fromState.CleanRoomsNotebookTask.IsNull() && !fromState.CleanRoomsNotebookTask.IsUnknown() {
-		if toStateCleanRoomsNotebookTask, ok := toState.GetCleanRoomsNotebookTask(ctx); ok {
-			if fromStateCleanRoomsNotebookTask, ok := fromState.GetCleanRoomsNotebookTask(ctx); ok {
-				toStateCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromStateCleanRoomsNotebookTask)
-				toState.SetCleanRoomsNotebookTask(ctx, toStateCleanRoomsNotebookTask)
+func (to *Task) SyncFieldsDuringRead(ctx context.Context, from Task) {
+	if !from.CleanRoomsNotebookTask.IsNull() && !from.CleanRoomsNotebookTask.IsUnknown() {
+		if toCleanRoomsNotebookTask, ok := to.GetCleanRoomsNotebookTask(ctx); ok {
+			if fromCleanRoomsNotebookTask, ok := from.GetCleanRoomsNotebookTask(ctx); ok {
+				toCleanRoomsNotebookTask.SyncFieldsDuringRead(ctx, fromCleanRoomsNotebookTask)
+				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
 			}
 		}
 	}
-	if !fromState.ConditionTask.IsNull() && !fromState.ConditionTask.IsUnknown() {
-		if toStateConditionTask, ok := toState.GetConditionTask(ctx); ok {
-			if fromStateConditionTask, ok := fromState.GetConditionTask(ctx); ok {
-				toStateConditionTask.SyncFieldsDuringRead(ctx, fromStateConditionTask)
-				toState.SetConditionTask(ctx, toStateConditionTask)
+	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
+		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
+			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
+				toConditionTask.SyncFieldsDuringRead(ctx, fromConditionTask)
+				to.SetConditionTask(ctx, toConditionTask)
 			}
 		}
 	}
-	if !fromState.DashboardTask.IsNull() && !fromState.DashboardTask.IsUnknown() {
-		if toStateDashboardTask, ok := toState.GetDashboardTask(ctx); ok {
-			if fromStateDashboardTask, ok := fromState.GetDashboardTask(ctx); ok {
-				toStateDashboardTask.SyncFieldsDuringRead(ctx, fromStateDashboardTask)
-				toState.SetDashboardTask(ctx, toStateDashboardTask)
+	if !from.DashboardTask.IsNull() && !from.DashboardTask.IsUnknown() {
+		if toDashboardTask, ok := to.GetDashboardTask(ctx); ok {
+			if fromDashboardTask, ok := from.GetDashboardTask(ctx); ok {
+				toDashboardTask.SyncFieldsDuringRead(ctx, fromDashboardTask)
+				to.SetDashboardTask(ctx, toDashboardTask)
 			}
 		}
 	}
-	if !fromState.DbtCloudTask.IsNull() && !fromState.DbtCloudTask.IsUnknown() {
-		if toStateDbtCloudTask, ok := toState.GetDbtCloudTask(ctx); ok {
-			if fromStateDbtCloudTask, ok := fromState.GetDbtCloudTask(ctx); ok {
-				toStateDbtCloudTask.SyncFieldsDuringRead(ctx, fromStateDbtCloudTask)
-				toState.SetDbtCloudTask(ctx, toStateDbtCloudTask)
+	if !from.DbtCloudTask.IsNull() && !from.DbtCloudTask.IsUnknown() {
+		if toDbtCloudTask, ok := to.GetDbtCloudTask(ctx); ok {
+			if fromDbtCloudTask, ok := from.GetDbtCloudTask(ctx); ok {
+				toDbtCloudTask.SyncFieldsDuringRead(ctx, fromDbtCloudTask)
+				to.SetDbtCloudTask(ctx, toDbtCloudTask)
 			}
 		}
 	}
-	if !fromState.DbtPlatformTask.IsNull() && !fromState.DbtPlatformTask.IsUnknown() {
-		if toStateDbtPlatformTask, ok := toState.GetDbtPlatformTask(ctx); ok {
-			if fromStateDbtPlatformTask, ok := fromState.GetDbtPlatformTask(ctx); ok {
-				toStateDbtPlatformTask.SyncFieldsDuringRead(ctx, fromStateDbtPlatformTask)
-				toState.SetDbtPlatformTask(ctx, toStateDbtPlatformTask)
+	if !from.DbtPlatformTask.IsNull() && !from.DbtPlatformTask.IsUnknown() {
+		if toDbtPlatformTask, ok := to.GetDbtPlatformTask(ctx); ok {
+			if fromDbtPlatformTask, ok := from.GetDbtPlatformTask(ctx); ok {
+				toDbtPlatformTask.SyncFieldsDuringRead(ctx, fromDbtPlatformTask)
+				to.SetDbtPlatformTask(ctx, toDbtPlatformTask)
 			}
 		}
 	}
-	if !fromState.DbtTask.IsNull() && !fromState.DbtTask.IsUnknown() {
-		if toStateDbtTask, ok := toState.GetDbtTask(ctx); ok {
-			if fromStateDbtTask, ok := fromState.GetDbtTask(ctx); ok {
-				toStateDbtTask.SyncFieldsDuringRead(ctx, fromStateDbtTask)
-				toState.SetDbtTask(ctx, toStateDbtTask)
+	if !from.DbtTask.IsNull() && !from.DbtTask.IsUnknown() {
+		if toDbtTask, ok := to.GetDbtTask(ctx); ok {
+			if fromDbtTask, ok := from.GetDbtTask(ctx); ok {
+				toDbtTask.SyncFieldsDuringRead(ctx, fromDbtTask)
+				to.SetDbtTask(ctx, toDbtTask)
 			}
 		}
 	}
-	if !fromState.EmailNotifications.IsNull() && !fromState.EmailNotifications.IsUnknown() {
-		if toStateEmailNotifications, ok := toState.GetEmailNotifications(ctx); ok {
-			if fromStateEmailNotifications, ok := fromState.GetEmailNotifications(ctx); ok {
-				toStateEmailNotifications.SyncFieldsDuringRead(ctx, fromStateEmailNotifications)
-				toState.SetEmailNotifications(ctx, toStateEmailNotifications)
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() && to.DependsOn.IsNull() && len(from.DependsOn.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DependsOn, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DependsOn = from.DependsOn
+	}
+	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
+		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
+			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
+				toEmailNotifications.SyncFieldsDuringRead(ctx, fromEmailNotifications)
+				to.SetEmailNotifications(ctx, toEmailNotifications)
 			}
 		}
 	}
-	if !fromState.ForEachTask.IsNull() && !fromState.ForEachTask.IsUnknown() {
-		if toStateForEachTask, ok := toState.GetForEachTask(ctx); ok {
-			if fromStateForEachTask, ok := fromState.GetForEachTask(ctx); ok {
-				toStateForEachTask.SyncFieldsDuringRead(ctx, fromStateForEachTask)
-				toState.SetForEachTask(ctx, toStateForEachTask)
+	if !from.ForEachTask.IsNull() && !from.ForEachTask.IsUnknown() {
+		if toForEachTask, ok := to.GetForEachTask(ctx); ok {
+			if fromForEachTask, ok := from.GetForEachTask(ctx); ok {
+				toForEachTask.SyncFieldsDuringRead(ctx, fromForEachTask)
+				to.SetForEachTask(ctx, toForEachTask)
 			}
 		}
 	}
-	if !fromState.GenAiComputeTask.IsNull() && !fromState.GenAiComputeTask.IsUnknown() {
-		if toStateGenAiComputeTask, ok := toState.GetGenAiComputeTask(ctx); ok {
-			if fromStateGenAiComputeTask, ok := fromState.GetGenAiComputeTask(ctx); ok {
-				toStateGenAiComputeTask.SyncFieldsDuringRead(ctx, fromStateGenAiComputeTask)
-				toState.SetGenAiComputeTask(ctx, toStateGenAiComputeTask)
+	if !from.GenAiComputeTask.IsNull() && !from.GenAiComputeTask.IsUnknown() {
+		if toGenAiComputeTask, ok := to.GetGenAiComputeTask(ctx); ok {
+			if fromGenAiComputeTask, ok := from.GetGenAiComputeTask(ctx); ok {
+				toGenAiComputeTask.SyncFieldsDuringRead(ctx, fromGenAiComputeTask)
+				to.SetGenAiComputeTask(ctx, toGenAiComputeTask)
 			}
 		}
 	}
-	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromState.NewCluster.IsNull() && !fromState.NewCluster.IsUnknown() {
-		if toStateNewCluster, ok := toState.GetNewCluster(ctx); ok {
-			if fromStateNewCluster, ok := fromState.GetNewCluster(ctx); ok {
-				toStateNewCluster.SyncFieldsDuringRead(ctx, fromStateNewCluster)
-				toState.SetNewCluster(ctx, toStateNewCluster)
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
+		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
+			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
+				toNewCluster.SyncFieldsDuringRead(ctx, fromNewCluster)
+				to.SetNewCluster(ctx, toNewCluster)
 			}
 		}
 	}
-	if !fromState.NotebookTask.IsNull() && !fromState.NotebookTask.IsUnknown() {
-		if toStateNotebookTask, ok := toState.GetNotebookTask(ctx); ok {
-			if fromStateNotebookTask, ok := fromState.GetNotebookTask(ctx); ok {
-				toStateNotebookTask.SyncFieldsDuringRead(ctx, fromStateNotebookTask)
-				toState.SetNotebookTask(ctx, toStateNotebookTask)
+	if !from.NotebookTask.IsNull() && !from.NotebookTask.IsUnknown() {
+		if toNotebookTask, ok := to.GetNotebookTask(ctx); ok {
+			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
+				toNotebookTask.SyncFieldsDuringRead(ctx, fromNotebookTask)
+				to.SetNotebookTask(ctx, toNotebookTask)
 			}
 		}
 	}
-	if !fromState.NotificationSettings.IsNull() && !fromState.NotificationSettings.IsUnknown() {
-		if toStateNotificationSettings, ok := toState.GetNotificationSettings(ctx); ok {
-			if fromStateNotificationSettings, ok := fromState.GetNotificationSettings(ctx); ok {
-				toStateNotificationSettings.SyncFieldsDuringRead(ctx, fromStateNotificationSettings)
-				toState.SetNotificationSettings(ctx, toStateNotificationSettings)
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
 			}
 		}
 	}
-	if !fromState.PipelineTask.IsNull() && !fromState.PipelineTask.IsUnknown() {
-		if toStatePipelineTask, ok := toState.GetPipelineTask(ctx); ok {
-			if fromStatePipelineTask, ok := fromState.GetPipelineTask(ctx); ok {
-				toStatePipelineTask.SyncFieldsDuringRead(ctx, fromStatePipelineTask)
-				toState.SetPipelineTask(ctx, toStatePipelineTask)
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				toPipelineTask.SyncFieldsDuringRead(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
-	if !fromState.PowerBiTask.IsNull() && !fromState.PowerBiTask.IsUnknown() {
-		if toStatePowerBiTask, ok := toState.GetPowerBiTask(ctx); ok {
-			if fromStatePowerBiTask, ok := fromState.GetPowerBiTask(ctx); ok {
-				toStatePowerBiTask.SyncFieldsDuringRead(ctx, fromStatePowerBiTask)
-				toState.SetPowerBiTask(ctx, toStatePowerBiTask)
+	if !from.PowerBiTask.IsNull() && !from.PowerBiTask.IsUnknown() {
+		if toPowerBiTask, ok := to.GetPowerBiTask(ctx); ok {
+			if fromPowerBiTask, ok := from.GetPowerBiTask(ctx); ok {
+				toPowerBiTask.SyncFieldsDuringRead(ctx, fromPowerBiTask)
+				to.SetPowerBiTask(ctx, toPowerBiTask)
 			}
 		}
 	}
-	if !fromState.PythonWheelTask.IsNull() && !fromState.PythonWheelTask.IsUnknown() {
-		if toStatePythonWheelTask, ok := toState.GetPythonWheelTask(ctx); ok {
-			if fromStatePythonWheelTask, ok := fromState.GetPythonWheelTask(ctx); ok {
-				toStatePythonWheelTask.SyncFieldsDuringRead(ctx, fromStatePythonWheelTask)
-				toState.SetPythonWheelTask(ctx, toStatePythonWheelTask)
+	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
+		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
+			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
+				toPythonWheelTask.SyncFieldsDuringRead(ctx, fromPythonWheelTask)
+				to.SetPythonWheelTask(ctx, toPythonWheelTask)
 			}
 		}
 	}
-	if !fromState.RunJobTask.IsNull() && !fromState.RunJobTask.IsUnknown() {
-		if toStateRunJobTask, ok := toState.GetRunJobTask(ctx); ok {
-			if fromStateRunJobTask, ok := fromState.GetRunJobTask(ctx); ok {
-				toStateRunJobTask.SyncFieldsDuringRead(ctx, fromStateRunJobTask)
-				toState.SetRunJobTask(ctx, toStateRunJobTask)
+	if !from.RunJobTask.IsNull() && !from.RunJobTask.IsUnknown() {
+		if toRunJobTask, ok := to.GetRunJobTask(ctx); ok {
+			if fromRunJobTask, ok := from.GetRunJobTask(ctx); ok {
+				toRunJobTask.SyncFieldsDuringRead(ctx, fromRunJobTask)
+				to.SetRunJobTask(ctx, toRunJobTask)
 			}
 		}
 	}
-	if !fromState.SparkJarTask.IsNull() && !fromState.SparkJarTask.IsUnknown() {
-		if toStateSparkJarTask, ok := toState.GetSparkJarTask(ctx); ok {
-			if fromStateSparkJarTask, ok := fromState.GetSparkJarTask(ctx); ok {
-				toStateSparkJarTask.SyncFieldsDuringRead(ctx, fromStateSparkJarTask)
-				toState.SetSparkJarTask(ctx, toStateSparkJarTask)
+	if !from.SparkJarTask.IsNull() && !from.SparkJarTask.IsUnknown() {
+		if toSparkJarTask, ok := to.GetSparkJarTask(ctx); ok {
+			if fromSparkJarTask, ok := from.GetSparkJarTask(ctx); ok {
+				toSparkJarTask.SyncFieldsDuringRead(ctx, fromSparkJarTask)
+				to.SetSparkJarTask(ctx, toSparkJarTask)
 			}
 		}
 	}
-	if !fromState.SparkPythonTask.IsNull() && !fromState.SparkPythonTask.IsUnknown() {
-		if toStateSparkPythonTask, ok := toState.GetSparkPythonTask(ctx); ok {
-			if fromStateSparkPythonTask, ok := fromState.GetSparkPythonTask(ctx); ok {
-				toStateSparkPythonTask.SyncFieldsDuringRead(ctx, fromStateSparkPythonTask)
-				toState.SetSparkPythonTask(ctx, toStateSparkPythonTask)
+	if !from.SparkPythonTask.IsNull() && !from.SparkPythonTask.IsUnknown() {
+		if toSparkPythonTask, ok := to.GetSparkPythonTask(ctx); ok {
+			if fromSparkPythonTask, ok := from.GetSparkPythonTask(ctx); ok {
+				toSparkPythonTask.SyncFieldsDuringRead(ctx, fromSparkPythonTask)
+				to.SetSparkPythonTask(ctx, toSparkPythonTask)
 			}
 		}
 	}
-	if !fromState.SparkSubmitTask.IsNull() && !fromState.SparkSubmitTask.IsUnknown() {
-		if toStateSparkSubmitTask, ok := toState.GetSparkSubmitTask(ctx); ok {
-			if fromStateSparkSubmitTask, ok := fromState.GetSparkSubmitTask(ctx); ok {
-				toStateSparkSubmitTask.SyncFieldsDuringRead(ctx, fromStateSparkSubmitTask)
-				toState.SetSparkSubmitTask(ctx, toStateSparkSubmitTask)
+	if !from.SparkSubmitTask.IsNull() && !from.SparkSubmitTask.IsUnknown() {
+		if toSparkSubmitTask, ok := to.GetSparkSubmitTask(ctx); ok {
+			if fromSparkSubmitTask, ok := from.GetSparkSubmitTask(ctx); ok {
+				toSparkSubmitTask.SyncFieldsDuringRead(ctx, fromSparkSubmitTask)
+				to.SetSparkSubmitTask(ctx, toSparkSubmitTask)
 			}
 		}
 	}
-	if !fromState.SqlTask.IsNull() && !fromState.SqlTask.IsUnknown() {
-		if toStateSqlTask, ok := toState.GetSqlTask(ctx); ok {
-			if fromStateSqlTask, ok := fromState.GetSqlTask(ctx); ok {
-				toStateSqlTask.SyncFieldsDuringRead(ctx, fromStateSqlTask)
-				toState.SetSqlTask(ctx, toStateSqlTask)
+	if !from.SqlTask.IsNull() && !from.SqlTask.IsUnknown() {
+		if toSqlTask, ok := to.GetSqlTask(ctx); ok {
+			if fromSqlTask, ok := from.GetSqlTask(ctx); ok {
+				toSqlTask.SyncFieldsDuringRead(ctx, fromSqlTask)
+				to.SetSqlTask(ctx, toSqlTask)
 			}
 		}
 	}
-	if !fromState.WebhookNotifications.IsNull() && !fromState.WebhookNotifications.IsUnknown() {
-		if toStateWebhookNotifications, ok := toState.GetWebhookNotifications(ctx); ok {
-			if fromStateWebhookNotifications, ok := fromState.GetWebhookNotifications(ctx); ok {
-				toStateWebhookNotifications.SyncFieldsDuringRead(ctx, fromStateWebhookNotifications)
-				toState.SetWebhookNotifications(ctx, toStateWebhookNotifications)
+	if !from.WebhookNotifications.IsNull() && !from.WebhookNotifications.IsUnknown() {
+		if toWebhookNotifications, ok := to.GetWebhookNotifications(ctx); ok {
+			if fromWebhookNotifications, ok := from.GetWebhookNotifications(ctx); ok {
+				toWebhookNotifications.SyncFieldsDuringRead(ctx, fromWebhookNotifications)
+				to.SetWebhookNotifications(ctx, toWebhookNotifications)
 			}
 		}
 	}
@@ -19847,6 +21573,7 @@ func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
@@ -19929,6 +21656,7 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
 			"disable_auto_optimization": o.DisableAutoOptimization,
+			"disabled":                  o.Disabled,
 			"email_notifications":       o.EmailNotifications,
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
@@ -19973,6 +21701,7 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
+			"disabled":                  types.BoolType,
 			"email_notifications":       TaskEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
 			"existing_cluster_id":       types.StringType,
@@ -20615,10 +22344,10 @@ type TaskDependency struct {
 	TaskKey types.String `tfsdk:"task_key"`
 }
 
-func (toState *TaskDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskDependency) {
+func (to *TaskDependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TaskDependency) {
 }
 
-func (toState *TaskDependency) SyncFieldsDuringRead(ctx context.Context, fromState TaskDependency) {
+func (to *TaskDependency) SyncFieldsDuringRead(ctx context.Context, from TaskDependency) {
 }
 
 func (c TaskDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20697,10 +22426,70 @@ type TaskEmailNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (toState *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskEmailNotifications) {
+func (to *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TaskEmailNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
-func (toState *TaskEmailNotifications) SyncFieldsDuringRead(ctx context.Context, fromState TaskEmailNotifications) {
+func (to *TaskEmailNotifications) SyncFieldsDuringRead(ctx context.Context, from TaskEmailNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
 func (c TaskEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20914,10 +22703,10 @@ type TaskNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
-func (toState *TaskNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskNotificationSettings) {
+func (to *TaskNotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TaskNotificationSettings) {
 }
 
-func (toState *TaskNotificationSettings) SyncFieldsDuringRead(ctx context.Context, fromState TaskNotificationSettings) {
+func (to *TaskNotificationSettings) SyncFieldsDuringRead(ctx context.Context, from TaskNotificationSettings) {
 }
 
 func (c TaskNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -20972,10 +22761,10 @@ type TerminationDetails struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *TerminationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TerminationDetails) {
+func (to *TerminationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TerminationDetails) {
 }
 
-func (toState *TerminationDetails) SyncFieldsDuringRead(ctx context.Context, fromState TerminationDetails) {
+func (to *TerminationDetails) SyncFieldsDuringRead(ctx context.Context, from TerminationDetails) {
 }
 
 func (c TerminationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21027,10 +22816,10 @@ type TriggerInfo struct {
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
-func (toState *TriggerInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerInfo) {
+func (to *TriggerInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerInfo) {
 }
 
-func (toState *TriggerInfo) SyncFieldsDuringRead(ctx context.Context, fromState TriggerInfo) {
+func (to *TriggerInfo) SyncFieldsDuringRead(ctx context.Context, from TriggerInfo) {
 }
 
 func (c TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21083,71 +22872,75 @@ type TriggerSettings struct {
 	TableUpdate types.Object `tfsdk:"table_update"`
 }
 
-func (toState *TriggerSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerSettings) {
-	if !fromPlan.FileArrival.IsNull() && !fromPlan.FileArrival.IsUnknown() {
-		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
-			if fromPlanFileArrival, ok := fromPlan.GetFileArrival(ctx); ok {
-				toStateFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileArrival)
-				toState.SetFileArrival(ctx, toStateFileArrival)
+func (to *TriggerSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerSettings) {
+	if !from.FileArrival.IsNull() && !from.FileArrival.IsUnknown() {
+		if toFileArrival, ok := to.GetFileArrival(ctx); ok {
+			if fromFileArrival, ok := from.GetFileArrival(ctx); ok {
+				// Recursively sync the fields of FileArrival
+				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
+				to.SetFileArrival(ctx, toFileArrival)
 			}
 		}
 	}
-	if !fromPlan.Periodic.IsNull() && !fromPlan.Periodic.IsUnknown() {
-		if toStatePeriodic, ok := toState.GetPeriodic(ctx); ok {
-			if fromPlanPeriodic, ok := fromPlan.GetPeriodic(ctx); ok {
-				toStatePeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPeriodic)
-				toState.SetPeriodic(ctx, toStatePeriodic)
+	if !from.Periodic.IsNull() && !from.Periodic.IsUnknown() {
+		if toPeriodic, ok := to.GetPeriodic(ctx); ok {
+			if fromPeriodic, ok := from.GetPeriodic(ctx); ok {
+				// Recursively sync the fields of Periodic
+				toPeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPeriodic)
+				to.SetPeriodic(ctx, toPeriodic)
 			}
 		}
 	}
-	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				// Recursively sync the fields of Table
+				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
-	if !fromPlan.TableUpdate.IsNull() && !fromPlan.TableUpdate.IsUnknown() {
-		if toStateTableUpdate, ok := toState.GetTableUpdate(ctx); ok {
-			if fromPlanTableUpdate, ok := fromPlan.GetTableUpdate(ctx); ok {
-				toStateTableUpdate.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTableUpdate)
-				toState.SetTableUpdate(ctx, toStateTableUpdate)
+	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
+		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
+			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
+				// Recursively sync the fields of TableUpdate
+				toTableUpdate.SyncFieldsDuringCreateOrUpdate(ctx, fromTableUpdate)
+				to.SetTableUpdate(ctx, toTableUpdate)
 			}
 		}
 	}
 }
 
-func (toState *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, fromState TriggerSettings) {
-	if !fromState.FileArrival.IsNull() && !fromState.FileArrival.IsUnknown() {
-		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
-			if fromStateFileArrival, ok := fromState.GetFileArrival(ctx); ok {
-				toStateFileArrival.SyncFieldsDuringRead(ctx, fromStateFileArrival)
-				toState.SetFileArrival(ctx, toStateFileArrival)
+func (to *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, from TriggerSettings) {
+	if !from.FileArrival.IsNull() && !from.FileArrival.IsUnknown() {
+		if toFileArrival, ok := to.GetFileArrival(ctx); ok {
+			if fromFileArrival, ok := from.GetFileArrival(ctx); ok {
+				toFileArrival.SyncFieldsDuringRead(ctx, fromFileArrival)
+				to.SetFileArrival(ctx, toFileArrival)
 			}
 		}
 	}
-	if !fromState.Periodic.IsNull() && !fromState.Periodic.IsUnknown() {
-		if toStatePeriodic, ok := toState.GetPeriodic(ctx); ok {
-			if fromStatePeriodic, ok := fromState.GetPeriodic(ctx); ok {
-				toStatePeriodic.SyncFieldsDuringRead(ctx, fromStatePeriodic)
-				toState.SetPeriodic(ctx, toStatePeriodic)
+	if !from.Periodic.IsNull() && !from.Periodic.IsUnknown() {
+		if toPeriodic, ok := to.GetPeriodic(ctx); ok {
+			if fromPeriodic, ok := from.GetPeriodic(ctx); ok {
+				toPeriodic.SyncFieldsDuringRead(ctx, fromPeriodic)
+				to.SetPeriodic(ctx, toPeriodic)
 			}
 		}
 	}
-	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromStateTable, ok := fromState.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				toTable.SyncFieldsDuringRead(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
-	if !fromState.TableUpdate.IsNull() && !fromState.TableUpdate.IsUnknown() {
-		if toStateTableUpdate, ok := toState.GetTableUpdate(ctx); ok {
-			if fromStateTableUpdate, ok := fromState.GetTableUpdate(ctx); ok {
-				toStateTableUpdate.SyncFieldsDuringRead(ctx, fromStateTableUpdate)
-				toState.SetTableUpdate(ctx, toStateTableUpdate)
+	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
+		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
+			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
+				toTableUpdate.SyncFieldsDuringRead(ctx, fromTableUpdate)
+				to.SetTableUpdate(ctx, toTableUpdate)
 			}
 		}
 	}
@@ -21313,39 +23106,41 @@ type TriggerStateProto struct {
 	Table types.Object `tfsdk:"table"`
 }
 
-func (toState *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TriggerStateProto) {
-	if !fromPlan.FileArrival.IsNull() && !fromPlan.FileArrival.IsUnknown() {
-		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
-			if fromPlanFileArrival, ok := fromPlan.GetFileArrival(ctx); ok {
-				toStateFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFileArrival)
-				toState.SetFileArrival(ctx, toStateFileArrival)
+func (to *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerStateProto) {
+	if !from.FileArrival.IsNull() && !from.FileArrival.IsUnknown() {
+		if toFileArrival, ok := to.GetFileArrival(ctx); ok {
+			if fromFileArrival, ok := from.GetFileArrival(ctx); ok {
+				// Recursively sync the fields of FileArrival
+				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
+				to.SetFileArrival(ctx, toFileArrival)
 			}
 		}
 	}
-	if !fromPlan.Table.IsNull() && !fromPlan.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromPlanTable, ok := fromPlan.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				// Recursively sync the fields of Table
+				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
 }
 
-func (toState *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, fromState TriggerStateProto) {
-	if !fromState.FileArrival.IsNull() && !fromState.FileArrival.IsUnknown() {
-		if toStateFileArrival, ok := toState.GetFileArrival(ctx); ok {
-			if fromStateFileArrival, ok := fromState.GetFileArrival(ctx); ok {
-				toStateFileArrival.SyncFieldsDuringRead(ctx, fromStateFileArrival)
-				toState.SetFileArrival(ctx, toStateFileArrival)
+func (to *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, from TriggerStateProto) {
+	if !from.FileArrival.IsNull() && !from.FileArrival.IsUnknown() {
+		if toFileArrival, ok := to.GetFileArrival(ctx); ok {
+			if fromFileArrival, ok := from.GetFileArrival(ctx); ok {
+				toFileArrival.SyncFieldsDuringRead(ctx, fromFileArrival)
+				to.SetFileArrival(ctx, toFileArrival)
 			}
 		}
 	}
-	if !fromState.Table.IsNull() && !fromState.Table.IsUnknown() {
-		if toStateTable, ok := toState.GetTable(ctx); ok {
-			if fromStateTable, ok := fromState.GetTable(ctx); ok {
-				toStateTable.SyncFieldsDuringRead(ctx, fromStateTable)
-				toState.SetTable(ctx, toStateTable)
+	if !from.Table.IsNull() && !from.Table.IsUnknown() {
+		if toTable, ok := to.GetTable(ctx); ok {
+			if fromTable, ok := from.GetTable(ctx); ok {
+				toTable.SyncFieldsDuringRead(ctx, fromTable)
+				to.SetTable(ctx, toTable)
 			}
 		}
 	}
@@ -21465,6 +23260,49 @@ type UpdateJob struct {
 	NewSettings types.Object `tfsdk:"new_settings"`
 }
 
+func (to *UpdateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateJob) {
+	if !from.FieldsToRemove.IsNull() && !from.FieldsToRemove.IsUnknown() && to.FieldsToRemove.IsNull() && len(from.FieldsToRemove.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FieldsToRemove, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FieldsToRemove = from.FieldsToRemove
+	}
+	if !from.NewSettings.IsNull() && !from.NewSettings.IsUnknown() {
+		if toNewSettings, ok := to.GetNewSettings(ctx); ok {
+			if fromNewSettings, ok := from.GetNewSettings(ctx); ok {
+				// Recursively sync the fields of NewSettings
+				toNewSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNewSettings)
+				to.SetNewSettings(ctx, toNewSettings)
+			}
+		}
+	}
+}
+
+func (to *UpdateJob) SyncFieldsDuringRead(ctx context.Context, from UpdateJob) {
+	if !from.FieldsToRemove.IsNull() && !from.FieldsToRemove.IsUnknown() && to.FieldsToRemove.IsNull() && len(from.FieldsToRemove.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FieldsToRemove, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FieldsToRemove = from.FieldsToRemove
+	}
+	if !from.NewSettings.IsNull() && !from.NewSettings.IsUnknown() {
+		if toNewSettings, ok := to.GetNewSettings(ctx); ok {
+			if fromNewSettings, ok := from.GetNewSettings(ctx); ok {
+				toNewSettings.SyncFieldsDuringRead(ctx, fromNewSettings)
+				to.SetNewSettings(ctx, toNewSettings)
+			}
+		}
+	}
+}
+
+func (c UpdateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -21556,36 +23394,6 @@ func (o *UpdateJob) SetNewSettings(ctx context.Context, v JobSettings) {
 	o.NewSettings = vs
 }
 
-type UpdateResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse
-// only implements ToObjectValue() and Type().
-func (o UpdateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 type ViewItem struct {
 	// Content of the view.
 	Content types.String `tfsdk:"content"`
@@ -21597,10 +23405,10 @@ type ViewItem struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *ViewItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ViewItem) {
+func (to *ViewItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ViewItem) {
 }
 
-func (toState *ViewItem) SyncFieldsDuringRead(ctx context.Context, fromState ViewItem) {
+func (to *ViewItem) SyncFieldsDuringRead(ctx context.Context, from ViewItem) {
 }
 
 func (c ViewItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21650,10 +23458,10 @@ type Webhook struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (toState *Webhook) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Webhook) {
+func (to *Webhook) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Webhook) {
 }
 
-func (toState *Webhook) SyncFieldsDuringRead(ctx context.Context, fromState Webhook) {
+func (to *Webhook) SyncFieldsDuringRead(ctx context.Context, from Webhook) {
 }
 
 func (c Webhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21720,10 +23528,70 @@ type WebhookNotifications struct {
 	OnSuccess types.List `tfsdk:"on_success"`
 }
 
-func (toState *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WebhookNotifications) {
+func (to *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WebhookNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
-func (toState *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, fromState WebhookNotifications) {
+func (to *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, from WebhookNotifications) {
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() && to.OnDurationWarningThresholdExceeded.IsNull() && len(from.OnDurationWarningThresholdExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnDurationWarningThresholdExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnFailure = from.OnFailure
+	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStart = from.OnStart
+	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnSuccess = from.OnSuccess
+	}
 }
 
 func (c WebhookNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -21925,10 +23793,10 @@ type WidgetErrorDetail struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (toState *WidgetErrorDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetErrorDetail) {
+func (to *WidgetErrorDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WidgetErrorDetail) {
 }
 
-func (toState *WidgetErrorDetail) SyncFieldsDuringRead(ctx context.Context, fromState WidgetErrorDetail) {
+func (to *WidgetErrorDetail) SyncFieldsDuringRead(ctx context.Context, from WidgetErrorDetail) {
 }
 
 func (c WidgetErrorDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

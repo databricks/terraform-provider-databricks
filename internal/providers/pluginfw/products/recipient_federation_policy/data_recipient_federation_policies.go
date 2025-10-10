@@ -26,17 +26,12 @@ func DataSourceFederationPolicies() datasource.DataSource {
 	return &FederationPoliciesDataSource{}
 }
 
-type FederationPoliciesList struct {
-	sharing_tf.ListFederationPoliciesRequest
+// FederationPoliciesData extends the main model with additional fields.
+type FederationPoliciesData struct {
 	RecipientFederationPolicies types.List `tfsdk:"policies"`
 }
 
-func (c FederationPoliciesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policies"] = attrs["policies"].SetComputed()
-	return attrs
-}
-
-func (FederationPoliciesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"policies": reflect.TypeOf(sharing_tf.FederationPolicy{}),
 	}
@@ -51,7 +46,10 @@ func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasou
 }
 
 func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetComputed("policies")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,
@@ -72,7 +70,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	var config FederationPoliciesList
+	var config FederationPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,7 +98,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
-	var newState FederationPoliciesList
+	var newState FederationPoliciesData
 	newState.RecipientFederationPolicies = types.ListValueMust(sharing_tf.FederationPolicy{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

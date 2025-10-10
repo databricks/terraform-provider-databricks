@@ -36,6 +36,9 @@ The following arguments are required:
 
 * `name` - Name of Schema relative to parent catalog. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog. Change forces creation of a new resource.
+
+The following arguments are optional:
+
 * `storage_root` - (Optional) Managed location of the schema. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the catalog root location. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text.
@@ -48,7 +51,17 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this schema in form of `<catalog_name>.<name>`.
+* `browse_only` - Whether the principal is limited to retrieving metadata for the schema through the BROWSE privilege.
+* `catalog_type` - The type of the parent catalog.
+* `created_at` - Time at which this schema was created, in epoch milliseconds.
+* `created_by` - Username of schema creator.
+* `effective_predictive_optimization_flag` - Detailed status of the effective predictive optimization flag for this schema.
+* `full_name` - the full name of the schema in form of `<catalog_name>.<name>`.
+* `metastore_id` - Unique identifier of parent metastore.
 * `schema_id` - The unique identifier of the schema.
+* `storage_location` - Storage location for managed tables within schema (read-only).
+* `updated_at` - Time at which this schema was last updated, in epoch milliseconds.
+* `updated_by` - Username of user who last modified schema.
 
 ## Import
 

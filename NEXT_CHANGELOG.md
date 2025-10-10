@@ -17,3 +17,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Switch to use Go SDK struct in `databricks_schema` resource ([#5087](https://github.com/databricks/terraform-provider-databricks/pull/5087))

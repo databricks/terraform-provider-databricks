@@ -13,25 +13,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type MetastoreInfo struct {
-	Name                                        string `json:"name"`
-	StorageRoot                                 string `json:"storage_root,omitempty" tf:"force_new"`
-	DefaultDacID                                string `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
-	StorageRootCredentialId                     string `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
-	Owner                                       string `json:"owner,omitempty" tf:"computed"`
-	MetastoreID                                 string `json:"metastore_id,omitempty" tf:"computed"`
-	Region                                      string `json:"region,omitempty" tf:"computed"`
-	Cloud                                       string `json:"cloud,omitempty" tf:"computed"`
-	GlobalMetastoreId                           string `json:"global_metastore_id,omitempty" tf:"computed"`
-	CreatedAt                                   int64  `json:"created_at,omitempty" tf:"computed"`
-	CreatedBy                                   string `json:"created_by,omitempty" tf:"computed"`
-	UpdatedAt                                   int64  `json:"updated_at,omitempty" tf:"computed"`
-	UpdatedBy                                   string `json:"updated_by,omitempty" tf:"computed"`
-	DeltaSharingScope                           string `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
-	DeltaSharingRecipientTokenLifetimeInSeconds int64  `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
-	DeltaSharingOrganizationName                string `json:"delta_sharing_organization_name,omitempty"`
-}
-
 func updateForceSendFields(req *catalog.UpdateMetastore) {
 	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
 		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
@@ -60,15 +41,37 @@ func toUpdateAccountsMetastore(update *catalog.UpdateMetastore) *catalog.UpdateA
 }
 
 func ResourceMetastore() common.Resource {
-	s := common.StructToSchema(MetastoreInfo{},
+	s := common.StructToSchema(catalog.MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			// Add custom field
 			m["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
-			m["delta_sharing_scope"].ValidateFunc = validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false)
-			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
+
+			// Mark fields as force_new
+			common.CustomizeSchemaPath(m, "storage_root").SetForceNew()
+
+			// Mark optional and computed fields (user can set, but has default from backend)
+			for _, v := range []string{"owner", "privilege_model_version", "region"} {
+				common.CustomizeSchemaPath(m, v).SetComputed()
+			}
+
+			// Set read-only fields (returned by backend, not settable by user)
+			// Note: SetReadOnly() implies SetComputed(), so no need to call both
+			for _, v := range []string{"metastore_id", "cloud", "global_metastore_id",
+				"created_at", "created_by", "updated_at", "updated_by"} {
+				common.CustomizeSchemaPath(m, v).SetReadOnly()
+			}
+
+			// Custom diff suppressions
+			common.CustomizeSchemaPath(m, "default_data_access_config_id").SetSuppressDiff()
+			common.CustomizeSchemaPath(m, "storage_root_credential_id").SetSuppressDiff()
+			common.CustomizeSchemaPath(m, "delta_sharing_scope").SetSuppressDiff()
+
+			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
+			// Custom storage_root diff suppression
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if strings.HasPrefix(old, new) {
 					log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
@@ -76,7 +79,14 @@ func ResourceMetastore() common.Resource {
 				}
 				return false
 			}
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+
+			// Field dependencies and validation
+			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
+			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
+			common.CustomizeSchemaPath(m, "delta_sharing_scope").SetValidateFunc(
+				validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false),
+			)
+
 			return m
 		})
 

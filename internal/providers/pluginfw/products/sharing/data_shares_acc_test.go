@@ -12,8 +12,8 @@ import (
 
 func checkSharesDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		ds, ok := s.Modules[0].Resources["data.databricks_shares_pluginframework.this"]
-		require.True(t, ok, "data.databricks_shares_pluginframework.this has to be there")
+		ds, ok := s.Modules[0].Resources["data.databricks_shares.this"]
+		require.True(t, ok, "data.databricks_shares.this has to be there")
 		num_shares, _ := strconv.Atoi(ds.Primary.Attributes["shares.#"])
 		assert.GreaterOrEqual(t, num_shares, 1)
 		return nil
@@ -65,7 +65,7 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			}
 		}
 
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name = "{var.RANDOM}-terraform-delta-share"
 			object {
 				name = databricks_sql_table.mytable.id
@@ -81,8 +81,8 @@ func TestUcAccDataSourceShares(t *testing.T) {
 			}
 		}
 
-		data "databricks_shares_pluginframework" "this" {
-			depends_on = [databricks_share_pluginframework.myshare]
+		data "databricks_shares" "this" {
+			depends_on = [databricks_share.myshare]
 		}
 		`,
 		Check: checkSharesDataSourcePopulated(t),

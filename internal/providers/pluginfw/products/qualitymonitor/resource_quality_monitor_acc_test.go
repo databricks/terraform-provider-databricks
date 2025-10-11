@@ -160,6 +160,9 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				model_id_col = "model_id"
 				problem_type = "PROBLEM_TYPE_REGRESSION"
 			}
+			provider_config = {
+				workspace_id = "{env.THIS_WORKSPACE_ID}"
+			}
 		}
 		`,
 	})

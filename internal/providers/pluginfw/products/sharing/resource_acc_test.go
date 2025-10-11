@@ -192,6 +192,9 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 				data_object_type = "TABLE"
 				history_data_sharing_status = "ENABLED"
 			}
+			provider_config = {
+				workspace_id = "{env.THIS_WORKSPACE_ID}"
+			}
 		}`,
 	})
 }

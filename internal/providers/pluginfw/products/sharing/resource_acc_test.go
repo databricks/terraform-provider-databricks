@@ -242,7 +242,7 @@ func TestUcAccUpdateShareNoChanges(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "stable comment"
 				data_object_type = "TABLE"
 			}
@@ -263,12 +263,12 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "original comment"
 				data_object_type = "TABLE"
 			}
 			object {
-				name = databricks_table.mytable_2.id
+				name = databricks_sql_table.mytable_2.id
 				comment = "second table"
 				data_object_type = "TABLE"
 			}
@@ -280,12 +280,12 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "updated comment"
 				data_object_type = "TABLE"
 			}
 			object {
-				name = databricks_table.mytable_3.id
+				name = databricks_sql_table.mytable_3.id
 				comment = "third table"
 				data_object_type = "TABLE"
 			}
@@ -301,12 +301,12 @@ func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_table.mytable.id
+				name = databricks_sql_table.mytable.id
 				comment = "to be removed"
 				data_object_type = "TABLE"
 			}
 			object {
-				name = databricks_table.mytable_2.id
+				name = databricks_sql_table.mytable_2.id
 				comment = "also to be removed"
 				data_object_type = "TABLE"
 			}
@@ -338,12 +338,12 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
 					owner = "account users"
 					object {
-						name = databricks_table.mytable.id
+						name = databricks_sql_table.mytable.id
 						comment = "Shared table for migration test"
 						data_object_type = "TABLE"
 					}
 					object {
-						name = databricks_table.mytable_2.id
+						name = databricks_sql_table.mytable_2.id
 						comment = "Second shared table"
 						data_object_type = "TABLE"
 						cdf_enabled = false
@@ -359,12 +359,12 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
 					owner = "account users"
 					object {
-						name = databricks_table.mytable.id
+						name = databricks_sql_table.mytable.id
 						comment = "Updated comment after migration"
 						data_object_type = "TABLE"
 					}
 					object {
-						name = databricks_table.mytable_2.id
+						name = databricks_sql_table.mytable_2.id
 						comment = "Second shared table"
 						data_object_type = "TABLE"
 						cdf_enabled = false
@@ -386,12 +386,12 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
 					owner = "account users"
 					object {
-						name = databricks_table.mytable.id
+						name = databricks_sql_table.mytable.id
 						comment = "Shared table for migration test"
 						data_object_type = "TABLE"
 					}
 					object {
-						name = databricks_table.mytable_2.id
+						name = databricks_sql_table.mytable_2.id
 						comment = "Second shared table"
 						data_object_type = "TABLE"
 						cdf_enabled = false
@@ -413,12 +413,12 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
 					owner = "account users"
 					object {
-						name = databricks_table.mytable.id
+						name = databricks_sql_table.mytable.id
 						comment = "Shared table for migration test"
 						data_object_type = "TABLE"
 					}
 					object {
-						name = databricks_table.mytable_2.id
+						name = databricks_sql_table.mytable_2.id
 						comment = "Second shared table"
 						data_object_type = "TABLE"
 						cdf_enabled = false

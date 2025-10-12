@@ -13,7 +13,7 @@ func DataSourceStorageCredentials() common.Resource {
 		common.Namespace
 		Names []string `json:"names,omitempty" tf:"computed"`
 	}
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *storageCredentialsData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *storageCredentialsData, w *databricks.WorkspaceClient) error {
 		credentials, err := w.StorageCredentials.ListAll(ctx, catalog.ListStorageCredentialsRequest{})
 		if err != nil {
 			return err

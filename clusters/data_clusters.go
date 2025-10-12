@@ -10,7 +10,7 @@ import (
 )
 
 func DataSourceClusters() common.Resource {
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		common.Namespace
 		Id                  string                        `json:"id,omitempty" tf:"computed"`
 		Ids                 []string                      `json:"ids,omitempty" tf:"computed,slice_set"`

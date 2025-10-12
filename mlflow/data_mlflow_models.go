@@ -15,7 +15,7 @@ type modelsData struct {
 }
 
 func DataSourceModels() common.Resource {
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *modelsData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *modelsData, w *databricks.WorkspaceClient) error {
 		list, err := w.ModelRegistry.ListModelsAll(ctx, ml.ListModelsRequest{})
 		if err != nil {
 			return err

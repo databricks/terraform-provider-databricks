@@ -16,7 +16,7 @@ type sparkVersionRequestWrapper struct {
 
 // DataSourceSparkVersion returns DBR version matching to the specification
 func DataSourceSparkVersion() common.Resource {
-	return common.WorkspaceDataWithCustomizeFuncWithUnifiedProvider(func(ctx context.Context, data *sparkVersionRequestWrapper, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithCustomizeFunc(func(ctx context.Context, data *sparkVersionRequestWrapper, w *databricks.WorkspaceClient) error {
 		data.Id = ""
 		version, err := w.Clusters.SelectSparkVersion(ctx, data.SparkVersionRequest)
 		if err != nil {

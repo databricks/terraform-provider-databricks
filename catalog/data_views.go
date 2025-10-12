@@ -9,7 +9,7 @@ import (
 )
 
 func DataSourceViews() common.Resource {
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		common.Namespace
 		CatalogName string   `json:"catalog_name"`
 		SchemaName  string   `json:"schema_name"`

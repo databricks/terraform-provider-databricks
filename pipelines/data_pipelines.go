@@ -16,7 +16,7 @@ func DataSourcePipelines() common.Resource {
 		PipelineNameContains string   `json:"pipeline_name,omitempty"`
 		Ids                  []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *pipelinesData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *pipelinesData, w *databricks.WorkspaceClient) error {
 		pipelineSearch := pipelines.ListPipelinesRequest{MaxResults: 100}
 
 		if data.PipelineNameContains != "" {

@@ -15,7 +15,7 @@ func DataSourceStorageCredential() common.Resource {
 		Name              string                         `json:"name"`
 		StorageCredential *catalog.StorageCredentialInfo `json:"storage_credential_info,omitempty" tf:"computed" `
 	}
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *AccountMetastoreByID, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *AccountMetastoreByID, w *databricks.WorkspaceClient) error {
 		credential, err := w.StorageCredentials.GetByName(ctx, data.Name)
 		if err != nil {
 			return err

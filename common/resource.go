@@ -249,24 +249,11 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //	type catalogsData struct {
 //		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 //	}
-//	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
+//	return common.WorkspaceData(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
 //		catalogs, err := w.Catalogs.ListAll(ctx)
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
-	return genericDatabricksData(
-		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClient()
-		},
-		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
-			return read(ctx, t, wc)
-		}, false, NoCustomize)
-}
-
-// WorkspaceDataWithUnifiedProvider is a generic way to define workspace data resources in Terraform provider.
-// The provider config is used to get the workspace client for the workspace ID specified in the provider config.
-// The type T must include a field: ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
-func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
 			return client.WorkspaceClientUnifiedProvider(ctx, d)
@@ -310,21 +297,6 @@ func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *dat
 func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClient()
-		},
-		func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
-			res, err := read(ctx, o, w)
-			if err != nil {
-				return err
-			}
-			*s = *res
-			return nil
-		}, true, NoCustomize)
-}
-
-func WorkspaceDataWithParamsWithUnifiedProvider[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
-	return genericDatabricksData(
-		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
 			return client.WorkspaceClientUnifiedProvider(ctx, d)
 		},
 		func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
@@ -342,20 +314,7 @@ func WorkspaceDataWithParamsWithUnifiedProvider[T, P any](read func(context.Cont
 // customizeSchemaFunc function.
 //
 // The additional argument is a function that will be called to customize the schema of the data source.
-
 func WorkspaceDataWithCustomizeFunc[T any](
-	read func(context.Context, *T, *databricks.WorkspaceClient) error,
-	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
-	return genericDatabricksData(
-		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClient()
-		},
-		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
-			return read(ctx, t, wc)
-		}, false, customizeSchemaFunc)
-}
-
-func WorkspaceDataWithCustomizeFuncWithUnifiedProvider[T any](
 	read func(context.Context, *T, *databricks.WorkspaceClient) error,
 	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
 	return genericDatabricksData(

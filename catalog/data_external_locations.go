@@ -13,7 +13,7 @@ func DataSourceExternalLocations() common.Resource {
 		common.Namespace
 		Names []string `json:"names,omitempty" tf:"computed"`
 	}
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *externalLocationsData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *externalLocationsData, w *databricks.WorkspaceClient) error {
 		locations, err := w.ExternalLocations.ListAll(ctx, catalog.ListExternalLocationsRequest{})
 		if err != nil {
 			return err

@@ -18,6 +18,7 @@ import (
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
+	common.Namespace
 	InstanceProfileArn    string `json:"instance_profile_arn"`
 	IamRoleArn            string `json:"iam_role_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`

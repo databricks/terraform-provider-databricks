@@ -23,6 +23,7 @@ type PrivilegeAssignment struct {
 // PermissionsList reflects it's shape on terraform resource with
 // privilege_assignments column renamed to `grant` block for simplicity
 type PermissionsList struct {
+	common.Namespace
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 

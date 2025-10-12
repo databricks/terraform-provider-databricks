@@ -16,6 +16,7 @@ func DataSourceInstanceProfiles() common.Resource {
 		IsMeta  bool   `json:"is_meta,omitempty" tf:"computed"`
 	}
 	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+		common.Namespace
 		InstanceProfiles []instanceProfileData `json:"instance_profiles,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
 		instanceProfiles, err := w.InstanceProfiles.ListAll(ctx)

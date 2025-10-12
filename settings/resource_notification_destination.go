@@ -108,6 +108,7 @@ func Delete(ctx context.Context, d *schema.ResourceData, w *databricks.Workspace
 
 type NDStruct struct {
 	settings.NotificationDestination
+	common.Namespace
 }
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {

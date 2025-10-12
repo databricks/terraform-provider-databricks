@@ -25,6 +25,7 @@ type GcpKeyInfo struct {
 // CustomerManagedKey contains key information and metadata for BYOK for E2
 // You must specify either AwsKeyInfo for AWS or GcpKeyInfo for GCP, but not both
 type CustomerManagedKey struct {
+	common.Namespace
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty" tf:"force_new,conflicts:gcp_key_info"`
 	GcpKeyInfo           *GcpKeyInfo `json:"gcp_key_info,omitempty" tf:"force_new,conflicts:aws_key_info"`

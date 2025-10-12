@@ -10,6 +10,7 @@ import (
 
 func DataSourceSchema() common.Resource {
 	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+		common.Namespace
 		Id     string              `json:"id,omitempty" tf:"computed"`
 		Name   string              `json:"name"`
 		Schema *catalog.SchemaInfo `json:"schema_info,omitempty" tf:"computed"`

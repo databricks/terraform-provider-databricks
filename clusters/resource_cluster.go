@@ -275,6 +275,7 @@ type LibraryWithAlias struct {
 
 type ClusterSpec struct {
 	compute.ClusterSpec
+	common.Namespace
 	LibraryWithAlias
 }
 

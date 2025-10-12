@@ -73,6 +73,7 @@ type AwsInstancePoolFleetAttributes struct {
 
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
+	common.Namespace
 	InstancePoolID                     string                          `json:"instance_pool_id,omitempty" tf:"computed"`
 	InstancePoolName                   string                          `json:"instance_pool_name"`
 	MinIdleInstances                   int32                           `json:"min_idle_instances,omitempty"`

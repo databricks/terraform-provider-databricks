@@ -10,6 +10,7 @@ import (
 
 func DataSourceShares() common.Resource {
 	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+		common.Namespace
 		Shares []string `json:"shares,omitempty" tf:"computed,slice_set"`
 	}, w *databricks.WorkspaceClient) error {
 

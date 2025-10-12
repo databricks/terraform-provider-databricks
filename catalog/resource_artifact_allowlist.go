@@ -9,6 +9,7 @@ import (
 )
 
 type ArtifactAllowlistInfo struct {
+	common.Namespace
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers []catalog.ArtifactMatcher `json:"artifact_matchers" tf:"slice_set,alias:artifact_matcher"`
 	// The artifact type of the allowlist.

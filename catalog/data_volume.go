@@ -10,6 +10,7 @@ import (
 
 func DataSourceVolume() common.Resource {
 	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+		common.Namespace
 		Id     string              `json:"id,omitempty" tf:"computed"`
 		Name   string              `json:"name"`
 		Volume *catalog.VolumeInfo `json:"volume_info,omitempty" tf:"computed"`

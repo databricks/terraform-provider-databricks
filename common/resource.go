@@ -242,19 +242,6 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	}
 }
 
-// WorkspaceDataWithUnifiedProvider is a generic way to define workspace data resources in Terraform provider.
-// The provider config is used to get the workspace client for the workspace ID specified in the provider config.
-// The type T must include a field: ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
-func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
-	return genericDatabricksData(
-		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClientUnifiedProvider(ctx, d)
-		},
-		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
-			return read(ctx, t, wc)
-		}, false, NamespaceCustomizeSchemaMap)
-}
-
 // WorkspaceData is a generic way to define workspace data resources in Terraform provider.
 //
 // Example usage:
@@ -274,6 +261,19 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)
 		}, false, NoCustomize)
+}
+
+// WorkspaceDataWithUnifiedProvider is a generic way to define workspace data resources in Terraform provider.
+// The provider config is used to get the workspace client for the workspace ID specified in the provider config.
+// The type T must include a field: ProviderConfig common.ProviderConfig `json:"provider_config,omitempty"`
+func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClientUnifiedProvider(ctx, d)
+		},
+		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
+			return read(ctx, t, wc)
+		}, false, NamespaceCustomizeSchemaMap)
 }
 
 // WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
@@ -322,6 +322,21 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 		}, true, NoCustomize)
 }
 
+func WorkspaceDataWithParamsWithUnifiedProvider[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClientUnifiedProvider(ctx, d)
+		},
+		func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
+			res, err := read(ctx, o, w)
+			if err != nil {
+				return err
+			}
+			*s = *res
+			return nil
+		}, true, NoCustomize)
+}
+
 // WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.
 // It differs from WorkspaceData in that it allows the schema to be customized further using a
 // customizeSchemaFunc function.
@@ -334,6 +349,18 @@ func WorkspaceDataWithCustomizeFunc[T any](
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
 			return client.WorkspaceClient()
+		},
+		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+			return read(ctx, t, wc)
+		}, false, customizeSchemaFunc)
+}
+
+func WorkspaceDataWithCustomizeFuncWithUnifiedProvider[T any](
+	read func(context.Context, *T, *databricks.WorkspaceClient) error,
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
+	return genericDatabricksData(
+		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
+			return client.WorkspaceClientUnifiedProvider(ctx, d)
 		},
 		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)

@@ -12,6 +12,7 @@ import (
 // ResourceGroup manages user groups
 func ResourceEntitlements() common.Resource {
 	type entity struct {
+		common.Namespace
 		GroupId string `json:"group_id,omitempty" tf:"force_new"`
 		UserId  string `json:"user_id,omitempty" tf:"force_new"`
 		SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`

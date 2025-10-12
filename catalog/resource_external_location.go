@@ -12,6 +12,7 @@ import (
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
 type ExternalLocationInfo struct {
 	catalog.ExternalLocationInfo
+	common.Namespace
 	SkipValidation bool `json:"skip_validation,omitempty"`
 }
 

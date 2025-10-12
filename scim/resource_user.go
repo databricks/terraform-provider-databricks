@@ -34,6 +34,7 @@ func setCommonUserFields(d *schema.ResourceData, user User, username string) {
 // ResourceUser manages users within workspace
 func ResourceUser() common.Resource {
 	type entity struct {
+		common.Namespace
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
 		Active      bool   `json:"active,omitempty"`

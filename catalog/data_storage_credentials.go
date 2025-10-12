@@ -10,6 +10,7 @@ import (
 
 func DataSourceStorageCredentials() common.Resource {
 	type storageCredentialsData struct {
+		common.Namespace
 		Names []string `json:"names,omitempty" tf:"computed"`
 	}
 	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *storageCredentialsData, w *databricks.WorkspaceClient) error {

@@ -15,6 +15,7 @@ import (
 // We need to create this because we need Owner, FullNameArg, SchemaName and CatalogName which aren't present in a single of them.
 // We also need to annotate tf:"computed" for the Owner field.
 type VolumeInfo struct {
+	common.Namespace
 	// The name of the catalog where the schema and the volume are
 	CatalogName string `json:"catalog_name" tf:"force_new"`
 	// The comment attached to the volume

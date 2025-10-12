@@ -14,6 +14,7 @@ import (
 // Need a struct for Query because there are aliases we need and it'll be needed in the create method.
 type QueryStruct struct {
 	sql.Query
+	common.Namespace
 }
 
 var queryAliasMap = map[string]string{

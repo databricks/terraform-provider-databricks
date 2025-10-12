@@ -80,6 +80,7 @@ type externalCustomerInfo struct {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
+	common.Namespace
 	AccountID                           string                   `json:"account_id"`
 	WorkspaceName                       string                   `json:"workspace_name"`
 	DeploymentName                      string                   `json:"deployment_name,omitempty"`
@@ -381,6 +382,7 @@ func (s SensitiveString) String() string {
 
 // ephemeral entity to use with StructToData()
 type WorkspaceToken struct {
+	common.Namespace
 	WorkspaceURL string `json:"workspace_url,omitempty"`
 	Token        *Token `json:"token,omitempty"`
 }

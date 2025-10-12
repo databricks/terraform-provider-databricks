@@ -18,6 +18,7 @@ func NewProvidersAPI(ctx context.Context, m interface{}) ProvidersAPI {
 }
 
 type ProviderInfo struct {
+	common.Namespace
 	Name                string `json:"name" tf:"force_new"`
 	Comment             string `json:"comment,omitempty"`
 	AuthenticationType  string `json:"authentication_type"`

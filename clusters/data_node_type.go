@@ -12,6 +12,7 @@ import (
 )
 
 type NodeTypeRequest struct {
+	common.Namespace
 	compute.NodeTypeRequest
 	Arm bool `json:"arm,omitempty"`
 }
@@ -59,7 +60,7 @@ func (a ClustersAPI) GetSmallestNodeType(request NodeTypeRequest) string {
 
 // DataSourceNodeType returns smallest node depedning on the cloud
 func DataSourceNodeType() common.Resource {
-	return common.WorkspaceDataWithUnifiedProviderWithCustomizeFunc(func(ctx context.Context, data *NodeTypeRequest, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithCustomizeFuncWithUnifiedProvider(func(ctx context.Context, data *NodeTypeRequest, w *databricks.WorkspaceClient) error {
 		data.Id = smallestNodeType(ctx, *data, w)
 		log.Printf("[DEBUG] smallest node: %s", data.Id)
 		return nil

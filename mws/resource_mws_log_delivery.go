@@ -17,6 +17,7 @@ type LogDelivery struct {
 
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
+	common.Namespace
 	AccountID              string  `json:"account_id" tf:"force_new"`
 	ConfigID               string  `json:"config_id,omitempty" tf:"computed,force_new"`
 	CredentialsID          string  `json:"credentials_id" tf:"force_new"`

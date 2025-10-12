@@ -15,6 +15,7 @@ import (
 
 type LibraryResource struct {
 	compute.Library
+	common.Namespace
 }
 
 func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {

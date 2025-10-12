@@ -11,6 +11,7 @@ import (
 
 func DataSourceExperiment() common.Resource {
 	type experimentDataParams struct {
+		common.Namespace
 		ExperimentId string `json:"experiment_id" tf:"computed,optional"`
 		Name         string `json:"name" tf:"computed,optional"`
 	}
@@ -20,7 +21,7 @@ func DataSourceExperiment() common.Resource {
 		Id string `json:"id" tf:"computed,optional"`
 	}
 
-	return common.WorkspaceDataWithUnifiedProviderWithParams(func(ctx context.Context, data experimentDataParams, w *databricks.WorkspaceClient) (*MlExperiment, error) {
+	return common.WorkspaceDataWithParamsWithUnifiedProvider(func(ctx context.Context, data experimentDataParams, w *databricks.WorkspaceClient) (*MlExperiment, error) {
 		var experiment *MlExperiment
 		if data.ExperimentId == "" && data.Name == "" {
 			return nil, fmt.Errorf("either 'experiment_id' or 'name' should be provided")

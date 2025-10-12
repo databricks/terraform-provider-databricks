@@ -97,6 +97,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() common.Resource {
 	type entity struct {
+		common.Namespace
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty"`

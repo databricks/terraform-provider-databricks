@@ -13,6 +13,7 @@ import (
 )
 
 type StorageCredentialInfo struct {
+	common.Namespace
 	Name                        string                                       `json:"name" tf:"force_new"`
 	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
 	Comment                     string                                       `json:"comment,omitempty"`

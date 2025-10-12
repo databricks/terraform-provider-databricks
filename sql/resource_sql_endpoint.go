@@ -21,6 +21,7 @@ var (
 
 type SqlWarehouse struct {
 	sql.GetWarehouseResponse
+	common.Namespace
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources

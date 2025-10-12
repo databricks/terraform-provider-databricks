@@ -16,6 +16,7 @@ import (
 
 type ServicePrincipalSecret struct {
 	oauth2.CreateServicePrincipalSecretResponse
+	common.Namespace
 	ServicePrincipalId string `json:"service_principal_id" tf:"force_new"`
 	Lifetime           string `json:"lifetime,omitempty" tf:"computed,force_new"`
 }

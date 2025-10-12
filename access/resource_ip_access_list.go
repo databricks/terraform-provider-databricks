@@ -11,6 +11,7 @@ import (
 )
 
 type ipAccessListUpdateRequest struct {
+	common.Namespace
 	Label       string            `json:"label"`
 	ListType    settings.ListType `json:"list_type"`
 	IpAddresses []string          `json:"ip_addresses"`

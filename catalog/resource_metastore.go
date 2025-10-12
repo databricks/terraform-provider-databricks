@@ -14,6 +14,7 @@ import (
 )
 
 type MetastoreInfo struct {
+	common.Namespace
 	Name                                        string `json:"name"`
 	StorageRoot                                 string `json:"storage_root,omitempty" tf:"force_new"`
 	DefaultDacID                                string `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`

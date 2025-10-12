@@ -10,6 +10,7 @@ import (
 )
 
 type SchemaInfo struct {
+	common.Namespace
 	Name                         string            `json:"name" tf:"force_new"`
 	CatalogName                  string            `json:"catalog_name" tf:"force_new"`
 	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`

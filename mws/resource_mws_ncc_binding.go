@@ -12,6 +12,7 @@ import (
 
 func ResourceMwsNccBinding() common.Resource {
 	type binding struct {
+		common.Namespace
 		WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
 		NccId       string `json:"network_connectivity_config_id"`
 	}

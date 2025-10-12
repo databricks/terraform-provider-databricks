@@ -23,6 +23,7 @@ type AlertOptions struct {
 }
 
 type AlertEntity struct {
+	common.Namespace
 	Name      string        `json:"name"`
 	QueryId   string        `json:"query_id"`
 	Rearm     int           `json:"rearm,omitempty"`
@@ -130,7 +131,7 @@ func ResourceSqlAlert() common.Resource {
 
 	return common.Resource{
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -147,7 +148,7 @@ func ResourceSqlAlert() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -160,7 +161,7 @@ func ResourceSqlAlert() common.Resource {
 			return a.fromAPIObject(apiAlert, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -172,7 +173,7 @@ func ResourceSqlAlert() common.Resource {
 			return w.AlertsLegacy.Update(ctx, ca)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}

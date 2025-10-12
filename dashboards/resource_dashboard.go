@@ -14,6 +14,7 @@ import (
 
 type Dashboard struct {
 	dashboards.Dashboard
+	common.Namespace
 	EmbedCredentials        bool   `json:"embed_credentials,omitempty"`
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`

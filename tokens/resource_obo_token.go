@@ -11,6 +11,7 @@ import (
 )
 
 type OboToken struct {
+	common.Namespace
 	ApplicationID   string `json:"application_id"`
 	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
 	Comment         string `json:"comment,omitempty"`

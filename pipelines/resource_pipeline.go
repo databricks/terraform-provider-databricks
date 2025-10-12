@@ -160,6 +160,7 @@ func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema)
 
 type Pipeline struct {
 	pipelines.PipelineSpec
+	common.Namespace
 	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
 	Cause                string                              `json:"cause,omitempty"`
 	ClusterId            string                              `json:"cluster_id,omitempty"`

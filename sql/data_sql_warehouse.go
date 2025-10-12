@@ -12,12 +12,13 @@ import (
 // Note that these fields are both marked as computed/optional because users can specify either the name or the ID
 // of the warehouse to retrieve.
 type sqlWarehouseDataParams struct {
+	common.Namespace
 	Id   string `json:"id" tf:"computed,optional"`
 	Name string `json:"name" tf:"computed,optional"`
 }
 
 func DataSourceWarehouse() common.Resource {
-	return common.WorkspaceDataWithUnifiedProviderWithParams(func(ctx context.Context, data sqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
+	return common.WorkspaceDataWithParamsWithUnifiedProvider(func(ctx context.Context, data sqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
 		if data.Id == "" && data.Name == "" {
 			return nil, fmt.Errorf("either 'id' or 'name' should be provided")
 		}

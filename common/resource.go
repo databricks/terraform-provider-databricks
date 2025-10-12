@@ -219,7 +219,7 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
-	s := StructToSchema(sc, ProviderConfigCustomizeSchema)
+	s := StructToSchema(sc, NamespaceCustomizeSchemaMap)
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
@@ -283,7 +283,7 @@ func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *dat
 		},
 		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)
-		}, false, ProviderConfigCustomizeSchema)
+		}, false, NamespaceCustomizeSchemaMap)
 }
 
 // WorkspaceData is a generic way to define workspace data resources in Terraform provider.

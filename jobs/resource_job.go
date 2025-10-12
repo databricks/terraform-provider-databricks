@@ -486,7 +486,7 @@ func (JobCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 
 type JobSettingsResource struct {
 	jobs.JobSettings
-	ProviderConfig *common.ProviderConfig `json:"provider_config,omitempty"`
+	common.Namespace
 
 	// BEGIN Jobs API 2.0
 	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
@@ -658,7 +658,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
 	s.SchemaPath("git_source", "provider").SetOptional()
 
-	s.SchemaPath("provider_config", "workspace_id").SetValidateFunc(validation.StringIsNotEmpty)
+	common.NamespaceCustomizeSchema(s)
 
 	return s
 }
@@ -1091,18 +1091,14 @@ func ResourceJob() common.Resource {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
-			return common.ProviderConfigCustomizeDiff(d)
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				var workspaceID string
-				if jsr.ProviderConfig != nil {
-					workspaceID = jsr.ProviderConfig.WorkspaceID
-				}
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -1138,13 +1134,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-
-				var workspaceID string
-				if jsr.ProviderConfig != nil {
-					workspaceID = jsr.ProviderConfig.WorkspaceID
-				}
-
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -1161,7 +1151,6 @@ func ResourceJob() common.Resource {
 				res := JobSettingsResource{
 					JobSettings: *job.Settings,
 				}
-				res.ProviderConfig = jsr.ProviderConfig
 				return common.StructToData(res, jobsGoSdkSchema, d)
 			} else {
 				// Api 2.0
@@ -1187,11 +1176,7 @@ func ResourceJob() common.Resource {
 				if err != nil {
 					return err
 				}
-				var workspaceID string
-				if jsr.ProviderConfig != nil {
-					workspaceID = jsr.ProviderConfig.WorkspaceID
-				}
-				w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -1218,15 +1203,7 @@ func ResourceJob() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			var jsr JobSettingsResource
-			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
-
-			var workspaceID string
-			if jsr.ProviderConfig != nil {
-				workspaceID = jsr.ProviderConfig.WorkspaceID
-			}
-
-			w, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

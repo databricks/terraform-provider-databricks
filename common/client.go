@@ -77,6 +77,20 @@ type DatabricksClient struct {
 	mu sync.Mutex
 }
 
+func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
+	workspaceIDFromSchema := d.Get("provider_config.0.workspace_id")
+	var workspaceID string
+	// workspace_id does not exist in the schema
+	if workspaceIDFromSchema == nil {
+		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
+	}
+	workspaceID, ok := workspaceIDFromSchema.(string)
+	if !ok {
+		return nil, fmt.Errorf("workspace_id must be a string")
+	}
+	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+}
+
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks
 // WorkspaceClient for workspace level resources or diagnostics if that fails
 // for terraform provider, the provider can be configured at account level or workspace level.

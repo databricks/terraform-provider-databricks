@@ -12,7 +12,7 @@ func DataSourceExternalLocations() common.Resource {
 	type externalLocationsData struct {
 		Names []string `json:"names,omitempty" tf:"computed"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, data *externalLocationsData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *externalLocationsData, w *databricks.WorkspaceClient) error {
 		locations, err := w.ExternalLocations.ListAll(ctx, catalog.ListExternalLocationsRequest{})
 		if err != nil {
 			return err

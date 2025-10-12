@@ -40,7 +40,7 @@ func (ShareDetail) Aliases() map[string]map[string]string {
 }
 
 func DataSourceShare() common.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *ShareDetail, client *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *ShareDetail, client *databricks.WorkspaceClient) error {
 		share, err := client.Shares.Get(ctx, sharing.GetShareRequest{
 			Name:              data.Name,
 			IncludeSharedData: true,

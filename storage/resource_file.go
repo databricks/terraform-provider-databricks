@@ -52,7 +52,7 @@ func getContentReader(data *schema.ResourceData) (*hashReadCloser, error) {
 }
 
 func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func ResourceFile() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func ResourceFile() common.Resource {
 			return upload(ctx, data, c, path)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

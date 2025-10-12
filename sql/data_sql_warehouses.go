@@ -15,7 +15,7 @@ func DataSourceWarehouses() common.Resource {
 		WarehouseNameContains string   `json:"warehouse_name_contains,omitempty"`
 		Ids                   []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, data *warehousesData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *warehousesData, w *databricks.WorkspaceClient) error {
 		list, err := w.Warehouses.ListAll(ctx, sql.ListWarehousesRequest{})
 		if err != nil {
 			return err

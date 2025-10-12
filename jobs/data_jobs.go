@@ -17,7 +17,7 @@ const (
 )
 
 func DataSourceJobs() common.Resource {
-	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProviderWithUnifiedProvider(func(ctx context.Context, data *struct {
 		Ids        map[string]string `json:"ids,omitempty" tf:"computed"`
 		NameFilter string            `json:"job_name_contains,omitempty"`
 		Key        string            `json:"key,omitempty" tf:"default:name"`

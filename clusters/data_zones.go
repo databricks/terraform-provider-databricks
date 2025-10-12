@@ -9,7 +9,7 @@ import (
 
 // DataSourceClusterZones ...
 func DataSourceClusterZones() common.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
 		Id          string   `json:"id,omitempty" tf:"computed"`
 		DefaultZone string   `json:"default_zone,omitempty" tf:"computed"`
 		Zones       []string `json:"zones,omitempty" tf:"computed"`

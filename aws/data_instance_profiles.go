@@ -15,7 +15,7 @@ func DataSourceInstanceProfiles() common.Resource {
 		RoleArn string `json:"role_arn,omitempty" tf:"computed"`
 		IsMeta  bool   `json:"is_meta,omitempty" tf:"computed"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
 		InstanceProfiles []instanceProfileData `json:"instance_profiles,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
 		instanceProfiles, err := w.InstanceProfiles.ListAll(ctx)

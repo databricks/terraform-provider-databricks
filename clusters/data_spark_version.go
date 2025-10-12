@@ -11,7 +11,7 @@ import (
 
 // DataSourceSparkVersion returns DBR version matching to the specification
 func DataSourceSparkVersion() common.Resource {
-	return common.WorkspaceDataWithCustomizeFunc(func(ctx context.Context, data *compute.SparkVersionRequest, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithUnifiedProviderWithCustomizeFunc(func(ctx context.Context, data *compute.SparkVersionRequest, w *databricks.WorkspaceClient) error {
 		data.Id = ""
 		version, err := w.Clusters.SelectSparkVersion(ctx, *data)
 		if err != nil {

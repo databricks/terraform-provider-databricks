@@ -9,7 +9,7 @@ import (
 )
 
 func DataSourceCatalogs() common.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
 		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}, w *databricks.WorkspaceClient) error {
 		catalogs, err := w.Catalogs.ListAll(ctx, catalog.ListCatalogsRequest{})

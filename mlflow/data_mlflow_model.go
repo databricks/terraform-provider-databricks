@@ -9,7 +9,7 @@ import (
 )
 
 func DataSourceModel() common.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
 		Name            string             `json:"name"`
 		UserId          string             `json:"user_id,omitempty" tf:"computed"`
 		Description     string             `json:"description,omitempty" tf:"computed"`

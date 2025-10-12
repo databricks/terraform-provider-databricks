@@ -262,7 +262,7 @@ func WorkspaceDataWithUnifiedProvider[T any](read func(context.Context, *T, *dat
 //	type catalogsData struct {
 //		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 //	}
-//	return common.WorkspaceData(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
+//	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
 //		catalogs, err := w.Catalogs.ListAll(ctx)
 //		...
 //	})

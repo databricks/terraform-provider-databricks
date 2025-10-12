@@ -9,7 +9,7 @@ import (
 )
 
 func DataSourceVolumes() common.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, data *struct {
 		CatalogName string   `json:"catalog_name"`
 		SchemaName  string   `json:"schema_name"`
 		Ids         []string `json:"ids,omitempty" tf:"computed,slice_set"`

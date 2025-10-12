@@ -17,7 +17,7 @@ func DataSourceDirectory() common.Resource {
 		ObjectId      int64  `json:"object_id,omitempty" tf:"computed"`
 		WorkspacePath string `json:"workspace_path,omitempty" tf:"computed"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, d *Directory, client *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithUnifiedProvider(func(ctx context.Context, d *Directory, client *databricks.WorkspaceClient) error {
 		data, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
 			return client.Workspace.GetStatusByPath(ctx, d.Path)
 		})

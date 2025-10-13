@@ -9,21 +9,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type EntitlementEntity struct {
+	common.Namespace
+	GroupId string `json:"group_id,omitempty" tf:"force_new"`
+	UserId  string `json:"user_id,omitempty" tf:"force_new"`
+	SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
+}
+
 // ResourceGroup manages user groups
 func ResourceEntitlements() common.Resource {
-	type entity struct {
-		common.Namespace
-		GroupId string `json:"group_id,omitempty" tf:"force_new"`
-		UserId  string `json:"user_id,omitempty" tf:"force_new"`
-		SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
-	}
-	entitlementSchema := common.StructToSchema(entity{},
+	entitlementSchema := common.StructToSchema(EntitlementEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			alof := []string{"group_id", "user_id", "service_principal_id"}
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	addEntitlementsToSchema(entitlementSchema)

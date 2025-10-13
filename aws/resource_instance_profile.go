@@ -158,6 +158,7 @@ func ResourceInstanceProfile() common.Resource {
 				}
 				return false
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{

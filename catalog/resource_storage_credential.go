@@ -37,6 +37,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		}
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
+		common.NamespaceCustomizeSchemaMap(m)
 		return adjustDataAccessSchema(m)
 	})
 

@@ -16,6 +16,7 @@ type ShareInfo struct {
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("name").SetRequired()
 	s.SchemaPath("name").SetForceNew()
 	s.SchemaPath("name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)

@@ -72,6 +72,7 @@ type SqlTableInfo struct {
 }
 
 func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
 		s.SchemaPath(field).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)

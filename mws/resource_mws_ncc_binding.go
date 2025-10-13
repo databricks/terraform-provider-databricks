@@ -10,13 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type NccBinding struct {
+	common.Namespace
+	WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
+	NccId       string `json:"network_connectivity_config_id"`
+}
+
+func (NccBinding) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
+	return s
+}
+
 func ResourceMwsNccBinding() common.Resource {
-	type binding struct {
-		common.Namespace
-		WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
-		NccId       string `json:"network_connectivity_config_id"`
-	}
-	s := common.StructToSchema(binding{}, common.NoCustomize)
+	s := common.StructToSchema(NccBinding{}, nil)
 	p := common.NewPairSeparatedID("workspace_id", "network_connectivity_config_id", "/")
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		acc, err := c.AccountClient()

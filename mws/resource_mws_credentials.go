@@ -109,6 +109,7 @@ func ResourceMwsCredentials() common.Resource {
 		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		}),
 	}

@@ -126,6 +126,7 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.LegacyAlert, s map[string]*sch
 func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.MustSchemaPath(m, "options", "op").ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 

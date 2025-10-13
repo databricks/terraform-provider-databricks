@@ -57,6 +57,7 @@ func ResourceMetastore() common.Resource {
 				return false
 			}
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 

@@ -30,6 +30,7 @@ func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) b
 }
 
 func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	// Required fields
 	s.SchemaPath("display_name").SetRequired()
 	s.SchemaPath("parent_path").SetRequired()

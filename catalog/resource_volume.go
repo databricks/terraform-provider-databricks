@@ -59,6 +59,7 @@ func ResourceVolume() common.Resource {
 			// If server side validation is added in the future, this validation function
 			// can be removed.
 			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{

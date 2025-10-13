@@ -49,6 +49,7 @@ func ResourceOboToken() common.Resource {
 				Computed:  true,
 				Sensitive: true,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{

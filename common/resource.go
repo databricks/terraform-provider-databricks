@@ -225,11 +225,13 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, s, ptr.Elem())
-			w, err := m.WorkspaceClientUnifiedProvider(ctx, d)
-			if err != nil {
-				return err
+			if m.DatabricksClient != nil && !m.Config.IsAccountClient() {
+				w, err := m.WorkspaceClientUnifiedProvider(ctx, d)
+				if err != nil {
+					return err
+				}
+				m.SetWorkspaceClient(w)
 			}
-			m.SetWorkspaceClient(w)
 			err = read(ctx, ptr.Interface(), m)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")

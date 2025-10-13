@@ -21,6 +21,7 @@ type SecretScope struct {
 }
 
 func (s SecretScope) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(m)
 	m.SchemaPath("name").SetValidateFunc(validScope)
 	m.SchemaPath("backend_type").SetComputed()
 	return m

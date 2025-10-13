@@ -28,6 +28,7 @@ func (QueryStruct) Aliases() map[string]map[string]string {
 }
 
 func (QueryStruct) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(m)
 	m.SchemaPath("display_name").SetRequired().SetValidateFunc(validation.StringIsNotWhiteSpace)
 	m.SchemaPath("query_text").SetRequired()
 	m.SchemaPath("warehouse_id").SetRequired().SetValidateFunc(validation.StringIsNotWhiteSpace)

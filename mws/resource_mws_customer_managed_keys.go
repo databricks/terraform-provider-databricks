@@ -34,6 +34,11 @@ type CustomerManagedKey struct {
 	UseCases             []string    `json:"use_cases"`
 }
 
+func (CustomerManagedKey) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
+	return s
+}
+
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
 func NewCustomerManagedKeysAPI(ctx context.Context, m any) CustomerManagedKeysAPI {
 	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), ctx}

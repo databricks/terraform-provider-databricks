@@ -39,6 +39,7 @@ func ResourceSchema() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{

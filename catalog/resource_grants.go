@@ -156,6 +156,7 @@ func ResourceGrants() common.Resource {
 			for field := range permissions.Mappings {
 				s[field].AtLeastOneOf = alof
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{

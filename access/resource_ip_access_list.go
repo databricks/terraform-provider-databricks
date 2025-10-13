@@ -27,6 +27,7 @@ func ResourceIPAccessList() common.Resource {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
 		}
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{

@@ -28,6 +28,7 @@ func ResourceCustomAppIntegration() common.Resource {
 		common.CustomizeSchemaPath(m, "client_secret").SetSensitive().SetComputed()
 		common.CustomizeSchemaPath(m, "token_access_policy", "access_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 1440))
 		common.CustomizeSchemaPath(m, "token_access_policy", "refresh_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 129600))
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	return common.Resource{

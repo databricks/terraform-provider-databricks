@@ -41,6 +41,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			m["secret"].Computed = true
 			m["secret"].Sensitive = true
 			m["status"].Computed = true
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{

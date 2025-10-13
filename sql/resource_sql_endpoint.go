@@ -99,6 +99,7 @@ func ResourceSqlEndpoint() common.Resource {
 			},
 		}
 
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	return common.Resource{

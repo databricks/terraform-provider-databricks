@@ -14,6 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type ServicePrincipalEntity struct {
+	common.Namespace
+	ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
+	DisplayName   string `json:"display_name,omitempty" tf:"computed"`
+	Active        bool   `json:"active,omitempty"`
+	ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
+}
+
 // NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
 func NewServicePrincipalsAPI(ctx context.Context, m any) ServicePrincipalsAPI {
 	return ServicePrincipalsAPI{m.(*common.DatabricksClient), ctx}
@@ -96,14 +104,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() common.Resource {
-	type entity struct {
-		common.Namespace
-		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
-		Active        bool   `json:"active,omitempty"`
-		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
-	}
-	servicePrincipalSchema := common.StructToSchema(entity{},
+	servicePrincipalSchema := common.StructToSchema(ServicePrincipalEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			m["active"].Default = true
@@ -140,10 +141,11 @@ func ResourceServicePrincipal() common.Resource {
 			}
 			m["application_id"].AtLeastOneOf = []string{"application_id", "display_name"}
 			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
-		var u entity
+		var u ServicePrincipalEntity
 		common.DataToStructPointer(d, servicePrincipalSchema, &u)
 		return User{
 			ApplicationID: u.ApplicationID,

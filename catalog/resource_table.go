@@ -72,6 +72,7 @@ func ResourceTable() common.Resource {
 			for _, field := range caseInsensitiveFields {
 				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{

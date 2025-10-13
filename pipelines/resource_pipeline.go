@@ -196,6 +196,7 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()

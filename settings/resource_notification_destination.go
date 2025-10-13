@@ -112,6 +112,7 @@ type NDStruct struct {
 }
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	// Required fields
 	s.SchemaPath("display_name").SetRequired()
 

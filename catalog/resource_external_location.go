@@ -58,6 +58,7 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "subscription_id").SetRequired()
 			common.CustomizeSchemaPath(m, "file_event_queue").SetMaxItems(1)
 
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{

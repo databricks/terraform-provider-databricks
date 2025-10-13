@@ -247,6 +247,7 @@ func ResourceInstancePool() common.Resource {
 			v.ForceNew = true
 		}
 
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{

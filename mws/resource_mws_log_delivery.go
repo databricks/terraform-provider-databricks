@@ -76,6 +76,7 @@ func ResourceMwsLogDelivery() common.Resource {
 				k, old, new string, d *schema.ResourceData) bool {
 				return false
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{

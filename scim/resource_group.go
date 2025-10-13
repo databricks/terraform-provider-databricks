@@ -10,15 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type GroupEntity struct {
+	common.Namespace
+	DisplayName string `json:"display_name"`
+	ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
+	URL         string `json:"url,omitempty" tf:"computed"`
+}
+
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
-	type entity struct {
-		common.Namespace
-		DisplayName string `json:"display_name"`
-		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
-		URL         string `json:"url,omitempty" tf:"computed"`
-	}
-	groupSchema := common.StructToSchema(entity{},
+	groupSchema := common.StructToSchema(GroupEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
@@ -33,6 +34,7 @@ func ResourceGroup() common.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	addEntitlementsToSchema(groupSchema)

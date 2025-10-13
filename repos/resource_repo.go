@@ -184,6 +184,7 @@ func ResourceRepo() common.Resource {
 		}
 
 		delete(s, "id")
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 

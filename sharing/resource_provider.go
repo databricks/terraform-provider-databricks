@@ -54,6 +54,7 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 func ResourceProvider() common.Resource {
 	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 

@@ -33,8 +33,8 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
-	ID             types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	tfschema.Namespace
+	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}

@@ -2,9 +2,13 @@ package sharing_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -270,5 +274,136 @@ func TestUcAccUpdateShareName(t *testing.T) {
 	}, acceptance.Step{
 		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-after"),
 		Check:    shareCheckStateforID(),
+	})
+}
+
+func shareTemplate(provider_config string) string {
+	return preTestTemplate + fmt.Sprintf(`
+	resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-share-config"
+			%s
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "A"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
+			}
+	}
+`, provider_config)
+}
+
+func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config = {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`failed to parse workspace_id.*invalid syntax`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(""),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	// get workspace id here from workspace
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(""),
+	}, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = "1142582526922259"
+			}
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				common.CheckResourceUpdate{Address: "databricks_share_pluginframework.myshare"},
+				common.CheckResourceNoDelete{Address: "databricks_share_pluginframework.myshare"},
+				common.CheckResourceNoCreate{Address: "databricks_share_pluginframework.myshare"},
+			},
+		},
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(""),
+	}, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = "1142582526922259"
+			}
+		`),
+	}, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				common.CheckResourceCreate{Address: "databricks_share_pluginframework.myshare"},
+				common.CheckResourceDelete{Address: "databricks_share_pluginframework.myshare"},
+			},
+		},
+		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareTemplate(""),
+	}, acceptance.Step{
+		Template: shareTemplate(`
+			provider_config {
+				workspace_id = "1142582526922259"
+			}
+		`),
+	}, acceptance.Step{
+		Template: shareTemplate(""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				common.CheckResourceUpdate{Address: "databricks_share_pluginframework.myshare"},
+				common.CheckResourceNoDelete{Address: "databricks_share_pluginframework.myshare"},
+				common.CheckResourceNoCreate{Address: "databricks_share_pluginframework.myshare"},
+			},
+		},
 	})
 }

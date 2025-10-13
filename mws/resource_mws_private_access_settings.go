@@ -66,14 +66,16 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			common.DataToStructPointer(d, pasSchema, &pas)
 			common.SetForceSendFields(&pas, d, []string{"public_access_enabled"})
 			pas.PrivateAccessSettingsId = pasID
-			return a.PrivateAccess.Replace(ctx, pas)
+			_, err = a.PrivateAccess.Replace(ctx, pas)
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			a, pasID, err := c.AccountClientWithAccountIdFromPair(d, p)
 			if err != nil {
 				return err
 			}
-			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
+			_, err = a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
+			return err
 		},
 	}
 }

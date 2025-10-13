@@ -75,6 +75,35 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
+func toCreateAccountsStorageCredential(create *catalog.CreateStorageCredential) *catalog.CreateAccountsStorageCredential {
+	return &catalog.CreateAccountsStorageCredential{
+		AwsIamRole:                  create.AwsIamRole,
+		AzureManagedIdentity:        create.AzureManagedIdentity,
+		AzureServicePrincipal:       create.AzureServicePrincipal,
+		CloudflareApiToken:          create.CloudflareApiToken,
+		Comment:                     create.Comment,
+		DatabricksGcpServiceAccount: create.DatabricksGcpServiceAccount,
+		Name:                        create.Name,
+		ReadOnly:                    create.ReadOnly,
+		ForceSendFields:             create.ForceSendFields,
+	}
+}
+
+func toUpdateAccountsStorageCredential(update *catalog.UpdateStorageCredential) *catalog.UpdateAccountsStorageCredential {
+	return &catalog.UpdateAccountsStorageCredential{
+		AwsIamRole:                  update.AwsIamRole,
+		AzureManagedIdentity:        update.AzureManagedIdentity,
+		AzureServicePrincipal:       update.AzureServicePrincipal,
+		CloudflareApiToken:          update.CloudflareApiToken,
+		Comment:                     update.Comment,
+		DatabricksGcpServiceAccount: update.DatabricksGcpServiceAccount,
+		IsolationMode:               update.IsolationMode,
+		Owner:                       update.Owner,
+		ReadOnly:                    update.ReadOnly,
+		ForceSendFields:             update.ForceSendFields,
+	}
+}
+
 func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
@@ -97,17 +126,18 @@ func ResourceMetastoreDataAccess() common.Resource {
 				dac, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
-						CredentialInfo: &create,
+						CredentialInfo: toCreateAccountsStorageCredential(&create),
 					})
 				if err != nil {
 					return err
 				}
 				if d.Get("is_default").(bool) {
+					updateReq := catalog.UpdateMetastore{
+						StorageRootCredentialId: dac.CredentialInfo.Id,
+					}
 					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
-						MetastoreId: metastoreId,
-						MetastoreInfo: &catalog.UpdateMetastore{
-							StorageRootCredentialId: dac.CredentialInfo.Id,
-						},
+						MetastoreId:   metastoreId,
+						MetastoreInfo: toUpdateAccountsMetastore(&updateReq),
 					})
 					if err != nil {
 						return err
@@ -179,11 +209,12 @@ func ResourceMetastoreDataAccess() common.Resource {
 				return err
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+				_, err := acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
 					StorageCredentialName: dacName,
 					Force:                 force,
 				})
+				return err
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
 					Name:  dacName,

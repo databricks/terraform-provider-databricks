@@ -5,7 +5,6 @@
 ### Breaking Changes
 
 * Remove stale resources/datasources/documentation related to Clean Room services.
-  
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))

@@ -94,6 +94,9 @@ func (queryUpdateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.C
 func ResourceQuery() common.Resource {
 	s := common.StructToSchema(QueryStruct{}, nil)
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

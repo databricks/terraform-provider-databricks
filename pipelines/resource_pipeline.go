@@ -283,6 +283,9 @@ var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
 func ResourcePipeline() common.Resource {
 	return common.Resource{
 		Schema: pipelineSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

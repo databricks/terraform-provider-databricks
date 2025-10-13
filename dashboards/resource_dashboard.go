@@ -67,6 +67,9 @@ var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
 func ResourceDashboard() common.Resource {
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

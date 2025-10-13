@@ -163,6 +163,9 @@ func ResourceInstanceProfile() common.Resource {
 		})
 	return common.Resource{
 		Schema: instanceProfileSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
 			if err != nil {

@@ -696,7 +696,7 @@ func ResourceMwsWorkspaces() common.Resource {
 					}
 				}
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),

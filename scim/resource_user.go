@@ -94,6 +94,9 @@ func ResourceUser() common.Resource {
 	}
 	return common.Resource{
 		Schema: userSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			u, err := scimUserFromData(d)
 			if err != nil {

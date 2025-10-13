@@ -31,6 +31,9 @@ const (
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create:        resourceClusterCreate,
 		Read:          resourceClusterRead,
 		Update:        resourceClusterUpdate,

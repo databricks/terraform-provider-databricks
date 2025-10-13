@@ -46,6 +46,9 @@ func ResourceServicePrincipalSecret() common.Resource {
 		})
 	return common.Resource{
 		Schema: spnSecretSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
 			return true
 		},

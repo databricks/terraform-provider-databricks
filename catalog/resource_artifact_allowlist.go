@@ -59,6 +59,9 @@ func ResourceArtifactAllowlist() common.Resource {
 	}
 	return common.Resource{
 		Schema: allowlistSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

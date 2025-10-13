@@ -39,6 +39,10 @@ func ResourceGroup() common.Resource {
 		})
 	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
+		Schema: groupSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
@@ -76,7 +80,6 @@ func ResourceGroup() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
-		Schema: groupSchema,
 	}
 }
 

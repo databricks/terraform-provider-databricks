@@ -131,6 +131,9 @@ func ResourceSqlAlert() common.Resource {
 	})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {

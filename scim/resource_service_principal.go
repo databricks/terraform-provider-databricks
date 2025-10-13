@@ -157,6 +157,9 @@ func ResourceServicePrincipal() common.Resource {
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
 			spAPI := NewServicePrincipalsAPI(ctx, c)

@@ -81,6 +81,9 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 	s := common.StructToSchema(CustomerManagedKey{}, nil)
 	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
 			common.DataToStructPointer(d, s, &cmk)

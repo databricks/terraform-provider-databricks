@@ -65,6 +65,9 @@ func ResourceProvider() common.Resource {
 	}
 	return common.Resource{
 		Schema: providerSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)

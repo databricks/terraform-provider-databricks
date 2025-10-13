@@ -30,6 +30,10 @@ func ResourceEntitlements() common.Resource {
 		})
 	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
+		Schema: entitlementSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config.IsAccountClient() {
 				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
@@ -80,7 +84,6 @@ func ResourceEntitlements() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "remove")
 		},
-		Schema: entitlementSchema,
 	}
 }
 

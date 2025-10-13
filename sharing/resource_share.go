@@ -156,6 +156,9 @@ func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, nil)
 	return common.Resource{
 		Schema: shareSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

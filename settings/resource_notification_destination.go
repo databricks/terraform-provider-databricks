@@ -168,6 +168,9 @@ var ndSchema = common.StructToSchema(NDStruct{}, nil)
 func ResourceNotificationDestination() common.Resource {
 	return common.Resource{
 		Schema: ndSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

@@ -178,7 +178,10 @@ func ResourceSqlEndpoint() common.Resource {
 		},
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return d.Clear("health")
+			if err := d.Clear("health"); err != nil {
+				return err
+			}
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

@@ -245,11 +245,11 @@ func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 
 // If expected_workspace_status is specified, WaitForExpectedStatus will wait until workspace is in the expected status.
 // If not, it will wait until workspace is running, and otherwise will try to explain why it failed.
-func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expected_status string, timeout time.Duration) error {
+func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expectedStatus string, timeout time.Duration) error {
 	// If expected_status is empty, default to RUNNING
-	if expected_status == "" {
-		expected_status = WorkspaceStatusRunning
-		log.Printf("[INFO] No expected_workspace_status specified, defaulting to %s", expected_status)
+	if expectedStatus == "" {
+		expectedStatus = WorkspaceStatusRunning
+		log.Printf("[INFO] No expected_workspace_status specified, defaulting to %s", expectedStatus)
 	}
 	
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
@@ -260,10 +260,10 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expected_status strin
 		}
 
 		switch workspace.WorkspaceStatus {
-		case expected_status:
+		case expectedStatus:
 			log.Printf("[INFO] Workspace is now in expected status %s", expected_status)
 			// only verify that workspace is reachable if expected status is RUNNING
-			if expected_status == WorkspaceStatusRunning {
+			if expectedStatus == WorkspaceStatusRunning {
 				if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
 					// nobody would probably name workspace as 900150983cd24fb0,
 					// so we'll use it as unit testing shim
@@ -284,7 +284,15 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expected_status strin
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags", "expected_workspace_status"}
+var workspaceRunningUpdatesAllowed = []string{
+	"credentials_id", 
+	"network_id", 
+	"storage_customer_managed_key_id", 
+	"private_access_settings_id", 
+	"managed_services_customer_managed_key_id", 
+	"custom_tags", 
+	"expected_workspace_status"
+}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -670,6 +678,9 @@ func ResourceMwsWorkspaces() common.Resource {
 			// The expected_workspace_status field is input only.
 			// Therefore, we need to read it from the original Terraform configuration.
 			expectedStatus := d.Get("expected_workspace_status").(string)
+			// PROVISIONING workspace import may fail because the "expected_workspace_status" is not included in the state during import, nor is it returned by the API.
+			// As a result, the provider will wait for RUNNING state, which will never happen, and timeout.
+			// TODO: fix this.
 			err = workspacesAPI.WaitForExpectedStatus(workspace, expectedStatus, d.Timeout(schema.TimeoutRead))
 			if err != nil {
 				return err

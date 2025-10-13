@@ -1909,3 +1909,53 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
+
+// TestAccessControlHashFunction verifies that the custom hash function treats
+// access_control elements with and without empty fields as equal.
+// This prevents "inconsistent final plan" errors reported in ES-1587799.
+func TestAccessControlHashFunction(t *testing.T) {
+	resource := ResourcePermissions()
+	s := resource.ToResource().Schema
+	acSchema := s["access_control"]
+
+	require.NotNil(t, acSchema.Set, "access_control should have a custom Set function")
+
+	// Test case 1: Elements with only populated fields should hash the same
+	// as elements with explicit empty fields
+	elem1 := map[string]interface{}{
+		"group_name":       "RSDB_Databricks_TSR_Residential_RW",
+		"permission_level": "CAN_USE",
+	}
+	elem2 := map[string]interface{}{
+		"group_name":             "RSDB_Databricks_TSR_Residential_RW",
+		"permission_level":       "CAN_USE",
+		"service_principal_name": "",
+		"user_name":              "",
+	}
+	hash1 := acSchema.Set(elem1)
+	hash2 := acSchema.Set(elem2)
+	assert.Equal(t, hash1, hash2, "Elements with and without empty fields should have the same hash")
+
+	// Test case 2: Different elements should have different hashes
+	elem3 := map[string]interface{}{
+		"user_name":        "different_user",
+		"permission_level": "CAN_USE",
+	}
+	hash3 := acSchema.Set(elem3)
+	assert.NotEqual(t, hash1, hash3, "Different elements should have different hashes")
+
+	// Test case 3: Service principal with and without empty fields
+	elem4 := map[string]interface{}{
+		"service_principal_name": "6d1fc824-191d-4a99-9fac-f62a27822946",
+		"permission_level":       "CAN_USE",
+	}
+	elem5 := map[string]interface{}{
+		"service_principal_name": "6d1fc824-191d-4a99-9fac-f62a27822946",
+		"permission_level":       "CAN_USE",
+		"group_name":             "",
+		"user_name":              "",
+	}
+	hash4 := acSchema.Set(elem4)
+	hash5 := acSchema.Set(elem5)
+	assert.Equal(t, hash4, hash5, "Service principal elements with and without empty fields should have the same hash")
+}

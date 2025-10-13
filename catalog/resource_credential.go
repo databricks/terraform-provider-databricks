@@ -9,7 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
+type CredentialInfo struct {
+	catalog.CredentialInfo
+	common.Namespace
+}
+
+var credentialSchema = common.StructToSchema(CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
 			"databricks_gcp_service_account"}
@@ -55,6 +60,7 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			Computed: true,
 		}
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -181,6 +187,9 @@ func ResourceCredential() common.Resource {
 				NameArg: d.Id(),
 				Force:   force,
 			})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

@@ -12,8 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type SystemSchemaInfo struct {
+	catalog.SystemSchemaInfo
+	common.Namespace
+}
+
 func ResourceSystemSchema() common.Resource {
-	systemSchema := common.StructToSchema(catalog.SystemSchemaInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	systemSchema := common.StructToSchema(SystemSchemaInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["metastore_id"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -30,6 +35,7 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	pi := common.NewPairID("metastore_id", "schema").Schema(
@@ -142,6 +148,9 @@ func ResourceSystemSchema() common.Resource {
 				return err
 			}
 			return safeDisable(ctx, w, metastoreSummary.MetastoreId, schemaName)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

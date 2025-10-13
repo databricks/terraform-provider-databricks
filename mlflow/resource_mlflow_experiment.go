@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type Experiment struct {
+	ml.Experiment
+	common.Namespace
+}
+
 func experimentNameSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
 
 	if strings.TrimSuffix(strings.TrimPrefix(new, "/Workspace"), "/") == strings.TrimSuffix(strings.TrimPrefix(old, "/Workspace"), "/") {
@@ -21,7 +26,7 @@ func experimentNameSuppressDiff(k, old, new string, d *schema.ResourceData) bool
 
 func ResourceMlflowExperiment() common.Resource {
 	s := common.StructToSchema(
-		ml.Experiment{},
+		Experiment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			for _, p := range []string{"creation_time", "experiment_id", "last_update_time", "lifecycle_stage", "tags"} {
 				common.CustomizeSchemaPath(m, p).SetComputed()
@@ -34,6 +39,7 @@ func ResourceMlflowExperiment() common.Resource {
 				Type:       schema.TypeString,
 				Deprecated: "Remove the description attribute as it no longer is used and will be removed in a future version.",
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
@@ -84,5 +90,8 @@ func ResourceMlflowExperiment() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts:       &schema.ResourceTimeout{},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 	}
 }

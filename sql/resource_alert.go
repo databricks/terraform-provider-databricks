@@ -11,8 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type Alert struct {
+	sql.Alert
+	common.Namespace
+}
+
 func ResourceAlert() common.Resource {
-	s := common.StructToSchema(sql.Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "display_name").SetRequired()
 		common.CustomizeSchemaPath(m, "query_id").SetRequired()
 		common.CustomizeSchemaPath(m, "condition").SetRequired()
@@ -45,6 +50,7 @@ func ResourceAlert() common.Resource {
 		common.CustomizeSchemaPath(m, "state").SetReadOnly()
 		common.CustomizeSchemaPath(m, "trigger_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "update_time").SetReadOnly()
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -125,5 +131,8 @@ func ResourceAlert() common.Resource {
 			return w.Alerts.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 	}
 }

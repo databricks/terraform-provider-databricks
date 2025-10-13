@@ -28,8 +28,13 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 	return false
 }
 
+type CatalogInfo struct {
+	catalog.CatalogInfo
+	common.Namespace
+}
+
 func ResourceCatalog() common.Resource {
-	catalogSchema := common.StructToSchema(catalog.CatalogInfo{},
+	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -58,6 +63,7 @@ func ResourceCatalog() common.Resource {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
@@ -242,7 +248,7 @@ func ResourceCatalog() common.Resource {
 					}
 				}
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

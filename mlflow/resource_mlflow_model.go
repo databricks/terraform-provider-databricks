@@ -8,15 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type CreateModelRequest struct {
+	ml.CreateModelRequest
+	common.Namespace
+}
+
 func ResourceMlflowModel() common.Resource {
 	s := common.StructToSchema(
-		ml.CreateModelRequest{},
+		CreateModelRequest{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["name"].ForceNew = true
 			s["registered_model_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
@@ -78,5 +84,8 @@ func ResourceMlflowModel() common.Resource {
 			return w.ModelRegistry.DeleteModel(ctx, req)
 		},
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 	}
 }

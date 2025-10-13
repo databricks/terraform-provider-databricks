@@ -52,8 +52,13 @@ var getSecurableName = func(d *schema.ResourceData) string {
 	return securableName.(string)
 }
 
+type WorkspaceBinding struct {
+	catalog.WorkspaceBinding
+	common.Namespace
+}
+
 func ResourceWorkspaceBinding() common.Resource {
-	workspaceBindingSchema := common.StructToSchema(catalog.WorkspaceBinding{},
+	workspaceBindingSchema := common.StructToSchema(WorkspaceBinding{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["catalog_name"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -80,6 +85,7 @@ func ResourceWorkspaceBinding() common.Resource {
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite),
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
 				}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		},
 	)
@@ -158,6 +164,9 @@ func ResourceWorkspaceBinding() common.Resource {
 				SecurableType: string(bindings.BindingsSecurableType(d.Get("securable_type").(string))),
 			})
 			return err
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

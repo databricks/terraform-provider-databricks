@@ -30,7 +30,6 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 }
 
 type CredentialInfo struct {
-	common.Namespace
 	// The account id - this is for backwards compatiblity
 	AccountId string `json:"account_id,omitempty" tf:"force_new,suppress_diff"`
 	// The human-readable name of the credential configuration object.
@@ -109,7 +108,6 @@ func ResourceMwsCredentials() common.Resource {
 		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
-			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		}),
 	}

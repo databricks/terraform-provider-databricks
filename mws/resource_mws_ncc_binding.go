@@ -11,14 +11,8 @@ import (
 )
 
 type NccBinding struct {
-	common.Namespace
 	WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
 	NccId       string `json:"network_connectivity_config_id"`
-}
-
-func (NccBinding) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-	common.NamespaceCustomizeSchema(s)
-	return s
 }
 
 func ResourceMwsNccBinding() common.Resource {

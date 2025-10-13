@@ -9,6 +9,8 @@
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
+* Add `data_quality_monitor` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
+* Add `data_quality_refresh` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
 
 ### Bug Fixes
 
@@ -21,3 +23,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Bump the Go SDK to v0.86.0 ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).

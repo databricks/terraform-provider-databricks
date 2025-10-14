@@ -251,9 +251,9 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expectedStatus string
 		expectedStatus = WorkspaceStatusRunning
 		log.Printf("[INFO] No expected_workspace_status specified, defaulting to %s", expectedStatus)
 	}
-	
+
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
-		
+
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -261,7 +261,7 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expectedStatus string
 
 		switch workspace.WorkspaceStatus {
 		case expectedStatus:
-			log.Printf("[INFO] Workspace is now in expected status %s", expected_status)
+			log.Printf("[INFO] Workspace is now in expected status %s", expectedStatus)
 			// only verify that workspace is reachable if expected status is RUNNING
 			if expectedStatus == WorkspaceStatusRunning {
 				if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
@@ -285,13 +285,13 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expectedStatus string
 }
 
 var workspaceRunningUpdatesAllowed = []string{
-	"credentials_id", 
-	"network_id", 
-	"storage_customer_managed_key_id", 
-	"private_access_settings_id", 
-	"managed_services_customer_managed_key_id", 
-	"custom_tags", 
-	"expected_workspace_status"
+	"credentials_id",
+	"network_id",
+	"storage_customer_managed_key_id",
+	"private_access_settings_id",
+	"managed_services_customer_managed_key_id",
+	"custom_tags",
+	"expected_workspace_status",
 }
 
 // UpdateRunning will update running workspace with couple of possible fields

@@ -176,7 +176,7 @@ func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
 						"subnet_cidr": "a",
 					},
 					"workspace_name":  "labdata",
-					"workspace_state": "WORKSPACE_STATE_PROVISIONING",
+					"expected_workspace_status": "PROVISIONING",
 				},
 				Response: Workspace{
 					WorkspaceID:    1234,

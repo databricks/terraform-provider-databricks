@@ -5,6 +5,8 @@
 ### Breaking Changes
 
 * Remove stale resources/datasources/documentation related to Clean Room services.
+* databricks\_permissions resource no longer updates permissions on delete. This is to mitigate an issue with incorrect IS\_OWNER being set.
+
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))

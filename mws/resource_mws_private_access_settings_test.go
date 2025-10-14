@@ -190,10 +190,13 @@ func TestResourcePAS_Update(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
 			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
+				PrivateAccessSettingsId: "pas_id",
 				CustomerFacingPrivateAccessSettings: provisioning.PrivateAccessSettings{
+					AccountId:                 "abc",
 					Region:                    "eu-west-1",
 					PublicAccessEnabled:       true,
 					PrivateAccessLevel:        "ENDPOINT",
+					PrivateAccessSettingsId:   "pas_id",
 					PrivateAccessSettingsName: "pas_name",
 					AllowedVpcEndpointIds:     []string{"a", "b"},
 				},
@@ -233,12 +236,16 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 		MockAccountClientFunc: func(mac *mocks.MockAccountClient) {
 			e := mac.GetMockPrivateAccessAPI().EXPECT()
 			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
+				PrivateAccessSettingsId: "pas_id",
 				CustomerFacingPrivateAccessSettings: provisioning.PrivateAccessSettings{
+					AccountId:                 "abc",
 					Region:                    "eu-west-1",
 					PublicAccessEnabled:       false,
 					PrivateAccessLevel:        "ENDPOINT",
+					PrivateAccessSettingsId:   "pas_id",
 					PrivateAccessSettingsName: "pas_name",
 					AllowedVpcEndpointIds:     []string{"a", "b"},
+					ForceSendFields:           []string{"PublicAccessEnabled"},
 				},
 			}).Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",

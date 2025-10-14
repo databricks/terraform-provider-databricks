@@ -12,7 +12,7 @@ func TestResourceNccBindingCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
+				Resource: "/api/2.0/accounts/abc/workspaces/123456789?update_mask=network_connectivity_config_id",
 				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
 					CustomerFacingWorkspace: provisioning.Workspace{
 						NetworkConnectivityConfigId: "ncc_id",
@@ -45,7 +45,7 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
+				Resource: "/api/2.0/accounts/abc/workspaces/123456789?update_mask=network_connectivity_config_id",
 				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
 					CustomerFacingWorkspace: provisioning.Workspace{
 						NetworkConnectivityConfigId: "new_ncc_id",

@@ -1418,7 +1418,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("job_id", "job")
-		err := p.Delete("/jobs/123", mapping)
+		err := p.Delete(ctx, "/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
@@ -1457,7 +1457,7 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("job_id", "job")
-		err := p.Delete("/jobs/123", mapping)
+		err := p.Delete(ctx, "/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
@@ -1507,7 +1507,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("pipeline_id", "pipelines")
-		err := p.Delete("/pipelines/123", mapping)
+		err := p.Delete(ctx, "/pipelines/123", mapping)
 		assert.NoError(t, err)
 	})
 }

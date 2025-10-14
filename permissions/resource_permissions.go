@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -91,7 +92,7 @@ func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity,
 // Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
 // by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
 // object creator, if it can be determined.
-func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
+func (a PermissionsAPI) Delete(ctx context.Context, objectID string, mapping resourcePermissions) error {
 	objectACL, err := a.readRaw(objectID, mapping)
 	if err != nil {
 		return err
@@ -112,7 +113,14 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 	if !resourceStatus.exists {
 		return nil
 	}
-	return a.safePutWithOwner(objectID, accl, mapping, resourceStatus.creator)
+	err = a.safePutWithOwner(objectID, accl, mapping, resourceStatus.creator)
+	if err != nil {
+		// When pipelines run_as setting is used and deployment service principal is not an admin then
+		// Deleting permissions fails with Error: cannot delete permissions: PERMISSION_DENIED: PERMISSION_DENIED: Only metastore admins can change pipeline owner
+		// https://community.databricks.com/t5/data-engineering/dab-dlt-destroy-fails-due-to-ownership-permissions-mismatch/td-p/132101
+		tflog.Warn(ctx, fmt.Sprintf("Ignoring error when deleting permissions: %s", err))
+	}
+	return nil // fail open on purpose
 }
 
 func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*iam.ObjectPermissions, error) {
@@ -271,7 +279,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			return NewPermissionsAPI(ctx, c).Delete(d.Id(), mapping)
+			return NewPermissionsAPI(ctx, c).Delete(ctx, d.Id(), mapping)
 		},
 	}
 }

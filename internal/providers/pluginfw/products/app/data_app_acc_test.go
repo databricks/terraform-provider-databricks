@@ -20,6 +20,7 @@ const fastApp = `
 	resource "databricks_app" "this" {
 		name = "{var.STICKY_RANDOM}"
 		description = "%s"
+		compute_size = "MEDIUM"
 		resources = [{
 			name = "secret"
 			description = "secret for app"

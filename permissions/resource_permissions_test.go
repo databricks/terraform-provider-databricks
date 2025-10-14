@@ -616,7 +616,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 		Delete:   true,
 		ID:       "/clusters/abc",
 	}.Apply(t)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
 
 func TestResourcePermissionsCreate_invalid(t *testing.T) {

@@ -427,7 +427,7 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 	)
 }
 func shareUpdateWithName(name string) string {
-	return fmt.Sprintf(`resource "databricks_share_pluginframework" "myshare" {
+	return fmt.Sprintf(`resource "databricks_share" "myshare" {
 			name  = "%s"
 			owner = "account users"
 			object {
@@ -441,7 +441,7 @@ func shareUpdateWithName(name string) string {
 
 func shareCheckStateforID() func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources["databricks_share_pluginframework.myshare"]
+		r, ok := s.RootModule().Resources["databricks_share.myshare"]
 		if !ok {
 			return fmt.Errorf("resource not found in state")
 		}
@@ -501,7 +501,7 @@ const preTestTemplateSchema = `
 func TestUcAccShareReorderObject(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
 			object {
 				name = databricks_schema.schema1.id
@@ -514,7 +514,7 @@ func TestUcAccShareReorderObject(t *testing.T) {
 		}`,
 	}, acceptance.Step{
 		Template: preTestTemplateSchema + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
 			object {
 				name = databricks_schema.schema1.id
@@ -529,7 +529,7 @@ func TestUcAccShareReorderObject(t *testing.T) {
 	}, acceptance.Step{
 		// Changing order of objects in the config leads to changes show up in plan as updates
 		Template: preTestTemplateSchema + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
 			object {
 				name = databricks_schema.schema3.id
@@ -551,7 +551,7 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	sharedObjectNameToAdd := ""
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
 			object {
 				name = databricks_schema.schema1.id
@@ -564,9 +564,9 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 		}`,
 		Check: func(s *terraform.State) error {
 			resources := s.RootModule().Resources
-			share := resources["databricks_share_pluginframework.myshare"]
+			share := resources["databricks_share.myshare"]
 			if share == nil {
-				return fmt.Errorf("expected to find databricks_share_pluginframework.myshare in resources keys: %v", maps.Keys(resources))
+				return fmt.Errorf("expected to find databricks_share.myshare in resources keys: %v", maps.Keys(resources))
 			}
 			shareName = share.Primary.Attributes["name"]
 			assert.NotEmpty(t, shareName)
@@ -600,7 +600,7 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 			require.NoError(t, err)
 		},
 		Template: preTestTemplateSchema + `
-		resource "databricks_share_pluginframework" "myshare" {
+		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
 			object {
 				name = databricks_schema.schema1.id

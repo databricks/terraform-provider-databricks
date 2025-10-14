@@ -159,7 +159,6 @@ func ResourceModelServing() common.Resource {
 			common.CustomizeSchemaPath(m, "rate_limits").SetDeprecated("Please use AI Gateway to manage rate limits.")
 
 			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
-			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_size").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_type").SetComputed()
 
 			// Apply custom suppress diff to traffic config routes for served_model_name and served_entity_name

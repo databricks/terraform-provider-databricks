@@ -129,7 +129,7 @@ type permissionAssignmentEntity struct {
 	UserName             string   `json:"user_name,omitempty" tf:"computed,force_new"`
 	GroupName            string   `json:"group_name,omitempty" tf:"computed,force_new"`
 	Permissions          []string `json:"permissions" tf:"slice_as_set"`
-	DisplayName          string   `json:"display_name,omitempty" tf:"computed"`
+	DisplayName          string   `json:"display_name" tf:"computed"`
 }
 
 // ResourcePermissionAssignment performs of users to a workspace
@@ -141,7 +141,7 @@ func ResourcePermissionAssignment() common.Resource {
 		for _, field := range fields {
 			s[field].ExactlyOneOf = fields
 		}
-		common.CustomizeSchemaPath(s, "display_name").SetReadOnly().SetOptional()
+		common.CustomizeSchemaPath(s, "display_name").SetReadOnly()
 		return s
 	})
 	return common.Resource{

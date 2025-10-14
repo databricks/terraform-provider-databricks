@@ -242,20 +242,20 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 
 // TestUcAccUpdateShareNoChanges tests that updating a share with no actual changes doesn't cause issues
 func TestUcAccUpdateShareNoChanges(t *testing.T) {
-	shareConfig := preTestTemplate + preTestTemplateUpdate +
+	shareConfig := preTestTemplateSchema +
 		`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_sql_table.mytable.id
-				comment = "stable comment"
-				data_object_type = "TABLE"
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
 			}
 		}`
 
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: shareConfig,
 	}, acceptance.Step{
+		PlanOnly: true,
 		Template: shareConfig, // Same config - should not trigger any updates
 	})
 }
@@ -263,36 +263,36 @@ func TestUcAccUpdateShareNoChanges(t *testing.T) {
 // TestUcAccUpdateShareComplexObjectChanges tests complex scenarios with multiple object updates
 func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
+		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_sql_table.mytable.id
+				name = databricks_schema.schema1.id
 				comment = "original comment"
-				data_object_type = "TABLE"
+				data_object_type = "SCHEMA"
 			}
 			object {
-				name = databricks_sql_table.mytable_2.id
-				comment = "second table"
-				data_object_type = "TABLE"
+				name = databricks_schema.schema2.id
+				comment = "second schema"
+				data_object_type = "SCHEMA"
 			}
 		}`,
 	}, acceptance.Step{
 		// Remove one object, add another, and update comment on existing
-		Template: preTestTemplate + preTestTemplateUpdate +
+		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_sql_table.mytable.id
+				name = databricks_schema.schema1.id
 				comment = "updated comment"
-				data_object_type = "TABLE"
+				data_object_type = "SCHEMA"
 			}
 			object {
-				name = databricks_sql_table.mytable_3.id
-				comment = "third table"
-				data_object_type = "TABLE"
+				name = databricks_schema.schema3.id
+				comment = "third schema"
+				data_object_type = "SCHEMA"
 			}
 		}`,
 	})
@@ -301,23 +301,23 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 // TestUcAccUpdateShareRemoveAllObjects tests removing all objects from a share
 func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
+		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
 			object {
-				name = databricks_sql_table.mytable.id
+				name = databricks_schema.schema1.id
 				comment = "to be removed"
-				data_object_type = "TABLE"
+				data_object_type = "SCHEMA"
 			}
 			object {
-				name = databricks_sql_table.mytable_2.id
+				name = databricks_schema.schema2.id
 				comment = "also to be removed"
-				data_object_type = "TABLE"
+				data_object_type = "SCHEMA"
 			}
 		}`,
 	}, acceptance.Step{
-		Template: preTestTemplate + preTestTemplateUpdate +
+		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
@@ -338,41 +338,38 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 				},
 			},
-			Template: preTestTemplate + preTestTemplateUpdate + `
+			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
 					owner = "account users"
 					object {
-						name = databricks_sql_table.mytable.id
-						comment = "Shared table for migration test"
-						data_object_type = "TABLE"
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
 					}
 					object {
-						name = databricks_sql_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
 					}
 				}`,
 		},
 		// Step 2: Update the share using plugin framework implementation (default)
 		// This verifies no changes are needed when switching implementations
 		acceptance.Step{
-			ExpectNonEmptyPlan: false,
-			Template: preTestTemplate + preTestTemplateUpdate + `
+			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
 					owner = "account users"
 					object {
-						name = databricks_sql_table.mytable.id
-						comment = "Updated comment after migration"
-						data_object_type = "TABLE"
+						name = databricks_schema.schema1.id
+						comment = "Updated comment for schema object after migration"
+						data_object_type = "SCHEMA"
 					}
 					object {
-						name = databricks_sql_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
 					}
 				}`,
 		},
@@ -386,20 +383,19 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t,
 		// Step 1: Create share using plugin framework implementation
 		acceptance.Step{
-			Template: preTestTemplate + preTestTemplateUpdate + `
+			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
 					owner = "account users"
 					object {
-						name = databricks_sql_table.mytable.id
-						comment = "Shared table for migration test"
-						data_object_type = "TABLE"
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
 					}
 					object {
-						name = databricks_sql_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
 					}
 				}`,
 		},
@@ -412,21 +408,19 @@ func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
 					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 				},
 			},
-			ExpectNonEmptyPlan: false,
-			Template: preTestTemplate + preTestTemplateUpdate + `
+			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
 					owner = "account users"
 					object {
-						name = databricks_sql_table.mytable.id
-						comment = "Shared table for migration test"
-						data_object_type = "TABLE"
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
 					}
 					object {
-						name = databricks_sql_table.mytable_2.id
-						comment = "Second shared table"
-						data_object_type = "TABLE"
-						cdf_enabled = false
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
 					}
 				}`,
 		},

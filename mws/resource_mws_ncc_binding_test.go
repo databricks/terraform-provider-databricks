@@ -3,7 +3,6 @@ package mws
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -13,11 +12,12 @@ func TestResourceNccBindingCreate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/123456789?update_mask=network_connectivity_config_id",
-				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					CustomerFacingWorkspace: provisioning.Workspace{
-						NetworkConnectivityConfigId: "ncc_id",
-					},
-					UpdateMask: "network_connectivity_config_id",
+				ExpectedRequest: map[string]any{
+					"network_connectivity_config_id": "ncc_id",
+				},
+				Response: Workspace{
+					WorkspaceStatus: WorkspaceStatusRunning,
+					WorkspaceID:     123456789,
 				},
 			},
 			{
@@ -46,11 +46,12 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/123456789?update_mask=network_connectivity_config_id",
-				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					CustomerFacingWorkspace: provisioning.Workspace{
-						NetworkConnectivityConfigId: "new_ncc_id",
-					},
-					UpdateMask: "network_connectivity_config_id",
+				ExpectedRequest: map[string]any{
+					"network_connectivity_config_id": "new_ncc_id",
+				},
+				Response: Workspace{
+					WorkspaceStatus: WorkspaceStatusRunning,
+					WorkspaceID:     123456789,
 				},
 			},
 			{
